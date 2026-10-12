@@ -22,6 +22,12 @@ import diagnostic_publisher as publisher
 
 SECRET='PRIVATE_DIAGNOSTIC_SENTINEL_TOKEN_AUDIO_HISTORY'
 
+def positive_release_fixture():
+    # Explicit source-only positive fixture. Checked-in authority stays disabled.
+    release=pc.decode(pc.regular(HERE/'prepare-release.json'))
+    for key in ('enabled','independent_source_review','source_closure_ready'):release[key]=True
+    return pc.validate_release(release)
+
 def context(head='c'*40):
     env={'GITHUB_REPOSITORY':h.REPOSITORY,'GITHUB_REF':'refs/heads/'+h.SOURCE_REF,'GITHUB_EVENT_NAME':'push',
         'GITHUB_RUN_ATTEMPT':'1','GITHUB_JOB':'prepare_diagnostic','RUNNER_ENVIRONMENT':'github-hosted',
@@ -56,8 +62,13 @@ class API:
 
 
 class HostedTests(unittest.TestCase):
-    def test_actual_controls_allow_only_prepare_and_all_sealed_asr_remains_disabled(self):
-        release=pc.release_first()
+    def test_actual_consumed_prepare_and_sealed_asr_controls_remain_disabled(self):
+        release=pc.decode(pc.regular(HERE/'prepare-release.json'))
+        self.assertTrue(all(release[k] is False for k in ('enabled','independent_source_review','source_closure_ready')))
+        with self.assertRaisesRegex(ValueError,'prepare_execution_disabled'):pc.release_first()
+        control=h.read_json(HERE/'publication-release.json')
+        self.assertTrue(all(control[k] is False for k in ('enabled','independent_source_review','root_publication_release')))
+        with self.assertRaises(publisher.PublicationDisabled):publisher.publication_gate(control)
         self.assertEqual(release['max_new_asr_calls'],0);self.assertFalse(release['audio_forward_allowed'])
         self.assertEqual(release['prior_prepare_history_sha256'],pc.digest(pc.canonical(h.prior_history_identity())))
         for name,keys in (('execution-release.json',('enabled','independent_source_review','root_execution_release')),
@@ -67,8 +78,8 @@ class HostedTests(unittest.TestCase):
         self.assertEqual([r['run_id'] for r in h.prior_history_identity()['sealed_asr_runs']],[38207026177,38219171568])
         self.assertTrue(all(r['actual_consumed_attempts'] is None and r['reusable_slots']==0 for r in h.prior_history_identity()['sealed_asr_runs']))
 
-    def test_real_checked_in_release_api_preflight_positive_and_history_rejections(self):
-        release=pc.release_first();_,_,run=context();api=API(run)
+    def test_explicit_positive_fixture_api_preflight_and_history_rejections(self):
+        release=positive_release_fixture();_,_,run=context();api=API(run)
         result=h.api_preflight(api,run,release)
         self.assertEqual(len(api.calls),6);self.assertEqual(result['numeric_job_id'],999)
         key=next(k for k in api.rows if '/runs?branch=' in k)
@@ -87,7 +98,7 @@ class HostedTests(unittest.TestCase):
                         {'GITHUB_RUN_ID':'38219171568'},{'GITHUB_RUN_ID':'38207026177'},{'GITHUB_JOB':'asr18'}):
             with self.subTest(changed=changed),self.assertRaises(ValueError):h.event_identity({**env,**changed},event)
 
-    def test_true_controls_actual_isolated_cli_rejects_before_runtime(self):
+    def test_actual_disabled_isolated_cli_rejects_before_runtime(self):
         for filename in ('prepare_run.py','diagnostic_publisher.py'):
             process=subprocess.run([sys.executable,'-I','-B',str(HERE/filename)],
                 env={'PATH':'/usr/bin:/bin','GITHUB_TOKEN':SECRET,'RUNNER_TEMP':SECRET},capture_output=True,text=True,timeout=10)
@@ -96,6 +107,19 @@ class HostedTests(unittest.TestCase):
             rows=[json.loads(x) for x in process.stdout.splitlines()]
             self.assertTrue(any('diagnostic' in row.get('schema','') for row in rows))
             self.assertFalse(Path(SECRET).exists())
+
+    def test_actual_disabled_gates_precede_environment_api_git_and_runtime(self):
+        class Poison(dict):
+            def __getitem__(self,key):raise AssertionError('environment touched')
+            def get(self,*args):raise AssertionError('environment touched')
+            def __contains__(self,key):raise AssertionError('environment touched')
+            def keys(self):raise AssertionError('environment iterated')
+        with patch.object(h.os,'environ',Poison()),patch.object(h,'PublicAPI',side_effect=AssertionError('API')), \
+             patch.object(h,'git_read',side_effect=AssertionError('Git')),patch.object(h,'execute',side_effect=AssertionError('model')),redirect_stdout(io.StringIO()):
+            with self.assertRaisesRegex(ValueError,'prepare_execution_disabled'):h.main([])
+        with patch.object(publisher.os,'environ',Poison()),patch.object(publisher,'GitHubAPI',side_effect=AssertionError('API')), \
+             patch.object(publisher,'_source_git',side_effect=AssertionError('Git')),redirect_stdout(io.StringIO()):
+            with self.assertRaises(publisher.PublicationDisabled):publisher.main([])
 
     def test_explicit_disabled_host_gate_precedes_api_git_runtime(self):
         release=pc.decode(pc.regular(HERE/'prepare-release.json'));release['enabled']=False
@@ -113,6 +137,9 @@ class HostedTests(unittest.TestCase):
             names=set(freeze['host_code'])|{pc.REL+'prepare-freeze.json',h.WORKFLOW}
             for name in names:
                 target=root/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(h.read_bytes(h.ROOT/name))
+            (fixed/'prepare-release.json').write_bytes(pc.canonical(positive_release_fixture()))
+            fixture_freeze=freezer.build(root)
+            (fixed/'prepare-freeze.json').write_bytes(pc.canonical(fixture_freeze))
             env={'PATH':'/usr/bin:/bin','HOME':'/nonexistent','GIT_CONFIG_NOSYSTEM':'1','GIT_CONFIG_GLOBAL':'/dev/null',
                 'GIT_AUTHOR_NAME':'Offline fixture','GIT_AUTHOR_EMAIL':'fixture@example.invalid','GIT_COMMITTER_NAME':'Offline fixture',
                 'GIT_COMMITTER_EMAIL':'fixture@example.invalid','GIT_AUTHOR_DATE':'2026-10-12T00:00:00Z','GIT_COMMITTER_DATE':'2026-10-12T00:00:00Z'}
@@ -120,12 +147,12 @@ class HostedTests(unittest.TestCase):
             git('init','--quiet');git('add','.');git('commit','--quiet','-m','offline fixed source fixture')
             head=git('rev-parse','HEAD').decode().strip();_,_,run=context(head)
             with patch.object(h,'ROOT',root),patch.object(h,'HERE',fixed),patch.object(h,'git_read',side_effect=git):
-                actual,identity,tree=h.source_authority(run,pc.release_first())
-                self.assertEqual(actual,freeze);self.assertEqual(identity,pc.digest(pc.canonical(freeze)))
+                actual,identity,tree=h.source_authority(run,positive_release_fixture())
+                self.assertEqual(actual,fixture_freeze);self.assertEqual(identity,pc.digest(pc.canonical(fixture_freeze)))
                 self.assertEqual(tree,git('rev-parse','HEAD^{tree}').decode().strip())
                 (fixed/'prepare_run.py').write_bytes(b'changed')
-                with self.assertRaises(ValueError):h.source_authority(run,pc.release_first())
-        inp,authority,policy=h.input_authorities(pc.release_first(),freeze)
+                with self.assertRaises(ValueError):h.source_authority(run,positive_release_fixture())
+        inp,authority,policy=h.input_authorities(positive_release_fixture(),freeze)
         self.assertEqual(len(inp['actual_blind_job']['clips']),6)
         self.assertEqual(policy,freeze['host_code'][h.retained_host.NEW+'asr18_metadata.py']['sha256'])
 

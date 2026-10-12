@@ -39,6 +39,25 @@ ERRNOS = frozenset(errno.errorcode)
 # No exception message, prefix, path, variable, subclass property or traceback
 # is copied. Unlisted conditions keep the original generic private-text policy.
 VALIDATION_CODES = {
+    # Fixed prepare-only launch predicates; never infer a code for an old run.
+    'bounded_private_local_logs': 'prepare_launch_logs',
+    'exact_mount_roster': 'prepare_launch_mount_roster',
+    'exact_prepare_command_no_mode': 'prepare_launch_command',
+    'exact_prepare_image': 'prepare_launch_image',
+    'fixed_tmpfs_arguments': 'prepare_launch_tmpfs_arguments',
+    'fixed_tmpfs_options': 'prepare_launch_tmpfs_options',
+    'fixed_tmpfs_roster': 'prepare_launch_tmpfs_roster',
+    'metadata_only_mount_contract': 'prepare_launch_metadata_mounts',
+    'no_extra_host_resource': 'prepare_launch_host_resources',
+    'no_extra_volume': 'prepare_launch_extra_volume',
+    'no_secret_or_label_environment': 'prepare_launch_environment',
+    'nonroot_effective_worker_user': 'prepare_launch_nonroot_user',
+    'observed_mount_identity': 'prepare_launch_mount_identity',
+    'prepare_privilege_boundary': 'prepare_launch_privileges',
+    'prepare_resource_network_boundary': 'prepare_launch_resources_network',
+    'unique_mount_destination': 'prepare_launch_mount_unique',
+    'unique_tmpfs_destination': 'prepare_launch_tmpfs_unique',
+    'unique_worker_environment': 'prepare_launch_environment_unique',
     'unknown worker member cannot be dropped or published': 'collector_worker_roster',
     'only fixed public authority/policy/order members': 'collector_fixed_roster',
     'whole actual public source closure required': 'collector_source_roster',

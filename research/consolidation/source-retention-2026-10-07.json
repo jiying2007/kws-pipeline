@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 44103,
-      "sha256": "8d68eaa3141a1029c6dfece9448bf92e990db2e58eff18f07f3d35c9e9387cc2",
-      "git_blob_sha1": "6a5acd3c39f9e0ee104953f1fa402b975b3e68a7"
+      "bytes": 44508,
+      "sha256": "139e2d9f406ee6b41e44b09abe8311fb97e756437f569e95cd06b2b796fd66a0",
+      "git_blob_sha1": "b958b3dfdfbc507e796d3c16bbd6841f2827425c"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -20770,6 +20770,329 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-12",
+      "operation_id": "k1-consumed-prepare-launch-observer-ci-retention-20261012",
+      "public_main_base_commit": "54ee9ee80e88c172cd04611474ded2613d956745",
+      "public_main_base_tree": "1e76b3592c6eb80a74c4b793589321eb3b36a21c",
+      "workflow_source_changed": true,
+      "baseline_kind": "Public main at the consumed prepare diagnostic source; disabled source-only launch and fixed-observer repair",
+      "scope": "Disable the consumed prepare execution/publication controls; correct the fixed production tmpfs inspect predicate and share the pure launch argv builder with a create/inspect/remove-only regression in the existing Ubuntu 24.04 CI job. Add its stdlib mock module to both exact prepare test lists. Update the same live observer for the fixed three prepare families and admit only fixed safe launch-predicate codes, leaving unknown errors generic. Rebind only the synthetic current-source transport fixture to the regenerated disabled-source closure; historical executed snapshots stay immutable. Give the no-start CI step eight minutes for its fixed 360-second maximum command path plus cleanup margin, without changing model budgets. Preserve all prior checks and refresh current workflow byte identities.",
+      "rationale": "Run38234429437 attempt1 produced no completed constructor receipts. The actual raw Docker inspect response is unavailable, so this tmpfs defect is a sufficient blocker rather than an established unique first exception. Preserve the original null host ASR count and both sealed ASR histories, all52 preceding maintenance receipts, all718 retained source files, provenance, projections, allowed active workflow names, and retained execution branches. No new execution ref or identity, model execution, retry authority, token forwarding, container start/run/exec, or private content is introduced. The hosted Docker result must be observed separately; local mocks are not hosted execution evidence.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 44103,
+            "sha256": "8d68eaa3141a1029c6dfece9448bf92e990db2e58eff18f07f3d35c9e9387cc2",
+            "git_blob_sha1": "6a5acd3c39f9e0ee104953f1fa402b975b3e68a7"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 44508,
+            "sha256": "139e2d9f406ee6b41e44b09abe8311fb97e756437f569e95cd06b2b796fd66a0",
+            "git_blob_sha1": "b958b3dfdfbc507e796d3c16bbd6841f2827425c"
+          }
+        },
+        {
+          "path": ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml",
+          "before": {
+            "path": ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml",
+            "mode": "100644",
+            "bytes": 2845,
+            "sha256": "331293f97d8a2b45922213cdebb3dff3d344d03346cfc965b392d4cf09204ab9",
+            "git_blob_sha1": "1b0d961dcb5ef1d9dc920892d96aeee79f13c1f6"
+          },
+          "after": {
+            "path": ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml",
+            "mode": "100644",
+            "bytes": 2871,
+            "sha256": "c2fdb4367656f1325d20a8916643c4ceb8783958cc031bb7d38d030cf2f5a484",
+            "git_blob_sha1": "9200791a826b417e6715cbee525b0ba3f4a25e05"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_ci_structure.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 37100,
+            "sha256": "b7b528b8ac4dae11ac468a9d2559a8d8067af83422d82487ab51143494e63475",
+            "git_blob_sha1": "4774f67dcceb743736c52f0d155a3c52d50c85f7"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 38291,
+            "sha256": "c1ea74e53365535e18a64bbdfa2b6ad56a534db81f519f8ec511be234c717d64",
+            "git_blob_sha1": "40b7ec05436de0cff07819f9952d61160001bee5"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 31639,
+            "sha256": "5bfbc146c886c99995456fc1be9271107180635b1d9ed59828af146d35998499",
+            "git_blob_sha1": "bf5d3dc2abbfa049bed33690f689f9391143cb98"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 31639,
+            "sha256": "38fb1194d0f816fe3f7a088da62136c02cc6f1f6ae672f411acd1aa9284d0787",
+            "git_blob_sha1": "22239245d4e45ef271dfe3ce5b56e649570d64cd"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/failure_observer.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/failure_observer.py",
+            "mode": "100644",
+            "bytes": 21389,
+            "sha256": "fb4e5e53bfa7415fdc797b6412cd13eaebdaa5a2c15fff86422fa6ef39f8c044",
+            "git_blob_sha1": "773f3277cabf6b39663ac4f0d784777f73298ca2"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/failure_observer.py",
+            "mode": "100644",
+            "bytes": 22598,
+            "sha256": "42cde3f6b0c50930ad56267aeb296ec15855df7590b88a023583b39a97dea9c1",
+            "git_blob_sha1": "f53fb5a018722218a21a131ac3807545a61433bc"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_failure_observer.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_failure_observer.py",
+            "mode": "100644",
+            "bytes": 24446,
+            "sha256": "83a1e0c1f5d403acdd63f4f84ca3fb6c44c2876f39c6fb6fa7b59a55d8c51673",
+            "git_blob_sha1": "1f6a1b2429e41b30e4be8d584042bc8b7c35c8f8"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_failure_observer.py",
+            "mode": "100644",
+            "bytes": 24527,
+            "sha256": "cd576fb38adc4609c15513f846a3d61c784a9c2febd898fc180ca203e50b5a65",
+            "git_blob_sha1": "cec32d1319b26cdf6d26c8edec21adf7d8fad79c"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+            "mode": "100644",
+            "bytes": 92682,
+            "sha256": "533a9ebf024e2d53e4297e4ded97b1343947ee0ca5b29977aeab0c7116f36194",
+            "git_blob_sha1": "8cd6c2835bbe7398c3660e9551b3f04c407a6fe4"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+            "mode": "100644",
+            "bytes": 92773,
+            "sha256": "c3757014a6007b785fd0d743a08920a1e83237cc42ec3965701ed72b33ba968f",
+            "git_blob_sha1": "596c24d76ca612ce78ea7cff98f9951d418fbad3"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/README.md",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/README.md",
+            "mode": "100644",
+            "bytes": 5750,
+            "sha256": "ef68400cb38716e1bd08b3b5ebd40bd12766255acdfd7eb58ab5d110994d5e4a",
+            "git_blob_sha1": "0b085d1962fd69b12807aff29d33ce76ce252cf7"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/README.md",
+            "mode": "100644",
+            "bytes": 8733,
+            "sha256": "f881fd87557060f6255d37f181dccb6f352d4c85ba8e58cef32b11f0eee381d7",
+            "git_blob_sha1": "b98b9f4d0ebf55d8daa19885070ea89962323714"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json",
+            "mode": "100644",
+            "bytes": 41283,
+            "sha256": "87e29e63c96252c3183f82928ae1e1a0faa818d613e6d4eee6326724185656dd",
+            "git_blob_sha1": "2886f5d14b85290643cfa367e9d65222a1adac7c"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json",
+            "mode": "100644",
+            "bytes": 41283,
+            "sha256": "c45de8ab755551c6d2f6a2651550d5376d3befbd8e04e2693e32bd0dad073c72",
+            "git_blob_sha1": "226f68f590bf0e2b4a9466fa1f52cdac80218a8e"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-release.json",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-release.json",
+            "mode": "100644",
+            "bytes": 1152,
+            "sha256": "1ede51ac2143d2fc6108070c3d0dc5e904a2febb1ece0150cf840bf2a092ac99",
+            "git_blob_sha1": "2f261c87b652e534d4d1e7a58ef29f70b4bc6d2c"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-release.json",
+            "mode": "100644",
+            "bytes": 1155,
+            "sha256": "6deea887a2f8be0fe4fd883c5945e44c53fe34947cfaa65ec0da34b8389a82c7",
+            "git_blob_sha1": "4c9401c90d4c861eb3f6b6011406ad9156239f2e"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare_host.py",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare_host.py",
+            "mode": "100644",
+            "bytes": 13523,
+            "sha256": "c4bb04fd4e18fec3ec51d45bfabf5ba94c908bea3c5548b747c1f88dd02abef1",
+            "git_blob_sha1": "b710976b92ba335fec8e896ebb53d648c8eb3f88"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare_host.py",
+            "mode": "100644",
+            "bytes": 15383,
+            "sha256": "ecfd44314248336634a87ea4fb9d368acce84bcad8e3d7ee8e6af21f9dbdea9d",
+            "git_blob_sha1": "52a7e3a1c2752b8352467b41c42c1bd2a5394a99"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare_launch_ci.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare_launch_ci.py",
+            "mode": "100644",
+            "bytes": 17448,
+            "sha256": "00ac3d39f25613f051852a5dfdc82c962a14369ad1c5180e6d8615d01f2874de",
+            "git_blob_sha1": "83b4c79b9d60e28cbded65851d40595fb29a7875"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare_run.py",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare_run.py",
+            "mode": "100644",
+            "bytes": 18412,
+            "sha256": "ca4761ccf1e842f30ee8dcd7c42842f56d9b4b6a4ea1d9b2f584fcafa981a629",
+            "git_blob_sha1": "4dafb3fc9070f025c17378cc5411801419be4f3d"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare_run.py",
+            "mode": "100644",
+            "bytes": 18430,
+            "sha256": "594fa842ca8c716fcf4ccd393f09e751073d5f3e761cf4bbc6acdba30377def0",
+            "git_blob_sha1": "4536881c3dee19efce265463a219141a2cc3b7be"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/publication-release.json",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/publication-release.json",
+            "mode": "100644",
+            "bytes": 456,
+            "sha256": "06471b0cf995557afacbf610405ecde6fd8bf4be1cf35800abb18a266cdaacb5",
+            "git_blob_sha1": "a113868e9524d3389db6bebc5b40b170c208f78b"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/publication-release.json",
+            "mode": "100644",
+            "bytes": 459,
+            "sha256": "2f8ee45939abacfcd8f88c05e9f813c4b970138ea66b58f1df1651c3be6a9c5b",
+            "git_blob_sha1": "d0a2bce9f1ee02bd059a7315d8709a23755e75ad"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+            "mode": "100644",
+            "bytes": 10658,
+            "sha256": "e0e85997b32f090bf71bd388f2b31ccaf9889950022983b45fbce57c3994fd4d",
+            "git_blob_sha1": "df8a67e674f73bbe3b6c31048f35cfef7aeeb327"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+            "mode": "100644",
+            "bytes": 12898,
+            "sha256": "1948766e10402e07f40f5f7c5dc3a039b319d0889c142fbe6ff16696b80b24a5",
+            "git_blob_sha1": "80ae8d96cc7e6748f2825b73ad58816e1ac3f037"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_launch_ci.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_launch_ci.py",
+            "mode": "100644",
+            "bytes": 30079,
+            "sha256": "a9ab2480199051ec1dc899bcd6a1293f1e6d939c289e267d8076deb1500e6caf",
+            "git_blob_sha1": "de2b809d0da6622e84fb80faebfe5a7be9c360d6"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_only.py",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_only.py",
+            "mode": "100644",
+            "bytes": 48370,
+            "sha256": "0159865be6dcaaf15a85b2e196a31f7cb8dcbcf32ec9f823270f966e25a963ff",
+            "git_blob_sha1": "2d3102124f71803fadd251d30aab5d98cab72a47"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_only.py",
+            "mode": "100644",
+            "bytes": 49226,
+            "sha256": "27df938055013987bbb7d39dd09e7ce18f4af50d00963a93a58bc90770df0ed5",
+            "git_blob_sha1": "f6962f73a893a31b7dbc7228c12d8611402b00a8"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_transport.py",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_transport.py",
+            "mode": "100644",
+            "bytes": 28726,
+            "sha256": "d82543848d044d87ce6080aa7254f0ba72d1156d419a96e7b1917a8ba87fe438",
+            "git_blob_sha1": "146554b393fd45bbfb22815cf62b87154db463c4"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_transport.py",
+            "mode": "100644",
+            "bytes": 29270,
+            "sha256": "047228cb843a02ea68f9f8b86ebd717d843bd107e7680f691024609efe382c30",
+            "git_blob_sha1": "8eaa2e29330d39552bda844f1ddea141ab30c57b"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/workflow.yml",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 2845,
+            "sha256": "331293f97d8a2b45922213cdebb3dff3d344d03346cfc965b392d4cf09204ab9",
+            "git_blob_sha1": "1b0d961dcb5ef1d9dc920892d96aeee79f13c1f6"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 2871,
+            "sha256": "c2fdb4367656f1325d20a8916643c4ceb8783958cc031bb7d38d030cf2f5a484",
+            "git_blob_sha1": "9200791a826b417e6715cbee525b0ba3f4a25e05"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -20797,9 +21120,9 @@
     {
       "path": ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml",
       "mode": "100644",
-      "bytes": 2845,
-      "sha256": "331293f97d8a2b45922213cdebb3dff3d344d03346cfc965b392d4cf09204ab9",
-      "git_blob_sha1": "1b0d961dcb5ef1d9dc920892d96aeee79f13c1f6"
+      "bytes": 2871,
+      "sha256": "c2fdb4367656f1325d20a8916643c4ceb8783958cc031bb7d38d030cf2f5a484",
+      "git_blob_sha1": "9200791a826b417e6715cbee525b0ba3f4a25e05"
     }
   ]
 }

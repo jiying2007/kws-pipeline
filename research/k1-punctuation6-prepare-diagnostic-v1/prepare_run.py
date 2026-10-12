@@ -204,7 +204,7 @@ def execute(env,run,release,freeze,freeze_sha,tree,preflight,observer):
         atomic(root/'acquisition-receipt.json',acquisition)
         c.durable_mkdir(root/'output');c.durable_mkdir(root/'policy')
         receipt['stage']='prepare';atomic(root/'prepare-host-receipt.json',receipt)
-        result=ph.run_prepares(root,setup,docker,run,freeze_sha,claim_sha,setup['seconds'])
+        result=ph.run_prepares(root,setup,docker,run,freeze_sha,claim_sha,setup['seconds'],observer=observer)
         receipt['prepared_families']=result['prepared_families']
         for family in pc.FAMILIES:receipt['stages'][family+'_prepare']='complete'
         observe(observer,'policy_freeze');receipt['stage']='policy_freeze'

@@ -48,15 +48,25 @@ class PrepareContracts(unittest.TestCase):
             with patch.object(c,'HERE',root):
                 yield
 
-    def test_checked_in_release_zero_scope_still_rejects_invalid_context(self):
-        value = c.release_first()
-        self.assertIs(value['enabled'], True)
-        self.assertIs(value['independent_source_review'], True)
-        self.assertIs(value['source_closure_ready'], True)
+    @contextmanager
+    def enabled_release_fixture(self):
+        # Positive constructor sentinels use a local fixture, never the consumed
+        # checked-in release. The real release parser/validator still executes.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'prepare-release.json').write_bytes(c.canonical(self.enabled()))
+            with patch.object(c, 'HERE', root):
+                yield
+
+    def test_consumed_checked_in_release_disabled_before_worker_runtime(self):
+        value = c.decode(c.regular(HERE / 'prepare-release.json'))
+        self.assertIs(value['enabled'], False)
+        self.assertIs(value['independent_source_review'], False)
+        self.assertIs(value['source_closure_ready'], False)
         self.assertEqual(value['max_new_asr_calls'],0)
         self.assertIs(value['audio_forward_allowed'],False)
         with patch.object(c,'fixed_module',side_effect=AssertionError('runtime reached')):
-            with self.assertRaisesRegex(ValueError,'fixed_isolated_worker_root'):
+            with self.assertRaisesRegex(ValueError,'prepare_execution_disabled'):
                 worker.main(['qwen06'])
 
     def test_disabled_precedes_runtime_import_for_worker(self):
@@ -90,7 +100,7 @@ class PrepareContracts(unittest.TestCase):
         with self.assertRaises(ValueError): c.validate_release(value)
 
     def test_decode_and_extra_options_rejected_before_admission(self):
-        with patch.object(c, 'worker_admission', side_effect=AssertionError('admission reached')):
+        with self.enabled_release_fixture(), patch.object(c, 'worker_admission', side_effect=AssertionError('admission reached')):
             for args in ([], ['decode'], ['qwen06', 'decode'], ['qwen06', 'prepare'],
                          ['whisper', '--input', '/input'], ['qwen06', '--release', 'other']):
                 with self.subTest(args=args), self.assertRaisesRegex(ValueError, 'only_one_fixed'):
@@ -148,7 +158,7 @@ class PrepareContracts(unittest.TestCase):
             'setup_adapter':types.SimpleNamespace(verify_runtime=Mock(return_value={}))}
         def fixed(relative,name):
             return retained if relative.endswith('/asr_worker.py') else native
-        with patch.object(c,'fixed_module',side_effect=fixed), \
+        with self.enabled_release_fixture(), patch.object(c,'fixed_module',side_effect=fixed), \
              patch.object(c,'worker_admission',return_value=(self.enabled(),{}, {'identity':{'run_id':1,'executed_head_sha':'a'*40}}, {'decoder-inputs.json':b'{}'},{})), \
              patch.object(worker,'_shared',side_effect=lambda n:shared[n]), patch.object(worker,'_MODEL_STARTED',False), \
              patch.object(Path,'is_dir',return_value=True), patch.object(Path,'exists',return_value=False):
@@ -177,7 +187,7 @@ class PrepareContracts(unittest.TestCase):
             'optional_tools':types.SimpleNamespace(unavailable_ffmpeg=Mock(return_value=nullcontext()),policy_config=Mock(return_value={}))}
         def fixed(relative,name):
             return retained if relative.endswith('/asr_worker.py') else native
-        with patch.object(c,'fixed_module',side_effect=fixed), \
+        with self.enabled_release_fixture(), patch.object(c,'fixed_module',side_effect=fixed), \
              patch.object(c,'worker_admission',return_value=(self.enabled(),{}, {'identity':{'run_id':1,'executed_head_sha':'a'*40}}, {'decoder-inputs.json':b'{}'},{})), \
              patch.object(worker,'_shared',side_effect=lambda n:shared[n]), patch.object(worker,'_MODEL_STARTED',False), \
              patch.object(Path,'is_dir',return_value=True), patch.object(Path,'exists',return_value=False):
@@ -352,7 +362,7 @@ with worker.NoForward():
         contract = types.SimpleNamespace(read_json=Mock(return_value={}))
         locks = types.SimpleNamespace(build_whisper_locks=Mock(return_value=(b'{}',b'{}')))
         shared = {'campaign_contract':contract,'native_locks':locks,'whisper_binding':binding}
-        with patch.object(c,'fixed_module',return_value=adapter), \
+        with self.enabled_release_fixture(), patch.object(c,'fixed_module',return_value=adapter), \
              patch.object(c,'worker_admission',return_value=(self.enabled(),{}, {'identity':{'run_id':1,'executed_head_sha':'a'*40}}, {},{})), \
              patch.object(worker,'_shared',side_effect=lambda n:shared[n]), patch.object(worker,'_MODEL_STARTED',False), \
              patch.object(Path,'is_dir',return_value=True), patch.object(Path,'exists',return_value=False):
@@ -377,7 +387,10 @@ with worker.NoForward():
             'NetworkMode':'none','ReadonlyRootfs':True,'Privileged':False,'CgroupnsMode':'private','PidMode':'',
             'IpcMode':'private','CapAdd':[],'CapDrop':['ALL'],'SecurityOpt':['no-new-privileges'],
             'LogConfig':{'Type':'local','Config':{'max-size':'1m','max-file':'1','compress':'false'}}}
-        mounts += [{'Type':'tmpfs','Destination':p} for p in ('/scratch','/tmp')]
+        limits['Tmpfs'] = {p:'rw,noexec,nosuid,nodev,size='+str(size)+',uid=1000,gid=1000,mode=0700'
+            for p,size in (('/scratch',268435456),('/tmp',134217728))}
+        at=args.index(image)
+        args[at:at]=[item for p,options in limits['Tmpfs'].items() for item in ('--tmpfs',p+':'+options)]
         return args,{'Config':config,'HostConfig':limits,'Mounts':mounts}
 
     def test_launch_fixed_metadata_only(self):

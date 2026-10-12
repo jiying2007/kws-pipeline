@@ -15,6 +15,9 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 import prepare_contract as c
 
+PREPARE_STAGES = {'qwen06': 'prepare_qwen06', 'sensevoice': 'prepare_sensevoice',
+    'whisper': 'prepare_whisper'}
+
 
 def _shared(name):
     return c.fixed_module(c.OLD + name + '.py', name)
@@ -50,6 +53,18 @@ def build_metadata_packet(host_verified_input_dir, release, binding, plan, run_i
 def worker_arguments(*, name, image, code, runtime, output, metadata, authority, family,
                      run_identity, freeze_sha, claim_sha):
     c.release_first()
+    return _worker_arguments(name=name, image=image, code=code, runtime=runtime, output=output,
+        metadata=metadata, authority=authority, family=family, run_identity=run_identity,
+        freeze_sha=freeze_sha, claim_sha=claim_sha)
+
+
+def _worker_arguments(*, name, image, code, runtime, output, metadata, authority, family,
+                      run_identity, freeze_sha, claim_sha):
+    """Pure argv construction shared by the released launcher and no-start CI.
+
+    Returning arguments grants no release and performs no Docker/model action.
+    Production must continue through worker_arguments and prepare_supervise.
+    """
     c.require(family in c.FAMILIES, 'fixed_prepare_family')
     session = _shared('runtime_session')
     # Reuse resource flags unchanged; replace the UNLAUNCHED input placeholder.
@@ -97,9 +112,25 @@ def validate_launch(record, args):
     for row in binds:
         c.require(expected[row['Destination']] == (row['Source'], row['RW']) and
             row.get('Propagation') == 'rprivate', 'observed_mount_identity')
-    c.require(all(m['Type'] in ('bind', 'tmpfs') for m in record['Mounts']), 'no_extra_volume')
-    c.require({m['Destination'] for m in record['Mounts'] if m['Type'] == 'tmpfs'} == {'/scratch', '/tmp'},
-              'fixed_tmpfs_roster')
+    # CLI --tmpfs lives in HostConfig.Tmpfs, not top-level Mounts. The
+    # latter contains only the six --mount bind entries in this exact launch.
+    c.require(len(record['Mounts']) == len(expected) and
+        all(m['Type'] == 'bind' for m in record['Mounts']), 'no_extra_volume')
+    tmpfs = {}
+    for i, arg in enumerate(args[:index]):
+        if arg == '--tmpfs':
+            destination, options = args[i + 1].split(':', 1)
+            c.require(destination not in tmpfs, 'unique_tmpfs_destination')
+            tmpfs[destination] = options
+    user = args[args.index('--user') + 1]
+    uid, gid = user.split(':')
+    safe_tmpfs = {destination: 'rw,noexec,nosuid,nodev,size=' + str(size) +
+        ',uid=' + uid + ',gid=' + gid + ',mode=0700'
+        for destination, size in (('/scratch', 268435456), ('/tmp', 134217728))}
+    c.require(tmpfs == safe_tmpfs, 'fixed_tmpfs_arguments')
+    c.require(type(host.get('Tmpfs')) is dict and set(host['Tmpfs']) == set(tmpfs),
+        'fixed_tmpfs_roster')
+    c.require(host['Tmpfs'] == tmpfs, 'fixed_tmpfs_options')
     c.require(config.get('User') == args[args.index('--user') + 1] and
         config['User'].split(':')[0].isdigit() and int(config['User'].split(':')[0]) != 0,
         'nonroot_effective_worker_user')
@@ -200,7 +231,7 @@ def validate_result(value, family, run_identity, freeze_sha):
     return value
 
 
-def run_prepares(root, setup, docker, run_identity, freeze_sha, claim_sha, setup_seconds):
+def run_prepares(root, setup, docker, run_identity, freeze_sha, claim_sha, setup_seconds, *, observer):
     """Fixed Qwen→SenseVoice→Whisper sequence. There is no post-prepare callback."""
     c.release_first()
     root = Path(root)
@@ -208,6 +239,12 @@ def run_prepares(root, setup, docker, run_identity, freeze_sha, claim_sha, setup
     complete = []
     spent = setup_seconds
     for family in c.FAMILIES:
+        # Update the same source/run-bound observer before argv/create/inspect.
+        # Diagnostic output failure must never replace the original failure.
+        try:
+            observer.stage(PREPARE_STAGES[family])
+        except BaseException:
+            pass
         print(json.dumps({'schema': 'k1-prepare-progress-v1', 'stage': 'prepare',
             'family': family, 'status': 'started'}, sort_keys=True), flush=True)
         remaining = min(600, 1800 - spent)
