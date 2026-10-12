@@ -21987,6 +21987,79 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-12",
+      "operation_id": "prepare-r1-hotpath-historical-review-projection-20261012",
+      "public_source_base_commit": "73ce27b16ca483fc45a262af7da9f462e78acb3c",
+      "public_source_base_tree": "39a2804e71713930ad136fef9f972e5b10e4d8da",
+      "workflow_source_changed": false,
+      "scope": "Preserve exact historical screen32 and qwen12 freeze semantics after the current Qwen finite-check revision. Archive the original asr_worker bytes, add two fixed historical review paths, and use an explicitly test-only historical qwen12 root projection.",
+      "rationale": "The original screen32 CI packet rejected current vendor and worker drift. Both historical freezes remain unchanged and still require their original byte identities. Production qwen12 build/admission/staging remain live-path-bound and continue rejecting drift; no fallback enters any execution path. Current prepare and ASR controls stay disabled, with no new identity or model execution.",
+      "files": [
+        {
+          "path": "research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/asr_worker.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/asr_worker.py",
+            "mode": "100644",
+            "bytes": 40928,
+            "sha256": "73aac9baae7c15bdc18e835fa0f3b70fe22627db9e078aef68d9febbd1b569e2",
+            "git_blob_sha1": "889d84aed0689572ce36924c824aaf2f3521d2c9"
+          }
+        },
+        {
+          "path": "research/experiment_quality_guards/screen32_human_review.py",
+          "before": {
+            "path": "research/experiment_quality_guards/screen32_human_review.py",
+            "mode": "100644",
+            "bytes": 23859,
+            "sha256": "3aff945f0f56639dcb5a155ca8103ab01632e906262850fecb8e243da8cba870",
+            "git_blob_sha1": "18630199ab2b66d77d312a93c8afcc6e463dafba"
+          },
+          "after": {
+            "path": "research/experiment_quality_guards/screen32_human_review.py",
+            "mode": "100644",
+            "bytes": 24182,
+            "sha256": "999420b342b1c388697f74017dd645b18458d54bf523ac00fbfea99cd4e5480d",
+            "git_blob_sha1": "cb9a711c117f2b509ca7f7acc1542d51d5fe381b"
+          }
+        },
+        {
+          "path": "research/experiment_quality_guards/tests/test_screen32_human_review.py",
+          "before": {
+            "path": "research/experiment_quality_guards/tests/test_screen32_human_review.py",
+            "mode": "100644",
+            "bytes": 32732,
+            "sha256": "58580992277ada3225d274f0d4c59685115c8141eb29898efe6cc0295bba604a",
+            "git_blob_sha1": "1a35f8ae05923e4a6028fbefc4ec3f32388c102a"
+          },
+          "after": {
+            "path": "research/experiment_quality_guards/tests/test_screen32_human_review.py",
+            "mode": "100644",
+            "bytes": 34240,
+            "sha256": "e588c2d96059cf2f819189a620cb97f9244f133ac05706caa37a27ee8c839c20",
+            "git_blob_sha1": "dfbbe44fd5f006518cf9f2ff9cfa32a34c7bc4e0"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/test_contract.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 140794,
+            "sha256": "2f16f2a41ad2ea1e4b54060a41ac187cb40fe25078e07fbfc800e065a5788e2d",
+            "git_blob_sha1": "58f108a28b8c79edf995c9a599670bcbfea959dd"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 143803,
+            "sha256": "f5968361854bc32196e277924af421513cebc641bfcd54e836b1663ccd48600e",
+            "git_blob_sha1": "ad9b997c86dd2352f5d8e0a84b207435fcd43f12"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
