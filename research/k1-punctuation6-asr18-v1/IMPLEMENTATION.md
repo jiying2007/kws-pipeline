@@ -1,10 +1,10 @@
-# K1 punctuation6 ASR18: disabled failure-observability repair
+# K1 punctuation6 ASR18 r1: independent authorized round
 
-This is a source-only maintenance candidate after failed run 38207026177. Execution and publication approval flags are false. The six actual TTS cells remain bound, but all eighteen ASR slots have unknown consumption and remain sealed. Preparing, reviewing, testing, or publishing this repair does not authorize any new execution, ref creation, or retry. The implementation boundaries below describe the retained original contract; they do not assert that its runtime stages completed.
+This candidate declares a new one-shot ASR campaign for the same six completed TTS cells. Its execution and publication approval flags are true for exact source review; publication of this candidate alone does not create its execution ref. The unique source branch is `research/k1-punctuation6-asr18-r1`, result branch is `evidence/k1-punctuation6-asr18-r1`, and result directory is `research/k1-punctuation6-asr18-v1/evidence/asr18-r1`. The source directory and workflow filename remain unchanged; the workflow recognizes only the new r1 branch, a freshly created push, and attempt one.
 
-The actual TTS input authority binds executed source dbf8aa7c1d04f785874c1d089b1646348308af3b, result 99f559a131daf43316d5e0556d1c73931b62073f and run 38200026588. All six cells passed source/audio semantics and root-reviewed finite historical identity screening. Their total input duration is 11.84 seconds; all eighteen eligible ASR slots would process 35.52 seconds cumulatively. No new ASR outcome or formal training admission is asserted. No additional TTS or training is authorized by this source.
+The maximum is eighteen new ASR calls, one per fixed model/audio combination, without retries or replacement. The original thirty-six-call contract remains consumed. The preceding eighteen planned slots from run 38207026177 remain sealed with unknown actual consumption. They are neither reclaimed nor used for selection, comparison, or a success claim. The frozen earlier observation is explicitly distinguished from the new branch/workflow's empty pre-execution history. Runtime requires that the new scoped history contain only the actual current run, and rejects the earlier run ID.
 
-The active workflow remains byte-identical to the fixed research template. Its sole execution identity was consumed by run 38207026177, attempt one, and the exact branch remains protected from repository cleanup. The frozen empty prior-history record describes the observation before that run only; current public history contains that run. Deleting or recreating the ref cannot reset its authority.
+The actual TTS input authority remains byte-identical: executed source dbf8aa7c1d04f785874c1d089b1646348308af3b, result 99f559a131daf43316d5e0556d1c73931b62073f, run 38200026588. All six cells passed source/audio semantics and root-reviewed finite historical identity screening. Their total duration is 11.84 seconds; the eighteen eligible ASR slots process at most 35.52 seconds cumulatively. No new TTS, model, parameter search, training, or additional recognition is authorized. All six cells and all eighteen slots remain in the denominator.
 
 ## Fixed scientific and counting boundaries
 
@@ -26,7 +26,7 @@ Workers receive only anonymous audio IDs and exact WAV/PCM/frame identities, a b
 
 ## One-shot source and native claims
 
-The fixed execution identity is repository `jiying2007/kws-pipeline`, branch `research/k1-punctuation6-asr18-v1`, workflow `.github/workflows/k1-punctuation6-asr18-v1.yml`, job `asr18`, attempt one. The complete fixed-workflow branch history must contain only the current run; deleting/recreating a branch does not reset that history. The evidence ref must be absent. The actual public standard hosted runner, clean committed source and exact source closure are required. Host API preflight is limited to six GET requests and a 1 MiB cumulative response-body rejection threshold, with at most one extra probe byte counted before fail-closed termination. Its reservation is 1 MiB + 1 byte, separately inside the 6 GiB acquisition slack rather than hidden as zero; redirects and retries are forbidden. Each history/job query must prove a single complete result in its first page.
+The fixed execution identity is repository `jiying2007/kws-pipeline`, branch `research/k1-punctuation6-asr18-r1`, workflow `.github/workflows/k1-punctuation6-asr18-v1.yml`, job `asr18`, attempt one. The complete fixed-workflow branch history must contain only the current run; deleting/recreating a branch does not reset that history. The evidence ref must be absent. The actual public standard hosted runner, clean committed source and exact source closure are required. Host API preflight is limited to six GET requests and a 1 MiB cumulative response-body rejection threshold, with at most one extra probe byte counted before fail-closed termination. Its reservation is 1 MiB + 1 byte, separately inside the 6 GiB acquisition slack rather than hidden as zero; redirects and retries are forbidden. Each history/job query must prove a single complete result in its first page.
 
 A durable source claim is written after those checks and before any model setup. Each native audio forward has a distinct exclusive durable start before the one inference call. File and parent-directory sync boundaries are checked; uncertain starts are consumed conservatively. There is no resume, retry, warmup audio forward, best-of selection, new identity after failure or loop to refill missing slots. Model construction/preparation has zero audio forwards.
 
@@ -48,7 +48,7 @@ Only the existing locked models, adapters, CPU runtime and standard hosted route
 
 `source-reuse-lock.json` records byte-identical retained files and explicit new adaptations. `prepare_freeze.py` enumerates the inference, setup and host closures and excludes its own output. Retained qwen12 campaign code and consumed identities are never inference inputs. The extracted resource algorithms retain their original safe filesystem sampling and metering rules; fixed legacy receipt format labels are provenance, not old-call authority.
 
-No actual run is authorized by this repair. Any future separate experiment would need its own explicit authority and must not reuse or reset the eighteen sealed slots. The active workflow must preserve exact equality with the reviewed template. The original training recipe and original insufficient coverage conclusion remain intact. No training admission or training execution is established.
+This independently authorized r1 round has its own eighteen-call maximum. Its exact reviewed main and unique execution ref still require a separate execution release; it must not reuse or reset the preceding eighteen sealed slots. The active workflow must preserve exact equality with the reviewed template. The original training recipe and original insufficient coverage conclusion remain intact. No training admission or training execution is established.
 
 ## Diagnostic-only maintenance after run 38207026177
 
@@ -59,10 +59,10 @@ with unknown actual consumption; they cannot be automatically reused. The six
 TTS calls remain completed. No ASR effectiveness or training admission conclusion
 is established. Synthetic regression outcomes are not observations of that run.
 
-This maintenance candidate sets execution and publication approval gates to
-false. It introduces no new ref, workflow, model, input, decode policy, quota,
-retry, or execution permission. The historical unique execution identity remains
-consumed. The existing preparation, native, resource, archive, source, and
+The merged diagnostic repair remains in place. This r1 candidate enables only the
+new fixed campaign controls and refs described above. Models, inputs, decode
+policy, resource and per-round call caps are unchanged. The preceding unique
+execution identity remains consumed. The existing preparation, native, resource, archive, source, and
 publication gates remain in place.
 
 `failure_observer.py` is host-only, pure standard library. The two host processes
@@ -100,5 +100,4 @@ prevent the final record. Any such missing evidence remains unknown.
 
 The existing CI and pre-execution fixed standard-library test lists include the
 new observation tests. Enabled-path regression checks use explicit temporary
-synthetic-enabled source copies and re-freeze them; checked-in controls remain
-disabled. No test invokes a recognition model or retries the failed run.
+explicit synthetic source copies when a synthetic authority is required and re-freeze them; the checked-in r1 controls are enabled, while dedicated disabled copies test disable-first gates. No test invokes a recognition model or retries the failed run.

@@ -28,8 +28,8 @@ from campaign_contract import require, canonical, digest, read_json, read_bytes,
 REPOSITORY = 'jiying2007/kws-pipeline'
 NEW = 'research/k1-punctuation6-asr18-v1/'
 WORKFLOW = '.github/workflows/k1-punctuation6-asr18-v1.yml'
-SOURCE_REF = 'research/k1-punctuation6-asr18-v1'
-EVIDENCE_REF = 'evidence/k1-punctuation6-asr18-v1'
+SOURCE_REF = 'research/k1-punctuation6-asr18-r1'
+EVIDENCE_REF = 'evidence/k1-punctuation6-asr18-r1'
 HOST_STAGES = ('admitted', 'input', 'setup', 'prepare', 'policy_freeze', 'capacity_proof', 'decode', 'cleanup', 'package')
 SHARED = frozenset(('prepared.json','run-identity.json','kernel-scope.json','cpu-process-guard.json',
     'blind-job.json','execution-plan.json','progress.json','contract.json','decoder-inputs.json',
@@ -99,6 +99,7 @@ def event_identity(env, event):
     require(all(env.get(k) == v for k, v in fixed.items()), 'fixed public standard ubuntu24.04 first-attempt job')
     head, run = env.get('GITHUB_SHA', ''), env.get('GITHUB_RUN_ID', '')
     require(c.HEAD.fullmatch(head) and re.fullmatch('[1-9][0-9]{0,19}', run), 'actual run/source identity')
+    require(int(run) != 38207026177, 'sealed earlier campaign run cannot become a new authority')
     require(env.get('GITHUB_WORKFLOW_REF') == REPOSITORY + '/' + WORKFLOW + '@refs/heads/' + SOURCE_REF and
             env.get('GITHUB_WORKFLOW_SHA') == head, 'fixed source workflow identity')
     require(type(event) is dict and event.get('created') is True and event.get('deleted') is False and
@@ -121,7 +122,15 @@ def _unique_page(api, path, key):
 
 def prior_history_identity():
     return {'schema': 'k1-asr18-prior-public-claim-history-v1', 'repository': REPOSITORY,
-            'source_branch': SOURCE_REF, 'workflow': WORKFLOW, 'prior_runs': []}
+            'source_branch': SOURCE_REF, 'workflow': WORKFLOW, 'prior_runs': [],
+            'prior_runs_scope': 'only_new_source_branch_and_fixed_workflow',
+            'sealed_prior_campaigns': [{'observation': 'frozen_existing_public_failure_observation', 'experiment': 'k1-punctuation6-asr18-v1',
+                'source_branch': 'research/k1-punctuation6-asr18-v1',
+                'result_branch': 'evidence/k1-punctuation6-asr18-v1',
+                'run_id': 38207026177, 'run_attempt': 1,
+                'executed_head_sha': '0f3cc89a3235c4b3af294dc6b5816ff9877c0f42',
+                'planned_slots': 18, 'actual_consumed_attempts': None, 'reusable_slots': 0,
+                'status': 'failed_consumption_unknown_sealed'}]}
 
 
 def api_preflight(api, run, release):

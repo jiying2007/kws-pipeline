@@ -32,9 +32,9 @@ SHA = re.compile(r"[0-9a-f]{64}\Z")
 HEAD = re.compile(r"[0-9a-f]{40}\Z")
 MEMBER_MANIFEST = "__native_evidence_manifest__.json"
 HERE = Path(__file__).resolve().parent
-POLICY = {"source_branch": "research/k1-punctuation6-asr18-v1",
-    "result_branch": "evidence/k1-punctuation6-asr18-v1",
-    "directory": "research/k1-punctuation6-asr18-v1/evidence/asr18-v1",
+POLICY = {"source_branch": "research/k1-punctuation6-asr18-r1",
+    "result_branch": "evidence/k1-punctuation6-asr18-r1",
+    "directory": "research/k1-punctuation6-asr18-v1/evidence/asr18-r1",
     "workflow": ".github/workflows/k1-punctuation6-asr18-v1.yml", "job_key": "asr18"}
 require = c.require
 canonical = c.canonical

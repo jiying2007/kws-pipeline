@@ -808,7 +808,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
     LICENSE='source/research/qwen6_asr/FUNASR_MODEL_LICENSE'
     LICENSE_ID={'bytes':5306,'sha256':'7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8'}
     # Parent-rebuilt candidate freeze after the reviewed narrow license delta.
-    FROZEN_SOURCE_SHA256='2776d839d461264100c8c31ea3bfa3eca8d09cf84d9d33f484fdac49d4a03344'
+    FROZEN_SOURCE_SHA256='e97a1777b7d94439959c31aadb76cc92cd37884c2162810e95f79cd8cf832113'
     SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json'))
 
     def setUp(self):
@@ -844,12 +844,9 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
             _,_,run=self.host_tests.context()  # Invented run only; no source authority claim.
             inp=c.read_json(HERE/'input-freeze.json')
             release=c.read_json(HERE/'execution-release.json')
-            self.assertFalse(release['enabled'])
-            for key in c.RELEASE_APPROVALS:release[key]=True
-            name=self.host.NEW+'execution-release.json';body=t.canonical(release)
-            source['source/'+name]=body
-            for role in ('host_code','setup_code','inference_code'):
-                if name in freeze[role]:freeze[role][name]={'bytes':len(body),'sha256':t.sha(body)}
+            self.assertTrue(all(release[key] is True for key in c.RELEASE_APPROVALS))
+            self.assertEqual(release,self.host.release_first())
+            # Actual checked-in r1 controls and complete source remain unchanged.
             projection=self.host.projection_for(inp['actual_new_cells'])
             receipt=inp['actual_screening_receipt']
             host=self.host.host_receipt(run,t.sha(t.canonical(freeze)),'d'*40,t.sha(t.canonical(receipt)))
@@ -881,7 +878,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
         self.assertEqual({'bytes':len(files[self.LICENSE]),'sha256':t.sha(files[self.LICENSE])},self.LICENSE_ID)
         files[self.LICENSE].decode('utf-8')
         differences={name for name in self.roster if files['source/'+name]!=c.read_bytes(ROOT/name)}
-        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else {self.host.NEW+'execution-release.json'})
+        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else set())
 
     def materialize(self, root, files):
         for name,body in files.items():
@@ -930,7 +927,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
                 else:
                     with self.assertRaises(ValueError):operation(root,run)
 
-    def test_full_114_source_one_enabled_test_control_all_notrun_and_license_negatives(self):
+    def test_full_114_actual_r1_source_all_notrun_and_license_negatives(self):
         files,run=self.full_fixture()
         with tempfile.TemporaryDirectory(prefix='synthetic-run-real-source-all-notrun-') as temp:
             root=Path(temp);self.materialize(root,files)

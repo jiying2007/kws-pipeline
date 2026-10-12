@@ -15421,9 +15421,9 @@
     {
       "path": ".github/workflows/repository-cleanup.yml",
       "mode": "100644",
-      "bytes": 17872,
-      "sha256": "11a7535dade5c9e4e727b68e68f7c56470b5e615f7afa0bfeb416a33bfe6d20d",
-      "git_blob_sha1": "096bab28edefc6242b581d981bd672bd4685fb04"
+      "bytes": 17910,
+      "sha256": "e60bd940d67808fe776f85b39955e57f50ff62dc21310d53d21a09ec5eeef1f3",
+      "git_blob_sha1": "eef672f645231c1a5f905d165d57af03116f8220"
     },
     {
       "path": ".github/workflows/research-arm-runtime.yml",
@@ -20500,6 +20500,103 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-12",
+      "operation_id": "k1-asr18-independent-r1-ci-retention-20261012",
+      "public_main_base_commit": "d972b39d72df57210702e363df5f3d3949b55a01",
+      "public_main_base_tree": "ebcfab8dda0e5019fb1d9c2a68a028ae1632b190",
+      "workflow_source_changed": true,
+      "baseline_kind": "Public main after disabled failure-observability maintenance; independent authorized r1 preparation",
+      "scope": "Retarget only the existing ASR18 workflow identity to the new exact research/k1-punctuation6-asr18-r1 create-ref push; append its exact source branch to cleanup retention; preserve original source directory, workflow filename, and all thirteen fixed offline test modules.",
+      "rationale": "This independent new18 experiment reuses the same six TTS clips and authorizes no new TTS. The original run38207026177 attempt1 remains permanently sealed with all18 old slot-consumption states unknown; its source branch and source commit remain untouched. Preserve all nine existing execution-retention names, 718 retained source rows, 834 provenance rows, 18 source projections, all54 baseline workflow names, all three allowed added workflow names and all50 preceding maintenance receipts. No old-branch, later-push, rerun, retry, manual-dispatch or alternate trigger is permitted.",
+      "files": [
+        {
+          "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+          "before": {
+            "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+            "mode": "100644",
+            "bytes": 2927,
+            "sha256": "3d9efc5edffc4ca8e762caef61d764485a9a52ffc3fcc6a77dd29f79e7ef8690",
+            "git_blob_sha1": "50cfd1bb193d5db68b96068e4d0b689e5bedce2d"
+          },
+          "after": {
+            "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+            "mode": "100644",
+            "bytes": 2930,
+            "sha256": "2205903431ef10513dcb13eda2e7657a64bc427cd339a64ff790ce88d92e69fd",
+            "git_blob_sha1": "8f002a174fbde1beaa20d5800aaa7f6f01bb7c0b"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/workflow.yml",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 2927,
+            "sha256": "3d9efc5edffc4ca8e762caef61d764485a9a52ffc3fcc6a77dd29f79e7ef8690",
+            "git_blob_sha1": "50cfd1bb193d5db68b96068e4d0b689e5bedce2d"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 2930,
+            "sha256": "2205903431ef10513dcb13eda2e7657a64bc427cd339a64ff790ce88d92e69fd",
+            "git_blob_sha1": "8f002a174fbde1beaa20d5800aaa7f6f01bb7c0b"
+          }
+        },
+        {
+          "path": ".github/workflows/repository-cleanup.yml",
+          "before": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "bytes": 17872,
+            "sha256": "11a7535dade5c9e4e727b68e68f7c56470b5e615f7afa0bfeb416a33bfe6d20d",
+            "git_blob_sha1": "096bab28edefc6242b581d981bd672bd4685fb04"
+          },
+          "after": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "bytes": 17910,
+            "sha256": "e60bd940d67808fe776f85b39955e57f50ff62dc21310d53d21a09ec5eeef1f3",
+            "git_blob_sha1": "eef672f645231c1a5f905d165d57af03116f8220"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_cleanup_retention.py",
+          "before": {
+            "path": "research/consolidation/tests/test_cleanup_retention.py",
+            "mode": "100644",
+            "bytes": 12692,
+            "sha256": "3c9d9f03e58ef0878161a0756354d26fe7b3a014d4492f5680de68268c845b47",
+            "git_blob_sha1": "74c7877c06540ef0265b54ef72a427f135e8ad4f"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_cleanup_retention.py",
+            "mode": "100644",
+            "bytes": 13227,
+            "sha256": "af65d1646f85020872102200addbac1e6217eccc63e469b8f4205cd32c5414e5",
+            "git_blob_sha1": "8b38b0be6fa17100e58ce1126678e7ef3a139052"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_ci_structure.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 23262,
+            "sha256": "c2f64d36b0c88aa962ce98df660a57f447de3aea4a068943b62c929424dfa94e",
+            "git_blob_sha1": "f51cb7db377699c1ad6b2b3d0d6723430e10101e"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 26771,
+            "sha256": "62e52d598815d606c017b9bdfb1c25a334c4241d193f876e55af93090b9e61dd",
+            "git_blob_sha1": "38e7b9a9aa9eb4035d32b01acd2054e11bb11ac9"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -20520,9 +20617,9 @@
     {
       "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
       "mode": "100644",
-      "bytes": 2927,
-      "sha256": "3d9efc5edffc4ca8e762caef61d764485a9a52ffc3fcc6a77dd29f79e7ef8690",
-      "git_blob_sha1": "50cfd1bb193d5db68b96068e4d0b689e5bedce2d"
+      "bytes": 2930,
+      "sha256": "2205903431ef10513dcb13eda2e7657a64bc427cd339a64ff790ce88d92e69fd",
+      "git_blob_sha1": "8f002a174fbde1beaa20d5800aaa7f6f01bb7c0b"
     }
   ]
 }

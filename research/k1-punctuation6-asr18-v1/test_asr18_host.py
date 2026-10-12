@@ -64,7 +64,7 @@ class FakeAPI:
             'path':h.WORKFLOW,'repository':{'full_name':h.REPOSITORY,'private':False},
             'head_repository':{'full_name':h.REPOSITORY},'workflow_id':9}
         self.rows={base+'/actions/runs/123':current,base+'/actions/workflows/9':{'id':9,'path':h.WORKFLOW},
-            base+'/actions/workflows/9/runs?branch=research%2Fk1-punctuation6-asr18-v1&per_page=100&page=1':{'total_count':1,'workflow_runs':[current]},
+            base+'/actions/workflows/9/runs?branch=research%2Fk1-punctuation6-asr18-r1&per_page=100&page=1':{'total_count':1,'workflow_runs':[current]},
             base+'/actions/runs/123/attempts/1/jobs?per_page=100&page=1':{'total_count':1,'jobs':[{'id':456,'name':'asr18','run_id':123,'head_sha':'c'*40,'status':'in_progress','conclusion':None,
                 'labels':['ubuntu-24.04'],'runner_name':'GitHub Actions 1','runner_group_name':'GitHub Actions'}]},
             base+'/git/ref/heads/'+h.SOURCE_REF:{'ref':'refs/heads/'+h.SOURCE_REF,'object':{'type':'commit','sha':'c'*40}},
@@ -114,11 +114,28 @@ def public_fixture():
 
 
 class HostTests(unittest.TestCase):
-    def test_checked_in_controls_remain_disabled(self):
+    def test_checked_in_r1_controls_are_exact_and_prior_unknown_is_not_reclaimed(self):
         for filename,keys in DISABLED_APPROVALS.items():
             value=c.read_json(HERE/filename)
-            self.assertTrue(all(value[key] is False for key in keys))
-        with self.assertRaisesRegex(ValueError,'disabled'):h.release_first()
+            self.assertTrue(all(value[key] is True for key in keys))
+        release=h.release_first();history=h.prior_history_identity()
+        self.assertEqual(release['experiment'],'k1-punctuation6-asr18-r1')
+        self.assertEqual(release['source_ref'],'research/k1-punctuation6-asr18-r1')
+        self.assertEqual(history['prior_runs'],[])
+        self.assertEqual(history['prior_runs_scope'],'only_new_source_branch_and_fixed_workflow')
+        prior=history['sealed_prior_campaigns'][0]
+        self.assertEqual(prior['run_id'],38207026177);self.assertIsNone(prior['actual_consumed_attempts'])
+        self.assertEqual(prior['reusable_slots'],0)
+        self.assertEqual(release['prior_public_claim_history_sha256'],c.digest(c.canonical(history)))
+        import copy
+        wrong=copy.deepcopy(history);wrong['sealed_prior_campaigns'][0]['actual_consumed_attempts']=0
+        bad=dict(release,prior_public_claim_history_sha256=c.digest(c.canonical(wrong)))
+        with self.assertRaisesRegex(ValueError,'prior public claim history'):
+            h.api_preflight(FakeAPI(),context()[2],bad)
+        env,event,_=context()
+        for change in ({'GITHUB_RUN_ID':'38207026177'}, {'GITHUB_REF':'refs/heads/research/k1-punctuation6-asr18-v1'},
+                       {'GITHUB_RUN_ATTEMPT':'2'}):
+            with self.subTest(change=change),self.assertRaises(ValueError):h.event_identity({**env,**change},event)
 
     def test_explicit_disabled_copy_precedes_every_external_or_mutating_operation(self):
         # Exercise the real disabled reader without changing production controls.
@@ -147,8 +164,7 @@ class HostTests(unittest.TestCase):
         self.assertEqual(len(inputs['actual_new_cells']),6)
         self.assertGreater(len(inputs['actual_blind_job']['clips']),0)
 
-    @synthetic_enabled_host_test
-    def test_synthetic_enabled_controls_pass_real_git_api_and_input_gates(self):
+    def test_checked_in_r1_controls_pass_real_git_api_and_input_gates(self):
         # Keep the temporary enabled controls and re-frozen public source bytes.
         # Only the host event and six GitHub responses are invented. A clean
         # temporary local commit supplies the actual source HEAD/tree/blob;
@@ -192,7 +208,7 @@ class HostTests(unittest.TestCase):
             self.assertEqual(c.canonical(release),production)
             self.assertTrue(all(release[key] is True for key in c.RELEASE_APPROVALS))
             self.assertEqual(release['prior_public_claim_history_sha256'],
-                '1d2a1494c50b6fe63ce2f9220895c9bec9578ed3b90beb56cd46f3c629a67662')
+                '29c28203c52b5ec355b3bc7c7da1d9fb6da75a28c6affef2ac834463028c7f41')
             run=h.event_identity(host,event)
             api=FakeAPI();base='/repos/'+h.REPOSITORY
             api.rows[base+'/actions/runs/123']['head_sha']=head
@@ -219,8 +235,7 @@ class HostTests(unittest.TestCase):
         self.assertEqual(c.read_bytes(HERE/'execution-release.json'),production)
         self.assertEqual(c.read_bytes(HERE/'execution-freeze.json'),source_raw)
 
-    @synthetic_enabled_host_test
-    def test_synthetic_enabled_release_rejects_observer_raw_lf_history_sha(self):
+    def test_checked_in_r1_release_rejects_noncanonical_lf_history_sha(self):
         # The public observer's bytes retain their trailing LF. Its file digest
         # must never stand in for the canonical JSON identity accepted by the
         # production API gate. Reconstruct only this public fixed identity;
@@ -230,8 +245,8 @@ class HostTests(unittest.TestCase):
         canonical=c.canonical(h.prior_history_identity())
         raw_observer=canonical+b'\n'
         self.assertEqual(c.decode_json(raw_observer,require_canonical=False),h.prior_history_identity())
-        self.assertEqual(c.digest(canonical),'1d2a1494c50b6fe63ce2f9220895c9bec9578ed3b90beb56cd46f3c629a67662')
-        self.assertEqual(c.digest(raw_observer),'ef0aba1aa295dceca3bc8394c5faa10cc25497f6a17def0d51bc7343ee162640')
+        self.assertEqual(c.digest(canonical),'29c28203c52b5ec355b3bc7c7da1d9fb6da75a28c6affef2ac834463028c7f41')
+        self.assertEqual(c.digest(raw_observer),'07870e58e9718549bd4d5dd65a157e2dec14bfce4e9397082bbebfa8ac655d61')
         self.assertEqual(release['prior_public_claim_history_sha256'],c.digest(canonical))
         wrong=copy.deepcopy(release)
         wrong['prior_public_claim_history_sha256']=c.digest(raw_observer)
