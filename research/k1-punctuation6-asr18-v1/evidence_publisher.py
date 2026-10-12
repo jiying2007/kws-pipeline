@@ -21,6 +21,13 @@ ROOT = HERE.parents[1]
 if str(HERE) not in sys.path: sys.path.insert(0, str(HERE))
 import evidence_transport as t
 import campaign_contract as c
+import failure_observer
+
+
+def _observe(observer, stage):
+    if observer is not None:
+        try: observer.stage(stage)
+        except BaseException: pass  # Diagnostic failure cannot truncate publication or replace its original failure.
 
 BASE = "/repos/" + t.REPOSITORY
 MAX_REQUEST = 512 * 1024
@@ -282,11 +289,13 @@ def verify_commit(value, expected_sha, expected_body):
         _equal(value.get(key), expected_body[key], "exact commit metadata")
 
 
-def publish(env, event, release, payload, api, raw_get, progress=None):
+def publish(env, event, release, payload, api, raw_get, progress=None, observer=None):
     progress = {} if progress is None else progress
+    _observe(observer, "validate_local_package")
     progress.update(stage="validate_local_package", publication_confirmed=False, readback_confirmed=False)
     identity = context(env, event, release); purpose = release["purpose"]; p = t.policy(purpose)
     t.validate_archive(payload, identity)
+    _observe(observer, "verify_actual_run_source")
     progress["stage"] = "verify_actual_run_source"
     numeric_job_id = verify_run(api, identity, release)
     routes = endpoints(identity, release)
@@ -298,6 +307,7 @@ def publish(env, event, release, payload, api, raw_get, progress=None):
     directory = p["directory"]
     t.require(not any(row["path"] == directory or row["path"].startswith(directory + "/")
         or directory.startswith(row["path"] + "/") for row in original), "result directory absent; no replacement")
+    _observe(observer, "verify_destination_absent")
     progress["stage"] = "verify_destination_absent"
     api("GET", routes["ref"], expected=404)
     files = t.build_file_set(payload, identity, release["source_closure_sha256"], numeric_job_id, purpose)
@@ -305,6 +315,7 @@ def publish(env, event, release, payload, api, raw_get, progress=None):
     expected_tree, _ = t.tree_identity(original + tree_rows)
     expected_body, expected_commit = commit_body(expected_tree, release)
     api.bind_result(expected_commit, expected_tree)
+    _observe(observer, "create_blobs")
     progress.update(stage="create_blobs", confirmed_blob_count=0, expected_result_commit=expected_commit,
                     expected_result_tree=expected_tree, archive_sha256=t.sha(payload), archive_bytes=len(payload))
     sent_blobs = set()
@@ -314,17 +325,21 @@ def publish(env, event, release, payload, api, raw_get, progress=None):
             _equal(blob, {"sha": row["sha"]}, "true Git blob identity")
             sent_blobs.add(row["sha"])
             progress["confirmed_blob_count"] = len(sent_blobs)
+    _observe(observer, "create_tree")
     progress["stage"] = "create_tree"
     tree = api("POST", BASE + "/git/trees", {"base_tree": release["source_tree"], "tree": tree_rows}, expected=201)
     _equal(tree, {"sha": expected_tree}, "true computed merged Git tree")
+    _observe(observer, "create_commit")
     progress["stage"] = "create_commit"
     commit = api("POST", BASE + "/git/commits", expected_body, expected=201)
     verify_commit(commit, expected_commit, expected_body)
+    _observe(observer, "create_ref")
     progress["stage"] = "create_ref"
     ref = "refs/heads/" + p["result_branch"]
     created = api("POST", BASE + "/git/refs", {"ref": ref, "sha": expected_commit}, expected=201)
     _equal(created, {"ref": ref}, "created exact ref")
     _equal(created.get("object"), {"type": "commit", "sha": expected_commit}, "created ref exact commit")
+    _observe(observer, "immutable_postpublish_readback")
     progress.update(stage="immutable_postpublish_readback", publication_confirmed=True)
     final_ref = api("GET", routes["ref"])
     _equal(final_ref, {"ref": ref}, "readback ref")
@@ -341,6 +356,7 @@ def publish(env, event, release, payload, api, raw_get, progress=None):
     got = t.reassemble(outer, chunks, identity, release["source_closure_sha256"], numeric_job_id, purpose)
     t.require(got == payload, "same complete audio-free evidence archive readback")
     t.validate_archive(got, identity)
+    _observe(observer, "readback_verified")
     progress.update(stage="readback_verified", readback_confirmed=True)
     return {"schema": "k1-asr18-evidence-publication-receipt-v1", "status": "same_identity_readback_verified",
         "identity": identity, "purpose": purpose, "numeric_job_id": numeric_job_id,
@@ -377,29 +393,37 @@ def write_once(root, name, value):
         os.close(directory)
 
 
-def run_once(env, event, release, payload, api, raw_get, receipt_directory):
+def run_once(env, event, release, payload, api, raw_get, receipt_directory, observer=None):
     identity = context(env, event, release)
     old_handler = signal.getsignal(signal.SIGALRM)
     t.require(signal.getitimer(signal.ITIMER_REAL) == (0.0, 0.0), "publisher owns separate bounded host process timer")
+    _observe(observer, "publication_started")
     write_once(receipt_directory, "publication.started.json", {"schema": "k1-asr18-evidence-publication-started-v1",
         "identity": identity, "purpose": release["purpose"], "archive_sha256": t.sha(payload)})
     progress = {}
     signal.signal(signal.SIGALRM, lambda *_: (_ for _ in ()).throw(PublicationError()))
     signal.setitimer(signal.ITIMER_REAL, TIMEOUT)
     try:
-        result = publish(env, event, release, payload, api, raw_get, progress)
+        _observe(observer, "remote_publish")
+        result = publish(env, event, release, payload, api, raw_get, progress, observer=observer)
     except Exception as error:
+        if observer is not None:
+            try: observer.failure(error)
+            except BaseException: pass  # A diagnostic must never replace the original failure.
         signal.setitimer(signal.ITIMER_REAL, 0)
         result = {"schema": "k1-asr18-evidence-publication-receipt-v1", "status": "publication_failed_or_unconfirmed_no_retry",
             "identity": identity, "purpose": release["purpose"], "error_type": type(error).__name__ if type(error) in (ValueError, TypeError, OSError, TimeoutError, PublicationError) else "OtherException",
             "retry_authorized": False, "new_native_calls_authorized": False, **progress}
         if isinstance(error, PublicationError) and error.status is not None: result["http_status"] = error.status
+        try: _observe(observer, "receipt_write")
+        except BaseException: pass  # Preserve the already recorded primary publish exception.
         write_once(receipt_directory, "publication.receipt.json", result)
         error.publication_receipt = result
         raise
     finally:
         signal.setitimer(signal.ITIMER_REAL, 0)
         signal.signal(signal.SIGALRM, old_handler)
+    _observe(observer, "receipt_write")
     write_once(receipt_directory, "publication.receipt.json", result)
     return result
 
@@ -436,13 +460,14 @@ def _source_git(*args):
     return subprocess.check_output(["git", "-c", "core.fsmonitor=false", "-c", "core.hooksPath=/dev/null",
         "-C", str(ROOT), *args], env=safe_env, stderr=subprocess.DEVNULL, timeout=15).decode("ascii").strip()
 
-def bound_release(env, event):
+def bound_release(env, event, observer=None):
     """Clean exact source + separately approved freeze; never trust a self hash.
 
     The source-local control intentionally contains no hash of its own source
     commit or source freeze. KWS_SOURCE_FREEZE_SHA256 is the independently
     reviewed trusted-host workflow input and is not copied from a candidate.
     """
+    _observe(observer, "source_release")
     publication_gate(c.read_json(HERE / "publication-release.json", cap=65536))
     execution = c.read_json(HERE / "execution-release.json", cap=65536)
     freeze_raw = c.read_bytes(HERE / "execution-freeze.json", cap=8 * 1024 ** 2)
@@ -451,13 +476,17 @@ def bound_release(env, event):
     c.require_execution_release(execution, freeze, expected_freeze_sha256=expected)
     t.require(t.sha(freeze_raw) == expected, "exact independently approved source freeze bytes")
     t.require(env.get("GITHUB_ACTIONS") == "true", "trusted Actions poststep only")
+    _observe(observer, "source_git_clean")
     t.require(_source_git("status", "--porcelain", "--untracked-files=all") == "", "clean executed source checkout")
+    _observe(observer, "source_git_identity")
     head = _source_git("rev-parse", "HEAD")
     tree = _source_git("rev-parse", "HEAD^{tree}")
     t.require(head == env.get("GITHUB_SHA") and t.HEAD.fullmatch(head) and t.HEAD.fullmatch(tree), "actual clean executed Git source")
+    _observe(observer, "source_freeze")
     import prepare_freeze
     t.require(Path(prepare_freeze.__file__).resolve() == HERE / "prepare_freeze.py", "fixed source-freeze builder")
     t.require(t.canonical(prepare_freeze.build(ROOT)) == freeze_raw, "all exact executed source closure bytes")
+    _observe(observer, "source_timestamp")
     stamp = event.get("head_commit", {}).get("timestamp")
     # The source commit's exact UTC timestamp is stable across retries; no clock
     # or remote-server timestamp can alter the precomputed result Git identity.
@@ -472,22 +501,42 @@ def bound_release(env, event):
 
 
 def main(argv=None):
-    # This is deliberately first: disabled preparation never consults a token,
-    # event path, runtime, source checkout, network or a publication package.
-    publication_gate(c.read_json(HERE / "publication-release.json", cap=65536))
-    argv = sys.argv[1:] if argv is None else argv
-    t.require(argv == [], "fixed trusted-host poststep paths only")
-    env = {key: os.environ[key] for key in _CONTEXT_KEYS if key in os.environ}
-    event = c.read_json(Path(env.get("GITHUB_EVENT_PATH", "")), cap=1024 * 1024)
-    release = bound_release(env, event)
-    run_identity = context(env, event, release)
-    payload = t.read_package(Path(env["RUNNER_TEMP"]), run_identity)
-    # The worker never sees this token. Only a future approved separate Actions
-    # step may provide its same-repository short-lived GITHUB_TOKEN here.
-    api = GitHubAPI(os.environ.get("GITHUB_TOKEN"), run_identity, release)
-    root = Path(env["RUNNER_TEMP"]) / ("k1-asr18-publication-" + str(run_identity["run_id"]))
-    c.durable_mkdir(root)
-    return run_once(env, event, release, payload, api, RawReader, root)
+    # Construction does no IO. The initial checkpoint has only a fixed literal
+    # stage; release admission still precedes environment/token/runtime access.
+    observer = failure_observer.Observation(role="publisher")
+    try:
+        _observe(observer, "publication_gate")
+        publication_gate(c.read_json(HERE / "publication-release.json", cap=65536))
+        _observe(observer, "arguments")
+        argv = sys.argv[1:] if argv is None else argv
+        t.require(argv == [], "fixed trusted-host poststep paths only")
+        env = {key: os.environ[key] for key in _CONTEXT_KEYS if key in os.environ}
+        _observe(observer, "event_read")
+        event = c.read_json(Path(env.get("GITHUB_EVENT_PATH", "")), cap=1024 * 1024)
+        release = bound_release(env, event, observer=observer)
+        _observe(observer, "context")
+        run_identity = context(env, event, release)
+        observer.attach(run_identity, Path(env["RUNNER_TEMP"]))
+        _observe(observer, "package_read")
+        payload = t.read_package(Path(env["RUNNER_TEMP"]), run_identity)
+        # The worker never sees this token. Only the separate reviewed Actions
+        # publisher step receives the same-repository short-lived GITHUB_TOKEN.
+        _observe(observer, "token_admission")
+        api = GitHubAPI(os.environ.get("GITHUB_TOKEN"), run_identity, release)
+        _observe(observer, "receipt_directory")
+        root = Path(env["RUNNER_TEMP"]) / ("k1-asr18-publication-" + str(run_identity["run_id"]))
+        c.durable_mkdir(root)
+        result = run_once(env, event, release, payload, api, RawReader, root, observer=observer)
+    except BaseException as error:
+        # A secondary diagnostic failure never replaces the original exception.
+        try: observer.failure(error)
+        except BaseException: pass
+        try: observer.finish(success=False)
+        except BaseException: pass
+        raise
+    _observe(observer, "complete")
+    observer.finish(success=True)
+    return result
 
 
 if __name__ == "__main__":

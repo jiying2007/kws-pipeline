@@ -14,6 +14,8 @@ import unittest
 
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[1]
+sys.path.insert(0,str(HERE))
+from test_control_fixture import DISABLED_APPROVALS, synthetic_enabled_source
 OPT=['-'+'O'*sys.flags.optimize] if sys.flags.optimize else []
 SENTINELS={key:'SYNTHETIC_'+key+'_NOT_A_CREDENTIAL' for key in
     ('GITHUB_TOKEN','GH_TOKEN','KWS_EVIDENCE_TOKEN','ACTIONS_RUNTIME_TOKEN','ACTIONS_ID_TOKEN_REQUEST_TOKEN')}
@@ -35,6 +37,57 @@ def disabled_source():
 
 
 class ActualEntrypoints(unittest.TestCase):
+    def check_diagnostic(self,raw,*,role,stages,terminal=False):
+        def canonical(value):
+            return json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
+        lines=raw.splitlines()
+        if terminal:
+            self.assertEqual(lines.pop(),b'{"status":"blocked_no_retry"}')
+        self.assertEqual(len(lines),len(stages)+1)
+        for sequence,(line,stage) in enumerate(zip(lines[:-1],stages),1):
+            row=json.loads(line)
+            self.assertEqual(row,{'schema':'k1-asr18-safe-checkpoint-v1','role':role,
+                'stage':stage,'sequence':sequence,'identity':None,'native_calls':'not_asserted'})
+            self.assertEqual(line,canonical(row));self.assertLessEqual(len(line),1024)
+        envelope=json.loads(lines[-1]);record=envelope['record']
+        self.assertEqual(set(envelope),{'schema','record','record_bytes','record_sha256','persistence'})
+        self.assertEqual(envelope['schema'],'k1-asr18-independent-process-diagnostic-envelope-v1')
+        self.assertEqual(lines[-1],canonical(envelope))
+        self.assertEqual(envelope['record_bytes'],len(canonical(record)))
+        self.assertEqual(envelope['record_sha256'],hashlib.sha256(canonical(record)).hexdigest())
+        self.assertLessEqual(envelope['record_bytes'],16384)
+        self.assertLessEqual(len(lines[-1]),17408)
+        self.assertEqual(envelope['persistence'],{'status':'unconfigured','error':None})
+        self.assertEqual(set(record),{'schema','role','identity','stage','status','errors','attachment_error',
+            'checkpoint_output_error','checkpoint_limit_reached','errors_truncated','claims','checkpoint_count',
+            'original_writer_receipt_included','native_success_established','retry_authorized','limit'})
+        self.assertEqual(record['limit'],'ordinary_exception_observation; abrupt_process_or_runner_loss_may_prevent_final_record')
+        self.assertEqual(record['schema'],'k1-asr18-independent-process-diagnostic-v1')
+        self.assertEqual(record['role'],role);self.assertEqual(record['stage'],stages[-1])
+        self.assertEqual(record['status'],'failed_or_unconfirmed');self.assertIsNone(record['identity'])
+        self.assertEqual(record['checkpoint_count'],len(stages))
+        for key in ('native_success_established','retry_authorized','original_writer_receipt_included',
+                    'checkpoint_limit_reached','errors_truncated'):self.assertIs(record[key],False)
+        for key in ('attachment_error','checkpoint_output_error'):self.assertIsNone(record[key])
+        self.assertEqual(record['claims'],{'scope':'fixed_new_campaign_local_observations_only',
+            'snapshot_atomic':False,'consumed_attempts':None,'consumed_attempts_authority':'unknown',
+            'source_claim':{'status':'unobserved','bytes':None,'sha256':None},
+            'terminal_ledger':{'status':'unobserved','bytes':None,'sha256':None},
+            'reported_terminal_attempts':None,'reported_terminal_accounting_valid':None,
+            'observed_slot_directories':None,'validated_start_files_observed':None,'slots':[]})
+        self.assertEqual(len(record['errors']),1)
+        error=record['errors'][0]
+        self.assertEqual(set(error),{'stage','detail','explanation'})
+        self.assertEqual(error['stage'],stages[-1])
+        self.assertEqual(error['explanation'],'operation_failed_at_fixed_stage; exception_content_omitted')
+        self.assertEqual(error['detail'],{'error_type':'UnlistedError' if stages==['publication_gate'] else 'ValueError',
+            'error_text':'omitted_by_fixed_privacy_policy'})
+
+    def test_checked_in_controls_remain_disabled(self):
+        for filename,keys in DISABLED_APPROVALS.items():
+            value=json.loads((HERE/filename).read_bytes())
+            self.assertTrue(all(value[key] is False for key in keys))
+
     def call(self,path,args=()):
         with tempfile.TemporaryDirectory(prefix='k1-entry-negative-') as name:
             temp=Path(name)
@@ -50,16 +103,18 @@ class ActualEntrypoints(unittest.TestCase):
 
     def test_real_workflow_host_command_hits_disabled_entry(self):
         with disabled_source() as source:value=self.call(source/'hosted_run.py')
-        self.assertEqual((value.returncode,value.stdout,value.stderr),(2,b'{"status":"blocked_no_retry"}\n',b''))
+        self.assertEqual((value.returncode,value.stderr),(2,b''))
+        self.check_diagnostic(value.stdout,role='host',stages=['release'],terminal=True)
 
     def test_real_workflow_publisher_command_hits_explicit_disabled_gate(self):
         with disabled_source() as source:value=self.call(source/'evidence_publisher.py')
-        self.assertEqual((value.returncode,value.stdout,value.stderr),(1,b'',b'ASR18 publication disabled or review absent.\n'))
+        self.assertEqual((value.returncode,value.stderr),(1,b'ASR18 publication disabled or review absent.\n'))
+        self.check_diagnostic(value.stdout,role='publisher',stages=['publication_gate'])
 
 
-    def test_actual_enabled_workflow_commands_reject_nonexecution_context_without_effects(self):
-        # Observe real production gates and Python audit events. No source-path
-        # injection, gate patch, network blocker, or substituted release value.
+    def test_synthetic_enabled_workflow_commands_reject_nonexecution_context_without_effects(self):
+        # Observe real gates in a complete temporary enabled/refrozen source copy.
+        # No gate patch, import-path injection or network blocker in the child.
         program='''import hashlib,json,os,pathlib,runpy,sys
 path=pathlib.Path(sys.argv[1]);seen=[];effects=[]
 def profile(frame,event,arg):
@@ -74,28 +129,35 @@ except SystemExit as e:code=e.code
 finally:sys.setprofile(None)
 print(json.dumps({'code':code,'seen':seen,'effects':effects}))
 '''
-        for filename in ('hosted_run.py','evidence_publisher.py'):
-            with self.subTest(filename=filename),tempfile.TemporaryDirectory(prefix='k1-enabled-cli-') as name:
-                temp=Path(name);event=temp/'event.json';event.write_text('{}')
-                expected=hashlib.sha256((HERE/'execution-freeze.json').read_bytes()).hexdigest()
-                env={'PATH':'/usr/bin:/bin','HOME':'/nonexistent','RUNNER_TEMP':name,
-                    'GITHUB_EVENT_PATH':str(event),'GITHUB_ACTIONS':'false','KWS_SOURCE_FREEZE_SHA256':expected,**SENTINELS}
-                value=subprocess.run([sys.executable,'-I','-B',*OPT,'-c',program,str(HERE/filename)],
-                    cwd=temp,env=env,capture_output=True,timeout=20)
-                self.assertEqual(value.returncode,0,value.stderr.decode())
-                observation=json.loads(value.stdout.decode().splitlines()[-1])
-                self.assertEqual(observation['effects'],[])
-                self.assertEqual(sorted(x.name for x in temp.iterdir()),['event.json'])
-                calls={row[1] for row in observation['seen'] if row[0]=='call'}
-                self.assertFalse(calls & {'_source_git','execute','run_once'})
-                if filename=='hosted_run.py':
-                    self.assertEqual(observation['code'],2)
-                    self.assertTrue({'release_first','event_identity'}<=calls)
-                else:
-                    self.assertEqual(observation['code'],'ASR18 publication blocked or unconfirmed; no retry.')
-                    self.assertTrue({'publication_gate','bound_release','require_execution_release'}<=calls)
-                    self.assertIn(['return','require_execution_release',str(HERE/'campaign_contract.py')],observation['seen'])
-                for secret in SENTINELS.values():self.assertNotIn(secret.encode(),value.stdout+value.stderr)
+        with synthetic_enabled_source(HERE) as source:
+            for filename in ('hosted_run.py','evidence_publisher.py'):
+                with self.subTest(filename=filename),tempfile.TemporaryDirectory(prefix='k1-enabled-cli-') as name:
+                    temp=Path(name);event=temp/'event.json';event.write_text('{}')
+                    expected=hashlib.sha256((source/'execution-freeze.json').read_bytes()).hexdigest()
+                    env={'PATH':'/usr/bin:/bin','HOME':'/nonexistent','RUNNER_TEMP':name,
+                        'GITHUB_EVENT_PATH':str(event),'GITHUB_ACTIONS':'false','KWS_SOURCE_FREEZE_SHA256':expected,**SENTINELS}
+                    value=subprocess.run([sys.executable,'-I','-B',*OPT,'-c',program,str(source/filename)],
+                        cwd=temp,env=env,capture_output=True,timeout=20)
+                    self.assertEqual(value.returncode,0,value.stderr.decode())
+                    chunks=value.stdout.splitlines(keepends=True)
+                    observation=json.loads(chunks[-1])
+                    self.check_diagnostic(b''.join(chunks[:-1]),
+                        role='host' if filename=='hosted_run.py' else 'publisher',
+                        stages=['release','arguments','event_read','context'] if filename=='hosted_run.py' else
+                               ['publication_gate','arguments','event_read','source_release'],
+                        terminal=filename=='hosted_run.py')
+                    self.assertEqual(observation['effects'],[])
+                    self.assertEqual(sorted(x.name for x in temp.iterdir()),['event.json'])
+                    calls={row[1] for row in observation['seen'] if row[0]=='call'}
+                    self.assertFalse(calls & {'_source_git','execute','run_once'})
+                    if filename=='hosted_run.py':
+                        self.assertEqual(observation['code'],2)
+                        self.assertTrue({'release_first','event_identity'}<=calls)
+                    else:
+                        self.assertEqual(observation['code'],'ASR18 publication blocked or unconfirmed; no retry.')
+                        self.assertTrue({'publication_gate','bound_release','require_execution_release'}<=calls)
+                        self.assertIn(['return','require_execution_release',str(source/'campaign_contract.py')],observation['seen'])
+                    for secret in SENTINELS.values():self.assertNotIn(secret.encode(),value.stdout+value.stderr)
 
     def test_real_native_family_mode_commands_import_and_reject(self):
         for family in ('qwen06','sensevoice','whisper'):

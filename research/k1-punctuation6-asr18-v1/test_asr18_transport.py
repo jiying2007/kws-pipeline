@@ -430,7 +430,7 @@ class PublisherTests(TransportTests):
         # Never rewrite the production controls or replace a production gate.
         folder=self.root/'disabled-source-copy'/'research'/'k1-punctuation6-asr18-v1'
         folder.mkdir(parents=True)
-        for name in ('evidence_publisher.py','evidence_transport.py','campaign_contract.py','asr18_metadata.py'):
+        for name in ('evidence_publisher.py','evidence_transport.py','campaign_contract.py','asr18_metadata.py','failure_observer.py'):
             body=(HERE/name).read_bytes();(folder/name).write_bytes(body)
             self.assertEqual((folder/name).read_bytes(),body)
         (folder/'publication-release.json').write_bytes(t.canonical(p.disabled_publication_release()))
@@ -462,6 +462,26 @@ class PublisherTests(TransportTests):
         for key in ('enabled','root_publication_release','independent_source_review'):control[key]=True
         p.publication_gate(control)
 
+    def check_safe_diagnostic_stdout(self, raw, *, stage=None):
+        lines=[t.decode(line) for line in raw.splitlines()]
+        self.assertGreaterEqual(len(lines),2)
+        for row in lines[:-1]:
+            self.assertEqual(row['schema'],'k1-asr18-safe-checkpoint-v1')
+            self.assertEqual(row['role'],'publisher')
+            self.assertEqual(row['native_calls'],'not_asserted')
+            self.assertLessEqual(len(t.canonical(row)),1024)
+        final=lines[-1]
+        self.assertEqual(final['schema'],'k1-asr18-independent-process-diagnostic-envelope-v1')
+        record=final['record']
+        self.assertEqual(record['role'],'publisher')
+        self.assertIsNone(record['claims']['consumed_attempts'])
+        self.assertFalse(record['native_success_established'])
+        self.assertFalse(record['retry_authorized'])
+        self.assertEqual(final['record_sha256'],t.sha(t.canonical(record)))
+        self.assertLessEqual(final['record_bytes'],16384)
+        self.assertEqual(final['persistence']['status'],'unconfigured')
+        if stage is not None:self.assertEqual(record['stage'],stage)
+
     def test_actual_isolated_publisher_cli_reaches_disabled_gate_without_side_effects(self):
         disabled=self.disabled_cli_source()
         cwd=self.root/'isolated-cli';cwd.mkdir()
@@ -476,7 +496,7 @@ class PublisherTests(TransportTests):
         result=subprocess.run(['python3','-I','-B',str(disabled/'evidence_publisher.py')],cwd=cwd,env=env,
             stdin=subprocess.DEVNULL,capture_output=True,timeout=15,check=False)
         self.assertEqual(result.returncode,1)
-        self.assertEqual(result.stdout,b'')
+        self.check_safe_diagnostic_stdout(result.stdout,stage='publication_gate')
         self.assertEqual(result.stderr,b'ASR18 publication disabled or review absent.\n')
         self.assertNotIn(sentinel.encode(),result.stdout+result.stderr)
         after={str(path.relative_to(self.root)):path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
@@ -484,12 +504,17 @@ class PublisherTests(TransportTests):
         self.assertEqual(sorted(path.name for path in cwd.iterdir()),
             ['campaign_contract.py','evidence_transport.py','sitecustomize.py'])
 
-    def test_current_released_isolated_cli_rejects_missing_authority_before_side_effects(self):
-        publication=c.read_json(HERE/'publication-release.json')
+    def test_synthetic_enabled_isolated_cli_rejects_missing_authority_before_side_effects(self):
+        # Explicit synthetic-enabled copy exercises negative gates even when
+        # production is disabled. No production approval/control is changed.
+        source=self.disabled_cli_source()
+        publication=p.disabled_publication_release()
+        for key in ('enabled','root_publication_release','independent_source_review'):publication[key]=True
         execution=c.read_json(HERE/'execution-release.json')
-        self.assertTrue(all(publication[key] is True for key in
-            ('enabled','root_publication_release','independent_source_review')))
-        self.assertTrue(all(execution[key] is True for key in c.RELEASE_APPROVALS))
+        for key in c.RELEASE_APPROVALS:execution[key]=True
+        (source/'publication-release.json').write_bytes(t.canonical(publication))
+        (source/'execution-release.json').write_bytes(t.canonical(execution))
+        (source/'execution-freeze.json').write_bytes(c.read_bytes(HERE/'execution-freeze.json'))
         p.publication_gate(publication)
         cwd=self.root/'released-cli';cwd.mkdir()
         event=cwd/'event.json';event.write_bytes(b'{}')
@@ -502,7 +527,7 @@ class PublisherTests(TransportTests):
                 'ACTIONS_ID_TOKEN_REQUEST_TOKEN','ACTIONS_FUTURE_TEST_TOKEN')}}
         # This local digest is a negative-test input, never execution authority:
         # no trusted Actions host is supplied, and Git is prohibited below.
-        freeze_sha=t.sha(c.read_bytes(HERE/'execution-freeze.json'))
+        freeze_sha=t.sha(c.read_bytes(source/'execution-freeze.json'))
         before={str(path.relative_to(self.root)):path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
         probe=r'''
 import os, sys
@@ -556,14 +581,17 @@ print('exact production authority gate; zero side effects')
                 ({'KWS_SOURCE_FREEZE_SHA256':freeze_sha},'trusted Actions poststep only')):
             with self.subTest(reason=reason):
                 isolated_env={**env,**extra}
-                direct=subprocess.run(['python3','-I','-B',str(HERE/'evidence_publisher.py')],cwd=cwd,
+                direct=subprocess.run(['python3','-I','-B',str(source/'evidence_publisher.py')],cwd=cwd,
                     env=isolated_env,stdin=subprocess.DEVNULL,capture_output=True,timeout=15,check=False)
-                self.assertEqual((direct.returncode,direct.stdout,direct.stderr),
-                    (1,b'',b'ASR18 publication blocked or unconfirmed; no retry.\n'))
-                guarded=subprocess.run(['python3','-I','-B','-c',probe,str(HERE),reason],cwd=cwd,
+                self.assertEqual((direct.returncode,direct.stderr),
+                    (1,b'ASR18 publication blocked or unconfirmed; no retry.\n'))
+                self.check_safe_diagnostic_stdout(direct.stdout,stage='source_release')
+                guarded=subprocess.run(['python3','-I','-B','-c',probe,str(source),reason],cwd=cwd,
                     env=isolated_env,stdin=subprocess.DEVNULL,capture_output=True,timeout=15,check=False)
-                self.assertEqual((guarded.returncode,guarded.stdout,guarded.stderr),
-                    (0,b'exact production authority gate; zero side effects\n',b''))
+                self.assertEqual((guarded.returncode,guarded.stderr),(0,b''))
+                diagnostic,terminal=guarded.stdout.rsplit(b'exact production authority gate; zero side effects\n',1)
+                self.assertEqual(terminal,b'')
+                self.check_safe_diagnostic_stdout(diagnostic,stage='source_release')
                 self.assertNotIn(sentinel.encode(),direct.stdout+direct.stderr+guarded.stdout+guarded.stderr)
         after={str(path.relative_to(self.root)):path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
         self.assertEqual(after,before)
@@ -780,7 +808,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
     LICENSE='source/research/qwen6_asr/FUNASR_MODEL_LICENSE'
     LICENSE_ID={'bytes':5306,'sha256':'7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8'}
     # Parent-rebuilt candidate freeze after the reviewed narrow license delta.
-    FROZEN_SOURCE_SHA256='ca7f5298e222f57de373fa50ed1c647712430513f76c2738052493d7d2a6bb64'
+    FROZEN_SOURCE_SHA256='2776d839d461264100c8c31ea3bfa3eca8d09cf84d9d33f484fdac49d4a03344'
     SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json'))
 
     def setUp(self):
@@ -791,7 +819,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
         self.guard=mock.patch('http.client.HTTPSConnection',side_effect=AssertionError('no live network'))
         self.guard.start();self.addCleanup(self.guard.stop)
         self.roster=self.freezer.declared_rosters(ROOT)['host_code']
-        self.assertEqual(len(self.roster),113)
+        self.assertEqual(len(self.roster),114)
         self.assertEqual(t.SOURCE_TEXT_EXCEPTIONS,{self.LICENSE:self.LICENSE_ID})
 
     def full_fixture(self, *, synthetic_native=False):
@@ -816,6 +844,12 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
             _,_,run=self.host_tests.context()  # Invented run only; no source authority claim.
             inp=c.read_json(HERE/'input-freeze.json')
             release=c.read_json(HERE/'execution-release.json')
+            self.assertFalse(release['enabled'])
+            for key in c.RELEASE_APPROVALS:release[key]=True
+            name=self.host.NEW+'execution-release.json';body=t.canonical(release)
+            source['source/'+name]=body
+            for role in ('host_code','setup_code','inference_code'):
+                if name in freeze[role]:freeze[role][name]={'bytes':len(body),'sha256':t.sha(body)}
             projection=self.host.projection_for(inp['actual_new_cells'])
             receipt=inp['actual_screening_receipt']
             host=self.host.host_receipt(run,t.sha(t.canonical(freeze)),'d'*40,t.sha(t.canonical(receipt)))
@@ -847,7 +881,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
         self.assertEqual({'bytes':len(files[self.LICENSE]),'sha256':t.sha(files[self.LICENSE])},self.LICENSE_ID)
         files[self.LICENSE].decode('utf-8')
         differences={name for name in self.roster if files['source/'+name]!=c.read_bytes(ROOT/name)}
-        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else set())
+        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else {self.host.NEW+'execution-release.json'})
 
     def materialize(self, root, files):
         for name,body in files.items():
@@ -896,7 +930,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
                 else:
                     with self.assertRaises(ValueError):operation(root,run)
 
-    def test_exact_113_real_source_bodies_all_notrun_package_and_license_negatives(self):
+    def test_full_114_source_one_enabled_test_control_all_notrun_and_license_negatives(self):
         files,run=self.full_fixture()
         with tempfile.TemporaryDirectory(prefix='synthetic-run-real-source-all-notrun-') as temp:
             root=Path(temp);self.materialize(root,files)
@@ -940,10 +974,10 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
             case.run_case(fail_native=fail_native)
         self.assertEqual(observed,['prepared','final'])
 
-    def test_full_113_roster_prepared_and_synthetic_18_success_license_negatives(self):
+    def test_full_114_roster_prepared_and_synthetic_18_success_license_negatives(self):
         self.full_native_case(False)
 
-    def test_full_113_roster_prepared_and_synthetic_first_failure_license_negatives(self):
+    def test_full_114_roster_prepared_and_synthetic_first_failure_license_negatives(self):
         self.full_native_case(True)
 
 

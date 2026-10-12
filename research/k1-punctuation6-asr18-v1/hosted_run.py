@@ -43,6 +43,12 @@ ROOT_PUBLIC = frozenset(('host-receipt.json','terminal-outcomes.json','run-prefl
     'asr-setup-public.json','cpu-receipt.json','cleanup-receipt.json','supervision-receipt.json'))
 
 
+def _observe(observer,stage):
+    if observer is not None:
+        try:observer.stage(stage)
+        except BaseException:pass  # Diagnostics cannot truncate cleanup or replace primary errors.
+
+
 def release_first():
     release = read_json(HERE / 'execution-release.json', 65536)
     c.validate_release_shape(release)
@@ -687,17 +693,21 @@ def validate_public_evidence(files, run_identity, *, phase='final'):
     return True
 
 
-def execute(env, run, release, freeze, freeze_sha, tree, preflight):
+def execute(env, run, release, freeze, freeze_sha, tree, preflight, observer=None):
     from resource_host import MeteredDocker, recognition_stages, atomic, safe_error
     import runtime_session as runtime
     import input_binding
     import evidence_transport as transport
+    def observe(stage):
+        _observe(observer,stage)
     started=time.monotonic()
     def interrupt(_signum,_frame): raise TimeoutError('fixed host ceiling or interruption')
     for sig in (signal.SIGTERM,signal.SIGINT,signal.SIGALRM): signal.signal(sig,interrupt)
     signal.setitimer(signal.ITIMER_REAL,c.LIMITS['host_seconds'])
+    observe('workspace')
     root=c.durable_mkdir(Path(env['RUNNER_TEMP'])/(c.EXPERIMENT+'-'+str(run['run_id'])))
     # Frozen public control plane and source failures remain packageable before claim.
+    observe('input_authorities')
     frozen_input,authority=input_authorities(release,freeze)
     screening_policy_sha=screening_policy_identity(freeze)['sha256']
     projection=projection_for(frozen_input['actual_new_cells'])
@@ -709,11 +719,13 @@ def execute(env, run, release, freeze, freeze_sha, tree, preflight):
     write_once(root/'public-screening-receipt.json',frozen_input['actual_screening_receipt'])
     write_once(root/'new-cell-projection.json',projection)
     c.durable_mkdir(root/'authority'); write_once(root/'authority/execution-freeze.json',freeze)
+    observe('source_stage')
     runtime.stage_source(freeze['host_code'],root/'source')
     write_once(root/'source'/NEW/'execution-freeze.json',freeze)
     atomic(root/'host-receipt.json',receipt)
     docker=None; successful=[]; failed=False
     try:
+        observe('input')
         receipt['stage']='input'; atomic(root/'host-receipt.json',receipt)
         require(shutil.disk_usage(root).free>=c.LIMITS['initial_free_bytes'],'12GiB initial free reserve before acquisition')
         bound,data_accounting=verify_download(release,frozen_input,authority,expected_policy_sha256=screening_policy_sha)
@@ -722,6 +734,7 @@ def execute(env, run, release, freeze, freeze_sha, tree, preflight):
         c.durable_mkdir(root/'order')
         write_once(root/'order/execution-plan.json',plan)
         write_once(root/'order/worker-input-binding.json',binding)
+        observe('source_claim')
         claim=source_claim(run,release,preflight,freeze_sha)
         claim_sha=write_once(root/'authority/source-claim.json',claim)
         receipt['source_claim_sha256']=claim_sha
@@ -730,6 +743,7 @@ def execute(env, run, release, freeze, freeze_sha, tree, preflight):
             'reserved_total_bytes':c.LIMITS['acquisition_reserved_bytes'],'cap_bytes':6*c.GIB,'hard_wire_byte_cap':False}
         atomic(root/'acquisition-receipt.json',acquisition)
         docker=MeteredDocker(root,started+c.LIMITS['host_seconds'])
+        observe('setup')
         receipt['stage']='setup'; receipt['stages']['setup']='started'; atomic(root/'host-receipt.json',receipt)
         setup=runtime.setup_runtimes(root,freeze,docker,root/'input',run)
         receipt['combined_setup_seconds']=setup['seconds']; receipt['stages']['setup']='complete'
@@ -747,11 +761,13 @@ def execute(env, run, release, freeze, freeze_sha, tree, preflight):
             runtime.supervise(docker,args,out,family=family,mode=mode,deadline=min(docker.deadline,time.monotonic()+seconds))
             validate_worker_complete(out,family,mode,job,plan)
         def prepare(family,seconds):
+            observe('prepare_'+family)
             receipt['stage']='prepare'; receipt['stages'][family+'_prepare']='started'; atomic(root/'host-receipt.json',receipt)
             worker(family,'prepare',seconds)
             receipt['stages'][family+'_prepare']='complete'; atomic(root/'host-receipt.json',receipt)
         def freeze_policy():
             import worker_receipts
+            observe('policy_freeze')
             receipt['stage']='policy_freeze'
             policy=worker_receipts.build_policy({family:root/'output'/family for family in c.FAMILIES})
             policy_sha=write_once(root/'policy/policy.json',policy)
@@ -760,6 +776,7 @@ def execute(env, run, release, freeze, freeze_sha, tree, preflight):
                 'prepared_config_files':{family:c.identity(root/'output'/family/'native-config.json') for family in c.FAMILIES}})
             receipt['all3_policy_frozen_before_recognition']=True; receipt['stage']='capacity_proof'
             atomic(root/'host-receipt.json',receipt)
+            observe('capacity_proof')
             proof=transport.package_budget_preflight(root,run,job=job,execution_plan=plan,input_binding=binding,policy_path=root/'policy/policy.json')
             c.validate_decode_proof(proof,job=job,execution_plan=plan,input_binding=binding,policy_path=root/'policy/policy.json',family='qwen06')
             write_once(root/'policy/budget-proof.json',proof)
@@ -770,6 +787,7 @@ def execute(env, run, release, freeze, freeze_sha, tree, preflight):
                 for name in _walk_files(directory):
                     os.chmod(directory/name,0o444,follow_symlinks=False)
         def decode(family,seconds):
+            observe('decode_'+family)
             receipt['stage']='decode'; receipt['stages'][family+'_decode']='started'; atomic(root/'host-receipt.json',receipt)
             worker(family,'decode',seconds)
             successful.append(family)
@@ -777,23 +795,35 @@ def execute(env, run, release, freeze, freeze_sha, tree, preflight):
         recognition_stages(prepare,freeze_policy,decode,setup_seconds=setup['seconds'],record=receipt)
         receipt['status']='all_planned_native_complete'
     except BaseException as error:
+        if observer is not None:
+            try:observer.failure(error)
+            except BaseException:pass
         failed=True; receipt['status']='stopped_no_retry'; receipt['primary_error']=safe_error(error)
         for key,value in receipt['stages'].items():
             if value=='started': receipt['stages'][key]='failed'
     finally:
+        observe('cleanup')
         receipt['stage']='cleanup'
         if docker is not None:
             try: docker.finish(); receipt['cleanup_verified']=True
             except BaseException as error:
+                if observer is not None:
+                    try:observer.failure(error)
+                    except BaseException:pass
                 failed=True; receipt['status']='cleanup_unconfirmed'; receipt['cleanup_error']=safe_error(error)
         else: receipt['cleanup_verified']=True
+        observe('terminal_accounting')
         terminal=terminal_accounting(root,projection,job,plan,run,successful)
         receipt['accounting_valid']=terminal['accounting_valid']; failed |= not terminal['accounting_valid']
         if failed and receipt['status']=='all_planned_native_complete': receipt['status']='stopped_no_retry'
+        observe('terminal_write')
         write_once(root/'terminal-outcomes.json',terminal)
         receipt['wall_seconds']=time.monotonic()-started; receipt['stage']='package'
+        observe('host_receipt_write')
         atomic(root/'host-receipt.json',receipt)
+        observe('package_build')
         payload,_=transport.build_package(root,run)
+        observe('package_write')
         transport.write_package(env['RUNNER_TEMP'],payload,run)
         # No audio/text/paths, arbitrary exceptions, tokens or raw container logs.
         print(json.dumps({'schema':'k1-asr18-local-evidence-ready-v1','archive_bytes':len(payload),
@@ -804,15 +834,34 @@ def execute(env, run, release, freeze, freeze_sha, tree, preflight):
 
 
 def main(argv=None):
-    # Crucially first: no event file, Git, API, input, directory, claim or runtime.
-    release=release_first()
-    require((sys.argv[1:] if argv is None else argv)==[],'fixed source entry; no alternate config path')
-    env=dict(os.environ)
-    event=read_json(Path(env['GITHUB_EVENT_PATH']),c.MIB)
-    run=event_identity(env,event)
-    preflight=api_preflight(PublicAPI(),run,release)
-    freeze,freeze_sha,tree=source_authority(run,release)
-    return execute(env,run,release,freeze,freeze_sha,tree,preflight)
+    from failure_observer import Observation
+    observer=Observation(role='host')
+    try:
+        # First operational gate remains before event/Git/API/claim/model/token.
+        _observe(observer,'release')
+        release=release_first()
+        _observe(observer,'arguments')
+        require((sys.argv[1:] if argv is None else argv)==[],'fixed source entry; no alternate config path')
+        env=dict(os.environ)
+        _observe(observer,'event_read')
+        event=read_json(Path(env['GITHUB_EVENT_PATH']),c.MIB)
+        _observe(observer,'context')
+        run=event_identity(env,event)
+        observer.attach(run,env['RUNNER_TEMP'])
+        _observe(observer,'api_preflight')
+        preflight=api_preflight(PublicAPI(),run,release)
+        _observe(observer,'source_authority')
+        freeze,freeze_sha,tree=source_authority(run,release)
+        result=execute(env,run,release,freeze,freeze_sha,tree,preflight,observer=observer)
+    except BaseException as error:
+        try:observer.failure(error)
+        except BaseException:pass
+        try:observer.finish(success=False)
+        except BaseException:pass
+        raise
+    _observe(observer,'complete')
+    recorded=observer.finish(success=result==0)
+    return result if recorded else 2
 
 
 if __name__=='__main__':

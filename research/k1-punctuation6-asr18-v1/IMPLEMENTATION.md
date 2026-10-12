@@ -1,10 +1,10 @@
-# K1 punctuation6 ASR18: source-reviewed activation candidate
+# K1 punctuation6 ASR18: disabled failure-observability repair
 
-This local candidate binds exactly six actual new TTS cells and eighteen new ASR slots. Its static ASR-only execution/publication approval flags are true for final review; it has not been published or executed by preparing these files. Real source publication, CI acceptance and the one execution-ref creation remain separate release actions.
+This is a source-only maintenance candidate after failed run 38207026177. Execution and publication approval flags are false. The six actual TTS cells remain bound, but all eighteen ASR slots have unknown consumption and remain sealed. Preparing, reviewing, testing, or publishing this repair does not authorize any new execution, ref creation, or retry. The implementation boundaries below describe the retained original contract; they do not assert that its runtime stages completed.
 
 The actual TTS input authority binds executed source dbf8aa7c1d04f785874c1d089b1646348308af3b, result 99f559a131daf43316d5e0556d1c73931b62073f and run 38200026588. All six cells passed source/audio semantics and root-reviewed finite historical identity screening. Their total input duration is 11.84 seconds; all eighteen eligible ASR slots would process 35.52 seconds cumulatively. No new ASR outcome or formal training admission is asserted. No additional TTS or training is authorized by this source.
 
-The active workflow is byte-identical to the fixed research template and only responds to the unique source-ref creation, attempt one. The exact new branch is protected from repository cleanup. The prior public branch-history record is independently observed empty; the live gate still must prove only its actual current run exists.
+The active workflow remains byte-identical to the fixed research template. Its sole execution identity was consumed by run 38207026177, attempt one, and the exact branch remains protected from repository cleanup. The frozen empty prior-history record describes the observation before that run only; current public history contains that run. Deleting or recreating the ref cannot reset its authority.
 
 ## Fixed scientific and counting boundaries
 
@@ -48,4 +48,57 @@ Only the existing locked models, adapters, CPU runtime and standard hosted route
 
 `source-reuse-lock.json` records byte-identical retained files and explicit new adaptations. `prepare_freeze.py` enumerates the inference, setup and host closures and excludes its own output. Retained qwen12 campaign code and consumed identities are never inference inputs. The extracted resource algorithms retain their original safe filesystem sampling and metering rules; fixed legacy receipt format labels are provenance, not old-call authority.
 
-Before an actual run, this exact complete candidate requires independent review, exact remote source publication, CI acceptance and root execution-ref release. Runtime resource/capacity proof still precedes every new decode. The active workflow must preserve exact equality with the reviewed template. The original training recipe and original insufficient coverage conclusion remain intact. Training admission and any later data-bound derived recipe require their own review and execution release.
+No actual run is authorized by this repair. Any future separate experiment would need its own explicit authority and must not reuse or reset the eighteen sealed slots. The active workflow must preserve exact equality with the reviewed template. The original training recipe and original insufficient coverage conclusion remain intact. No training admission or training execution is established.
+
+## Diagnostic-only maintenance after run 38207026177
+
+The actual attempt-1 host and publisher both failed. `FAILURE-38207026177.json`
+records the public identities and observations. No claims, result archive, or
+original publisher receipt could be recovered. All 18 planned slots are sealed
+with unknown actual consumption; they cannot be automatically reused. The six
+TTS calls remain completed. No ASR effectiveness or training admission conclusion
+is established. Synthetic regression outcomes are not observations of that run.
+
+This maintenance candidate sets execution and publication approval gates to
+false. It introduces no new ref, workflow, model, input, decode policy, quota,
+retry, or execution permission. The historical unique execution identity remains
+consumed. The existing preparation, native, resource, archive, source, and
+publication gates remain in place.
+
+`failure_observer.py` is host-only, pure standard library. The two host processes
+emit fixed-stage JSON checkpoints (at most 96 lines of at most 1 KiB each).
+Prepare/decode stages identify only the fixed recognizer family. A final safe
+record is at most 16 KiB; its stdout envelope is at most 17 KiB and includes the
+complete record, byte count, SHA256, and local persistence outcome. The same
+record is independently written with exclusive creation and fsync outside the
+complete evidence package. A failed local write does not prevent an attempted
+stdout record; no artifact, network, token, or extra publisher is introduced.
+
+Diagnostics never include arbitrary exception strings, exception chains, frame
+locals, environment values, HTTP bodies, transcripts, audio, weights, or private
+history. Original exception class names are emitted only from a fixed known
+class allowlist; unlisted classes are `UnlistedError`. Fixed-stage explanations
+replace exception content. The first observed error and distinct later errors
+are retained separately, capped at four; the same propagated exception is not
+relabelled as a new failure. Checkpoint exhaustion is recorded without preventing
+cleanup or replacing the original error.
+
+Claim observations inspect only the fixed new source claim, terminal ledger,
+and 18 anonymous start paths. A file's bytes/hash are projected only after its
+safe fixed JSON shape is checked. Missing, invalid, aliased, or unreadable records
+are explicit. `consumed_attempts` is always null in this independent diagnostic;
+reported ledger totals and non-atomic directory/start-file observations are
+separate and cannot establish native calls, success, or retry authority. In
+particular, a missing ledger is never represented as zero consumption. A
+publisher failure/unconfirmed status does not establish that no HTTP request,
+Git object, or ref creation occurred.
+
+These records address ordinary Python/control-flow failures even when terminal
+accounting, full-package construction, package writing, or publication fails.
+SIGKILL, runner loss, broken stdout, or system-wide storage failure can still
+prevent the final record. Any such missing evidence remains unknown.
+
+The existing CI and pre-execution fixed standard-library test lists include the
+new observation tests. Enabled-path regression checks use explicit temporary
+synthetic-enabled source copies and re-freeze them; checked-in controls remain
+disabled. No test invokes a recognition model or retries the failed run.

@@ -222,7 +222,7 @@ class CIContracts(unittest.TestCase):
 
 ASR18_MODULES = (
     'test_asr18_binding', 'test_asr18_contract', 'test_asr18_entrypoints',
-    'test_asr18_freeze', 'test_asr18_host', 'test_asr18_metadata',
+    'test_asr18_freeze', 'test_asr18_failure_observer', 'test_publisher_observation', 'test_asr18_host', 'test_asr18_metadata',
     'test_asr18_raw_data_reader', 'test_asr18_receipts', 'test_asr18_resources',
     'test_asr18_transport', 'test_asr18_worker',
 )
@@ -315,9 +315,11 @@ class ASR18CIContracts(unittest.TestCase):
 
     def test_fixed_all_modules_run_in_required_ci_and_before_execution(self):
         self.check_wiring(self.ci, self.workflow, self.template)
-        actual = {p.stem for p in (ROOT / 'research/k1-punctuation6-asr18-v1').glob('test_asr18_*.py')}
+        actual = {p.stem for p in (ROOT / 'research/k1-punctuation6-asr18-v1').iterdir()
+                  if p.is_file() and (p.name.startswith('test_asr18_') and p.suffix == '.py'
+                                     or p.name == 'test_publisher_observation.py')}
         self.assertEqual(actual, set(ASR18_MODULES))
-        self.assertEqual(len(ASR18_MODULES), 11)
+        self.assertEqual(len(ASR18_MODULES), 13)
         for name in ASR18_MODULES:
             self.assertTrue((ROOT / 'research/k1-punctuation6-asr18-v1' / (name + '.py')).is_file())
 
@@ -338,6 +340,14 @@ class ASR18CIContracts(unittest.TestCase):
                 workflow = self.workflow.replace(before, after) if target == 'workflow' else self.workflow
                 with self.assertRaises(AssertionError):
                     self.check_wiring(ci, workflow, workflow)
+
+    def test_rejects_removing_each_fixed_module(self):
+        for name in ASR18_MODULES:
+            with self.subTest(name=name):
+                altered = self.ci.replace('"' + name + '"', '"test_not_approved"')
+                self.assertNotEqual(altered, self.ci)
+                with self.assertRaises(AssertionError):
+                    self.check_wiring(altered, self.workflow, self.template)
 
     def test_contract_shell_failure_stops_later_modes_and_host_marker(self):
         command = contract_command(named_step(self.workflow, 'K1 punctuation6 ASR18 offline source contracts'))

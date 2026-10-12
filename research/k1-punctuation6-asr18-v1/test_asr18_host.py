@@ -1,6 +1,7 @@
 """Synthetic metadata, fake API/Git and mocked runtime only. Zero model/Docker calls."""
 import ast
 from contextlib import ExitStack
+from functools import wraps
 import copy
 import hashlib
 import json
@@ -23,6 +24,18 @@ import asr18_metadata as m
 from test_asr18_contract import invented_projection
 from test_asr18_binding import setup_binding as unbound_setup_binding
 from input_binding import verify_screening_receipt
+from test_control_fixture import DISABLED_APPROVALS, synthetic_enabled_source
+
+
+def synthetic_enabled_host_test(function):
+    """Run real gates against a separately re-frozen test-only enabled copy."""
+    @wraps(function)
+    def wrapped(self):
+        with synthetic_enabled_source(HERE) as source, \
+             patch.object(h,'ROOT',source.parents[1]), patch.object(h,'HERE',source), \
+             patch.dict(globals(),{'HERE':source}):
+            return function(self)
+    return wrapped
 
 
 def release_fixture():
@@ -101,9 +114,14 @@ def public_fixture():
 
 
 class HostTests(unittest.TestCase):
+    def test_checked_in_controls_remain_disabled(self):
+        for filename,keys in DISABLED_APPROVALS.items():
+            value=c.read_json(HERE/filename)
+            self.assertTrue(all(value[key] is False for key in keys))
+        with self.assertRaisesRegex(ValueError,'disabled'):h.release_first()
+
     def test_explicit_disabled_copy_precedes_every_external_or_mutating_operation(self):
-        # This candidate is released; exercise the real disabled reader against
-        # a separate explicit file, without changing the production control.
+        # Exercise the real disabled reader without changing production controls.
         before=c.read_bytes(HERE/'execution-release.json')
         with tempfile.TemporaryDirectory() as temp:
             source=Path(temp)
@@ -116,8 +134,9 @@ class HostTests(unittest.TestCase):
                 api.assert_not_called();git.assert_not_called();execute.assert_not_called()
         self.assertEqual(c.read_bytes(HERE/'execution-release.json'),before)
 
-    def test_actual_candidate_release_and_authorities_remain_bound(self):
-        # Read the checked-in True candidate with the actual production gate.
+    @synthetic_enabled_host_test
+    def test_synthetic_enabled_candidate_release_and_authorities_remain_bound(self):
+        # Real production gate, only temporary approval flags enabled.
         release=h.release_first()
         self.assertTrue(all(release[key] is True for key in c.RELEASE_APPROVALS))
         for key in c.RELEASE_AUTHORITIES:c.sha(release[key])
@@ -128,8 +147,9 @@ class HostTests(unittest.TestCase):
         self.assertEqual(len(inputs['actual_new_cells']),6)
         self.assertGreater(len(inputs['actual_blind_job']['clips']),0)
 
-    def test_actual_released_controls_pass_real_git_api_and_input_gates(self):
-        # Keep the candidate's real controls and frozen public source bytes.
+    @synthetic_enabled_host_test
+    def test_synthetic_enabled_controls_pass_real_git_api_and_input_gates(self):
+        # Keep the temporary enabled controls and re-frozen public source bytes.
         # Only the host event and six GitHub responses are invented. A clean
         # temporary local commit supplies the actual source HEAD/tree/blob;
         # no source, release, API or input admission gate is replaced.
@@ -199,7 +219,8 @@ class HostTests(unittest.TestCase):
         self.assertEqual(c.read_bytes(HERE/'execution-release.json'),production)
         self.assertEqual(c.read_bytes(HERE/'execution-freeze.json'),source_raw)
 
-    def test_actual_release_rejects_observer_raw_lf_history_sha(self):
+    @synthetic_enabled_host_test
+    def test_synthetic_enabled_release_rejects_observer_raw_lf_history_sha(self):
         # The public observer's bytes retain their trailing LF. Its file digest
         # must never stand in for the canonical JSON identity accepted by the
         # production API gate. Reconstruct only this public fixed identity;
@@ -221,7 +242,8 @@ class HostTests(unittest.TestCase):
         self.assertFalse(any('/jobs?' in path or '/git/ref/' in path for path in api.calls))
         self.assertEqual(c.read_bytes(HERE/'execution-release.json'),production)
 
-    def test_real_enabled_entry_rejects_invalid_host_or_event_before_side_effects(self):
+    @synthetic_enabled_host_test
+    def test_synthetic_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects(self):
         # release_first/read_json/event_identity/main are all the real functions.
         # Traps observe only downstream external or mutating operations; no
         # gate is mocked into returning success or into inventing a rejection.
