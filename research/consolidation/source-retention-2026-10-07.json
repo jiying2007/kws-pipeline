@@ -15253,43 +15253,43 @@
     {
       "path": ".github/workflows/acoustic-boundary-segmentation.yml",
       "mode": "100644",
-      "git_blob_sha1": "46c3590ebeb5dc874c88bac7a74716276cde818a",
-      "sha256": "68d1b43c63cc66b429e6fec019c42663ce5ba5fc43ea6100099cfd12307ebb39",
+      "git_blob_sha1": "f7e659bff283fc49da39c17d28d9005abfeab330",
+      "sha256": "6a37608043e03937fa46260d61a5dd807dad38c56df6a776d9ad261b242dc089",
       "bytes": 9010
     },
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
       "bytes": 43165,
-      "sha256": "3d03a25c91800429e21b2cc97aa4ed990e9785406e24d80faf3f041a798b6082",
-      "git_blob_sha1": "ab054126699b025ab3beec1f5461d6e1ed1102c8"
+      "sha256": "417e3a21deccd9edeed04316079e9484d8e7d18e02935adda098140510d535db",
+      "git_blob_sha1": "bc3d4b26c70173c9f0fb17b3e8eff8e65b98b83c"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
       "mode": "100644",
-      "git_blob_sha1": "10d8d9d80edc8b0239f3a93dbce2d685e53cad09",
-      "sha256": "c94f33f945ff92ed7a2db362d10a177a2f8737a2347c9da84609e2633659a323",
+      "git_blob_sha1": "e3ff7412135c661e8159363ff1612002b55c0dd4",
+      "sha256": "973101add617d9a584b8ca2b266bf525d4715ad5a186a41f6b550e9af891e54c",
       "bytes": 8555
     },
     {
       "path": ".github/workflows/decoder-boundary-requalification.yml",
       "mode": "100644",
-      "git_blob_sha1": "9967486ad7f0157d36852e4f944b45a8678895b2",
-      "sha256": "464b5585652a9f6bc70dfe93c327dc92401282c51ab09d58f2829c696408fbe6",
+      "git_blob_sha1": "99eac834cc8737a237d3b8cf5f3025c72bbd627f",
+      "sha256": "0f195ca8237d78a4f79849deb4c457162a9f1d5f50417d1d474eb60d5a3fc8f1",
       "bytes": 12417
     },
     {
       "path": ".github/workflows/decoder-boundary-separability.yml",
       "mode": "100644",
-      "git_blob_sha1": "056c08e4e5fdc2268f6d6daefcb6a877fecb5f96",
-      "sha256": "7c7182acc2d2933888ec7b0ebc1d1bda22bcb0c23ecd9a39bc9a831723c9e5ca",
+      "git_blob_sha1": "758d106802b1f13155a1fcf761fd968ae8353367",
+      "sha256": "df627697d915972501bb528af873296c359a05d6d8eab060d31ce6d57bc5b63f",
       "bytes": 9046
     },
     {
       "path": ".github/workflows/deployment-release.yml",
       "mode": "100644",
-      "git_blob_sha1": "c23809f9cde0b1fd355b917587f08f8a25b213e7",
-      "sha256": "9d288a41dc2f1c4321519109a46710165d7b9b82cfe32606dc79213d0fd1ac27",
+      "git_blob_sha1": "8d913de0be1c408f19c512af19d1aa61f8974010",
+      "sha256": "3cd63debcd6ba2ccc1b1f6761f0e6b9e9dde71362b60f09666d27ed04c76b4d3",
       "bytes": 18908
     },
     {
@@ -15302,15 +15302,15 @@
     {
       "path": ".github/workflows/far-nightly.yml",
       "mode": "100644",
-      "git_blob_sha1": "8ad61477f9cce7ec7a26247d17f7721f932e280a",
-      "sha256": "8054da7cd49b7f2a5d49b25672d379a4946bd9101c63993e9e980d7c3ee755df",
+      "git_blob_sha1": "6ce40d434372460dc0f7060cc8612dfce77c41db",
+      "sha256": "e60172d69e24e1e8ada780c912e20ce097dc14196551de57934850dff5beaf8a",
       "bytes": 13500
     },
     {
       "path": ".github/workflows/frozen-far-source-replay.yml",
       "mode": "100644",
-      "git_blob_sha1": "4021f06ad73b350468f154e7feeff18342bbb327",
-      "sha256": "ff77b2f48418e88fed5dc8003aa5e8964300dd26598f9e47016b0a60f88eada2",
+      "git_blob_sha1": "958233cd273564e22928acf6107381320c746776",
+      "sha256": "bca1406b1c57a0fac40331a5c3535316129e6fe958cc8e03f6604a5429fae839",
       "bytes": 20470
     },
     {
@@ -15358,15 +15358,15 @@
     {
       "path": ".github/workflows/model-training-preflight.yml",
       "mode": "100644",
-      "git_blob_sha1": "4a32f660f9f3f418855b0d2a0c0107327c086984",
-      "sha256": "5273557d10ead694673174dea637cc28180ac2b1c46af22bd6cdeb067c797e09",
+      "git_blob_sha1": "3d2e6121f4b64104b1e9e9fdfb847bdfa30c17f2",
+      "sha256": "ec6ff044f922bcbe6d7ea3838ebcd496df09ea35b62bc5d1394ea9a387c3183f",
       "bytes": 16061
     },
     {
       "path": ".github/workflows/model-training.yml",
       "mode": "100644",
-      "git_blob_sha1": "2c6088cc9698eb409d0fb276d04fb4e12a9cbdcd",
-      "sha256": "f03cecc8f4e7742b77017677e25cf7b776ed686ea7f52b3a31d5c161fa396bc0",
+      "git_blob_sha1": "e444bc88070a21a3b650f7f15a3501a842040ea4",
+      "sha256": "6e15d45973875b7b05e8f55bfeca5c07da1f4765814e92182334c1d0501e5834",
       "bytes": 13945
     },
     {
@@ -15379,36 +15379,36 @@
     {
       "path": ".github/workflows/product-development-experiment.yml",
       "mode": "100644",
-      "git_blob_sha1": "80cf92e5d38386bd7ee062de0daa71c3c3f4d0ae",
-      "sha256": "1e3d62471671c0e9cd21ad423d263744c5917acf68fff217bb9dce351dbb5023",
+      "git_blob_sha1": "0e192eeffcbb46ff1b49e9f47ccee5b3650e19d3",
+      "sha256": "ef11d02f986f6db7b00d94ae8c23ea8f4f24e93c3da5c0d09e1809d60b0b38b6",
       "bytes": 35404
     },
     {
       "path": ".github/workflows/product-development-pair-analysis.yml",
       "mode": "100644",
-      "git_blob_sha1": "4fff67925dfcadec05a36dd89c7410d937e87aaf",
-      "sha256": "21439823ee06970189381b3ab98e2a9d0039344c66173d065f9ed55a1af54536",
+      "git_blob_sha1": "3f646cf1c3c48a4925162374b96f43c70ad54f49",
+      "sha256": "227af540dd4f54233e8a7d9235edbf63c4cdb4a8cc6969ed2b3265e0518949ed",
       "bytes": 4456
     },
     {
       "path": ".github/workflows/product-development-paired-experiment.yml",
       "mode": "100644",
-      "git_blob_sha1": "91c05a068d75bd34cb215cbd78bfb828cef28971",
-      "sha256": "159bee8599013977ba600ccc96243a1f0611e739e16de8f54722e68edea39bd9",
+      "git_blob_sha1": "9f9a2376bd55d7e6aba7de5d791c6a270ff3fb96",
+      "sha256": "a744849d0a3ae45e6858b89caff247dcf70d301c6b76f75ff4229ff2b9e3faa4",
       "bytes": 16063
     },
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
       "bytes": 28189,
-      "git_blob_sha1": "8423b42042240cf5dfea17fdaa43bb714fb3ce23",
-      "sha256": "3e56c260d97b5d54c2b2485f8a98767ba414572e0b8056dc936e09bc580a7a35"
+      "git_blob_sha1": "cc8ad60322b17f1c8aeb88855ca4f2d432dc8491",
+      "sha256": "4c4f80d261c0fb71a8890ac45bb3f7f4385b0eb8dae848b333ff7daa10412a9b"
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
       "mode": "100644",
-      "git_blob_sha1": "928dffe356aff01f307d007c213d0d6a8fb6cd18",
-      "sha256": "1e06ca0b63450a6a69f7178ef45110270e6c0f70d0454f9d77e9f8bbc7dee7ed",
+      "git_blob_sha1": "409fa360592fe7e6d6865287063f80b6bbf449f7",
+      "sha256": "82a1b7de2b9837240f0564eb22274a7e8cdc9e6ffdcd123724c15d3489d5f33d",
       "bytes": 14973
     },
     {
@@ -15449,8 +15449,8 @@
     {
       "path": ".github/workflows/research-donor-fbank.yml",
       "mode": "100644",
-      "git_blob_sha1": "9f2af9e4be5be5372eaee05e7fe0d5e823eb8cdb",
-      "sha256": "716a508683498ea0a75082c299ac7613f18d2c35f0893897dcb4b3960eeffaef",
+      "git_blob_sha1": "f672261c99f8a16c7abef085d8872f03254176d9",
+      "sha256": "27267a2658bc1c1ed7c36782f99a108a6e9733589b559531d02839c0e8358c69",
       "bytes": 3696
     },
     {
@@ -15464,8 +15464,8 @@
       "path": ".github/workflows/research-native-a20.yml",
       "mode": "100644",
       "bytes": 3635,
-      "git_blob_sha1": "abc9df041c6cef99cb3d92bc75ff344601cf0ebf",
-      "sha256": "6671553244346cb530db44d043d5855f0437b8d8b4f0a89c01357ceeb340067b"
+      "git_blob_sha1": "1c504623407b6e0c46e83bd62d7479ce081b1daa",
+      "sha256": "29476f609f896158d20c27ab1be5e87403ff6e1aa659deb7f877ee13addedd32"
     },
     {
       "path": ".github/workflows/research-sherpa-host.yml",
@@ -15484,50 +15484,50 @@
     {
       "path": ".github/workflows/retained-ctc-keyword-competition-gradient.yml",
       "mode": "100644",
-      "git_blob_sha1": "8307c7a324f9a9b756e211b574703dafcf89258f",
-      "sha256": "2a2dba737d4ca3ced1c5dedbca555fdcd3edfb72ef5ba6f0b9965f3c1f1b5e05",
+      "git_blob_sha1": "3a77c0b3a2791d36c3806b26901353abe627f030",
+      "sha256": "1e995aa218c64a8e58c77b51955a054b0810c9b11b322ed4fb643b68c9f72eeb",
       "bytes": 9891
     },
     {
       "path": ".github/workflows/retained-ctc-label-prior-gradient.yml",
       "mode": "100644",
-      "git_blob_sha1": "d910a619a38f127fd356da751fd24fb0fd45ec27",
-      "sha256": "c7b6d7546a30721fe117c2e292ab2406d82dec0455d9fb3a78181d4851c82b28",
+      "git_blob_sha1": "008b9526e292f85b9da25d78c6f444737b781854",
+      "sha256": "633c83438c5c1bc3e9725908fe6fb7acdbc0efbeb94bc154aaa77bb8890fc333",
       "bytes": 8965
     },
     {
       "path": ".github/workflows/retained-ctc-token-state-blank-gradient.yml",
       "mode": "100644",
-      "git_blob_sha1": "e18877f9f08d1f14c224c4ebdde1dd33c3379118",
-      "sha256": "e396da6416df498c6b835f19cfb0451b9c302bd3e8606b6e9397408cfb58ef44",
+      "git_blob_sha1": "bea9fdc76cf9beeca5249ce50bae2612f3599ea7",
+      "sha256": "276ed42f84911d0f22f9e1b976add9c4df8b2ebe5762d9abe75bcc252b9b2391",
       "bytes": 9092
     },
     {
       "path": ".github/workflows/retained-decoder-search-path-decomposition.yml",
       "mode": "100644",
-      "git_blob_sha1": "520caa8faeba3bb28d94a8cc043c56500d1f3dea",
-      "sha256": "5c50ec7d51c3d1571b2a76e8cf54e367e0f6b2ef9945edd89c371f6744889c85",
+      "git_blob_sha1": "d98310c1486c02b25b304ff849b13dcd91ad5eae",
+      "sha256": "201955494cff930a528f1dd27dc2cd59928a1b214d611853bc3658b32f4ee96a",
       "bytes": 13120
     },
     {
       "path": ".github/workflows/retained-frozen-far-context-path-summary.yml",
       "mode": "100644",
-      "git_blob_sha1": "590d75ad6dcab4a2e178cb6ad4784f8f9755dc33",
-      "sha256": "0a5d13e995ae26780b7cc95ea6bb11e73208f886ea7a6f062b43093a462731de",
+      "git_blob_sha1": "81dbbb8e74df1b97d608ff459c735c3fcf69aa28",
+      "sha256": "1f6431df5bdfe11e0df433e0379b9b3fde62c683d8469cb58fd27a99ad089a1a",
       "bytes": 5319
     },
     {
       "path": ".github/workflows/retained-full-speech-objective-gradient.yml",
       "mode": "100644",
-      "git_blob_sha1": "fe4a7d55fa41af992fcb9565bcede92047adce78",
-      "sha256": "0bc113eb73cf8878a163f7482e2c989ce49c8d1107597632c9c89f84d9a06f01",
+      "git_blob_sha1": "682a192d9b8594afed73703d99a0cac3c7fae383",
+      "sha256": "1cd750aa3d269baab4311f49a84829e96d8b79401119e72d5b718cc4e90810e3",
       "bytes": 10226
     },
     {
       "path": ".github/workflows/retained-sequence-margin-runtime-gap-decomposition.yml",
       "mode": "100644",
-      "git_blob_sha1": "82925e023d3bf0b5a59f80aacded6ddd3bd3fc1c",
-      "sha256": "2ced9a25e212e44de1d15893c373101725e444f8be3410143fe531a5c7401eca",
+      "git_blob_sha1": "fcf52f8f7a3285e89862142d9b29afc98a83bf10",
+      "sha256": "495a7b728e997fb7efa3ca3d3387699cd8cc7b11f5e3f78d0c8fe5af0831bb2f",
       "bytes": 9408
     },
     {
@@ -15610,15 +15610,15 @@
     {
       "path": ".github/workflows/target-dut-qualification.yml",
       "mode": "100644",
-      "git_blob_sha1": "f706fe2be3d0147d3f60082ae56feec88bdc5db9",
-      "sha256": "b7499b23d2eba2800f962520d4df06b940a15712c710f5d50d4259f6cec6596b",
+      "git_blob_sha1": "bbf3b8ad4c349873e3e623aca41d5244dfc0e696",
+      "sha256": "c4ce46581d6681856ce72e3b7bf629db9ed9a6af65f66accca7bc1890f58855b",
       "bytes": 11666
     },
     {
       "path": ".github/workflows/training-audit-closure.yml",
       "mode": "100644",
-      "git_blob_sha1": "9f608322e81f93c29c98f31d1276916d3457fc52",
-      "sha256": "c771f5c522b6ef933981b79d027d9f13c52627f0a923f90f7ba19e344572959b",
+      "git_blob_sha1": "993319a679c5823592dbd6fb3b5edea104b39aa8",
+      "sha256": "64f33a545a3ebda433cc54ae0f4fad7416256aa8a81024018a9afbab0c846724",
       "bytes": 3011
     },
     {
@@ -19914,14 +19914,520 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-12",
+      "operation_id": "dependabot-pr547-action-pins-contracts-retention-20261012",
+      "public_main_base_commit": "0f3cc89a3235c4b3af294dc6b5816ff9877c0f42",
+      "public_main_base_tree": "a78e8791c233e847df67face7b2d5052f3f7e512",
+      "workflow_source_changed": true,
+      "scope": "Update only the 27 current workflow identities for reviewed upload-artifact v7.0.2, download-artifact v8.0.2 and cache v6.1.0 pins, plus the two exact download-artifact test expectations.",
+      "files": [
+        {
+          "path": ".github/workflows/acoustic-boundary-segmentation.yml",
+          "before": {
+            "path": ".github/workflows/acoustic-boundary-segmentation.yml",
+            "mode": "100644",
+            "bytes": 9010,
+            "sha256": "68d1b43c63cc66b429e6fec019c42663ce5ba5fc43ea6100099cfd12307ebb39",
+            "git_blob_sha1": "46c3590ebeb5dc874c88bac7a74716276cde818a"
+          },
+          "after": {
+            "path": ".github/workflows/acoustic-boundary-segmentation.yml",
+            "mode": "100644",
+            "bytes": 9010,
+            "sha256": "6a37608043e03937fa46260d61a5dd807dad38c56df6a776d9ad261b242dc089",
+            "git_blob_sha1": "f7e659bff283fc49da39c17d28d9005abfeab330"
+          }
+        },
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 43165,
+            "sha256": "3d03a25c91800429e21b2cc97aa4ed990e9785406e24d80faf3f041a798b6082",
+            "git_blob_sha1": "ab054126699b025ab3beec1f5461d6e1ed1102c8"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 43165,
+            "sha256": "417e3a21deccd9edeed04316079e9484d8e7d18e02935adda098140510d535db",
+            "git_blob_sha1": "bc3d4b26c70173c9f0fb17b3e8eff8e65b98b83c"
+          }
+        },
+        {
+          "path": ".github/workflows/dataset-driven-iteration.yml",
+          "before": {
+            "path": ".github/workflows/dataset-driven-iteration.yml",
+            "mode": "100644",
+            "bytes": 8555,
+            "sha256": "c94f33f945ff92ed7a2db362d10a177a2f8737a2347c9da84609e2633659a323",
+            "git_blob_sha1": "10d8d9d80edc8b0239f3a93dbce2d685e53cad09"
+          },
+          "after": {
+            "path": ".github/workflows/dataset-driven-iteration.yml",
+            "mode": "100644",
+            "bytes": 8555,
+            "sha256": "973101add617d9a584b8ca2b266bf525d4715ad5a186a41f6b550e9af891e54c",
+            "git_blob_sha1": "e3ff7412135c661e8159363ff1612002b55c0dd4"
+          }
+        },
+        {
+          "path": ".github/workflows/decoder-boundary-requalification.yml",
+          "before": {
+            "path": ".github/workflows/decoder-boundary-requalification.yml",
+            "mode": "100644",
+            "bytes": 12417,
+            "sha256": "464b5585652a9f6bc70dfe93c327dc92401282c51ab09d58f2829c696408fbe6",
+            "git_blob_sha1": "9967486ad7f0157d36852e4f944b45a8678895b2"
+          },
+          "after": {
+            "path": ".github/workflows/decoder-boundary-requalification.yml",
+            "mode": "100644",
+            "bytes": 12417,
+            "sha256": "0f195ca8237d78a4f79849deb4c457162a9f1d5f50417d1d474eb60d5a3fc8f1",
+            "git_blob_sha1": "99eac834cc8737a237d3b8cf5f3025c72bbd627f"
+          }
+        },
+        {
+          "path": ".github/workflows/decoder-boundary-separability.yml",
+          "before": {
+            "path": ".github/workflows/decoder-boundary-separability.yml",
+            "mode": "100644",
+            "bytes": 9046,
+            "sha256": "7c7182acc2d2933888ec7b0ebc1d1bda22bcb0c23ecd9a39bc9a831723c9e5ca",
+            "git_blob_sha1": "056c08e4e5fdc2268f6d6daefcb6a877fecb5f96"
+          },
+          "after": {
+            "path": ".github/workflows/decoder-boundary-separability.yml",
+            "mode": "100644",
+            "bytes": 9046,
+            "sha256": "df627697d915972501bb528af873296c359a05d6d8eab060d31ce6d57bc5b63f",
+            "git_blob_sha1": "758d106802b1f13155a1fcf761fd968ae8353367"
+          }
+        },
+        {
+          "path": ".github/workflows/deployment-release.yml",
+          "before": {
+            "path": ".github/workflows/deployment-release.yml",
+            "mode": "100644",
+            "bytes": 18908,
+            "sha256": "9d288a41dc2f1c4321519109a46710165d7b9b82cfe32606dc79213d0fd1ac27",
+            "git_blob_sha1": "c23809f9cde0b1fd355b917587f08f8a25b213e7"
+          },
+          "after": {
+            "path": ".github/workflows/deployment-release.yml",
+            "mode": "100644",
+            "bytes": 18908,
+            "sha256": "3cd63debcd6ba2ccc1b1f6761f0e6b9e9dde71362b60f09666d27ed04c76b4d3",
+            "git_blob_sha1": "8d913de0be1c408f19c512af19d1aa61f8974010"
+          }
+        },
+        {
+          "path": ".github/workflows/far-nightly.yml",
+          "before": {
+            "path": ".github/workflows/far-nightly.yml",
+            "mode": "100644",
+            "bytes": 13500,
+            "sha256": "8054da7cd49b7f2a5d49b25672d379a4946bd9101c63993e9e980d7c3ee755df",
+            "git_blob_sha1": "8ad61477f9cce7ec7a26247d17f7721f932e280a"
+          },
+          "after": {
+            "path": ".github/workflows/far-nightly.yml",
+            "mode": "100644",
+            "bytes": 13500,
+            "sha256": "e60172d69e24e1e8ada780c912e20ce097dc14196551de57934850dff5beaf8a",
+            "git_blob_sha1": "6ce40d434372460dc0f7060cc8612dfce77c41db"
+          }
+        },
+        {
+          "path": ".github/workflows/frozen-far-source-replay.yml",
+          "before": {
+            "path": ".github/workflows/frozen-far-source-replay.yml",
+            "mode": "100644",
+            "bytes": 20470,
+            "sha256": "ff77b2f48418e88fed5dc8003aa5e8964300dd26598f9e47016b0a60f88eada2",
+            "git_blob_sha1": "4021f06ad73b350468f154e7feeff18342bbb327"
+          },
+          "after": {
+            "path": ".github/workflows/frozen-far-source-replay.yml",
+            "mode": "100644",
+            "bytes": 20470,
+            "sha256": "bca1406b1c57a0fac40331a5c3535316129e6fe958cc8e03f6604a5429fae839",
+            "git_blob_sha1": "958233cd273564e22928acf6107381320c746776"
+          }
+        },
+        {
+          "path": ".github/workflows/model-training-preflight.yml",
+          "before": {
+            "path": ".github/workflows/model-training-preflight.yml",
+            "mode": "100644",
+            "bytes": 16061,
+            "sha256": "5273557d10ead694673174dea637cc28180ac2b1c46af22bd6cdeb067c797e09",
+            "git_blob_sha1": "4a32f660f9f3f418855b0d2a0c0107327c086984"
+          },
+          "after": {
+            "path": ".github/workflows/model-training-preflight.yml",
+            "mode": "100644",
+            "bytes": 16061,
+            "sha256": "ec6ff044f922bcbe6d7ea3838ebcd496df09ea35b62bc5d1394ea9a387c3183f",
+            "git_blob_sha1": "3d2e6121f4b64104b1e9e9fdfb847bdfa30c17f2"
+          }
+        },
+        {
+          "path": ".github/workflows/model-training.yml",
+          "before": {
+            "path": ".github/workflows/model-training.yml",
+            "mode": "100644",
+            "bytes": 13945,
+            "sha256": "f03cecc8f4e7742b77017677e25cf7b776ed686ea7f52b3a31d5c161fa396bc0",
+            "git_blob_sha1": "2c6088cc9698eb409d0fb276d04fb4e12a9cbdcd"
+          },
+          "after": {
+            "path": ".github/workflows/model-training.yml",
+            "mode": "100644",
+            "bytes": 13945,
+            "sha256": "6e15d45973875b7b05e8f55bfeca5c07da1f4765814e92182334c1d0501e5834",
+            "git_blob_sha1": "e444bc88070a21a3b650f7f15a3501a842040ea4"
+          }
+        },
+        {
+          "path": ".github/workflows/product-development-experiment.yml",
+          "before": {
+            "path": ".github/workflows/product-development-experiment.yml",
+            "mode": "100644",
+            "bytes": 35404,
+            "sha256": "1e3d62471671c0e9cd21ad423d263744c5917acf68fff217bb9dce351dbb5023",
+            "git_blob_sha1": "80cf92e5d38386bd7ee062de0daa71c3c3f4d0ae"
+          },
+          "after": {
+            "path": ".github/workflows/product-development-experiment.yml",
+            "mode": "100644",
+            "bytes": 35404,
+            "sha256": "ef11d02f986f6db7b00d94ae8c23ea8f4f24e93c3da5c0d09e1809d60b0b38b6",
+            "git_blob_sha1": "0e192eeffcbb46ff1b49e9f47ccee5b3650e19d3"
+          }
+        },
+        {
+          "path": ".github/workflows/product-development-pair-analysis.yml",
+          "before": {
+            "path": ".github/workflows/product-development-pair-analysis.yml",
+            "mode": "100644",
+            "bytes": 4456,
+            "sha256": "21439823ee06970189381b3ab98e2a9d0039344c66173d065f9ed55a1af54536",
+            "git_blob_sha1": "4fff67925dfcadec05a36dd89c7410d937e87aaf"
+          },
+          "after": {
+            "path": ".github/workflows/product-development-pair-analysis.yml",
+            "mode": "100644",
+            "bytes": 4456,
+            "sha256": "227af540dd4f54233e8a7d9235edbf63c4cdb4a8cc6969ed2b3265e0518949ed",
+            "git_blob_sha1": "3f646cf1c3c48a4925162374b96f43c70ad54f49"
+          }
+        },
+        {
+          "path": ".github/workflows/product-development-paired-experiment.yml",
+          "before": {
+            "path": ".github/workflows/product-development-paired-experiment.yml",
+            "mode": "100644",
+            "bytes": 16063,
+            "sha256": "159bee8599013977ba600ccc96243a1f0611e739e16de8f54722e68edea39bd9",
+            "git_blob_sha1": "91c05a068d75bd34cb215cbd78bfb828cef28971"
+          },
+          "after": {
+            "path": ".github/workflows/product-development-paired-experiment.yml",
+            "mode": "100644",
+            "bytes": 16063,
+            "sha256": "a744849d0a3ae45e6858b89caff247dcf70d301c6b76f75ff4229ff2b9e3faa4",
+            "git_blob_sha1": "9f9a2376bd55d7e6aba7de5d791c6a270ff3fb96"
+          }
+        },
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 28189,
+            "sha256": "3e56c260d97b5d54c2b2485f8a98767ba414572e0b8056dc936e09bc580a7a35",
+            "git_blob_sha1": "8423b42042240cf5dfea17fdaa43bb714fb3ce23"
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 28189,
+            "sha256": "4c4f80d261c0fb71a8890ac45bb3f7f4385b0eb8dae848b333ff7daa10412a9b",
+            "git_blob_sha1": "cc8ad60322b17f1c8aeb88855ca4f2d432dc8491"
+          }
+        },
+        {
+          "path": ".github/workflows/real-human-qualification.yml",
+          "before": {
+            "path": ".github/workflows/real-human-qualification.yml",
+            "mode": "100644",
+            "bytes": 14973,
+            "sha256": "1e06ca0b63450a6a69f7178ef45110270e6c0f70d0454f9d77e9f8bbc7dee7ed",
+            "git_blob_sha1": "928dffe356aff01f307d007c213d0d6a8fb6cd18"
+          },
+          "after": {
+            "path": ".github/workflows/real-human-qualification.yml",
+            "mode": "100644",
+            "bytes": 14973,
+            "sha256": "82a1b7de2b9837240f0564eb22274a7e8cdc9e6ffdcd123724c15d3489d5f33d",
+            "git_blob_sha1": "409fa360592fe7e6d6865287063f80b6bbf449f7"
+          }
+        },
+        {
+          "path": ".github/workflows/research-donor-fbank.yml",
+          "before": {
+            "path": ".github/workflows/research-donor-fbank.yml",
+            "mode": "100644",
+            "bytes": 3696,
+            "sha256": "716a508683498ea0a75082c299ac7613f18d2c35f0893897dcb4b3960eeffaef",
+            "git_blob_sha1": "9f2af9e4be5be5372eaee05e7fe0d5e823eb8cdb"
+          },
+          "after": {
+            "path": ".github/workflows/research-donor-fbank.yml",
+            "mode": "100644",
+            "bytes": 3696,
+            "sha256": "27267a2658bc1c1ed7c36782f99a108a6e9733589b559531d02839c0e8358c69",
+            "git_blob_sha1": "f672261c99f8a16c7abef085d8872f03254176d9"
+          }
+        },
+        {
+          "path": ".github/workflows/research-native-a20.yml",
+          "before": {
+            "path": ".github/workflows/research-native-a20.yml",
+            "mode": "100644",
+            "bytes": 3635,
+            "sha256": "6671553244346cb530db44d043d5855f0437b8d8b4f0a89c01357ceeb340067b",
+            "git_blob_sha1": "abc9df041c6cef99cb3d92bc75ff344601cf0ebf"
+          },
+          "after": {
+            "path": ".github/workflows/research-native-a20.yml",
+            "mode": "100644",
+            "bytes": 3635,
+            "sha256": "29476f609f896158d20c27ab1be5e87403ff6e1aa659deb7f877ee13addedd32",
+            "git_blob_sha1": "1c504623407b6e0c46e83bd62d7479ce081b1daa"
+          }
+        },
+        {
+          "path": ".github/workflows/research-source-consolidation.yml",
+          "before": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "bytes": 3719,
+            "sha256": "45aacd71cdf36210fb9e075c68c1c2f8c7fc8b9e70b676f5ff413cc49198d8ea",
+            "git_blob_sha1": "65c53193fb52ce18a93b27c9dca5708f67ab2c62"
+          },
+          "after": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "bytes": 3719,
+            "sha256": "49681bf1a17017f958bda4f2949cb20d1c724d2add2dc70bc6fc45cff54cfcdb",
+            "git_blob_sha1": "c14276804ed442e73ca7f2e3ad5e906992f30f94"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-ctc-keyword-competition-gradient.yml",
+          "before": {
+            "path": ".github/workflows/retained-ctc-keyword-competition-gradient.yml",
+            "mode": "100644",
+            "bytes": 9891,
+            "sha256": "2a2dba737d4ca3ced1c5dedbca555fdcd3edfb72ef5ba6f0b9965f3c1f1b5e05",
+            "git_blob_sha1": "8307c7a324f9a9b756e211b574703dafcf89258f"
+          },
+          "after": {
+            "path": ".github/workflows/retained-ctc-keyword-competition-gradient.yml",
+            "mode": "100644",
+            "bytes": 9891,
+            "sha256": "1e995aa218c64a8e58c77b51955a054b0810c9b11b322ed4fb643b68c9f72eeb",
+            "git_blob_sha1": "3a77c0b3a2791d36c3806b26901353abe627f030"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-ctc-label-prior-gradient.yml",
+          "before": {
+            "path": ".github/workflows/retained-ctc-label-prior-gradient.yml",
+            "mode": "100644",
+            "bytes": 8965,
+            "sha256": "c7b6d7546a30721fe117c2e292ab2406d82dec0455d9fb3a78181d4851c82b28",
+            "git_blob_sha1": "d910a619a38f127fd356da751fd24fb0fd45ec27"
+          },
+          "after": {
+            "path": ".github/workflows/retained-ctc-label-prior-gradient.yml",
+            "mode": "100644",
+            "bytes": 8965,
+            "sha256": "633c83438c5c1bc3e9725908fe6fb7acdbc0efbeb94bc154aaa77bb8890fc333",
+            "git_blob_sha1": "008b9526e292f85b9da25d78c6f444737b781854"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-ctc-token-state-blank-gradient.yml",
+          "before": {
+            "path": ".github/workflows/retained-ctc-token-state-blank-gradient.yml",
+            "mode": "100644",
+            "bytes": 9092,
+            "sha256": "e396da6416df498c6b835f19cfb0451b9c302bd3e8606b6e9397408cfb58ef44",
+            "git_blob_sha1": "e18877f9f08d1f14c224c4ebdde1dd33c3379118"
+          },
+          "after": {
+            "path": ".github/workflows/retained-ctc-token-state-blank-gradient.yml",
+            "mode": "100644",
+            "bytes": 9092,
+            "sha256": "276ed42f84911d0f22f9e1b976add9c4df8b2ebe5762d9abe75bcc252b9b2391",
+            "git_blob_sha1": "bea9fdc76cf9beeca5249ce50bae2612f3599ea7"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-decoder-search-path-decomposition.yml",
+          "before": {
+            "path": ".github/workflows/retained-decoder-search-path-decomposition.yml",
+            "mode": "100644",
+            "bytes": 13120,
+            "sha256": "5c50ec7d51c3d1571b2a76e8cf54e367e0f6b2ef9945edd89c371f6744889c85",
+            "git_blob_sha1": "520caa8faeba3bb28d94a8cc043c56500d1f3dea"
+          },
+          "after": {
+            "path": ".github/workflows/retained-decoder-search-path-decomposition.yml",
+            "mode": "100644",
+            "bytes": 13120,
+            "sha256": "201955494cff930a528f1dd27dc2cd59928a1b214d611853bc3658b32f4ee96a",
+            "git_blob_sha1": "d98310c1486c02b25b304ff849b13dcd91ad5eae"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-frozen-far-context-path-summary.yml",
+          "before": {
+            "path": ".github/workflows/retained-frozen-far-context-path-summary.yml",
+            "mode": "100644",
+            "bytes": 5319,
+            "sha256": "0a5d13e995ae26780b7cc95ea6bb11e73208f886ea7a6f062b43093a462731de",
+            "git_blob_sha1": "590d75ad6dcab4a2e178cb6ad4784f8f9755dc33"
+          },
+          "after": {
+            "path": ".github/workflows/retained-frozen-far-context-path-summary.yml",
+            "mode": "100644",
+            "bytes": 5319,
+            "sha256": "1f6431df5bdfe11e0df433e0379b9b3fde62c683d8469cb58fd27a99ad089a1a",
+            "git_blob_sha1": "81dbbb8e74df1b97d608ff459c735c3fcf69aa28"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-full-speech-objective-gradient.yml",
+          "before": {
+            "path": ".github/workflows/retained-full-speech-objective-gradient.yml",
+            "mode": "100644",
+            "bytes": 10226,
+            "sha256": "0bc113eb73cf8878a163f7482e2c989ce49c8d1107597632c9c89f84d9a06f01",
+            "git_blob_sha1": "fe4a7d55fa41af992fcb9565bcede92047adce78"
+          },
+          "after": {
+            "path": ".github/workflows/retained-full-speech-objective-gradient.yml",
+            "mode": "100644",
+            "bytes": 10226,
+            "sha256": "1cd750aa3d269baab4311f49a84829e96d8b79401119e72d5b718cc4e90810e3",
+            "git_blob_sha1": "682a192d9b8594afed73703d99a0cac3c7fae383"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-sequence-margin-runtime-gap-decomposition.yml",
+          "before": {
+            "path": ".github/workflows/retained-sequence-margin-runtime-gap-decomposition.yml",
+            "mode": "100644",
+            "bytes": 9408,
+            "sha256": "2ced9a25e212e44de1d15893c373101725e444f8be3410143fe531a5c7401eca",
+            "git_blob_sha1": "82925e023d3bf0b5a59f80aacded6ddd3bd3fc1c"
+          },
+          "after": {
+            "path": ".github/workflows/retained-sequence-margin-runtime-gap-decomposition.yml",
+            "mode": "100644",
+            "bytes": 9408,
+            "sha256": "495a7b728e997fb7efa3ca3d3387699cd8cc7b11f5e3f78d0c8fe5af0831bb2f",
+            "git_blob_sha1": "fcf52f8f7a3285e89862142d9b29afc98a83bf10"
+          }
+        },
+        {
+          "path": ".github/workflows/target-dut-qualification.yml",
+          "before": {
+            "path": ".github/workflows/target-dut-qualification.yml",
+            "mode": "100644",
+            "bytes": 11666,
+            "sha256": "b7499b23d2eba2800f962520d4df06b940a15712c710f5d50d4259f6cec6596b",
+            "git_blob_sha1": "f706fe2be3d0147d3f60082ae56feec88bdc5db9"
+          },
+          "after": {
+            "path": ".github/workflows/target-dut-qualification.yml",
+            "mode": "100644",
+            "bytes": 11666,
+            "sha256": "c4ce46581d6681856ce72e3b7bf629db9ed9a6af65f66accca7bc1890f58855b",
+            "git_blob_sha1": "bbf3b8ad4c349873e3e623aca41d5244dfc0e696"
+          }
+        },
+        {
+          "path": ".github/workflows/training-audit-closure.yml",
+          "before": {
+            "path": ".github/workflows/training-audit-closure.yml",
+            "mode": "100644",
+            "bytes": 3011,
+            "sha256": "c771f5c522b6ef933981b79d027d9f13c52627f0a923f90f7ba19e344572959b",
+            "git_blob_sha1": "9f608322e81f93c29c98f31d1276916d3457fc52"
+          },
+          "after": {
+            "path": ".github/workflows/training-audit-closure.yml",
+            "mode": "100644",
+            "bytes": 3011,
+            "sha256": "64f33a545a3ebda433cc54ae0f4fad7416256aa8a81024018a9afbab0c846724",
+            "git_blob_sha1": "993319a679c5823592dbd6fb3b5edea104b39aa8"
+          }
+        },
+        {
+          "path": "tests/test_product_development_preflight.py",
+          "before": {
+            "path": "tests/test_product_development_preflight.py",
+            "mode": "100644",
+            "bytes": 18593,
+            "sha256": "c3191b72298fd3f5f54cb462d6e7571419ecf8e97d65aecad43a4f9163fc13cf",
+            "git_blob_sha1": "5987c1db7ca25e43ba3c9833df35a1de9029a829"
+          },
+          "after": {
+            "path": "tests/test_product_development_preflight.py",
+            "mode": "100644",
+            "bytes": 18593,
+            "sha256": "1ae848b01d78b57836ec36bd8c35e1d200710b18d9d5c1933b7900f13ae47aa0",
+            "git_blob_sha1": "fbd659a0cd48b35e96903a9c772b81e0f5e507d2"
+          }
+        },
+        {
+          "path": "tests/test_model_promotion.py",
+          "before": {
+            "path": "tests/test_model_promotion.py",
+            "mode": "100644",
+            "bytes": 21952,
+            "sha256": "b4f133a886e8a8bd65c08ae0cac245dfcc0b7a053d3b6b99aa02eada4a588f8c",
+            "git_blob_sha1": "8207485664fb5cba795dac466d4c2289b7580eea"
+          },
+          "after": {
+            "path": "tests/test_model_promotion.py",
+            "mode": "100644",
+            "bytes": 21952,
+            "sha256": "48800e277acf8dfadd06362487eb0edc86d844f80e23d0a99583f04a48796bfd",
+            "git_blob_sha1": "b9e1fcbb95b4f28e66d85625bbff52b358a57dbf"
+          }
+        }
+      ],
+      "baseline_kind": "Immutable public main and exact Dependabot PR547 head readback",
+      "reviewed_dependabot_head_commit": "3bfc0f09dcc90f00397837e7dc9e25568411a310",
+      "rationale": "Retain strict SHA-pinned contracts and all existing gates. Preserve 718 retained source rows, 834 provenance rows, 18 source projections, all 54 baseline workflow names, the three allowed added workflow names and all 48 prior maintenance receipts. Historical workflow copies, ASR18 source, source freeze, execution refs and evidence are unchanged. This maintenance does not dispatch experiments or authorize execution."
     }
   ],
   "current_added_active_workflows": [
     {
       "path": ".github/workflows/research-source-consolidation.yml",
       "mode": "100644",
-      "git_blob_sha1": "65c53193fb52ce18a93b27c9dca5708f67ab2c62",
-      "sha256": "45aacd71cdf36210fb9e075c68c1c2f8c7fc8b9e70b676f5ff413cc49198d8ea",
+      "git_blob_sha1": "c14276804ed442e73ca7f2e3ad5e906992f30f94",
+      "sha256": "49681bf1a17017f958bda4f2949cb20d1c724d2add2dc70bc6fc45cff54cfcdb",
       "bytes": 3719
     },
     {

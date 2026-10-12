@@ -455,7 +455,7 @@ def main() -> int:
     assert "product_preflight_handoff.py pack" in workflow
     assert "product_preflight_handoff.py restore" in workflow
     assert "product_preflight_handoff.py verify-materialization" in workflow
-    assert "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c" in workflow
+    assert "actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333" in workflow
     assert "xiaowo-product-development-base-handoff-" in workflow
     assert "tools/diagnose_acoustic_alignment.py" in workflow
     assert "--runner build/kws_wav" in workflow
