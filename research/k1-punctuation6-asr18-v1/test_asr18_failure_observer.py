@@ -59,15 +59,30 @@ class ObserverTests(unittest.TestCase):
         error=Hostile(SECRET);error.__cause__=ValueError(SECRET)
         self.assertEqual(f.error_metadata(error),{'error_type':'UnlistedError','error_text':'omitted_by_fixed_privacy_policy'})
 
-    def test_disabled_actual_cli_prints_safe_release_failure_before_sideeffects(self):
+    def test_explicit_disabled_cli_keeps_safe_release_diagnostic_before_sideeffects(self):
+        from test_asr18_entrypoints import disabled_source
+        with disabled_source() as source:
+            proc=subprocess.run([sys.executable,'-I','-B',str(source/'hosted_run.py')],
+                env={'PATH':'/usr/bin:/bin','GITHUB_TOKEN':SECRET,'GH_TOKEN':SECRET,'RUNNER_TEMP':SECRET},
+                capture_output=True,text=True,timeout=10)
+        self.assertEqual(proc.returncode,2);self.assertNotIn(SECRET,proc.stdout+proc.stderr)
+        rows=[json.loads(line) for line in proc.stdout.splitlines()]
+        self.assertEqual(rows[0]['stage'],'release')
+        self.assertEqual(rows[1]['record']['stage'],'release')
+        self.assertIsNone(rows[1]['record']['identity'])
+        self.assertEqual(rows[-1],{'status':'blocked_no_retry'})
+
+    def test_actual_r1_cli_missing_event_prints_safe_failure_before_sideeffects(self):
         proc=subprocess.run([sys.executable,'-I','-B',str(HERE/'hosted_run.py')],env={'PATH':'/usr/bin:/bin',
             'GITHUB_TOKEN':SECRET,'GH_TOKEN':SECRET,'RUNNER_TEMP':SECRET},capture_output=True,text=True,timeout=10)
         self.assertEqual(proc.returncode,2)
         self.assertNotIn(SECRET,proc.stdout+proc.stderr)
         rows=[json.loads(line) for line in proc.stdout.splitlines()]
         self.assertEqual(rows[0]['stage'],'release')
-        self.assertEqual(rows[1]['record']['stage'],'release')
-        self.assertIsNone(rows[1]['record']['identity'])
+        self.assertEqual([row['stage'] for row in rows if row.get('schema')=='k1-asr18-safe-checkpoint-v1'],
+                         ['release','arguments','event_read'])
+        self.assertEqual(rows[-2]['record']['stage'],'event_read')
+        self.assertIsNone(rows[-2]['record']['identity'])
         self.assertEqual(rows[-1],{'status':'blocked_no_retry'})
 
     def test_complete_claim_observations_do_not_assert_actual_native_success(self):

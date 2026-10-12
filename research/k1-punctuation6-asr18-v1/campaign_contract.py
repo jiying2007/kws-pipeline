@@ -13,7 +13,7 @@ import stat
 
 import asr18_metadata as metadata
 
-EXPERIMENT = 'k1-punctuation6-asr18-v1'
+EXPERIMENT = 'k1-punctuation6-asr18-r1'
 FAMILIES = ('qwen06', 'sensevoice', 'whisper')
 CELLS = metadata.CELLS
 MIB, GIB = 1024 ** 2, 1024 ** 3
@@ -322,8 +322,8 @@ def disabled_release():
     return {'schema': 'k1-asr18-execution-release-v1', 'experiment': EXPERIMENT,
         **{key: False for key in RELEASE_APPROVALS}, **{key: None for key in RELEASE_AUTHORITIES},
         'max_new_asr_calls': 18, 'old_calls_allowed': 0, 'retries': 0, 'run_attempt': 1,
-        'source_ref': 'research/k1-punctuation6-asr18-v1',
-        'evidence_ref': 'evidence/k1-punctuation6-asr18-v1',
+        'source_ref': 'research/k1-punctuation6-asr18-r1',
+        'evidence_ref': 'evidence/k1-punctuation6-asr18-r1',
         'workflow': '.github/workflows/k1-punctuation6-asr18-v1.yml', 'job_key': 'asr18'}
 
 

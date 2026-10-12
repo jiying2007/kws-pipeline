@@ -226,9 +226,27 @@ ASR18_MODULES = (
     'test_asr18_raw_data_reader', 'test_asr18_receipts', 'test_asr18_resources',
     'test_asr18_transport', 'test_asr18_worker',
 )
-ASR18_JOB_IF = "${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-asr18-v1' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}"
+ASR18_JOB_IF = "${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-asr18-r1' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}"
 ASR18_HOST_IF = "${{ success() && steps.asr18_contracts.outcome == 'success' }}"
 ASR18_PUBLISH_IF = "${{ always() && steps.host.outputs.started == 'true' }}"
+
+
+
+def asr18_job_route(condition, context):
+    """Evaluate only the fixed equality grammar in the actual job guard."""
+    if not condition.startswith('${{ ') or not condition.endswith(' }}'):
+        raise ValueError('job condition delimiters')
+    results = []
+    for clause in condition[4:-3].split(' && '):
+        match = re.fullmatch(r"(github\.[a-z_.]+) == ('[^']*'|true|false|[1-9][0-9]*)", clause)
+        if not match or match[1] not in context:
+            raise ValueError('unsupported or missing job context')
+        literal = match[2]
+        expected = (literal == 'true' if literal in ('true', 'false') else
+                    ast.literal_eval(literal))
+        actual = context[match[1]]
+        results.append(type(actual) is type(expected) and actual == expected)
+    return all(results)
 
 
 def named_step(text, name):
@@ -287,12 +305,16 @@ class ASR18CIContracts(unittest.TestCase):
     def check_wiring(self, ci, workflow, template):
         self.assertEqual(workflow, template)
         self.assertNotIn('INERT RESEARCH TEMPLATE', workflow)
+        self.assertEqual(workflow.split('permissions:', 1)[0],
+            'name: K1 punctuation6 ASR18 r1 once\n'
+            'on:\n  push:\n    branches:\n      - research/k1-punctuation6-asr18-r1\n')
+        self.assertNotIn("refs/heads/research/k1-punctuation6-asr18-v1", workflow)
         shared = jobs(ci)['python-contracts']
         self.assertNotIn('    if:', shared)
         self.assertEqual(set(jobs(workflow)), {'asr18'})
         execution = jobs(workflow)['asr18']
         self.assertIn('    if: ' + ASR18_JOB_IF + '\n', execution)
-        self.assertIn('concurrency:\n  group: k1-punctuation6-asr18-v1\n  cancel-in-progress: false\n', workflow)
+        self.assertIn('concurrency:\n  group: k1-punctuation6-asr18-r1\n  cancel-in-progress: false\n', workflow)
         for name, body in (('ci', shared), ('asr18', execution)):
             step = named_step(body, 'K1 punctuation6 ASR18 offline source contracts')
             self.assertIn('        id: asr18_contracts\n', step)
@@ -332,6 +354,14 @@ class ASR18CIContracts(unittest.TestCase):
             ('workflow', ASR18_HOST_IF, '${{ always() }}'),
             ('workflow', ASR18_PUBLISH_IF, "${{ always() && steps.host.outcome != 'skipped' }}"),
             ('workflow', "github.run_attempt == 1", 'github.run_attempt >= 1'),
+            ('workflow', '      - research/k1-punctuation6-asr18-r1\n',
+             '      - research/k1-punctuation6-asr18-v1\n'),
+            ('workflow', '      - research/k1-punctuation6-asr18-r1\n',
+             '      - research/k1-punctuation6-asr18-r1\n      - research/k1-punctuation6-asr18-v1\n'),
+            ('workflow', "github.ref == 'refs/heads/research/k1-punctuation6-asr18-r1'",
+             "github.ref == 'refs/heads/research/k1-punctuation6-asr18-v1'"),
+            ('workflow', 'github.event.created == true', 'github.event.created == false'),
+            ('workflow', 'group: k1-punctuation6-asr18-r1', 'group: k1-punctuation6-asr18-v1'),
             ('workflow', 'id: host\n', 'id: host\n        continue-on-error: true\n'),
         )
         for target, before, after in mutations:
@@ -340,6 +370,37 @@ class ASR18CIContracts(unittest.TestCase):
                 workflow = self.workflow.replace(before, after) if target == 'workflow' else self.workflow
                 with self.assertRaises(AssertionError):
                     self.check_wiring(ci, workflow, workflow)
+
+    def test_actual_job_guard_allows_only_fresh_independent_r1(self):
+        job = jobs(self.workflow)['asr18']
+        condition = re.search(r'^    if: (.+)$', job, re.M).group(1)
+        context = {
+            'github.repository': 'jiying2007/kws-pipeline',
+            'github.event_name': 'push',
+            'github.ref': 'refs/heads/research/k1-punctuation6-asr18-r1',
+            'github.event.created': True,
+            'github.event.deleted': False,
+            'github.event.repository.private': False,
+            'github.run_attempt': 1,
+        }
+        self.assertTrue(asr18_job_route(condition, context))
+        for key, alternatives in (
+            ('github.repository', ('other/kws-pipeline', 'jiying2007/other')),
+            ('github.event_name', ('workflow_dispatch', 'workflow_call', 'pull_request', 'schedule')),
+            ('github.ref', ('refs/heads/research/k1-punctuation6-asr18-v1',
+                            'refs/heads/research/k1-punctuation6-asr18-v2',
+                            'refs/heads/research/k1-punctuation6-asr18-r10',
+                            'refs/heads/research/k1-punctuation6-asr18-r1-extra',
+                            'refs/heads/research/k1-punctuation6-asr18-r2',
+                            'refs/heads/main', 'refs/tags/research/k1-punctuation6-asr18-r1')),
+            ('github.event.created', (False, None)),
+            ('github.event.deleted', (True, None)),
+            ('github.event.repository.private', (True, None)),
+            ('github.run_attempt', (0, 2, 3, None)),
+        ):
+            for value in alternatives:
+                with self.subTest(key=key, value=value):
+                    self.assertFalse(asr18_job_route(condition, dict(context, **{key: value})))
 
     def test_rejects_removing_each_fixed_module(self):
         for name in ASR18_MODULES:

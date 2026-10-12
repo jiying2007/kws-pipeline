@@ -114,7 +114,7 @@ def _safe_source_claim(raw,identity):
     c.require(type(value) is dict and set(value)==keys and value['schema']=='k1-asr18-once-source-claim-v1' and
         value['identity']==identity,'fixed new source claim only')
     _identity(value['identity'])
-    fixed={'source_branch':'research/k1-punctuation6-asr18-v1','result_branch':'evidence/k1-punctuation6-asr18-v1',
+    fixed={'source_branch':'research/k1-punctuation6-asr18-r1','result_branch':'evidence/k1-punctuation6-asr18-r1',
         'workflow':'.github/workflows/k1-punctuation6-asr18-v1.yml','api_preflight_verified':True,
         'source_branch_workflow_runs':1,'maximum_new_asr_calls':18,'old_calls_allowed':0,'new_audio_forwards_at_claim':0}
     c.require(all(type(value[k]) is type(v) and value[k]==v for k,v in fixed.items()),'fixed source claim fields')
