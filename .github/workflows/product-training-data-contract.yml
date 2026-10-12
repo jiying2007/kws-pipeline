@@ -329,7 +329,7 @@ jobs:
             --report build/candidate-encoder-numeric.json
       - name: Retain candidate numeric contract receipt
         if: ${{ always() && needs.select-scope.outputs.candidate_required == 'true' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: candidate-encoder-numeric-${{ github.run_id }}-${{ github.run_attempt }}
           path: build/candidate-encoder-numeric.json
@@ -450,7 +450,7 @@ jobs:
             --output "build/observer-parity-${{ matrix.replica }}.json"
       - name: Retain reproducibility identity
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: training-reproducibility-${{ matrix.replica }}
           path: |
@@ -470,7 +470,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Download independent runner identities
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: training-reproducibility-*
           path: .repro
@@ -485,7 +485,7 @@ jobs:
             --output build/numeric-divergence.json
       - name: Retain numeric divergence even on mismatch
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: training-numeric-divergence
           path: build/numeric-divergence.json
