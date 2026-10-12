@@ -19666,6 +19666,48 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-12",
+      "operation_id": "qwen12-run38185393757-native-result-coverage-stop-20261012",
+      "baseline_kind": "local tree equivalent to actual public main and executed remaining35-r1 source",
+      "public_main_base_commit": "0f0f736c6faaecb0c62dffd6ef5e3707f1f4a894",
+      "public_main_base_tree": "df77173a0a8191326a230b60f866cdd84293d3a8",
+      "from_commit": "44139fbe5678706fe65aac8d6f750d60c84bd927",
+      "from_tree": "df77173a0a8191326a230b60f866cdd84293d3a8",
+      "scope": "Public derived machine result metadata and README only:35 native completions plus1 immutable historical error,6 consensus candidates, original-group candidate bounds0/2/3/1, frozen coverage stop and scoped resource/cleanup observations.",
+      "rationale": "The original36-start allowance is exhausted. K1 has no possible three-way matching candidate, so formal admission/root registration, training, export and candidate forward were not performed. Immutable original source/evidence, coverage, recipe, workflow/release/freeze, runtime and authority gates remain unchanged. No new data experiment or execution is authorized.",
+      "workflow_source_changed": false,
+      "files": [
+        {
+          "path": "research/qwen12-native-admission-v1/README.md",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/README.md",
+            "mode": "100644",
+            "bytes": 63611,
+            "sha256": "f691affbe41add397752aa930b126e0f3d49929c28dce82de59809cd4468a9dd",
+            "git_blob_sha1": "ba85a8155f5c38fa033bf0492a730c4ca92ae719"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/README.md",
+            "mode": "100644",
+            "bytes": 67977,
+            "sha256": "92d14ef3168ae0efc3e9f190d326ea1f75c300545fde2f40c2a365c4faac8006",
+            "git_blob_sha1": "f81a478f36827d7f687f713555332ab921db419b"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/results/run-38185393757.json",
+          "before": null,
+          "after": {
+            "path": "research/qwen12-native-admission-v1/results/run-38185393757.json",
+            "mode": "100644",
+            "bytes": 36161,
+            "sha256": "6615dbb5ffb408544120465fbd964cda5692b18888a15b7a120d8cae08f55f87",
+            "git_blob_sha1": "a1cfc9dc3369e81999b93a379afa196249077d04"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
