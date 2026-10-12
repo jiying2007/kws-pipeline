@@ -1,0 +1,122 @@
+{
+  "schema": "k1-punctuation6-asr18-public-failure-summary-v1",
+  "repository": "jiying2007/kws-pipeline",
+  "experiment": "k1-punctuation6-asr18-r1",
+  "run_id": 38219171568,
+  "job_id": 114710984409,
+  "attempt": 1,
+  "source_commit": "054213c551eb83494b9a4ba8cd6d3ca4c1f488dd",
+  "source_tree": "f448545999edf8b6f66bdad493306e80943bdafa",
+  "source_freeze_sha256": "e97a1777b7d94439959c31aadb76cc92cd37884c2162810e95f79cd8cf832113",
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38219171568",
+  "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38219171568/job/114710984409",
+  "run_conclusion": "failure",
+  "job_completed_at_utc": "2026-10-12T07:53:42Z",
+  "host": {
+    "conclusion": "failure",
+    "started_at_utc": "2026-10-12T07:43:48Z",
+    "completed_at_utc": "2026-10-12T07:53:37Z",
+    "exit_code": 2,
+    "primary_observed_failure": {
+      "stage": "capacity_proof",
+      "error_type": "ValueError"
+    },
+    "secondary_observed_failure": {
+      "stage": "package_build",
+      "error_type": "ValueError"
+    },
+    "observed_prepare_checkpoints": [
+      "prepare_qwen06",
+      "prepare_sensevoice",
+      "prepare_whisper"
+    ],
+    "decode_checkpoint_observed": false,
+    "specific_error_text_available": false
+  },
+  "publisher": {
+    "conclusion": "failure",
+    "started_at_utc": "2026-10-12T07:53:37Z",
+    "completed_at_utc": "2026-10-12T07:53:37Z",
+    "exit_code": 1,
+    "observed_failure_stage": "source_timestamp",
+    "error_type": "ValueError",
+    "actual_push_event_body_available": false,
+    "actual_push_timestamp_known": false,
+    "timestamp_compatibility_defect": "Offline original-source reproduction rejects valid non-UTC ISO8601 offsets. This is a demonstrated source defect, not a proven unique cause of this run failure.",
+    "diagnostic_identity_attached": false,
+    "process_attribution": "Original job log within the named publisher step and its timestamp interval",
+    "original_error_text_available": false
+  },
+  "public_observations": [
+    {
+      "subject": "result_ref",
+      "status": 404,
+      "observed_by_utc": "2026-10-12T08:46:35.235Z",
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/git/ref/heads/evidence/k1-punctuation6-asr18-r1"
+    },
+    {
+      "subject": "run_artifacts",
+      "total_count": 0,
+      "observed_by_utc": "2026-10-12T08:46:39.560Z",
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/actions/runs/38219171568/artifacts?per_page=100"
+    },
+    {
+      "subject": "source_branch_push_history",
+      "total_count": 1,
+      "only_run_id": 38219171568,
+      "only_attempt": 1,
+      "observed_by_utc": "2026-10-12T08:46:37.181Z",
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/actions/runs?branch=research%2Fk1-punctuation6-asr18-r1&event=push&per_page=100"
+    }
+  ],
+  "observation_time_semantics": "observed_by_utc records collector completion bounds, not server response Date headers",
+  "planned_asr_slots": 18,
+  "actual_asr_calls_started": null,
+  "actual_asr_calls_completed": null,
+  "slot_consumption": "unknown; all 18 planned r1 slots remain sealed and cannot be automatically reused",
+  "local_diagnostic_observations": {
+    "reported_terminal_attempts": 0,
+    "reported_terminal_accounting_valid": true,
+    "consumed_attempts": null,
+    "consumed_attempts_authority": "unknown_local_observations_only",
+    "snapshot_atomic": false,
+    "observed_slot_directories": 0,
+    "validated_start_files_observed": 0,
+    "source_claim": {
+      "bytes": 826,
+      "sha256": "819af6ced2bdd165481c8ee3990631113875859a589902fc0223869a41009c29",
+      "status": "observed_file",
+      "body_directly_recovered": false
+    },
+    "terminal_ledger": {
+      "bytes": 1389,
+      "sha256": "622b63ba19e0e6aaf6934eecd750d1a8bb1f905487283662868941f6b57bfd46",
+      "status": "observed_file",
+      "body_directly_recovered": false
+    },
+    "meaning": "Reported zero and absent local starts are partial diagnostic observations, not independently recovered native-call accounting or permission to reuse slots."
+  },
+  "original_machine_claim_bodies_available": false,
+  "original_stdout_diagnostics_available": true,
+  "original_publisher_receipt_available": false,
+  "published_result_archive_available": false,
+  "terminal_log_sha256": "15ddd5cf3526576a1a4122a084b58b730557184a69f877666e97086f412f4a9b",
+  "prior_failed_campaign": {
+    "run_id": 38207026177,
+    "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38207026177",
+    "planned_asr_slots": 18,
+    "actual_asr_calls_started": null,
+    "actual_asr_calls_completed": null,
+    "slot_consumption": "unknown; all 18 prior slots remain sealed and cannot be automatically reused"
+  },
+  "tts": {
+    "completed": 6,
+    "run_id": 38200026588,
+    "run_url": "https://github.com/jiying2007/kws-data/actions/runs/38200026588",
+    "result_commit": "99f559a131daf43316d5e0556d1c73931b62073f",
+    "result_url": "https://github.com/jiying2007/kws-data/commit/99f559a131daf43316d5e0556d1c73931b62073f"
+  },
+  "asr_effectiveness_conclusion": "not established",
+  "training_admission_conclusion": "not established",
+  "new_execution_authorized": false
+}

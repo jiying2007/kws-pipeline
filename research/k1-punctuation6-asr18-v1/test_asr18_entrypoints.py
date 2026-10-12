@@ -83,10 +83,10 @@ class ActualEntrypoints(unittest.TestCase):
         self.assertEqual(error['detail'],{'error_type':'UnlistedError' if stages==['publication_gate'] else 'ValueError',
             'error_text':'omitted_by_fixed_privacy_policy'})
 
-    def test_checked_in_r1_controls_are_enabled_candidate(self):
+    def test_checked_in_controls_remain_disabled(self):
         for filename,keys in DISABLED_APPROVALS.items():
             value=json.loads((HERE/filename).read_bytes())
-            self.assertTrue(all(value[key] is True for key in keys))
+            self.assertTrue(all(value[key] is False for key in keys))
 
     def call(self,path,args=()):
         with tempfile.TemporaryDirectory(prefix='k1-entry-negative-') as name:

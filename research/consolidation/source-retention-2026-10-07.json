@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 43226,
-      "sha256": "bf84143af054f36b7cc0993e21f888a646d5dc59783854b40417607ff5cfc00d",
-      "git_blob_sha1": "221e4cf349639ec52f4fd8d538d242e2de666df4"
+      "bytes": 44103,
+      "sha256": "8d68eaa3141a1029c6dfece9448bf92e990db2e58eff18f07f3d35c9e9387cc2",
+      "git_blob_sha1": "6a5acd3c39f9e0ee104953f1fa402b975b3e68a7"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15421,9 +15421,9 @@
     {
       "path": ".github/workflows/repository-cleanup.yml",
       "mode": "100644",
-      "bytes": 17910,
-      "sha256": "e60bd940d67808fe776f85b39955e57f50ff62dc21310d53d21a09ec5eeef1f3",
-      "git_blob_sha1": "eef672f645231c1a5f905d165d57af03116f8220"
+      "bytes": 17961,
+      "sha256": "72f2d422d9d5e04b73b4013cdfe86fe74c7937eb6abb6b13779269425c824547",
+      "git_blob_sha1": "9b44bad06a9a1d4fa2d5d0f33dfbc09e06faf15d"
     },
     {
       "path": ".github/workflows/research-arm-runtime.yml",
@@ -15632,7 +15632,8 @@
   "allowed_new_active_workflows": [
     ".github/workflows/research-source-consolidation.yml",
     ".github/workflows/qwen12-native-admission-v1.yml",
-    ".github/workflows/k1-punctuation6-asr18-v1.yml"
+    ".github/workflows/k1-punctuation6-asr18-v1.yml",
+    ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -20597,6 +20598,178 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-12",
+      "operation_id": "k1-prepare-diagnostic-source-ci-retention-20261012",
+      "public_main_base_commit": "054213c551eb83494b9a4ba8cd6d3ca4c1f488dd",
+      "public_main_base_tree": "f448545999edf8b6f66bdad493306e80943bdafa",
+      "workflow_source_changed": true,
+      "baseline_kind": "Public main with sealed ASR18 r1; local prepare-only diagnostic source candidate",
+      "scope": "Add only the exact fresh prepare-diagnostic workflow, its three fixed stdlib modules in required CI, and its exact cleanup-retention name. Preserve the existing ASR13 runner and append exact current public workflow identities.",
+      "rationale": "Preserve all 51 preceding maintenance records, 718 retained source rows and bytes, 834 provenance rows, 18 projections, 54 baseline workflow names, three previously allowed added workflow names, and ten prior retained execution names. Both old ASR runs remain sealed. This public metadata maintenance creates no ref, runs no model or recognition, and grants no execution or publication authority. The prepare diagnostic is restricted to its distinct fresh source ref and attempt one; later pushes, reruns, main and PR events are denied.",
+      "allowed_new_active_workflows_before": [
+        ".github/workflows/research-source-consolidation.yml",
+        ".github/workflows/qwen12-native-admission-v1.yml",
+        ".github/workflows/k1-punctuation6-asr18-v1.yml"
+      ],
+      "allowed_new_active_workflows_after": [
+        ".github/workflows/research-source-consolidation.yml",
+        ".github/workflows/qwen12-native-admission-v1.yml",
+        ".github/workflows/k1-punctuation6-asr18-v1.yml",
+        ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml"
+      ],
+      "retained_execution_branches_before": [
+        "research/qwen12-native-admission-v1",
+        "research/qwen12-native-admission-recovery1",
+        "research/qwen12-native-transport-preflight-v1",
+        "research/qwen12-native-admission-recovery2",
+        "research/qwen12-native-transport-preflight-12m-v1",
+        "research/qwen12-native-admission-recovery3",
+        "research/qwen12-native-admission-remaining35-v1",
+        "research/qwen12-native-admission-remaining35-r1-v1",
+        "research/k1-punctuation6-asr18-v1",
+        "research/k1-punctuation6-asr18-r1"
+      ],
+      "retained_execution_branches_after": [
+        "research/qwen12-native-admission-v1",
+        "research/qwen12-native-admission-recovery1",
+        "research/qwen12-native-transport-preflight-v1",
+        "research/qwen12-native-admission-recovery2",
+        "research/qwen12-native-transport-preflight-12m-v1",
+        "research/qwen12-native-admission-recovery3",
+        "research/qwen12-native-admission-remaining35-v1",
+        "research/qwen12-native-admission-remaining35-r1-v1",
+        "research/k1-punctuation6-asr18-v1",
+        "research/k1-punctuation6-asr18-r1",
+        "research/k1-punctuation6-prepare-diagnostic-v1"
+      ],
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 43226,
+            "sha256": "bf84143af054f36b7cc0993e21f888a646d5dc59783854b40417607ff5cfc00d",
+            "git_blob_sha1": "221e4cf349639ec52f4fd8d538d242e2de666df4"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 44103,
+            "sha256": "8d68eaa3141a1029c6dfece9448bf92e990db2e58eff18f07f3d35c9e9387cc2",
+            "git_blob_sha1": "6a5acd3c39f9e0ee104953f1fa402b975b3e68a7"
+          }
+        },
+        {
+          "path": ".github/workflows/repository-cleanup.yml",
+          "before": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "bytes": 17910,
+            "sha256": "e60bd940d67808fe776f85b39955e57f50ff62dc21310d53d21a09ec5eeef1f3",
+            "git_blob_sha1": "eef672f645231c1a5f905d165d57af03116f8220"
+          },
+          "after": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "bytes": 17961,
+            "sha256": "72f2d422d9d5e04b73b4013cdfe86fe74c7937eb6abb6b13779269425c824547",
+            "git_blob_sha1": "9b44bad06a9a1d4fa2d5d0f33dfbc09e06faf15d"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 9314,
+            "sha256": "f51e0dd7f804729b377e7a96ba74294f53e79e96c0772478cfbff129b86f937c",
+            "git_blob_sha1": "64f5d393dceff9fef6c4503c367ad566ccbabe6b"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 9393,
+            "sha256": "a834e206da77ab1069cfaee0e140e16393bcdea289b55bd21f240b309316d8b7",
+            "git_blob_sha1": "0e84191721e6be9831807f5f9e0b9d48e71471aa"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_ci_structure.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 26771,
+            "sha256": "62e52d598815d606c017b9bdfb1c25a334c4241d193f876e55af93090b9e61dd",
+            "git_blob_sha1": "38e7b9a9aa9eb4035d32b01acd2054e11bb11ac9"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 37100,
+            "sha256": "b7b528b8ac4dae11ac468a9d2559a8d8067af83422d82487ab51143494e63475",
+            "git_blob_sha1": "4774f67dcceb743736c52f0d155a3c52d50c85f7"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 16058,
+            "sha256": "fe4a1655bb6aaded2c53e1190ba763c7cd849b10ec46c9b9c634f7810b59086a",
+            "git_blob_sha1": "d8c5e760504a4b9a8c3c0107bca9eccac8c5afb3"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 17888,
+            "sha256": "0bc11acd61d3af8f4ef6ffcc183bb1f56472bfd57593d6ff84ac6c32fc890282",
+            "git_blob_sha1": "7539441b283fd80cbebcf1cc029068acf46445f4"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_cleanup_retention.py",
+          "before": {
+            "path": "research/consolidation/tests/test_cleanup_retention.py",
+            "mode": "100644",
+            "bytes": 13227,
+            "sha256": "af65d1646f85020872102200addbac1e6217eccc63e469b8f4205cd32c5414e5",
+            "git_blob_sha1": "8b38b0be6fa17100e58ce1126678e7ef3a139052"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_cleanup_retention.py",
+            "mode": "100644",
+            "bytes": 13668,
+            "sha256": "85182950be4062328cd8026cf3c27564154760269226483bf77fe5437d3bd5e7",
+            "git_blob_sha1": "28de72d28b6187c629169907b1227f52c824219a"
+          }
+        },
+        {
+          "path": ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml",
+            "mode": "100644",
+            "bytes": 2845,
+            "sha256": "331293f97d8a2b45922213cdebb3dff3d344d03346cfc965b392d4cf09204ab9",
+            "git_blob_sha1": "1b0d961dcb5ef1d9dc920892d96aeee79f13c1f6"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/workflow.yml",
+          "before": null,
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 2845,
+            "sha256": "331293f97d8a2b45922213cdebb3dff3d344d03346cfc965b392d4cf09204ab9",
+            "git_blob_sha1": "1b0d961dcb5ef1d9dc920892d96aeee79f13c1f6"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -20620,6 +20793,13 @@
       "bytes": 2930,
       "sha256": "2205903431ef10513dcb13eda2e7657a64bc427cd339a64ff790ce88d92e69fd",
       "git_blob_sha1": "8f002a174fbde1beaa20d5800aaa7f6f01bb7c0b"
+    },
+    {
+      "path": ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml",
+      "mode": "100644",
+      "bytes": 2845,
+      "sha256": "331293f97d8a2b45922213cdebb3dff3d344d03346cfc965b392d4cf09204ab9",
+      "git_blob_sha1": "1b0d961dcb5ef1d9dc920892d96aeee79f13c1f6"
     }
   ]
 }

@@ -29,6 +29,7 @@ class RetentionTests(unittest.TestCase):
         added = file('.github/workflows/research-source-consolidation.yml', b'name: offline\n')
         admission = file('.github/workflows/qwen12-native-admission-v1.yml', b'name: disabled native; pure source CI\n')
         asr18 = file('.github/workflows/k1-punctuation6-asr18-v1.yml', b'name: disabled asr18; pure source CI\n')
+        prepare = file('.github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml', b'name: disabled prepare diagnostic; pure source CI\n')
         file(ARM, json.dumps(DISABLED_ARM).encode())
         provenance = dict(archived, source_commit='a'*40, original_path='.github/workflows/old.yml')
         provenance['source_url'] = 'https://github.com/jiying2007/kws-pipeline/blob/'+'a'*40+'/.github/workflows/old.yml'
@@ -36,10 +37,11 @@ class RetentionTests(unittest.TestCase):
             base_commit='b'*40, files=[archived], provenance=[provenance],
             source_projections=[dict(original_path='.github/workflows/old.yml', archive_path=archived['path'],
                 source_commit='a'*40, **{k:archived[k] for k in ('bytes','sha256','git_blob_sha1')})],
-            baseline_active_workflows=[baseline], current_added_active_workflows=[added, admission, asr18], pointer_only=[],
+            baseline_active_workflows=[baseline], current_added_active_workflows=[added, admission, asr18, prepare], pointer_only=[],
             allowed_new_active_workflows=['.github/workflows/research-source-consolidation.yml',
                 '.github/workflows/qwen12-native-admission-v1.yml',
-                '.github/workflows/k1-punctuation6-asr18-v1.yml'])
+                '.github/workflows/k1-punctuation6-asr18-v1.yml',
+                '.github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml'])
     def test_valid_retention(self):
         self.assertEqual(verify(self.root,self.manifest),1)
     def test_changed_bytes(self):
@@ -154,12 +156,37 @@ class RetentionTests(unittest.TestCase):
     def test_asr18_workflow_requires_exact_name_and_current_identity(self):
         approved = '.github/workflows/k1-punctuation6-asr18-v1.yml'
         path = self.root / approved
-        current = copy.deepcopy(self.manifest['current_added_active_workflows'][-1])
+        current = copy.deepcopy(self.manifest['current_added_active_workflows'][2])
         raw = path.read_bytes()
         self.assertEqual(verify(self.root, self.manifest), 1)
         for lookalike in ('.github/workflows/k1-punctuation6-asr18-v10.yml',
                           '.github/workflows/k1-punctuation6-asr18-v1-extra.yml',
                           '.github/workflows/k1-punctuation6-asr18-v2.yml'):
+            with self.subTest(path=lookalike):
+                replacement = self.file(lookalike, raw)
+                with self.assertRaisesRegex(ValueError, 'inventory changed'):
+                    verify(self.root, self.manifest)
+                path.unlink()
+                self.manifest['allowed_new_active_workflows'][2] = lookalike
+                self.manifest['current_added_active_workflows'][2] = replacement
+                with self.assertRaisesRegex(ValueError, 'unexpected active workflow addition'):
+                    verify(self.root, self.manifest)
+                (self.root / lookalike).unlink()
+                path.write_bytes(raw)
+                self.manifest['allowed_new_active_workflows'][2] = approved
+                self.manifest['current_added_active_workflows'][2] = current
+        path.unlink()
+        with self.assertRaisesRegex(ValueError, 'missing retained file'):
+            verify(self.root, self.manifest)
+    def test_prepare_workflow_requires_exact_name_and_current_identity(self):
+        approved = '.github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml'
+        path = self.root / approved
+        current = copy.deepcopy(self.manifest['current_added_active_workflows'][-1])
+        raw = path.read_bytes()
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        for lookalike in ('.github/workflows/k1-punctuation6-prepare-diagnostic-v10.yml',
+                          '.github/workflows/k1-punctuation6-prepare-diagnostic-v1-extra.yml',
+                          '.github/workflows/k1-punctuation6-prepare-diagnostic-v2.yml'):
             with self.subTest(path=lookalike):
                 replacement = self.file(lookalike, raw)
                 with self.assertRaisesRegex(ValueError, 'inventory changed'):

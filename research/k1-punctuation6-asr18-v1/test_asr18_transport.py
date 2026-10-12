@@ -601,11 +601,12 @@ print('exact production authority gate; zero side effects')
         names = ("GITHUB_TOKEN", "GH_TOKEN", "KWS_EVIDENCE_TOKEN", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN", "ACTIONS_FUTURE_TEST_TOKEN")
         with mock.patch.dict(p.os.environ, {key:sentinel for key in names}), \
              mock.patch.object(p.subprocess,"check_output",return_value=b"a"*40+b"\n") as process:
-            for args in (('status','--porcelain','--untracked-files=all'),('rev-parse','HEAD'),('rev-parse','HEAD^{tree}')):
+            for args in (('status','--porcelain','--untracked-files=all'),('rev-parse','HEAD'),('rev-parse','HEAD^{tree}'),
+                    ('log','-1','--format=%H%n%cI','HEAD')):
                 self.assertEqual(p._source_git(*args),"a"*40)
                 sent=process.call_args.kwargs['env'];argv=process.call_args.args[0]
                 self.assertEqual(sent,{'PATH':'/usr/bin:/bin','HOME':'/nonexistent','GIT_CONFIG_NOSYSTEM':'1',
-                    'GIT_CONFIG_GLOBAL':'/dev/null','GIT_TERMINAL_PROMPT':'0','LC_ALL':'C'})
+                    'GIT_CONFIG_GLOBAL':'/dev/null','GIT_TERMINAL_PROMPT':'0','GIT_NO_REPLACE_OBJECTS':'1','LC_ALL':'C'})
                 self.assertFalse(set(sent)&set(names));self.assertNotIn(sentinel,str(sent)+str(argv))
                 self.assertIn('core.fsmonitor=false',argv);self.assertIn('core.hooksPath=/dev/null',argv)
                 self.assertEqual(process.call_args.kwargs['stderr'],p.subprocess.DEVNULL)
@@ -640,6 +641,151 @@ print('exact production authority gate; zero side effects')
         with self.assertRaises(ValueError):api('GET',p.BASE)
         api=p.GitHubAPI('ghs_invented',self.identity,self.release);api.deadline=0
         with self.assertRaises(ValueError):api('GET',p.BASE)
+
+
+class SourceTimestampTests(unittest.TestCase):
+    """Real local Git commit and production gates; no model, token or remote use."""
+    @classmethod
+    def setUpClass(cls):
+        from test_control_fixture import synthetic_enabled_source
+        cls.fixture = synthetic_enabled_source(HERE)
+        cls.source = cls.fixture.__enter__()
+        cls.addClassCleanup(cls.fixture.__exit__, None, None, None)
+        cls.root = cls.source.parents[1]
+        cls.git_env = {'PATH':'/usr/bin:/bin','HOME':'/nonexistent','LC_ALL':'C',
+            'GIT_CONFIG_NOSYSTEM':'1','GIT_CONFIG_GLOBAL':'/dev/null','GIT_TERMINAL_PROMPT':'0',
+            'GIT_NO_REPLACE_OBJECTS':'1','GIT_AUTHOR_NAME':'Invented timestamp fixture',
+            'GIT_AUTHOR_EMAIL':'fixture@example.invalid','GIT_COMMITTER_NAME':'Invented timestamp fixture',
+            'GIT_COMMITTER_EMAIL':'fixture@example.invalid','GIT_AUTHOR_DATE':'2026-10-12T00:29:05-07:00',
+            'GIT_COMMITTER_DATE':'2026-10-12T00:29:05-07:00'}
+        cls.git('init','--initial-branch=timestamp-fixture')
+        cls.git('add','--all')
+        cls.git('commit','--no-verify','-m','Invented offline timestamp fixture')
+        cls.head = cls.git('rev-parse','HEAD')
+        cls.tree = cls.git('rev-parse','HEAD^{tree}')
+        cls.env, cls.event, _, _ = setup()
+        cls.env.update(GITHUB_ACTIONS='true', GITHUB_SHA=cls.head, GITHUB_WORKFLOW_SHA=cls.head,
+            KWS_SOURCE_FREEZE_SHA256=t.sha((cls.source/'execution-freeze.json').read_bytes()))
+        cls.event.update(after=cls.head)
+
+    @classmethod
+    def git(cls, *args, input=None, env=None):
+        return subprocess.check_output(['git','-c','core.fsmonitor=false','-c','core.hooksPath=/dev/null',
+            '-c','commit.gpgsign=false','-C',str(cls.root),*args], input=input, env=env or cls.git_env,
+            stderr=subprocess.DEVNULL, timeout=15).decode('ascii').strip()
+
+    def bound(self, stamp, *, event=None, env=None):
+        event = {**self.event, 'head_commit':{'timestamp':stamp}} if event is None else event
+        probe = r"""
+import json, os, sys
+sys.path.insert(0, sys.argv[1])
+import evidence_publisher as p
+native = {'torch','numpy','whisper','funasr','qwen_asr','native_worker','runtime_session'}
+def audit(event, args):
+    if event.startswith('socket.'):
+        raise AssertionError('offline timestamp test forbids network')
+    if event == 'import' and args[0].split('.')[0] in native:
+        raise AssertionError('offline timestamp test forbids model imports')
+    if event == 'subprocess.Popen':
+        executable, argv, cwd, env = args
+        if executable != 'git' or any('TOKEN' in key for key in env):
+            raise AssertionError('only token-free Git subprocesses allowed')
+sys.addaudithook(audit)
+try:
+    result = p.bound_release(json.loads(sys.argv[2]), json.loads(sys.argv[3]))
+except ValueError as error:
+    print(json.dumps({'error':str(error),'error_type':type(error).__name__}))
+else:
+    print(json.dumps({'release':result}))
+"""
+        child_env = {'PATH':'/usr/local/bin:/usr/bin:/bin','HOME':'/nonexistent','LC_ALL':'C',
+            'GITHUB_TOKEN':'ghs_invented_timestamp_sentinel','GH_TOKEN':'invented_timestamp_sentinel',
+            'GIT_CONFIG_COUNT':'1','GIT_CONFIG_KEY_0':'core.fsmonitor','GIT_CONFIG_VALUE_0':'untrusted'}
+        result = subprocess.run([sys.executable,'-I','-B','-c',probe,str(self.source),
+            t.canonical(env or self.env).decode(),t.canonical(event).decode()],env=child_env,
+            stdin=subprocess.DEVNULL,capture_output=True,timeout=20,check=False)
+        self.assertEqual((result.returncode,result.stderr),(0,b''))
+        self.assertNotIn(b'invented_timestamp_sentinel',result.stdout)
+        return t.decode(result.stdout)
+
+    def test_real_commit_Z_UTC_and_negative_offset_make_identical_release_and_result_commit(self):
+        self.assertEqual(self.git('show','-s','--format=%cI','HEAD'),'2026-10-12T00:29:05-07:00')
+        releases = []
+        for stamp in ('2026-10-12T07:29:05Z','2026-10-12T07:29:05+00:00',
+                '2026-10-12T00:29:05-07:00','2026-10-12T12:59:05+05:30',
+                '2026-10-12T21:29:05+14:00','2026-10-11T17:29:05-14:00'):
+            with self.subTest(stamp=stamp):
+                release = self.bound(stamp)['release']
+                self.assertEqual(release['commit_timestamp'],'2026-10-12T07:29:05Z')
+                self.assertEqual((release['source_sha'],release['source_tree']),(self.head,self.tree))
+                p.validate_release(release)
+                releases.append(release)
+        self.assertTrue(all(release == releases[0] for release in releases))
+        self.assertEqual(len({p.commit_body(self.tree,release)[1] for release in releases}),1)
+
+    def test_valid_different_instant_rejected_by_genuine_commit_binding(self):
+        for stamp in ('2026-10-12T07:29:06Z','2026-10-12T00:29:05-06:00'):
+            with self.subTest(stamp=stamp):
+                self.assertEqual(self.bound(stamp),{'error_type':'ValueError',
+                    'error':'push timestamp matches source committer instant'})
+
+    def test_malformed_naive_fractional_extreme_offset_and_invalid_calendar_rejected(self):
+        for stamp in (None,True,0,{},[], '', '2026-10-12T07:29:05','2026-10-12 07:29:05Z',
+                '2026-10-12T07:29:05z','2026-10-12T07:29:05.0Z','2026-10-12T07:29:05.123+00:00',
+                '2026-10-12T07:29:05+0000','2026-10-12T07:29:05+00:00:00',
+                '2026-10-12T07:29:05-00:00','2026-10-12T07:29:05+14:01',
+                '2026-10-12T07:29:05-14:01','2026-10-12T07:29:05+23:59',
+                '2026-10-12T07:29:05+24:00','2026-10-12T07:29:05-99:99',
+                '2026-10-12T07:29:05+07:60','2026-02-29T07:29:05Z',
+                '2026-13-12T07:29:05Z','2026-10-32T07:29:05Z','2026-10-12T24:00:00Z',
+                '2026-10-12T07:29:60Z','2026-10-12T07:29:05Z\n',' 2026-10-12T07:29:05Z'):
+            with self.subTest(stamp=stamp):
+                self.assertEqual(self.bound(stamp)['error_type'],'ValueError')
+
+    def test_missing_or_nonobject_head_commit_rejected(self):
+        for change in ({},{'head_commit':None},{'head_commit':[]},{'head_commit':'invalid'},
+                {'head_commit':{}},{'head_commit':{'timestamp':None}}):
+            with self.subTest(change=change):
+                self.assertEqual(self.bound(None,event={**self.event,**change})['error_type'],'ValueError')
+
+    def test_local_replacement_object_cannot_override_exact_source_timestamp(self):
+        replacement = self.git('commit-tree',self.tree,'-m','Invented replacement object',
+            env={**self.git_env,'GIT_COMMITTER_DATE':'2026-10-12T07:29:06+00:00'})
+        self.git('replace',self.head,replacement)
+        try:
+            self.assertIn('release',self.bound('2026-10-12T07:29:05Z'))
+            self.assertEqual(self.bound('2026-10-12T07:29:06Z')['error_type'],'ValueError')
+        finally:
+            self.git('replace','-d',self.head)
+
+    def test_timestamp_repair_keeps_clean_source_freeze_and_context_gates(self):
+        stamp = '2026-10-12T00:29:05-07:00'
+        for env, reason in (({**self.env,'GITHUB_SHA':'a'*40},'actual clean executed Git source'),
+                ({**self.env,'GITHUB_JOB':'different-job'},'same repository and ASR18 job'),
+                ({**self.env,'KWS_SOURCE_FREEZE_SHA256':'a'*64},'independently approved complete source-freeze identity required')):
+            with self.subTest(reason=reason):
+                result = self.bound(stamp,env=env)
+                self.assertEqual(result['error_type'],'ValueError')
+                self.assertEqual(result['error'],reason)
+        dirty = self.root/'invented-untracked-file.txt';dirty.write_text('synthetic dirty source')
+        try:
+            self.assertEqual(self.bound(stamp),{'error_type':'ValueError','error':'clean executed source checkout'})
+        finally:
+            dirty.unlink()
+
+    def test_source_timestamp_read_binds_exact_real_commit_SHA(self):
+        event = {'head_commit':{'timestamp':'2026-10-12T00:29:05-07:00'}}
+        with mock.patch.object(p,'ROOT',self.root):
+            self.assertEqual(p._source_timestamp(event,self.head),'2026-10-12T07:29:05Z')
+            with self.assertRaisesRegex(ValueError,'^timestamp from exact checked-out source commit$'):
+                p._source_timestamp(event,'a'*40)
+
+    def test_final_release_contract_remains_whole_second_UTC_only(self):
+        release = self.bound('2026-10-12T00:29:05-07:00')['release']
+        for stamp in ('2026-10-12T00:29:05-07:00','2026-10-12T07:29:05+00:00',
+                '2026-10-12T07:29:05.0Z','2026-10-12T07:29:05'):
+            with self.subTest(stamp=stamp),self.assertRaises(ValueError):
+                p.validate_release({**release,'commit_timestamp':stamp})
 
 
 class FailureSchemaTests(unittest.TestCase):
@@ -808,7 +954,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
     LICENSE='source/research/qwen6_asr/FUNASR_MODEL_LICENSE'
     LICENSE_ID={'bytes':5306,'sha256':'7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8'}
     # Parent-rebuilt candidate freeze after the reviewed narrow license delta.
-    FROZEN_SOURCE_SHA256='e97a1777b7d94439959c31aadb76cc92cd37884c2162810e95f79cd8cf832113'
+    FROZEN_SOURCE_SHA256='5bfbc146c886c99995456fc1be9271107180635b1d9ed59828af146d35998499'
     SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json'))
 
     def setUp(self):
@@ -844,9 +990,13 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
             _,_,run=self.host_tests.context()  # Invented run only; no source authority claim.
             inp=c.read_json(HERE/'input-freeze.json')
             release=c.read_json(HERE/'execution-release.json')
-            self.assertTrue(all(release[key] is True for key in c.RELEASE_APPROVALS))
-            self.assertEqual(release,self.host.release_first())
-            # Actual checked-in r1 controls and complete source remain unchanged.
+            self.assertFalse(release['enabled'])
+            for key in c.RELEASE_APPROVALS:release[key]=True
+            name=self.host.NEW+'execution-release.json';body=t.canonical(release)
+            source['source/'+name]=body
+            for role in ('host_code','setup_code','inference_code'):
+                if name in freeze[role]:freeze[role][name]={'bytes':len(body),'sha256':t.sha(body)}
+            # Explicit synthetic authority only; checked-in disabled controls stay unchanged.
             projection=self.host.projection_for(inp['actual_new_cells'])
             receipt=inp['actual_screening_receipt']
             host=self.host.host_receipt(run,t.sha(t.canonical(freeze)),'d'*40,t.sha(t.canonical(receipt)))
@@ -878,7 +1028,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
         self.assertEqual({'bytes':len(files[self.LICENSE]),'sha256':t.sha(files[self.LICENSE])},self.LICENSE_ID)
         files[self.LICENSE].decode('utf-8')
         differences={name for name in self.roster if files['source/'+name]!=c.read_bytes(ROOT/name)}
-        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else set())
+        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else {self.host.NEW+'execution-release.json'})
 
     def materialize(self, root, files):
         for name,body in files.items():
@@ -976,6 +1126,228 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
 
     def test_full_114_roster_prepared_and_synthetic_first_failure_license_negatives(self):
         self.full_native_case(True)
+
+
+class OfficialWhisperSourceTransportTests(unittest.TestCase):
+    """Small real public bodies, invented run; no download/model/source execution.
+
+    The original MIT LICENSE, tiny CLI source and locked frontend NPZ exercise
+    the real collector and archive validator in CI. This is intentionally a
+    partial interrupted-copytree fixture, not a fabricated full-22 success.
+    """
+    PREFIX = "whisper-setup/official-source/"
+    LOCK = "source/research/source-screen32-whisper-v1/source-lock.json"
+    # Public OpenAI Whisper 86098128c0b4f24f0e2aa2994de830614b474227,
+    # from the retained fourth setup artifact; each body is independently pinned.
+    REAL_TEXT = {
+        'LICENSE': b'MIT License\n\nCopyright (c) 2022 OpenAI\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the "Software"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n',
+        'whisper/__main__.py': b'from .transcribe import cli\n\ncli()\n',
+    }
+    REAL_MEL_BASE85 = (
+        b'P)h>@6aWAK2mk;8Apn87_YHUl006-I000UA6aZ~yY+pDqE^csn0RRvH!219I00000cn1Ig00000?cG^WRA(B-@fHoDf(we<h@dE7'
+        b'Y!w<8`g=Zu0SyzQf(W?8t!0r>6rtUwltqMyn1Bmt6cQIe5zL^1I^u$&g196SL!rSXQB)#gVn|$3hD>>3QS_OrxzUT~SJfANuFlQB'
+        b'-uFAzb$Y`%pRt~ko2eG7mf86S=>5X%gteUv9BikywhIgiTNtLBKO-c}Kj5$HAL)Yi0S(vnLAnJ24d3mZ9n{tu2giPD>u~G;PivJ*'
+        b'6_vi{yi^g9LHeaeNS=0toe(L|FO9~kw%P22NWq@GQ}}1W7Is3UpkeQla~8z26CwqPoo(bH*M;naNWq>wH@PK!0y`m6aMsITMi@J>'
+        b'6CwrrrO{FsWX?{A6s#y-FIOks#@oIRqIX$h=QQatX$LzYQt)*^u2eg_vJ)Z&d-6`nJFg<d+rAH?cUgY(A9#i*`X9EWUuGvn3KoXO'
+        b'iqCycu@fQ%YR6HCFwSKsL<%nbkcN;$JJ<=40+SARpbJ{hPKXq2x9un=bc<#uL<)|dc9N@;{MZSRf*)sj%izbZ?1V_c6V)Q=F{w8@'
+        b'AyN?kUA)xfH)AJ63O4slk!t5c{sxjr!L#}-`FTJLJ0Vi=ll=ktbopd<LZo0=hyAiHBbc2KDY$TdmmFZ4%1($B_=awhmBv@t36X->'
+        b'$`x|s6~1eQNXf{9o^n^*2zElG;CezAnKDJsPKXq&e2|NpswCMm)|qD%A_Md}=fv_ev9fL7T6RLDAm3q_Jac~}cP}CZR||>|lf6pj'
+        b'-AUj~Au?dx^UuUejF<OXTXCikDbPHugnouzI#(ugrVtr$_WEIw;UwiEkG`^5S*iAI-w)BdD$Qdb!sdm__>E<pDMShe?Pw`4+kGtO'
+        b'wTNabL<ack+Tq)4w(`9-HnQT11zRC9VA95L_~tvysspX1V@eMH?}5mG#M-Z5<Le?_y`JG0w-~lUWWbRZnMhqDWv`LH!n;0&tq>XT'
+        b'U_=^9>l|f|et)3k!hN<vWI*wuL@e&wOFCs3$q^P#Jlhi)u<xM`pIEh#1N*d>0xQ@GkpWe)<}mTPh0M5KGQ21UpIrCj9!AuJahtux'
+        b'l<}E3)ADcfMd)pOXEBtsg~))E!U-tqQ-eQen91eyQ!&440cQ(Q6I$%wE;hZ`j)`Z?<neho;ds}ZvxUfj6-)agZCnv_ksYLU)<M)~'
+        b'bz(0>O^CADsI7PNL-Eg7G5(24PE7p@gY55c7b9wd>&!5r|0W!BbT?tS`ytk!T!-#Km)Q$Z6AlM#7Nsj9;b(spLu&5Aq;f4n=2o*8'
+        b'q9&9UB?znM!I=B^5)>3v;gR`fxL+{m`Gu$ng=aq$*Ux>7Gwb%Di~sK!m6D0d^x>!*W6v2w)X22w8tqHRZg_vo2Kc7@2z9gL$eFB%'
+        b'*{m}5Lezvh<D;VEXFB-A>_^w<<!GM!B`V4_IAJ@U%@8%>xwA~`9nlF7ZB`-A<TRdK%ty@NDD)oM2DiKI<-1>q8mXHeBaEJE;QG@#'
+        b'#Ed+LnzNbc-6{ZOsz<_pnG2gCYUKM}yTzqZ!*Q)*JuY=B#z)rMV0`>jyjc8Dd{dmvW{4WuZn;O)6c0tri8bhGc@&FBY{h|K9hOgO'
+        b'fzBN)d7dF^WMI)ck+`TgTAD0}%f&2=E>1`5sd_~Av&6lcFW3xGBf~Gdi0Ai=(5J!&_Op{v7?Fd)$*VAWq6<DXxhbOKUUEMpdc!WK'
+        b'$=Vxd^TduJb|^Pq2;<;w(9GJ5&R2p^Qr#0zU+osP8b@|R^oF>k{-Uydr6}yLMVws}91f>pUF{mwhEBk#y0)-ymn@RU6gt1{`y_go'
+        b'v}`p~_!QNOj;Dba>EZaja4X8s$6|nH46-kn!t2{DBCz{R&KsgPNWbag;E-QLRjMQY_<BB~E+xYyCl)s{Ju$r20%F-g@u!s$p9>JZ'
+        b'VQ)JJk!)NdvWzUzD%uBms#Q1=7Z0P{=}7dp$FK*t#n$QbMXc>E?rKD@7468^mX6sZ9{pA?;zkd~m#IPUUXp--u!VTi)fKA?+F{6r'
+        b'e37eBbLJ4eA;MvhxDokpaV*yq33kIVEoB}oZQ@Xnp@Z9dPAKwkfemrlVrXIywnOw<y!w)Jdem4^5q?7Kw=~0&IxS>HAl%PKBOz!C'
+        b')`~$`Z`uO3$My-Y!l5EM!<suAQG<yq%ba8Hju4&+x#C~m%`xPb8b?EX;rcQXPmWE+u#<za^t36$5=+FL{(5mSbSIy&5xutaS$pv~'
+        b'ELn8_$1SlnrwjJI{{c>A_@n$@AnxD%5U<L6pzpR{#hA4jqDnPP{2bGU{SY-!pN!LPt@aY$NA`+x)l)Gr%?iJba>M?rKv-J%p#3=w'
+        b'j3V2kdiFK(ed#8#V2Q1`Ir%<!H=+h(%S*JE9|Vc|#Ro;wlBdE#T4JXB0NHW|+IWnG*%t%Q_PiN-nqL!E38})ZlMp=}gE@bQ8c6pO'
+        b'+F7%vhz*`u;&I45k?n4dspSr6JKF;hH^yS^A_t_IcElX_YO!|FUNOggZo{Ygzy16NP)h>@6aWAK2mk;8AprOIG9Nbx004lJ0RRgC'
+        b'6aZ~yY+o@lI4*8*c>w?r0DzJK0000005=E#000000PWpdP}Suc$MI!(*pf;@usshrDrg{x2(16}>L>?A5i-qG6pa)-Yk(=Gm|~{l'
+        b'aVNMl1j0OJ96b=8MoGy-ri5Ubilw4%HMUNInr6H9Rl}_Hu9<H1;`_N-u&&;l-~66ut(QM*BZh|$8P&iv+cej0LQKN=csIkvO~v}U'
+        b'dAPX6&WxWGA3bB-%=ig0f4<*8dRjuvAMYnjihe8RkKf&U_yl;k_;~l|>fw^)^0(NTOr`}v`v)l#0IMn<J|H824MF=)kP|>-XZl()'
+        b'0@&cwyjAa~eForJ7E)I%eUmT9(>@3AEZdpxNS6RM6wcqkZUSfoohu<DfDMytOw3$>Mo3+Ny6Lsbc-rRxo@Mj)cB4xG8~P@XVK)IZ'
+        b'DxL3;5x|CiS!c)zps}ksg^U0;6wYtQ{tjq_O-YmXO-%F&pyAuio-P4wD2U!nmjD_eb;V=^u;D-B8ZmPL8UwxE)J?Az{4Exs@i?>#'
+        b'T>{vkLT9j>02*g|UMC}f4Ska@kP|?osB$400c`NT<HG(9Xk_mnFKxeRNuK~3yNd1T62ON1;5@nn&=}xYKt=!?CVktKnG4Veo8qLZ'
+        b'1`Ove7od^!ohw}e*wDVo0(KKX<NG01WCXCGPfRsA0W@Y*$B_}hhJxtM?C*d^c%yc5-`$Nq0W=!TZ9ta*Hhk@ToGt-02D{BwGV%xh'
+        b'FBYKT8|Tc-1=x_YaT7Bapz+@wDe7IL4|g5`jl`vmnYjQPI^-T=<^nVdF8Hbm`@F~rpi$IzFBt)B*y-1h-2~8ZuKXpy@ZU$D02(>r'
+        b'&D8PfZ<7;1BdYs+)i(JBasp_0-pEmh8btE_BA`*ewTvzSZ0O?hBRK&yGO|4kkI=*91kk9?jh6P8a>)sxu`?}SMs>_0CxAvoX@#^K'
+        b'yN;Xy8lSpck;S(^BqxAIoX17k?wd+Z0F7FsR0=;^Pfh@hh?yDE^u$JT0%(j__=;qA$X6fq+r+bo04v;T|80z#wq2E_ywCkEKx5;{'
+        b')v8CE8{`DgNZ1go3cb6sqW~I{mv>X9meJ${(8w`;FDa{5s-aU4vC9KiH15z{mi9_jQ8x~<qW~H?>5=O5M0aK{K%?x9X6kIOIQ2Mc'
+        b'DYF+~#dB{Z%9J@P)WXTfn7sfEyX}2dhpB$dUVui?ujSIIXpt(pkwT{cR+NNf7|R>Hs@A%7pi=;iCR?tH&+%C*GGZB>0$4F&<yS^b'
+        b'NwAt1=}M;n8sW7^Wn;u#HS9nUodQ^~`=t_d>#iMD_Vb1+o8FkL09Ke?-;-;rUQ=oA4Vk|HjgJ~$l#}-3Rpjf1bP8Za#F{{3Nk2z*'
+        b'e7d1p_u_f>fHjc~&7ywmuGX$<qwLyW=k6C^#me)m#r$!gI+yyKYCp)6tN>P|H`^ucZ%3$_iC37v0F5D^o)Dkg!&FYxDY61sk=*>S'
+        b'|3LdnNvj>G%5sm86~Kx{lQx^nKdq3<p&=^Dxs<E`R{Z3dVg7Rc3Aq>%qPEUBCEFgiWVZ(_IQK~W16vkL&}Dy>x%rZ)utKr|STWBr'
+        b'Q$p5sQGSQ+%bo+RnZp1p2D#6b%pMNv?kzhN-!PV}09IVB?k<xj*2(%6?Nr~I49PlE5b(6m1U!o#{8DHvsy!^vf8nXVt3D~;cDl;W'
+        b'0$5RTWTl*HZm;^O-=*mD3Cv-D6)PXQOKFoTx!1Lgs<h9O=3ZHJ3t+)V`5}hW(R67y&0c--`7Jq{FoJFYtZ**zl1rr(^6GFW)#_k@'
+        b'_(hzjTL23_o8@dIl`oT?Q%x#pTAhUSNtP82e=<Mqa{<qy{+k~f`Q`c2IP*odbL%(K`D$-wF~Ex4Uwg}L`>$oqm}aWRoG-KAeu2CI'
+        b'797aDX^se+D&w;+$efHPQswlqIGE3}y8srPby{p(ow!Jbrc}$x7C+0+fh)!D!fx^cSdefm&nW1%OoH}Ylk=Uf$hPxK<jlYw<OQ(c'
+        b'-TwQGf7C3IIJ=)@bkiRtvDq?-=yQy`02btx<r+z27s%<*N~x&3EN?li5uf6F<OQ%GDt4K1bZM-3dmWK@|69_-*dUkQX~XAZfCcl{'
+        b'x*BEaf%3-WJTY~8AZM#`WMt1EaoFTT#{l*GzGz5*x1Y1Pr=?1OeU&_#R3hERCdl53qvQp!V8Wv##?lXFNZx=0@@@DznSC!+{QX?T'
+        b'uH6yt!~pdyc;afTx#KAZ3)V}(<O@=CdxylV8!vmed`ZUu7Tn%lX1ud#qC6SCQ<ii-BQH9oNzbO;#W{NbnE~p#)w<UF;^}`%T+&jB'
+        b'bS#x%hrM#_e3CR-+eG|_rZATQ^@KU47<U&2Nao`-2`)Y@t?jnS%TeQG@ZgJd3}C@4SN9nO55r`GDMR`-E*HC@8{{(ym&7fH$qZ0W'
+        b'&7)fX<tdfMhnd6Vj$}&ol;bk5_d4-(?Jq}G9V9bAJ;$<Im>X<8XEZu6M1qHXEWvk6#m_TMBFaPM&D2xI`+>zgj|}*W@3IaD%-VFq'
+        b'n7t%eMpgYw>Jm%j{Z$`Hvd3%kU`~xuFuI)20DyX~?B8y*YUM4LCM}j7r8{Kw4_Pw3(?sc%+Cpa9k7Par>e=#ej<G2ICCRupMaJZQ'
+        b'BCAukOSd-{$ntR>vamMa*pn2)d<Oi*S1U|LqFuGo|9Y@&+q7JAD|gAOPHW_)gRe-ltxt?gSwhzU^@P5@&hW}<Er#bL={O=?0)sb7'
+        b'*tI$082qvn2OTh6e_PF71N_Aou@B7y?w>K@PWVcn_3ud|-_2sz{6ksoIQoxQhd+P*f7kpEP)h*<6ay3h000O8001EXfw}h$cn1Ig'
+        b'!219I3IG5A0000000000fB^si003=eY+pDqE^csnP)h*<6ay3h000O8001EX_xLg&HwXX#fRX_K3jhEB0000000000fC01z003=e'
+        b'Y+o@lI4*8*c~DCQ1^@s600IC40C4~S04NXu0000'
+    )
+
+    def setUp(self):
+        import hosted_run
+        from test_asr18_host import public_fixture
+        self.host = hosted_run
+        self.files, self.run = public_fixture()
+        self.lock = c.read_bytes(ROOT / "research/source-screen32-whisper-v1/source-lock.json")
+        self.bodies = {self.PREFIX + name: raw for name, raw in self.REAL_TEXT.items()}
+        self.bodies[self.PREFIX + "whisper/assets/mel_filters.npz"] = base64.b85decode(self.REAL_MEL_BASE85)
+        self.files.update(self.bodies)
+        self.files["whisper-setup/source-lock.json"] = self.lock
+        self.guard = mock.patch("http.client.HTTPSConnection", side_effect=AssertionError("no live network"))
+        self.guard.start(); self.addCleanup(self.guard.stop)
+
+    def materialize(self, root, files):
+        for name, raw in files.items():
+            target = root / name; target.parent.mkdir(parents=True, exist_ok=True); target.write_bytes(raw)
+
+    def test_fixed_inventory_matches_original_lock_and_cannot_be_mutated_by_caller(self):
+        self.assertEqual(t.sha(self.lock), "0635fb8759fb56439f59db6956612f78cc8903c239f81f3eb7f9b0c47eb99649")
+        expected = {self.PREFIX + row["path"]: {"bytes": row["size_bytes"], "sha256": row["sha256"]}
+            for row in t.decode(self.lock)["files"]}
+        self.assertEqual(len(expected), 22)
+        self.assertEqual(sum(row["bytes"] for row in expected.values()), 1874441)
+        actual = t.official_whisper_source_inventory()
+        self.assertEqual(actual, expected)
+        actual[self.PREFIX + "LICENSE"]["sha256"] = "0" * 64
+        self.assertEqual(t.official_whisper_source_inventory(), expected)
+        self.assertEqual(set(self.host.public_setup_members()) & set(expected), set(expected))
+
+    def test_real_partial_copytree_through_unmocked_collector_package_and_validator(self):
+        verified = t.official_whisper_source_members(self.files)
+        self.assertEqual(set(verified), set(self.bodies))
+        for name, row in verified.items():
+            self.assertEqual(row, {"bytes": len(self.bodies[name]), "sha256": t.sha(self.bodies[name])})
+        with tempfile.TemporaryDirectory(prefix="real-public-whisper-partial-") as temp:
+            root = Path(temp); self.materialize(root, self.files)
+            self.assertEqual(set(self.host.collect_public(root)), set(self.files))
+            payload, manifest = t.build_package(root, self.run)
+            validated, _ = t.validate_archive(payload, self.run)
+            self.assertEqual(manifest, validated)
+            self.assertTrue(set(self.bodies) <= set(manifest["members"]))
+
+    def test_partial_subset_is_allowed_but_each_present_body_must_be_exact(self):
+        for name in self.bodies:
+            changed = dict(self.files); del changed[name]
+            self.assertEqual(set(t.official_whisper_source_members(changed)), set(self.bodies) - {name})
+            for body in (self.bodies[name][:-1], b"X" + self.bodies[name][1:], b"\x00private-binary"):
+                changed = {**self.files, name: body}
+                with self.subTest(name=name, body_length=len(body)), self.assertRaisesRegex(ValueError, "original official Whisper"):
+                    t.validate_members(changed, self.run)
+                with tempfile.TemporaryDirectory(prefix="whisper-wrong-body-") as temp:
+                    root = Path(temp); self.materialize(root, changed)
+                    with self.assertRaisesRegex(ValueError, "original official Whisper"):
+                        self.host.collect_public(root)
+
+    def test_extra_wrong_directory_alias_suffixless_and_binary_rejected(self):
+        extras = {
+            self.PREFIX + "LICENSE_COPY": self.REAL_TEXT["LICENSE"],
+            self.PREFIX + "other/LICENSE": self.REAL_TEXT["LICENSE"],
+            self.PREFIX + "private": b"invented private text",
+            self.PREFIX + "whisper/assets/extra.npz": self.bodies[self.PREFIX + "whisper/assets/mel_filters.npz"],
+            self.PREFIX + "whisper/assets/noextension": b"\x00invented binary",
+            "whisper-setup/other/LICENSE": self.REAL_TEXT["LICENSE"],
+            self.PREFIX + "./LICENSE": self.REAL_TEXT["LICENSE"],
+            self.PREFIX + "whisper/../LICENSE": self.REAL_TEXT["LICENSE"],
+        }
+        for name, raw in extras.items():
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                t.validate_members({**self.files, name: raw}, self.run)
+            if "/./" in name or "/../" in name: continue  # Filesystem normalizes these; byte-map test above does not.
+            with tempfile.TemporaryDirectory(prefix="whisper-extra-body-") as temp:
+                root = Path(temp); self.materialize(root, {**self.files, name: raw})
+                with self.assertRaises(ValueError): self.host.collect_public(root)
+
+    def test_filesystem_aliases_are_rejected_without_omission(self):
+        for mode in ("symlink_file", "symlink_directory", "hardlink_file"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory(prefix="whisper-alias-") as temp:
+                root = Path(temp); self.materialize(root, self.files)
+                target = root / (self.PREFIX + "LICENSE")
+                if mode == "symlink_directory":
+                    (root / self.PREFIX / "alias").symlink_to(target.parent, target_is_directory=True)
+                else:
+                    backup = root / "unpublished-original-license"; target.rename(backup)
+                    if mode == "symlink_file": target.symlink_to(backup)
+                    else: os.link(backup, target)
+                with self.assertRaises((ValueError, OSError)): self.host.collect_public(root)
+
+    def test_completed_setup_requires_whole_fixed_roster_presence(self):
+        # Presence-only negative: metadata schemas are exercised by real host
+        # fixtures elsewhere; these minimal objects cannot claim valid setup.
+        for marker in ("setup-receipt.json", "phase-finalize-complete.json",
+                "phase-finalize-progress.json"):
+            files = {**self.files, "whisper-setup/" + marker: t.canonical({"status": "complete"})}
+            with self.subTest(marker=marker), self.assertRaisesRegex(ValueError, "all 22 official"):
+                t.official_whisper_source_members(files)
+            with tempfile.TemporaryDirectory(prefix="whisper-incomplete-success-") as temp:
+                root = Path(temp); self.materialize(root, files)
+                with self.assertRaisesRegex(ValueError, "all 22 official"): self.host.collect_public(root)
+
+    def test_acquisition_complete_before_finalize_allows_absent_or_partial_source(self):
+        # Synthetic acquisition metadata is finalized BEFORE the real finalizer
+        # begins copying official-source. It cannot prove setup completion.
+        assets = [{"allowance": 1, "asset_id": name, "budget_charge_bytes": 1,
+            "charge_kind": "observed", "kind": "wheel" if name.startswith("wheel-") else name,
+            "observed_ciphertext_bytes": 1, "status": "verified"}
+            for name in [*[f"wheel-{i:02d}" for i in range(1, 23)], "source", "model"]]
+        receipt = t.canonical({"schema": "bounded-host-acquisition-v1", "status": "complete",
+            "aggregate_cap": 1536 * c.MIB, "total_read_bytes": 24, "assets": assets,
+            "byte_scope": "bidirectional_tunnel_socket_recv_before_forwarding"})
+        for bodies in ({}, self.bodies):
+            files = {name: raw for name, raw in self.files.items() if not name.startswith(self.PREFIX)}
+            files.update(bodies); files["whisper-setup/bounded-acquisition/receipt.json"] = receipt
+            with self.subTest(retained_source_members=len(bodies)):
+                self.assertEqual(set(t.official_whisper_source_members(files)), set(bodies))
+                with tempfile.TemporaryDirectory(prefix="whisper-prefinalize-acquisition-") as temp:
+                    root = Path(temp); self.materialize(root, files)
+                    self.assertEqual(set(self.host.collect_public(root)), set(files))
+                    payload, manifest = t.build_package(root, self.run)
+                    self.assertEqual(t.validate_archive(payload, self.run)[0], manifest)
+                files["whisper-setup/phase-finalize-complete.json"] = t.canonical({"status": "complete"})
+                with self.assertRaisesRegex(ValueError, "all 22 official"):
+                    t.official_whisper_source_members(files)
+
+    def test_caller_source_lock_and_coherently_rebound_freeze_cannot_replace_original(self):
+        changed_lock = t.decode(self.lock)
+        changed_lock["files"][0]["sha256"] = "0" * 64
+        changed_lock = t.canonical(changed_lock)
+        with self.assertRaisesRegex(ValueError, "original fixed official Whisper source lock"):
+            t.validate_members({**self.files, "whisper-setup/source-lock.json": changed_lock}, self.run)
+        files = dict(self.files); files[self.LOCK] = changed_lock
+        freeze = t.decode(files["authority/execution-freeze.json"])
+        row = {"bytes": len(changed_lock), "sha256": t.sha(changed_lock)}
+        for role in ("host_code", "setup_code", "inference_code"):
+            freeze[role][self.LOCK[len("source/"):]] = dict(row)
+        raw = t.canonical(freeze)
+        files["authority/execution-freeze.json"] = raw
+        files["source/" + self.host.NEW + "execution-freeze.json"] = raw
+        host = t.decode(files["host-receipt.json"]); host["source_freeze_sha256"] = t.sha(raw)
+        files["host-receipt.json"] = t.canonical(host)
+        # Prove the attack is a coherent caller-defined source closure, then
+        # prove independent fixed official identities reject it anyway.
+        self.assertIn(self.LOCK, t._source_members(files))
+        with self.assertRaisesRegex(ValueError, "original fixed official Whisper source lock"):
+            t.validate_members(files, self.run)
+        with tempfile.TemporaryDirectory(prefix="whisper-rebound-lock-") as temp:
+            root = Path(temp); self.materialize(root, files)
+            with self.assertRaisesRegex(ValueError, "original fixed official Whisper source lock"):
+                self.host.collect_public(root)
 
 
 if __name__=='__main__':unittest.main()

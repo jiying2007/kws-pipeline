@@ -114,11 +114,12 @@ def public_fixture():
 
 
 class HostTests(unittest.TestCase):
-    def test_checked_in_r1_controls_are_exact_and_prior_unknown_is_not_reclaimed(self):
+    def test_checked_in_controls_disabled_and_prior_unknown_not_reclaimed(self):
         for filename,keys in DISABLED_APPROVALS.items():
             value=c.read_json(HERE/filename)
-            self.assertTrue(all(value[key] is True for key in keys))
-        release=h.release_first();history=h.prior_history_identity()
+            self.assertTrue(all(value[key] is False for key in keys))
+        with self.assertRaisesRegex(ValueError,'disabled'):h.release_first()
+        release=c.read_json(HERE/'execution-release.json');history=h.prior_history_identity()
         self.assertEqual(release['experiment'],'k1-punctuation6-asr18-r1')
         self.assertEqual(release['source_ref'],'research/k1-punctuation6-asr18-r1')
         self.assertEqual(history['prior_runs'],[])
@@ -164,7 +165,8 @@ class HostTests(unittest.TestCase):
         self.assertEqual(len(inputs['actual_new_cells']),6)
         self.assertGreater(len(inputs['actual_blind_job']['clips']),0)
 
-    def test_checked_in_r1_controls_pass_real_git_api_and_input_gates(self):
+    @synthetic_enabled_host_test
+    def test_synthetic_enabled_r1_controls_pass_real_git_api_and_input_gates(self):
         # Keep the temporary enabled controls and re-frozen public source bytes.
         # Only the host event and six GitHub responses are invented. A clean
         # temporary local commit supplies the actual source HEAD/tree/blob;
@@ -235,7 +237,8 @@ class HostTests(unittest.TestCase):
         self.assertEqual(c.read_bytes(HERE/'execution-release.json'),production)
         self.assertEqual(c.read_bytes(HERE/'execution-freeze.json'),source_raw)
 
-    def test_checked_in_r1_release_rejects_noncanonical_lf_history_sha(self):
+    @synthetic_enabled_host_test
+    def test_synthetic_enabled_r1_release_rejects_noncanonical_lf_history_sha(self):
         # The public observer's bytes retain their trailing LF. Its file digest
         # must never stand in for the canonical JSON identity accepted by the
         # production API gate. Reconstruct only this public fixed identity;

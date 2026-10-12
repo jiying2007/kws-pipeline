@@ -72,7 +72,7 @@ class ObserverTests(unittest.TestCase):
         self.assertIsNone(rows[1]['record']['identity'])
         self.assertEqual(rows[-1],{'status':'blocked_no_retry'})
 
-    def test_actual_r1_cli_missing_event_prints_safe_failure_before_sideeffects(self):
+    def test_actual_disabled_cli_rejects_before_event_or_sideeffects(self):
         proc=subprocess.run([sys.executable,'-I','-B',str(HERE/'hosted_run.py')],env={'PATH':'/usr/bin:/bin',
             'GITHUB_TOKEN':SECRET,'GH_TOKEN':SECRET,'RUNNER_TEMP':SECRET},capture_output=True,text=True,timeout=10)
         self.assertEqual(proc.returncode,2)
@@ -80,8 +80,8 @@ class ObserverTests(unittest.TestCase):
         rows=[json.loads(line) for line in proc.stdout.splitlines()]
         self.assertEqual(rows[0]['stage'],'release')
         self.assertEqual([row['stage'] for row in rows if row.get('schema')=='k1-asr18-safe-checkpoint-v1'],
-                         ['release','arguments','event_read'])
-        self.assertEqual(rows[-2]['record']['stage'],'event_read')
+                         ['release'])
+        self.assertEqual(rows[-2]['record']['stage'],'release')
         self.assertIsNone(rows[-2]['record']['identity'])
         self.assertEqual(rows[-1],{'status':'blocked_no_retry'})
 
@@ -352,6 +352,52 @@ class HostFaultObservationTests(unittest.TestCase):
         self.assertEqual(record['claims']['reported_terminal_attempts'],18)
         self.assertEqual(record['claims']['validated_start_files_observed'],18)
         self.assertIsNone(record['claims']['consumed_attempts'])
+
+
+
+class StaticValidationCodeTests(unittest.TestCase):
+    def test_codes_are_unique_static_gate_messages_in_reviewed_sources(self):
+        import ast
+        messages=set()
+        for name in ('hosted_run.py','evidence_transport.py','evidence_publisher.py'):
+            for node in ast.walk(ast.parse((HERE/name).read_bytes())):
+                if isinstance(node,ast.Call) and len(node.args)>1 and isinstance(node.args[1],ast.Constant):
+                    if isinstance(node.func,ast.Name) and node.func.id=='require' or isinstance(node.func,ast.Attribute) and node.func.attr=='require':
+                        messages.add(node.args[1].value)
+        self.assertEqual(len(f.VALIDATION_CODES),len(set(f.VALIDATION_CODES.values())))
+        self.assertTrue(set(f.VALIDATION_CODES)<=messages)
+        for message,code in f.VALIDATION_CODES.items():
+            self.assertRegex(code,r'^[a-z][a-z0-9_]{1,63}$')
+            result=f.error_metadata(ValueError(message))
+            self.assertEqual(result['validation_code'],code)
+            self.assertNotIn(message,json.dumps(result))
+
+    def test_unknown_prefix_subclass_multiarg_and_hostile_content_stay_generic(self):
+        known=next(iter(f.VALIDATION_CODES))
+        class Derived(ValueError):
+            @property
+            def args(self):raise AssertionError('do not read subclass property')
+            def __str__(self):raise AssertionError('do not render')
+        for value in (known+' '+SECRET,SECRET,known+'\n',known[:5], 'x'*100000):
+            self.assertNotIn('validation_code',f.error_metadata(ValueError(value)))
+        for error in (Derived(known),ValueError(known,SECRET),ValueError(),TypeError(known)):
+            self.assertNotIn('validation_code',f.error_metadata(error))
+
+    def test_real_metadata_gates_emit_only_fixed_codes_in_complete_envelope(self):
+        import evidence_transport as transport
+        cases=({'path':'/home/'+SECRET},{'secret':SECRET},{'anything':'Bearer '+SECRET})
+        for value,expected in zip(cases,('metadata_private_path','metadata_forbidden_key','metadata_credential')):
+            output=io.StringIO();observer=f.Observation('host')
+            with contextlib.redirect_stdout(output):
+                observer.stage('capacity_proof')
+                try:transport._public_metadata(value)
+                except ValueError as error:observer.failure(error)
+                self.assertTrue(observer.finish())
+            result=envelope(output)
+            self.assertEqual(result['record']['errors'][0]['detail']['validation_code'],expected)
+            self.assertNotIn(SECRET,output.getvalue())
+            self.assertIsNone(result['record']['claims']['consumed_attempts'])
+            self.assertEqual(result['record_sha256'],c.digest(c.canonical(result['record'])))
 
 if __name__=='__main__':unittest.main()
 
