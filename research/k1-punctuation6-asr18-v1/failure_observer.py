@@ -35,11 +35,85 @@ ERROR_TYPES = (AssertionError,FileNotFoundError,FileExistsError,NotADirectoryErr
 ERRNOS = frozenset(errno.errorcode)
 
 
+# Only exact, source-fixed validation messages map to public enum codes.
+# No exception message, prefix, path, variable, subclass property or traceback
+# is copied. Unlisted conditions keep the original generic private-text policy.
+VALIDATION_CODES = {
+    'unknown worker member cannot be dropped or published': 'collector_worker_roster',
+    'only fixed public authority/policy/order members': 'collector_fixed_roster',
+    'whole actual public source closure required': 'collector_source_roster',
+    'complete public source identity': 'collector_source_identity',
+    'exact bounded Whisper setup metadata': 'collector_whisper_setup_roster',
+    'complete public evidence bound; never prune to fit': 'collector_total_bytes',
+    'complete actual retained source/assets': 'collector_retained_body_identity',
+    'required public evidence missing': 'host_required_member',
+    'whole actual prepared metadata and lock closure': 'host_prepared_roster',
+    'prepared actual run/source closure': 'host_prepared_identity',
+    'prepared measured config/model/source identity': 'host_prepared_measurement',
+    'complete policy and actual prepared identity': 'host_prepared_policy',
+    'durable complete prepare-only result': 'host_prepared_result',
+    'prepared exact anonymous inputs': 'host_prepared_inputs',
+    'no prepared forward traces': 'host_prepared_has_forward',
+    'fixed evidence phase': 'host_evidence_phase',
+    'complete source-bound evidence core': 'host_evidence_core',
+    'fixed host identity/boundary/caps': 'host_identity_or_limits',
+    'actual source freeze/head binding': 'host_source_binding',
+    'actual metadata bodies separately counted within remaining6GiB reserve': 'host_input_body_reservation',
+    'ASR actual body reservation': 'host_asr_body_reservation',
+    'bounded complete evidence file map': 'package_file_map',
+    'member byte cap': 'package_member_bytes',
+    'member count cap': 'package_member_count',
+    'member cap': 'package_member_size',
+    'complete expanded evidence cap; do not omit records': 'package_expanded_bytes',
+    'complete compressed evidence cap; do not omit records': 'package_compressed_bytes',
+    'member outside exact public allowlist': 'package_member_allowlist',
+    'public metadata object required': 'package_json_object',
+    'nonpublic field prohibited': 'metadata_forbidden_key',
+    'private host path prohibited': 'metadata_private_path',
+    'credential payload prohibited': 'metadata_credential',
+    'bounded JSON nesting': 'metadata_depth',
+    'public JSON scalar': 'metadata_scalar_type',
+    'exact retained public metadata schema required': 'metadata_retained_schema',
+    'complete retained native nested shape': 'metadata_native_shape',
+    'fixed bounded supervision': 'metadata_supervision_shape',
+    'bounded observed supervision': 'metadata_supervision_value',
+    'complete cleanup failure/success fields': 'metadata_cleanup_shape',
+    'complete bounded image observation': 'metadata_image_shape',
+    'exact bounded setup reason': 'metadata_setup_reason',
+    'exact phased progress shape': 'metadata_setup_progress',
+    'no setup model calls/retries or false all-wire claim': 'metadata_setup_claim',
+    'full exact native source/dependency bytes required': 'native_retained_body_identity',
+    'all three actual prepared configurations': 'capacity_prepared_roster',
+    'actual prepared native policy/config binding': 'capacity_policy_identity',
+    'complete prepare/frozen identity': 'capacity_prepare_identity',
+    'zero forward before budget proof': 'capacity_forward_residue',
+    'prepare-only zero native calls': 'capacity_prepare_result',
+    'actual prepared policy bytes': 'capacity_policy_bytes',
+    'fixed commit timestamp': 'publisher_timestamp_syntax',
+    'actual push source timestamp': 'publisher_timestamp_missing',
+    'whole-second source timestamp with explicit offset': 'publisher_timestamp_offset_syntax',
+    'timestamp from exact checked-out source commit': 'publisher_timestamp_commit_identity',
+    'push timestamp matches source committer instant': 'publisher_timestamp_instant_mismatch',
+}
+
+
+def validation_code(error):
+    if type(error) is not ValueError:return None
+    try:
+        args=BaseException.args.__get__(error)
+        if type(args) is tuple and len(args)==1 and type(args[0]) is str and len(args[0])<=160:
+            return VALIDATION_CODES.get(args[0])
+    except BaseException:pass
+    return None
+
+
 def error_metadata(error):
-    """Never consult str/repr, instance properties, traceback locals, or chains."""
+    """Never render error content; only exact builtin args may select a fixed enum."""
     kind = type(error)
     name = next((known.__name__ for known in ERROR_TYPES if kind is known), 'UnlistedError')
     result = {'error_type':name, 'error_text':'omitted_by_fixed_privacy_policy'}
+    code=validation_code(error)
+    if code is not None:result['validation_code']=code
     if issubclass(kind,OSError):
         try:
             number=OSError.errno.__get__(error)

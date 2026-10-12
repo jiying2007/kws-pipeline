@@ -106,6 +106,80 @@ SOURCE_TEXT_EXCEPTIONS = {
     "source/research/qwen6_asr/FUNASR_MODEL_LICENSE": {
         "bytes": 5306, "sha256": "7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8"},
 }
+# Independently fixed official setup source, copied by the retained finalizer.
+# These identities are anchored to the ORIGINAL source-lock bytes, never to a
+# caller-supplied source freeze or mutable setup/native lock. Only the locked
+# mel filter is binary; LICENSE and both tokenizer vocabularies are UTF-8 text.
+OFFICIAL_WHISPER_SOURCE_LOCK_SHA256 = "0635fb8759fb56439f59db6956612f78cc8903c239f81f3eb7f9b0c47eb99649"
+OFFICIAL_WHISPER_SOURCE_PREFIX = "whisper-setup/official-source/"
+_OFFICIAL_WHISPER_SOURCE_ROWS = (
+    ('LICENSE', 1063, 'b5d65a59060e68c4ff940e1eddfa6f94b2d68fdf58ed7f4dd57721c997e35e9d'),
+    ('README.md', 8246, '38c180c2a8d8ba628a3e131ad42bf06c8a51bb681efb30fbe28d5a0f4b65f288'),
+    ('pyproject.toml', 1418, '9c8111da3701070095304ea5e12b6301eddcca3bb65e491a982b102d6042b1c4'),
+    ('requirements.txt', 140, '70063b7cde70331c8d9187bb459c27fbe87bf3335cebc3ee55675b9d91262599'),
+    ('whisper/__init__.py', 7432, '79ecbed714783b6230931a3dba6d5da6d386e2d44f9fc27256e4fc72751e1f62'),
+    ('whisper/__main__.py', 35, 'c519d586c3a6b639f64e59d2d6fd6b591a67ecd739f9727492911fc4ce4d545a'),
+    ('whisper/assets/gpt2.tiktoken', 835554, '306cd27f03c1a714eca7108e03d66b7dc042abe8c258b44c199a7ed9838dd930'),
+    ('whisper/assets/mel_filters.npz', 4271, '7450ae70723a5ef9d341e3cee628c7cb0177f36ce42c44b7ed2bf3325f0f6d4c'),
+    ('whisper/assets/multilingual.tiktoken', 816730, 'b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126'),
+    ('whisper/audio.py', 4945, '36ed287b2de3eaf40207cd2a44a8d45d57ea5c212a39df07401d4fcb4d5a5a1a'),
+    ('whisper/decoding.py', 32155, '94084fedc5af74cabf8e1883a85552700057081f00ea669ad49435ecb29039db'),
+    ('whisper/model.py', 12209, 'f82b0f40e29076506f1e34607a8008782f0586750a8e8bd6d8e1cee5c41b9329'),
+    ('whisper/normalizers/__init__.py', 130, 'f18fcdce4caee7f2e80e4c01ab0457d3a080a872a29489542c6d23c4b0bba572'),
+    ('whisper/normalizers/basic.py', 2064, '4742eaa040e0657fa1247a1361e0d856c62317a43326ea59a40c2e9edd8d2c38'),
+    ('whisper/normalizers/english.json', 56128, '6607f948be9824d2e1b2fa2223cd94c06c45afa4e05ea0e3d5e1f2bdffde2465'),
+    ('whisper/normalizers/english.py', 21001, 'd31a52685b5b42628ea4e3343c3a7925ce5b2f317e6c0ec4575677dd5c8b5d2c'),
+    ('whisper/timing.py', 12697, 'bb091c973c428697012f0f8d1b4f5f3a605cd93c5d1c129957f712a6a878a59c'),
+    ('whisper/tokenizer.py', 12338, '3b48e361a7e95b4ec0356ca6d72bba635778aa10269153136ee7bc34cae30b85'),
+    ('whisper/transcribe.py', 30375, '176f5ab30e961bec2a7872f5701a1f5bf3cbfc77946e50512f0f0cf00a1ceacf'),
+    ('whisper/triton_ops.py', 3646, '26c5082f029bbd2b7ae77ecf5a3f7f196f220e5850e2c9d0ec42961caf0dde4c'),
+    ('whisper/utils.py', 11839, 'f46aa555363ab42a455cd7c7f8c108dc2f69c5a94c6354c73ae96d671d9b1c37'),
+    ('whisper/version.py', 25, 'c4d27ecccdd52a9cded762f1a82da3152db12cbc0aa6ea781f945446a143cfaf'),
+)
+
+
+def official_whisper_source_inventory():
+    """Return a fresh exact 22-member identity map from the original fixed lock."""
+    return {OFFICIAL_WHISPER_SOURCE_PREFIX + name: {"bytes": size, "sha256": digest}
+        for name, size, digest in _OFFICIAL_WHISPER_SOURCE_ROWS}
+
+
+def official_whisper_source_members(files):
+    """Validate retained official setup bodies without filesystem/model access.
+
+    Interrupted copytree may retain only fully copied, independently locked
+    members. A completed setup/finalize receipt requires all 22 source bodies.
+    Metadata schemas are still checked by the caller's full evidence validator.
+    """
+    require(type(files) is dict, "official Whisper source evidence map")
+    for name in ("whisper-setup/source-lock.json",
+            "source/research/source-screen32-whisper-v1/source-lock.json"):
+        if name in files:
+            require(type(files[name]) is bytes and sha(files[name]) == OFFICIAL_WHISPER_SOURCE_LOCK_SHA256,
+                "original fixed official Whisper source lock required; caller freeze cannot rebind it")
+    expected = official_whisper_source_inventory()
+    result = {}
+    for name, raw in files.items():
+        if type(name) is not str or not (name == OFFICIAL_WHISPER_SOURCE_PREFIX.rstrip("/") or
+                name.startswith(OFFICIAL_WHISPER_SOURCE_PREFIX)):
+            continue
+        path(name)
+        require(name in expected, "member outside fixed official Whisper source roster")
+        require(type(raw) is bytes and {"bytes": len(raw), "sha256": sha(raw)} == expected[name],
+            "exact original official Whisper source bytes/hash required")
+        if name != OFFICIAL_WHISPER_SOURCE_PREFIX + "whisper/assets/mel_filters.npz":
+            raw.decode("utf-8")
+        result[name] = expected[name]
+    for name in ("whisper-setup/setup-receipt.json", "whisper-setup/phase-finalize-complete.json",
+            "whisper-setup/phase-finalize-progress.json"):
+        if name in files:
+            value = decode(files[name])
+            require(type(value) is dict, "official Whisper setup completion object")
+            if value.get("status") == "complete":
+                require(set(result) == set(expected), "complete Whisper setup requires all 22 official source bodies")
+    return result
+
+
 FORBIDDEN_KEYS = frozenset(("environment", "env", "environ", "credentials", "credential", "password", "secret",
     "access_token", "api_key", "authorization", "private_history", "historical_inventory", "inventory_sha256",
     "history_sha256", "history_paths", "history_count", "history_matches", "matched_history", "private_path",
@@ -210,10 +284,11 @@ def validate_members(files, run_identity, *, phase="final"):
         require(not (raw[:4] == b"RIFF" and raw[8:12] == b"WAVE") and not raw.startswith((b"fLaC", b"OggS", b"ID3")), "audio bytes prohibited")
         require(PurePosixPath(name).suffix.lower() not in (".wav", ".flac", ".mp3", ".ogg", ".pt", ".pth",
             ".safetensors", ".whl", ".pkl", ".pickle", ".key", ".pem", ".zip", ".gz", ".bin"), "audio/weights/packages/credentials prohibited")
+    official = official_whisper_source_members(files)
     source = _source_members(files)
     native = _native_body_members(files)
     for name, raw in files.items():
-        if name in source: continue
+        if name in source or name in official: continue
         if name in native:
             if "/".join(name.split("/")[1:]) not in BINARY_ASSETS: raw.decode("utf-8")
             continue

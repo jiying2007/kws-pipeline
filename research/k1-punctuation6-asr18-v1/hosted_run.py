@@ -453,17 +453,20 @@ def collect_public(root):
         for name,identity in expected.items(): require(c.identity(root/'source'/name)==identity, 'complete public source identity')
         names|={'source/'+name for name in expected}
     if (root/'whisper-setup').exists():
-        from runtime_session import whisper_public_names
-        observed=_walk_files(root/'whisper-setup')
-        require(observed<=whisper_public_names(), 'exact bounded Whisper setup metadata')
-        names|={'whisper-setup/'+name for name in observed}
+        observed={'whisper-setup/'+name for name in _walk_files(root/'whisper-setup')}
+        require(observed<=public_setup_members(), 'exact bounded Whisper setup metadata')
+        names|=observed
+    from evidence_transport import official_whisper_source_members
+    official_whisper_source_members({name:read_bytes(root/name,cap=8*c.MIB) for name in names
+        if name.startswith('whisper-setup/') or name=='source/research/source-screen32-whisper-v1/source-lock.json'})
     require(sum(c.identity(root/name)['bytes'] for name in names)<=c.LIMITS['output_bytes'], 'complete public evidence bound; never prune to fit')
     return sorted(names)
 
 
 def public_setup_members():
     from runtime_session import whisper_public_names
-    return {'whisper-setup/'+name for name in whisper_public_names()}
+    from evidence_transport import official_whisper_source_inventory
+    return {'whisper-setup/'+name for name in whisper_public_names()} | set(official_whisper_source_inventory())
 
 
 def host_receipt(run, freeze_sha, tree, screening_sha):

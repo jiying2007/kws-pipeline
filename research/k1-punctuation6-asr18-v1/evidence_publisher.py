@@ -454,11 +454,32 @@ _CONTEXT_KEYS = ("GITHUB_ACTIONS", "GITHUB_REPOSITORY", "GITHUB_EVENT_NAME", "GI
 
 def _source_git(*args):
     t.require(args in (("status", "--porcelain", "--untracked-files=all"), ("rev-parse", "HEAD"),
-        ("rev-parse", "HEAD^{tree}")), "fixed local source Git observations only")
+        ("rev-parse", "HEAD^{tree}"), ("log", "-1", "--format=%H%n%cI", "HEAD")), "fixed local source Git observations only")
     safe_env = {"PATH": "/usr/bin:/bin", "HOME": "/nonexistent", "GIT_CONFIG_NOSYSTEM": "1",
-        "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_TERMINAL_PROMPT": "0", "LC_ALL": "C"}
+        "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_TERMINAL_PROMPT": "0", "GIT_NO_REPLACE_OBJECTS": "1", "LC_ALL": "C"}
     return subprocess.check_output(["git", "-c", "core.fsmonitor=false", "-c", "core.hooksPath=/dev/null",
         "-C", str(ROOT), *args], env=safe_env, stderr=subprocess.DEVNULL, timeout=15).decode("ascii").strip()
+
+def _utc_timestamp(stamp):
+    """Strict whole-second source timestamp; normalize an explicit known offset."""
+    t.require(type(stamp) is str and re.fullmatch(
+        r"20[0-9]{2}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:Z|[+-][0-9]{2}:[0-9]{2})", stamp),
+        "whole-second source timestamp with explicit offset")
+    if not stamp.endswith("Z"):
+        hours, minutes = int(stamp[-5:-3]), int(stamp[-2:])
+        t.require(stamp[-6:] != "-00:00" and minutes < 60 and
+            (hours < 14 or (hours == 14 and minutes == 0)), "known source offset within fourteen hours")
+    return datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%S%z").astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _source_timestamp(event, head):
+    t.require(type(event) is dict and type(event.get("head_commit")) is dict, "actual push source timestamp")
+    stamp = _utc_timestamp(event["head_commit"].get("timestamp"))
+    commit = _source_git("log", "-1", "--format=%H%n%cI", "HEAD").splitlines()
+    t.require(len(commit) == 2 and commit[0] == head, "timestamp from exact checked-out source commit")
+    t.require(stamp == _utc_timestamp(commit[1]), "push timestamp matches source committer instant")
+    return stamp
+
 
 def bound_release(env, event, observer=None):
     """Clean exact source + separately approved freeze; never trust a self hash.
@@ -487,11 +508,9 @@ def bound_release(env, event, observer=None):
     t.require(Path(prepare_freeze.__file__).resolve() == HERE / "prepare_freeze.py", "fixed source-freeze builder")
     t.require(t.canonical(prepare_freeze.build(ROOT)) == freeze_raw, "all exact executed source closure bytes")
     _observe(observer, "source_timestamp")
-    stamp = event.get("head_commit", {}).get("timestamp")
-    # The source commit's exact UTC timestamp is stable across retries; no clock
-    # or remote-server timestamp can alter the precomputed result Git identity.
-    t.require(type(stamp) is str, "actual push source timestamp")
-    if stamp.endswith("+00:00"): stamp = stamp[:-6] + "Z"
+    # Bind the push timestamp to the exact local commit instant, never a clock
+    # or remote-server timestamp, and keep the fixed final UTC release contract.
+    stamp = _source_timestamp(event, head)
     release = {"schema": "k1-asr18-publisher-bound-release-v1", "purpose": t.PURPOSE,
         "source_sha": head, "source_tree": tree, "source_closure_sha256": expected,
         "prior_claim_history_sha256": execution["prior_public_claim_history_sha256"], "commit_timestamp": stamp}

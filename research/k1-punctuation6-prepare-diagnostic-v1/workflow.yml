@@ -1,0 +1,51 @@
+name: K1 prepare-only diagnostic once
+on:
+  push:
+    branches:
+      - research/k1-punctuation6-prepare-diagnostic-v1
+permissions:
+  contents: read
+concurrency:
+  group: k1-punctuation6-prepare-diagnostic-v1
+  cancel-in-progress: false
+jobs:
+  prepare_diagnostic:
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-prepare-diagnostic-v1' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: K1 punctuation6 prepare diagnostic offline source contracts
+        id: prepare_contracts
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          prepare_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-prepare-diagnostic-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_prepare_only", "test_prepare_transport", "test_prepare_hosted")); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
+          python3 -I -S -B -c "$prepare_tests"
+          python3 -I -S -B -O -c "$prepare_tests"
+          python3 -I -S -B -OO -c "$prepare_tests"
+      - name: Admit fixed six inputs and prepare three models without recognition
+        id: host
+        if: ${{ success() && steps.prepare_contracts.outcome == 'success' }}
+        timeout-minutes: 61
+        run: |
+          printf 'started=true\n' >> "$GITHUB_OUTPUT"
+          python3 -I -B research/k1-punctuation6-prepare-diagnostic-v1/prepare_run.py
+      - name: Publish complete audio-free prepare diagnostic evidence
+        if: ${{ always() && steps.host.outputs.started == 'true' }}
+        timeout-minutes: 4
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          export KWS_PREPARE_FREEZE_SHA256="$(env -i PATH=/usr/bin:/bin HOME=/nonexistent GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 LC_ALL=C sh -eu -c 'git --no-optional-locks -c core.fsmonitor=false -c core.hooksPath=/dev/null show "$1:research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json" | sha256sum | cut -d " " -f 1' sh "$GITHUB_SHA")"
+          python3 -I -B research/k1-punctuation6-prepare-diagnostic-v1/diagnostic_publisher.py
+      # Only the distinct publisher process receives the short-lived token.
+      # No Actions artifacts, caches, audio logs, retries or alternative triggers.

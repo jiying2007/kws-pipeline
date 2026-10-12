@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def jobs(text):
     body = text.split('\njobs:\n', 1)[1]
-    entries = re.split(r'(?m)^  (?=[a-z][a-z0-9-]*:\s*$)', body)
+    entries = re.split(r'(?m)^  (?=[a-z][a-z0-9_-]*:\s*$)', body)
     return {part.split(':', 1)[0]: part for part in entries if part.strip()}
 
 
@@ -448,6 +448,158 @@ class ASR18CIContracts(unittest.TestCase):
                     # An outcome label alone never proves that the step began.
                     self.assertEqual(outcome_route(publish_if, host=host, started=started), started == 'true')
 
+
+
+PREPARE_MODULES = ('test_prepare_only', 'test_prepare_transport', 'test_prepare_hosted')
+PREPARE_PATH = 'research/k1-punctuation6-prepare-diagnostic-v1'
+PREPARE_JOB_IF = "${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-prepare-diagnostic-v1' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}"
+PREPARE_HOST_IF = "${{ success() && steps.prepare_contracts.outcome == 'success' }}"
+
+
+class PrepareDiagnosticCIContracts(unittest.TestCase):
+    def setUp(self):
+        self.ci = (ROOT / '.github/workflows/ci.yml').read_text()
+        self.workflow = (ROOT / '.github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml').read_text()
+        self.template = (ROOT / PREPARE_PATH / 'workflow.yml').read_text()
+
+    def expected_command(self):
+        program = ('import sys,unittest; from pathlib import Path; '
+                   'sys.path.insert(0,str(Path("' + PREPARE_PATH + '").resolve())); '
+                   'suite=unittest.defaultTestLoader.loadTestsFromNames('
+                   + repr(PREPARE_MODULES).replace("'", '"') + '); '
+                   'result=unittest.TextTestRunner(verbosity=2).run(suite); '
+                   'raise SystemExit(not result.wasSuccessful())')
+        return ("set -euo pipefail\nprepare_tests='" + program + "'\n" + ''.join(
+            'python3 -I -S -B' + mode + ' -c "$prepare_tests"\n' for mode in ('', ' -O', ' -OO')))
+
+    def check_wiring(self, ci, workflow, template):
+        self.assertEqual(workflow, template)
+        self.assertEqual(workflow.split('permissions:', 1)[0],
+            'name: K1 prepare-only diagnostic once\n'
+            'on:\n  push:\n    branches:\n      - research/k1-punctuation6-prepare-diagnostic-v1\n')
+        self.assertEqual(set(jobs(workflow)), {'prepare_diagnostic'})
+        execution = jobs(workflow)['prepare_diagnostic']
+        self.assertIn('    if: ' + PREPARE_JOB_IF + '\n', execution)
+        self.assertIn('concurrency:\n  group: k1-punctuation6-prepare-diagnostic-v1\n  cancel-in-progress: false\n', workflow)
+        shared = jobs(ci)['python-contracts']
+        self.assertNotIn('    if:', shared)
+        for name, body in (('ci', shared), ('prepare', execution)):
+            step = named_step(body, 'K1 punctuation6 prepare diagnostic offline source contracts')
+            self.assertIn('        id: prepare_contracts\n', step)
+            self.assertIn('        timeout-minutes: 5\n', step)
+            self.assertNotIn('        if:', step)
+            self.assertNotIn('continue-on-error:', step)
+            self.assertNotIn('        env:', step)
+            self.assertEqual(contract_command(step), self.expected_command(), name)
+        host = named_step(execution, 'Admit fixed six inputs and prepare three models without recognition')
+        publish = named_step(execution, 'Publish complete audio-free prepare diagnostic evidence')
+        self.assertIn('        id: host\n', host)
+        self.assertEqual(step_if(host), PREPARE_HOST_IF)
+        self.assertEqual(step_if(publish), ASR18_PUBLISH_IF)
+        self.assertNotIn('continue-on-error:', execution)
+        self.assertLess(execution.index('id: prepare_contracts'), execution.index('id: host'))
+        self.assertLess(execution.index('id: host'), execution.index('name: Publish complete'))
+        self.assertEqual(contract_command(host), "printf 'started=true\\n' >> \"$GITHUB_OUTPUT\"\n"
+                         'python3 -I -B ' + PREPARE_PATH + '/prepare_run.py\n')
+        self.assertIn('python3 -I -B ' + PREPARE_PATH + '/diagnostic_publisher.py\n', publish)
+        self.assertIn('export KWS_PREPARE_FREEZE_SHA256=', publish)
+        self.assertNotIn('KWS_SOURCE_FREEZE_SHA256', publish)
+        self.assertIn('"$RUNNER_TEMP/check-tracked-worktree.sh" "K1 prepare diagnostic contracts"', shared)
+        for forbidden in ('prepare_run.py', 'diagnostic_publisher.py', 'setup-python',
+                          'pip install', 'load_model(', '.transcribe(', '.generate('):
+            self.assertNotIn(forbidden, shared)
+        for forbidden in ('upload-artifact', 'actions/cache', 'workflow_dispatch:',
+                          'workflow_call:', 'pull_request:', 'schedule:', 'workflow_run:'):
+            self.assertNotIn(forbidden, workflow)
+
+    def test_fixed_three_modules_run_in_required_ci_and_before_prepare(self):
+        self.check_wiring(self.ci, self.workflow, self.template)
+        actual = {p.stem for p in (ROOT / PREPARE_PATH).iterdir()
+                  if p.is_file() and p.name.startswith('test_') and p.suffix == '.py'}
+        self.assertEqual(actual, set(PREPARE_MODULES))
+        self.assertEqual(len(PREPARE_MODULES), 3)
+
+    def test_rejects_missing_modes_discovery_skips_and_bypassed_routes(self):
+        mutations = (
+            ('ci', 'python3 -I -S -B -OO -c "$prepare_tests"', 'true'),
+            ('ci', 'loadTestsFromNames', 'discover'),
+            ('ci', 'test_prepare_hosted', 'test_prepare_unreviewed'),
+            ('ci', '        id: prepare_contracts\n', '        id: prepare_contracts\n        if: false\n'),
+            ('workflow', PREPARE_HOST_IF, '${{ always() }}'),
+            ('workflow', ASR18_PUBLISH_IF, "${{ always() && steps.host.outcome != 'skipped' }}"),
+            ('workflow', 'github.run_attempt == 1', 'github.run_attempt >= 1'),
+            ('workflow', 'github.event.created == true', 'github.event.created == false'),
+            ('workflow', '      - research/k1-punctuation6-prepare-diagnostic-v1\n',
+             '      - research/k1-punctuation6-prepare-diagnostic-v1\n      - main\n'),
+            ('workflow', "github.ref == 'refs/heads/research/k1-punctuation6-prepare-diagnostic-v1'",
+             "github.ref == 'refs/heads/research/k1-punctuation6-asr18-r1'"),
+            ('workflow', 'group: k1-punctuation6-prepare-diagnostic-v1', 'group: k1-punctuation6-prepare-diagnostic-v2'),
+            ('workflow', 'id: host\n', 'id: host\n        continue-on-error: true\n'),
+        )
+        for target, before, after in mutations:
+            with self.subTest(target=target, before=before):
+                ci = self.ci.replace(before, after) if target == 'ci' else self.ci
+                workflow = self.workflow.replace(before, after) if target == 'workflow' else self.workflow
+                with self.assertRaises(AssertionError):
+                    self.check_wiring(ci, workflow, workflow)
+
+    def test_actual_job_guard_allows_only_fresh_diagnostic_attempt_one(self):
+        condition = re.search(r'^    if: (.+)$', jobs(self.workflow)['prepare_diagnostic'], re.M).group(1)
+        context = {
+            'github.repository': 'jiying2007/kws-pipeline', 'github.event_name': 'push',
+            'github.ref': 'refs/heads/research/k1-punctuation6-prepare-diagnostic-v1',
+            'github.event.created': True, 'github.event.deleted': False,
+            'github.event.repository.private': False, 'github.run_attempt': 1,
+        }
+        self.assertTrue(asr18_job_route(condition, context))
+        for key, alternatives in (
+            ('github.repository', ('other/kws-pipeline', 'jiying2007/other')),
+            ('github.event_name', ('workflow_dispatch', 'workflow_call', 'pull_request', 'schedule')),
+            ('github.ref', ('refs/heads/research/k1-punctuation6-asr18-v1',
+                            'refs/heads/research/k1-punctuation6-asr18-r1',
+                            'refs/heads/research/k1-punctuation6-prepare-diagnostic-v10',
+                            'refs/heads/research/k1-punctuation6-prepare-diagnostic-v1-extra',
+                            'refs/heads/research/k1-punctuation6-prepare-diagnostic-v2',
+                            'refs/heads/main', 'refs/tags/research/k1-punctuation6-prepare-diagnostic-v1')),
+            ('github.event.created', (False, None)), ('github.event.deleted', (True, None)),
+            ('github.event.repository.private', (True, None)),
+            ('github.run_attempt', (0, 2, 3, None, '1', True)),
+        ):
+            for value in alternatives:
+                with self.subTest(key=key, value=value):
+                    self.assertFalse(asr18_job_route(condition, dict(context, **{key: value})))
+
+    def test_rejects_removing_each_fixed_module(self):
+        for name in PREPARE_MODULES:
+            with self.subTest(name=name):
+                altered = self.ci.replace('"' + name + '"', '"test_not_approved"')
+                self.assertNotEqual(altered, self.ci)
+                with self.assertRaises(AssertionError):
+                    self.check_wiring(altered, self.workflow, self.template)
+
+    def test_contract_shell_failure_stops_later_modes_and_host_marker(self):
+        command = contract_command(named_step(self.workflow, 'K1 punctuation6 prepare diagnostic offline source contracts'))
+        host = contract_command(named_step(self.workflow, 'Admit fixed six inputs and prepare three models without recognition'))
+        with tempfile.TemporaryDirectory(prefix='prepare-ci-shell-') as name:
+            root = Path(name)
+            fake = root / 'python3'
+            fake.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$CALL_LOG"\n'
+                            'count=$(wc -l < "$CALL_LOG")\n'
+                            'if [ "$count" = "$FAIL_AT" ]; then exit 7; fi\n')
+            fake.chmod(0o755)
+            for fail_at in (0, 1, 2, 3, 4):
+                with self.subTest(fail_at=fail_at):
+                    log = root / ('calls-' + str(fail_at))
+                    output = root / ('output-' + str(fail_at))
+                    run = subprocess.run(['bash', '-c', command + host],
+                        env={'PATH': str(root) + os.pathsep + '/usr/bin:/bin',
+                             'CALL_LOG': str(log), 'FAIL_AT': str(fail_at), 'GITHUB_OUTPUT': str(output)},
+                        text=True, capture_output=True, check=False)
+                    self.assertEqual(len(log.read_text().splitlines()), fail_at or 4)
+                    self.assertEqual(run.returncode == 0, fail_at == 0)
+                    self.assertEqual(output.exists(), fail_at in (0, 4))
+                    if output.exists():
+                        self.assertEqual(output.read_text(), 'started=true\n')
 
 if __name__ == '__main__':
     unittest.main()
