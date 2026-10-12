@@ -169,4 +169,110 @@ class PublisherObservationTests(unittest.TestCase):
             'GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT','GITHUB_JOB','GITHUB_SHA','GITHUB_WORKFLOW_REF','GITHUB_WORKFLOW_SHA','RUNNER_TEMP','KWS_SOURCE_FREEZE_SHA256'))
 
 
+class TransferObservationTests(unittest.TestCase):
+    def progress(self, count=1):
+        files={t.chunk_path(i):bytes([i%256])*32 for i in range(count)}
+        files[t.manifest_path()]=b'{}'
+        rows=[{'path':name,'bytes':len(raw),'sha256':t.sha(raw),'git_blob_sha':t.git_sha(raw)} for name,raw in sorted(files.items())]
+        return {'stage':'create_blobs','planned_blobs':rows,'attempted_blob_count':0,'confirmed_blob_count':0,
+            'archive_sha256':'a'*64,'archive_bytes':count*32,'expected_result_commit':'b'*40,'expected_result_tree':'d'*40,
+            'publication_confirmed':False,'readback_confirmed':False}
+
+    def test_plan_and_terminal_are_full_bounded_safe_records(self):
+        progress=self.progress(48);out=io.StringIO()
+        progress['archive_bytes']=t.MAX_ARCHIVE
+        for row in progress['planned_blobs']:
+            if row['path']!=t.manifest_path():row['bytes']=t.MAX_CHUNK
+        with redirect_stdout(out):
+            self.assertTrue(p._emit_transfer(object(),RUN,progress,'upload_plan_prepared'))
+            progress['attempted_blob_count']=1
+            self.assertTrue(p._emit_transfer(object(),RUN,progress,'publication_failed_or_unconfirmed_no_retry',p.PublicationError(429)))
+        values=[json.loads(line) for line in out.getvalue().splitlines()]
+        self.assertEqual(len(values),2)
+        for v in values:
+            self.assertEqual(v['schema'],'k1-asr18-publisher-transfer-envelope-v1')
+            self.assertEqual(v['record_bytes'],len(t.canonical(v['record'])))
+            self.assertEqual(v['record_sha256'],t.sha(t.canonical(v['record'])))
+            self.assertLessEqual(v['record_bytes'],16*1024)
+            self.assertEqual(len(v['record']['planned_blobs']),49)
+            self.assertFalse(v['record']['native_success_established'])
+        self.assertEqual(values[1]['record']['http_status'],429)
+        self.assertEqual(values[1]['record']['attempted_blob_count'],1)
+        self.assertEqual(values[1]['record']['confirmed_blob_count'],0)
+        self.assertTrue(values[1]['record']['unconfirmed_request_may_have_written'])
+        self.assertEqual(values[1]['record']['attempted_blob_count_scope'],'blob_api_invocations_not_confirmed_http_sends')
+        self.assertEqual(values[1]['record']['observation_delivery'],'best_effort_stdout')
+
+    def test_missing_observations_are_null_not_zero(self):
+        r=p.transfer_record(RUN,{'stage':'validate_local_package'},'publication_failed_or_unconfirmed_no_retry',ValueError(SENTINEL))
+        for key in ('planned_blobs','attempted_blob_count','confirmed_blob_count','archive_sha256','expected_result_tree','http_status'):
+            self.assertIsNone(r[key])
+        self.assertNotIn(SENTINEL,t.canonical(r).decode())
+
+    def test_no_arbitrary_paths_bodies_errors_or_field_values(self):
+        bad=[]
+        for key,val in (('path','/private/sentinel'),('bytes',True),('sha256',SENTINEL),('git_blob_sha',SENTINEL)):
+            v=self.progress();v['planned_blobs'][0][key]=val;bad.append(v)
+        v=self.progress();v['planned_blobs'][0]['secret']=SENTINEL;bad.append(v)
+        for key,val in (('stage',SENTINEL),('archive_bytes',True),('archive_sha256',SENTINEL),('confirmed_blob_count',1),('attempted_blob_count',True)):
+            v=self.progress();v[key]=val;bad.append(v)
+        for v in bad:
+            out=io.StringIO()
+            with self.subTest(v=v),redirect_stdout(out):
+                self.assertFalse(p._emit_transfer(object(),RUN,v,'publication_failed_or_unconfirmed_no_retry',ValueError(SENTINEL)))
+            self.assertEqual(out.getvalue(),'')
+        class HostileError(ValueError):
+            def __str__(self):raise AssertionError('rendered exception')
+        r=p.transfer_record(RUN,self.progress(),'publication_failed_or_unconfirmed_no_retry',HostileError(SENTINEL))
+        self.assertEqual(r['error_type'],'OtherException');self.assertNotIn(SENTINEL,t.canonical(r).decode())
+
+    def test_local_plan_record_precedes_stdout_and_no_replace(self):
+        out=io.StringIO()
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            with redirect_stdout(out):
+                self.assertTrue(p._emit_transfer(object(),RUN,self.progress(),'upload_plan_prepared',directory=root))
+                self.assertTrue(p._emit_transfer(object(),RUN,self.progress(),'upload_plan_prepared',directory=root))
+            records=[json.loads(line) for line in out.getvalue().splitlines()]
+            self.assertEqual((root/'publication.plan.json').read_bytes(),t.canonical(records[0]['record']))
+            self.assertEqual(records[0]['persistence']['status'],'local_exclusive_write_and_fsync_completed')
+            self.assertEqual(records[1]['persistence']['status'],'local_write_failed_or_unconfirmed')
+            self.assertEqual(records[1]['persistence']['error_type'],'FileExistsError')
+
+    def test_api_local_rejection_count_does_not_claim_sent_http(self):
+        progress=self.progress();progress['attempted_blob_count']=1
+        r=p.transfer_record(RUN,progress,'publication_failed_or_unconfirmed_no_retry',ValueError('API deadline/count cap'))
+        self.assertEqual((r['attempted_blob_count'],r['confirmed_blob_count'],r['http_status']),(1,0,None))
+        self.assertEqual(r['attempted_blob_count_scope'],'blob_api_invocations_not_confirmed_http_sends')
+        class EvilPublication(p.PublicationError):
+            @property
+            def status(self):raise AssertionError('status property evaluated')
+            def __str__(self):raise AssertionError('error rendered')
+        error=BaseException.__new__(EvilPublication);BaseException.__init__(error,SENTINEL)
+        r=p.transfer_record(RUN,progress,'publication_failed_or_unconfirmed_no_retry',error)
+        self.assertEqual(r['error_type'],'OtherException');self.assertIsNone(r['http_status'])
+
+    def test_output_failure_is_no_throw_and_no_observer_is_silent(self):
+        with mock.patch('builtins.print',side_effect=OSError(SENTINEL)):
+            self.assertFalse(p._emit_transfer(object(),RUN,self.progress(),'upload_plan_prepared'))
+        with mock.patch('builtins.print') as printer:
+            self.assertFalse(p._emit_transfer(None,RUN,self.progress(),'upload_plan_prepared'));printer.assert_not_called()
+
+    def test_original_failure_receipt_output_precedes_failed_local_save(self):
+        out=io.StringIO();primary=p.PublicationError(503);observer=mock.Mock()
+        def publish(env,event,release,payload,api,raw,progress,observer=None,transfer_directory=None):
+            progress.update(self.progress());progress.update(attempted_blob_count=1)
+            raise primary
+        with tempfile.TemporaryDirectory() as tmp,redirect_stdout(out),mock.patch.object(p,'context',return_value=RUN),\
+             mock.patch.object(p,'publish',side_effect=publish),mock.patch.object(p,'write_once',side_effect=lambda root,name,value: None if name=='publication.started.json' else (_ for _ in ()).throw(OSError(SENTINEL))):
+            with self.assertRaises(p.PublicationError) as caught:
+                p.run_once({}, {}, {'purpose':'asr18'},b'fixture',None,None,Path(tmp),observer=observer)
+        self.assertIs(caught.exception,primary)
+        values=[json.loads(line) for line in out.getvalue().splitlines()]
+        self.assertEqual(len(values),1);r=values[0]['record']
+        self.assertEqual((r['http_status'],r['confirmed_blob_count'],r['attempted_blob_count']),(503,0,1))
+        self.assertEqual(values[0]['persistence']['status'],'local_write_failed_or_unconfirmed')
+        self.assertNotIn(SENTINEL,out.getvalue());self.assertEqual(observer.failure.call_count,2)
+
+
 if __name__ == '__main__': unittest.main(verbosity=2)

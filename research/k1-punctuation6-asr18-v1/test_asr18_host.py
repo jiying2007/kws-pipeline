@@ -24,7 +24,7 @@ import asr18_metadata as m
 from test_asr18_contract import invented_projection
 from test_asr18_binding import setup_binding as unbound_setup_binding
 from input_binding import verify_screening_receipt
-from test_control_fixture import APPROVALS, synthetic_enabled_source, synthetic_prerequisite
+from test_control_fixture import DISABLED_APPROVALS, synthetic_enabled_source, synthetic_prerequisite
 
 
 def synthetic_enabled_host_test(function):
@@ -120,12 +120,13 @@ def public_fixture():
 
 
 class HostTests(unittest.TestCase):
-    def test_checked_in_controls_released_and_prior_unknown_not_reclaimed(self):
-        for filename,keys in APPROVALS.items():
+    def test_checked_in_controls_disabled_and_prior_unknown_not_reclaimed(self):
+        for filename,keys in DISABLED_APPROVALS.items():
             value=c.read_json(HERE/filename)
-            self.assertTrue(all(value[key] is True for key in keys))
+            self.assertTrue(all(value[key] is False for key in keys))
         release=c.read_json(HERE/'execution-release.json');history=h.prior_history_identity()
-        self.assertEqual(h.release_first(),release)
+        self.assertIs(release['historical_screening_reviewed'],True)
+        with self.assertRaisesRegex(ValueError,'disabled'):h.release_first()
         self.assertEqual(release['experiment'],'k1-punctuation6-asr18-r2')
         self.assertEqual(release['source_ref'],'research/k1-punctuation6-asr18-r2')
         self.assertEqual(history['prior_runs'],[])

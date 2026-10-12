@@ -15,7 +15,7 @@ import unittest
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[1]
 sys.path.insert(0,str(HERE))
-from test_control_fixture import APPROVALS, synthetic_enabled_source
+from test_control_fixture import DISABLED_APPROVALS, synthetic_enabled_source
 OPT=['-'+'O'*sys.flags.optimize] if sys.flags.optimize else []
 SENTINELS={key:'SYNTHETIC_'+key+'_NOT_A_CREDENTIAL' for key in
     ('GITHUB_TOKEN','GH_TOKEN','KWS_EVIDENCE_TOKEN','ACTIONS_RUNTIME_TOKEN','ACTIONS_ID_TOKEN_REQUEST_TOKEN')}
@@ -83,10 +83,11 @@ class ActualEntrypoints(unittest.TestCase):
         self.assertEqual(error['detail'],{'error_type':'UnlistedError' if stages==['publication_gate'] else 'ValueError',
             'error_text':'omitted_by_fixed_privacy_policy'})
 
-    def test_checked_in_asr_controls_are_explicitly_released(self):
-        for filename,keys in APPROVALS.items():
+    def test_checked_in_asr_controls_are_explicitly_disabled(self):
+        for filename,keys in DISABLED_APPROVALS.items():
             value=json.loads((HERE/filename).read_bytes())
-            self.assertTrue(all(value[key] is True for key in keys))
+            self.assertTrue(all(value[key] is False for key in keys))
+        self.assertIs(json.loads((HERE/'execution-release.json').read_bytes())['historical_screening_reviewed'],True)
 
     def call(self,path,args=()):
         with tempfile.TemporaryDirectory(prefix='k1-entry-negative-') as name:
@@ -102,12 +103,12 @@ class ActualEntrypoints(unittest.TestCase):
             return result
 
     def test_real_workflow_host_command_hits_disabled_entry(self):
-        with disabled_source() as source:value=self.call(source/'hosted_run.py')
+        value=self.call(HERE/'hosted_run.py')
         self.assertEqual((value.returncode,value.stderr),(2,b''))
         self.check_diagnostic(value.stdout,role='host',stages=['release'],terminal=True)
 
     def test_real_workflow_publisher_command_hits_explicit_disabled_gate(self):
-        with disabled_source() as source:value=self.call(source/'evidence_publisher.py')
+        value=self.call(HERE/'evidence_publisher.py')
         self.assertEqual((value.returncode,value.stderr),(1,b'ASR18 publication disabled or review absent.\n'))
         self.check_diagnostic(value.stdout,role='publisher',stages=['publication_gate'])
 
@@ -115,10 +116,6 @@ class ActualEntrypoints(unittest.TestCase):
     def test_synthetic_enabled_workflow_commands_reject_nonexecution_context_without_effects(self):
         with synthetic_enabled_source(HERE) as source:
             self.check_enabled_workflow_commands_reject_nonexecution_context(source)
-
-    def test_checked_in_enabled_workflow_commands_reject_nonexecution_context_without_effects(self):
-        # Actual checked-in release/proof bytes must pass the real gate first.
-        self.check_enabled_workflow_commands_reject_nonexecution_context(HERE)
 
     def check_enabled_workflow_commands_reject_nonexecution_context(self,source):
         # No gate patch, import-path injection or network blocker in the child.
