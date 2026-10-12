@@ -1,14 +1,16 @@
 # Qwen12 one-shot controlled native admission capture
 
-Current source state: five native execution identities are consumed. Their actual
-new-start counts are [0, 0, 0, 1, 0]; only the recovery 3 Qwen clip-000001 slot
-was consumed. The remaining35 execution's historical reference is that same
-error, not a second start. This reviewed static activation removes the native
-workflow stops and sets all six native approval/enable bits true for the fixed
-remaining35-r1-v1 continuation. Existing bounded publication permission remains
-unchanged. Only its exact fresh branch can trigger after source PR, protected
-merge, fresh-main CI and immediate history checks. No new execution has been
-created, and future runtime prerequisites have not been marked passed.
+Current source state: all 36 original recognizer slots have consumed their one
+attempt. The remaining35-r1 run completed 35 new native captures; the original
+Qwen clip-000001 error remains historical and is never retried. All six execution
+identities are consumed. Eleven sources have full three-ASR chains, of which six
+strictly agree after the frozen punctuation-only normalization. Original-group
+candidate upper bounds are K1=0, K2=2, repeat-nihao=3 and suffix-kw2=1. The frozen
+training coverage is therefore insufficient: no training, export or candidate
+readback ran, and no train root or formal source-resolved admission was created.
+No unused recognition allowance or automatic continuation remains. The complete
+[derived result summary](results/run-38185393757.json) links the immutable original
+evidence; this main-branch summary is not an original capture artifact.
 
 The 12MiB transport was independently verified by zero-model run 38170753261 and
 used successfully to retain recovery 3 failure evidence. Models, input clips,
@@ -209,8 +211,10 @@ adapter/Whisper-binding/lock, repository transport and publisher mock tests. `pr
 runs only after all source is integrated in a separate checkout; it hashes the
 exact source/role roster and does not enable execution.
 
-The current five-predecessor static release removes the native condition's
-literal `false && ` and sets `release.enabled=true` plus its five review bits true.
+The retained five-predecessor static release removed the native condition's
+literal `false && ` and set `release.enabled=true` plus its five review bits true.
+That fixed identity has now executed once and is consumed; these historical
+source bits do not authorize another attempt or a replacement execution identity.
 All five consumed source/run/evidence identities remain unchanged. Dispatch requires literal JSON true for
 source, budget, independent review, actual complete selected-transport readback,
 historical campaign uniqueness, and bounded public transcript publication
@@ -842,7 +846,7 @@ This repair remains unchanged in the reviewed static continuation below and
 establishes no additional recognition, admission or training result.
 
 
-## Fixed remaining35-r1-v1 controlled static activation
+## Fixed remaining35-r1-v1 static activation history (now consumed)
 
 This proposal uses fixed source `research/qwen12-native-admission-remaining35-r1-v1`,
 create-only evidence branch `evidence/qwen12-native-admission-remaining35-r1-v1`
@@ -923,3 +927,63 @@ protected merge and fresh-main CI, followed by immediate checks of all five
 consumed histories and unused new source/evidence refs. Only root may then
 create one fixed fresh source ref at that approved main. No execution is performed
 by this static preparation. There is no automatic next identity or replay mechanism.
+
+
+## Terminal result: remaining35-r1, run 38185393757
+
+[Run 38185393757, attempt 1, job 114606697135](https://github.com/jiying2007/kws-pipeline/actions/runs/38185393757/job/114606697135)
+executed source `0f0f736c6faaecb0c62dffd6ef5e3707f1f4a894`, tree
+`df77173a0a8191326a230b60f866cdd84293d3a8`. All 35 permitted new captures have
+actual started/completed receipts and nonempty native transcripts: Qwen11,
+SenseVoice12 and Whisper12. The original denominator remains36:35 native-complete
+plus the unique historical Qwen error/null, no current errors or not-run slots.
+The cumulative36-start allowance is exhausted. Workflow success, native completion
+and label admission are separate outcomes.
+
+Immutable [evidence commit38dd722574abef198ee97b424cb8864599d0c713](https://github.com/jiying2007/kws-pipeline/tree/38dd722574abef198ee97b424cb8864599d0c713/research/qwen12-native-admission-v1/evidence/remaining35-r1-v1)
+retains18 chunks plus2 transport metadata files. They reconstruct4,692,291 ZIP
+bytes, SHA-256 `f07f44e08c84eb9d5d70699a82eb848b334597df73fa1210a327aeae39d0983d`.
+All1,005 payload members plus the manifest, original source/run/job bindings,
+Git/blob/chunk/member hashes, CRC and native completion/source/config closure
+were independently verified. No original source or evidence bytes were rewritten.
+The [public derived metadata](results/run-38185393757.json) retains the full12-row
+machine transcript matrix and exact original member references without private
+human-review bodies or model weights.
+
+Of11 complete three-ASR sources,6 are unanimous under the unchanged fixed
+punctuation/whitespace removal,3 have only two-way agreement and2 all differ.
+The incomplete historical-error source has only SenseVoice/Whisper observations
+and cannot acquire a third vote. The6 unanimous candidates are K2 clips3/12,
+repeat-nihao clips2/6/7 and suffix-kw2 clip8. They are machine candidates only:
+source/rights/history resolution and formal train-only admission were not issued.
+Acoustic verbatim completeness remains unknown, and no human-gold claim is made.
+
+All three original K1 sources fail strict three-way agreement:
+
+| Preset | Qwen06 actual | SenseVoice actual | Whisper actual |
+|---|---|---|---|
+| Dylan | 您好，小吴。 | 您好小啊 | 你好小巫啊 |
+| Uncle_Fu | 你好，小沃。 | 你好小沃 | 你好小我 |
+| Vivian | 你好，小屋。 | 你好小我 | 你好小屋。 |
+
+These contain out-of-vocabulary characters and cannot be repaired by mapping
+沃/屋/我 to窝, two-vote selection, replacing unknown human observations, or blank
+negative targets. The original four-group candidate upper bounds are0/2/3/1;
+K1 cannot reach its frozen minimum1 even before any additional admission rejection.
+The result is `INSUFFICIENT_ADMITTED_COVERAGE`: training, export and model/C readback
+were not run. The frozen coverage/recipe and all original members remain unchanged.
+A separately approved future data experiment cannot be inserted into this old
+frozen group roster or presented as completing this failed coverage condition.
+
+All57 controlled containers have acknowledged final CPU accounting and verified
+removal, with no cleanup/receipt errors or sampled CPU-threshold violation. The
+controlled-cgroup CPU through pause was970.499524 seconds; host-receipt elapsed
+was989.8504755309999 seconds, excluding the subsequent final ZIP and publisher.
+Separate byte scopes were3,340,966,447 ASR response-body bytes,774,054,311 Whisper
+bidirectional userspace tunnel-recv bytes,45,687,055 default-interface image
+receive-delta bytes and776,208 audio response-body bytes. They are not added into
+an alleged wire total. The8 filesystem scopes retained complete latest samples
+with no latest vanished entries; the actual errno/frame error path was not
+triggered. Sampling is not atomic, a peak measurement or a hard quota, and this
+successful run does not retroactively resolve recovery1 cleanup uncertainty or
+the fifth run's missing ASR final counter. Whole-CI resources remain unmeasured.

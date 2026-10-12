@@ -1,0 +1,918 @@
+{
+  "schema": "qwen12-public-derived-run-result-v1",
+  "summary_kind": "derived_machine_metadata_on_main_not_original_capture",
+  "repository": "jiying2007/kws-pipeline",
+  "run_id": 38185393757,
+  "run_attempt": 1,
+  "numeric_job_id": 114606697135,
+  "job_key": "qwen12",
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38185393757/job/114606697135",
+  "executed_head_sha": "0f0f736c6faaecb0c62dffd6ef5e3707f1f4a894",
+  "source_tree_sha": "df77173a0a8191326a230b60f866cdd84293d3a8",
+  "source_freeze_sha256": "b2e6101faf3653960c40047e5c5e20f7bc851eac61cc56ef2e9c27ea19590342",
+  "original_evidence": {
+    "transport": "github-repository-zip-chunks-v1",
+    "commit": "38dd722574abef198ee97b424cb8864599d0c713",
+    "tree": "f76897f34681cd1f7a6175f83fe74df914da97f2",
+    "sole_parent": "0f0f736c6faaecb0c62dffd6ef5e3707f1f4a894",
+    "directory": "research/qwen12-native-admission-v1/evidence/remaining35-r1-v1",
+    "url": "https://github.com/jiying2007/kws-pipeline/tree/38dd722574abef198ee97b424cb8864599d0c713/research/qwen12-native-admission-v1/evidence/remaining35-r1-v1",
+    "archive_sha256": "f07f44e08c84eb9d5d70699a82eb848b334597df73fa1210a327aeae39d0983d",
+    "archive_bytes": 4692291,
+    "chunk_count": 18,
+    "repository_file_count": 20,
+    "payload_member_count_excluding_manifest": 1005,
+    "archive_member_count_including_manifest": 1006,
+    "original_bytes_unchanged": true,
+    "actions_artifact_id": null
+  },
+  "selected_original_members": {
+    "terminal-outcomes.json": {
+      "path": "terminal-outcomes.json",
+      "bytes": 21528,
+      "sha256": "1269ca9b563e3daf86136fb14da6263bb8da299070b31697f16b3da7b7903f82"
+    },
+    "host-receipt.json": {
+      "path": "host-receipt.json",
+      "bytes": 88066,
+      "sha256": "991aa44769e97a5f53e25efd66a3f627c569128f30076bc982aef505be459ac1"
+    },
+    "supervision-receipt.json": {
+      "path": "supervision-receipt.json",
+      "bytes": 3356,
+      "sha256": "3426f78891056faefb1beaa8508ce346169634a3f8112e4d935e69b75a41f29c"
+    },
+    "cleanup-receipt.json": {
+      "path": "cleanup-receipt.json",
+      "bytes": 60164,
+      "sha256": "ad5782f1bd3f4f9dd4ffc23a7e1aa3263c922ddb95b63e836a4b27f7a6856638"
+    },
+    "cpu-receipt.json": {
+      "path": "cpu-receipt.json",
+      "bytes": 7307,
+      "sha256": "9c9da16da2bb8e497e6130b63ba8480c2c6cc3fde076ba615cda986356372ba2"
+    },
+    "acquisition-receipt.json": {
+      "path": "acquisition-receipt.json",
+      "bytes": 581,
+      "sha256": "9293535aae4e66264ed25daca57b86a29dce3607bb91b974342b280ecfe36fd6"
+    },
+    "image-transfer.json": {
+      "path": "image-transfer.json",
+      "bytes": 1301,
+      "sha256": "60c805a10942da3b807a73b5dd2648646524bc790fee189d8a92ac4e3d957753"
+    },
+    "asr-setup-public.json": {
+      "path": "asr-setup-public.json",
+      "bytes": 386364,
+      "sha256": "5acfb86054a4e2bdee4f5928bf522e2a31d02cf9fbc6114965f4171a5a3dea9d"
+    },
+    "package-budget-preflight.json": {
+      "path": "package-budget-preflight.json",
+      "bytes": 412,
+      "sha256": "5c532c2270fe7b16d402114136319b32087bf5950eaddb5e64cac2a93f1e544f"
+    },
+    "policy/policy.json": {
+      "path": "policy/policy.json",
+      "bytes": 7040,
+      "sha256": "57a73c203e65f781eabac68d9c95b0e0a8835f18e7931d03e6e43b12df198a2c"
+    }
+  },
+  "native_evidence_validation": {
+    "source_run_job_transport_crc_member_closure": "PASSED",
+    "native_source_config_completion": "PASSED",
+    "current_started": 35,
+    "current_completed": 35,
+    "current_nonempty_transcripts": 35,
+    "current_errors": 0,
+    "current_not_run": 0,
+    "current_accounting_invalid": 0,
+    "current_by_family": {
+      "qwen06": 11,
+      "sensevoice": 12,
+      "whisper": 12
+    },
+    "historical_unique_qwen_started_error_null": 1,
+    "original_denominator": 36,
+    "cumulative_unique_started": 36,
+    "native_start_budget_remaining": 0,
+    "host_terminal_status": "all35_planned_native_calls_complete_with_historical_error",
+    "terminal_status_counts": {
+      "accounting_invalid": 0,
+      "error": 1,
+      "native_v2_complete": 35,
+      "not_run": 0
+    },
+    "acoustic_verbatim_completeness": "unknown"
+  },
+  "machine_candidate_screen": {
+    "normalization": "fixed-punctuation-removal-only-v1",
+    "normalizer_source": {
+      "path": "tools/speech_asr_consensus.py",
+      "sha256": "ac7329b2e6d7b9c494c22da38fbf398a926805b5227a1fb52b33c9e0f1df2e8f"
+    },
+    "punctuation_definition_source": {
+      "path": "tools/speech_label_admission.py",
+      "sha256": "d7fb1a6708a5729e6bfe2c7b294b0961767e2fbd631d0395812aac723791d73f"
+    },
+    "complete_triplets": 11,
+    "incomplete_triplets": 1,
+    "normalized_triplet_distribution": {
+      "all_three": 6,
+      "two_way": 3,
+      "all_different": 2
+    },
+    "three_way_unanimous_nonempty_candidates": 6,
+    "original_group_candidate_upper_bounds": {
+      "original-k1": 0,
+      "original-k2": 2,
+      "original-control-repeat-nihao": 3,
+      "original-control-suffix-kw2": 1
+    },
+    "candidate_only_not_admission": true,
+    "all_twelve_rows": [
+      {
+        "audio_id": "clip-000001",
+        "source_id": "qwen12-02e864a17e72e72ad62d13f6c04b18788a59ef08d121f6a676c89ff1b39cc915",
+        "wav_sha256": "02e864a17e72e72ad62d13f6c04b18788a59ef08d121f6a676c89ff1b39cc915",
+        "preset": "Uncle_Fu",
+        "original_group": "original-k2",
+        "actual_text": {
+          "qwen06": null,
+          "sensevoice": "小窝小窝",
+          "whisper": "小窝小窝"
+        },
+        "normalized_text": {
+          "qwen06": null,
+          "sensevoice": "小窝小窝",
+          "whisper": "小窝小窝"
+        },
+        "family_status": {
+          "qwen06": {
+            "origin": "historical",
+            "status": "error",
+            "native_completion_verified": false
+          },
+          "sensevoice": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "whisper": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          }
+        },
+        "complete_native_triplet": false,
+        "normalized_distinct_count": null,
+        "machine_unanimous_nonempty": false,
+        "matches_original_group_candidate_only": false,
+        "raw_transcript_members": {
+          "qwen06": null,
+          "sensevoice": {
+            "path": "output/sensevoice/clip-000001/raw-transcript.json",
+            "bytes": 505,
+            "sha256": "5a48e672af8cecff13de8972d8865198f5edff94a56765f120828cab08041388"
+          },
+          "whisper": {
+            "path": "output/whisper/clip-000001/raw-transcript.json",
+            "bytes": 389,
+            "sha256": "ba1fbda4ee4254843190a21c155fab27a38ad544483c6dc343e12aa790837acf"
+          }
+        },
+        "actual_source_resolved_admission": null,
+        "human_gold": false,
+        "public_input_record_index_zero_based": 0,
+        "public_audio_path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw2-uncle_fu.wav"
+      },
+      {
+        "audio_id": "clip-000002",
+        "source_id": "qwen12-06fd2d9f2186ad9c7d4386bbbfe13241a141bc792c7ea8e634b74cadea5e2980",
+        "wav_sha256": "06fd2d9f2186ad9c7d4386bbbfe13241a141bc792c7ea8e634b74cadea5e2980",
+        "preset": "Vivian",
+        "original_group": "original-control-repeat-nihao",
+        "actual_text": {
+          "qwen06": "你好，你好。",
+          "sensevoice": "你好你好",
+          "whisper": "你好你好!"
+        },
+        "normalized_text": {
+          "qwen06": "你好你好",
+          "sensevoice": "你好你好",
+          "whisper": "你好你好"
+        },
+        "family_status": {
+          "qwen06": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "sensevoice": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "whisper": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          }
+        },
+        "complete_native_triplet": true,
+        "normalized_distinct_count": 1,
+        "machine_unanimous_nonempty": true,
+        "matches_original_group_candidate_only": true,
+        "raw_transcript_members": {
+          "qwen06": {
+            "path": "output/qwen06/clip-000002/raw-transcript.json",
+            "bytes": 508,
+            "sha256": "ba0083939fcbaa3b773801c80c828a52c198966d6eaacc4316cf4cb31867a8c5"
+          },
+          "sensevoice": {
+            "path": "output/sensevoice/clip-000002/raw-transcript.json",
+            "bytes": 505,
+            "sha256": "7bd51f89d89f6b53464415ec0ef2fac806231b7a0760267e4c88659119112bca"
+          },
+          "whisper": {
+            "path": "output/whisper/clip-000002/raw-transcript.json",
+            "bytes": 390,
+            "sha256": "6ba177e65b86c1757b9161ae74da63bf6a1d392458b67bd4d5f8163551f8c37c"
+          }
+        },
+        "actual_source_resolved_admission": null,
+        "human_gold": false,
+        "public_input_record_index_zero_based": 1,
+        "public_audio_path": "datasets/qwen3-reviewed-v1/audio/qwen3-repeat-nihao-vivian.wav"
+      },
+      {
+        "audio_id": "clip-000003",
+        "source_id": "qwen12-3660c72e7db7392d4a430b71cc224b65527037129ef45d4387627dc6e262ef25",
+        "wav_sha256": "3660c72e7db7392d4a430b71cc224b65527037129ef45d4387627dc6e262ef25",
+        "preset": "Vivian",
+        "original_group": "original-k2",
+        "actual_text": {
+          "qwen06": "小窝，小窝。",
+          "sensevoice": "小窝小窝",
+          "whisper": "小窝小窝"
+        },
+        "normalized_text": {
+          "qwen06": "小窝小窝",
+          "sensevoice": "小窝小窝",
+          "whisper": "小窝小窝"
+        },
+        "family_status": {
+          "qwen06": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "sensevoice": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "whisper": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          }
+        },
+        "complete_native_triplet": true,
+        "normalized_distinct_count": 1,
+        "machine_unanimous_nonempty": true,
+        "matches_original_group_candidate_only": true,
+        "raw_transcript_members": {
+          "qwen06": {
+            "path": "output/qwen06/clip-000003/raw-transcript.json",
+            "bytes": 508,
+            "sha256": "1e5b5c410f7484386f30b10bc038257e7244c7c2cbbba546bbc433f1c5ec1f9a"
+          },
+          "sensevoice": {
+            "path": "output/sensevoice/clip-000003/raw-transcript.json",
+            "bytes": 505,
+            "sha256": "932961650699f75f46b04ee8e542ccd0aa2f2a79bffc46218d948f2eda6996bd"
+          },
+          "whisper": {
+            "path": "output/whisper/clip-000003/raw-transcript.json",
+            "bytes": 389,
+            "sha256": "d0a01425316d540d4d5a8db11dd1c9f43669fb67512057c47735fec0c81aa2bc"
+          }
+        },
+        "actual_source_resolved_admission": null,
+        "human_gold": false,
+        "public_input_record_index_zero_based": 2,
+        "public_audio_path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw2-vivian.wav"
+      },
+      {
+        "audio_id": "clip-000004",
+        "source_id": "qwen12-514bca4b4dc77a10dac3d66f38231dbd7203e193fa5d515857db6826813bcda5",
+        "wav_sha256": "514bca4b4dc77a10dac3d66f38231dbd7203e193fa5d515857db6826813bcda5",
+        "preset": "Dylan",
+        "original_group": "original-k1",
+        "actual_text": {
+          "qwen06": "您好，小吴。",
+          "sensevoice": "您好小啊",
+          "whisper": "你好小巫啊"
+        },
+        "normalized_text": {
+          "qwen06": "您好小吴",
+          "sensevoice": "您好小啊",
+          "whisper": "你好小巫啊"
+        },
+        "family_status": {
+          "qwen06": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "sensevoice": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "whisper": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          }
+        },
+        "complete_native_triplet": true,
+        "normalized_distinct_count": 3,
+        "machine_unanimous_nonempty": false,
+        "matches_original_group_candidate_only": false,
+        "raw_transcript_members": {
+          "qwen06": {
+            "path": "output/qwen06/clip-000004/raw-transcript.json",
+            "bytes": 508,
+            "sha256": "23c9cf543945a9badc7c060271d3e5a13d2c23c3b55e8812ca360a8a20504a57"
+          },
+          "sensevoice": {
+            "path": "output/sensevoice/clip-000004/raw-transcript.json",
+            "bytes": 505,
+            "sha256": "fde81146844798d3167978ff21c3618b5e32942aa6dbb567a2d0a5bacd6827be"
+          },
+          "whisper": {
+            "path": "output/whisper/clip-000004/raw-transcript.json",
+            "bytes": 392,
+            "sha256": "c5124bdd70fec92b1dfc0efa5cfcbc70fd19eabde6308f7e636f013f41face0a"
+          }
+        },
+        "actual_source_resolved_admission": null,
+        "human_gold": false,
+        "public_input_record_index_zero_based": 3,
+        "public_audio_path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw1-dylan.wav"
+      },
+      {
+        "audio_id": "clip-000005",
+        "source_id": "qwen12-7100eaf6994960cee1d5da192020ffcdfae367d17b401c9b9efbacf7172a5ddd",
+        "wav_sha256": "7100eaf6994960cee1d5da192020ffcdfae367d17b401c9b9efbacf7172a5ddd",
+        "preset": "Uncle_Fu",
+        "original_group": "original-control-suffix-kw2",
+        "actual_text": {
+          "qwen06": "窝小窝儿。",
+          "sensevoice": "窝小窝",
+          "whisper": "我小沃"
+        },
+        "normalized_text": {
+          "qwen06": "窝小窝儿",
+          "sensevoice": "窝小窝",
+          "whisper": "我小沃"
+        },
+        "family_status": {
+          "qwen06": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "sensevoice": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "whisper": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          }
+        },
+        "complete_native_triplet": true,
+        "normalized_distinct_count": 3,
+        "machine_unanimous_nonempty": false,
+        "matches_original_group_candidate_only": false,
+        "raw_transcript_members": {
+          "qwen06": {
+            "path": "output/qwen06/clip-000005/raw-transcript.json",
+            "bytes": 505,
+            "sha256": "d9c1239cd0649280d937de451631199bf718017d9a3aca536806874583c5779e"
+          },
+          "sensevoice": {
+            "path": "output/sensevoice/clip-000005/raw-transcript.json",
+            "bytes": 502,
+            "sha256": "f4531e05e1ab047a1e1ad8869bd53f2871ab9d61fc902878c74e8a1dd8edbc8c"
+          },
+          "whisper": {
+            "path": "output/whisper/clip-000005/raw-transcript.json",
+            "bytes": 386,
+            "sha256": "f2c4d318166140d1713e1eb278d6c2e4cca23812870c8a4d32f192c20137317c"
+          }
+        },
+        "actual_source_resolved_admission": null,
+        "human_gold": false,
+        "public_input_record_index_zero_based": 4,
+        "public_audio_path": "datasets/qwen3-reviewed-v1/audio/qwen3-suffix-kw2-uncle_fu.wav"
+      },
+      {
+        "audio_id": "clip-000006",
+        "source_id": "qwen12-7c091117d6ef772c960bd818c4188a1ece8db9219f540d35ecb6850493697af4",
+        "wav_sha256": "7c091117d6ef772c960bd818c4188a1ece8db9219f540d35ecb6850493697af4",
+        "preset": "Dylan",
+        "original_group": "original-control-repeat-nihao",
+        "actual_text": {
+          "qwen06": "你好，你好。",
+          "sensevoice": "你好你好",
+          "whisper": "你好你好"
+        },
+        "normalized_text": {
+          "qwen06": "你好你好",
+          "sensevoice": "你好你好",
+          "whisper": "你好你好"
+        },
+        "family_status": {
+          "qwen06": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "sensevoice": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "whisper": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          }
+        },
+        "complete_native_triplet": true,
+        "normalized_distinct_count": 1,
+        "machine_unanimous_nonempty": true,
+        "matches_original_group_candidate_only": true,
+        "raw_transcript_members": {
+          "qwen06": {
+            "path": "output/qwen06/clip-000006/raw-transcript.json",
+            "bytes": 508,
+            "sha256": "9eceb85af98037dd9f4df254c0acf2dd365bf07fff8e808f77c66c013c1781d6"
+          },
+          "sensevoice": {
+            "path": "output/sensevoice/clip-000006/raw-transcript.json",
+            "bytes": 505,
+            "sha256": "30dcba411eb49d728ee54af2daab6ac28a90d7076217a8e9a5254e9b5be2f806"
+          },
+          "whisper": {
+            "path": "output/whisper/clip-000006/raw-transcript.json",
+            "bytes": 389,
+            "sha256": "be7278be97da3f4f3f8b7f969e927e1767c40a635338c0b65a045a3d328f1d20"
+          }
+        },
+        "actual_source_resolved_admission": null,
+        "human_gold": false,
+        "public_input_record_index_zero_based": 5,
+        "public_audio_path": "datasets/qwen3-reviewed-v1/audio/qwen3-repeat-nihao-dylan.wav"
+      },
+      {
+        "audio_id": "clip-000007",
+        "source_id": "qwen12-a9ddaa06fa6133cd9acdb37a761b0e3cc6b66e48a18c82a97b159738bdbc8229",
+        "wav_sha256": "a9ddaa06fa6133cd9acdb37a761b0e3cc6b66e48a18c82a97b159738bdbc8229",
+        "preset": "Uncle_Fu",
+        "original_group": "original-control-repeat-nihao",
+        "actual_text": {
+          "qwen06": "你好，你好。",
+          "sensevoice": "你好你好",
+          "whisper": "你好 你好"
+        },
+        "normalized_text": {
+          "qwen06": "你好你好",
+          "sensevoice": "你好你好",
+          "whisper": "你好你好"
+        },
+        "family_status": {
+          "qwen06": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "sensevoice": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "whisper": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          }
+        },
+        "complete_native_triplet": true,
+        "normalized_distinct_count": 1,
+        "machine_unanimous_nonempty": true,
+        "matches_original_group_candidate_only": true,
+        "raw_transcript_members": {
+          "qwen06": {
+            "path": "output/qwen06/clip-000007/raw-transcript.json",
+            "bytes": 508,
+            "sha256": "9f482491e1129f4070f643b1761cea3e5f3483023b1bbcf2110967f2944c6e97"
+          },
+          "sensevoice": {
+            "path": "output/sensevoice/clip-000007/raw-transcript.json",
+            "bytes": 505,
+            "sha256": "f41b500db0749400535fec954f196928ca8289110454c9c589e7cfe13bd6d4d2"
+          },
+          "whisper": {
+            "path": "output/whisper/clip-000007/raw-transcript.json",
+            "bytes": 390,
+            "sha256": "afcf511f58b732231c6d26d2cd52a8307725fc0077fa6265098ed57681e092d4"
+          }
+        },
+        "actual_source_resolved_admission": null,
+        "human_gold": false,
+        "public_input_record_index_zero_based": 6,
+        "public_audio_path": "datasets/qwen3-reviewed-v1/audio/qwen3-repeat-nihao-uncle_fu.wav"
+      },
+      {
+        "audio_id": "clip-000008",
+        "source_id": "qwen12-ae352e520daff27d394d726e3f35ea46b1745c6d8c0a335685e1f9b770227e20",
+        "wav_sha256": "ae352e520daff27d394d726e3f35ea46b1745c6d8c0a335685e1f9b770227e20",
+        "preset": "Dylan",
+        "original_group": "original-control-suffix-kw2",
+        "actual_text": {
+          "qwen06": "窝小窝。",
+          "sensevoice": "窝小窝",
+          "whisper": "窝小窝"
+        },
+        "normalized_text": {
+          "qwen06": "窝小窝",
+          "sensevoice": "窝小窝",
+          "whisper": "窝小窝"
+        },
+        "family_status": {
+          "qwen06": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "sensevoice": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "whisper": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          }
+        },
+        "complete_native_triplet": true,
+        "normalized_distinct_count": 1,
+        "machine_unanimous_nonempty": true,
+        "matches_original_group_candidate_only": true,
+        "raw_transcript_members": {
+          "qwen06": {
+            "path": "output/qwen06/clip-000008/raw-transcript.json",
+            "bytes": 502,
+            "sha256": "a71ad92875f7adefec2425ad32218036ce0ead7476c024f3d73d5e7611fe699f"
+          },
+          "sensevoice": {
+            "path": "output/sensevoice/clip-000008/raw-transcript.json",
+            "bytes": 502,
+            "sha256": "d05a53cd4e408359338de77014f637a0ba88837d19fa5ce54ee7f861b36f51f4"
+          },
+          "whisper": {
+            "path": "output/whisper/clip-000008/raw-transcript.json",
+            "bytes": 386,
+            "sha256": "58604454c6e2444b70e15aaea6c46784f50ad8b2cf702602ec18d767ff15a0e7"
+          }
+        },
+        "actual_source_resolved_admission": null,
+        "human_gold": false,
+        "public_input_record_index_zero_based": 7,
+        "public_audio_path": "datasets/qwen3-reviewed-v1/audio/qwen3-suffix-kw2-dylan.wav"
+      },
+      {
+        "audio_id": "clip-000009",
+        "source_id": "qwen12-b01a04cc168f8c9de314c9ddb22f3f191e6c0a7138ac78c3cf63831d2bbbf26e",
+        "wav_sha256": "b01a04cc168f8c9de314c9ddb22f3f191e6c0a7138ac78c3cf63831d2bbbf26e",
+        "preset": "Vivian",
+        "original_group": "original-control-suffix-kw2",
+        "actual_text": {
+          "qwen06": "窝小窝。",
+          "sensevoice": "我小我",
+          "whisper": "窝小窝"
+        },
+        "normalized_text": {
+          "qwen06": "窝小窝",
+          "sensevoice": "我小我",
+          "whisper": "窝小窝"
+        },
+        "family_status": {
+          "qwen06": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "sensevoice": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "whisper": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          }
+        },
+        "complete_native_triplet": true,
+        "normalized_distinct_count": 2,
+        "machine_unanimous_nonempty": false,
+        "matches_original_group_candidate_only": false,
+        "raw_transcript_members": {
+          "qwen06": {
+            "path": "output/qwen06/clip-000009/raw-transcript.json",
+            "bytes": 502,
+            "sha256": "5b16ded3c65c609e0966945d87b6a8fde662f1a7152c76accb3c712c1c4ed385"
+          },
+          "sensevoice": {
+            "path": "output/sensevoice/clip-000009/raw-transcript.json",
+            "bytes": 502,
+            "sha256": "e58c59e4cf97c2a92a23a244c889e34c7940402d1fb247d50a6d1be2f1d86541"
+          },
+          "whisper": {
+            "path": "output/whisper/clip-000009/raw-transcript.json",
+            "bytes": 386,
+            "sha256": "c70431ce945050e14a56e0f1a9a5e481839e3ef3f4aba1fc6675c09c87fe2f6f"
+          }
+        },
+        "actual_source_resolved_admission": null,
+        "human_gold": false,
+        "public_input_record_index_zero_based": 8,
+        "public_audio_path": "datasets/qwen3-reviewed-v1/audio/qwen3-suffix-kw2-vivian.wav"
+      },
+      {
+        "audio_id": "clip-000010",
+        "source_id": "qwen12-b6902e14b699ca504f34d7b4bdba66a4c9805a0fd3403f5633cbb891872d9d51",
+        "wav_sha256": "b6902e14b699ca504f34d7b4bdba66a4c9805a0fd3403f5633cbb891872d9d51",
+        "preset": "Uncle_Fu",
+        "original_group": "original-k1",
+        "actual_text": {
+          "qwen06": "你好，小沃。",
+          "sensevoice": "你好小沃",
+          "whisper": "你好小我"
+        },
+        "normalized_text": {
+          "qwen06": "你好小沃",
+          "sensevoice": "你好小沃",
+          "whisper": "你好小我"
+        },
+        "family_status": {
+          "qwen06": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "sensevoice": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "whisper": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          }
+        },
+        "complete_native_triplet": true,
+        "normalized_distinct_count": 2,
+        "machine_unanimous_nonempty": false,
+        "matches_original_group_candidate_only": false,
+        "raw_transcript_members": {
+          "qwen06": {
+            "path": "output/qwen06/clip-000010/raw-transcript.json",
+            "bytes": 508,
+            "sha256": "662e32e23f0205c6cedb699b7d3fbe4b90a6bed6653ba4cb4efe5662a1e3617d"
+          },
+          "sensevoice": {
+            "path": "output/sensevoice/clip-000010/raw-transcript.json",
+            "bytes": 505,
+            "sha256": "2200492c400cdc355c73e6aff52826289095351b4e783c345158aa7dcdb199de"
+          },
+          "whisper": {
+            "path": "output/whisper/clip-000010/raw-transcript.json",
+            "bytes": 389,
+            "sha256": "d4587c313eea9248056da0e9f31ef5df6a2c52cef7e75bf4b458a56af51a1ec2"
+          }
+        },
+        "actual_source_resolved_admission": null,
+        "human_gold": false,
+        "public_input_record_index_zero_based": 9,
+        "public_audio_path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw1-uncle_fu.wav"
+      },
+      {
+        "audio_id": "clip-000011",
+        "source_id": "qwen12-db85999b9d7a36f2a8633a58e5279c2ed5dda8f61f8bf7cf45c72beef6871261",
+        "wav_sha256": "db85999b9d7a36f2a8633a58e5279c2ed5dda8f61f8bf7cf45c72beef6871261",
+        "preset": "Vivian",
+        "original_group": "original-k1",
+        "actual_text": {
+          "qwen06": "你好，小屋。",
+          "sensevoice": "你好小我",
+          "whisper": "你好小屋。"
+        },
+        "normalized_text": {
+          "qwen06": "你好小屋",
+          "sensevoice": "你好小我",
+          "whisper": "你好小屋"
+        },
+        "family_status": {
+          "qwen06": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "sensevoice": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "whisper": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          }
+        },
+        "complete_native_triplet": true,
+        "normalized_distinct_count": 2,
+        "machine_unanimous_nonempty": false,
+        "matches_original_group_candidate_only": false,
+        "raw_transcript_members": {
+          "qwen06": {
+            "path": "output/qwen06/clip-000011/raw-transcript.json",
+            "bytes": 508,
+            "sha256": "1e63ed20f05df0054d4d98bcbdb09c5817e2bdefb145605fca99c01a8a7e8e59"
+          },
+          "sensevoice": {
+            "path": "output/sensevoice/clip-000011/raw-transcript.json",
+            "bytes": 505,
+            "sha256": "6994dcb04fee079133e7e1ca923c21284689c968ba6e2e5e5b553874cafe53c1"
+          },
+          "whisper": {
+            "path": "output/whisper/clip-000011/raw-transcript.json",
+            "bytes": 392,
+            "sha256": "f2a96077c071b817d043dbb87725f83aa9ac3ca0449410c86cbab6809182049a"
+          }
+        },
+        "actual_source_resolved_admission": null,
+        "human_gold": false,
+        "public_input_record_index_zero_based": 10,
+        "public_audio_path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw1-vivian.wav"
+      },
+      {
+        "audio_id": "clip-000012",
+        "source_id": "qwen12-f96edce564f94ea7919c6de63613e88fe89ae07f01ad907097c4af095c3685db",
+        "wav_sha256": "f96edce564f94ea7919c6de63613e88fe89ae07f01ad907097c4af095c3685db",
+        "preset": "Dylan",
+        "original_group": "original-k2",
+        "actual_text": {
+          "qwen06": "小窝，小窝。",
+          "sensevoice": "小窝小窝",
+          "whisper": "小窝 小窝"
+        },
+        "normalized_text": {
+          "qwen06": "小窝小窝",
+          "sensevoice": "小窝小窝",
+          "whisper": "小窝小窝"
+        },
+        "family_status": {
+          "qwen06": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "sensevoice": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          },
+          "whisper": {
+            "origin": "current_run",
+            "status": "native_v2_complete",
+            "native_completion_verified": true
+          }
+        },
+        "complete_native_triplet": true,
+        "normalized_distinct_count": 1,
+        "machine_unanimous_nonempty": true,
+        "matches_original_group_candidate_only": true,
+        "raw_transcript_members": {
+          "qwen06": {
+            "path": "output/qwen06/clip-000012/raw-transcript.json",
+            "bytes": 508,
+            "sha256": "a425392ace585d8d2e74b27e5025c473248b18bb8bdb706c5ca183c97bb1e59b"
+          },
+          "sensevoice": {
+            "path": "output/sensevoice/clip-000012/raw-transcript.json",
+            "bytes": 505,
+            "sha256": "c00e977f20992e77472089859262c221949a2fa657fd2f20b41b5f7d2000dfb0"
+          },
+          "whisper": {
+            "path": "output/whisper/clip-000012/raw-transcript.json",
+            "bytes": 390,
+            "sha256": "3d1e0ba060cb243be9df77daf50f485ca706553798e2e6691793b33e2e1ab66c"
+          }
+        },
+        "actual_source_resolved_admission": null,
+        "human_gold": false,
+        "public_input_record_index_zero_based": 11,
+        "public_audio_path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw2-dylan.wav"
+      }
+    ],
+    "public_input_projection_basis": {
+      "repository": "jiying2007/kws-pipeline",
+      "commit": "0f0f736c6faaecb0c62dffd6ef5e3707f1f4a894",
+      "path": "research/qwen12-native-admission-v1/public-inputs.json",
+      "bytes": 7972,
+      "sha256": "cd56eb66043a487c151107445bdccbe627f958110b142bea341bf221193e14fe",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/0f0f736c6faaecb0c62dffd6ef5e3707f1f4a894/research/qwen12-native-admission-v1/public-inputs.json",
+      "preset_and_group_rule": "Derive display preset and original group from the already-public qwen3-{group}-{preset}.wav basename. No human-review text is projected.",
+      "preset_mapping": {
+        "dylan": "Dylan",
+        "uncle_fu": "Uncle_Fu",
+        "vivian": "Vivian"
+      },
+      "group_stem_mapping": {
+        "kw1": "original-k1",
+        "kw2": "original-k2",
+        "repeat-nihao": "original-control-repeat-nihao",
+        "suffix-kw2": "original-control-suffix-kw2"
+      }
+    }
+  },
+  "training_decision": {
+    "status": "INSUFFICIENT_ADMITTED_COVERAGE",
+    "reason": "original-k1 has zero complete three-way normalized matching candidates; source-resolved admission can only reduce that upper bound",
+    "frozen_coverage_sha256": "83a0b0473049ca1b784274be5703ff38afd5e7d6922277350db3732265a2b128",
+    "frozen_recipe_sha256": "bee9cc3d4a6c879705fe77e36195d2f2eeca2244e7ea01c5b2891e499eb4cd5f",
+    "required_original_group_minimum": 1,
+    "formal_source_resolved_admission_established": false,
+    "source_resolved_admitted_count": null,
+    "train_root_registered_for_this_run": false,
+    "training_not_run": true,
+    "export_not_run": true,
+    "candidate_readback_not_run": true,
+    "human_gold": false,
+    "qualification_allowed": false,
+    "shipping_approved": false,
+    "original_coverage_and_recipe_unchanged": true,
+    "no_majority_vote_homophone_relabeling_or_negative_substitution": true
+  },
+  "resources_current_run_separate_scopes": {
+    "qwen_sense_response_body_bytes": "3340966447",
+    "whisper_bidirectional_tunnel_recv_bytes": "774054311",
+    "image_observed_default_interface_receive_delta_bytes": "45687055",
+    "audio_response_body_bytes": "776208",
+    "controlled_cgroup_cpu_seconds_through_acknowledged_pause": "970.499524",
+    "host_capture_receipt_wall_seconds": "989.8504755309999"
+  },
+  "resource_scope_qualifications": {
+    "qwen_sense_response_body_bytes": "Exact retained download response-body sum; never complete network-wire accounting.",
+    "whisper_bidirectional_tunnel_recv_bytes": "All asset charges observed; bidirectional userspace tunnel recv excludes CONNECT headers, kernel buffers and other overhead.",
+    "image_observed_default_interface_receive_delta_bytes": "Default-interface receive delta only; may include unrelated/protocol traffic, not Docker daemon or exact wire accounting.",
+    "audio_response_body_bytes": "Retained audio response-body bytes only; not wire bytes.",
+    "controlled_cgroup_cpu_seconds_through_acknowledged_pause": "Verified controlled-cgroup counters through acknowledged pause only; host/image/log/cleanup-after-pause CPU excluded. Incomplete final accounting leaves this scope unknown.",
+    "host_capture_receipt_wall_seconds": "Host capture snapshot interval; includes capture cleanup, excludes subsequent final ZIP and publisher. Not entire job elapsed time."
+  },
+  "cleanup": {
+    "controlled_containers": 57,
+    "final_cpu_verified": true,
+    "all_removed": true,
+    "all_cleanup_verified": true,
+    "cleanup_errors": 0,
+    "receipt_errors": 0,
+    "cpu_threshold_exceeded": false
+  },
+  "filesystem_sampling": {
+    "scope_count": 8,
+    "latest_retained_samples_incomplete": 0,
+    "latest_retained_samples_vanished_entries": 0,
+    "bounded_metadata_validation": "PASSED",
+    "actual_safe_error_errno_frames": "NOT_TRIGGERED",
+    "not_atomic_peak_or_hard_quota": true
+  },
+  "historical_limits_preserved": {
+    "fifth_asr_final_counter": "UNKNOWN",
+    "recovery1_cleanup": "UNCONFIRMED",
+    "whole_ci_resources": "UNKNOWN",
+    "total_network_wire_bytes": null
+  },
+  "next_experiment_authorized_by_this_summary": false
+}
