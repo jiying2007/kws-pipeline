@@ -1,0 +1,52 @@
+{
+  "archive_bytes": 2500378,
+  "archive_sha256": "a10c27861d69a78d694de37b7cfe244eea87b91404591019832e87c880628984",
+  "asr_forward_calls": null,
+  "attempt": 1,
+  "cleanup_verified": true,
+  "conditional_new_asr_started": false,
+  "consumed_asr_attempts": null,
+  "content_members": 403,
+  "host_step": "failure",
+  "job_conclusion": "failure",
+  "job_id": 114817557432,
+  "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38251170134/job/114817557432",
+  "log_sha256": "27c3b450b5acb84faf9808ef0715abd54d77af8445c77e388a99f1c203451444",
+  "prepare_prerequisite_established": false,
+  "publisher_step": "success",
+  "qwen06": {
+    "cgroup_cpu_usec": 598913413,
+    "constructor_completion_count": null,
+    "constructor_entry_count": null,
+    "gate_result": "missing",
+    "model_load_receipt_present": false,
+    "retained_outputs": [
+      "contract.json",
+      "decoder-inputs.json",
+      "kernel-scope.json",
+      "cpu-process-guard.json"
+    ],
+    "supervision_wall_seconds": 600.127735289,
+    "worker_complete_receipt_present": false,
+    "worker_exit_success": false
+  },
+  "repository": "jiying2007/kws-pipeline",
+  "result_commit": "f25fd13109aa7e3b6e8bea8df61cff3ec2e74c2d",
+  "result_tree": "1270f956bd66266a3dacbba56d193e0bd7f06adb",
+  "retry_authorized": false,
+  "root_cause_limit": "Fixed-source control flow and two redacted error frames support the host preparation wall ceiling as stop condition. The actual internal loader stopping point is not observable; independently reproduced profile/generator overhead is not established as the unique cause.",
+  "run_conclusion": "failure",
+  "run_id": 38251170134,
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38251170134",
+  "schema": "k1-prepare-r1-terminal-public-summary-v1",
+  "scope": "Original ASR v1/r1 consumed counts remain unknown and sealed; no new TTS or training. This failed diagnostic identity cannot be retried or relabeled.",
+  "source_commit": "d6ca13151f98a8fc80c2fbb1f21832a9524191db",
+  "source_tree": "403b0a0212dc17549ede6697cdc74fd9cd915446",
+  "stages": {
+    "qwen06_prepare": "failed_no_retry",
+    "sensevoice_prepare": "not_run",
+    "setup": "complete",
+    "whisper_prepare": "not_run"
+  },
+  "verified_complete_prepare_receipts": 0
+}

@@ -54,7 +54,7 @@ RETAINED_PINS = {
     "core/vendor/checkpoint_guard/__init__.py": "ca1bfd88d26591efeb70bb58155294be4ebc2af7a6e45cc5f09f3e90dc5c541e",
     "core/vendor/checkpoint_guard/checkpoint_contract.py": "80cd48b0ce8beb2f7473372a3d904ba42af316c7df4a3c44f8a8b54dd50896c4",
     "core/vendor/checkpoint_guard/exact_apply.py": "10bc8634053a602b1669a007865c9d18955577b8aab4b7e7f14dfdcc6ce9e22b",
-    "core/vendor/qwen_loading_gate_v2.py": "1b0cbd7b96e24925bfcf72438edea9dfb286860d2a990cdbad48104ae595d3fb",
+    "core/vendor/qwen_loading_gate_v2.py": "b21139d3d63467b910f13b4bc2045d08a737799f9d4bc4dae96972f2a9cd1dad",
     "import_preflight.py": "30cfe60347ccc6074d98a21406fccee3e3be5c54822aa8d874aae3655693ae1c",
     "model-locks.json": "8b0813aba3c2447c7dc30b47e856e4ce9a619a98d32ed6dfa9f44dc6646714e4",
     "runtime-lock.json": "2d496a76bd0e044a6812bfc9afdd8965474bf135bd21f3a24f71695638d1183f",
