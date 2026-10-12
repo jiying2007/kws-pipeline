@@ -99,6 +99,13 @@ ASSETS = {
 BINARY_ASSETS = frozenset(("sensevoice/retained-assets/chn_jpn_yue_eng_ko_spectok.bpe.model",
     "whisper/retained-assets/whisper/assets/mel_filters.npz",
     "whisper/retained-assets/whisper/assets/multilingual.tiktoken"))
+# One already-reviewed source license has no suffix. Its independent fixed
+# identity is required in addition to the complete source-freeze binding below;
+# a caller-supplied/rebound freeze cannot authorize different license bytes.
+SOURCE_TEXT_EXCEPTIONS = {
+    "source/research/qwen6_asr/FUNASR_MODEL_LICENSE": {
+        "bytes": 5306, "sha256": "7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8"},
+}
 FORBIDDEN_KEYS = frozenset(("environment", "env", "environ", "credentials", "credential", "password", "secret",
     "access_token", "api_key", "authorization", "private_history", "historical_inventory", "inventory_sha256",
     "history_sha256", "history_paths", "history_count", "history_matches", "matched_history", "private_path",
@@ -136,7 +143,8 @@ def _source_members(files):
             and 0 <= row["bytes"] <= MAX_MEMBER and type(row["sha256"]) is str and SHA.fullmatch(row["sha256"]), "bounded source identity")
         require(member in files and {"bytes": len(files[member]), "sha256": sha(files[member])} == row,
             "every exact source body retained")
-        require(PurePosixPath(member).suffix in (".py", ".json", ".md", ".yml", ".yaml", ".txt"), "public source text only")
+        require(PurePosixPath(member).suffix in (".py", ".json", ".md", ".yml", ".yaml", ".txt") or
+            SOURCE_TEXT_EXCEPTIONS.get(member) == row, "public source text or exact reviewed license only")
         files[member].decode("utf-8")
     return names
 

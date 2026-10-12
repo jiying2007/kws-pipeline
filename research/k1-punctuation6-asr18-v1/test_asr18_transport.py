@@ -769,4 +769,182 @@ class RealHostTransportIntegration(unittest.TestCase):
         self.assertFalse(any(call[0]=='POST' for call in api.calls))
 
 
+class CompleteSourceLicenseIntegration(unittest.TestCase):
+    """Full real source roster; native results are explicitly synthetic only.
+
+    All-notrun uses all 113 current source bodies and actual input metadata.
+    Native semantic cases reuse the existing zero-model host fixture and replace
+    exactly three metadata bodies, listed below, to bind its invented inputs.
+    No actual ASR identity/result, model, download or remote claim is created.
+    """
+    LICENSE='source/research/qwen6_asr/FUNASR_MODEL_LICENSE'
+    LICENSE_ID={'bytes':5306,'sha256':'7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8'}
+    # Parent-rebuilt candidate freeze after the reviewed narrow license delta.
+    FROZEN_SOURCE_SHA256='ca7f5298e222f57de373fa50ed1c647712430513f76c2738052493d7d2a6bb64'
+    SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json'))
+
+    def setUp(self):
+        import hosted_run
+        import prepare_freeze
+        import test_asr18_host
+        self.host=hosted_run;self.freezer=prepare_freeze;self.host_tests=test_asr18_host
+        self.guard=mock.patch('http.client.HTTPSConnection',side_effect=AssertionError('no live network'))
+        self.guard.start();self.addCleanup(self.guard.stop)
+        self.roster=self.freezer.declared_rosters(ROOT)['host_code']
+        self.assertEqual(len(self.roster),113)
+        self.assertEqual(t.SOURCE_TEXT_EXCEPTIONS,{self.LICENSE:self.LICENSE_ID})
+
+    def full_fixture(self, *, synthetic_native=False):
+        checked=c.read_bytes(HERE/'execution-freeze.json')
+        self.assertEqual(t.sha(checked),self.FROZEN_SOURCE_SHA256)
+        self.assertEqual(checked,t.canonical(self.freezer.build(ROOT)))
+        freeze=t.decode(checked)
+        source={'source/'+name:c.read_bytes(ROOT/name) for name in freeze['host_code']}
+        if synthetic_native:
+            files,run=self.host_tests.public_fixture()
+            inp=t.decode(files['input-freeze.json'])
+            substitutions={'execution-release.json':files['source/'+self.host.NEW+'execution-release.json'],
+                'input-freeze.json':files['input-freeze.json'],
+                'tts-source-authority.json':t.canonical(inp['actual_screening_receipt']['tts_authority'])}
+            self.assertEqual(set(substitutions),self.SYNTHETIC_CONTROLS)
+            for leaf,body in substitutions.items():
+                name=self.host.NEW+leaf;source['source/'+name]=body
+                for role in ('host_code','setup_code','inference_code'):
+                    if name in freeze[role]:freeze[role][name]={'bytes':len(body),'sha256':t.sha(body)}
+            files={name:raw for name,raw in files.items() if not name.startswith('source/')}
+        else:
+            _,_,run=self.host_tests.context()  # Invented run only; no source authority claim.
+            inp=c.read_json(HERE/'input-freeze.json')
+            release=c.read_json(HERE/'execution-release.json')
+            projection=self.host.projection_for(inp['actual_new_cells'])
+            receipt=inp['actual_screening_receipt']
+            host=self.host.host_receipt(run,t.sha(t.canonical(freeze)),'d'*40,t.sha(t.canonical(receipt)))
+            host.update(status='stopped_no_retry',stage='package')
+            values={'host-receipt.json':host,'input-freeze.json':inp,'public-screening-receipt.json':receipt,
+                'new-cell-projection.json':projection,'terminal-outcomes.json':{
+                    'schema':'k1-asr18-terminal-outcomes-v1','identity':run,
+                    'projection_sha256':t.sha(t.canonical(projection)),
+                    'slots':c.initial_ledger(projection),'accounting_valid':True},
+                'run-preflight.json':{'schema':'k1-asr18-run-preflight-v1','identity':run,'numeric_job_id':456,
+                    'workflow':self.host.WORKFLOW,'source_branch':self.host.SOURCE_REF,
+                    'evidence_branch':self.host.EVIDENCE_REF,'source_branch_workflow_runs':1,
+                    'evidence_ref_absent':True,'prior_public_claim_history_sha256':release['prior_public_claim_history_sha256'],
+                    'public_standard_hosted_ubuntu24':True,'api_metadata_accounting':{'gets':6,'response_body_bytes':1,
+                        'response_body_cap_bytes':c.MIB,'scope':'public_api_metadata_separate_from_model_audio_bodies',
+                        'hard_wire_byte_cap':False}}}
+            files={name:t.canonical(value) for name,value in values.items()}
+        raw=t.canonical(freeze)
+        files.update(source);files['authority/execution-freeze.json']=raw
+        files['source/'+self.host.NEW+'execution-freeze.json']=raw
+        host=t.decode(files['host-receipt.json']);host['source_freeze_sha256']=t.sha(raw)
+        files['host-receipt.json']=t.canonical(host)
+        self.assert_complete_source(files,synthetic_native=synthetic_native)
+        return files,run
+
+    def assert_complete_source(self, files, *, synthetic_native):
+        self.assertEqual({name[7:] for name in files if name.startswith('source/')},
+            self.roster|{self.host.NEW+'execution-freeze.json'})
+        self.assertEqual({'bytes':len(files[self.LICENSE]),'sha256':t.sha(files[self.LICENSE])},self.LICENSE_ID)
+        files[self.LICENSE].decode('utf-8')
+        differences={name for name in self.roster if files['source/'+name]!=c.read_bytes(ROOT/name)}
+        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else set())
+
+    def materialize(self, root, files):
+        for name,body in files.items():
+            target=root/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(body)
+
+    def rebind_test_freeze(self, files, member):
+        """Deliberately coherent adversarial fixture; never trusted authority."""
+        freeze=t.decode(files['authority/execution-freeze.json']);name=member[7:]
+        row={'bytes':len(files[member]),'sha256':t.sha(files[member])}
+        freeze['host_code'][name]=row
+        for role in ('setup_code','inference_code'):
+            if name in freeze[role]:freeze[role][name]=row
+        raw=t.canonical(freeze);files['authority/execution-freeze.json']=raw
+        files['source/'+self.host.NEW+'execution-freeze.json']=raw
+        host=t.decode(files['host-receipt.json']);host['source_freeze_sha256']=t.sha(raw)
+        if 'authority/source-claim.json' in files:
+            claim=t.decode(files['authority/source-claim.json']);claim['source_freeze_sha256']=t.sha(raw)
+            files['authority/source-claim.json']=t.canonical(claim)
+            host['source_claim_sha256']=t.sha(files['authority/source-claim.json'])
+        files['host-receipt.json']=t.canonical(host)
+
+    def reject_source_mutations(self, files, run, operation, *, phase):
+        for mutation in ('single_byte','rebound_single_byte','same_body_suffixless','same_name_other_directory',
+                'missing_body','rebound_non_utf8','extra_private_suffixless','relative_alias'):
+            with self.subTest(phase=phase,mutation=mutation),tempfile.TemporaryDirectory(prefix='synthetic-license-negative-') as temp:
+                changed=dict(files);member=self.LICENSE;reason=None
+                if mutation in ('single_byte','rebound_single_byte'):
+                    changed[member]=b'X'+changed[member][1:]
+                    if mutation=='rebound_single_byte':
+                        self.rebind_test_freeze(changed,member);reason='exact reviewed license'
+                elif mutation=='missing_body':del changed[member]
+                elif mutation=='rebound_non_utf8':
+                    changed[member]=b'\xff'+changed[member][1:]
+                    self.rebind_test_freeze(changed,member);reason='exact reviewed license'
+                else:
+                    member={'same_body_suffixless':self.LICENSE+'_COPY',
+                        'same_name_other_directory':'source/research/another/FUNASR_MODEL_LICENSE',
+                        'extra_private_suffixless':'source/research/qwen6_asr/PRIVATE_TEST_ONLY',
+                        'relative_alias':'source/research/qwen6_asr/./FUNASR_MODEL_LICENSE'}[mutation]
+                    changed[member]=b'invented private text must not publish' if mutation=='extra_private_suffixless' else files[self.LICENSE]
+                    self.rebind_test_freeze(changed,member)
+                    if mutation!='relative_alias':reason='exact reviewed license'
+                root=Path(temp);self.materialize(root,changed)
+                if reason:
+                    with self.assertRaisesRegex(ValueError,reason):operation(root,run)
+                else:
+                    with self.assertRaises(ValueError):operation(root,run)
+
+    def test_exact_113_real_source_bodies_all_notrun_package_and_license_negatives(self):
+        files,run=self.full_fixture()
+        with tempfile.TemporaryDirectory(prefix='synthetic-run-real-source-all-notrun-') as temp:
+            root=Path(temp);self.materialize(root,files)
+            payload,manifest=t.build_package(root,run)
+            verified,_=t.validate_archive(payload,run);self.assertEqual(manifest,verified)
+            self.assertEqual(set(self.host.collect_public(root)),set(files))
+            self.assertEqual(t.decode(files['terminal-outcomes.json'])['slots'],
+                c.initial_ledger(t.decode(files['new-cell-projection.json'])))
+            self.assertNotIn('authority/source-claim.json',files)
+            self.assertFalse(any(name.startswith(('output/','frozen/')) for name in files))
+        self.reject_source_mutations(files,run,t.build_package,phase='all_notrun')
+
+    def full_native_case(self, fail_native):
+        files,run=self.full_fixture(synthetic_native=True)
+        original_proof=t.package_budget_preflight;original_package=t.build_package
+        observed=[]
+        def proof(root,identity,**kwargs):
+            result=original_proof(root,identity,**kwargs)
+            actual={name:c.read_bytes(root/name) for name in self.host.collect_public(root)}
+            self.assert_complete_source(actual,synthetic_native=True)
+            self.assertEqual(result['new_native_calls'],0)
+            self.assertEqual(result['actual_prepared_members'],len(actual))
+            def operation(copy_root,copy_identity):
+                return original_proof(copy_root,copy_identity,**{**kwargs,'policy_path':copy_root/'policy/policy.json'})
+            self.reject_source_mutations(actual,identity,operation,phase='prepared')
+            observed.append('prepared');return result
+        def package(root,identity):
+            result=original_package(root,identity)
+            actual={name:c.read_bytes(root/name) for name in self.host.collect_public(root)}
+            self.assert_complete_source(actual,synthetic_native=True)
+            terminal=t.decode(actual['terminal-outcomes.json'])
+            self.assertEqual([row['status'] for row in terminal['slots']],
+                ['failed_no_retry']+['not_run']*17 if fail_native else ['complete']*18)
+            self.reject_source_mutations(actual,identity,original_package,
+                phase='first_failure_18_denominator' if fail_native else 'synthetic_18_success')
+            observed.append('final');return result
+        case=self.host_tests.CompleteSyntheticEndToEnd()
+        with mock.patch.object(self.host_tests,'public_fixture',return_value=(files,run)), \
+             mock.patch.object(t,'package_budget_preflight',side_effect=proof), \
+             mock.patch.object(t,'build_package',side_effect=package):
+            case.run_case(fail_native=fail_native)
+        self.assertEqual(observed,['prepared','final'])
+
+    def test_full_113_roster_prepared_and_synthetic_18_success_license_negatives(self):
+        self.full_native_case(False)
+
+    def test_full_113_roster_prepared_and_synthetic_first_failure_license_negatives(self):
+        self.full_native_case(True)
+
+
 if __name__=='__main__':unittest.main()
