@@ -214,7 +214,7 @@ def main() -> int:
         "xiaowo-domain-base-state",
         "Retain exact base-domain state",
         "Download exact base-domain state",
-        "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
+        "actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
         "training/base_stage_receipt.py write",
         "training/base_stage_receipt.py verify",
         "steps.base_stage.outputs.iteration_exit_code",
