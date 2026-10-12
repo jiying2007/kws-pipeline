@@ -23,7 +23,7 @@ INFERENCE_NEW = (
     "whisper_binding.py", "optional_tools.py", "execution-release.json",
 )
 HOST_NEW = (
-    "input_binding.py", "raw_data_reader.py", "hosted_run.py", "resource_host.py",
+    "input_binding.py", "raw_data_reader.py", "hosted_run.py", "resource_host.py", "failure_observer.py",
     "evidence_transport.py", "evidence_publisher.py", "prepare_freeze.py", "workflow.yml", "runtime_session.py",
     "source-reuse-lock.json", "input-freeze.json", "tts-source-authority.json", "publication-release.json",
 )

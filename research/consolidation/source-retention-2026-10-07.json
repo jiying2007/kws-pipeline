@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 43165,
-      "sha256": "417e3a21deccd9edeed04316079e9484d8e7d18e02935adda098140510d535db",
-      "git_blob_sha1": "bc3d4b26c70173c9f0fb17b3e8eff8e65b98b83c"
+      "bytes": 43226,
+      "sha256": "bf84143af054f36b7cc0993e21f888a646d5dc59783854b40417607ff5cfc00d",
+      "git_blob_sha1": "221e4cf349639ec52f4fd8d538d242e2de666df4"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -20420,6 +20420,86 @@
       "baseline_kind": "Immutable public main and exact Dependabot PR547 head readback",
       "reviewed_dependabot_head_commit": "3bfc0f09dcc90f00397837e7dc9e25568411a310",
       "rationale": "Retain strict SHA-pinned contracts and all existing gates. Preserve 718 retained source rows, 834 provenance rows, 18 source projections, all 54 baseline workflow names, the three allowed added workflow names and all 48 prior maintenance receipts. Historical workflow copies, ASR18 source, source freeze, execution refs and evidence are unchanged. This maintenance does not dispatch experiments or authorize execution."
+    },
+    {
+      "date": "2026-10-12",
+      "operation_id": "k1-asr18-disabled-failure-observability-20261012",
+      "public_main_base_commit": "1630b16fbcd8b1c2ef868dfd0eb857a1d2526be8",
+      "public_main_base_tree": "68e5f28b8362f7e9982b9ec7e4cc8b4eedcfff15",
+      "workflow_source_changed": true,
+      "baseline_kind": "protected public main after PR547; source-only disabled repair candidate",
+      "scope": "Add fixed safe failure-observation stdlib tests to both existing CI and pre-execution test lists; preserve all existing tests, workflow/ref identities, and caps.",
+      "rationale": "Actual ASR run38207026177 attempt1 failed without retrievable claims or archive; all18 planned slot consumption remains unknown and sealed. This revision disables execution and publication approvals, preserves all49 preceding maintenance receipts, and authorizes no new run or retry. Added diagnostic checkpoints and full safe stdout records are independent of full evidence packaging.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 43165,
+            "sha256": "417e3a21deccd9edeed04316079e9484d8e7d18e02935adda098140510d535db",
+            "git_blob_sha1": "bc3d4b26c70173c9f0fb17b3e8eff8e65b98b83c"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 43226,
+            "sha256": "bf84143af054f36b7cc0993e21f888a646d5dc59783854b40417607ff5cfc00d",
+            "git_blob_sha1": "221e4cf349639ec52f4fd8d538d242e2de666df4"
+          }
+        },
+        {
+          "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+          "before": {
+            "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+            "mode": "100644",
+            "bytes": 2866,
+            "sha256": "d9d0a8e87f3056f8dd06341aadec466ea52c364fcd2aae89556a361b0d11faca",
+            "git_blob_sha1": "4ef6707ac0ed08d58782e42bcaa6521af1339bf0"
+          },
+          "after": {
+            "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+            "mode": "100644",
+            "bytes": 2927,
+            "sha256": "3d9efc5edffc4ca8e762caef61d764485a9a52ffc3fcc6a77dd29f79e7ef8690",
+            "git_blob_sha1": "50cfd1bb193d5db68b96068e4d0b689e5bedce2d"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/workflow.yml",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 2866,
+            "sha256": "d9d0a8e87f3056f8dd06341aadec466ea52c364fcd2aae89556a361b0d11faca",
+            "git_blob_sha1": "4ef6707ac0ed08d58782e42bcaa6521af1339bf0"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 2927,
+            "sha256": "3d9efc5edffc4ca8e762caef61d764485a9a52ffc3fcc6a77dd29f79e7ef8690",
+            "git_blob_sha1": "50cfd1bb193d5db68b96068e4d0b689e5bedce2d"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_ci_structure.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 22636,
+            "sha256": "2d668f7e9c9afa0553b2ae4a1d0c08b44e32c03adf55076dc43f4fd094dfcf4a",
+            "git_blob_sha1": "fd6517c3c8c555807e1232db5692985516840a61"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 23262,
+            "sha256": "c2f64d36b0c88aa962ce98df660a57f447de3aea4a068943b62c929424dfa94e",
+            "git_blob_sha1": "f51cb7db377699c1ad6b2b3d0d6723430e10101e"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -20440,9 +20520,9 @@
     {
       "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
       "mode": "100644",
-      "bytes": 2866,
-      "sha256": "d9d0a8e87f3056f8dd06341aadec466ea52c364fcd2aae89556a361b0d11faca",
-      "git_blob_sha1": "4ef6707ac0ed08d58782e42bcaa6521af1339bf0"
+      "bytes": 2927,
+      "sha256": "3d9efc5edffc4ca8e762caef61d764485a9a52ffc3fcc6a77dd29f79e7ef8690",
+      "git_blob_sha1": "50cfd1bb193d5db68b96068e4d0b689e5bedce2d"
     }
   ]
 }

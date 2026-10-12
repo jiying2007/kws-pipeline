@@ -1,0 +1,70 @@
+{
+  "schema": "k1-punctuation6-asr18-public-failure-summary-v1",
+  "repository": "jiying2007/kws-pipeline",
+  "run_id": 38207026177,
+  "job_id": 114672664473,
+  "attempt": 1,
+  "source_commit": "0f3cc89a3235c4b3af294dc6b5816ff9877c0f42",
+  "source_tree": "a78e8791c233e847df67face7b2d5052f3f7e512",
+  "source_freeze_sha256": "ca7f5298e222f57de373fa50ed1c647712430513f76c2738052493d7d2a6bb64",
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38207026177",
+  "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38207026177/job/114672664473",
+  "run_conclusion": "failure",
+  "job_completed_at_utc": "2026-10-12T05:26:02Z",
+  "host": {
+    "conclusion": "failure",
+    "started_at_utc": "2026-10-12T05:15:17Z",
+    "completed_at_utc": "2026-10-12T05:25:57Z",
+    "exit_code": 2,
+    "observed_status": "blocked_no_retry",
+    "specific_failure_stage": "unknown"
+  },
+  "publisher": {
+    "conclusion": "failure",
+    "started_at_utc": "2026-10-12T05:25:57Z",
+    "completed_at_utc": "2026-10-12T05:25:57Z",
+    "exit_code": 1,
+    "observed_message": "ASR18 publication blocked or unconfirmed; no retry."
+  },
+  "public_observations": [
+    {
+      "subject": "result_ref",
+      "status": 404,
+      "observed_by_utc": "2026-10-12T05:29:48Z",
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/git/ref/heads/evidence/k1-punctuation6-asr18-v1"
+    },
+    {
+      "subject": "run_artifacts",
+      "total_count": 0,
+      "observed_by_utc": "2026-10-12T05:30:38Z",
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/actions/runs/38207026177/artifacts?per_page=100"
+    },
+    {
+      "subject": "source_branch_push_history",
+      "total_count": 1,
+      "only_run_id": 38207026177,
+      "only_attempt": 1,
+      "observed_by_utc": "2026-10-12T05:30:38Z",
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/actions/runs?branch=research%2Fk1-punctuation6-asr18-v1&event=push&per_page=100"
+    }
+  ],
+  "observation_time_semantics": "observed_by_utc records collector completion bounds, not server response Date headers",
+  "planned_asr_slots": 18,
+  "actual_asr_calls_started": null,
+  "actual_asr_calls_completed": null,
+  "slot_consumption": "unknown; all 18 planned slots remain sealed and cannot be automatically reused",
+  "original_machine_claims_available": false,
+  "original_publisher_receipt_available": false,
+  "published_result_archive_available": false,
+  "terminal_log_sha256": "3b9c11affd71e31ef88bbb2a35582b7b8722ccfc51b5b6e50c210ccddc296de0",
+  "tts": {
+    "completed": 6,
+    "run_id": 38200026588,
+    "run_url": "https://github.com/jiying2007/kws-data/actions/runs/38200026588",
+    "result_commit": "99f559a131daf43316d5e0556d1c73931b62073f",
+    "result_url": "https://github.com/jiying2007/kws-data/commit/99f559a131daf43316d5e0556d1c73931b62073f"
+  },
+  "asr_effectiveness_conclusion": "not established",
+  "training_admission_conclusion": "not established",
+  "new_execution_authorized": false
+}
