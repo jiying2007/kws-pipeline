@@ -21,6 +21,11 @@ import urllib.request
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 if str(HERE) not in sys.path: sys.path.insert(0, str(HERE))
+# Complete host/publisher validation imports only these two pinned pure helpers.
+# worker_receipts still rejects any decoder/parser whose origin is not exact.
+for _retained_pure_root in (ROOT / 'research/qwen6_asr/core', ROOT / 'research/qwen6_asr'):
+    if str(_retained_pure_root) not in sys.path:
+        sys.path.insert(0, str(_retained_pure_root))
 import campaign_contract as c
 import asr18_metadata as m
 from campaign_contract import require, canonical, digest, read_json, read_bytes, write_once

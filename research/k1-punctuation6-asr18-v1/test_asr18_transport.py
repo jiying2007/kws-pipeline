@@ -505,13 +505,14 @@ class PublisherTests(TransportTests):
             ['campaign_contract.py','evidence_transport.py','sitecustomize.py'])
 
     def test_synthetic_enabled_isolated_cli_rejects_missing_authority_before_side_effects(self):
-        # Explicit synthetic-enabled copy exercises negative gates even when
-        # production is disabled. No production approval/control is changed.
+        # Explicit test-only missing-authority copy; never change checked-in
+        # approval or proof bytes when exercising this negative gate.
         source=self.disabled_cli_source()
         publication=p.disabled_publication_release()
         for key in ('enabled','root_publication_release','independent_source_review'):publication[key]=True
         execution=c.read_json(HERE/'execution-release.json')
         for key in c.RELEASE_APPROVALS:execution[key]=True
+        execution['prepare_prerequisite_sha256']=None
         (source/'publication-release.json').write_bytes(t.canonical(publication))
         (source/'execution-release.json').write_bytes(t.canonical(execution))
         (source/'execution-freeze.json').write_bytes(c.read_bytes(HERE/'execution-freeze.json'))
@@ -953,9 +954,9 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
     """
     LICENSE='source/research/qwen6_asr/FUNASR_MODEL_LICENSE'
     LICENSE_ID={'bytes':5306,'sha256':'7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8'}
-    # Exact current disabled-source closure after the reviewed observer repair.
+    # Exact root-reviewed current source closure, including released controls.
     # Historical executed snapshots remain immutable; this is a synthetic fixture.
-    FROZEN_SOURCE_SHA256='5cce595e8df42805487b81f788e54e006764f327f9e022a3d741a721e0536d85'
+    FROZEN_SOURCE_SHA256='8a83c67edebc0b9e13a0307a4f18a36164a3b8dea899ed660364fcd54b8a26bb'
     SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json','prepare-prerequisite.json'))
 
     def setUp(self):
@@ -992,7 +993,6 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
             _,_,run=self.host_tests.context()  # Invented run only; no source authority claim.
             inp=c.read_json(HERE/'input-freeze.json')
             release=c.read_json(HERE/'execution-release.json')
-            self.assertFalse(release['enabled'])
             for key in c.RELEASE_APPROVALS:release[key]=True
             from test_control_fixture import synthetic_prerequisite
             proof=synthetic_prerequisite(release,root=ROOT,freeze=freeze)
@@ -1004,7 +1004,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
             source['source/'+name]=body
             for role in ('host_code','setup_code','inference_code'):
                 if name in freeze[role]:freeze[role][name]={'bytes':len(body),'sha256':t.sha(body)}
-            # Explicit synthetic authority only; checked-in disabled controls stay unchanged.
+            # Explicit synthetic authority only; checked-in release/proof bytes stay unchanged.
             projection=self.host.projection_for(inp['actual_new_cells'])
             receipt=inp['actual_screening_receipt']
             host=self.host.host_receipt(run,t.sha(t.canonical(freeze)),'d'*40,t.sha(t.canonical(receipt)))
@@ -1085,7 +1085,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
                 else:
                     with self.assertRaises(ValueError):operation(root,run)
 
-    def test_full_116_current_disabled_source_all_notrun_and_license_negatives(self):
+    def test_full_116_current_source_all_notrun_and_license_negatives(self):
         files,run=self.full_fixture()
         with tempfile.TemporaryDirectory(prefix='synthetic-run-real-source-all-notrun-') as temp:
             root=Path(temp);self.materialize(root,files)
@@ -1097,6 +1097,51 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
             self.assertNotIn('authority/source-claim.json',files)
             self.assertFalse(any(name.startswith(('output/','frozen/')) for name in files))
         self.reject_source_mutations(files,run,t.build_package,phase='all_notrun')
+
+    def isolated_public_validation(self, payload, run, *, complete):
+        # No test module, PYTHONPATH, inherited source paths or model package is
+        # available in these fresh processes. The production entry supplies its
+        # own fixed pure-helper roots; exact origin checks remain unchanged.
+        program = r'''import hashlib,importlib,json,pathlib,runpy,sys,types
+source=pathlib.Path(sys.argv[1]);entry=sys.argv[2];foreign=sys.argv[3]
+def audit(event,args):
+    if event.startswith('socket.') or event in ('subprocess.Popen','os.system','os.fork'):
+        raise RuntimeError('unexpected external side effect')
+    if event=='import' and args[0].split('.')[0] in {'torch','transformers','whisper','funasr','qwen_asr'}:
+        raise RuntimeError('model import forbidden in public validator')
+sys.addaudithook(audit)
+namespace=runpy.run_path(str(source/entry),run_name='isolated_production_import')
+if foreign:
+    module=types.ModuleType(foreign);module.__file__='/foreign/blocked.py'
+    sys.modules[foreign]=module
+transport=importlib.import_module('evidence_transport')
+body=sys.stdin.buffer.read()
+try: transport.validate_archive(body,json.loads(sys.argv[4]))
+except ValueError:
+    if not foreign:raise
+    print(json.dumps({'foreign_rejected':foreign}));raise SystemExit(0)
+if foreign:raise RuntimeError('foreign source was accepted')
+origins={name:str(pathlib.Path(sys.modules[name].__file__).resolve())
+    for name in ('asr_stage.decoding','sense_parser') if name in sys.modules}
+print(json.dumps({'accepted_sha256':hashlib.sha256(body).hexdigest(),'origins':origins}))
+'''
+        import subprocess
+        options=['-'+'O'*sys.flags.optimize] if sys.flags.optimize else []
+        for entry in ('hosted_run.py','evidence_publisher.py'):
+            probes=('', 'asr_stage.decoding', 'sense_parser') if complete else ('',)
+            for foreign in probes:
+                with self.subTest(isolated_entry=entry,foreign=foreign), tempfile.TemporaryDirectory(prefix='k1-public-isolated-') as empty:
+                    proc=subprocess.run([sys.executable,'-I','-B',*options,'-c',program,str(HERE),entry,foreign,t.canonical(run).decode()],
+                        cwd=empty,env={'PATH':'/usr/bin:/bin','HOME':'/nonexistent'},input=payload,
+                        capture_output=True,timeout=30)
+                    self.assertEqual(proc.returncode,0,proc.stderr.decode())
+                    value=t.decode(proc.stdout)
+                    if foreign:self.assertEqual(value,{'foreign_rejected':foreign})
+                    else:
+                        self.assertEqual(value['accepted_sha256'],t.sha(payload))
+                        if complete:self.assertEqual(value['origins'],{
+                            'asr_stage.decoding':str((ROOT/'research/qwen6_asr/core/asr_stage/decoding.py').resolve()),
+                            'sense_parser':str((ROOT/'research/qwen6_asr/sense_parser.py').resolve())})
 
     def full_native_case(self, fail_native):
         files,run=self.full_fixture(synthetic_native=True)
@@ -1119,6 +1164,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
             terminal=t.decode(actual['terminal-outcomes.json'])
             self.assertEqual([row['status'] for row in terminal['slots']],
                 ['failed_no_retry']+['not_run']*17 if fail_native else ['complete']*18)
+            self.isolated_public_validation(result[0], identity, complete=not fail_native)
             self.reject_source_mutations(actual,identity,original_package,
                 phase='first_failure_18_denominator' if fail_native else 'synthetic_18_success')
             observed.append('final');return result
