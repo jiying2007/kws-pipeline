@@ -14,7 +14,7 @@ EXACT = frozenset({
 
 
 def relevant(paths: list[str]) -> bool:
-    return any(path.startswith(('research/', '.github/workflows/')) or path in EXACT
+    return any(path.startswith(('research/', '.github/workflows/', 'host-tts-verifier-source/')) or path in EXACT
                for path in paths)
 
 

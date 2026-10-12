@@ -1,0 +1,164 @@
+{
+  "files": {
+    "research/qwen12-native-admission-v1/branch_transport.py": {
+      "bytes": 9356,
+      "role": "asr_adaptation_templates",
+      "sha256": "a823ddf7c8ca9a04233e2e15fe22328537482b47baa7ece574431da831f7f122"
+    },
+    "research/qwen12-native-admission-v1/cpu_budget.py": {
+      "bytes": 5673,
+      "role": "asr_adaptation_templates",
+      "sha256": "b92e99b84d17a25621ee4451b46bbbc2c73c7493c0021a4244952e501baf03eb"
+    },
+    "research/qwen12-native-admission-v1/cpu_gate.py": {
+      "bytes": 1093,
+      "role": "asr_adaptation_templates",
+      "sha256": "f8b5c23dc62cdb7cb7282d4f73f5625e480a1a2a94d8be99c2adca0f132c7c3d"
+    },
+    "research/qwen12-native-admission-v1/evidence_publisher.py": {
+      "bytes": 17418,
+      "role": "asr_adaptation_templates",
+      "sha256": "ba4b37daa2d2f0cd20160ecd7a5c2093283aec57ddfcf3d692872345731e9eb4"
+    },
+    "research/qwen12-native-admission-v1/hosted_run.py": {
+      "bytes": 61535,
+      "role": "asr_adaptation_templates",
+      "sha256": "ab234569663e77c20376cdf15877da5d78b06a9744d455418d66a703e1d549f9"
+    },
+    "research/qwen12-native-admission-v1/log_transport.py": {
+      "bytes": 15034,
+      "role": "asr_adaptation_templates",
+      "sha256": "430f05356d2131cd9c69ba0e18a146519fd6028003e797b18b45a339c0321989"
+    },
+    "research/qwen12-native-admission-v1/native_locks.py": {
+      "bytes": 23079,
+      "role": "asr_adaptation_templates",
+      "sha256": "b3df33e8049d509ab32f3e59a2e394c9f581aaafe780f1b6f949a2831625b510"
+    },
+    "research/qwen12-native-admission-v1/native_worker.py": {
+      "bytes": 20575,
+      "role": "asr_adaptation_templates",
+      "sha256": "e09c206a92ea83be6050c40f508f64770c4e7cc941f1ea503b6d5da28eb30caf"
+    },
+    "research/qwen12-native-admission-v1/optional_tools.py": {
+      "bytes": 4553,
+      "role": "asr_adaptation_templates",
+      "sha256": "e1e191da24633885bf10591efaa44e205ef66d0fec18de5dbdb735413af18c14"
+    },
+    "research/qwen12-native-admission-v1/reuse-lock.json": {
+      "bytes": 4063,
+      "role": "asr_transitive_reference_lock",
+      "sha256": "b98ab5e76a2153c6db1b98a65473941f9958f8127a99d62157fc935d32c0af02"
+    },
+    "research/qwen12-native-admission-v1/runtime_scope.py": {
+      "bytes": 3014,
+      "role": "asr_adaptation_templates",
+      "sha256": "c08bd46d34bea011a63d32867386b26637d5a02753769654e08e4c32c31cb927"
+    },
+    "research/qwen12-native-admission-v1/setup_adapter.py": {
+      "bytes": 17696,
+      "role": "asr_adaptation_templates",
+      "sha256": "ac52c8e029105be5a11f9a81c4fbe0660b933ad93ca0c163cea8be98661213dc"
+    },
+    "research/qwen12-native-admission-v1/whisper_binding.py": {
+      "bytes": 3003,
+      "role": "asr_adaptation_templates",
+      "sha256": "33804f24f2bbdbc02e6520d7ec5bb752c6bcc4442c4510e67a89f7333439b31e"
+    },
+    "research/qwen12-native-admission-v1/worker_receipts.py": {
+      "bytes": 20072,
+      "role": "asr_adaptation_templates",
+      "sha256": "a8160ab6972f8018a283e08ec8f06e87d21ebe461a28ee8641c4ab5d75769764"
+    },
+    "research/qwen6_tts/generate_six.py": {
+      "bytes": 14457,
+      "role": "tts_adaptation_templates",
+      "sha256": "25530b89fa3f58f44ceb8d3c2a8f26f3b37651c7173f62414dc96142919ea03e"
+    },
+    "research/qwen6_tts/import_preflight.py": {
+      "bytes": 8907,
+      "role": "tts_locked_helpers",
+      "sha256": "30cfe60347ccc6074d98a21406fccee3e3be5c54822aa8d874aae3655693ae1c"
+    },
+    "research/qwen6_tts/model-lock.json": {
+      "bytes": 5446,
+      "role": "tts_locked_helpers",
+      "sha256": "c2dd1e752e1b139e490691b5e1d68daf75684e66687b4175672391d0bc9f3133"
+    },
+    "research/qwen6_tts/model-locks.json": {
+      "bytes": 8441,
+      "role": "tts_locked_helpers",
+      "sha256": "c206556a633b7d04c334494fc5a82934a19d572c125982c689f18f8b2d472110"
+    },
+    "research/qwen6_tts/run_tts.py": {
+      "bytes": 3732,
+      "role": "tts_adaptation_templates",
+      "sha256": "2683e071dc6bda1d61058827af69cc734491bab102509c8e8cc1a3c1b5553f9e"
+    },
+    "research/qwen6_tts/runtime-lock.json": {
+      "bytes": 170913,
+      "role": "tts_locked_helpers",
+      "sha256": "6a707c2fa2c2ae8f842176a7f9c8301186d51fddef167c413160c7f2816613de"
+    },
+    "research/qwen6_tts/runtime_gate.py": {
+      "bytes": 6367,
+      "role": "tts_locked_helpers",
+      "sha256": "f4333b694bb1bc261e4bdeea6d586dc9f76b1afce6ce0af9dfcdb74d57d12815"
+    },
+    "research/qwen6_tts/setup_diagnostics.py": {
+      "bytes": 8718,
+      "role": "tts_locked_helpers",
+      "sha256": "7c583ba0ed6f0e90f72ab3b5c107e3666a32d25359ce13ffc284d545f7d1dd5f"
+    },
+    "research/qwen6_tts/setup_locked.py": {
+      "bytes": 37613,
+      "role": "tts_locked_helpers",
+      "sha256": "aac8d8e66504444f2965aa8d95dcfef9e8c6fa63d74f2eade15ca1290bc6b4b3"
+    },
+    "research/qwen6_tts/supervision.py": {
+      "bytes": 4614,
+      "role": "tts_locked_helpers",
+      "sha256": "9afb771c58febd574d1143c41daa7523cf1dea5c6a7f0424119d602423159b3f"
+    },
+    "research/qwen6_tts/wheel_identity.py": {
+      "bytes": 2774,
+      "role": "tts_locked_helpers",
+      "sha256": "623ee07a0d8f85ba1d7218a56fcd0e270df8c6e2c3e353dd52b3184ca915d8d5"
+    },
+    "tools/asr_native_contracts.py": {
+      "bytes": 20495,
+      "role": "admission_only_future",
+      "sha256": "752f192fb125fb31291a8246845c3015dc97348fc27822c389e14b52da3ef674"
+    },
+    "tools/asr_source_resolver.py": {
+      "bytes": 31387,
+      "role": "admission_only_future",
+      "sha256": "83ebfd93ecfe86fc55e3c0bf6be4410b2481add54cef76b6b0dead514f8a427e"
+    },
+    "tools/speech_asr_consensus.py": {
+      "bytes": 29277,
+      "role": "admission_only_future",
+      "sha256": "ac7329b2e6d7b9c494c22da38fbf398a926805b5227a1fb52b33c9e0f1df2e8f"
+    },
+    "tools/speech_label_admission.py": {
+      "bytes": 10901,
+      "role": "admission_only_future",
+      "sha256": "d7fb1a6708a5729e6bfe2c7b294b0961767e2fbd631d0395812aac723791d73f"
+    }
+  },
+  "local_equivalent_commit": "b0f886e92fe1fb16fa0492fdf308abbb953bc6d2",
+  "old_identity_entrypoints_not_reused": [
+    "research/qwen6_tts/plan.json",
+    "research/qwen6_tts/release_gate.py",
+    "research/qwen6_tts/workflow.yml",
+    "research/qwen12-native-admission-v1/campaign_contract.py",
+    "research/qwen12-native-admission-v1/public-inputs.json",
+    "research/qwen12-native-admission-v1/execution-release.json",
+    "research/qwen12-native-admission-v1/execution-freeze.json",
+    "research/qwen12-native-admission-v1/workflow.yml"
+  ],
+  "schema": "k1-punctuation6-source-reuse-landmarks-v1",
+  "scope": "Review landmarks only; not a complete consumed dependency closure or runnable copy. Full clean source tree/staged dependency closure must be bound before release.",
+  "verified_base_commit": "0113fcb295066b1ba3486053224c8e455ed861fc",
+  "verified_base_tree": "3d0e9667dcf68bcaa58742278bd5332acdc89a21"
+}

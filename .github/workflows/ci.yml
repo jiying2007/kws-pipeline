@@ -76,6 +76,17 @@ jobs:
         run: python3 -B tests/test_research_ci_changes.py
       - name: Verify tracked worktree after Research change selection contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Research change selection contract"'
+      - name: K1 punctuation6 ASR18 offline source contracts
+        id: asr18_contracts
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          asr18_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-asr18-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_asr18_binding", "test_asr18_contract", "test_asr18_entrypoints", "test_asr18_freeze", "test_asr18_host", "test_asr18_metadata", "test_asr18_raw_data_reader", "test_asr18_receipts", "test_asr18_resources", "test_asr18_transport", "test_asr18_worker")); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
+          python3 -I -S -B -c "$asr18_tests"
+          python3 -I -S -B -O -c "$asr18_tests"
+          python3 -I -S -B -OO -c "$asr18_tests"
+      - name: Verify tracked worktree after K1 punctuation6 ASR18 contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "K1 punctuation6 ASR18 contracts"'
       - name: Workflow exact path-filter integrity
         run: |
           python3 tools/check_workflow_path_filters.py --self-test

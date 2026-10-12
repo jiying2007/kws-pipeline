@@ -1,0 +1,18 @@
+{
+  "asr_enabled": false,
+  "asr_run_id": null,
+  "asr_source_ref": null,
+  "coverage_canonical_sha256": "cf3299ff5b5cc48dacff19a7b7a4b3b73f2dfb0a2e6c58e16008a4aee54a4962",
+  "experiment": "k1-punctuation6-v1",
+  "historical_audio_comparison_inventory_sha256": null,
+  "plan_canonical_sha256": "c951ee2f1544eae4605008e05bb10041613156d58ef4f4e67070b82838e5d16f",
+  "schema": "k1-punctuation6-disabled-release-v1",
+  "source_commit": null,
+  "source_tree": null,
+  "state": "No executable release; root and independent review required separately for TTS, ASR and any training.",
+  "training_enabled": false,
+  "tts_data_commit": null,
+  "tts_enabled": false,
+  "tts_run_id": null,
+  "tts_source_ref": null
+}

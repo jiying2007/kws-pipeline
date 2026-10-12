@@ -1,0 +1,413 @@
+{
+  "schema": "k1-asr18-source-reuse-lock-v1",
+  "source_repository": "jiying2007/kws-pipeline",
+  "source_commit": "0113fcb295066b1ba3486053224c8e455ed861fc",
+  "source_tree": "3d0e9667dcf68bcaa58742278bd5332acdc89a21",
+  "files": [
+    {
+      "source_path": "research/qwen6_asr/FUNASR_MODEL_LICENSE",
+      "destination_path": "research/qwen6_asr/FUNASR_MODEL_LICENSE",
+      "bytes": 5306,
+      "sha256": "7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/NOTICE.md",
+      "destination_path": "research/qwen6_asr/NOTICE.md",
+      "bytes": 1699,
+      "sha256": "a01fd4891fd878f2bbb4de93e13dbef67dd10b127974240046304803c96685a7",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/asr6_contract.py",
+      "destination_path": "research/qwen6_asr/core/asr6_contract.py",
+      "bytes": 5799,
+      "sha256": "d1c3368133e06a3de9758b23f136c3a37a74a63057f317ece863470ad0304b10",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/asr_stage/__init__.py",
+      "destination_path": "research/qwen6_asr/core/asr_stage/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/asr_stage/adapters.py",
+      "destination_path": "research/qwen6_asr/core/asr_stage/adapters.py",
+      "bytes": 16560,
+      "sha256": "85512f20280cfa0aeb06b50699664e360db39bbf5b58034d3a2ede5cde8ff6ca",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/asr_stage/architecture.py",
+      "destination_path": "research/qwen6_asr/core/asr_stage/architecture.py",
+      "bytes": 6922,
+      "sha256": "d3f0d67bcf724c34763ac4666a1570b02dfd979182e6183403ef91e0897d58ab",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/asr_stage/assets.py",
+      "destination_path": "research/qwen6_asr/core/asr_stage/assets.py",
+      "bytes": 5481,
+      "sha256": "91a8c7e75f37872fc1b07cabc2afd1790901bf44a3fda1e48fb5abc2b129ff6e",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/asr_stage/decoding.py",
+      "destination_path": "research/qwen6_asr/core/asr_stage/decoding.py",
+      "bytes": 3167,
+      "sha256": "fd401bd85e4ca3d871e5a9354753d3599facbb32b9df22e34f05e5476e74b503",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/asr_stage/execution.py",
+      "destination_path": "research/qwen6_asr/core/asr_stage/execution.py",
+      "bytes": 10872,
+      "sha256": "149befff56ef9da603d8b27174ca1a1d4eae638cc86f356cc5a1b8412ac06c9f",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/asr_stage/runtime_support.py",
+      "destination_path": "research/qwen6_asr/core/asr_stage/runtime_support.py",
+      "bytes": 5889,
+      "sha256": "f3a6ee85e30dc5a1bc2351a76843c44bc988aed83745773e543e1b69cf4a6d90",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/pcm/pcm_binding.py",
+      "destination_path": "research/qwen6_asr/core/pcm/pcm_binding.py",
+      "bytes": 15751,
+      "sha256": "1f8cb1e8fba2c99dfd969b7f33a12011243aa68f0a6e1eb0dbf45d90fc9b1684",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/runtime_version_gate.py",
+      "destination_path": "research/qwen6_asr/core/runtime_version_gate.py",
+      "bytes": 1685,
+      "sha256": "c6d2e35c69f3ba34e3a7f92bd9b486eb00476f76ed5c8687319f4382b23bd512",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/sense_binding.py",
+      "destination_path": "research/qwen6_asr/core/sense_binding.py",
+      "bytes": 5393,
+      "sha256": "1a2fd8474d347591939b3ce9ab7411aa9a8f9ce0ffa732d93a95402b677503d2",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/vendor/__init__.py",
+      "destination_path": "research/qwen6_asr/core/vendor/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/vendor/checkpoint_guard/__init__.py",
+      "destination_path": "research/qwen6_asr/core/vendor/checkpoint_guard/__init__.py",
+      "bytes": 85,
+      "sha256": "ca1bfd88d26591efeb70bb58155294be4ebc2af7a6e45cc5f09f3e90dc5c541e",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/vendor/checkpoint_guard/checkpoint_contract.py",
+      "destination_path": "research/qwen6_asr/core/vendor/checkpoint_guard/checkpoint_contract.py",
+      "bytes": 11858,
+      "sha256": "80cd48b0ce8beb2f7473372a3d904ba42af316c7df4a3c44f8a8b54dd50896c4",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/vendor/checkpoint_guard/exact_apply.py",
+      "destination_path": "research/qwen6_asr/core/vendor/checkpoint_guard/exact_apply.py",
+      "bytes": 7190,
+      "sha256": "10bc8634053a602b1669a007865c9d18955577b8aab4b7e7f14dfdcc6ce9e22b",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+      "destination_path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+      "bytes": 20790,
+      "sha256": "1b0cbd7b96e24925bfcf72438edea9dfb286860d2a990cdbad48104ae595d3fb",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/import_preflight.py",
+      "destination_path": "research/qwen6_asr/import_preflight.py",
+      "bytes": 8907,
+      "sha256": "30cfe60347ccc6074d98a21406fccee3e3be5c54822aa8d874aae3655693ae1c",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/model-locks.json",
+      "destination_path": "research/qwen6_asr/model-locks.json",
+      "bytes": 7689,
+      "sha256": "8b0813aba3c2447c7dc30b47e856e4ce9a619a98d32ed6dfa9f44dc6646714e4",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/runtime-lock.json",
+      "destination_path": "research/qwen6_asr/runtime-lock.json",
+      "bytes": 229711,
+      "sha256": "2d496a76bd0e044a6812bfc9afdd8965474bf135bd21f3a24f71695638d1183f",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/sense_parser.py",
+      "destination_path": "research/qwen6_asr/sense_parser.py",
+      "bytes": 1927,
+      "sha256": "878278e46ae9af349a93e37dddffa83e916f447ef82fb6dd61fa8948bb8261d7",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/setup_diagnostics.py",
+      "destination_path": "research/qwen6_asr/setup_diagnostics.py",
+      "bytes": 8676,
+      "sha256": "1b98e253d7054d0bfcd5ec128cb3a331bb05de48776330e84ea348694b3a1bf2",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/setup_locked.py",
+      "destination_path": "research/qwen6_asr/setup_locked.py",
+      "bytes": 37521,
+      "sha256": "d7c580b59b0bd249bc62c9093b9de5f8842170510cf11e7e61c29057e6287af4",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen6_asr/wheel_identity.py",
+      "destination_path": "research/qwen6_asr/wheel_identity.py",
+      "bytes": 2774,
+      "sha256": "623ee07a0d8f85ba1d7218a56fcd0e270df8c6e2c3e353dd52b3184ca915d8d5",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-v1/asr_worker.py",
+      "destination_path": "research/source-screen32-v1/asr_worker.py",
+      "bytes": 40928,
+      "sha256": "73aac9baae7c15bdc18e835fa0f3b70fe22627db9e078aef68d9febbd1b569e2",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-v1/container-lock.json",
+      "destination_path": "research/source-screen32-v1/container-lock.json",
+      "bytes": 2691,
+      "sha256": "71a687d9580c2310dcc73768daffa6f881c41aa96310be144cf4dfccbefb5ba1",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-v1/contract.py",
+      "destination_path": "research/source-screen32-v1/contract.py",
+      "bytes": 12082,
+      "sha256": "5aa40db17ae3d67df3995a55714b880e5aec0b68b262db82c37b9935c28af3b5",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-v1/hosted_run.py",
+      "destination_path": "research/source-screen32-v1/hosted_run.py",
+      "bytes": 51950,
+      "sha256": "f561883ff305a1e411dbc9323401f73d59a044b46ed15ef6bc0157c221db1f1c",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-v1/native_v2_adapter.py",
+      "destination_path": "research/source-screen32-v1/native_v2_adapter.py",
+      "bytes": 28222,
+      "sha256": "071ba45333b113fa598404e2a7eff6d960f88969f8d8e3dec9be3992b7340a0c",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-v1/runtime_scope.py",
+      "destination_path": "research/source-screen32-v1/runtime_scope.py",
+      "bytes": 3014,
+      "sha256": "c08bd46d34bea011a63d32867386b26637d5a02753769654e08e4c32c31cb927",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-v1/sense_adapter.py",
+      "destination_path": "research/source-screen32-v1/sense_adapter.py",
+      "bytes": 9287,
+      "sha256": "307a3a5985ae616e777f0b71ffc37ac31cd4b78bd12b4d7cbd69f816813057c1",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-whisper-v1/adapter.py",
+      "destination_path": "research/source-screen32-whisper-v1/adapter.py",
+      "bytes": 15431,
+      "sha256": "d142605a62ff990633194b43992b698673780b065e5f3599d7e27eccc74d693b",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-whisper-v1/attempt-3/bounded_connect.py",
+      "destination_path": "research/source-screen32-whisper-v1/attempt-3/bounded_connect.py",
+      "bytes": 22031,
+      "sha256": "deea42f68a250efd7ec6b9617799fc565dbb4629135f081682f809bcee4d76c7",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-whisper-v1/attempt-3/bounded_host.py",
+      "destination_path": "research/source-screen32-whisper-v1/attempt-3/bounded_host.py",
+      "bytes": 32699,
+      "sha256": "79d0971af1a8cc91bf2600548aa4288475ea41224aca2f674eb428805b41e5cf",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-whisper-v1/attempt-3/phased_setup.py",
+      "destination_path": "research/source-screen32-whisper-v1/attempt-3/phased_setup.py",
+      "bytes": 15040,
+      "sha256": "6d21237d7b9b96daac85329a9e29e9a9e5c9b6964a46a34a34b8fba094c28f0b",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-whisper-v1/attempt-3/pip_acquire.py",
+      "destination_path": "research/source-screen32-whisper-v1/attempt-3/pip_acquire.py",
+      "bytes": 29601,
+      "sha256": "c20fde7746c33eb3b0de0357cc54e8b211d8c6f93892ce6650078fb5da1aee72",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-whisper-v1/attempt-3/pip_compatibility.py",
+      "destination_path": "research/source-screen32-whisper-v1/attempt-3/pip_compatibility.py",
+      "bytes": 4763,
+      "sha256": "bbf5b8a660b36d33f53457f0f9b596231514f691f6bdf5c36627ccdcc99ae12f",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-whisper-v1/common.py",
+      "destination_path": "research/source-screen32-whisper-v1/common.py",
+      "bytes": 5108,
+      "sha256": "21cc72171d071cc9ac0113307af751315b69ce70fbf522a1b2586a7617900861",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-whisper-v1/runtime-lock.json",
+      "destination_path": "research/source-screen32-whisper-v1/runtime-lock.json",
+      "bytes": 21952,
+      "sha256": "881443c6e66acb99223137bd8342788468f814d0a1c3e73ba33a27da3ad1fe6d",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-whisper-v1/setup_runtime.py",
+      "destination_path": "research/source-screen32-whisper-v1/setup_runtime.py",
+      "bytes": 17512,
+      "sha256": "526d4c5b282c61644ee8357fb045e371288b5143b6a4ec9981ce867a758704c4",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/source-screen32-whisper-v1/source-lock.json",
+      "destination_path": "research/source-screen32-whisper-v1/source-lock.json",
+      "bytes": 6780,
+      "sha256": "0635fb8759fb56439f59db6956612f78cc8903c239f81f3eb7f9b0c47eb99649",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "tools/asr_native_contracts.py",
+      "destination_path": "tools/asr_native_contracts.py",
+      "bytes": 20495,
+      "sha256": "752f192fb125fb31291a8246845c3015dc97348fc27822c389e14b52da3ef674",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "tools/speech_asr_consensus.py",
+      "destination_path": "tools/speech_asr_consensus.py",
+      "bytes": 29277,
+      "sha256": "ac7329b2e6d7b9c494c22da38fbf398a926805b5227a1fb52b33c9e0f1df2e8f",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "tools/speech_label_admission.py",
+      "destination_path": "tools/speech_label_admission.py",
+      "bytes": 10901,
+      "sha256": "d7fb1a6708a5729e6bfe2c7b294b0961767e2fbd631d0395812aac723791d73f",
+      "treatment": "byte_identical"
+    },
+    {
+      "source_path": "research/qwen12-native-admission-v1/cpu_budget.py",
+      "destination_path": "research/k1-punctuation6-asr18-v1/cpu_budget.py",
+      "bytes": 5673,
+      "sha256": "b92e99b84d17a25621ee4451b46bbbc2c73c7493c0021a4244952e501baf03eb",
+      "treatment": "byte_identical_relocated_new_contract_namespace"
+    },
+    {
+      "source_path": "research/qwen12-native-admission-v1/native_locks.py",
+      "destination_path": "research/k1-punctuation6-asr18-v1/native_locks.py",
+      "bytes": 23079,
+      "sha256": "b3df33e8049d509ab32f3e59a2e394c9f581aaafe780f1b6f949a2831625b510",
+      "treatment": "byte_identical_relocated_new_contract_namespace"
+    },
+    {
+      "source_path": "research/qwen12-native-admission-v1/setup_adapter.py",
+      "destination_path": "research/k1-punctuation6-asr18-v1/setup_adapter.py",
+      "bytes": 17696,
+      "sha256": "ac52c8e029105be5a11f9a81c4fbe0660b933ad93ca0c163cea8be98661213dc",
+      "treatment": "byte_identical_relocated_new_contract_namespace"
+    },
+    {
+      "source_path": "research/qwen12-native-admission-v1/runtime_scope.py",
+      "destination_path": "research/k1-punctuation6-asr18-v1/runtime_scope.py",
+      "bytes": 3014,
+      "sha256": "c08bd46d34bea011a63d32867386b26637d5a02753769654e08e4c32c31cb927",
+      "treatment": "byte_identical_relocated_new_contract_namespace"
+    },
+    {
+      "source_path": "research/qwen12-native-admission-v1/whisper_binding.py",
+      "destination_path": "research/k1-punctuation6-asr18-v1/whisper_binding.py",
+      "bytes": 3003,
+      "sha256": "33804f24f2bbdbc02e6520d7ec5bb752c6bcc4442c4510e67a89f7333439b31e",
+      "treatment": "byte_identical_relocated_new_contract_namespace"
+    },
+    {
+      "source_path": "research/qwen12-native-admission-v1/optional_tools.py",
+      "destination_path": "research/k1-punctuation6-asr18-v1/optional_tools.py",
+      "bytes": 4553,
+      "sha256": "e1e191da24633885bf10591efaa44e205ef66d0fec18de5dbdb735413af18c14",
+      "treatment": "byte_identical_relocated_new_contract_namespace"
+    },
+    {
+      "source_path": "research/qwen12-native-admission-v1/cpu_gate.py",
+      "destination_path": "research/k1-punctuation6-asr18-v1/cpu_gate.py",
+      "bytes": 1093,
+      "sha256": "f8b5c23dc62cdb7cb7282d4f73f5625e480a1a2a94d8be99c2adca0f132c7c3d",
+      "treatment": "byte_identical_relocated_new_contract_namespace"
+    },
+    {
+      "source_path": "tests/asr_native_fixtures.py",
+      "destination_path": "tests/asr_native_fixtures.py",
+      "bytes": 5183,
+      "sha256": "56f055eca000067bd9aef423f403027e3baf7c2898a2d59ec3dd6c04d86572b1",
+      "treatment": "byte_identical_test_only"
+    }
+  ],
+  "host_only_tts_verifier": {
+    "repository": "jiying2007/kws-data",
+    "source_freeze_sha256": "60207c3ba21647d5dc68e1524c5b4358db5bcf2d96d85790d189a21063eeab23",
+    "source_file_count": 43,
+    "purpose": "Pure byte validation only. The template supplies the identical 43 source files; it does not declare the executed TTS source commit, run, result commit or parent relation. Actual TTS authority remains separately unset.",
+    "source_bytes_template_commit": "10e660d8f484cd73e5ecf1e628ea3ca491bd3a4c",
+    "template_tree": "d69300fa0bc75b3fe88fdadbf4f51c535bf4e905",
+    "actual_executed_source_authority": null
+  },
+  "new_source_deltas": [
+    {
+      "path": "resource_host.py",
+      "source": "research/qwen12-native-admission-v1/hosted_run.py",
+      "treatment": "Static AST extraction of fixed resource metering/filesystem sampling functions; diagnostic path label only changed; no retained campaign execution."
+    },
+    {
+      "path": "runtime_session.py",
+      "source": "research/source-screen32-v1/hosted_run.py",
+      "treatment": "Static resource/runtime helper extraction and fixed new campaign interface; original retained file kept unchanged."
+    },
+    {
+      "path": "evidence_transport.py",
+      "source": "research/qwen12-native-admission-v1/log_transport.py and branch_publisher.py; reviewed K1 TTS data_transport.py",
+      "treatment": "Bounded archive/Git algorithms adapted to fixed new ASR18 roster, exact schemas and binary lock exceptions."
+    },
+    {
+      "path": "evidence_publisher.py",
+      "source": "reviewed K1 TTS data_publisher.py",
+      "treatment": "Fixed pipeline ASR18 source/result/workflow/job, retained strong Git identities and one-final-LF API presentation rule."
+    }
+  ],
+  "old_asr_quota_consumption": 0,
+  "new_asr_maximum": 18,
+  "execution_enabled": false
+}

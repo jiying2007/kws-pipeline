@@ -1,0 +1,376 @@
+{
+  "asr": {
+    "all_six_inputs_frozen_before_first_asr": true,
+    "blind_inputs": true,
+    "family_order": [
+      "qwen06",
+      "sensevoice",
+      "whisper"
+    ],
+    "new_attempts_max": 18,
+    "old_attempts_allowed": 0,
+    "prepare_only_loads_have_zero_audio_forward": true,
+    "reuse_historical_transcripts_as_new_outputs": false,
+    "slots": [
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-001",
+        "family": "qwen06",
+        "slot_id": "k1p6-001-qwen06"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-002",
+        "family": "qwen06",
+        "slot_id": "k1p6-002-qwen06"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-003",
+        "family": "qwen06",
+        "slot_id": "k1p6-003-qwen06"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-004",
+        "family": "qwen06",
+        "slot_id": "k1p6-004-qwen06"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-005",
+        "family": "qwen06",
+        "slot_id": "k1p6-005-qwen06"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-006",
+        "family": "qwen06",
+        "slot_id": "k1p6-006-qwen06"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-001",
+        "family": "sensevoice",
+        "slot_id": "k1p6-001-sensevoice"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-002",
+        "family": "sensevoice",
+        "slot_id": "k1p6-002-sensevoice"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-003",
+        "family": "sensevoice",
+        "slot_id": "k1p6-003-sensevoice"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-004",
+        "family": "sensevoice",
+        "slot_id": "k1p6-004-sensevoice"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-005",
+        "family": "sensevoice",
+        "slot_id": "k1p6-005-sensevoice"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-006",
+        "family": "sensevoice",
+        "slot_id": "k1p6-006-sensevoice"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-001",
+        "family": "whisper",
+        "slot_id": "k1p6-001-whisper"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-002",
+        "family": "whisper",
+        "slot_id": "k1p6-002-whisper"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-003",
+        "family": "whisper",
+        "slot_id": "k1p6-003-whisper"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-004",
+        "family": "whisper",
+        "slot_id": "k1p6-004-whisper"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-005",
+        "family": "whisper",
+        "slot_id": "k1p6-005-whisper"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-006",
+        "family": "whisper",
+        "slot_id": "k1p6-006-whisper"
+      }
+    ]
+  },
+  "attempt_accounting": {
+    "asr_call_definition": "One native family audio-decode invocation for one newly generated, byte-frozen cell.",
+    "asr_denominator": 18,
+    "attempts_per_slot": 1,
+    "best_of": 1,
+    "consumed_boundary": "Exclusive started file plus file and containing-directory fsync before each call; failed/timeout/crashed started slots remain consumed.",
+    "denominator_policy": "Retain every six-cell and eighteen-slot row, including failures, not_run, disagreements and exclusions, stratified by voice and text condition.",
+    "failure_policy": "Stop on any failed call, timeout, resource violation or TTS output/token/duration limit; retain failed and unstarted slots. Never refill, rename or resume.",
+    "global_once_boundary": "Distinct fixed create-event refs for TTS and ASR, run_attempt=1, source-bound one-use release, and verified prior-claim history. Local exclusive files alone do not prevent new-workspace replay.",
+    "hidden_audio_probes": 0,
+    "max_asr_calls": 18,
+    "max_tts_calls": 6,
+    "retries": 0,
+    "tts_call_definition": "One top-level generate_custom_voice call for one cell. Its ordinary autoregressive subtalker work is internal, never another top-level request.",
+    "tts_denominator": 6,
+    "warmup_synthesis": 0
+  },
+  "derivation": {
+    "parent_contract_sha256": "aa860a9baa2b0aceb29d5a75f2693dec8c2bb150b68c60f49a68a08e8be017e0",
+    "parent_plan_sha256": "a799de29be9e41c283982942ed6eb2256e951d864c12104deb152bdcd4d1f229",
+    "parent_snapshot_manifest_sha256": "15bec2841e5cda32f556874a063afed42d498d173c0b1ac599559f3fd837934b",
+    "schema": "k1-punctuation6-derived-policy-v1",
+    "sole_behavior_change": "Exact all-zero final PCM16 bytes add derived_pcm_silent; quarantine as not_run_quality before ASR. No amplitude/SNR threshold, retry, changed generation or changed denominator."
+  },
+  "execution_enabled": false,
+  "experiment": "k1-punctuation6-v1",
+  "publication": {
+    "audio_prefix": "datasets/k1-punctuation6-v1/",
+    "audio_repository": "jiying2007/kws-data",
+    "data_read_path": "Read the one complete data-result ZIP as raw-content chunks and manifest at one verified immutable kws-data commit. Compressed archive <=12MiB plus manifest <=16KiB; <=16MiB reserved total data response bodies. No unaccounted base64/API download path. The derived WAV payload (<2.31MB) is consumed-audio size, not download size.",
+    "data_reader_requests": {
+      "attempts_per_path": 1,
+      "manifest_body_counted": true,
+      "manifest_gets": 1,
+      "maximum_chunk_gets": 48,
+      "maximum_gets": 49,
+      "other_data_body_requests_allowed": false,
+      "redirects": 0,
+      "retries": 0
+    },
+    "evidence_prefix": "research/k1-punctuation6-v1/evidence/",
+    "evidence_repository": "jiying2007/kws-pipeline",
+    "excluded": [
+      "weights",
+      "credentials",
+      "environments",
+      "unfiltered_logs",
+      "private_human_history",
+      "private_training_recipe"
+    ],
+    "model_license_is_not_output_rights_guarantee": true,
+    "no_cross_repository_credential": true,
+    "no_persistent_token": true,
+    "output_rights_scope": "research/development; commercial output rights not established",
+    "transport": "TTS runs in kws-data and publishes WAVs only to same-repository create-only audio refs with its scoped GITHUB_TOKEN. Pipeline ASR reads the fixed verified data commit and publishes audio-free machine evidence to pipeline create-only refs; no Actions artifacts or WAV-bearing pipeline/log transport.",
+    "transport_bounds": {
+      "chunk_bytes": 262144,
+      "compressed_archive_bytes": 12582912,
+      "future_same_repository_write_tested": false,
+      "maximum_chunks": 48,
+      "outer_manifest_bytes": 16384,
+      "per_member_wav_and_pcm_readback_required": true
+    },
+    "tts_audio_derivation": "Each cell has one native 24k mono float32 source and one fixed 2:3 scipy-resample-poly 16k mono PCM16 derivative. Bind original float values, raw WAV, derived WAV, PCM and frame geometry in the same cell receipt; no additional synthesis, gain or trimming.",
+    "tts_output_members": "Six derived PCM WAVs, six native FLOAT WAVs, and bounded allowlisted source/generation/EOS/resource JSON receipts, only in kws-data."
+  },
+  "quality_policy": {
+    "asr_disposition": "not_run_quality unless an already-fixed duplicate quarantine also applies",
+    "derived_pcm_silent_definition": "All final decoded PCM16 sample bytes are zero; compute after WAV write/readback and independently recompute from published WAV. Any nonzero int16 sample, including +1 or -1, is not silent under this rule.",
+    "generation_status": "Natural generation may remain complete; quality exclusion is an independent pre-ASR disposition.",
+    "ordered_flags": [
+      "silent",
+      "source_peak_ge_one",
+      "normalized_peak_ge_one",
+      "derived_pcm_silent"
+    ]
+  },
+  "resources": {
+    "actions_artifact_storage": false,
+    "asr_proposal": {
+      "clip_wall_seconds": 120,
+      "cpu_threshold_seconds": {
+        "qwen06": 600,
+        "sensevoice": 600,
+        "setup": 3600,
+        "whisper": 1800
+      },
+      "cpu_total_threshold_seconds": 6600,
+      "family_wall_seconds": 600,
+      "host_wall_seconds": 3600,
+      "maximum_cumulative_audio_seconds": 216,
+      "maximum_derived_wav_payload_bytes": 2304000,
+      "new_complete_data_package_response_body_reservation_bytes": 16777216,
+      "prior_audio_transport_reservation_reusable": false,
+      "proposed_mixed_scope_acquisition_reservation_bytes": 6056574976,
+      "reservation_slack_bytes": 385875968,
+      "resource_scope_requires_fresh_review": true,
+      "setup_wall_seconds": 1800,
+      "total_acquisition_cap_bytes": 6442450944,
+      "workflow_minutes": 70
+    },
+    "caveats": [
+      "RSS/disk thresholds are sampled, not hard continuous limits.",
+      "TTS RLIMIT_CPU is per process, not aggregate process-tree CPU.",
+      "Transport input body caps are not all-wire traffic caps.",
+      "Weight cache is not established. No download, installation or runtime check has run.",
+      "Model/native-I/O preflight may use fixed synthetic numeric samples but no model construction or audio generation."
+    ],
+    "paid_resources": false,
+    "provider": "public GitHub standard ubuntu-24.04 hosted runner or separately reviewed already-owned resource",
+    "tts": {
+      "controlled_input_bytes": 2934954359,
+      "generation_cpu_seconds_per_process": 3600,
+      "generation_sampled_rss_bytes": 7516192768,
+      "generation_wall_seconds": 1200,
+      "maximum_audio_seconds_all_cells": 72,
+      "maximum_audio_seconds_per_cell": 12,
+      "maximum_blind_audio_bytes": 4194304,
+      "maximum_evidence_bytes": 16777216,
+      "per_cell_cooperative_alarm_seconds": 300,
+      "response_body_cap_bytes": 4294967296,
+      "setup_cpu_seconds_per_process": 2400,
+      "setup_sampled_rss_bytes": 4294967296,
+      "setup_wall_seconds": 1200,
+      "total_stage_wall_seconds": 2400,
+      "workflow_minutes": 50
+    }
+  },
+  "schema": "k1-punctuation6-preregistration-proposal-v1",
+  "scientific_limits": {
+    "agreement": "All three successful, fully native/source/config-bound outputs must normalize identically and nonempty; no majority voting.",
+    "forbidden_substitutions": [
+      "沃→窝",
+      "屋→窝",
+      "我→窝"
+    ],
+    "generalization_claim": false,
+    "human_gold": false,
+    "normalization": "Existing fixed punctuation/whitespace removal only; no homophone, script, case or Unicode folding.",
+    "punctuation_improvement_guaranteed": false,
+    "shipping_approved": false,
+    "statistical_inference_claim": false,
+    "training_admitted": false
+  },
+  "stage_barrier": [
+    "All six fixed TTS cells must finish once without failure/cap; no early ASR. Successful cells with signal-quality flags are quarantined before ASR.",
+    "Verify genuine claims, complete runtime/source/model custody, 24k float source and 16k mono PCM16 derivative bytes, PCM/frames and EOS termination.",
+    "Before ASR, quarantine every member of each same-batch equal-WAV or equal-PCM group symmetrically; quarantine any cell overlapping frozen historical consumed/selection WAV or PCM identities. Preserve all six TTS outcomes and all eighteen slots with not_run_duplicate or not_run_quality reasons; never reuse old transcripts or regenerate.",
+    "Freeze all six actual WAV/PCM/frame identities, history-comparison inventory, deterministic quarantine decisions and fresh eligible-only blind job/source inventory before releasing any ASR. Each eligible unique new cell permits exactly three new slots; maximum eighteen. No eligible cells means no ASR release.",
+    "Native policies, decode configurations, retained source closure, resource scope and worst-case evidence packaging must be frozen before audio-forward.",
+    "TTS and ASR releases are independently reviewed; successful TTS does not automatically release ASR."
+  ],
+  "status": "disabled_pending_root_freeze",
+  "tts": {
+    "cells": [
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-001",
+        "condition": "unpunctuated",
+        "human_gold": false,
+        "prospective_role": "train-only",
+        "seed": 1012001,
+        "text": "你好小窝",
+        "training_admitted": false,
+        "voice": "Dylan"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-002",
+        "condition": "comma",
+        "human_gold": false,
+        "prospective_role": "train-only",
+        "seed": 1012001,
+        "text": "你好，小窝",
+        "training_admitted": false,
+        "voice": "Dylan"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-003",
+        "condition": "unpunctuated",
+        "human_gold": false,
+        "prospective_role": "train-only",
+        "seed": 1012002,
+        "text": "你好小窝",
+        "training_admitted": false,
+        "voice": "Uncle_Fu"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-004",
+        "condition": "comma",
+        "human_gold": false,
+        "prospective_role": "train-only",
+        "seed": 1012002,
+        "text": "你好，小窝",
+        "training_admitted": false,
+        "voice": "Uncle_Fu"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-005",
+        "condition": "unpunctuated",
+        "human_gold": false,
+        "prospective_role": "train-only",
+        "seed": 1012003,
+        "text": "你好小窝",
+        "training_admitted": false,
+        "voice": "Vivian"
+      },
+      {
+        "attempts_max": 1,
+        "cell_id": "k1p6-006",
+        "condition": "comma",
+        "human_gold": false,
+        "prospective_role": "train-only",
+        "seed": 1012003,
+        "text": "你好，小窝",
+        "training_admitted": false,
+        "voice": "Vivian"
+      }
+    ],
+    "cpu": {
+      "attention": "eager",
+      "dtype": "float32",
+      "interop_threads": 1,
+      "threads": 4
+    },
+    "instruction": null,
+    "model_id": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+    "phoneme_interface": null,
+    "pronunciation_control_claim": false,
+    "recipe": {
+      "do_sample": true,
+      "language": "Chinese",
+      "max_new_tokens": 120,
+      "non_streaming_mode": true,
+      "repetition_penalty": 1.05,
+      "subtalker_dosample": true,
+      "subtalker_temperature": 0.9,
+      "subtalker_top_k": 50,
+      "subtalker_top_p": 1.0,
+      "temperature": 0.9,
+      "top_k": 50,
+      "top_p": 1.0
+    },
+    "reference_audio": null,
+    "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+    "seed_policy": "One predeclared seed per voice, paired across the two texts; no seed search.",
+    "voice_cloning": false
+  }
+}
