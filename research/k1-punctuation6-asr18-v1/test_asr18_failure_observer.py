@@ -15,6 +15,7 @@ import campaign_contract as c
 import asr18_metadata as m
 import failure_observer as f
 import hosted_run as h
+from test_control_fixture import synthetic_enabled_source
 
 IDENTITY={'repository':'jiying2007/kws-pipeline','job_key':'asr18','run_id':123,'run_attempt':1,'executed_head_sha':'c'*40}
 SECRET='TOKEN_SENTINEL_PRIVATE_PATH_OLD_HISTORY_AUDIO_TEXT'
@@ -72,9 +73,9 @@ class ObserverTests(unittest.TestCase):
         self.assertIsNone(rows[1]['record']['identity'])
         self.assertEqual(rows[-1],{'status':'blocked_no_retry'})
 
-    def test_actual_enabled_cli_rejects_missing_event_without_sideeffects(self):
-        with tempfile.TemporaryDirectory(prefix='k1-actual-enabled-no-event-') as name:
-            proc=subprocess.run([sys.executable,'-I','-B',str(HERE/'hosted_run.py')],cwd=name,
+    def test_synthetic_enabled_cli_rejects_missing_event_without_sideeffects(self):
+        with synthetic_enabled_source(HERE) as source, tempfile.TemporaryDirectory(prefix='k1-synthetic-enabled-no-event-') as name:
+            proc=subprocess.run([sys.executable,'-I','-B',str(source/'hosted_run.py')],cwd=name,
                 env={'PATH':'/usr/bin:/bin','GITHUB_TOKEN':SECRET,'GH_TOKEN':SECRET,'RUNNER_TEMP':name},
                 capture_output=True,text=True,timeout=10)
             self.assertEqual(list(Path(name).iterdir()),[])

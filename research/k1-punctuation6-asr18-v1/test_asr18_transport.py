@@ -379,6 +379,36 @@ class PublisherTests(TransportTests):
         self.assertEqual([call[0] for call in api.calls[:7]],['GET']*7)
         with self.assertRaises(FileExistsError):p.run_once(self.env,self.event,self.release,self.package(),api,api.raw_factory,self.root)
 
+    def test_transfer_plan_precedes_first_post_and_terminal_records_uncertainty(self):
+        from contextlib import redirect_stdout
+        import json
+        out=io.StringIO();owner=self
+        class ObservedAPI(MockAPI):
+            def __call__(self,method,route,body=None,expected=200):
+                if method=='POST':
+                    envelopes=[json.loads(line) for line in out.getvalue().splitlines()]
+                    owner.assertGreaterEqual(len(envelopes),1)
+                    plan=envelopes[0]['record']
+                    owner.assertEqual(plan['status'],'upload_plan_prepared')
+                    if route==p.BASE+'/git/blobs':
+                        raw=base64.b64decode(body['content'],validate=True);digest=t.git_sha(raw)
+                        row=next(v for v in plan['planned_blobs'] if v['git_blob_sha']==digest)
+                        owner.assertEqual((row['bytes'],row['sha256']),(len(raw),t.sha(raw)))
+                        if self.blobs:raise p.PublicationError(503)
+                return super().__call__(method,route,body,expected)
+        api=ObservedAPI(self.env,self.event,self.release,self.source)
+        with redirect_stdout(out),self.assertRaises(p.PublicationError):
+            p.run_once(self.env,self.event,self.release,self.package(),api,api.raw_factory,self.root,observer=mock.Mock())
+        envelopes=[json.loads(line) for line in out.getvalue().splitlines()]
+        self.assertEqual(len(envelopes),2)
+        last=envelopes[-1]['record']
+        self.assertEqual((last['attempted_blob_count'],last['confirmed_blob_count'],last['http_status']),(2,1,503))
+        self.assertTrue(last['unconfirmed_request_may_have_written'])
+        self.assertFalse(any(route.endswith(('/trees','/commits','/refs')) for method,route,*_ in api.calls if method=='POST'))
+        receipt=t.decode((self.root/'publication.receipt.json').read_bytes())
+        for key in ('planned_blobs','attempted_blob_count','confirmed_blob_count','expected_result_commit','expected_result_tree','http_status'):
+            self.assertEqual(last[key],receipt[key])
+
     def test_only_exact_commit_message_or_one_removed_terminal_lf(self):
         for methods in ({'POST'},{'GET'},{'POST','GET'}):
             class LFAPI(MockAPI):
@@ -956,7 +986,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
     LICENSE_ID={'bytes':5306,'sha256':'7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8'}
     # Exact root-reviewed current source closure, including released controls.
     # Historical executed snapshots remain immutable; this is a synthetic fixture.
-    FROZEN_SOURCE_SHA256='8a83c67edebc0b9e13a0307a4f18a36164a3b8dea899ed660364fcd54b8a26bb'
+    FROZEN_SOURCE_SHA256='b40a1c84e1ebac952fa6d0c19d3251324b6fe7440e93e771600066d0c8b4ab7b'
     SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json','prepare-prerequisite.json'))
 
     def setUp(self):

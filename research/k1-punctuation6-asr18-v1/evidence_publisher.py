@@ -289,7 +289,104 @@ def verify_commit(value, expected_sha, expected_body):
         _equal(value.get(key), expected_body[key], "exact commit metadata")
 
 
-def publish(env, event, release, payload, api, raw_get, progress=None, observer=None):
+
+_TRANSFER_STAGES = frozenset(("validate_local_package", "verify_actual_run_source", "verify_destination_absent",
+    "create_blobs", "create_tree", "create_commit", "create_ref", "immutable_postpublish_readback", "readback_verified"))
+_TRANSFER_STATUSES = frozenset(("upload_plan_prepared", "publication_failed_or_unconfirmed_no_retry", "same_identity_readback_verified"))
+
+
+def transfer_record(identity, progress, status, error=None):
+    """Fixed public metadata only. An unconfirmed POST may have written its object.
+
+    This is transfer observation, never recognition or recovery success. Source
+    bytes and planned blobs are already validated before upload_plan_prepared.
+    """
+    t.identity(identity)
+    t.require(type(progress) is dict and status in _TRANSFER_STATUSES, "fixed transfer observation")
+    stage = progress.get("stage")
+    t.require(stage in _TRANSFER_STAGES, "fixed transfer stage")
+    rows = progress.get("planned_blobs")
+    if rows is not None:
+        t.require(type(rows) is list and 2 <= len(rows) <= t.MAX_CHUNKS + 1, "bounded planned blobs")
+        allowed = {t.manifest_path()} | {t.chunk_path(i) for i in range(t.MAX_CHUNKS)}
+        names = []; copied = []
+        for row in rows:
+            t.require(type(row) is dict and set(row) == {"path", "bytes", "sha256", "git_blob_sha"}, "exact planned blob fields")
+            name = row["path"]
+            t.require(type(name) is str and name in allowed, "fixed planned blob path")
+            cap = t.MAX_MANIFEST if name == t.manifest_path() else t.MAX_CHUNK
+            t.require(type(row["bytes"]) is int and 0 < row["bytes"] <= cap, "planned blob bytes")
+            t.require(type(row["sha256"]) is str and t.SHA.fullmatch(row["sha256"]) and
+                type(row["git_blob_sha"]) is str and t.HEAD.fullmatch(row["git_blob_sha"]), "planned blob digests")
+            names.append(name); copied.append(dict(row))
+        t.require(names == sorted(set(names)) and t.manifest_path() in names, "complete ordered planned paths")
+        chunks = [name for name in names if name != t.manifest_path()]
+        t.require(chunks == [t.chunk_path(i) for i in range(len(chunks))], "contiguous planned chunks")
+        rows = copied
+    numeric = {}
+    for key in ("attempted_blob_count", "confirmed_blob_count"):
+        value = progress.get(key)
+        t.require(value is None or (type(value) is int and rows is not None and 0 <= value <= len({r["git_blob_sha"] for r in rows})), "bounded blob observation count")
+        numeric[key] = value
+    if numeric["confirmed_blob_count"] is not None:
+        t.require(numeric["attempted_blob_count"] is not None and numeric["confirmed_blob_count"] <= numeric["attempted_blob_count"], "confirmed versus attempted blobs")
+    digests = {}
+    for key, pattern in (("archive_sha256", t.SHA), ("expected_result_commit", t.HEAD), ("expected_result_tree", t.HEAD)):
+        value = progress.get(key)
+        t.require(value is None or (type(value) is str and pattern.fullmatch(value)), "fixed transfer digest")
+        digests[key] = value
+    size = progress.get("archive_bytes")
+    t.require(size is None or (type(size) is int and 0 < size <= t.MAX_ARCHIVE), "transfer archive bytes")
+    if rows is not None:
+        t.require(size is not None and all(v is not None for v in digests.values()) and
+            sum(row["bytes"] for row in rows if row["path"] != t.manifest_path()) == size, "complete transfer byte plan")
+    code = None; http_status = None
+    if error is not None:
+        code = next((known.__name__ for known in (ValueError, TypeError, OSError, TimeoutError, PublicationError)
+            if type(error) is known), "OtherException")
+        if type(error) is PublicationError:
+            fields = BaseException.__dict__["__dict__"].__get__(error)
+            candidate = dict.get(fields, "status")
+            if type(candidate) is int and 100 <= candidate <= 599: http_status = candidate
+    for key in ("publication_confirmed", "readback_confirmed"):
+        t.require(progress.get(key) is None or type(progress[key]) is bool, "transfer confirmation observation")
+    return {"schema": "k1-asr18-publisher-transfer-observation-v1", "identity": dict(identity),
+        "status": status, "stage": stage, "planned_blobs": rows, **numeric, **digests, "archive_bytes": size,
+        "http_status": http_status, "error_type": code,
+        "publication_confirmed": progress.get("publication_confirmed"), "readback_confirmed": progress.get("readback_confirmed"),
+        "attempted_blob_count_scope": "blob_api_invocations_not_confirmed_http_sends",
+        "observation_delivery": "best_effort_stdout",
+        "unconfirmed_request_may_have_written": True, "original_http_body_included": False,
+        "native_success_established": False, "retry_authorized": False}
+
+
+def _emit_transfer(observer, identity, progress, status, error=None, directory=None):
+    # Diagnostics cannot alter publication, replace its primary failure, or retry.
+    if observer is None: return False
+    try:
+        record = transfer_record(identity, progress, status, error)
+        raw = t.canonical(record)
+        t.require(len(raw) <= 16 * 1024, "bounded transfer observation")
+        persistence = {"status": "not_attempted", "error_type": None}
+        if directory is not None:
+            leaf = "publication.plan.json" if status == "upload_plan_prepared" else "publication.transfer.json"
+            try:
+                write_once(directory, leaf, record)
+                persistence["status"] = "local_exclusive_write_and_fsync_completed"
+            except BaseException as local_error:
+                persistence = {"status": "local_write_failed_or_unconfirmed",
+                    "error_type": failure_observer.error_metadata(local_error)["error_type"]}
+        envelope = {"schema": "k1-asr18-publisher-transfer-envelope-v1", "record": record,
+            "record_bytes": len(raw), "record_sha256": t.sha(raw), "persistence": persistence}
+        out = t.canonical(envelope)
+        t.require(len(out) <= 17 * 1024, "bounded transfer envelope")
+        print(out.decode("ascii"), flush=True)
+        return True
+    except BaseException:
+        return False
+
+
+def publish(env, event, release, payload, api, raw_get, progress=None, observer=None, transfer_directory=None):
     progress = {} if progress is None else progress
     _observe(observer, "validate_local_package")
     progress.update(stage="validate_local_package", publication_confirmed=False, readback_confirmed=False)
@@ -316,11 +413,15 @@ def publish(env, event, release, payload, api, raw_get, progress=None, observer=
     expected_body, expected_commit = commit_body(expected_tree, release)
     api.bind_result(expected_commit, expected_tree)
     _observe(observer, "create_blobs")
-    progress.update(stage="create_blobs", confirmed_blob_count=0, expected_result_commit=expected_commit,
-                    expected_result_tree=expected_tree, archive_sha256=t.sha(payload), archive_bytes=len(payload))
+    progress.update(stage="create_blobs", attempted_blob_count=0, confirmed_blob_count=0, expected_result_commit=expected_commit,
+                    expected_result_tree=expected_tree, archive_sha256=t.sha(payload), archive_bytes=len(payload),
+                    planned_blobs=[{"path": row["path"], "bytes": len(files[row["path"]]),
+                        "sha256": t.sha(files[row["path"]]), "git_blob_sha": row["sha"]} for row in tree_rows])
+    _emit_transfer(observer, identity, progress, "upload_plan_prepared", directory=transfer_directory)
     sent_blobs = set()
     for row in tree_rows:
         if row["sha"] not in sent_blobs:
+            progress["attempted_blob_count"] += 1
             blob = api("POST", BASE + "/git/blobs", {"content": base64.b64encode(files[row["path"]]).decode("ascii"), "encoding": "base64"}, expected=201)
             _equal(blob, {"sha": row["sha"]}, "true Git blob identity")
             sent_blobs.add(row["sha"])
@@ -405,7 +506,7 @@ def run_once(env, event, release, payload, api, raw_get, receipt_directory, obse
     signal.setitimer(signal.ITIMER_REAL, TIMEOUT)
     try:
         _observe(observer, "remote_publish")
-        result = publish(env, event, release, payload, api, raw_get, progress, observer=observer)
+        result = publish(env, event, release, payload, api, raw_get, progress, observer=observer, transfer_directory=receipt_directory)
     except Exception as error:
         if observer is not None:
             try: observer.failure(error)
@@ -414,15 +515,26 @@ def run_once(env, event, release, payload, api, raw_get, receipt_directory, obse
         result = {"schema": "k1-asr18-evidence-publication-receipt-v1", "status": "publication_failed_or_unconfirmed_no_retry",
             "identity": identity, "purpose": release["purpose"], "error_type": type(error).__name__ if type(error) in (ValueError, TypeError, OSError, TimeoutError, PublicationError) else "OtherException",
             "retry_authorized": False, "new_native_calls_authorized": False, **progress}
-        if isinstance(error, PublicationError) and error.status is not None: result["http_status"] = error.status
+        if type(error) is PublicationError:
+            fields = BaseException.__dict__["__dict__"].__get__(error)
+            status = dict.get(fields, "status")
+            if type(status) is int and 100 <= status <= 599: result["http_status"] = status
+        _emit_transfer(observer, identity, progress, "publication_failed_or_unconfirmed_no_retry", error, directory=receipt_directory)
         try: _observe(observer, "receipt_write")
         except BaseException: pass  # Preserve the already recorded primary publish exception.
-        write_once(receipt_directory, "publication.receipt.json", result)
-        error.publication_receipt = result
+        try:
+            write_once(receipt_directory, "publication.receipt.json", result)
+        except BaseException as receipt_error:
+            if observer is not None:
+                try: observer.failure(receipt_error)
+                except BaseException: pass
+        try: error.publication_receipt = result
+        except BaseException: pass
         raise
     finally:
         signal.setitimer(signal.ITIMER_REAL, 0)
         signal.signal(signal.SIGALRM, old_handler)
+    _emit_transfer(observer, identity, progress, "same_identity_readback_verified", directory=receipt_directory)
     _observe(observer, "receipt_write")
     write_once(receipt_directory, "publication.receipt.json", result)
     return result

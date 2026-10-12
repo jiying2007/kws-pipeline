@@ -1,0 +1,97 @@
+{
+  "evidence_limits": {
+    "archive_outer_chunks": "unavailable_unobserved",
+    "asr_semantic_quality_conclusion": "not_established",
+    "full_immutable_readback_verified": false,
+    "native_outputs": "unavailable_unobserved",
+    "original_transcripts": "unavailable_unobserved",
+    "original_writer_receipt": "unavailable_unobserved",
+    "result_commit_and_tree": "unobserved",
+    "train_admission": false
+  },
+  "experiment": "k1-punctuation6-asr18-r2",
+  "host_step": {
+    "completed_at": "2026-10-12T18:00:02Z",
+    "conclusion": "success",
+    "diagnostic_status": "returned_success",
+    "name": "Admit complete new input and run fixed ASR18 once",
+    "native_run_failed_reported": false,
+    "started_at": "2026-10-12T17:46:02Z"
+  },
+  "job_id": 114934551920,
+  "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38286042984/job/114934551920",
+  "local_archive_commitment": {
+    "archive_bytes": 5884370,
+    "archive_bytes_recovered": false,
+    "archive_sha256": "e692d6bdde76c3e065c5e4296ccfc8d30421fbbd348e8eb0b3d8b4ef31f8f2f8",
+    "observed_in_host_stdout_at": "2026-10-12T18:00:02.5455410Z"
+  },
+  "log_observed_claims": {
+    "consumed_attempts": null,
+    "consumed_attempts_authority": "unknown_local_observations_only",
+    "observed_slot_directories": 18,
+    "original_claim_start_files_and_terminal_ledger_recovered": false,
+    "reported_terminal_accounting_valid": true,
+    "reported_terminal_attempts": 18,
+    "snapshot_atomic": false,
+    "terminal_ledger_commitment": {
+      "bytes": 1407,
+      "sha256": "46ec5d9e4f404a0b0e28f4d508ce711b8ad7b82fadd96a343148af5bb93e78f1"
+    },
+    "validated_start_files_observed": 18
+  },
+  "new_tts_calls": 0,
+  "original_job_log": {
+    "bytes": 263339,
+    "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38286042984/job/114934551920",
+    "sha256": "1b78e6daa89d1760fffc583402e973d26413b75aa075bc3f5ff6dd6840bd8e3e"
+  },
+  "previous_failed_asr_v1_and_r1_slots_remain_sealed_unknown": true,
+  "publisher_step": {
+    "actual_http_status": null,
+    "completed_at": "2026-10-12T18:00:25Z",
+    "conclusion": "failure",
+    "confirmed_blob_count": null,
+    "exact_cause": "unobserved; safe error projection does not distinguish HTTP, transport, or other publication causes",
+    "failure_stage": "create_blobs",
+    "name": "Publish complete audio-free bounded evidence",
+    "orphan_blob_existence": "unknown",
+    "safe_error_type": "UnlistedError",
+    "started_at": "2026-10-12T18:00:02Z"
+  },
+  "repository": "jiying2007/kws-pipeline",
+  "retry_authorized": false,
+  "run_attempt": 1,
+  "run_conclusion": "failure",
+  "run_id": 38286042984,
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38286042984",
+  "schema": "k1-asr18-r2-publication-failure-summary-v1",
+  "sealed_slots": 18,
+  "slots_reusable": false,
+  "source_branch": "research/k1-punctuation6-asr18-r2",
+  "source_commit": "d3b7ce54c8909df8e962d8547a546c3d460dcbc8",
+  "source_tree": "3313a1ddb4ab74c802611054434c7d8dd6984402",
+  "terminal_public_observations": {
+    "artifacts": {
+      "observed_at": "2026-10-12T18:03:18.909Z",
+      "total_count": 0,
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/actions/runs/38286042984/artifacts?per_page=100"
+    },
+    "result_ref": {
+      "http_status_reported": 404,
+      "observed_at": "2026-10-12T18:03:14.377Z",
+      "ref": "refs/heads/evidence/k1-punctuation6-asr18-r2",
+      "status": "not_found_observed",
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/git/ref/heads/evidence/k1-punctuation6-asr18-r2"
+    },
+    "source_branch_push_history": {
+      "observed_at": "2026-10-12T18:03:18.976Z",
+      "run_ids": [
+        38286042984
+      ],
+      "total_count": 1,
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/actions/runs?branch=research%2Fk1-punctuation6-asr18-r2&event=push&per_page=100"
+    }
+  },
+  "workflow": ".github/workflows/k1-punctuation6-asr18-v1.yml"
+}
