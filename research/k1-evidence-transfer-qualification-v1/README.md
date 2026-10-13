@@ -38,11 +38,35 @@ schedule, workflow-run trigger, matrix, rerun or branch update is authority.
 
 ## Two separately reviewed source phases
 
-The checked-in first-phase control enables only checkpoint qualification. Its
-recovery flag remains false and its producer pin is null. Twelve model, decode,
-retry, storage and credential flags are literally false. The independently
-reviewed `source-freeze.json` closes an explicit public source roster, including
-the workflow, controls and shared publisher. Its own bytes are excluded.
+The checked-in second-phase control disables checkpoint production and enables
+only recovery from the exact static 13-field producer pin. Its canonical pin
+SHA-256 is `8192b7d5d1bd47bd76df3d67f0da1389558f024068a393eeb2f97c7b13a5fb8f`.
+The original first-phase source enabled only checkpoint qualification, with
+recovery disabled and a null producer pin. Twelve model, decode, retry, storage
+and credential flags remain literally false. Separate ASR execution, publication
+and transfer-recovery releases remain disabled; the standalone ASR recovery
+`authority` remains null. The independently reviewed `source-freeze.json` closes
+an explicit public source roster, including the workflow, controls and shared
+publisher. Its own bytes are excluded.
+
+The accepted original producer is run `38338993274`, attempt `1`, job
+`transfer_qualification`, numeric job `115105508103`, executed source
+`c666679327f37a82097626e879322dd4adf79875`, source tree
+`7503ac421cc92f7d9cca1b3e8e269af0918c529e`, and source-freeze SHA-256
+`5b8140497bf39390de89e3312cdca69fb9a2fdfff7a6eb19a72c36deebe2c112`.
+Its independently read-back checkpoint is commit
+`9ff0777d39aeae8978ce16685da6be9b8364d473`, tree
+`71511b7be342a022202481bf63c6c8d14a9dd7ac`, with manifest SHA-256
+`bd1c44eb2ea588a572a64f65428f40c0815b5c35ec33e90f71f89b208861b9a6`
+and deterministic commit timestamp `2026-10-13T02:37:04Z`. The producer reached
+the deliberately injected exit code `86` after verified checkpoint readback;
+its terminal run/job conclusion is and remains `failure`.
+
+This source candidate does not yet have a published recovery source commit or
+actual recovery run/job identity. Those values must come from the separately
+reviewed execution and cannot replace the pinned original producer identity.
+The only admitted archive is the original 5,884,370-byte synthetic fixture with
+SHA-256 `5a75f40a03388dffa6366aa5a39b740582f4b6ea9f36f0d7212d17a1ad8ab901`.
 
 1. Read and verify all 24 original immutable fixture bodies. Using the production
    bounded writer, verify both output refs absent and create the 24 output blobs,
@@ -116,9 +140,11 @@ backup guarantee.
 `python3 -I -S -B research/k1-evidence-transfer-qualification-v1/test_qualification.py`
 runs only invented local service fixtures. Repeat with `-O` and `-OO`. Tests
 exercise the actual shared writer; they do not replace it with a success stub.
-They cover exact first-phase API/raw counts, a fresh recovery with all local
-file reads forbidden, exact original identity retention, final-ref-only writes,
-disabled-before-token admission, strict source events, synthetic-ASR rejection,
+They cover the exact checked-in 13-field producer pin and recovery-only control,
+disabled standalone ASR releases, exact first-phase API/raw counts, a fresh
+recovery with all local file reads forbidden, exact original identity retention,
+final-ref-only writes, explicit temporary disabled-before-token controls, strict
+source events for both phases, synthetic-ASR rejection,
 corrupt/missing/reordered bytes, substituted identity/hash pins, preexisting refs,
 deadline rejection and checkpoint retention after final failure.
 

@@ -23438,6 +23438,85 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-13",
+      "operation_id": "k1-hosted-transfer-qualified-checkpoint-recovery-v1",
+      "public_main_base_commit": "c666679327f37a82097626e879322dd4adf79875",
+      "public_main_base_tree": "7503ac421cc92f7d9cca1b3e8e269af0918c529e",
+      "workflow_source_changed": false,
+      "scope": "Enable only the existing fixed synthetic hosted recovery phase with its exact public actual producer checkpoint pin. Disable consumed checkpoint phase. Model flags and standalone ASR recovery remain disabled.",
+      "rationale": "Actual first phase run 38338993274 / job 115105508103 retained failure from deliberate exit 86 only after complete checkpoint original-byte readback. Its source c666679327f37a82097626e879322dd4adf79875 and checkpoint 9ff0777d39aeae8978ce16685da6be9b8364d473 remain immutable. Recovery reads all 24 original checkpoint files, preserves the 5884370-byte synthetic ZIP SHA256 5a75f40a03388dffa6366aa5a39b740582f4b6ea9f36f0d7212d17a1ad8ab901, and may create only the already-fixed final ref pointing to the same producer commit. Independent 17 API / 1 POST / 24 raw / 600-second bounds and all runtime/workflow/scientific bytes remain unchanged. This is no model or ASR result and does not release an execution ref.",
+      "files": [
+        {
+          "path": "research/k1-evidence-transfer-qualification-v1/README.md",
+          "before": {
+            "path": "research/k1-evidence-transfer-qualification-v1/README.md",
+            "mode": "100644",
+            "bytes": 8476,
+            "sha256": "b2e4b11fe77dbc8f52eb1642f66c82713aad5a71cb9e385ce3d20f9402420b21",
+            "git_blob_sha1": "f66cbca49080754c09cdd0ab4e754ca49caa2b55"
+          },
+          "after": {
+            "path": "research/k1-evidence-transfer-qualification-v1/README.md",
+            "mode": "100644",
+            "bytes": 10143,
+            "sha256": "cf36e692343a55ec9761c4408636d6f7682047d987e24f44a38a51d1fd756237",
+            "git_blob_sha1": "e8e12b86f55c00c379116f4d4acfd9dbd1053dc1"
+          }
+        },
+        {
+          "path": "research/k1-evidence-transfer-qualification-v1/qualification-control.json",
+          "before": {
+            "path": "research/k1-evidence-transfer-qualification-v1/qualification-control.json",
+            "mode": "100644",
+            "bytes": 517,
+            "sha256": "96025b8d61a6bc2abb8b79b276c9329498a86c31be4d624127057b489ee38544",
+            "git_blob_sha1": "d1a7c35cc2006ad698046863b170386379abd755"
+          },
+          "after": {
+            "path": "research/k1-evidence-transfer-qualification-v1/qualification-control.json",
+            "mode": "100644",
+            "bytes": 1344,
+            "sha256": "33ffc85ade6d534938edfe7973a939a4d0bd6961fb45ecf0dec7e1f253ef9e6c",
+            "git_blob_sha1": "48b6c278a1236d372c63c50127eeee2b8202b310"
+          }
+        },
+        {
+          "path": "research/k1-evidence-transfer-qualification-v1/source-freeze.json",
+          "before": {
+            "path": "research/k1-evidence-transfer-qualification-v1/source-freeze.json",
+            "mode": "100644",
+            "bytes": 2168,
+            "sha256": "5b8140497bf39390de89e3312cdca69fb9a2fdfff7a6eb19a72c36deebe2c112",
+            "git_blob_sha1": "a4b75df37986834625eb9080266b10df0e0dfa8e"
+          },
+          "after": {
+            "path": "research/k1-evidence-transfer-qualification-v1/source-freeze.json",
+            "mode": "100644",
+            "bytes": 2169,
+            "sha256": "4e34627200403071a873847d594553fb54beb99e38785b40b99520dc643b8ba0",
+            "git_blob_sha1": "a14534785efadcd2919ad169e19cd1a82692b1ac"
+          }
+        },
+        {
+          "path": "research/k1-evidence-transfer-qualification-v1/test_qualification.py",
+          "before": {
+            "path": "research/k1-evidence-transfer-qualification-v1/test_qualification.py",
+            "mode": "100644",
+            "bytes": 34309,
+            "sha256": "75556f0acbbab2e88c51ade38d6d03fa6b78b43c53b22c2430ec296fd82c3cb2",
+            "git_blob_sha1": "78e302215a091de218f31dc4042bb3913395ba63"
+          },
+          "after": {
+            "path": "research/k1-evidence-transfer-qualification-v1/test_qualification.py",
+            "mode": "100644",
+            "bytes": 37559,
+            "sha256": "6f747dd414f8cc7b345ad5e5e6ba1b183dfcc3d34bbbbfa9079304d73317bf7d",
+            "git_blob_sha1": "3a090c17d03cfead792177a6d33d1d2353cf3a47"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

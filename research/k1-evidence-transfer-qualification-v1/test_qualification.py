@@ -201,13 +201,52 @@ class QualificationTests(unittest.TestCase):
         api = FakeAPI(current, 'recovery', old, producer)
         return current, pin, api
 
-    def test_checked_in_source_authority_is_checkpoint_only(self):
+    def test_checked_in_source_authority_is_exact_pinned_recovery_only(self):
         value = q.read_json(HERE / 'qualification-control.json')
-        q.control_gate(value, 'checkpoint')
-        self.assertIsNone(value['producer_pin'])
+        q.control_gate(value, 'recovery')
+        self.assertIs(value['checkpoint_enabled'], False)
+        self.assertIs(value['recovery_enabled'], True)
+        self.assertIs(value['root_transfer_release'], True)
+        self.assertIs(value['independent_source_review'], True)
         self.assertEqual(len(q.FALSE_FLAGS), 12)
+        self.assertTrue(all(value[key] is False for key in q.FALSE_FLAGS))
+        expected_pin = {
+            'identity': {'repository': q.REPOSITORY, 'run_id': 38338993274,
+                'run_attempt': 1, 'job_key': 'transfer_qualification',
+                'executed_head_sha': 'c666679327f37a82097626e879322dd4adf79875'},
+            'numeric_job_id': 115105508103,
+            'source_tree': '7503ac421cc92f7d9cca1b3e8e269af0918c529e',
+            'source_freeze_sha256': '5b8140497bf39390de89e3312cdca69fb9a2fdfff7a6eb19a72c36deebe2c112',
+            'commit_timestamp': '2026-10-13T02:37:04Z',
+            'checkpoint_commit': '9ff0777d39aeae8978ce16685da6be9b8364d473',
+            'checkpoint_tree': '71511b7be342a022202481bf63c6c8d14a9dd7ac',
+            'manifest_sha256': 'bd1c44eb2ea588a572a64f65428f40c0815b5c35ec33e90f71f89b208861b9a6',
+            'archive_bytes': 5884370,
+            'archive_sha256': '5a75f40a03388dffa6366aa5a39b740582f4b6ea9f36f0d7212d17a1ad8ab901',
+            'checkpoint_readback_verified': True,
+            'producer_terminal_conclusion': 'failure',
+            'injected_stop_verified': True,
+        }
+        self.assertEqual(len(expected_pin), 13)
+        self.assertEqual(value['producer_pin'], expected_pin)
+        self.assertEqual(q.digest(q.canonical(value['producer_pin'])),
+            '8192b7d5d1bd47bd76df3d67f0da1389558f024068a393eeb2f97c7b13a5fb8f')
         with self.assertRaises(q.QualificationDisabled):
-            q.control_gate(value, 'recovery')
+            q.control_gate(value, 'checkpoint')
+
+    def test_checked_in_asr_execution_publication_and_recovery_remain_disabled(self):
+        for filename, root_flag in (
+                ('execution-release.json', 'root_execution_release'),
+                ('publication-release.json', 'root_publication_release'),
+                ('transfer-recovery-release.json', 'root_transfer_recovery_release')):
+            value = q.transport.decode((q.ASR / filename).read_bytes())
+            with self.subTest(filename=filename):
+                for key in ('enabled', 'independent_source_review', root_flag):
+                    self.assertIs(value[key], False)
+                if filename == 'transfer-recovery-release.json':
+                    self.assertIsNone(value['authority'])
+                    self.assertIs(value['new_native_calls_authorized'], False)
+                    self.assertIs(value['retry_authorized'], False)
 
     def test_fixture_exact_bytes(self):
         self.assertEqual(len(self.payload), q.ARCHIVE_BYTES)
@@ -243,15 +282,21 @@ class QualificationTests(unittest.TestCase):
                 q.control_gate(value, 'checkpoint')
 
     def test_disabled_gate_precedes_environment_or_token(self):
-        value = control(); value['checkpoint_enabled'] = False
+        # Explicit temporary disabled controls exercise both phase histories;
+        # neither inherits live authority from the checked-in recovery source.
+        checkpoint = control(); checkpoint['checkpoint_enabled'] = False
+        recovery = q.read_json(HERE / 'qualification-control.json')
+        recovery['recovery_enabled'] = False
         class NoEnv(dict):
             def get(self, *args):
                 raise AssertionError('environment access while disabled')
             def __contains__(self, key):
                 raise AssertionError('environment access while disabled')
-        with mock.patch.object(q, 'read_json', return_value=value), mock.patch.object(q.os, 'environ', NoEnv()):
-            with self.assertRaises(q.QualificationDisabled):
-                q.main([])
+        for value in (checkpoint, recovery):
+            with self.subTest(pin_present=value['producer_pin'] is not None), \
+                 mock.patch.object(q, 'read_json', return_value=value), mock.patch.object(q.os, 'environ', NoEnv()):
+                with self.assertRaises(q.QualificationDisabled):
+                    q.main([])
 
     def test_recovery_pin_required_before_environment(self):
         with mock.patch.object(q, 'read_json', return_value=control('recovery')), \
@@ -264,22 +309,27 @@ class QualificationTests(unittest.TestCase):
             q.main(['--checkpoint', 'foreign'])
 
     def test_context_requires_exact_created_public_first_attempt(self):
-        env = {'GITHUB_ACTIONS': 'true', 'GITHUB_REPOSITORY': q.REPOSITORY, 'GITHUB_EVENT_NAME': 'push',
-            'GITHUB_REF': 'refs/heads/' + q.PHASES['checkpoint'], 'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '1',
-            'GITHUB_JOB': q.JOB_KEY, 'GITHUB_SHA': 'a' * 40, 'GITHUB_WORKFLOW_SHA': 'a' * 40,
-            'GITHUB_WORKFLOW_REF': q.REPOSITORY + '/' + q.WORKFLOW + '@refs/heads/' + q.PHASES['checkpoint']}
-        event = {'repository': {'full_name': q.REPOSITORY, 'private': False}, 'created': True, 'deleted': False,
-            'forced': False, 'before': '0' * 40, 'after': 'a' * 40, 'ref': env['GITHUB_REF']}
-        self.assertEqual(q.context(env, event, 'checkpoint'), who())
-        for key, value in (('GITHUB_EVENT_NAME', 'workflow_dispatch'), ('GITHUB_RUN_ATTEMPT', '2'),
-                           ('GITHUB_JOB', 'asr18'), ('GITHUB_REF', 'refs/heads/main'),
-                           ('GITHUB_WORKFLOW_SHA', 'b' * 40)):
-            with self.subTest(key=key), self.assertRaises(ValueError):
-                q.context(dict(env, **{key: value}), event, 'checkpoint')
-        for key, value in (('created', False), ('deleted', True), ('forced', True), ('before', 'a' * 40),
-                           ('after', 'b' * 40), ('repository', {'full_name': q.REPOSITORY, 'private': True})):
-            with self.subTest(key=key), self.assertRaises(ValueError):
-                q.context(env, dict(event, **{key: value}), 'checkpoint')
+        for phase in ('checkpoint', 'recovery'):
+            env = {'GITHUB_ACTIONS': 'true', 'GITHUB_REPOSITORY': q.REPOSITORY, 'GITHUB_EVENT_NAME': 'push',
+                'GITHUB_REF': 'refs/heads/' + q.PHASES[phase], 'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '1',
+                'GITHUB_JOB': q.JOB_KEY, 'GITHUB_SHA': 'a' * 40, 'GITHUB_WORKFLOW_SHA': 'a' * 40,
+                'GITHUB_WORKFLOW_REF': q.REPOSITORY + '/' + q.WORKFLOW + '@refs/heads/' + q.PHASES[phase]}
+            event = {'repository': {'full_name': q.REPOSITORY, 'private': False}, 'created': True, 'deleted': False,
+                'forced': False, 'before': '0' * 40, 'after': 'a' * 40, 'ref': env['GITHUB_REF']}
+            with self.subTest(phase=phase):
+                self.assertEqual(q.context(env, event, phase), who())
+                other_phase = 'recovery' if phase == 'checkpoint' else 'checkpoint'
+                with self.assertRaises(ValueError):
+                    q.context(env, event, other_phase)
+            for key, value in (('GITHUB_EVENT_NAME', 'workflow_dispatch'), ('GITHUB_RUN_ATTEMPT', '2'),
+                               ('GITHUB_JOB', 'asr18'), ('GITHUB_REF', 'refs/heads/main'),
+                               ('GITHUB_WORKFLOW_SHA', 'b' * 40)):
+                with self.subTest(phase=phase, key=key), self.assertRaises(ValueError):
+                    q.context(dict(env, **{key: value}), event, phase)
+            for key, value in (('created', False), ('deleted', True), ('forced', True), ('before', 'a' * 40),
+                               ('after', 'b' * 40), ('repository', {'full_name': q.REPOSITORY, 'private': True})):
+                with self.subTest(phase=phase, key=key), self.assertRaises(ValueError):
+                    q.context(env, dict(event, **{key: value}), phase)
 
     def test_real_shared_writer_checkpoint_then_fixed_failure(self):
         released, api, receipt = self.producer()
