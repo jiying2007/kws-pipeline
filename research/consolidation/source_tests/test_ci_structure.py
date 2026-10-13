@@ -660,5 +660,201 @@ class HostedTransferCIContracts(unittest.TestCase):
             with self.subTest(change=old),self.assertRaises(AssertionError):self.check(source.replace(old,new),ci)
         with self.assertRaises(AssertionError):self.check(source,ci.replace('python3 -I -S -B -OO research/k1-evidence-transfer-qualification-v1/test_qualification.py','true'))
 
+
+class AtomicClaimQualificationCIContracts(unittest.TestCase):
+    """Bind the reviewed, zero-model workflow shape without executing its CLI."""
+
+    PATH = '.github/workflows/k1-atomic-claim-qualification-v1.yml'
+    SOURCE = 'research/k1-atomic-claim-qualification-v1'
+    JOB_IF = "${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-atomic-claim-qualification-v1' && github.event.created == true && github.event.deleted == false && github.event.forced == false && github.event.repository.private == false && github.run_number == 1 && github.run_attempt == 1 }}"
+    CONTRACTS = ('set -euo pipefail\n' + ''.join(
+        'python3 -I -S -B' + mode +
+        ' research/k1-atomic-claim-qualification-v1/test_git_claim_qualification.py\n'
+        for mode in ('', ' -O', ' -OO')))
+    INVENTORY = ('python3 -B tools/test_inventory.py --root '
+                 'research/k1-atomic-claim-qualification-v1 --workflow .github/workflows/ci.yml\n')
+    HEADER = (
+        'name: K1 atomic claim zero-model qualification v1\n'
+        'on:\n  push:\n    branches:\n      - research/k1-atomic-claim-qualification-v1\n'
+        'permissions:\n  contents: read\n'
+        'concurrency:\n  group: k1-atomic-claim-qualification-v1\n  cancel-in-progress: false\n'
+        'jobs:\n  qualify:\n    if: ' + JOB_IF + '\n'
+        '    runs-on: ubuntu-24.04\n    timeout-minutes: 10\n'
+        '    permissions:\n      contents: write\n      actions: read\n')
+    CHECKOUT = (
+        'uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1\n'
+        '        timeout-minutes: 2\n        with:\n          ref: ${{ github.sha }}\n'
+        '          persist-credentials: false\n          fetch-depth: 1\n')
+    QUALIFY_COMMAND = textwrap.dedent(r'''
+          set -euo pipefail
+          checkout_sha="$(env -i PATH=/usr/bin:/bin HOME=/nonexistent GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 LC_ALL=C git --no-optional-locks -c core.fsmonitor=false -c core.hooksPath=/dev/null rev-parse HEAD)"
+          checkout_tree="$(env -i PATH=/usr/bin:/bin HOME=/nonexistent GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 LC_ALL=C git --no-optional-locks -c core.fsmonitor=false -c core.hooksPath=/dev/null rev-parse "$GITHUB_SHA^{tree}")"
+          freeze_sha="$(env -i PATH=/usr/bin:/bin HOME=/nonexistent GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 LC_ALL=C sh -eu -c 'git --no-optional-locks -c core.fsmonitor=false -c core.hooksPath=/dev/null show "$1:research/k1-atomic-claim-qualification-v1/source-freeze.json" | sha256sum | cut -d " " -f 1' sh "$GITHUB_SHA")"
+          python3 -I -S -B research/k1-atomic-claim-qualification-v1/git_claim_qualification.py --control research/k1-atomic-claim-qualification-v1/qualification-control.json --checkout-sha "$checkout_sha" --checkout-tree "$checkout_tree" --source-freeze research/k1-atomic-claim-qualification-v1/source-freeze.json --source-freeze-sha "$freeze_sha"
+''').lstrip('\n')
+
+    def setUp(self):
+        self.workflow = (ROOT / self.PATH).read_text()
+        self.ci = (ROOT / '.github/workflows/ci.yml').read_text()
+
+    def check(self, workflow, ci):
+        # Exact root/job/step schemas reject inserted routing, privilege, retry,
+        # environment, action and extra-command owners, not only missing words.
+        head, body = workflow.split('    steps:\n', 1)
+        self.assertEqual(head, self.HEADER)
+        parts = body.split('      - ')
+        self.assertEqual(len(parts), 4)
+        self.assertEqual(parts[0], '')
+        self.assertEqual(parts[1], self.CHECKOUT)
+        self.assertEqual(parts[2],
+            'name: Fixed zero-model atomic claim contracts\n'
+            '        id: contracts\n        timeout-minutes: 2\n        run: |\n' +
+            textwrap.indent(self.CONTRACTS, '          '))
+        self.assertEqual(parts[3],
+            'name: Fixed public Git create-only claim qualification\n'
+            '        id: qualify\n'
+            "        if: ${{ success() && steps.contracts.outcome == 'success' }}\n"
+            '        timeout-minutes: 6\n        env:\n'
+            '          GITHUB_TOKEN: ${{ github.token }}\n        run: |\n' +
+            textwrap.indent(self.QUALIFY_COMMAND, '          ') +
+            '      # Only fixed public Git metadata; no model, payload, Artifact or retry path.\n')
+        self.assertEqual(workflow.count('GITHUB_TOKEN:'), 1)
+        self.assertEqual(workflow.count('${{ github.token }}'), 1)
+        for forbidden in ('workflow_dispatch:', 'workflow_call:', 'pull_request:',
+                          'schedule:', 'workflow_run:', 'continue-on-error:',
+                          'upload-artifact', 'download-artifact', 'actions/cache@',
+                          'hosted_run.py', 'prepare_host.py', 'pip install', 'docker '):
+            self.assertNotIn(forbidden, workflow)
+        shared = jobs(ci)['python-contracts']
+        step = named_step(shared, 'Fixed zero-model atomic claim contracts')
+        self.assertEqual(step,
+            'name: Fixed zero-model atomic claim contracts\n'
+            '        id: atomic_claim_contracts\n        timeout-minutes: 2\n        run: |\n' +
+            textwrap.indent(self.CONTRACTS + self.INVENTORY, '          '))
+        guard = named_step(shared, 'Verify tracked worktree after atomic claim contracts')
+        self.assertEqual(guard,
+            'name: Verify tracked worktree after atomic claim contracts\n'
+            '        run: \'"$RUNNER_TEMP/check-tracked-worktree.sh" "Atomic claim contracts"\'\n')
+        self.assertNotIn(self.SOURCE + '/git_claim_qualification.py', ci)
+        self.assertNotIn(self.SOURCE, ci.split('jobs:', 1)[0])
+
+    def test_fixed_workflow_and_main_pr_offline_wiring(self):
+        self.check(self.workflow, self.ci)
+
+    def test_every_identity_guard_is_exact_and_required(self):
+        for old, new in (
+            ("github.repository == 'jiying2007/kws-pipeline'", "github.repository == 'other/kws-pipeline'"),
+            ("github.event_name == 'push'", "github.event_name == 'workflow_dispatch'"),
+            ("github.ref == 'refs/heads/research/k1-atomic-claim-qualification-v1'",
+             "github.ref == 'refs/heads/main'"),
+            ('github.event.created == true', 'github.event.created == false'),
+            ('github.event.deleted == false', 'github.event.deleted == true'),
+            ('github.event.forced == false', 'github.event.forced == true'),
+            ('github.event.repository.private == false', 'github.event.repository.private == true'),
+            ('github.run_number == 1', 'github.run_number >= 1'),
+            ('github.run_attempt == 1', 'github.run_attempt >= 1'),
+        ):
+            for replacement in (new, 'true'):
+                with self.subTest(guard=old, replacement=replacement):
+                    altered = self.workflow.replace(old, replacement)
+                    self.assertNotEqual(altered, self.workflow)
+                    with self.assertRaises(AssertionError):
+                        self.check(altered, self.ci)
+
+    def test_actual_route_requires_first_fresh_public_push(self):
+        condition = re.search(r'^    if: (.+)$', jobs(self.workflow)['qualify'], re.M).group(1)
+        context = {
+            'github.repository': 'jiying2007/kws-pipeline',
+            'github.event_name': 'push',
+            'github.ref': 'refs/heads/research/k1-atomic-claim-qualification-v1',
+            'github.event.created': True,
+            'github.event.deleted': False,
+            'github.event.forced': False,
+            'github.event.repository.private': False,
+            'github.run_number': 1,
+            'github.run_attempt': 1,
+        }
+        self.assertTrue(asr18_job_route(condition, context))
+        for field, values in (
+            ('github.repository', ('other/kws-pipeline', 'jiying2007/other')),
+            ('github.event_name', ('pull_request', 'workflow_dispatch', 'workflow_call', 'schedule')),
+            ('github.ref', ('refs/heads/main', 'refs/pull/1/merge',
+                            'refs/heads/research/k1-atomic-claim-qualification-v10',
+                            'refs/heads/research/k1-atomic-claim-qualification-v1-extra')),
+            ('github.event.created', (False, 'true', 1)),
+            ('github.event.deleted', (True, 'false', 0)),
+            ('github.event.forced', (True, 'false', 0)),
+            ('github.event.repository.private', (True, 'false', 0)),
+            ('github.run_number', (0, 2, '1', True)),
+            ('github.run_attempt', (0, 2, '1', True)),
+        ):
+            for value in values:
+                with self.subTest(field=field, value=value):
+                    self.assertFalse(asr18_job_route(condition, dict(context, **{field: value})))
+
+    def test_timeout_permissions_token_checkout_and_command_changes_rejected(self):
+        for old, new in (
+            ('permissions:\n  contents: read', 'permissions:\n  contents: write'),
+            ('      contents: write', '      contents: read'),
+            ('      actions: read', '      actions: write'),
+            ('      actions: read', '      actions: read\n      id-token: write'),
+            ('    runs-on: ubuntu-24.04', '    runs-on: ubuntu-latest'),
+            ('    timeout-minutes: 10', '    timeout-minutes: 11'),
+            ('        timeout-minutes: 2', '        timeout-minutes: 3'),
+            ('        timeout-minutes: 6', '        timeout-minutes: 7'),
+            ('  cancel-in-progress: false', '  cancel-in-progress: true'),
+            ('  group: k1-atomic-claim-qualification-v1', '  group: atomic-${{ github.run_id }}'),
+            ('checkout@3d3c42e5aac5ba805825da76410c181273ba90b1', 'checkout@v7'),
+            ('          ref: ${{ github.sha }}', '          ref: main'),
+            ('persist-credentials: false', 'persist-credentials: true'),
+            ('fetch-depth: 1', 'fetch-depth: 0'),
+            ('        id: contracts\n', '        id: contracts\n        env:\n          GITHUB_TOKEN: ${{ github.token }}\n'),
+            ('          GITHUB_TOKEN: ${{ github.token }}', '          GITHUB_TOKEN: ${{ secrets.OTHER_TOKEN }}'),
+            ("${{ success() && steps.contracts.outcome == 'success' }}", '${{ always() }}'),
+            ('env -i PATH=', 'env PATH='),
+            ('GIT_CONFIG_NOSYSTEM=1', 'GIT_CONFIG_NOSYSTEM=0'),
+            ('--control research/k1-atomic-claim-qualification-v1/qualification-control.json', '--control arbitrary.json'),
+            ('--source-freeze-sha "$freeze_sha"', '--source-freeze-sha ignored'),
+            ('python3 -I -S -B research/k1-atomic-claim-qualification-v1/git_claim_qualification.py',
+             'python3 research/k1-atomic-claim-qualification-v1/git_claim_qualification.py'),
+        ):
+            with self.subTest(change=old):
+                altered = self.workflow.replace(old, new)
+                self.assertNotEqual(altered, self.workflow)
+                with self.assertRaises(AssertionError):
+                    self.check(altered, self.ci)
+
+    def test_added_routes_steps_or_remote_owners_rejected(self):
+        for trigger in ('  pull_request:\n', '  workflow_dispatch:\n',
+                        '  schedule:\n', '  workflow_call:\n'):
+            with self.subTest(trigger=trigger), self.assertRaises(AssertionError):
+                self.check(self.workflow.replace('on:\n', 'on:\n' + trigger), self.ci)
+        for action in ('actions/upload-artifact@v4', 'actions/download-artifact@v4', 'actions/cache@v4'):
+            with self.subTest(action=action), self.assertRaises(AssertionError):
+                self.check(self.workflow + '      - uses: ' + action + '\n', self.ci)
+        for command in ('python3 hosted_run.py', 'python3 prepare_host.py', 'git push origin main'):
+            with self.subTest(command=command), self.assertRaises(AssertionError):
+                self.check(self.workflow.replace('          set -euo pipefail\n',
+                    '          set -euo pipefail\n          ' + command + '\n'), self.ci)
+        with self.assertRaises(AssertionError):
+            self.check(self.workflow.replace('        id: qualify\n',
+                '        id: qualify\n        continue-on-error: true\n'), self.ci)
+
+    def test_all_three_modes_inventory_and_worktree_guard_required_in_ci(self):
+        for mode in ('', ' -O', ' -OO'):
+            command = 'python3 -I -S -B' + mode + ' ' + self.SOURCE + '/test_git_claim_qualification.py'
+            with self.subTest(mode=mode, owner='qualification'), self.assertRaises(AssertionError):
+                self.check(self.workflow.replace(command, 'true'), self.ci)
+            with self.subTest(mode=mode, owner='main-pr'), self.assertRaises(AssertionError):
+                self.check(self.workflow, self.ci.replace(command, 'true'))
+        for old, new in (
+            (self.INVENTORY.strip(), 'true'),
+            ('        id: atomic_claim_contracts\n', '        id: atomic_claim_contracts\n        if: false\n'),
+            ('        id: atomic_claim_contracts\n', '        id: atomic_claim_contracts\n        env:\n          GITHUB_TOKEN: ${{ github.token }}\n'),
+            ('"$RUNNER_TEMP/check-tracked-worktree.sh" "Atomic claim contracts"', 'true'),
+        ):
+            with self.subTest(change=old), self.assertRaises(AssertionError):
+                self.check(self.workflow, self.ci.replace(old, new))
+
 if __name__ == '__main__':
     unittest.main()

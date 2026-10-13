@@ -97,6 +97,17 @@ jobs:
           python3 -I -S -B -OO research/k1-evidence-transfer-qualification-v1/test_qualification.py
       - name: Verify tracked worktree after hosted transfer contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Hosted transfer contracts"'
+      - name: Fixed zero-model atomic claim contracts
+        id: atomic_claim_contracts
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          python3 -I -S -B research/k1-atomic-claim-qualification-v1/test_git_claim_qualification.py
+          python3 -I -S -B -O research/k1-atomic-claim-qualification-v1/test_git_claim_qualification.py
+          python3 -I -S -B -OO research/k1-atomic-claim-qualification-v1/test_git_claim_qualification.py
+          python3 -B tools/test_inventory.py --root research/k1-atomic-claim-qualification-v1 --workflow .github/workflows/ci.yml
+      - name: Verify tracked worktree after atomic claim contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Atomic claim contracts"'
       - name: K1 punctuation6 prepare diagnostic offline source contracts
         id: prepare_contracts
         timeout-minutes: 5

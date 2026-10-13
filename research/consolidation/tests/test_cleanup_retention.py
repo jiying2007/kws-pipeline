@@ -99,17 +99,19 @@ class CleanupRetentionTests(unittest.TestCase):
             "research/k1-hosted-transfer-checkpoint-v1",
             "research/k1-hosted-transfer-recovery-v1",
             "research/k1-punctuation6-asr18-r3",
+            "research/k1-atomic-claim-qualification-v1",
         ]
-        self.assertEqual(len(expected), 17)
-        self.assertEqual(len(set(expected)), 17)
+        self.assertEqual(len(expected), 18)
+        self.assertEqual(len(set(expected)), 18)
         self.assertEqual(expected[8:11], ["research/k1-punctuation6-asr18-v1",
                                        "research/k1-punctuation6-asr18-r1",
                                        "research/k1-punctuation6-prepare-diagnostic-v1"])
         self.assertEqual(expected[11:13], ["research/k1-punctuation6-prepare-diagnostic-r1",
                                         "research/k1-punctuation6-asr18-r2"])
         self.assertEqual(expected[13], "research/k1-punctuation6-prepare-diagnostic-r2")
-        self.assertEqual(expected[-3:-1], ["research/k1-hosted-transfer-checkpoint-v1", "research/k1-hosted-transfer-recovery-v1"])
-        self.assertEqual(expected[-1], "research/k1-punctuation6-asr18-r3")
+        self.assertEqual(expected[-4:-2], ["research/k1-hosted-transfer-checkpoint-v1", "research/k1-hosted-transfer-recovery-v1"])
+        self.assertEqual(expected[-2], "research/k1-punctuation6-asr18-r3")
+        self.assertEqual(expected[-1], "research/k1-atomic-claim-qualification-v1")
         self.assertEqual(folded_env("RETAINED_EXECUTION_BRANCHES"), expected)
         self.assertTrue(set(expected).isdisjoint(folded_env("RETAINED_CONSOLIDATION_BRANCHES")))
         loop = WORKFLOW[WORKFLOW.index('          for row in "${branch_rows[@]}"; do'):]
@@ -224,7 +226,10 @@ class CleanupRetentionTests(unittest.TestCase):
                     "research/k1-hosted-transfer-recovery-v10",
                     "research/k1-hosted-transfer-recovery-v1-extra",
                     "research/k1-hosted-transfer-checkpoint-v2",
-                    "research/k1-hosted-transfer-recovery-v2"]
+                    "research/k1-hosted-transfer-recovery-v2",
+                    "research/k1-atomic-claim-qualification-v10",
+                    "research/k1-atomic-claim-qualification-v1-extra",
+                    "research/k1-atomic-claim-qualification-v2"]
         for branch in controls:
             for scenario in ("retired", "ancestor", "merged-pr", "closed-pr"):
                 with self.subTest(branch=branch, scenario=scenario):
@@ -250,7 +255,9 @@ class CleanupRetentionTests(unittest.TestCase):
                        "evidence/k1-punctuation6-prepare-diagnostic-r2",
                        "evidence/k1-punctuation6-asr18-r2",
                        "evidence/k1-punctuation6-asr18-r3",
-                       "evidence/k1-punctuation6-asr18-r3-checkpoint"):
+                       "evidence/k1-punctuation6-asr18-r3-checkpoint",
+                       "evidence/k1-atomic-claim-qualification-v1-race",
+                       "evidence/k1-atomic-claim-qualification-v1-lost-response"):
             for scenario in ("retired", "ancestor", "merged-pr", "closed-pr"):
                 with self.subTest(branch=branch, scenario=scenario):
                     run = self.cleanup_loop(branch, scenario, "failure")
