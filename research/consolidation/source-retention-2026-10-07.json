@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 46412,
-      "sha256": "650be96118941169478115c6b223b4460a434506c04ae418a5aec2e6eca52e83",
-      "git_blob_sha1": "efda102b8f7e62a45538cc656def50c033620e6d"
+      "bytes": 47159,
+      "sha256": "1c55b80e577aad48754dd92abdcb538e7ec5767fba5da4754211d619dcf331d7",
+      "git_blob_sha1": "e19f7a674a8251f5d570becc57b74fedeb1d94a0"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15421,9 +15421,9 @@
     {
       "path": ".github/workflows/repository-cleanup.yml",
       "mode": "100644",
-      "bytes": 18229,
-      "sha256": "cf1d1b77dc53b1aa40e977187199be9640bd160f9a700569f0b7abe5210bf954",
-      "git_blob_sha1": "53037ec2b8b9e03b8c129e78662866133adf5bb7"
+      "bytes": 18275,
+      "sha256": "81c520c45945d2ab5319bc7880bd47a88551029cb07fe3a4bced62150913c051",
+      "git_blob_sha1": "7ccfd7770c167fca33e56ff49dee202cb24075c0"
     },
     {
       "path": ".github/workflows/research-arm-runtime.yml",
@@ -15634,7 +15634,8 @@
     ".github/workflows/qwen12-native-admission-v1.yml",
     ".github/workflows/k1-punctuation6-asr18-v1.yml",
     ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml",
-    ".github/workflows/k1-evidence-transfer-qualification-v1.yml"
+    ".github/workflows/k1-evidence-transfer-qualification-v1.yml",
+    ".github/workflows/k1-atomic-claim-qualification-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -24420,6 +24421,219 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-13",
+      "operation_id": "k1-atomic-claim-zero-model-qualification-v1",
+      "public_main_base_commit": "ee4f8de75e4756a19889e9cb2c815fc4f309b726",
+      "public_main_base_tree": "c4b58cdc2c7051ff1f3f375458cc6519a6820314",
+      "workflow_source_changed": true,
+      "scope": "One new zero-model fixed Git create-only qualification; no model campaign or production admission modification.",
+      "rationale": "Qualify two independent OS processes against one fixed ref and an explicitly injected lost application acknowledgement after strict201. Reuse existing public fixture commits; at most3 create-ref POST/17GET/20calls/1536 POST JSON body bytes/4MiB observed response bodies/300seconds/public standard10minute job. Fixed new-workflow ordinal1/attempt1 and exclusive invocation gate the qualification budget without falsifying complete multi-run history. Retain all production history-one/closed controls/47scientific sources/prepareproof/old attempts. Add precise offline CI, workflow and cleanup retention guards; remeasure unchanged174 dependency roster and only its posterior digest.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 46412,
+            "sha256": "650be96118941169478115c6b223b4460a434506c04ae418a5aec2e6eca52e83",
+            "git_blob_sha1": "efda102b8f7e62a45538cc656def50c033620e6d"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 47159,
+            "sha256": "1c55b80e577aad48754dd92abdcb538e7ec5767fba5da4754211d619dcf331d7",
+            "git_blob_sha1": "e19f7a674a8251f5d570becc57b74fedeb1d94a0"
+          }
+        },
+        {
+          "path": ".github/workflows/k1-atomic-claim-qualification-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/k1-atomic-claim-qualification-v1.yml",
+            "mode": "100644",
+            "bytes": 2973,
+            "sha256": "9c224ad06a41c072f2e6c35e7c0766a9023ea3e98089d3cc41e8e0125f7939f6",
+            "git_blob_sha1": "27787da7620dc5aed8fe849eae4a421c5de0d407"
+          }
+        },
+        {
+          "path": ".github/workflows/repository-cleanup.yml",
+          "before": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "bytes": 18229,
+            "sha256": "cf1d1b77dc53b1aa40e977187199be9640bd160f9a700569f0b7abe5210bf954",
+            "git_blob_sha1": "53037ec2b8b9e03b8c129e78662866133adf5bb7"
+          },
+          "after": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "bytes": 18275,
+            "sha256": "81c520c45945d2ab5319bc7880bd47a88551029cb07fe3a4bced62150913c051",
+            "git_blob_sha1": "7ccfd7770c167fca33e56ff49dee202cb24075c0"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_ci_structure.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 42793,
+            "sha256": "83d93ca5bef041eac0a8b5d4007552f6e9831873f07edf061610b6f36eee4515",
+            "git_blob_sha1": "8d169e24fcac705754f62c15ec59e83290e1bcb7"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 56277,
+            "sha256": "64930b0cdfe103504153079d2c0dfa11e19504609c244c89dd4f07f3c088b61b",
+            "git_blob_sha1": "bbcd0410e2c87df908a4ce22d86fe459e1f18a49"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 32597,
+            "sha256": "8a015bf6dc5921b1adac3398c69ed8eff5e5f58e6bc94598380aedac09fa2dea",
+            "git_blob_sha1": "5901ee1a3299e57b03d511c08b6a80c8e1584016"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 34406,
+            "sha256": "9ff844138d440f8f160b061ddb89f393130e903006f0ce4a8e61b703401c6a7e",
+            "git_blob_sha1": "b000e88d751fcc644c46cda46b9d5169236587f9"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_cleanup_retention.py",
+          "before": {
+            "path": "research/consolidation/tests/test_cleanup_retention.py",
+            "mode": "100644",
+            "bytes": 15812,
+            "sha256": "399f5b194e33c10d1cd1a07096f7d620a689a1ca92e746405a805dcb36ecd946",
+            "git_blob_sha1": "fb3261c138cfc3216cc0a12f4946df582a9bd566"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_cleanup_retention.py",
+            "mode": "100644",
+            "bytes": 16310,
+            "sha256": "46a4fddcccd1b9eb87f54ce8342b0944a837b417eeef33894b153c6c41737095",
+            "git_blob_sha1": "cbda229e15f061d7e39f07155e8e6f2f0896a13c"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 34810,
+            "sha256": "c95bb2cd5911656227a0fdc3205ce37e3224f18ccf48cb30a97b7e6001620c78",
+            "git_blob_sha1": "1245285fe5d6886c2555821ddc3d0c92d1da16ed"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 34810,
+            "sha256": "12b2686c8c6bc66e111f39d9b1ad9bd12506d51eb35529d5f524db21e4725a53",
+            "git_blob_sha1": "fe5641a3a5f23a3064e165b838831ce4c5f91de3"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 38115,
+            "sha256": "9fd38052ef8b467ded248aada4eff6e86a7671baa9a2ee4ab1db82995f2b2e98",
+            "git_blob_sha1": "8648fa5578bedaa3c02a6f8f0b51f154cc5a16f5"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 38115,
+            "sha256": "ef3e9f407c7278adee52d3a532563b1109d0ae12757e609fde2c213363c12d6d",
+            "git_blob_sha1": "afa82c8212e2bbaba6716d72ab58b92d5135b6ea"
+          }
+        },
+        {
+          "path": "research/k1-atomic-claim-qualification-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/k1-atomic-claim-qualification-v1/README.md",
+            "mode": "100644",
+            "bytes": 8478,
+            "sha256": "a518e81d8df67f52ba4e31991ebd1f3cb599ea344d2ca54e7019f772d805bef6",
+            "git_blob_sha1": "79036022bb3d6b8d8871bd7cbebdd85c91d5fa7c"
+          }
+        },
+        {
+          "path": "research/k1-atomic-claim-qualification-v1/git_claim_qualification.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-atomic-claim-qualification-v1/git_claim_qualification.py",
+            "mode": "100644",
+            "bytes": 33637,
+            "sha256": "18cc9b802cc1c799fa19be3e7175abb2863a40bf27ca47b32c7395daae822360",
+            "git_blob_sha1": "96449e15ded0243ead33f63957e8284092b3fe2b"
+          }
+        },
+        {
+          "path": "research/k1-atomic-claim-qualification-v1/qualification-control.json",
+          "before": null,
+          "after": {
+            "path": "research/k1-atomic-claim-qualification-v1/qualification-control.json",
+            "mode": "100644",
+            "bytes": 541,
+            "sha256": "27c5b81a6f3b0b9b8019eb0844a92320009affe8f35e0618170abcfc36302e8a",
+            "git_blob_sha1": "f4fa170bde116fc69fb6eacfe2d05d680c75cd69"
+          }
+        },
+        {
+          "path": "research/k1-atomic-claim-qualification-v1/source-freeze.json",
+          "before": null,
+          "after": {
+            "path": "research/k1-atomic-claim-qualification-v1/source-freeze.json",
+            "mode": "100644",
+            "bytes": 851,
+            "sha256": "3043c857d67483455bf6af44550d423224e603610c383a47175569ce8193c722",
+            "git_blob_sha1": "d63f7613500a8c7e7b3afac82ee4a49d735a99f9"
+          }
+        },
+        {
+          "path": "research/k1-atomic-claim-qualification-v1/test_git_claim_qualification.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-atomic-claim-qualification-v1/test_git_claim_qualification.py",
+            "mode": "100644",
+            "bytes": 35220,
+            "sha256": "83b3c587e1cbef0fee45104a7d498f92d9e55e75297316df3ff3887eab99e679",
+            "git_blob_sha1": "91c97b80cd5836d8fdda0db689dc47b2b04de6d4"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 14003,
+            "sha256": "f1caa116ac25fcf233584fb7d30041867469c3a177c835576088cbebca1f0eaa",
+            "git_blob_sha1": "b24f7c82b363a2ca003cf17c842f6342497aab29"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 14077,
+            "sha256": "364bdd16180f82fb830423c3613aa2457309e3b6a232bb52fc0a11fc027c036b",
+            "git_blob_sha1": "5ea5925cdcbfe1712f825cc0b0e8b58a8a0d5e1b"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -24457,6 +24671,13 @@
       "bytes": 2421,
       "sha256": "0a0f5b24b917962b644fb4fc6aaa67decbc70d347f9bc1b8edd63091d2cb04df",
       "git_blob_sha1": "77bd8f58ac862d4c36807722f8407202ff181fa6"
+    },
+    {
+      "path": ".github/workflows/k1-atomic-claim-qualification-v1.yml",
+      "mode": "100644",
+      "bytes": 2973,
+      "sha256": "9c224ad06a41c072f2e6c35e7c0766a9023ea3e98089d3cc41e8e0125f7939f6",
+      "git_blob_sha1": "27787da7620dc5aed8fe849eae4a421c5de0d407"
     }
   ],
   "current_source_revision": {

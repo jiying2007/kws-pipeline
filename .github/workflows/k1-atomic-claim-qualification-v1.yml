@@ -1,0 +1,46 @@
+name: K1 atomic claim zero-model qualification v1
+on:
+  push:
+    branches:
+      - research/k1-atomic-claim-qualification-v1
+permissions:
+  contents: read
+concurrency:
+  group: k1-atomic-claim-qualification-v1
+  cancel-in-progress: false
+jobs:
+  qualify:
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-atomic-claim-qualification-v1' && github.event.created == true && github.event.deleted == false && github.event.forced == false && github.event.repository.private == false && github.run_number == 1 && github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Fixed zero-model atomic claim contracts
+        id: contracts
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          python3 -I -S -B research/k1-atomic-claim-qualification-v1/test_git_claim_qualification.py
+          python3 -I -S -B -O research/k1-atomic-claim-qualification-v1/test_git_claim_qualification.py
+          python3 -I -S -B -OO research/k1-atomic-claim-qualification-v1/test_git_claim_qualification.py
+      - name: Fixed public Git create-only claim qualification
+        id: qualify
+        if: ${{ success() && steps.contracts.outcome == 'success' }}
+        timeout-minutes: 6
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          checkout_sha="$(env -i PATH=/usr/bin:/bin HOME=/nonexistent GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 LC_ALL=C git --no-optional-locks -c core.fsmonitor=false -c core.hooksPath=/dev/null rev-parse HEAD)"
+          checkout_tree="$(env -i PATH=/usr/bin:/bin HOME=/nonexistent GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 LC_ALL=C git --no-optional-locks -c core.fsmonitor=false -c core.hooksPath=/dev/null rev-parse "$GITHUB_SHA^{tree}")"
+          freeze_sha="$(env -i PATH=/usr/bin:/bin HOME=/nonexistent GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 LC_ALL=C sh -eu -c 'git --no-optional-locks -c core.fsmonitor=false -c core.hooksPath=/dev/null show "$1:research/k1-atomic-claim-qualification-v1/source-freeze.json" | sha256sum | cut -d " " -f 1' sh "$GITHUB_SHA")"
+          python3 -I -S -B research/k1-atomic-claim-qualification-v1/git_claim_qualification.py --control research/k1-atomic-claim-qualification-v1/qualification-control.json --checkout-sha "$checkout_sha" --checkout-tree "$checkout_tree" --source-freeze research/k1-atomic-claim-qualification-v1/source-freeze.json --source-freeze-sha "$freeze_sha"
+      # Only fixed public Git metadata; no model, payload, Artifact or retry path.
