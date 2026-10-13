@@ -391,6 +391,13 @@ class QualificationTests(unittest.TestCase):
         self.assertEqual(f.execute()["status"], "skipped")
         self.assertEqual(f.requests(), [])
 
+    def test_checked_in_control_stays_disabled(self):
+        # This is the current source state, separate from explicitly enabled fake fixtures.
+        control = q.strict_json(Path(__file__).with_name("qualification-control.json").read_bytes())
+        self.assertEqual(control, q.default_control())
+        self.assertIs(control["enabled"], False)
+        self.assertFalse(q.validate_control(control))
+
     def test_disabled_zero_api_before_token(self):
         f = self.fixture(enabled=False)
         f.env = ForbiddenToken(f.env)
