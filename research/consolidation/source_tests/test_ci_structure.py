@@ -226,7 +226,7 @@ ASR18_MODULES = (
     'test_asr18_raw_data_reader', 'test_asr18_receipts', 'test_asr18_resources',
     'test_asr18_transport', 'test_asr18_worker',
 )
-ASR18_JOB_IF = "${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-asr18-r2' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}"
+ASR18_JOB_IF = "${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-asr18-r3' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}"
 ASR18_HOST_IF = "${{ success() && steps.asr18_contracts.outcome == 'success' }}"
 ASR18_PUBLISH_IF = "${{ always() && steps.host.outputs.started == 'true' }}"
 
@@ -306,15 +306,15 @@ class ASR18CIContracts(unittest.TestCase):
         self.assertEqual(workflow, template)
         self.assertNotIn('INERT RESEARCH TEMPLATE', workflow)
         self.assertEqual(workflow.split('permissions:', 1)[0],
-            'name: K1 punctuation6 ASR18 r2 conditional once\n'
-            'on:\n  push:\n    branches:\n      - research/k1-punctuation6-asr18-r2\n')
+            'name: K1 punctuation6 ASR18 r3 conditional once\n'
+            'on:\n  push:\n    branches:\n      - research/k1-punctuation6-asr18-r3\n')
         self.assertNotIn("refs/heads/research/k1-punctuation6-asr18-v1", workflow)
         shared = jobs(ci)['python-contracts']
         self.assertNotIn('    if:', shared)
         self.assertEqual(set(jobs(workflow)), {'asr18'})
         execution = jobs(workflow)['asr18']
         self.assertIn('    if: ' + ASR18_JOB_IF + '\n', execution)
-        self.assertIn('concurrency:\n  group: k1-punctuation6-asr18-r2\n  cancel-in-progress: false\n', workflow)
+        self.assertIn('concurrency:\n  group: k1-punctuation6-asr18-r3\n  cancel-in-progress: false\n', workflow)
         for name, body in (('ci', shared), ('asr18', execution)):
             step = named_step(body, 'K1 punctuation6 ASR18 offline source contracts')
             self.assertIn('        id: asr18_contracts\n', step)
@@ -354,14 +354,14 @@ class ASR18CIContracts(unittest.TestCase):
             ('workflow', ASR18_HOST_IF, '${{ always() }}'),
             ('workflow', ASR18_PUBLISH_IF, "${{ always() && steps.host.outcome != 'skipped' }}"),
             ('workflow', "github.run_attempt == 1", 'github.run_attempt >= 1'),
-            ('workflow', '      - research/k1-punctuation6-asr18-r2\n',
+            ('workflow', '      - research/k1-punctuation6-asr18-r3\n',
              '      - research/k1-punctuation6-asr18-v1\n'),
-            ('workflow', '      - research/k1-punctuation6-asr18-r2\n',
-             '      - research/k1-punctuation6-asr18-r2\n      - research/k1-punctuation6-asr18-v1\n'),
-            ('workflow', "github.ref == 'refs/heads/research/k1-punctuation6-asr18-r2'",
+            ('workflow', '      - research/k1-punctuation6-asr18-r3\n',
+             '      - research/k1-punctuation6-asr18-r3\n      - research/k1-punctuation6-asr18-v1\n'),
+            ('workflow', "github.ref == 'refs/heads/research/k1-punctuation6-asr18-r3'",
              "github.ref == 'refs/heads/research/k1-punctuation6-asr18-v1'"),
             ('workflow', 'github.event.created == true', 'github.event.created == false'),
-            ('workflow', 'group: k1-punctuation6-asr18-r2', 'group: k1-punctuation6-asr18-v1'),
+            ('workflow', 'group: k1-punctuation6-asr18-r3', 'group: k1-punctuation6-asr18-v1'),
             ('workflow', 'id: host\n', 'id: host\n        continue-on-error: true\n'),
         )
         for target, before, after in mutations:
@@ -377,7 +377,7 @@ class ASR18CIContracts(unittest.TestCase):
         context = {
             'github.repository': 'jiying2007/kws-pipeline',
             'github.event_name': 'push',
-            'github.ref': 'refs/heads/research/k1-punctuation6-asr18-r2',
+            'github.ref': 'refs/heads/research/k1-punctuation6-asr18-r3',
             'github.event.created': True,
             'github.event.deleted': False,
             'github.event.repository.private': False,
@@ -389,10 +389,11 @@ class ASR18CIContracts(unittest.TestCase):
             ('github.event_name', ('workflow_dispatch', 'workflow_call', 'pull_request', 'schedule')),
             ('github.ref', ('refs/heads/research/k1-punctuation6-asr18-v1',
                             'refs/heads/research/k1-punctuation6-asr18-v2',
-                            'refs/heads/research/k1-punctuation6-asr18-r20',
-                            'refs/heads/research/k1-punctuation6-asr18-r2-extra',
+                            'refs/heads/research/k1-punctuation6-asr18-r30',
+                            'refs/heads/research/k1-punctuation6-asr18-r3-extra',
                             'refs/heads/research/k1-punctuation6-asr18-r1',
-                            'refs/heads/main', 'refs/tags/research/k1-punctuation6-asr18-r2')),
+                            'refs/heads/research/k1-punctuation6-asr18-r2',
+                            'refs/heads/main', 'refs/tags/research/k1-punctuation6-asr18-r3')),
             ('github.event.created', (False, None)),
             ('github.event.deleted', (True, None)),
             ('github.event.repository.private', (True, None)),
@@ -547,7 +548,7 @@ class PrepareDiagnosticCIContracts(unittest.TestCase):
             ('workflow', '      - research/k1-punctuation6-prepare-diagnostic-r2\n',
              '      - research/k1-punctuation6-prepare-diagnostic-r2\n      - main\n'),
             ('workflow', "github.ref == 'refs/heads/research/k1-punctuation6-prepare-diagnostic-r2'",
-             "github.ref == 'refs/heads/research/k1-punctuation6-asr18-r2'"),
+             "github.ref == 'refs/heads/research/k1-punctuation6-asr18-r3'"),
             ('workflow', 'group: k1-punctuation6-prepare-diagnostic-r2', 'group: k1-punctuation6-prepare-diagnostic-v2'),
             ('workflow', 'id: host\n', 'id: host\n        continue-on-error: true\n'),
         )
@@ -571,7 +572,7 @@ class PrepareDiagnosticCIContracts(unittest.TestCase):
             ('github.repository', ('other/kws-pipeline', 'jiying2007/other')),
             ('github.event_name', ('workflow_dispatch', 'workflow_call', 'pull_request', 'schedule')),
             ('github.ref', ('refs/heads/research/k1-punctuation6-asr18-v1',
-                            'refs/heads/research/k1-punctuation6-asr18-r2',
+                            'refs/heads/research/k1-punctuation6-asr18-r3',
                             'refs/heads/research/k1-punctuation6-prepare-diagnostic-v1',
                             'refs/heads/research/k1-punctuation6-prepare-diagnostic-r1',
                             'refs/heads/research/k1-punctuation6-prepare-diagnostic-r20',

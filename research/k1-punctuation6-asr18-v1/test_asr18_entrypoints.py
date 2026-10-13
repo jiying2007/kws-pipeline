@@ -83,10 +83,10 @@ class ActualEntrypoints(unittest.TestCase):
         self.assertEqual(error['detail'],{'error_type':'UnlistedError' if stages==['publication_gate'] else 'ValueError',
             'error_text':'omitted_by_fixed_privacy_policy'})
 
-    def test_checked_in_asr_controls_are_explicitly_disabled(self):
+    def test_checked_in_asr_controls_are_explicitly_enabled(self):
         for filename,keys in DISABLED_APPROVALS.items():
             value=json.loads((HERE/filename).read_bytes())
-            self.assertTrue(all(value[key] is False for key in keys))
+            self.assertTrue(all(value[key] is True for key in keys))
         self.assertIs(json.loads((HERE/'execution-release.json').read_bytes())['historical_screening_reviewed'],True)
 
     def call(self,path,args=()):
@@ -102,16 +102,20 @@ class ActualEntrypoints(unittest.TestCase):
             self.assertNotIn(b'ImportError',result.stderr)
             return result
 
-    def test_real_workflow_host_command_hits_disabled_entry(self):
-        value=self.call(HERE/'hosted_run.py')
+    def test_real_workflow_host_command_hits_explicit_disabled_entry(self):
+        with disabled_source() as source:
+            value=self.call(source/'hosted_run.py')
         self.assertEqual((value.returncode,value.stderr),(2,b''))
         self.check_diagnostic(value.stdout,role='host',stages=['release'],terminal=True)
 
     def test_real_workflow_publisher_command_hits_explicit_disabled_gate(self):
-        value=self.call(HERE/'evidence_publisher.py')
+        with disabled_source() as source:
+            value=self.call(source/'evidence_publisher.py')
         self.assertEqual((value.returncode,value.stderr),(1,b'ASR18 publication disabled or review absent.\n'))
         self.check_diagnostic(value.stdout,role='publisher',stages=['publication_gate'])
 
+    def test_actual_enabled_workflow_commands_reject_nonexecution_context_without_effects(self):
+        self.check_enabled_workflow_commands_reject_nonexecution_context(HERE)
 
     def test_synthetic_enabled_workflow_commands_reject_nonexecution_context_without_effects(self):
         with synthetic_enabled_source(HERE) as source:

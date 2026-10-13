@@ -64,7 +64,7 @@ class FakeAPI:
             'path':h.WORKFLOW,'repository':{'full_name':h.REPOSITORY,'private':False},
             'head_repository':{'full_name':h.REPOSITORY},'workflow_id':9}
         self.rows={base+'/actions/runs/123':current,base+'/actions/workflows/9':{'id':9,'path':h.WORKFLOW},
-            base+'/actions/workflows/9/runs?branch=research%2Fk1-punctuation6-asr18-r2&per_page=100&page=1':{'total_count':1,'workflow_runs':[current]},
+            base+'/actions/workflows/9/runs?branch='+h.urllib.parse.quote(h.SOURCE_REF,safe='')+'&per_page=100&page=1':{'total_count':1,'workflow_runs':[current]},
             base+'/actions/runs/123/attempts/1/jobs?per_page=100&page=1':{'total_count':1,'jobs':[{'id':456,'name':'asr18','run_id':123,'head_sha':'c'*40,'status':'in_progress','conclusion':None,
                 'labels':['ubuntu-24.04'],'runner_name':'GitHub Actions 1','runner_group_name':'GitHub Actions'}]},
             base+'/git/ref/heads/'+h.SOURCE_REF:{'ref':'refs/heads/'+h.SOURCE_REF,'object':{'type':'commit','sha':'c'*40}},
@@ -120,34 +120,55 @@ def public_fixture():
 
 
 class HostTests(unittest.TestCase):
-    def test_checked_in_controls_disabled_and_prior_unknown_not_reclaimed(self):
+    def test_checked_in_r3_controls_enabled_and_all54_prior_slots_not_reclaimed(self):
         for filename,keys in DISABLED_APPROVALS.items():
             value=c.read_json(HERE/filename)
-            self.assertTrue(all(value[key] is False for key in keys))
+            self.assertTrue(all(value[key] is True for key in keys))
         release=c.read_json(HERE/'execution-release.json');history=h.prior_history_identity()
         self.assertIs(release['historical_screening_reviewed'],True)
-        with self.assertRaisesRegex(ValueError,'disabled'):h.release_first()
-        self.assertEqual(release['experiment'],'k1-punctuation6-asr18-r2')
-        self.assertEqual(release['source_ref'],'research/k1-punctuation6-asr18-r2')
+        self.assertEqual(h.release_first(),release)
+        self.assertEqual(release['experiment'],'k1-punctuation6-asr18-r3')
+        self.assertEqual(release['source_ref'],'research/k1-punctuation6-asr18-r3')
+        self.assertEqual(release['evidence_ref'],'evidence/k1-punctuation6-asr18-r3')
+        self.assertEqual(release['max_new_asr_calls'],18)
+        self.assertEqual(release['old_calls_allowed'],0)
+        self.assertEqual(release['retries'],0)
         self.assertEqual(history['prior_runs'],[])
         self.assertEqual(history['prior_runs_scope'],'only_new_source_branch_and_fixed_workflow')
-        prior=history['sealed_prior_campaigns'][0]
-        self.assertEqual(prior['run_id'],38207026177);self.assertIsNone(prior['actual_consumed_attempts'])
-        self.assertEqual(prior['reusable_slots'],0)
         self.assertEqual(release['prior_public_claim_history_sha256'],c.digest(c.canonical(history)))
-        self.assertEqual(len(history['sealed_prior_campaigns']),2)
-        prior_r1=history['sealed_prior_campaigns'][1]
-        self.assertEqual(prior_r1['run_id'],38219171568);self.assertIsNone(prior_r1['actual_consumed_attempts'])
-        self.assertEqual(prior_r1['reusable_slots'],0)
-        import copy
-        wrong=copy.deepcopy(history);wrong['sealed_prior_campaigns'][0]['actual_consumed_attempts']=0
-        bad=dict(release,prior_public_claim_history_sha256=c.digest(c.canonical(wrong)))
+        prior=history['sealed_prior_campaigns']
+        self.assertEqual([row['run_id'] for row in prior],[38207026177,38219171568,38286042984])
+        self.assertEqual([row['executed_head_sha'] for row in prior],list(c.SEALED_ASR_SOURCES))
+        self.assertEqual(sum(row['planned_slots'] for row in prior),54)
+        self.assertEqual(prior[2]['experiment'],'k1-punctuation6-asr18-r2')
+        self.assertEqual(prior[2]['source_branch'],'research/k1-punctuation6-asr18-r2')
+        self.assertEqual(prior[2]['result_branch'],'evidence/k1-punctuation6-asr18-r2')
+        self.assertEqual(prior[2]['executed_head_sha'],'d3b7ce54c8909df8e962d8547a546c3d460dcbc8')
+        for index,row in enumerate(prior):
+            self.assertEqual(row['planned_slots'],18)
+            self.assertIsNone(row['actual_consumed_attempts'])
+            self.assertEqual(row['reusable_slots'],0)
+            self.assertEqual(row['status'],'failed_consumption_unknown_sealed')
+            for key,value in (('actual_consumed_attempts',0),('reusable_slots',18)):
+                wrong=copy.deepcopy(history);wrong['sealed_prior_campaigns'][index][key]=value
+                bad=dict(release,prior_public_claim_history_sha256=c.digest(c.canonical(wrong)))
+                with self.subTest(prior=index,key=key),self.assertRaisesRegex(ValueError,'prior public claim history'):
+                    h.api_preflight(FakeAPI(),context()[2],bad)
+        wrong=copy.deepcopy(history);wrong['sealed_prior_campaigns'].pop()
         with self.assertRaisesRegex(ValueError,'prior public claim history'):
-            h.api_preflight(FakeAPI(),context()[2],bad)
+            h.api_preflight(FakeAPI(),context()[2],dict(release,
+                prior_public_claim_history_sha256=c.digest(c.canonical(wrong))))
         env,event,_=context()
-        for change in ({'GITHUB_RUN_ID':'38207026177'}, {'GITHUB_RUN_ID':'38219171568'}, {'GITHUB_REF':'refs/heads/research/k1-punctuation6-asr18-v1'},
-                       {'GITHUB_RUN_ATTEMPT':'2'}):
+        changes=[{'GITHUB_RUN_ID':str(run)} for run in c.SEALED_ASR_RUNS]
+        changes += [{'GITHUB_SHA':head,'GITHUB_WORKFLOW_SHA':head} for head in c.SEALED_ASR_SOURCES]
+        changes += [{'GITHUB_REF':'refs/heads/'+row['source_branch']} for row in prior]
+        changes += [{'GITHUB_WORKFLOW_REF':h.REPOSITORY+'/'+h.WORKFLOW+'@refs/heads/'+row['source_branch']} for row in prior]
+        changes += [{'GITHUB_RUN_ATTEMPT':'2'}]
+        for change in changes:
             with self.subTest(change=change),self.assertRaises(ValueError):h.event_identity({**env,**change},event)
+        for row in prior:
+            with self.subTest(event_ref=row['source_branch']),self.assertRaises(ValueError):
+                h.event_identity(env,{**event,'ref':'refs/heads/'+row['source_branch']})
 
     def test_explicit_disabled_copy_precedes_every_external_or_mutating_operation(self):
         # Exercise the real disabled reader without changing production controls.
@@ -177,7 +198,7 @@ class HostTests(unittest.TestCase):
         self.assertGreater(len(inputs['actual_blind_job']['clips']),0)
 
     @synthetic_enabled_host_test
-    def test_synthetic_enabled_r2_controls_pass_real_git_api_and_input_gates(self):
+    def test_synthetic_enabled_r3_controls_pass_real_git_api_and_input_gates(self):
         # Keep the temporary enabled controls and re-frozen public source bytes.
         # Only the host event and six GitHub responses are invented. A clean
         # temporary local commit supplies the actual source HEAD/tree/blob;
@@ -221,7 +242,7 @@ class HostTests(unittest.TestCase):
             self.assertEqual(c.canonical(release),production)
             self.assertTrue(all(release[key] is True for key in c.RELEASE_APPROVALS))
             self.assertEqual(release['prior_public_claim_history_sha256'],
-                '5658a010184522f001652089177f8ced1a8ffec919916379ccdb43f7bf766bcd')
+                '80670524b9a53bfcc5f296331c72ee9c1f8b060ba6ad76f292e4354ca7d97b1f')
             run=h.event_identity(host,event)
             api=FakeAPI();base='/repos/'+h.REPOSITORY
             api.rows[base+'/actions/runs/123']['head_sha']=head
@@ -249,7 +270,7 @@ class HostTests(unittest.TestCase):
         self.assertEqual(c.read_bytes(HERE/'execution-freeze.json'),source_raw)
 
     @synthetic_enabled_host_test
-    def test_synthetic_enabled_r2_release_rejects_noncanonical_lf_history_sha(self):
+    def test_synthetic_enabled_r3_release_rejects_noncanonical_lf_history_sha(self):
         # The public observer's bytes retain their trailing LF. Its file digest
         # must never stand in for the canonical JSON identity accepted by the
         # production API gate. Reconstruct only this public fixed identity;
@@ -259,8 +280,8 @@ class HostTests(unittest.TestCase):
         canonical=c.canonical(h.prior_history_identity())
         raw_observer=canonical+b'\n'
         self.assertEqual(c.decode_json(raw_observer,require_canonical=False),h.prior_history_identity())
-        self.assertEqual(c.digest(canonical),'5658a010184522f001652089177f8ced1a8ffec919916379ccdb43f7bf766bcd')
-        self.assertEqual(c.digest(raw_observer),'018f0dc3050f266e1410b844419bb0632d848562d8abdc71bac726b07608b2c7')
+        self.assertEqual(c.digest(canonical),'80670524b9a53bfcc5f296331c72ee9c1f8b060ba6ad76f292e4354ca7d97b1f')
+        self.assertEqual(c.digest(raw_observer),'0101226db6f13fd501ae791d818f2fe4ba56311fb9c3b43b4cbbb348140a0288')
         self.assertEqual(release['prior_public_claim_history_sha256'],c.digest(canonical))
         wrong=copy.deepcopy(release)
         wrong['prior_public_claim_history_sha256']=c.digest(raw_observer)
@@ -273,6 +294,12 @@ class HostTests(unittest.TestCase):
 
     @synthetic_enabled_host_test
     def test_synthetic_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects(self):
+        self.check_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects()
+
+    def test_actual_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects(self):
+        self.check_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects()
+
+    def check_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects(self):
         # release_first/read_json/event_identity/main are all the real functions.
         # Traps observe only downstream external or mutating operations; no
         # gate is mocked into returning success or into inventing a rejection.
@@ -313,13 +340,20 @@ class HostTests(unittest.TestCase):
 
     def test_history_replay_incomplete_page_and_changed_job_block(self):
         _,_,run=context()
-        for kind in ('replay','truncated','wrong_job','wrong_run','result_exists'):
+        for kind in ('replay','truncated','wrong_job','wrong_run','result_exists',
+                     'attempt2','sealed_r2_run','sealed_r2_source','r2_ref'):
             api=FakeAPI(); history=next(v for k,v in api.rows.items() if '/runs?branch=' in k)
             if kind=='replay': history.update(total_count=2,workflow_runs=history['workflow_runs']*2)
             if kind=='truncated': history['total_count']=101
             if kind=='wrong_job': next(v for k,v in api.rows.items() if '/jobs?' in k)['jobs'][0]['labels']=['self-hosted']
             if kind=='wrong_run': api.rows['/repos/'+h.REPOSITORY+'/actions/runs/123']['head_sha']='d'*40
             if kind=='result_exists': api.rows['/repos/'+h.REPOSITORY+'/git/ref/heads/'+h.EVIDENCE_REF]={}
+            if kind in ('attempt2','sealed_r2_run','sealed_r2_source'):
+                history['workflow_runs']=copy.deepcopy(history['workflow_runs'])
+                key,value={'attempt2':('run_attempt',2),'sealed_r2_run':('id',38286042984),
+                    'sealed_r2_source':('head_sha','d3b7ce54c8909df8e962d8547a546c3d460dcbc8')}[kind]
+                history['workflow_runs'][0][key]=value
+            if kind=='r2_ref':api.rows['/repos/'+h.REPOSITORY+'/actions/runs/123']['head_branch']='research/k1-punctuation6-asr18-r2'
             with self.subTest(kind=kind),self.assertRaises(ValueError): h.api_preflight(api,run,release_fixture())
 
     def test_nonunique_count_stops_without_another_page(self):
