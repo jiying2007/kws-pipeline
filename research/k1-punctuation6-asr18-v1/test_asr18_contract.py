@@ -123,7 +123,7 @@ class ContractTests(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 c.validate_worker_admission({**release, key: 'e' * 64}, value, blind['job'], blind['execution_plan'])
 
-    def test_source_claim_binds_actual_context_not_self_asserted_authority(self):
+    def test_archived_v1_source_claim_binds_context_and_retains_history1(self):
         release = c.disabled_release()
         for key in c.RELEASE_APPROVALS: release[key] = True
         for key in c.RELEASE_AUTHORITIES: release[key] = 'a' * 64
@@ -141,7 +141,7 @@ class ContractTests(unittest.TestCase):
             args = {'expected_sha256': c.digest(body), 'release': release,
                 'source_freeze_sha256': 'f' * 64, 'run_id': '123', 'executed_head_sha': 'c' * 40}
             args.update(changes)
-            return c.validate_source_claim(body, **args)
+            return c.validate_legacy_source_claim(body, **args)
         self.assertEqual(validate(claim), claim)
         for key, value in (('source_branch_workflow_runs', 2), ('old_calls_allowed', 1),
             ('maximum_new_asr_calls', 19), ('new_audio_forwards_at_claim', 1),

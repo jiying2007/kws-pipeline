@@ -169,6 +169,9 @@ class RecoveryAPI(p.GitHubAPI):
         authority = recovery_gate(control)
         t.require(run["job_key"] == JOB_KEY and source["source_sha"] == run["executed_head_sha"], "admitted recovery source")
         routes = endpoints(run, source, authority)
+        self.authority = t.decode(t.canonical(authority))
+        self.producer_history_route = routes["producer_history"]
+        self.producer_history_bound = False
         body, commit = p.commit_body(authority["checkpoint_tree"], original_release(authority))
         self._initialize(token, get_routes=set(routes.values()), source_sha=authority["producer_identity"]["executed_head_sha"],
             source_tree=authority["source_tree"], result_branch=t.POLICY["result_branch"],
@@ -176,6 +179,26 @@ class RecoveryAPI(p.GitHubAPI):
             max_upload=p.MAX_REQUEST, max_body=p.MAX_API_BODY, final_ref_only=True)
         self.bind_result(commit, authority["checkpoint_tree"])
         self.allowed = {("GET", route) for route in routes.values()} | {("POST", p.BASE + "/git/refs")}
+
+    def bind_producer_history(self, payload, source_rows):
+        """Replace only the producer-history ticket after immutable proof binding."""
+        a = self.authority
+        t.require(not self.producer_history_bound and
+            not any(row[0] == "GET" and row[1] == self.producer_history_route for row in self.seen),
+            "producer history rebound once before any history request")
+        t.require(type(payload) is bytes and len(payload) == a["archive_bytes"]
+            and t.sha(payload) == a["archive_sha256"] and
+            t.tree_identity(source_rows)[0] == a["source_tree"],
+            "independently pinned original archive and complete source tree")
+        proof = t.validate_source_binding(payload, a["producer_identity"], a["source_closure_sha256"],
+            source_rows, a["numeric_job_id"], a["source_tree"])
+        t.require(proof is not None, "source-bound producer proof required for route replacement")
+        route = p.producer_history_route(proof["identity"])
+        self.allowed.remove(("GET", self.producer_history_route))
+        self.allowed.add(("GET", route))
+        self.producer_history_route = route
+        self.producer_history_bound = True
+        return route
 
     def __call__(self, method, route, body=None, expected=200):
         t.require(self.count < MAX_API_REQUESTS, "recovery exact API budget")
@@ -197,7 +220,9 @@ class CheckpointReader(p.RawReader):
         return raw
 
 
-def _verify_run(api, routes, prefix, identity, branch, workflow, job_key, terminal=None):
+def _verify_run(api, routes, prefix, identity, branch, workflow, job_key, terminal=None, *, source_claim=None, observations=None):
+    if source_claim is not None:
+        c.require_current_scope(source_claim["identity"])
     expected = {"id": identity["run_id"], "run_attempt": 1, "head_sha": identity["executed_head_sha"],
         "head_branch": branch, "event": "push", "path": workflow,
         "status": "completed" if terminal else "in_progress", "conclusion": terminal["run_conclusion"] if terminal else None}
@@ -205,9 +230,22 @@ def _verify_run(api, routes, prefix, identity, branch, workflow, job_key, termin
     p._equal(run, expected, "exact current or original run")
     p._equal(run.get("repository"), {"full_name": t.REPOSITORY, "private": False}, "public run repository")
     history = api("GET", routes[prefix + "_history"])
-    p._equal(history, {"total_count": 1}, "one source run only")
-    t.require(type(history.get("workflow_runs")) is list and len(history["workflow_runs"]) == 1, "complete one-use source history")
-    p._equal(history["workflow_runs"][0], expected, "same exact original/recovery history")
+    if source_claim is None:
+        p._equal(history, {"total_count": 1}, "one source run only")
+        t.require(type(history.get("workflow_runs")) is list and len(history["workflow_runs"]) == 1, "complete one-use source history")
+        p._equal(history["workflow_runs"][0], expected, "same exact original/recovery history")
+    else:
+        t.require(prefix == "producer" and terminal is not None, "v2 never changes recovery's own history policy")
+        owner = source_claim["identity"]
+        c.validate_bound_admission(source_claim["admission"], owner)
+        t.require(owner["run_id"] == identity["run_id"] and owner["source_sha"] == identity["executed_head_sha"]
+            and (owner["source_branch"], owner["workflow"], owner["job_key"]) == (branch, workflow, job_key),
+            "same source-bound original owner and scope")
+        p._equal(run, c.bound_run_row(owner), "same actual original owner run identity")
+        p._equal(run.get("head_repository"), {"full_name": t.REPOSITORY, "private": False}, "public original head repository")
+        observation = p.history_observation(api, routes[prefix + "_history"], owner, history, "posterior")
+        if observations is not None: observations["producer_history"] = observation
+        p._equal(run, {"run_number": 1, "run_attempt": 1}, "eligible original immutable owner")
     jobs = api("GET", routes[prefix + "_jobs"])
     t.require(type(jobs.get("total_count")) is int and 1 <= jobs["total_count"] <= 100
         and type(jobs.get("jobs")) is list and len(jobs["jobs"]) == jobs["total_count"], "complete bounded jobs")
@@ -220,6 +258,8 @@ def _verify_run(api, routes, prefix, identity, branch, workflow, job_key, termin
     if "run_attempt" in job:
         p._equal(job, {"run_attempt": 1}, "job attempt one")
     t.require(type(job.get("id")) is int and 0 < job["id"] < 10 ** 20, "actual numeric job identity")
+    if source_claim is not None:
+        t.require(job["id"] == source_claim["identity"]["job_id"], "same independent original owner job")
     if terminal:
         steps = job.get("steps")
         t.require(type(steps) is list and 2 <= len(steps) <= 100 and all(type(step) is dict for step in steps), "complete original steps")
@@ -242,8 +282,9 @@ def recover(env, event, control, source, api, raw_factory=CheckpointReader):
     p._equal(api("GET", routes["repo"]), {"full_name": t.REPOSITORY, "private": False}, "canonical public API repository")
     recovery_job = _verify_run(api, routes, "recovery", run, SOURCE_BRANCH, WORKFLOW, JOB_KEY)
     original = authority["producer_identity"]
-    producer_job = _verify_run(api, routes, "producer", original, t.POLICY["source_branch"], t.POLICY["workflow"], "asr18", authority["terminal"])
-    t.require(producer_job == authority["numeric_job_id"], "original pinned numeric job")
+    # Preserve the original job pin while reading its immutable checkpoint.
+    # Independent producer run/history/jobs are read only after archive binding.
+    producer_job = authority["numeric_job_id"]
     source_rows = None
     for prefix, sha, tree, stamp in (("recovery", source["source_sha"], source["source_tree"], source["commit_timestamp"]),
         ("producer", original["executed_head_sha"], authority["source_tree"], authority["source_commit_timestamp"])):
@@ -268,7 +309,17 @@ def recover(env, event, control, source, api, raw_factory=CheckpointReader):
     t.require(len(outer) + sum(len(raw) for _, raw in chunks) <= MAX_RAW_BODY, "aggregate bounded complete immutable read")
     payload = t.reassemble(outer, chunks, original, authority["source_closure_sha256"], producer_job)
     t.validate_archive(payload, original)
-    t.validate_source_binding(payload, original, authority["source_closure_sha256"], source_rows, producer_job, authority["source_tree"])
+    proof = t.validate_source_binding(payload, original, authority["source_closure_sha256"], source_rows, producer_job, authority["source_tree"])
+    producer_policy = t.LEGACY_POLICY if proof is None else c.require_current_scope(proof["identity"])
+    if proof is not None:
+        route = p.producer_history_route(proof["identity"])
+        if isinstance(api, RecoveryAPI):
+            t.require(api.bind_producer_history(payload, source_rows) == route, "only verified producer history ticket")
+        routes["producer_history"] = route
+    observations = {}
+    observed_job = _verify_run(api, routes, "producer", original, producer_policy["source_branch"],
+        producer_policy["workflow"], "asr18", authority["terminal"], source_claim=proof, observations=observations)
+    t.require(observed_job == producer_job, "original pinned independent numeric job")
     # This is the same real native/host validator as ordinary publication, never
     # a synthetic transport selector or caller-supplied schema callback.
     import io
@@ -289,6 +340,7 @@ def recover(env, event, control, source, api, raw_factory=CheckpointReader):
     p.finalize_exact_ref(api, t.POLICY["result_branch"], commit)
     return {"schema": "k1-asr18-transfer-recovery-receipt-v1", "status": "exact_original_checkpoint_final_ref_verified",
         "producer_identity": dict(original), "producer_numeric_job_id": producer_job,
+        **observations,
         "original_terminal": dict(authority["terminal"]), "original_run_status": "completed",
         "original_job_status": "completed", "original_publisher_reclassified": False,
         "recovery_identity": run, "recovery_numeric_job_id": recovery_job,

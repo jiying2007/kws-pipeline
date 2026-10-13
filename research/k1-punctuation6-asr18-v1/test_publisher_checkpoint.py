@@ -1,4 +1,9 @@
-"""Offline production-wire fault matrix; invented bytes, no network or models."""
+"""Offline publisher wire faults and real v2 archive admission; no models/network.
+
+CheckpointTests exercises the narrow writer protocol with invented blobs.
+NormalAdmissionTests uses complete generated v2 source/owner evidence and
+unchanged validators before the same in-memory HTTPS transport.
+"""
 import base64
 import copy
 from contextlib import redirect_stdout
@@ -16,6 +21,7 @@ sys.path.insert(0, str(HERE))
 import evidence_publisher as p
 import evidence_transport as t
 import test_asr18_transport as fixtures
+from test_claim_consumer_integration import f, publication
 
 TOKEN = 'ghs_INVENTED_ONLY_TOKEN_SENTINEL'
 
@@ -28,10 +34,10 @@ class Response(io.BytesIO):
 
 class Wire:
     """The real production client talks only to this in-memory HTTPS fixture."""
-    def __init__(self, env, event, release, source):
+    def __init__(self, env, event, release, source, owner_identity=None):
         self.env = env; self.event = event; self.release = release; self.source = source
         self.identity = p.context(env, event, release); self.routes = p.endpoints(self.identity, release)
-        self.policy = t.policy(release['purpose']); self.calls = []; self.faults = {}
+        self.policy = p.publisher_policy(release); self.calls = []; self.faults = {}
         self.refs = {}; self.blobs = {}; self.result_rows = None; self.commit = None
         self.raw_override = {}; self.raw_calls = []; self.response_reads = []
         self.repo = {'full_name': t.REPOSITORY, 'private': False}
@@ -41,6 +47,14 @@ class Wire:
         self.job = {'id': 456, 'run_id': self.identity['run_id'], 'head_sha': release['source_sha'],
             'head_branch': self.policy['source_branch'], 'name': self.policy['job_key'],
             'run_url': 'https://api.github.com' + self.routes['run'], 'status': 'in_progress', 'conclusion': None}
+        self.history = {'total_count': 1, 'workflow_runs': [self.run]}
+        if release['schema'] == 'k1-asr18-publisher-bound-release-v2':
+            self.run.update(p.c.bound_run_row(owner_identity), conclusion=None,
+                head_repository=copy.deepcopy(self.repo))
+            self.job['id'] = owner_identity['job_id']
+            later = copy.deepcopy(self.run)
+            later.update(id=owner_identity['run_id'] + 1, run_number=2, status='queued')
+            self.history = {'total_count': 2, 'workflow_runs': [copy.deepcopy(self.run), later]}
 
     def connection(self, host, timeout, context):
         owner = self
@@ -80,9 +94,11 @@ class Wire:
         if method == 'GET':
             if route == self.routes['repo']: return 200, self.repo
             if route == self.routes['run']: return 200, self.run
-            if route == self.routes['history']: return 200, {'total_count': 1, 'workflow_runs': [self.run]}
+            if route == self.routes['history']: return 200, self.history
             if route == self.routes['jobs']: return 200, {'total_count': 1, 'jobs': [self.job]}
-            if route == self.routes['source']: return 200, {'sha': self.release['source_sha'], 'tree': {'sha': self.release['source_tree']}}
+            if route == self.routes['source']:
+                return 200, {'sha': self.release['source_sha'], 'tree': {'sha': self.release['source_tree']},
+                    'committer': {'date': self.release['commit_timestamp']}}
             if route == self.routes['source_tree']: return 200, fixtures.tree_response(self.source)
             if route.startswith(p.BASE + '/git/ref/heads/'):
                 ref = 'refs/heads/' + route.split('/git/ref/heads/', 1)[1]
@@ -123,7 +139,7 @@ class CheckpointTests(unittest.TestCase):
         self.configure()
 
     def configure(self):
-        self.wire = Wire(self.env, self.event, self.release, self.source)
+        self.wire = Wire(self.env, self.event, self.release, self.source, getattr(self, 'owner_identity', None))
         patch = mock.patch.object(p.http.client, 'HTTPSConnection', side_effect=self.wire.connection)
         patch.start(); self.addCleanup(patch.stop)
         self.api = p.GitHubAPI(TOKEN, self.identity, self.release)
@@ -483,7 +499,8 @@ class WorkflowTransferScopeTests(unittest.TestCase):
                 (b'        timeout-minutes: 11', b'        timeout-minutes: 4'),
                 (b'        timeout-minutes: 61', b'        timeout-minutes: 60'),
                 (b'        timeout-minutes: 61', b'        timeout-minutes: 62'),
-                (b'        timeout-minutes: 5', b'        timeout-minutes: 4'),
+                (b'        timeout-minutes: 4', b'        timeout-minutes: 5'),
+                (b'        timeout-minutes: 1\n', b'        timeout-minutes: 2\n'),
                 (b'        timeout-minutes: 2', b'        timeout-minutes: 3')):
             with self.subTest(old=old, new=new):
                 changed = self.original.replace(old, new)
@@ -521,11 +538,20 @@ class WorkflowTransferScopeTests(unittest.TestCase):
 
     def test_pure_workflow_scope_accepts_disabled_flags_without_requiring_authority(self):
         control = p.disabled_publication_release()
-        p.validate_transfer_workflow(self.original, control)
+        admission = p.c.disabled_claim_control()
+        p.validate_transfer_workflow(self.original, control, admission_control=admission)
         with self.assertRaises(p.PublicationDisabled): p.publication_gate(control)
         changed = copy.deepcopy(control); changed['effective_execution_envelope']['publisher_seconds'] = 180
-        with self.assertRaises(ValueError): p.validate_transfer_workflow(self.original, changed)
-        with self.assertRaises(ValueError): p.validate_transfer_workflow(self.original.decode('ascii'), control)
+        with self.assertRaises(ValueError): p.validate_transfer_workflow(self.original, changed, admission_control=admission)
+        with self.assertRaises(ValueError): p.validate_transfer_workflow(self.original.decode('ascii'), control, admission_control=admission)
+
+    def test_current_owner_control_rejects_legacy_step_roster(self):
+        issuer_start = self.original.index(b'      - name: Reserve fixed campaign owner without models\n')
+        issuer_end = self.original.index(b'      - name: Admit complete new input and run fixed ASR18 once\n')
+        legacy = (self.original[:issuer_start] + self.original[issuer_end:]).replace(
+            b'        timeout-minutes: 4\n', b'        timeout-minutes: 5\n')
+        with self.assertRaises(ValueError):
+            p.validate_transfer_workflow(legacy, admission_control=p.c.disabled_claim_control())
 
     def test_bound_release_checks_workflow_only_after_disabled_gate(self):
         with mock.patch.object(p.c, 'read_json', return_value=p.disabled_publication_release()), \
@@ -544,11 +570,25 @@ class WorkflowTransferScopeTests(unittest.TestCase):
 class NormalAdmissionTests(unittest.TestCase):
     configure = CheckpointTests.configure
     posts = CheckpointTests.posts
-    # Use only the pre-existing scientifically shaped invented fixtures. Calling
-    # the common writer directly cannot stand in for normal admission tests.
+    @classmethod
+    def setUpClass(cls):
+        cls.normal = f.normal_case()
+
     def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix='asr18-v2-normal-admission-')
+        self.addCleanup(self.temp.cleanup); self.root = Path(self.temp.name)
+        self.env, self.event, self.release, _ = publication(self.normal)
+        self.identity = p.context(self.env, self.event, self.release)
+        self.files = f.members(self.normal.payload)
+        self.owner_identity = t.decode(self.files['admission.json'])['owner']['identity']
+        self.source = [row for row in self.normal.records['producer_source_tree']['tree'] if row['type'] == 'blob']
+        # Preserve the TransportTests materialize/package interface while using
+        # complete generated evidence; no archive/host validator is replaced.
         self.materialize = lambda: fixtures.TransportTests.materialize(self)
-        fixtures.TransportTests.setUp(self)
+        self.materialize()
+        for target in ('socket.socket', 'subprocess.Popen'):
+            guard = mock.patch(target, side_effect=AssertionError('no network or process execution'))
+            guard.start(); self.addCleanup(guard.stop)
         self.ssl = mock.patch.object(p.ssl, 'create_default_context', return_value=object())
         self.ssl.start(); self.addCleanup(self.ssl.stop)
         self.configure()
@@ -573,6 +613,9 @@ class NormalAdmissionTests(unittest.TestCase):
         self.assertTrue(receipt['semantic_inference_success_not_established_by_publisher'])
         self.assertFalse(receipt['retry_authorized'])
         self.assertEqual(receipt['archive_sha256'], t.sha(package))
+        self.assertEqual(receipt['producer_history']['total_count'], 2)
+        self.assertEqual(receipt['numeric_job_id'], self.owner_identity['job_id'])
+        self.assertLessEqual(self.api.count, p.MAX_API_REQUESTS)
 
     def test_uncertain_persisted_refs_remain_null_in_durable_receipt_and_stdout_envelope(self):
         package = fixtures.TransportTests.package(self)

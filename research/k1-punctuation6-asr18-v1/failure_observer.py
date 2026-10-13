@@ -16,7 +16,7 @@ import sys
 
 import campaign_contract as c
 
-STAGES = frozenset(('entry','release','arguments','event_read','context','api_preflight','source_authority',
+STAGES = frozenset(('claim_consume','claim_issuer','claim_preflight','entry','release','arguments','event_read','context','api_preflight','source_authority',
     'workspace','input_authorities','source_stage','input','source_claim','setup','prepare','policy_freeze',
     'capacity_proof','decode','cleanup','terminal_accounting','terminal_write','host_receipt_write',
     'package_build','package_write','complete','publication_gate','source_release','source_git_clean',
@@ -40,6 +40,20 @@ ERRNOS = frozenset(errno.errorcode)
 # No exception message, prefix, path, variable, subclass property or traceback
 # is copied. Unlisted conditions keep the original generic private-text policy.
 VALIDATION_CODES = {
+    'claim admission closed or future authority absent': 'claim_admission_closed',
+    'source-bound v2 release required': 'claim_source_mode_rejected',
+    'claim_ordinal_attempt_source_gate': 'claim_ordinal_attempt_rejected',
+    'claim_host_credentials_present': 'claim_host_credentials_rejected',
+    'claim_http_status_no_retry': 'claim_http_status_rejected',
+    'claim_nonce_owner_binding': 'claim_nonce_owner_rejected',
+    'claim_own_response_binding': 'claim_own_response_rejected',
+    'claim_private_handoff': 'claim_private_handoff_rejected',
+    'claim_readiness_missing': 'claim_readiness_missing',
+    'claim_deadline_or_closed': 'claim_budget_closed',
+    'claim_private_file_alias': 'claim_private_file_rejected',
+    'claim_directory_substitution': 'claim_directory_rejected',
+    'private consumed host continuation required': 'claim_continuation_missing',
+    'claim_execute_once': 'claim_continuation_spent',
     # Fixed prepare-only launch predicates; never infer a code for an old run.
     'bounded_private_local_logs': 'prepare_launch_logs',
     'exact_mount_roster': 'prepare_launch_mount_roster',
@@ -204,6 +218,14 @@ def _sha(value):
 
 def _safe_source_claim(raw,identity):
     value=c.decode_json(raw)
+    if type(value) is dict and value.get('schema')==c.BOUND_CLAIM_SCHEMA:
+        c.require(value.get('identity')==identity,'fixed new source claim only')
+        _identity(identity)
+        release=c.decode_json(value['release_raw_utf8'].encode('utf-8'),require_canonical=False)
+        c.validate_source_claim(raw,expected_sha256=c.digest(raw),release=release,
+            source_freeze_sha256=value['source_freeze_sha256'],run_id=str(identity['run_id']),
+            executed_head_sha=identity['executed_head_sha'])
+        return
     keys={'schema','identity','source_freeze_sha256','release_sha256','source_branch','result_branch',
         'workflow','numeric_job_id','prior_public_claim_history_sha256','api_preflight_verified',
         'source_branch_workflow_runs','maximum_new_asr_calls','old_calls_allowed','new_audio_forwards_at_claim'}
@@ -255,7 +277,7 @@ def claim_snapshot(root, identity):
     """
     result=unknown_claims()
     if root is None or _directory(root)!='observed_directory':return result
-    source,source_raw=_fixed_file(root/'authority/source-claim.json',16384)
+    source,source_raw=_fixed_file(root/'authority/source-claim.json',65536)
     if source_raw is not None:
         try:_safe_source_claim(source_raw,identity)
         except BaseException:source=_invalid_file('observed_invalid_source_claim')

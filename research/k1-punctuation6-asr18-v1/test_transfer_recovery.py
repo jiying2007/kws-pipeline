@@ -17,14 +17,13 @@ import transfer_recovery as r
 import evidence_transport as t
 import evidence_publisher as p
 import campaign_contract as c
-from test_asr18_transport import tree_response
-from test_asr18_host import public_fixture
+from test_asr18_transport import tree_response, bound_test_fixture
 
 
 class FakeAPI:
     def __init__(self, fixture):
         self.fixture = fixture
-        self.rows = {}; self.calls = []; self.raw_calls = []; self.final = None
+        self.rows = {}; self.calls = []; self.raw_calls = []; self.final = None; self.response_bodies = {}
         self.deadline = time.monotonic() + 600
         self.routes = r.endpoints(fixture.run, fixture.source, fixture.authority)
         self.rows[self.routes['repo']] = {'full_name': t.REPOSITORY, 'private': False}
@@ -48,6 +47,15 @@ class FakeAPI:
             self.rows[self.routes[prefix + '_source']] = {'sha': identity['executed_head_sha'], 'tree': {'sha': tree},
                 'committer': {'date': '2026-10-12T00:00:00Z'}}
             self.rows[self.routes[prefix + '_tree']] = tree_response(source_rows)
+        if hasattr(fixture,'members') and 'admission.json' in fixture.members:
+            owner=t.decode(fixture.members['admission.json'])['owner']['identity']
+            run=self.rows[self.routes['producer_run']]
+            run.update(c.bound_run_row(owner),head_repository={'full_name':t.REPOSITORY,'private':False})
+            later=copy.deepcopy(run);later.update(id=owner['run_id']+1,run_number=2,status='queued',conclusion=None)
+            route=p.producer_history_route(owner)
+            self.routes['producer_history']=route
+            self.rows[route]={'total_count':2,'workflow_runs':[copy.deepcopy(run),later]}
+            self.rows[self.routes['producer_source']]['committer']={'date':fixture.authority['source_commit_timestamp']}
         a = fixture.authority
         self.rows[self.routes['checkpoint_ref']] = {'ref': a['checkpoint_ref'], 'object': {'type': 'commit', 'sha': a['checkpoint_commit']}}
         body, digest = p.commit_body(a['checkpoint_tree'], r.original_release(a))
@@ -56,6 +64,11 @@ class FakeAPI:
         self.rows[self.routes['checkpoint_tree']] = tree_response(fixture.complete_rows)
 
     def __call__(self, method, route, body=None, expected=200):
+        value=self._request(method,route,body,expected)
+        if value is not None:self.response_bodies[route]=json.dumps(value,indent=2).encode()+b'\n'
+        return value
+
+    def _request(self, method, route, body=None, expected=200):
         self.calls.append((method, route, copy.deepcopy(body), expected))
         if len(self.calls) > r.MAX_API_REQUESTS:
             raise AssertionError('request budget exceeded')
@@ -86,7 +99,8 @@ class FakeAPI:
 
 class RecoveryFixture:
     def __init__(self):
-        self.members, self.original = public_fixture()
+        bound=bound_test_fixture()
+        self.members,self.original=bound['files'],bound['identity']
         self.original_rows = [{'path': name[len('source/'):], 'mode': '100644', 'type': 'blob', 'sha': t.git_sha(raw)}
             for name, raw in self.members.items() if name.startswith('source/')]
         source_tree = t.tree_identity(self.original_rows)[0]
@@ -99,7 +113,7 @@ class RecoveryFixture:
             for name, raw in sorted(self.files.items())]
         self.authority = {'schema': 'k1-asr18-transfer-recovery-authority-v1', 'producer_identity': self.original,
             'numeric_job_id': 456, 'source_tree': source_tree, 'source_closure_sha256': freeze,
-            'source_commit_timestamp': '2026-10-12T00:00:00Z', 'archive_sha256': t.sha(self.payload),
+            'source_commit_timestamp': bound['source_commit_timestamp'], 'archive_sha256': t.sha(self.payload),
             'archive_bytes': len(self.payload), 'outer_manifest_sha256': t.sha(self.files[t.manifest_path()]),
             'checkpoint_ref': 'refs/heads/' + t.POLICY['result_branch'] + '-checkpoint', 'checkpoint_commit': None,
             'checkpoint_tree': t.tree_identity(self.complete_rows)[0], 'terminal': {'run_conclusion': 'failure',
@@ -278,6 +292,7 @@ class RecoveryTests(unittest.TestCase):
             if method == 'POST': raise p.PublicationError(504)
             return result
         uncertain.deadline = api.deadline
+        uncertain.response_bodies = api.response_bodies
         with self.assertRaises(p.PublicationError):
             r.recover(self.f.env, self.f.event, self.f.control, self.f.source, uncertain, api.raw_factory)
         self.assertEqual(sum(call[0] == 'POST' for call in api.calls), 1)

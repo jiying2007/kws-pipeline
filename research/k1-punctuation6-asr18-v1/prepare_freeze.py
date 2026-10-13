@@ -28,6 +28,7 @@ HOST_NEW = (
     "evidence_transport.py", "evidence_publisher.py", "prepare_freeze.py", "workflow.yml", "runtime_session.py",
     "source-reuse-lock.json", "input-freeze.json", "tts-source-authority.json", "publication-release.json",
     "transfer_recovery.py", "transfer-recovery-release.json",
+    "claim_admission.py", "claim-admission-control.json",
 )
 # The parent host supplies the reviewed exact verifier roster here. No recursive
 # host-tts tree, original TTS outputs or historical ASR inputs are ever inferred.

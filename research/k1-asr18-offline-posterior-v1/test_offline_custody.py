@@ -10,6 +10,7 @@ CLI_FLAGS=['-I','-S','-B']+(['-'+'O'*sys.flags.optimize] if sys.flags.optimize e
 def write_bundle(root, case):
     root=Path(root);root.mkdir(exist_ok=True);known=a.locators(case.expected);rows=[]
     bodies={k:(v if type(v) is bytes else a.canonical(v)) for k,v in case.records.items() if k in known}
+    if case.expected['schema']=='k1-asr18-offline-acceptance-v2':bodies['producer_history']=case.records['_response_bodies']['producer_history']
     bodies.update(outer_manifest=case.outer_raw,archive=case.payload,producer_log=case.logs.get('producer',b''))
     if case.expected['recovery'] is not None:bodies['recovery_log']=case.logs.get('recovery',b'')
     bodies.update({'chunk_%04d'%i:raw for i,(_,raw) in enumerate(case.chunks)})
@@ -17,7 +18,7 @@ def write_bundle(root, case):
         path=role+'.bin';(root/path).write_bytes(body)
         rows.append({'role':role,'path':path,'bytes':len(body),'sha256':a.sha(body),'locator':sorted(known[role])[0]})
     (root/'expected.json').write_bytes(a.canonical(case.expected))
-    (root/'custody.json').write_bytes(a.canonical({'schema':'k1-asr18-offline-custody-v1','entries':rows}))
+    (root/'custody.json').write_bytes(a.canonical({'schema':'k1-asr18-offline-custody-v2' if case.expected['schema']=='k1-asr18-offline-acceptance-v2' else 'k1-asr18-offline-custody-v1','entries':rows}))
     return dict(root=root,expected_path=root/'expected.json',expected_sha256=a.sha((root/'expected.json').read_bytes()),custody_path=root/'custody.json',custody_sha256=a.sha((root/'custody.json').read_bytes()))
 
 class CustodyTests(unittest.TestCase):

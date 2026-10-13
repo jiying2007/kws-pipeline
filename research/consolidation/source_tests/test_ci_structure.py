@@ -225,9 +225,12 @@ ASR18_MODULES = (
     'test_asr18_freeze', 'test_asr18_failure_observer', 'test_publisher_observation', 'test_publisher_checkpoint', 'test_transfer_recovery', 'test_asr18_host', 'test_asr18_metadata',
     'test_asr18_raw_data_reader', 'test_asr18_receipts', 'test_asr18_resources',
     'test_asr18_transport', 'test_asr18_worker',
+    'test_bound_claim_contract', 'test_claim_admission_host', 'test_claim_consumer_integration',
 )
+ASR18_PARALLEL_MODES = 'mode_logs="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/k1-asr18-contracts.XXXXXX")"\nstop_contracts() {\n  running="$(jobs -pr)"\n  if [ -n "$running" ]; then kill $running 2>/dev/null || true; fi\n  wait || true\n  exit 2\n}\ntrap stop_contracts INT TERM\npython3 -I -S -B -c "$asr18_tests" > "$mode_logs/normal.log" 2>&1 & normal_pid=$!\npython3 -I -S -B -O -c "$asr18_tests" > "$mode_logs/O.log" 2>&1 & optimized_pid=$!\npython3 -I -S -B -OO -c "$asr18_tests" > "$mode_logs/OO.log" 2>&1 & double_optimized_pid=$!\nfailed=0\nfor test_pid in "$normal_pid" "$optimized_pid" "$double_optimized_pid"; do\n  wait "$test_pid" || failed=1\ndone\ntrap - INT TERM\nfor mode in normal O OO; do\n  printf \'ASR18_CONTRACT_MODE=%s\\n\' "$mode"\n  cat "$mode_logs/$mode.log"\ndone\nexit "$failed"\n'
 ASR18_JOB_IF = "${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-asr18-r3' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}"
-ASR18_HOST_IF = "${{ success() && steps.asr18_contracts.outcome == 'success' }}"
+ASR18_CLAIM_IF = "${{ success() && steps.asr18_contracts.outcome == 'success' && github.run_number == 1 && github.run_attempt == 1 }}"
+ASR18_HOST_IF = "${{ success() && steps.asr18_contracts.outcome == 'success' && steps.campaign_claim.outcome == 'success' && steps.campaign_claim.outputs.ready == 'true' }}"
 ASR18_PUBLISH_IF = "${{ always() && steps.host.outputs.started == 'true' }}"
 
 
@@ -264,11 +267,11 @@ def contract_command(step):
     return textwrap.dedent(step.split('        run: |\n', 1)[1])
 
 
-def outcome_route(condition, *, success=False, host='', contracts='', started=''):
+def outcome_route(condition, *, success=False, host='', contracts='', started='', claim='', ready='', ordinal=None, attempt=None):
     """Only the fixed comparison grammar used by the actual two step guards."""
     if not condition.startswith('${{ ') or not condition.endswith(' }}'):
         raise ValueError('condition delimiters')
-    values = {'host': host, 'asr18_contracts': contracts}
+    values = {'host': host, 'asr18_contracts': contracts, 'campaign_claim': claim}
     results = []
     for clause in condition[4:-3].split(' && '):
         if clause == 'always()':
@@ -277,8 +280,14 @@ def outcome_route(condition, *, success=False, host='', contracts='', started=''
             results.append(success)
         elif clause == "steps.host.outputs.started == 'true'":
             results.append(started == 'true')
+        elif clause == "steps.campaign_claim.outputs.ready == 'true'":
+            results.append(ready == 'true')
+        elif clause == 'github.run_number == 1':
+            results.append(type(ordinal) is int and ordinal == 1)
+        elif clause == 'github.run_attempt == 1':
+            results.append(type(attempt) is int and attempt == 1)
         else:
-            match = re.fullmatch(r"steps\.(host|asr18_contracts)\.outcome (==|!=) ('[^']*')", clause)
+            match = re.fullmatch(r"steps\.(host|asr18_contracts|campaign_claim)\.outcome (==|!=) ('[^']*')", clause)
             if not match:
                 raise ValueError('unsupported outcome clause')
             value = ast.literal_eval(match[3])
@@ -299,8 +308,7 @@ class ASR18CIContracts(unittest.TestCase):
                    + repr(ASR18_MODULES).replace("'", '"') + '); '
                    'result=unittest.TextTestRunner(verbosity=2).run(suite); '
                    'raise SystemExit(not result.wasSuccessful())')
-        return ("set -euo pipefail\nasr18_tests='" + program + "'\n" + ''.join(
-            'python3 -I -S -B' + mode + ' -c "$asr18_tests"\n' for mode in ('', ' -O', ' -OO')))
+        return ("set -euo pipefail\nasr18_tests='" + program + "'\n" + ASR18_PARALLEL_MODES)
 
     def check_wiring(self, ci, workflow, template):
         self.assertEqual(workflow, template)
@@ -322,13 +330,28 @@ class ASR18CIContracts(unittest.TestCase):
             self.assertNotIn('continue-on-error:', step)
             self.assertNotIn('        env:', step)
             self.assertEqual(contract_command(step), self.expected_command(), name)
+        claim = named_step(execution, 'Reserve fixed campaign owner without models')
+        self.assertEqual(step_if(claim), ASR18_CLAIM_IF)
+        self.assertIn('        id: campaign_claim\n', claim)
+        self.assertIn('        timeout-minutes: 1\n', claim)
+        self.assertEqual(contract_command(claim), 'python3 -I -B research/k1-punctuation6-asr18-v1/claim_admission.py\n')
+        self.assertEqual(claim.split('        env:\n')[1].split('        run:')[0],
+                         '          GITHUB_TOKEN: ${{ github.token }}\n')
+        self.assertNotIn('GITHUB_ENV', execution)
+        self.assertEqual(execution.count('          GITHUB_TOKEN: ${{ github.token }}\n'), 2)
+        self.assertIn('    timeout-minutes: 80\n', execution)
+        self.assertEqual([int(x) for x in re.findall(r'^        timeout-minutes: ([0-9]+)$', execution, re.M)],
+                         [2, 4, 1, 61, 11])
         host = named_step(execution, 'Admit complete new input and run fixed ASR18 once')
         publish = named_step(execution, 'Publish complete audio-free bounded evidence')
         self.assertIn('        id: host\n', host)
+        self.assertNotIn('        env:', host)
+        self.assertNotIn('GITHUB_TOKEN', contract_command(host))
         self.assertEqual(step_if(host), ASR18_HOST_IF)
         self.assertEqual(step_if(publish), ASR18_PUBLISH_IF)
         self.assertNotIn('continue-on-error:', execution)
-        self.assertLess(execution.index('id: asr18_contracts'), execution.index('id: host'))
+        self.assertLess(execution.index('id: asr18_contracts'), execution.index('id: campaign_claim'))
+        self.assertLess(execution.index('id: campaign_claim'), execution.index('id: host'))
         self.assertLess(execution.index('id: host'), execution.index('name: Publish complete'))
         self.assertEqual(contract_command(host), "printf 'started=true\\n' >> \"$GITHUB_OUTPUT\"\n"
                          'python3 -I -B research/k1-punctuation6-asr18-v1/hosted_run.py\n')
@@ -339,9 +362,10 @@ class ASR18CIContracts(unittest.TestCase):
         self.check_wiring(self.ci, self.workflow, self.template)
         actual = {p.stem for p in (ROOT / 'research/k1-punctuation6-asr18-v1').iterdir()
                   if p.is_file() and (p.name.startswith('test_asr18_') and p.suffix == '.py'
-                                     or p.name in ('test_publisher_observation.py', 'test_publisher_checkpoint.py', 'test_transfer_recovery.py'))}
+                                     or p.name in ('test_publisher_observation.py', 'test_publisher_checkpoint.py', 'test_transfer_recovery.py',
+                                                   'test_bound_claim_contract.py', 'test_claim_admission_host.py', 'test_claim_consumer_integration.py'))}
         self.assertEqual(actual, set(ASR18_MODULES))
-        self.assertEqual(len(ASR18_MODULES), 16)
+        self.assertEqual(len(ASR18_MODULES), 19)
         for name in ASR18_MODULES:
             self.assertTrue((ROOT / 'research/k1-punctuation6-asr18-v1' / (name + '.py')).is_file())
 
@@ -352,6 +376,12 @@ class ASR18CIContracts(unittest.TestCase):
             ('ci', 'test_asr18_worker', 'test_asr18_not_reviewed'),
             ('ci', '        id: asr18_contracts\n', '        id: asr18_contracts\n        if: false\n'),
             ('workflow', ASR18_HOST_IF, '${{ always() }}'),
+            ('workflow', ASR18_CLAIM_IF, '${{ always() }}'),
+            ('workflow', 'github.run_number == 1', 'github.run_number >= 1'),
+            ('workflow', "steps.campaign_claim.outputs.ready == 'true'", "steps.campaign_claim.outputs.ready != 'false'"),
+            ('workflow', 'timeout-minutes: 4', 'timeout-minutes: 5'),
+            ('workflow', 'timeout-minutes: 1\n', 'timeout-minutes: 2\n'),
+            ('workflow', 'id: campaign_claim\n', 'id: campaign_claim\n        continue-on-error: true\n'),
             ('workflow', ASR18_PUBLISH_IF, "${{ always() && steps.host.outcome != 'skipped' }}"),
             ('workflow', "github.run_attempt == 1", 'github.run_attempt >= 1'),
             ('workflow', '      - research/k1-punctuation6-asr18-r3\n',
@@ -411,38 +441,52 @@ class ASR18CIContracts(unittest.TestCase):
                 with self.assertRaises(AssertionError):
                     self.check_wiring(altered, self.workflow, self.template)
 
-    def test_contract_shell_failure_stops_later_modes_and_host_marker(self):
+    def test_parallel_contract_shell_requires_all_modes_before_host_marker(self):
         command = contract_command(named_step(self.workflow, 'K1 punctuation6 ASR18 offline source contracts'))
         host = contract_command(named_step(self.workflow, 'Admit complete new input and run fixed ASR18 once'))
         with tempfile.TemporaryDirectory(prefix='asr18-ci-shell-') as name:
             root = Path(name)
             fake = root / 'python3'
-            fake.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$CALL_LOG"\n'
-                            'count=$(wc -l < "$CALL_LOG")\n'
-                            'if [ "$count" = "$FAIL_AT" ]; then exit 7; fi\n')
+            fake.write_text('#!/bin/sh\nmode=normal\n'
+                'case " $* " in *" -OO "*) mode=OO;; *" -O "*) mode=O;; *"hosted_run.py"*) mode=host;; esac\n'
+                'printf "%s\\n" "$mode" >> "$CALL_LOG"\n'
+                'if [ "$mode" = "$FAIL_MODE" ]; then exit 7; fi\n')
             fake.chmod(0o755)
-            for fail_at in (0, 1, 2, 3, 4):
-                with self.subTest(fail_at=fail_at):
-                    log = root / ('calls-' + str(fail_at))
-                    output = root / ('output-' + str(fail_at))
-                    run = subprocess.run(['bash', '-c', command + host],
+            for fail_mode in ('none', 'normal', 'O', 'OO', 'host'):
+                with self.subTest(fail_mode=fail_mode):
+                    log = root / ('calls-' + fail_mode)
+                    output = root / ('output-' + fail_mode)
+                    run = subprocess.run(['bash', '-euo', 'pipefail', '-c', '(' + command + ')\n' + host],
                         env={'PATH': str(root) + os.pathsep + '/usr/bin:/bin',
-                             'CALL_LOG': str(log), 'FAIL_AT': str(fail_at), 'GITHUB_OUTPUT': str(output)},
-                        text=True, capture_output=True, check=False)
-                    self.assertEqual(len(log.read_text().splitlines()), fail_at or 4)
-                    self.assertEqual(run.returncode == 0, fail_at == 0)
-                    self.assertEqual(output.exists(), fail_at in (0, 4))
-                    if output.exists():
-                        self.assertEqual(output.read_text(), 'started=true\n')
+                             'CALL_LOG': str(log), 'FAIL_MODE': fail_mode, 'GITHUB_OUTPUT': str(output),
+                             'RUNNER_TEMP': str(root)}, text=True, capture_output=True, check=False)
+                    calls = log.read_text().splitlines()
+                    self.assertEqual(sorted(calls[:3]), ['O', 'OO', 'normal'])
+                    self.assertEqual(len(calls), 4 if fail_mode in ('none', 'host') else 3)
+                    self.assertEqual(run.returncode == 0, fail_mode == 'none')
+                    self.assertEqual(output.exists(), fail_mode in ('none', 'host'))
+                    for mode in ('normal', 'O', 'OO'):
+                        self.assertIn('ASR18_CONTRACT_MODE=' + mode, run.stdout)
+                    if output.exists():self.assertEqual(output.read_text(), 'started=true\n')
 
     def test_actual_step_guard_routing_requires_recorded_host_start(self):
         host_if = step_if(named_step(self.workflow, 'Admit complete new input and run fixed ASR18 once'))
         publish_if = step_if(named_step(self.workflow, 'Publish complete audio-free bounded evidence'))
+        claim_if = step_if(named_step(self.workflow, 'Reserve fixed campaign owner without models'))
         for contracts in ('', 'success', 'failure', 'cancelled', 'skipped'):
             for previous_success in (False, True):
-                with self.subTest(contracts=contracts, previous_success=previous_success):
-                    self.assertEqual(outcome_route(host_if, success=previous_success, contracts=contracts),
-                                     previous_success and contracts == 'success')
+                for claim in ('', 'success', 'failure', 'skipped'):
+                    for ready in ('', 'false', 'true'):
+                        with self.subTest(contracts=contracts, previous_success=previous_success, claim=claim, ready=ready):
+                            self.assertEqual(outcome_route(host_if, success=previous_success,
+                                contracts=contracts, claim=claim, ready=ready),
+                                previous_success and contracts == 'success' and claim == 'success' and ready == 'true')
+                for ordinal in (None, 1, 2, 3, True):
+                    for attempt in (None, 1, 2, True):
+                        self.assertEqual(outcome_route(claim_if, success=previous_success,
+                            contracts=contracts, ordinal=ordinal, attempt=attempt),
+                            previous_success and contracts == 'success' and type(ordinal) is int
+                            and ordinal == 1 and type(attempt) is int and attempt == 1)
         for host in ('', 'skipped', 'success', 'failure', 'cancelled'):
             for started in ('', 'false', 'true'):
                 with self.subTest(host=host, started=started):
@@ -506,6 +550,8 @@ class PrepareDiagnosticCIContracts(unittest.TestCase):
         host = named_step(execution, 'Admit fixed six inputs and prepare three models without recognition')
         publish = named_step(execution, 'Publish complete audio-free prepare diagnostic evidence')
         self.assertIn('        id: host\n', host)
+        self.assertNotIn('        env:', host)
+        self.assertNotIn('GITHUB_TOKEN', contract_command(host))
         self.assertEqual(step_if(host), PREPARE_HOST_IF)
         self.assertEqual(step_if(publish), ASR18_PUBLISH_IF)
         self.assertNotIn('continue-on-error:', execution)

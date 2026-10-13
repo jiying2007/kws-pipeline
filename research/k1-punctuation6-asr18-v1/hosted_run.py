@@ -32,9 +32,9 @@ from campaign_contract import require, canonical, digest, read_json, read_bytes,
 
 REPOSITORY = 'jiying2007/kws-pipeline'
 NEW = 'research/k1-punctuation6-asr18-v1/'
-WORKFLOW = '.github/workflows/k1-punctuation6-asr18-v1.yml'
-SOURCE_REF = 'research/k1-punctuation6-asr18-r3'
-EVIDENCE_REF = 'evidence/k1-punctuation6-asr18-r3'
+WORKFLOW = c.current_scope()['workflow']
+SOURCE_REF = c.current_scope()['source_branch']
+EVIDENCE_REF = c.current_scope()['result_branch']
 HOST_STAGES = ('admitted', 'input', 'setup', 'prepare', 'policy_freeze', 'capacity_proof', 'decode', 'cleanup', 'package')
 SHARED = frozenset(('prepared.json','run-identity.json','kernel-scope.json','cpu-process-guard.json',
     'blind-job.json','execution-plan.json','progress.json','contract.json','decoder-inputs.json',
@@ -45,7 +45,7 @@ CLIP = frozenset(('started.json','completed.json','raw-output.json','raw-native-
     'raw-transcript.json','raw-native-row.json','input-capture.json','pre-finalize.json'))
 ROOT_PUBLIC = frozenset(('host-receipt.json','terminal-outcomes.json','run-preflight.json','input-freeze.json',
     'public-screening-receipt.json','new-cell-projection.json','acquisition-receipt.json','image-transfer.json',
-    'asr-setup-public.json','cpu-receipt.json','cleanup-receipt.json','supervision-receipt.json'))
+    'asr-setup-public.json','cpu-receipt.json','cleanup-receipt.json','supervision-receipt.json','admission.json'))
 
 
 def _observe(observer,stage):
@@ -57,6 +57,9 @@ def _observe(observer,stage):
 def release_first():
     release = read_json(HERE / 'execution-release.json', 65536)
     c.validate_release_shape(release)
+    # Compiled v2 admission is mandatory; a v1 file is never an entry fallback.
+    control = c.require_claim_admission(release, read_bytes(HERE / 'claim-admission-control.json', cap=16384))
+    c.require_current_scope(control)
     require(all(release[key] is True for key in c.RELEASE_APPROVALS), 'execution release disabled or review absent')
     require(all(release[key] is not None for key in c.RELEASE_AUTHORITIES), 'actual authority unavailable')
     import prepare_prerequisite
@@ -70,7 +73,7 @@ class PublicAPI:
     def __init__(self):
         from raw_data_reader import NoRedirect
         self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
-        self.used = set(); self.response_body_bytes = 0
+        self.used = set(); self.response_body_bytes = 0; self.response_hashes = {}
     def accounting(self):
         return {'gets':len(self.used),'response_body_bytes':self.response_body_bytes,'response_body_cap_bytes':c.MIB,
             'scope':'public_api_metadata_separate_from_model_audio_bodies','hard_wire_byte_cap':False}
@@ -90,6 +93,7 @@ class PublicAPI:
             raw = response.read(allowance+1); self.response_body_bytes+=len(raw)
             require(len(raw)<=allowance and self.response_body_bytes<=c.MIB and response.geturl() == url and
                     response.headers.get('Content-Encoding', 'identity') == 'identity', 'bounded unredirected API result')
+            self.response_hashes[path] = digest(raw)
             status = response.getcode()
             if absent:
                 require(status == 404, 'evidence ref already exists or absence unverified')
@@ -100,8 +104,13 @@ class PublicAPI:
             if response is not None: response.close()
 
 
-def event_identity(env, event):
-    fixed = {'GITHUB_REPOSITORY': REPOSITORY, 'GITHUB_REF': 'refs/heads/' + SOURCE_REF,
+def event_identity(env, event, *, control=None):
+    source = c.LEGACY_V1_SCOPE['source_branch'] if control is None else control['source_ref']
+    workflow = c.LEGACY_V1_SCOPE['workflow'] if control is None else control['workflow']
+    if control is not None:
+        import claim_admission
+        claim_admission.early_environment(env, control)
+    fixed = {'GITHUB_REPOSITORY': REPOSITORY, 'GITHUB_REF': 'refs/heads/' + source,
         'GITHUB_EVENT_NAME': 'push', 'GITHUB_RUN_ATTEMPT': '1', 'GITHUB_JOB': 'asr18',
         'RUNNER_ENVIRONMENT': 'github-hosted', 'RUNNER_OS': 'Linux', 'RUNNER_ARCH': 'X64', 'ImageOS': 'ubuntu24'}
     require(all(env.get(k) == v for k, v in fixed.items()), 'fixed public standard ubuntu24.04 first-attempt job')
@@ -109,11 +118,11 @@ def event_identity(env, event):
     require(c.HEAD.fullmatch(head) and re.fullmatch('[1-9][0-9]{0,19}', run), 'actual run/source identity')
     require(int(run) not in c.SEALED_ASR_RUNS and head not in c.SEALED_ASR_SOURCES,
             'sealed earlier campaign run or source cannot become a new authority')
-    require(env.get('GITHUB_WORKFLOW_REF') == REPOSITORY + '/' + WORKFLOW + '@refs/heads/' + SOURCE_REF and
+    require(env.get('GITHUB_WORKFLOW_REF') == REPOSITORY + '/' + workflow + '@refs/heads/' + source and
             env.get('GITHUB_WORKFLOW_SHA') == head, 'fixed source workflow identity')
     require(type(event) is dict and event.get('created') is True and event.get('deleted') is False and
         event.get('forced') is False and event.get('before') == '0' * 40 and event.get('after') == head and
-        event.get('ref') == 'refs/heads/' + SOURCE_REF and
+        event.get('ref') == 'refs/heads/' + source and
         event.get('repository', {}).get('full_name') == REPOSITORY and
         event.get('repository', {}).get('private') is False, 'first public source creation event')
     return {'repository': REPOSITORY, 'run_id': int(run), 'run_attempt': 1,
@@ -131,7 +140,7 @@ def _unique_page(api, path, key):
 
 def prior_history_identity():
     return {'schema': 'k1-asr18-prior-public-claim-history-v1', 'repository': REPOSITORY,
-            'source_branch': SOURCE_REF, 'workflow': WORKFLOW, 'prior_runs': [],
+            'source_branch': c.LEGACY_V1_SCOPE['source_branch'], 'workflow': c.LEGACY_V1_SCOPE['workflow'], 'prior_runs': [],
             'prior_runs_scope': 'only_new_source_branch_and_fixed_workflow',
             'sealed_prior_campaigns': [{'observation': 'frozen_existing_public_failure_observation', 'experiment': 'k1-punctuation6-asr18-v1',
                 'source_branch': 'research/k1-punctuation6-asr18-v1',
@@ -156,20 +165,26 @@ def prior_history_identity():
                 'status': 'failed_consumption_unknown_sealed'}]}
 
 
-def api_preflight(api, run, release):
+def bound_prior_history_identity(control):
+    return c.bound_prior_history_identity(control)
+
+
+def api_preflight(api, run, release, *, control=None, freeze_sha=None, tree=None, timestamp=None, release_raw=None):
+    if control is not None:
+        return bound_api_preflight(api, run, release, control, freeze_sha, tree, timestamp, release_raw)
     base = '/repos/' + REPOSITORY
     current = api.get(base + '/actions/runs/' + str(run['run_id']))
     require(current.get('id') == run['run_id'] and type(current.get('run_attempt')) is int and current.get('run_attempt') == 1 and
         current.get('status')=='in_progress' and current.get('conclusion') is None and
-        current.get('event') == 'push' and current.get('head_branch') == SOURCE_REF and
-        current.get('head_sha') == run['executed_head_sha'] and current.get('path') == WORKFLOW and
+        current.get('event') == 'push' and current.get('head_branch') == c.LEGACY_V1_SCOPE['source_branch'] and
+        current.get('head_sha') == run['executed_head_sha'] and current.get('path') == c.LEGACY_V1_SCOPE['workflow'] and
         current.get('repository', {}).get('full_name') == REPOSITORY and
         current.get('repository', {}).get('private') is False and
         current.get('head_repository', {}).get('full_name') == REPOSITORY and
         type(current.get('workflow_id')) is int and current['workflow_id'] > 0, 'actual current API run identity')
     workflow = api.get(base + '/actions/workflows/' + str(current['workflow_id']))
-    require(workflow.get('id') == current['workflow_id'] and workflow.get('path') == WORKFLOW, 'actual workflow path')
-    branch = urllib.parse.quote(SOURCE_REF, safe='')
+    require(workflow.get('id') == current['workflow_id'] and workflow.get('path') == c.LEGACY_V1_SCOPE['workflow'], 'actual workflow path')
+    branch = urllib.parse.quote(c.LEGACY_V1_SCOPE['source_branch'], safe='')
     history = _unique_page(api, base + '/actions/workflows/' + str(current['workflow_id']) + '/runs?branch=' + branch, 'workflow_runs')
     require(len(history) == 1 and history[0].get('id') == run['run_id'] and
             history[0].get('head_sha') == run['executed_head_sha'] and history[0].get('run_attempt') == 1,
@@ -184,16 +199,49 @@ def api_preflight(api, run, release):
         job.get('labels') == ['ubuntu-24.04'] and type(job.get('runner_name')) is str and
         job['runner_name'].startswith('GitHub Actions ') and job.get('runner_group_name') == 'GitHub Actions',
         'actual standard hosted ubuntu24.04 runner')
-    ref = api.get(base + '/git/ref/heads/' + SOURCE_REF)
-    require(ref.get('ref') == 'refs/heads/' + SOURCE_REF and
+    ref = api.get(base + '/git/ref/heads/' + c.LEGACY_V1_SCOPE['source_branch'])
+    require(ref.get('ref') == 'refs/heads/' + c.LEGACY_V1_SCOPE['source_branch'] and
             ref.get('object', {}).get('type') == 'commit' and ref['object'].get('sha') == run['executed_head_sha'], 'actual source ref/head')
-    api.get(base + '/git/ref/heads/' + EVIDENCE_REF, absent=True)
+    api.get(base + '/git/ref/heads/' + c.LEGACY_V1_SCOPE['result_branch'], absent=True)
     return {'schema': 'k1-asr18-run-preflight-v1', 'identity': run, 'numeric_job_id': job['id'],
-            'workflow': WORKFLOW, 'source_branch': SOURCE_REF, 'evidence_branch': EVIDENCE_REF,
+            'workflow': c.LEGACY_V1_SCOPE['workflow'], 'source_branch': c.LEGACY_V1_SCOPE['source_branch'], 'evidence_branch': c.LEGACY_V1_SCOPE['result_branch'],
             'source_branch_workflow_runs': 1, 'evidence_ref_absent': True,
             'prior_public_claim_history_sha256': release['prior_public_claim_history_sha256'],
             'public_standard_hosted_ubuntu24': True, 'api_metadata_accounting':api.accounting()}
 
+
+
+def bound_api_preflight(api, run, release, control, freeze_sha, tree, timestamp, release_raw):
+    """The original six public reads, independently binding the saved owner."""
+    c.require_current_scope(control)
+    import claim_admission as admission
+    require(digest(canonical(bound_prior_history_identity(control))) == release['prior_public_claim_history_sha256'],
+        'independently released prior public claim history')
+    base = '/repos/' + REPOSITORY
+    current = api.get(base + '/actions/runs/' + str(run['run_id']))
+    workflow_id = admission.validate_current(current, run, control)
+    admission.validate_workflow(api.get(base + '/actions/workflows/' + str(workflow_id)), workflow_id, control)
+    page = api.get(admission.history_route(control, workflow_id))
+    jobs = api.get(base + '/actions/runs/' + str(run['run_id']) + '/attempts/1/jobs?per_page=100&page=1')
+    numeric_job_id = admission.validate_jobs(jobs, run)
+    preflight = {'numeric_job_id': numeric_job_id, 'workflow_id': workflow_id}
+    owner_identity = admission.identity_for(run, preflight, release, control, freeze_sha, tree, timestamp, release_raw)
+    history = c.api_bound_history(owner_identity, page, 'host',
+        raw_sha256=api.response_hashes[admission.history_route(control, workflow_id)])
+    admission.validate_source_ref(api.get(base + '/git/ref/heads/' + control['source_ref']), run, control)
+    api.get(base + '/git/ref/heads/' + control['evidence_ref'], absent=True)
+    return {'schema': 'k1-asr18-run-preflight-v2', 'identity': run, 'numeric_job_id': numeric_job_id,
+        'workflow_id': workflow_id, 'workflow': control['workflow'], 'source_branch': control['source_ref'],
+        'evidence_branch': control['evidence_ref'], 'source_branch_workflow_runs': history['total_count'],
+        'history': history, 'complete_api_history': {'total_count': history['total_count'], 'workflow_runs': history['rows']}, 'evidence_ref_absent': True,
+        'prior_public_claim_history_sha256': release['prior_public_claim_history_sha256'],
+        'public_standard_hosted_ubuntu24': True, 'api_metadata_accounting': api.accounting()}
+
+
+def source_timestamp(event, head):
+    # Reuse fixed actual-commit and event timestamp agreement, with no token/API.
+    import evidence_publisher
+    return evidence_publisher._source_timestamp(event, head)
 
 def git_read(*args):
     process = subprocess.run(['git', '--no-optional-locks', '-c', 'core.fsmonitor=false', '-c',
@@ -203,9 +251,10 @@ def git_read(*args):
     return process.stdout
 
 
-def source_authority(run, release):
+def source_authority(run, release, *, control=None):
     """Expected freeze comes from the fixed immutable Git blob, never its local candidate."""
     head = run['executed_head_sha']
+    workflow = c.LEGACY_V1_SCOPE['workflow'] if control is None else control['workflow']
     require(git_read('rev-parse', 'HEAD').decode().strip() == head and
             git_read('status', '--porcelain=v1', '--untracked-files=all') == b'', 'clean actual executed Git source required')
     tree = git_read('rev-parse', head + '^{tree}').decode().strip()
@@ -217,6 +266,11 @@ def source_authority(run, release):
     c.require_execution_release(release, freeze, expected_freeze_sha256=expected_sha,
         prepare_prerequisite_raw=read_bytes(HERE / 'prepare-prerequisite.json', cap=65536), source_root=ROOT)
     require(read_bytes(HERE / 'execution-release.json') == git_read('cat-file', 'blob', head + ':' + NEW + 'execution-release.json'), 'committed exact release bytes')
+    if control is not None:
+        control_raw = read_bytes(HERE / 'claim-admission-control.json', cap=16384)
+        require(control_raw == git_read('cat-file', 'blob', head + ':' + NEW + 'claim-admission-control.json'), 'committed exact claim control bytes')
+        require(c.exact_json(c.require_claim_admission(release, control_raw), control), 'source-bound admission control')
+        require(read_bytes(HERE / 'claim_admission.py') == git_read('cat-file', 'blob', head + ':' + NEW + 'claim_admission.py'), 'committed exact claim issuer source')
     from prepare_freeze import declared_rosters
     rosters = declared_rosters(ROOT)
     require(set(freeze) == {'schema', *rosters} and freeze['schema'] == 'k1-asr18-source-freeze-v1', 'complete exact source freeze')
@@ -224,25 +278,34 @@ def source_authority(run, release):
         require(set(freeze[role]) == names, 'declared complete source role roster')
         for name, identity in freeze[role].items():
             require(c.identity(ROOT / name) == identity, 'actual closed source byte drift')
-    require(read_bytes(ROOT / WORKFLOW) == read_bytes(HERE / 'workflow.yml') ==
-            git_read('cat-file', 'blob', head + ':' + WORKFLOW), 'active workflow is exact committed inert template')
+    require(read_bytes(ROOT / workflow) == read_bytes(HERE / 'workflow.yml') ==
+            git_read('cat-file', 'blob', head + ':' + workflow), 'active workflow is exact committed inert template')
     # This pure scope check precedes source claims/setup; publication approval
     # is independent and remains checked only by the publisher itself.
     import evidence_publisher as publisher
-    publisher.validate_transfer_workflow(read_bytes(ROOT / WORKFLOW),
-        read_json(HERE / 'publication-release.json', 65536))
+    publisher.validate_transfer_workflow(read_bytes(ROOT / workflow),
+        read_json(HERE / 'publication-release.json', 65536), admission_control=control)
     return freeze, expected_sha, tree
 
 
-def source_claim(run, release, preflight, freeze_sha):
+def source_claim(run, release, preflight, freeze_sha, *, admission=None, tree=None, timestamp=None):
+    if c.is_bound_release(release):
+        release_raw = read_bytes(HERE / 'execution-release.json', cap=65536)
+        control_raw = read_bytes(HERE / 'claim-admission-control.json', cap=16384)
+        claim = c.make_source_claim(run, release, release_raw, control_raw, preflight['numeric_job_id'], tree,
+            timestamp, freeze_sha, preflight['workflow_id'], preflight['complete_api_history'], admission)
+        c.bind_source_claim(canonical(claim), run, release, preflight['numeric_job_id'], tree,
+            release_raw=release_raw, control_raw=control_raw, source_freeze_sha256=freeze_sha)
+        return claim
     claim = {'schema': 'k1-asr18-once-source-claim-v1', 'identity': run,
         'source_freeze_sha256': freeze_sha, 'release_sha256': digest(canonical(release)),
-        'source_branch': SOURCE_REF, 'result_branch': EVIDENCE_REF, 'workflow': WORKFLOW,
+        'source_branch': c.LEGACY_V1_SCOPE['source_branch'], 'result_branch': c.LEGACY_V1_SCOPE['result_branch'],
+        'workflow': c.LEGACY_V1_SCOPE['workflow'],
         'numeric_job_id': preflight['numeric_job_id'],
         'prior_public_claim_history_sha256': release['prior_public_claim_history_sha256'],
         'api_preflight_verified': True, 'source_branch_workflow_runs': 1,
         'maximum_new_asr_calls': 18, 'old_calls_allowed': 0, 'new_audio_forwards_at_claim': 0}
-    c.validate_source_claim(canonical(claim), expected_sha256=digest(canonical(claim)), release=release,
+    c.validate_legacy_source_claim(canonical(claim), expected_sha256=digest(canonical(claim)), release=release,
         source_freeze_sha256=freeze_sha, run_id=str(run['run_id']), executed_head_sha=run['executed_head_sha'])
     return claim
 
@@ -571,10 +634,13 @@ def validate_public_evidence(files, run_identity, *, phase='final'):
     required={'host-receipt.json','run-preflight.json','input-freeze.json','public-screening-receipt.json',
         'new-cell-projection.json','authority/execution-freeze.json'}
     require(required<=set(files),'complete source-bound evidence core')
+    release=c.decode_json(files['source/'+NEW+'execution-release.json'], require_canonical=False)
+    bound_mode=c.is_bound_release(release)
+    boundary=c.BOUNDARY if bound_mode else {**c.BOUNDARY, 'scope':c.LEGACY_V1_SCOPE['campaign']}
     host=value('host-receipt.json'); template=host_receipt(run_identity,'0'*64,'0'*40,'0'*64)
     _exact(host,template,'exact public host schema')
     require(host['schema']==template['schema'] and c.exact_json(host['identity'],run_identity) and
-        c.exact_json(host['boundary'],c.BOUNDARY) and c.exact_json(host['limits'],c.LIMITS),'fixed host identity/boundary/caps')
+        c.exact_json(host['boundary'],boundary) and c.exact_json(host['limits'],c.LIMITS),'fixed host identity/boundary/caps')
     require(host['limits_scope']==c.SCIENTIFIC_LIMITS_SCOPE and
         c.exact_json(host['effective_execution_envelope'],c.EFFECTIVE_EXECUTION_ENVELOPE), 'fixed effective workflow and publication envelope')
     require(host['stage'] in HOST_STAGES and host['status'] in ('started','stopped_no_retry','all_planned_native_complete','cleanup_unconfirmed'), 'fixed host terminal status')
@@ -587,15 +653,32 @@ def validate_public_evidence(files, run_identity, *, phase='final'):
     _safe_failure(host['primary_error']); _safe_failure(host['cleanup_error'])
     freeze=value('authority/execution-freeze.json'); freeze_sha=digest(canonical(freeze))
     require(host['source_freeze_sha256']==freeze_sha and c.HEAD.fullmatch(host['executed_tree_sha']), 'actual source freeze/head binding')
-    release=c.decode_json(files['source/'+NEW+'execution-release.json'], require_canonical=False)
-    c.require_execution_release(release,freeze,expected_freeze_sha256=freeze_sha,
+    archive_release_check=c.require_execution_release if bound_mode else c.require_legacy_execution_release
+    archive_release_check(release,freeze,expected_freeze_sha256=freeze_sha,
         prepare_prerequisite_raw=files['source/'+NEW+'prepare-prerequisite.json'], source_members=files)
     preflight=value('run-preflight.json')
-    expected={'schema':'k1-asr18-run-preflight-v1','identity':run_identity,'numeric_job_id':preflight.get('numeric_job_id'),
-        'workflow':WORKFLOW,'source_branch':SOURCE_REF,'evidence_branch':EVIDENCE_REF,'source_branch_workflow_runs':1,
-        'evidence_ref_absent':True,'prior_public_claim_history_sha256':release['prior_public_claim_history_sha256'],
-        'public_standard_hosted_ubuntu24':True,'api_metadata_accounting':preflight.get('api_metadata_accounting')}
-    require(c.exact_json(preflight,expected) and type(preflight['numeric_job_id']) is int and preflight['numeric_job_id']>0, 'exact actual preflight observation')
+    if not bound_mode:
+        expected={'schema':'k1-asr18-run-preflight-v1','identity':run_identity,'numeric_job_id':preflight.get('numeric_job_id'),
+            'workflow':c.LEGACY_V1_SCOPE['workflow'],'source_branch':c.LEGACY_V1_SCOPE['source_branch'],
+            'evidence_branch':c.LEGACY_V1_SCOPE['result_branch'],'source_branch_workflow_runs':1,
+            'evidence_ref_absent':True,'prior_public_claim_history_sha256':release['prior_public_claim_history_sha256'],
+            'public_standard_hosted_ubuntu24':True,'api_metadata_accounting':preflight.get('api_metadata_accounting')}
+        require(c.exact_json(preflight,expected) and type(preflight['numeric_job_id']) is int and preflight['numeric_job_id']>0, 'exact actual preflight observation')
+    else:
+        import evidence_transport
+        proof=evidence_transport.bind_archive_admission(files,run_identity,freeze_sha,
+            preflight.get('numeric_job_id'),host['executed_tree_sha'])
+        owner_identity=proof['identity']
+        history=c.validate_bound_history(owner_identity,preflight.get('history'),'host')
+        require(c.exact_json(history,proof['admission']['host_history']),'host retained exact admission history')
+        expected={'schema':'k1-asr18-run-preflight-v2','identity':run_identity,
+            'numeric_job_id':owner_identity['job_id'],'workflow_id':owner_identity['workflow_id'],
+            'workflow':owner_identity['workflow'],'source_branch':owner_identity['source_branch'],
+            'evidence_branch':owner_identity['result_branch'],'source_branch_workflow_runs':history['total_count'],
+            'history':history,'complete_api_history':{'total_count':history['total_count'],'workflow_runs':history['rows']},
+            'evidence_ref_absent':True,'prior_public_claim_history_sha256':release['prior_public_claim_history_sha256'],
+            'public_standard_hosted_ubuntu24':True,'api_metadata_accounting':preflight.get('api_metadata_accounting')}
+        require(c.exact_json(preflight,expected),'exact actual bound preflight observation')
     api_counts=preflight['api_metadata_accounting']
     _exact(api_counts,{'gets','response_body_bytes','response_body_cap_bytes','scope','hard_wire_byte_cap'},'fixed metadata acquisition accounting')
     require(type(api_counts['gets']) is int and api_counts['gets']==6 and type(api_counts['response_body_bytes']) is int and
@@ -626,7 +709,8 @@ def validate_public_evidence(files, run_identity, *, phase='final'):
     blind=m.blind_metadata(projection)
     require(c.exact_json(job,blind['job']) and c.exact_json(plan,blind['execution_plan']), 'fixed eligible-only anonymous order')
     if 'authority/source-claim.json' in files:
-        c.validate_source_claim(files['authority/source-claim.json'], expected_sha256=host['source_claim_sha256'],
+        claim_validator=c.validate_source_claim if bound_mode else c.validate_legacy_source_claim
+        claim_validator(files['authority/source-claim.json'], expected_sha256=host['source_claim_sha256'],
             release=release,source_freeze_sha256=freeze_sha,run_id=str(run_identity['run_id']),executed_head_sha=run_identity['executed_head_sha'])
         require(host['input_verified'] is True,'no claim before complete bytes/screening admission')
     else:
@@ -738,7 +822,16 @@ def validate_public_evidence(files, run_identity, *, phase='final'):
     return True
 
 
-def execute(env, run, release, freeze, freeze_sha, tree, preflight, observer=None):
+def execute(env, run, release, freeze, freeze_sha, tree, preflight, observer=None, *, admission_permit=None, timestamp=None):
+    import claim_admission
+    require(type(admission_permit) is claim_admission.HostPermit, 'private consumed host continuation required')
+    admission = admission_permit.enter(run)
+    control_raw = read_bytes(HERE/'claim-admission-control.json',cap=16384)
+    release_raw = read_bytes(HERE/'execution-release.json',cap=65536)
+    control = c.require_claim_admission(release,control_raw)
+    identity = claim_admission.identity_for(run,preflight,release,control,freeze_sha,tree,timestamp,release_raw)
+    c.validate_bound_admission(admission,identity)
+    require(c.exact_json(admission['host_history'],preflight['history']),'consumed host history bound to execute')
     from resource_host import MeteredDocker, recognition_stages, atomic, safe_error
     import runtime_session as runtime
     import input_binding
@@ -760,6 +853,7 @@ def execute(env, run, release, freeze, freeze_sha, tree, preflight, observer=Non
     binding=frozen_input['actual_worker_binding']
     receipt=host_receipt(run,freeze_sha,tree,release['actual_screening_receipt_sha256'])
     write_once(root/'run-preflight.json',preflight)
+    write_once(root/'admission.json',admission)
     write_once(root/'input-freeze.json',frozen_input)
     write_once(root/'public-screening-receipt.json',frozen_input['actual_screening_receipt'])
     write_once(root/'new-cell-projection.json',projection)
@@ -780,7 +874,7 @@ def execute(env, run, release, freeze, freeze_sha, tree, preflight, observer=Non
         write_once(root/'order/execution-plan.json',plan)
         write_once(root/'order/worker-input-binding.json',binding)
         observe('source_claim')
-        claim=source_claim(run,release,preflight,freeze_sha)
+        claim=source_claim(run,release,preflight,freeze_sha,admission=admission,tree=tree,timestamp=timestamp)
         claim_sha=write_once(root/'authority/source-claim.json',claim)
         receipt['source_claim_sha256']=claim_sha
         acquisition={'schema':'k1-asr18-reserved-acquisition-v1','data':data_accounting,
@@ -887,17 +981,31 @@ def main(argv=None):
         release=release_first()
         _observe(observer,'arguments')
         require((sys.argv[1:] if argv is None else argv)==[],'fixed source entry; no alternate config path')
-        env=dict(os.environ)
+        import claim_admission
+        control_raw=read_bytes(HERE/'claim-admission-control.json',cap=16384)
+        control=c.require_claim_admission(release,control_raw)
+        env=claim_admission.host_environment()
+        claim_admission.early_environment(env,control)
+        claim_admission.token_free(env)
         _observe(observer,'event_read')
         event=read_json(Path(env['GITHUB_EVENT_PATH']),c.MIB)
         _observe(observer,'context')
-        run=event_identity(env,event)
-        observer.attach(run,env['RUNNER_TEMP'])
-        _observe(observer,'api_preflight')
-        preflight=api_preflight(PublicAPI(),run,release)
+        run=event_identity(env,event,control=control)
         _observe(observer,'source_authority')
-        freeze,freeze_sha,tree=source_authority(run,release)
-        result=execute(env,run,release,freeze,freeze_sha,tree,preflight,observer=observer)
+        freeze,freeze_sha,tree=source_authority(run,release,control=control)
+        timestamp=source_timestamp(event,run['executed_head_sha'])
+        release_raw=read_bytes(HERE/'execution-release.json',cap=65536)
+        _observe(observer,'claim_consume')
+        def original_six_reads():
+            _observe(observer,'api_preflight')
+            return api_preflight(PublicAPI(),run,release,control=control,freeze_sha=freeze_sha,
+                tree=tree,timestamp=timestamp,release_raw=release_raw)
+        preflight,permit=claim_admission.consume_from_preflight(env,run,release,control_raw,
+            freeze_sha,tree,timestamp,release_raw,original_six_reads)
+        # Even diagnostic output directories are created after one-use admission.
+        observer.attach(run,env['RUNNER_TEMP'])
+        result=execute(env,run,release,freeze,freeze_sha,tree,preflight,observer=observer,
+            admission_permit=permit,timestamp=timestamp)
     except BaseException as error:
         try:observer.failure(error)
         except BaseException:pass

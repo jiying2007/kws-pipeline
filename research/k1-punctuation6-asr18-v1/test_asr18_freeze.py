@@ -19,8 +19,12 @@ class SourceFreezeTests(unittest.TestCase):
         for name in common:
             self.assertNotIn("qwen12-native-admission-v1", name)
             self.assertFalse(name.startswith("host-tts-verifier-source/"))
-        for name in ("input-freeze.json", "tts-source-authority.json", "input_binding.py", "raw_data_reader.py", "hosted_run.py"):
+        for name in ("input-freeze.json", "tts-source-authority.json", "input_binding.py", "raw_data_reader.py", "hosted_run.py",
+                     "claim_admission.py", "claim-admission-control.json"):
             self.assertNotIn(freeze.NEW + name, common)
+        for name in ("claim_admission.py", "claim-admission-control.json"):
+            self.assertIn(freeze.NEW + name, rosters["host_code"])
+            self.assertNotIn(freeze.NEW + name, rosters["setup_code"])
         self.assertNotIn(freeze.OLD + "hosted_run.py", rosters["setup_code"])
         self.assertNotIn(freeze.OLD + "contract.py", rosters["setup_code"])
         self.assertEqual(len(freeze.HOST_TTS_VERIFIER), 43)

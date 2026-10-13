@@ -13,7 +13,7 @@ import zipfile
 sys.dont_write_bytecode = True
 HERE = Path(__file__).resolve().parent
 SOURCE = HERE.parents[1]
-MANIFEST_SHA = 'ef3e9f407c7278adee52d3a532563b1109d0ae12757e609fde2c213363c12d6d'
+MANIFEST_SHA = '72f1ccad8f063122781e47f3bf93c01ba13fa2b56d1179bd7fc3d6e0aba6b06f'
 ASR_REL = 'research/k1-punctuation6-asr18-v1/'
 MAX_LOG = 8 * 1024 ** 2
 SAFE_FAILURE = '{"schema":"k1-asr18-offline-acceptance-failure-v1","status":"blocked_or_unconfirmed","native_success_established":false,"consumed_attempts":null,"retry_authorized":false}'
@@ -80,8 +80,24 @@ def digest_field(value):require(type(value) is str and t.SHA.fullmatch(value),'e
 def git_field(value):require(type(value) is str and t.HEAD.fullmatch(value),'exact Git pin')
 
 def validate_expected(e):
-    exact_fields(e,{'schema','mode','producer','archive','result','input_authorities','recovery'},'exact acceptance request')
-    require(e['schema']=='k1-asr18-offline-acceptance-v1' and e['mode'] in ('normal_publication','recovered_checkpoint'),'fixed acceptance mode')
+    require(type(e) is dict, 'exact acceptance request object')
+    bound = e.get('schema') == 'k1-asr18-offline-acceptance-v2'
+    fields = {'schema','mode','producer','archive','result','input_authorities','recovery'}
+    if bound:
+        fields.add('claim_owner')
+    exact_fields(e,fields,'exact acceptance request')
+    require(e['schema'] in ('k1-asr18-offline-acceptance-v1','k1-asr18-offline-acceptance-v2') and e['mode'] in ('normal_publication','recovered_checkpoint'),'fixed acceptance mode')
+    if bound:
+        claim = e['claim_owner']
+        exact_fields(claim, {'ref','commit','ref_response_sha256','commit_response_sha256','source_branch','workflow','result_branch'}, 'independently pinned claim custody')
+        require(type(claim['ref']) is str and claim['ref'].startswith('refs/heads/'), 'fixed external owner ref')
+        p._branch(claim['ref'][11:]);git_field(claim['commit'])
+        p._branch(claim['source_branch']);p._branch(claim['result_branch'])
+        require(type(claim['workflow']) is str and re.fullmatch(r'\.github/workflows/[A-Za-z0-9_-]+\.ya?ml', claim['workflow']), 'root-pinned producer workflow')
+        for key in ('ref_response_sha256','commit_response_sha256'):digest_field(claim[key])
+        scope = c.current_scope()
+        require(claim['ref'] == scope['claim_ref'] and all(claim[key] == scope[key]
+            for key in ('source_branch','workflow','result_branch')), 'independent owner custody matches compiled source scope')
     v=e['producer'];exact_fields(v,{'identity','numeric_job_id','source_tree','source_closure_sha256','source_commit_timestamp','terminal'},'exact producer pins')
     t.identity(v['identity']);require(type(v['numeric_job_id']) is int and v['numeric_job_id']>0,'numeric producer job')
     git_field(v['source_tree']);digest_field(v['source_closure_sha256'])
@@ -115,15 +131,55 @@ def validate_expected(e):
 def authority(e):
     v=e['producer'];return {'schema':'k1-asr18-transfer-recovery-authority-v1','producer_identity':v['identity'],'numeric_job_id':v['numeric_job_id'],'source_tree':v['source_tree'],'source_closure_sha256':v['source_closure_sha256'],'source_commit_timestamp':v['source_commit_timestamp'],'archive_sha256':e['archive']['sha256'],'archive_bytes':e['archive']['bytes'],'outer_manifest_sha256':e['archive']['outer_manifest_sha256'],'checkpoint_ref':'refs/heads/'+t.POLICY['result_branch']+'-checkpoint','checkpoint_commit':e['result']['commit'],'checkpoint_tree':e['result']['tree'],'terminal':v['terminal']}
 
-def producer_terminal(e, records):
+def producer_terminal(e, records, *, source_claim=None):
     v=e['producer'];base=p.BASE+'/actions/runs/'+str(v['identity']['run_id'])
     routes={'producer_run':base,'producer_history':p.BASE+'/actions/workflows/'+t.POLICY['workflow'].split('/')[-1]+'/runs?event=push&branch='+t.POLICY['source_branch']+'&per_page=100','producer_jobs':base+'/attempts/1/jobs?per_page=100'}
+    policy = t.LEGACY_POLICY if source_claim is None else c.require_current_scope(source_claim['identity'])
+    if source_claim is not None:
+        require(e['schema'] == 'k1-asr18-offline-acceptance-v2', 'independent external owner custody required')
+        routes['producer_history'] = p.producer_history_route(source_claim['identity'])
+        external_claim_custody(e, records, source_claim)
+    else:
+        require(e['schema'] == 'k1-asr18-offline-acceptance-v1', 'v2 request cannot promote legacy source')
     by_route={route:key for key,route in routes.items()}
     def get(method, route):
         require(method=='GET' and route in by_route,'read-only original terminal predicate')
-        return records[by_route[route]]
-    number=r._verify_run(get,routes,'producer',v['identity'],t.POLICY['source_branch'],t.POLICY['workflow'],'asr18',v['terminal'])
+        value = records[by_route[route]]
+        return decode(value) if type(value) is bytes else value
+    get.response_bodies = {route:(records[key] if type(records[key]) is bytes else records.get('_response_bodies',{}).get(key)) for route,key in by_route.items()}
+    observations = {}
+    number=r._verify_run(get,routes,'producer',v['identity'],policy['source_branch'],policy['workflow'],'asr18',v['terminal'],
+        source_claim=source_claim, observations=observations)
     require(number==v['numeric_job_id'],'same original numeric job')
+    return observations
+
+def external_claim_custody(e, records, proof):
+    """Independent original read-only snapshots, outside producer API budgets."""
+    pins = e['claim_owner'];owner = proof['admission']['owner'];identity = proof['identity']
+    c.require_current_scope(identity)
+    require(pins['ref'] == owner['claim_ref'] and pins['commit'] == proof['admission']['commit']['sha'] and
+        all(pins[key] == identity[key] for key in ('source_branch','workflow','result_branch')),
+        'source-bound immutable owner equals independently pinned custody scope')
+    for role,key,validator in (('claim_ref','ref_response_sha256',c.validate_claim_ref),
+                               ('claim_commit','commit_response_sha256',c.verify_owner_commit)):
+        raw = records.get(role)
+        require(type(raw) is bytes and 0 < len(raw) <= c.MAX_HTTP_RESPONSE and sha(raw) == pins[key],
+            'original independently pinned external claim response bytes')
+        validator(decode(raw), owner)
+    return True
+
+
+def source_bound_producer(e, records, payload):
+    v=e['producer']
+    require(type(payload) is bytes and len(payload)==e['archive']['bytes'] and sha(payload)==e['archive']['sha256'],
+        'original archive body mandatory before v2 policy selection')
+    rows=source(records,'producer',v['identity'],v['source_tree'],v['source_commit_timestamp'])
+    proof=t.validate_source_binding(payload,v['identity'],v['source_closure_sha256'],rows,v['numeric_job_id'],v['source_tree'])
+    require((proof is not None) == (e['schema']=='k1-asr18-offline-acceptance-v2'), 'actual source selects independent acceptance policy')
+    if proof is not None:
+        require(proof['identity']['source_timestamp']==v['source_commit_timestamp'], 'same independently observed source timestamp')
+    return rows,proof
+
 
 def terminal_recovery(rec, records):
     who=rec['identity'];run=records['recovery_run']
@@ -195,6 +251,9 @@ def inspect_stdout(logs, e):
 def recovery_receipt(e, value):
     a=authority(e);rec=e['recovery']
     wanted={'schema':'k1-asr18-transfer-recovery-receipt-v1','status':'exact_original_checkpoint_final_ref_verified','producer_identity':a['producer_identity'],'producer_numeric_job_id':a['numeric_job_id'],'original_terminal':a['terminal'],'original_run_status':'completed','original_job_status':'completed','original_publisher_reclassified':False,'recovery_identity':rec['identity'],'recovery_numeric_job_id':rec['numeric_job_id'],'recovery_source_closure_sha256':rec['source_closure_sha256'],'checkpoint_ref':a['checkpoint_ref'],'checkpoint_commit':a['checkpoint_commit'],'checkpoint_tree':a['checkpoint_tree'],'final_ref':'refs/heads/'+t.POLICY['result_branch'],'archive_sha256':a['archive_sha256'],'archive_bytes':a['archive_bytes'],'outer_manifest_sha256':a['outer_manifest_sha256'],'native_success_established':False,'new_native_calls_authorized':False,'retry_authorized':False}
+    if e['schema']=='k1-asr18-offline-acceptance-v2':
+        wanted['producer_history']=value.get('producer_history')
+        require(type(wanted['producer_history']) is dict, 'original recovery producer history observation')
     require(c.exact_json(value,wanted),'exact original-byte transfer-only receipt')
 
 def phase_resource_consistency(files, host, terminal):
@@ -263,19 +322,25 @@ def scientific_summary(files, e):
     return {'status':'complete_native_verified' if complete else 'partial_native_verified','native_success_established':complete,'host_status':host['status'],'input_verified_by_original_host':host['input_verified'],'accounting_valid':terminal['accounting_valid'],'verified_complete_slots':sum(x['status']=='complete' for x in rows),'ledger_reported_attempts':sum(x['attempts'] for x in rows) if terminal['accounting_valid'] else None,'consumed_attempts':None,'rows':rows,'machine_candidates':candidates,'resource_verification':resource,'normalization':consensus.NORMALIZATION,'training_admitted':False,'human_gold':False,'acoustic_verbatim_completeness':'unknown'}
 
 def _accept(expected, records, outer_raw, chunks, payload, logs=None):
-    e=validate_expected(expected);require(type(records) is dict,'original API records required');producer_terminal(e,records)
+    e=validate_expected(expected);require(type(records) is dict,'original API records required')
+    source_rows,proof=(None,None)
+    if e['schema']=='k1-asr18-offline-acceptance-v2':
+        source_rows,proof=source_bound_producer(e,records,payload)
+    producer_observations=producer_terminal(e,records,source_claim=proof)
     observation=inspect_stdout(logs,e)
-    v=e['producer'];base={'schema':'k1-asr18-offline-acceptance-result-v1','custody_mode':e['mode'],'producer_identity':v['identity'],'producer_terminal':v['terminal'],'recovery_identity':None if e['recovery'] is None else e['recovery']['identity'],'original_publisher_reclassified':False,'diagnostics':{k:x for k,x in observation.items() if k!='recovery_receipts'},'original_writer_receipt_observed':False,'original_publisher_http_telemetry':'unavailable','network_calls':0,'model_calls':0,'new_attempts_authorized':False}
+    v=e['producer'];base={'schema':'k1-asr18-offline-acceptance-result-v1','custody_mode':e['mode'],'producer_identity':v['identity'],'producer_terminal':v['terminal'],'recovery_identity':None if e['recovery'] is None else e['recovery']['identity'],'original_publisher_reclassified':False,'diagnostics':{k:x for k,x in observation.items() if k!='recovery_receipts'},'original_writer_receipt_observed':False,'original_publisher_http_telemetry':'unavailable','network_calls':0,'model_calls':0,'new_attempts_authorized':False,**producer_observations}
     if e['recovery'] is not None:
         success,terminal=terminal_recovery(e['recovery'],records);base['recovery_terminal']=terminal
         if not success:return {**base,'status':'recovery_not_verified','native_success_established':False,'consumed_attempts':None,'rows':[],'machine_candidates':[],'training_admitted':False,'human_gold':False}
         recovery_source(e,records)
         require(len(observation['recovery_receipts'])==1,'one original successful recovery stdout receipt')
         recovery_receipt(e,observation['recovery_receipts'][0])
+        if proof is not None:
+            c.validate_bound_history(proof['identity'],observation['recovery_receipts'][0]['producer_history'],'posterior')
         if 'recovery_receipt' in records:require(c.exact_json(records['recovery_receipt'],observation['recovery_receipts'][0]),'derived recovery receipt must match original stdout')
         p._equal(records['checkpoint_ref'],{'ref':'refs/heads/'+t.POLICY['result_branch']+'-checkpoint'},'fixed retained checkpoint ref')
         p._equal(records['checkpoint_ref'].get('object'),{'type':'commit','sha':e['result']['commit']},'checkpoint immutable target')
-    source_rows=source(records,'producer',v['identity'],v['source_tree'],v['source_commit_timestamp'])
+    if source_rows is None:source_rows,proof=source_bound_producer(e,records,payload)
     require(type(payload) is bytes and len(payload)==e['archive']['bytes'] and sha(payload)==e['archive']['sha256'],'original archive body mandatory')
     require(type(outer_raw) is bytes and sha(outer_raw)==e['archive']['outer_manifest_sha256'],'original outer bytes mandatory')
     t.parse_manifest(outer_raw,v['identity'],v['source_closure_sha256'],v['numeric_job_id'])
@@ -302,10 +367,12 @@ def accept(expected, records, outer_raw, chunks, payload, logs=None):
 # These locators describe the fixed observed resources. They are not HTTP
 # telemetry and do not turn connector content into a raw HTTP response.
 def locators(e):
+    validate_expected(e)
     v=e['producer'];base='https://api.github.com'+p.BASE
+    policy=t.LEGACY_POLICY if e['schema']=='k1-asr18-offline-acceptance-v1' else t.POLICY
     result={}
     for prefix,who,branch,workflow,tree,job in (
-        ('producer',v['identity'],t.POLICY['source_branch'],t.POLICY['workflow'],v['source_tree'],v['numeric_job_id']),
+        ('producer',v['identity'],policy['source_branch'],policy['workflow'],v['source_tree'],v['numeric_job_id']),
         *([] if e['recovery'] is None else [('recovery',e['recovery']['identity'],r.SOURCE_BRANCH,r.WORKFLOW,e['recovery']['source_tree'],e['recovery']['numeric_job_id'])])):
         run=base+'/actions/runs/'+str(who['run_id'])
         result.update({prefix+'_run':{run},prefix+'_jobs':{run+'/attempts/1/jobs?per_page=100'},
@@ -314,8 +381,12 @@ def locators(e):
             prefix+'_source_commit':{base+'/git/commits/'+who['executed_head_sha']},
             prefix+'_source_tree':{base+'/git/trees/'+tree+'?recursive=1'},
             prefix+'_log':{'connector:github_job_log:'+str(job)}})
+    if e['schema']=='k1-asr18-offline-acceptance-v2':
+        owner=e['claim_owner']
+        result['producer_history']={base+'/actions/workflows/'+owner['workflow'].split('/')[-1]+'/runs?branch='+owner['source_branch']+'&per_page=100'}
+        result.update(claim_ref={base+'/git/ref/'+owner['ref'][5:]},claim_commit={base+'/git/commits/'+owner['commit']})
     commit=e['result']['commit'];tree=e['result']['tree']
-    result.update(result_ref={base+'/git/ref/heads/'+t.POLICY['result_branch']},result_commit={base+'/git/commits/'+commit},result_tree={base+'/git/trees/'+tree+'?recursive=1'},outer_manifest={'https://raw.githubusercontent.com/'+t.REPOSITORY+'/'+commit+'/'+t.manifest_path()},archive={'derived:ordered-original-chunks:'+e['archive']['sha256']})
+    result.update(result_ref={base+'/git/ref/heads/'+policy['result_branch']},result_commit={base+'/git/commits/'+commit},result_tree={base+'/git/trees/'+tree+'?recursive=1'},outer_manifest={'https://raw.githubusercontent.com/'+t.REPOSITORY+'/'+commit+'/'+t.manifest_path()},archive={'derived:ordered-original-chunks:'+e['archive']['sha256']})
     for index in range(t.MAX_CHUNKS):result['chunk_%04d'%index]={'https://raw.githubusercontent.com/'+t.REPOSITORY+'/'+commit+'/'+t.chunk_path(index)}
     if e['recovery'] is not None:
         rec=e['recovery'];raw='https://raw.githubusercontent.com/'+t.REPOSITORY+'/'+rec['identity']['executed_head_sha']+'/'
@@ -328,7 +399,7 @@ def load_and_accept(root, expected_path, expected_sha256, custody_path, custody_
     require(sha(eraw)==expected_sha256 and sha(craw)==custody_sha256,'independently pinned exact input files')
     e=validate_expected(decode(eraw));index=decode(craw)
     exact_fields(index,{'schema','entries'},'exact custody index')
-    require(index['schema']=='k1-asr18-offline-custody-v1' and type(index['entries']) is list and 1<=len(index['entries'])<=80,'bounded original custody index')
+    require(index['schema']==('k1-asr18-offline-custody-v2' if e['schema']=='k1-asr18-offline-acceptance-v2' else 'k1-asr18-offline-custody-v1') and type(index['entries']) is list and 1<=len(index['entries'])<=80,'bounded original custody index')
     wanted=locators(e);loaded={};seen=set();total=0;provenance=[];root=Path(root).absolute()
     require(root.is_dir() and not any(p.is_symlink() for p in (root,*root.parents)),'fixed evidence directory')
     for row in index['entries']:
@@ -344,9 +415,12 @@ def load_and_accept(root, expected_path, expected_sha256, custody_path, custody_
         provenance.append({'role':role,'sha256':row['sha256'],'locator':row['locator']})
     required={'producer_run','producer_jobs','producer_history','producer_log'}
     if e['recovery'] is not None:required|={'recovery_run','recovery_jobs','recovery_history','recovery_log'}
+    if e['schema']=='k1-asr18-offline-acceptance-v2':required|={'claim_ref','claim_commit'}
     require(required<=set(loaded),'original identity terminal and log bodies required')
     raw_roles={'archive','outer_manifest','producer_log','recovery_log','recovery_source_freeze','recovery_control','recovery_workflow'}
+    if e['schema']=='k1-asr18-offline-acceptance-v2':raw_roles|={'claim_ref','claim_commit'}
     records={name:(body if name in raw_roles else decode(body)) for name,body in loaded.items() if not name.startswith('chunk_') and name not in {'archive','outer_manifest','producer_log','recovery_log'}}
+    if e['schema']=='k1-asr18-offline-acceptance-v2':records['_response_bodies']={'producer_history':loaded['producer_history']}
     outer=loaded.get('outer_manifest');chunks=[]
     if outer is not None:
         m=t.parse_manifest(outer,e['producer']['identity'],e['producer']['source_closure_sha256'],e['producer']['numeric_job_id'])

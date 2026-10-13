@@ -266,7 +266,7 @@ class PosteriorMatrix(unittest.TestCase):
     def test_E_complete_unique_source_history_and_numeric_job_binding(self):
         for mode in ("history_count", "history_repeat", "history_identity", "numeric_job", "job_attempt", "job_repeat", "missing_steps", "foreign_step"):
             case = copy.deepcopy(self.complete)
-            if mode == "history_count": case.records["producer_history"]["total_count"] = 2
+            if mode == "history_count": case.records["producer_history"]["total_count"] = 3
             elif mode == "history_repeat": case.records["producer_history"]["workflow_runs"].append(copy.deepcopy(case.records["producer_run"]))
             elif mode == "history_identity": case.records["producer_history"]["workflow_runs"][0]["head_sha"] = "f" * 40
             elif mode == "numeric_job": case.records["producer_jobs"]["jobs"][0]["id"] += 1
@@ -581,7 +581,7 @@ print(json.dumps({'status':'synthetic guarded acceptance passed', **observed,
         self.assertIn('    timeout-minutes: 15\n', job)
         self.assertIn('persist-credentials: false', job)
         self.assertIn('actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1', job)
-        self.assertIn('("test_asr_posterior.py", "test_offline_custody.py")', job)
+        self.assertIn('("test_asr_posterior.py", "test_offline_custody.py", "test_claim_posterior_integration.py")', job)
         for flags in ('', '-O ', '-OO '):
             self.assertIn('python3 -I -S -B ' + flags + '-c "$posterior_tests"', job)
         self.assertIn('if: always()', job)
