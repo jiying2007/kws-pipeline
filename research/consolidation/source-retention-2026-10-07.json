@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 45197,
-      "sha256": "d9216af85975cc292b6d52e24f7a16745e77c2dffb2f76bf58792cf559f8271f",
-      "git_blob_sha1": "c7b71e31ad1672fa743c21263a7d943514625da2"
+      "bytes": 46412,
+      "sha256": "650be96118941169478115c6b223b4460a434506c04ae418a5aec2e6eca52e83",
+      "git_blob_sha1": "efda102b8f7e62a45538cc656def50c033620e6d"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -23593,6 +23593,117 @@
             "bytes": 39537,
             "sha256": "a0277ad36f73407bcbe7073be39f4c64db8e1d76adc6fe73b33bfa27cbb17fa7",
             "git_blob_sha1": "f9eaf58a25a99ba02c75cf65f8db4540711919c2"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-13",
+      "operation_id": "k1-asr18-readonly-posterior-public-v1",
+      "public_main_base_commit": "a99110ccd276a2771c78d6d1984197051c3c98d5",
+      "public_main_base_tree": "037f0e32c3da8d7bad9c2af72186c6b09c749fa6",
+      "workflow_source_changed": true,
+      "scope": "Add a fixed read-only offline ASR evidence adapter and self-contained synthetic test generator; reuse existing strict validators and fixed scientific normalizer. Add an independent public standard-runner contents-read CI job with a 15-minute bound and normal/O/OO tests.",
+      "rationale": "Ordinary and recovered custody retain original producer identity and terminal facts. Only complete native/claim/resource/source evidence can establish complete acceptance; machine agreement does not admit training or human gold. The test generator uses original native-orchestration and resource writers with explicit synthetic setup/model/kernel observations; no historical ZIP or copied validator tree is published. All model, standalone recovery and qualification execution approvals remain disabled. Existing source freezes, scientific47, actual prepare prerequisite and sealed histories remain unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 45197,
+            "sha256": "d9216af85975cc292b6d52e24f7a16745e77c2dffb2f76bf58792cf559f8271f",
+            "git_blob_sha1": "c7b71e31ad1672fa743c21263a7d943514625da2"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 46412,
+            "sha256": "650be96118941169478115c6b223b4460a434506c04ae418a5aec2e6eca52e83",
+            "git_blob_sha1": "efda102b8f7e62a45538cc656def50c033620e6d"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/README.md",
+            "mode": "100644",
+            "bytes": 7610,
+            "sha256": "865428dea471fa7f442a5371629a785a883d00c0bfb04e0a87006294c4a9ce0c",
+            "git_blob_sha1": "e33bde8f05c4b86b9b251f8103adb1f25d920a6d"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 34810,
+            "sha256": "189f0cd716304050b65afc748001f0a8f44942300f91ca3914b2f5dcf655fe82",
+            "git_blob_sha1": "6e75a6d0c803da72e36f38c2d5943ee003b02298"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/fixture_cases.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/fixture_cases.py",
+            "mode": "100644",
+            "bytes": 25862,
+            "sha256": "a04b5c4a249846b385f53974abccb741d8e016cc35445510862189308186f0a2",
+            "git_blob_sha1": "3532f0a9f594a1d59650d7da4e8400859d2a6404"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+            "mode": "100644",
+            "bytes": 37110,
+            "sha256": "128a93f4e2b88112e73b316e67685855f41e502bbebfb7fd6be02d080e6200b9",
+            "git_blob_sha1": "ad7ddd35da56af884304e893f7e17e39a004c57b"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/test_offline_custody.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/test_offline_custody.py",
+            "mode": "100644",
+            "bytes": 8151,
+            "sha256": "41679453e4bdc586076cac12a4dbc26c10fbd52294336cab1815c3ebfc04ffda",
+            "git_blob_sha1": "aff1bcdfea0392b7437c6bd4c109f8560ad15deb"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": null,
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 38115,
+            "sha256": "a1b24112e2bf336ad9f6a626e24adc8c19508d3f1588f16d3795f4efc2a81ebd",
+            "git_blob_sha1": "1d4bf03cb4f1f4e5afd7a427933f42362b690fc1"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+            "mode": "100644",
+            "bytes": 59827,
+            "sha256": "69ca2ead424d6aae0919b86ac35b2deeea044e96453a9593f2bfae5158934a7a",
+            "git_blob_sha1": "36806fd7fa47d6d06ba950499bfb9a6f6a24dc19"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+            "mode": "100644",
+            "bytes": 63355,
+            "sha256": "80725a20de69054f58e53aa6a8487ee24fc2a92bfb1068df318872b3199bb3cc",
+            "git_blob_sha1": "8987dbe5080c835ad4a39fec37e090a7518cb34a"
           }
         }
       ]
