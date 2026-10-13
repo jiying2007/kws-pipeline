@@ -1,0 +1,198 @@
+{
+  "accounting_note": "One authorized maximum18 campaign had two observed runs. Neither 36 consumed attempts nor zero consumed attempts is asserted. No slots are reused.",
+  "authorized_campaign_count": 1,
+  "authorized_maximum_asr_slots": 18,
+  "campaign_slots_sealed": 18,
+  "checkpoint_branch": "evidence/k1-punctuation6-asr18-r3-checkpoint",
+  "consumed_attempts": null,
+  "consumption_authority": "not_established_by_original_native_bodies_or_ledger",
+  "duplicate_trigger_cause": {
+    "limits": [
+      "Two public push run records do not identify two operator create calls.",
+      "The connector branch result does not expose internal HTTP call count or retries.",
+      "Original push event payloads and webhook delivery records are unavailable.",
+      "No attribution to GitHub, connector internal retry, or another actor is established."
+    ],
+    "status": "unknown"
+  },
+  "evidence_limits": {
+    "archive_outer_chunks": "unavailable_unobserved",
+    "full_immutable_readback_verified": false,
+    "human_gold": false,
+    "native_outputs": "unavailable_unobserved",
+    "original_native_start_and_terminal_ledger_bodies": "unavailable_unobserved",
+    "original_transcripts": "unavailable_unobserved",
+    "original_writer_receipt": "unavailable_unobserved",
+    "scientific_asr_success": false,
+    "training_admitted": false
+  },
+  "experiment": "k1-punctuation6-asr18-r3",
+  "new_execution_authorized_by_closeout": false,
+  "observed_run_count": 2,
+  "observed_runs": [
+    {
+      "actual_process_observations": {
+        "host": {
+          "completed_at": "2026-10-13T10:49:14Z",
+          "consumed_attempts": null,
+          "diagnostic_record_bytes": 1270,
+          "diagnostic_record_sha256": "6236fc11c57569e9192e5e2178bfaacdadd517953ee3c7c04e87cfddde01d6fe",
+          "diagnostic_status": "failed_or_unconfirmed",
+          "native_success_established": false,
+          "observed_at": "2026-10-13T10:49:14.9160781Z",
+          "retry_authorized": false,
+          "safe_error_type": "ValueError",
+          "source_claim_status": "unobserved",
+          "stage": "api_preflight",
+          "started_at": "2026-10-13T10:49:14Z",
+          "step_conclusion": "failure",
+          "step_name": "Admit complete new input and run fixed ASR18 once",
+          "terminal_ledger_status": "unobserved"
+        },
+        "publisher": {
+          "completed_at": "2026-10-13T10:49:15Z",
+          "consumed_attempts": null,
+          "diagnostic_record_bytes": 1291,
+          "diagnostic_record_sha256": "8d719c53421b2488901dc692510756f789f2775180c26ac23b6f9a8377e68afc",
+          "diagnostic_status": "failed_or_unconfirmed",
+          "native_success_established": false,
+          "observed_at": "2026-10-13T10:49:15.2410057Z",
+          "retry_authorized": false,
+          "safe_error_type": "FileNotFoundError",
+          "source_claim_status": "unobserved",
+          "stage": "package_read",
+          "started_at": "2026-10-13T10:49:14Z",
+          "step_conclusion": "failure",
+          "step_name": "Publish complete audio-free bounded evidence",
+          "terminal_ledger_status": "unobserved"
+        }
+      },
+      "created_at": "2026-10-13T10:45:54Z",
+      "event": "push",
+      "job_conclusion": "failure",
+      "job_id": 115256449947,
+      "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38385589303/job/115256449947",
+      "nonnull_foreign_diagnostics": 0,
+      "original_job_log": {
+        "bytes": 303254,
+        "sha256": "ae838a47ef64b7b2f160f3cb166607009290e8caca07bc21fbc45ed10230dd7c"
+      },
+      "run_attempt": 1,
+      "run_conclusion": "failure",
+      "run_id": 38385589303,
+      "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38385589303",
+      "unattributed_null_identity_diagnostics": 24
+    },
+    {
+      "actual_process_observations": {
+        "host": {
+          "completed_at": "2026-10-13T10:52:29Z",
+          "consumed_attempts": null,
+          "diagnostic_record_bytes": 1270,
+          "diagnostic_record_sha256": "71f9c6d5871c6d69cf39ee9f287a3148620383823a7e5a9df4a4b906c10458b4",
+          "diagnostic_status": "failed_or_unconfirmed",
+          "native_success_established": false,
+          "observed_at": "2026-10-13T10:52:29.5975674Z",
+          "retry_authorized": false,
+          "safe_error_type": "ValueError",
+          "source_claim_status": "unobserved",
+          "stage": "api_preflight",
+          "started_at": "2026-10-13T10:52:28Z",
+          "step_conclusion": "failure",
+          "step_name": "Admit complete new input and run fixed ASR18 once",
+          "terminal_ledger_status": "unobserved"
+        },
+        "publisher": {
+          "completed_at": "2026-10-13T10:52:29Z",
+          "consumed_attempts": null,
+          "diagnostic_record_bytes": 1291,
+          "diagnostic_record_sha256": "557d0bb5eb1e023c9c6c6056f33c062ad46f193cbb1589f1ed93830d32bc64fa",
+          "diagnostic_status": "failed_or_unconfirmed",
+          "native_success_established": false,
+          "observed_at": "2026-10-13T10:52:29.9474785Z",
+          "retry_authorized": false,
+          "safe_error_type": "FileNotFoundError",
+          "source_claim_status": "unobserved",
+          "stage": "package_read",
+          "started_at": "2026-10-13T10:52:29Z",
+          "step_conclusion": "failure",
+          "step_name": "Publish complete audio-free bounded evidence",
+          "terminal_ledger_status": "unobserved"
+        }
+      },
+      "created_at": "2026-10-13T10:46:12Z",
+      "event": "push",
+      "job_conclusion": "failure",
+      "job_id": 115257715153,
+      "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38385623017/job/115257715153",
+      "nonnull_foreign_diagnostics": 0,
+      "original_job_log": {
+        "bytes": 303246,
+        "sha256": "c610453d66394f85e7b6ad7772e1487a867c62ee446e66b01df64db4f8d5d2dd"
+      },
+      "run_attempt": 1,
+      "run_conclusion": "failure",
+      "run_id": 38385623017,
+      "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38385623017",
+      "unattributed_null_identity_diagnostics": 24
+    }
+  ],
+  "prior_three_campaign_planned_slots_sealed": 54,
+  "repository": "jiying2007/kws-pipeline",
+  "result_branch": "evidence/k1-punctuation6-asr18-r3",
+  "retry_authorized": false,
+  "root_release_observation": {
+    "additional_outer_create_or_retry_reported": false,
+    "connector_internal_http_request_count": null,
+    "outer_create_call_count_reported_and_recorded": 1,
+    "returned_branch": "research/k1-punctuation6-asr18-r3"
+  },
+  "schema": "k1-asr18-r3-history-anomaly-closeout-v1",
+  "slots_reusable": 0,
+  "source_branch": "research/k1-punctuation6-asr18-r3",
+  "source_commit": "b012fca6bec8e0c2c1cdd5741fe8e43f0ca195b3",
+  "source_tree": "40224e4d7b566ee65574742b8c052cdb17936b61",
+  "stage_inference": {
+    "exact_first_failing_api_predicate": "not_established; original safe exception content is omitted",
+    "history2_is_sufficient_to_reject_before_execute": true,
+    "host_source_authority_execute_claim_setup_prepare_decode_reached": "not_observed; exact host final diagnostics stop at api_preflight before these calls in the fixed source",
+    "live_host_history_response_retained": false,
+    "publisher_missing_package_is_consistent_with_host_preexecute_stop": true,
+    "scope": "fixed executed-source control-flow interpretation, separate from machine attempt accounting"
+  },
+  "terminal_public_observations": {
+    "artifacts_38385589303": {
+      "observed_at": "2026-10-13T10:54:12.838Z",
+      "total_count": 0,
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/actions/runs/38385589303/artifacts?per_page=100"
+    },
+    "artifacts_38385623017": {
+      "observed_at": "2026-10-13T10:54:12.797Z",
+      "total_count": 0,
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/actions/runs/38385623017/artifacts?per_page=100"
+    },
+    "checkpoint_ref": {
+      "connector_reported_status": 404,
+      "observed_at": "2026-10-13T10:54:12.756Z",
+      "status": "not_found_observed",
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/git/ref/heads/evidence/k1-punctuation6-asr18-r3-checkpoint"
+    },
+    "result_ref": {
+      "connector_reported_status": 404,
+      "observed_at": "2026-10-13T10:54:12.922Z",
+      "status": "not_found_observed",
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/git/ref/heads/evidence/k1-punctuation6-asr18-r3"
+    },
+    "source_branch_push_history": {
+      "observed_at": "2026-10-13T10:54:12.807Z",
+      "run_ids": [
+        38385589303,
+        38385623017
+      ],
+      "same_workflow_source_attempt": true,
+      "total_count": 2,
+      "url": "https://api.github.com/repos/jiying2007/kws-pipeline/actions/runs?branch=research%2Fk1-punctuation6-asr18-r3&event=push&per_page=100"
+    }
+  },
+  "workflow": ".github/workflows/k1-punctuation6-asr18-v1.yml"
+}

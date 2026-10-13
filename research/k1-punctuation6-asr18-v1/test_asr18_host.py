@@ -120,13 +120,13 @@ def public_fixture():
 
 
 class HostTests(unittest.TestCase):
-    def test_checked_in_r3_controls_enabled_and_all54_prior_slots_not_reclaimed(self):
+    def test_checked_in_r3_controls_closed_and_all54_prior_slots_not_reclaimed(self):
         for filename,keys in DISABLED_APPROVALS.items():
             value=c.read_json(HERE/filename)
-            self.assertTrue(all(value[key] is True for key in keys))
+            self.assertTrue(all(value[key] is False for key in keys))
         release=c.read_json(HERE/'execution-release.json');history=h.prior_history_identity()
         self.assertIs(release['historical_screening_reviewed'],True)
-        self.assertEqual(h.release_first(),release)
+        with self.assertRaisesRegex(ValueError,'execution release disabled'):h.release_first()
         self.assertEqual(release['experiment'],'k1-punctuation6-asr18-r3')
         self.assertEqual(release['source_ref'],'research/k1-punctuation6-asr18-r3')
         self.assertEqual(release['evidence_ref'],'evidence/k1-punctuation6-asr18-r3')
@@ -296,8 +296,19 @@ class HostTests(unittest.TestCase):
     def test_synthetic_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects(self):
         self.check_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects()
 
-    def test_actual_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects(self):
-        self.check_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects()
+    def test_actual_closed_real_entry_rejects_before_event_or_side_effects(self):
+        production=c.read_bytes(HERE/'execution-release.json')
+        with ExitStack() as stack:
+            traps=[]
+            for module,name in ((h,'event_identity'),(h,'PublicAPI'),(h,'git_read'),
+                (h,'verify_download'),(h,'source_claim'),(h,'write_once'),(h,'execute'),
+                (c,'durable_mkdir'),(r,'setup_runtimes'),(r,'supervise')):
+                traps.append(stack.enter_context(patch.object(module,name,
+                    side_effect=AssertionError('forbidden downstream operation: '+name))))
+            stack.enter_context(patch.dict(os.environ,{'GITHUB_EVENT_PATH':'/must-not-read'},clear=True))
+            with self.assertRaisesRegex(ValueError,'execution release disabled'):h.main([])
+            for trap in traps:trap.assert_not_called()
+        self.assertEqual(c.read_bytes(HERE/'execution-release.json'),production)
 
     def check_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects(self):
         # release_first/read_json/event_identity/main are all the real functions.
