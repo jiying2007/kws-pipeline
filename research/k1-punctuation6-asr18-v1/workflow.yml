@@ -12,7 +12,7 @@ jobs:
   asr18:
     if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-asr18-r2' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 70
+    timeout-minutes: 80
     permissions:
       contents: write
       actions: read
@@ -28,7 +28,7 @@ jobs:
         timeout-minutes: 5
         run: |
           set -euo pipefail
-          asr18_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-asr18-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_asr18_binding", "test_asr18_contract", "test_asr18_prerequisite", "test_asr18_entrypoints", "test_asr18_freeze", "test_asr18_failure_observer", "test_publisher_observation", "test_asr18_host", "test_asr18_metadata", "test_asr18_raw_data_reader", "test_asr18_receipts", "test_asr18_resources", "test_asr18_transport", "test_asr18_worker")); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
+          asr18_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-asr18-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_asr18_binding", "test_asr18_contract", "test_asr18_prerequisite", "test_asr18_entrypoints", "test_asr18_freeze", "test_asr18_failure_observer", "test_publisher_observation", "test_publisher_checkpoint", "test_transfer_recovery", "test_asr18_host", "test_asr18_metadata", "test_asr18_raw_data_reader", "test_asr18_receipts", "test_asr18_resources", "test_asr18_transport", "test_asr18_worker")); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
           python3 -I -S -B -c "$asr18_tests"
           python3 -I -S -B -O -c "$asr18_tests"
           python3 -I -S -B -OO -c "$asr18_tests"
@@ -41,11 +41,12 @@ jobs:
           python3 -I -B research/k1-punctuation6-asr18-v1/hosted_run.py
       - name: Publish complete audio-free bounded evidence
         if: ${{ always() && steps.host.outputs.started == 'true' }}
-        timeout-minutes: 4
+        timeout-minutes: 11
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           export KWS_SOURCE_FREEZE_SHA256="$(env -i PATH=/usr/bin:/bin HOME=/nonexistent GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 LC_ALL=C sh -eu -c 'git --no-optional-locks -c core.fsmonitor=false -c core.hooksPath=/dev/null show "$1:research/k1-punctuation6-asr18-v1/execution-freeze.json" | sha256sum | cut -d " " -f 1' sh "$GITHUB_SHA")"
           python3 -I -B research/k1-punctuation6-asr18-v1/evidence_publisher.py
       # Only the distinct publisher process receives the short-lived token.
-      # No Actions artifacts, caches, audio logs, retries or alternative triggers.
+      # No Actions artifacts, caches, audio logs, host/ASR retries or alternative triggers.
+      # The publisher alone has one bounded same-blob reconciliation retry.

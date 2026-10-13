@@ -162,9 +162,9 @@ class PublisherObservationTests(unittest.TestCase):
         self.assertEqual(p.run_once({}, {}, {'purpose': 'asr18'}, b'fake', None, None, self.root), {'synthetic': True})
         self.assertEqual(self.stdout.getvalue(), '')
 
-    def test_existing_caps_and_route_constants_unchanged(self):
+    def test_approved_transport_caps_and_route_constants(self):
         self.assertEqual((p.MAX_REQUEST, p.MAX_RESPONSE, p.MAX_API_REQUESTS, p.MAX_API_BODY, p.MAX_API_UPLOAD, p.TIMEOUT),
-                         (512 * 1024, 1024 * 1024, 64, 8 * 1024 ** 2, 18 * 1024 ** 2, 180))
+                         (512 * 1024, 1024 * 1024, 67, 8 * 1024 ** 2, 18 * 1024 ** 2, 600))
         self.assertEqual(p._CONTEXT_KEYS, ('GITHUB_ACTIONS','GITHUB_REPOSITORY','GITHUB_EVENT_NAME','GITHUB_EVENT_PATH','GITHUB_REF',
             'GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT','GITHUB_JOB','GITHUB_SHA','GITHUB_WORKFLOW_REF','GITHUB_WORKFLOW_SHA','RUNNER_TEMP','KWS_SOURCE_FREEZE_SHA256'))
 

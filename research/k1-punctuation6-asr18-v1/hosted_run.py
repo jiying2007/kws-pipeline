@@ -219,6 +219,11 @@ def source_authority(run, release):
             require(c.identity(ROOT / name) == identity, 'actual closed source byte drift')
     require(read_bytes(ROOT / WORKFLOW) == read_bytes(HERE / 'workflow.yml') ==
             git_read('cat-file', 'blob', head + ':' + WORKFLOW), 'active workflow is exact committed inert template')
+    # This pure scope check precedes source claims/setup; publication approval
+    # is independent and remains checked only by the publisher itself.
+    import evidence_publisher as publisher
+    publisher.validate_transfer_workflow(read_bytes(ROOT / WORKFLOW),
+        read_json(HERE / 'publication-release.json', 65536))
     return freeze, expected_sha, tree
 
 
@@ -488,6 +493,7 @@ def public_setup_members():
 
 def host_receipt(run, freeze_sha, tree, screening_sha):
     return {'schema':'k1-asr18-host-receipt-v1','identity':run,'boundary':c.BOUNDARY,'limits':c.LIMITS,
+        'limits_scope':c.SCIENTIFIC_LIMITS_SCOPE,'effective_execution_envelope':dict(c.EFFECTIVE_EXECUTION_ENVELOPE),
         'status':'started','stage':'admitted','source_freeze_sha256':freeze_sha,'executed_tree_sha':tree,
         'source_claim_sha256':None,'screening_receipt_sha256':screening_sha,'input_verified':False,
         'stages':{name:'not_run' for name in ('setup',)+tuple(f+'_'+mode for mode in ('prepare','decode') for f in c.FAMILIES)},
@@ -562,6 +568,8 @@ def validate_public_evidence(files, run_identity, *, phase='final'):
     _exact(host,template,'exact public host schema')
     require(host['schema']==template['schema'] and c.exact_json(host['identity'],run_identity) and
         c.exact_json(host['boundary'],c.BOUNDARY) and c.exact_json(host['limits'],c.LIMITS),'fixed host identity/boundary/caps')
+    require(host['limits_scope']==c.SCIENTIFIC_LIMITS_SCOPE and
+        c.exact_json(host['effective_execution_envelope'],c.EFFECTIVE_EXECUTION_ENVELOPE), 'fixed effective workflow and publication envelope')
     require(host['stage'] in HOST_STAGES and host['status'] in ('started','stopped_no_retry','all_planned_native_complete','cleanup_unconfirmed'), 'fixed host terminal status')
     for key in ('input_verified','all3_policy_frozen_before_recognition','accounting_valid','cleanup_verified'):
         require(type(host[key]) is bool,'explicit boolean host observation')

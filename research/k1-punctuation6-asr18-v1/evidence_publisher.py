@@ -32,17 +32,18 @@ def _observe(observer, stage):
 BASE = "/repos/" + t.REPOSITORY
 MAX_REQUEST = 512 * 1024
 MAX_RESPONSE = 1024 * 1024
-MAX_API_REQUESTS = 64
+MAX_API_REQUESTS = 67
 MAX_API_BODY = 8 * 1024 * 1024
 MAX_API_UPLOAD = 18 * 1024 * 1024
-TIMEOUT = 180
+TIMEOUT = c.EFFECTIVE_EXECUTION_ENVELOPE["publisher_seconds"]
 AUTHOR = {"name": "K1 ASR18 bounded publisher", "email": "noreply@github.com"}
 
 
 class PublicationError(RuntimeError):
-    def __init__(self, status=None):
+    def __init__(self, status=None, *, body_bounded=True):
+        self.body_bounded = body_bounded is True
         self.status = status if type(status) is int else None
-        super().__init__("publication failed or unconfirmed; no retry")
+        super().__init__("publication failed or unconfirmed; no further retry")
 
 
 class PublicationDisabled(ValueError):
@@ -94,103 +95,220 @@ def endpoints(identity, release):
         "history": BASE + "/actions/workflows/" + p["workflow"].split("/")[-1] + "/runs?event=push&branch=" + p["source_branch"] + "&per_page=100",
         "source": BASE + "/git/commits/" + release["source_sha"],
         "source_tree": BASE + "/git/trees/" + release["source_tree"] + "?recursive=1",
-        "ref": BASE + "/git/ref/heads/" + p["result_branch"]}
+        "ref": BASE + "/git/ref/heads/" + p["result_branch"],
+        "checkpoint_ref": BASE + "/git/ref/heads/" + p["result_branch"] + "-checkpoint"}
 
 
 class GitHubAPI:
-    """Fixed API TLS host/routes, count/body caps, finite timeout, no retry/redirect.
+    """Fixed TLS/API scope with one globally bounded uncertain-blob recovery.
 
-    Token must be supplied only by a future reviewed trusted publisher step.
-    This class is NOT wired to CLI, environment lookup or an active workflow.
+    The normal constructor admits only the reviewed ASR profile. The private
+    initializer is shared with separately admitted, source-fixed transfer tests;
+    it never reads credentials or bypasses normal publication validation.
     """
     def __init__(self, token, identity, release):
         validate_release(release); t.identity(identity, release["purpose"])
-        t.require(type(token) is str and token.startswith("ghs_") and 5 <= len(token) <= 4096 and "\r" not in token and "\n" not in token,
-                  "publisher-only short-lived token")
-        self._token = token
         self.release = t.decode(t.canonical(release))
-        self.allowed = {("GET", route) for route in endpoints(identity, release).values()}
-        self.allowed |= {("POST", BASE + "/git/" + noun) for noun in ("blobs", "trees", "commits", "refs")}
-        self.deadline = time.monotonic() + TIMEOUT
+        self._initialize(token, get_routes=set(endpoints(identity, release).values()),
+            source_sha=release["source_sha"], source_tree=release["source_tree"],
+            result_branch=t.policy(release["purpose"])["result_branch"],
+            paths={t.manifest_path(release["purpose"]): t.MAX_MANIFEST,
+                **{t.chunk_path(i, release["purpose"]): t.MAX_CHUNK for i in range(t.MAX_CHUNKS)}})
+
+    def _initialize(self, token, *, get_routes, source_sha, source_tree, result_branch, paths, expected_body=None,
+            max_requests=MAX_API_REQUESTS, timeout=TIMEOUT, max_upload=MAX_API_UPLOAD, max_body=MAX_API_BODY, final_ref_only=False, checkpoint_branch=None):
+        t.require(not hasattr(self, "_token"), "API fixed scope initialized once")
+        t.require(type(token) is str and token.startswith("ghs_") and 5 <= len(token) <= 4096
+            and all(32 <= ord(char) < 127 for char in token), "publisher-only short-lived token")
+        for value in (source_sha, source_tree):
+            t.require(type(value) is str and t.HEAD.fullmatch(value), "exact source Git identity")
+        _branch(result_branch)
+        checkpoint_branch = result_branch + "-checkpoint" if checkpoint_branch is None else _branch(checkpoint_branch)
+        t.require(checkpoint_branch != result_branch, "distinct fixed checkpoint ref")
+        t.require(type(get_routes) in (set, frozenset) and len(get_routes) <= 16 and all(type(route) is str
+            and route.startswith(BASE + "/") or route == BASE for route in get_routes), "fixed same repository API routes")
+        t.require(all("\r" not in route and "\n" not in route and "#" not in route
+            and ".." not in route and "%" not in route for route in get_routes), "canonical fixed API routes")
+        t.require(type(paths) is dict and 2 <= len(paths) <= 49, "bounded fixed output paths")
+        for name, cap in paths.items():
+            t.path(name)
+            t.require(type(cap) is int and 0 < cap <= t.MAX_CHUNK, "bounded fixed path cap")
+        self._token = token
+        self.source_sha = source_sha; self.source_tree = source_tree
+        self.result_branch = result_branch; self.checkpoint_branch = checkpoint_branch; self.paths = dict(paths)
+        self._file_caps = dict(paths)
+        self.required_paths = {t.manifest_path(self.release["purpose"])} if hasattr(self, "release") else set(paths)
+        self.expected_body = None if expected_body is None else t.decode(t.canonical(expected_body))
+        t.require(type(final_ref_only) is bool, "fixed API write mode")
+        self.final_ref_only = final_ref_only
+        refs = {BASE + "/git/ref/heads/" + result_branch, BASE + "/git/ref/heads/" + checkpoint_branch}
+        self.allowed = {("GET", route) for route in get_routes | refs}
+        self.allowed |= {("POST", BASE + "/git/" + noun) for noun in (("refs",) if final_ref_only else ("blobs", "trees", "commits", "refs"))}
+        for value, cap in ((max_requests, MAX_API_REQUESTS), (timeout, TIMEOUT), (max_upload, MAX_API_UPLOAD), (max_body, MAX_API_BODY)):
+            t.require(type(value) is int and 0 < value <= cap, "scope only narrows transport limits")
+        self.max_requests = max_requests; self.max_upload = max_upload; self.max_body = max_body
+        self.deadline = time.monotonic() + timeout
         self.count = 0; self.body_bytes = 0; self.request_bytes = 0; self.seen = set(); self.posts = set()
+        self.blob_api_attempt_count = 0; self.blob_confirmed_count = 0
+        self.blob_recovery_get_count = 0; self.blob_retry_count = 0; self._recovery_consumed = False
+        self._retry_request = None
 
     def bind_result(self, commit_sha, tree_sha):
         for value in (commit_sha, tree_sha):
             t.require(type(value) is str and t.HEAD.fullmatch(value), "locally computed immutable Git object")
         t.require(not hasattr(self, "result"), "result binding once")
+        if self.expected_body is None:
+            self.expected_body, computed = commit_body(tree_sha, self.release)
+            t.require(computed == commit_sha, "precomputed result commit binding")
+        t.require(self.expected_body.get("tree") == tree_sha
+            and self.expected_body.get("parents") == [self.source_sha], "fixed result tree and sole source parent")
+        t.require(_commit_identity(self.expected_body) == commit_sha, "locally computed exact commit bytes")
         self.result = (commit_sha, tree_sha)
         self.allowed |= {("GET", BASE + "/git/commits/" + commit_sha),
                          ("GET", BASE + "/git/trees/" + tree_sha + "?recursive=1")}
 
     def __call__(self, method, route, body=None, expected=200):
+        if method != "POST" or route != BASE + "/git/blobs":
+            return self._request(method, route, body, expected)
+        t.require(type(body) is dict and set(body) == {"content", "encoding"} and body["encoding"] == "base64"
+            and type(body["content"]) is str and len(body["content"]) <= 4 * ((t.MAX_CHUNK + 2) // 3), "bounded exact blob request")
+        raw = base64.b64decode(body["content"], validate=True)
+        t.require(0 < len(raw) <= t.MAX_CHUNK and base64.b64encode(raw).decode("ascii") == body["content"], "canonical blob request")
+        digest = t.git_sha(raw)
+        try:
+            result = self._request(method, route, body, expected)
+        except PublicationError as error:
+            if type(error) is not PublicationError: raise
+            fields = BaseException.__dict__["__dict__"].__get__(error)
+            status = dict.get(fields, "status"); bounded = dict.get(fields, "body_bounded")
+            if self._recovery_consumed or bounded is not True or not (status is None or type(status) is int
+                    and status in (500, 502, 503, 504)): raise
+            self._recovery_consumed = True
+            recovery_route = BASE + "/git/blobs/" + digest
+            self.allowed.add(("GET", recovery_route))
+            self.blob_recovery_get_count += 1
+            try:
+                recovered = self._request("GET", recovery_route)
+            except PublicationError as recovery_error:
+                if type(recovery_error) is not PublicationError: raise
+                fields = BaseException.__dict__["__dict__"].__get__(recovery_error)
+                if type(dict.get(fields, "status")) is not int or dict.get(fields, "status") != 404 or dict.get(fields, "body_bounded") is not True: raise
+                # Only an actual authenticated 404 can release this exact body
+                # for one extra POST. A second uncertainty is terminal.
+                self._retry_request = ("POST", route, t.sha(t.canonical(body)), 201)
+                self.blob_retry_count += 1
+                result = self._request(method, route, body, expected)
+            else:
+                _equal(recovered, {"sha": digest, "encoding": "base64", "size": len(raw)}, "exact recovered blob identity")
+                content = recovered.get("content")
+                # GitHub wraps base64 with LF; admit only LF and canonical bytes.
+                t.require(type(content) is str and len(content) <= MAX_RESPONSE, "bounded recovered blob content")
+                content = content.replace("\n", "")
+                recovered_raw = base64.b64decode(content, validate=True)
+                t.require(len(recovered_raw) == len(raw) and recovered_raw == raw and t.git_sha(recovered_raw) == digest
+                    and base64.b64encode(recovered_raw).decode("ascii") == content, "exact recovered blob bytes")
+                result = {"sha": digest}
+        _equal(result, {"sha": digest}, "true Git blob identity")
+        self.blob_confirmed_count += 1
+        return result
+
+    def _request(self, method, route, body=None, expected=200):
         t.require((method, route) in self.allowed, "fixed method/route only")
         t.require(type(expected) is int and expected in (200, 201, 404), "HTTP status policy")
         t.require((method == "POST" and expected == 201 and type(body) is dict)
                   or (method == "GET" and expected in (200, 404) and body is None), "HTTP method/body/status")
         raw = None if body is None else t.canonical(body)
         t.require(raw is None or len(raw) <= MAX_REQUEST, "request body cap")
-        t.require(self.request_bytes + len(raw or b"") <= MAX_API_UPLOAD, "total API upload body cap")
+        t.require(self.request_bytes + len(raw or b"") <= self.max_upload, "total API upload body cap")
+        post_key = route
         if method == "POST" and route != BASE + "/git/blobs":
-            t.require(route not in self.posts, "create-only object attempted once")
             if route == BASE + "/git/refs":
-                t.require(hasattr(self, "result") and body == {"ref": "refs/heads/" + t.policy(self.release["purpose"])["result_branch"],
-                    "sha": self.result[0]}, "only exact reviewed result ref and computed commit")
+                refs = {"refs/heads/" + self.result_branch}
+                if not self.final_ref_only: refs.add("refs/heads/" + self.checkpoint_branch)
+                t.require(hasattr(self, "result") and set(body) == {"ref", "sha"} and body["ref"] in refs
+                    and body["sha"] == self.result[0], "only exact reviewed refs and computed commit")
+                post_key = (route, body["ref"])
             elif route == BASE + "/git/commits":
-                t.require(hasattr(self, "result") and body == commit_body(self.result[1], self.release)[0], "only computed result commit")
+                t.require(hasattr(self, "result") and body == self.expected_body, "only computed result commit")
             elif route == BASE + "/git/trees":
-                t.require(set(body) == {"base_tree", "tree"} and body["base_tree"] == self.release["source_tree"]
+                t.require(set(body) == {"base_tree", "tree"} and body["base_tree"] == self.source_tree
                     and type(body["tree"]) is list and 2 <= len(body["tree"]) <= 49, "bounded source-preserving result tree")
                 names = [row.get("path") for row in body["tree"] if type(row) is dict]
-                allowed = {t.manifest_path(self.release["purpose"])} | {t.chunk_path(i, self.release["purpose"]) for i in range(t.MAX_CHUNKS)}
-                t.require(len(names) == len(body["tree"]) == len(set(names)) and set(names) <= allowed
-                    and t.manifest_path(self.release["purpose"]) in names, "only bounded result paths")
+                t.require(len(names) == len(body["tree"]) == len(set(names)) and set(names) <= set(self.paths)
+                    and self.required_paths <= set(names), "only bounded result paths")
                 for row in body["tree"]:
                     t.require(set(row) == {"path", "mode", "type", "sha"} and row["mode"] == "100644" and row["type"] == "blob"
                         and type(row["sha"]) is str and t.HEAD.fullmatch(row["sha"]), "exact result tree rows")
-        # Identical request cannot be attempted again, including uncertain failures.
+            t.require(post_key not in self.posts, "create-only object attempted once")
         request = (method, route, t.sha(raw or b""), expected)
-        t.require(request not in self.seen, "request already consumed")
+        retry = self._retry_request == request
+        t.require(request not in self.seen or retry, "request already consumed")
         remaining = self.deadline - time.monotonic()
-        t.require(remaining > 0 and self.count < MAX_API_REQUESTS, "API deadline/count cap")
+        t.require(remaining > 0 and self.count < self.max_requests, "API deadline/count cap")
+        t.require(0 <= self.body_bytes < self.max_body, "remaining API response budget")
+        if retry: self._retry_request = None
         self.seen.add(request); self.count += 1; self.request_bytes += len(raw or b"")
-        if method == "POST" and route != BASE + "/git/blobs": self.posts.add(route)
-        connection = http.client.HTTPSConnection("api.github.com", timeout=min(15, remaining), context=ssl.create_default_context())
+        if method == "POST" and route == BASE + "/git/blobs": self.blob_api_attempt_count += 1
+        if method == "POST" and route != BASE + "/git/blobs": self.posts.add(post_key)
+        connection = None; status = None
         try:
+            connection = http.client.HTTPSConnection("api.github.com", timeout=min(15, remaining), context=ssl.create_default_context())
             connection.request(method, route, body=raw, headers={
                 "Authorization": "Bearer " + self._token, "Accept": "application/vnd.github+json",
                 "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "k1-asr18-bounded-evidence-publisher",
                 "Content-Type": "application/json"})
-            response = connection.getresponse()
-            body = response.read(min(MAX_RESPONSE, MAX_API_BODY - self.body_bytes) + 1)
-            self.body_bytes += len(body)
-            if len(body) > MAX_RESPONSE or self.body_bytes > MAX_API_BODY or response.status != expected:
-                raise PublicationError(response.status)
+            response = connection.getresponse(); status = response.status
+            response_body = response.read(min(MAX_RESPONSE, self.max_body - self.body_bytes) + 1)
+            self.body_bytes += len(response_body)
+            if len(response_body) > MAX_RESPONSE or self.body_bytes > self.max_body:
+                raise PublicationError(status, body_bounded=False)
+            if status != expected: raise PublicationError(status)
             if expected == 404: return None
-            value = t.decode(body)
+            value = t.decode(response_body)
             t.require(type(value) is dict, "API object response")
             return value
         except PublicationError:
             raise
+        except (OSError, http.client.HTTPException):
+            raise PublicationError(status) from None
         except Exception:
-            raise PublicationError() from None
+            raise PublicationError(status, body_bounded=False) from None
         finally:
-            connection.close()
+            if connection is not None:
+                try: connection.close()
+                except Exception: pass
+
+
+def _branch(value):
+    t.require(type(value) is str and re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9/_-]{0,199}", value)
+        and not value.endswith("/") and "//" not in value, "exact bounded branch")
+    return value
 
 
 class RawReader:
     """Public immutable raw-content only; at most 49 paths once, 16 MiB bodies."""
     def __init__(self, commit_sha, purpose):
-        t.require(type(commit_sha) is str and t.HEAD.fullmatch(commit_sha), "immutable result commit")
         t.policy(purpose)
+        self._initialize(commit_sha, {t.manifest_path(purpose): t.MAX_MANIFEST,
+            **{t.chunk_path(i, purpose): t.MAX_CHUNK for i in range(t.MAX_CHUNKS)}})
+
+    def _initialize(self, commit_sha, paths, *, shared_deadline=None):
+        t.require(not hasattr(self, "prefix"), "raw fixed scope initialized once")
+        t.require(type(commit_sha) is str and t.HEAD.fullmatch(commit_sha), "immutable result commit")
+        t.require(type(paths) is dict and 2 <= len(paths) <= 49, "bounded raw paths")
+        for name, cap in paths.items():
+            t.path(name)
+            t.require(type(cap) is int and 0 < cap <= t.MAX_CHUNK, "bounded raw path cap")
         self.prefix = "/" + t.REPOSITORY + "/" + commit_sha + "/"
-        self.allowed = {t.manifest_path(purpose): t.MAX_MANIFEST,
-                        **{t.chunk_path(i, purpose): t.MAX_CHUNK for i in range(t.MAX_CHUNKS)}}
-        self.seen = set(); self.body_bytes = 0; self.deadline = time.monotonic() + TIMEOUT
+        self.allowed = dict(paths)
+        self.seen = set(); self.body_bytes = 0
+        self.deadline = min(time.monotonic() + TIMEOUT, shared_deadline) if shared_deadline is not None else time.monotonic() + TIMEOUT
 
     def __call__(self, name):
         t.require(name in self.allowed and name not in self.seen and len(self.seen) < 49, "fixed raw path once")
         remaining = self.deadline - time.monotonic()
         t.require(remaining > 0, "raw total deadline")
+        t.require(0 <= self.body_bytes < t.MAX_BODY, "remaining raw response budget")
         self.seen.add(name)
         connection = http.client.HTTPSConnection("raw.githubusercontent.com", timeout=min(15, remaining), context=ssl.create_default_context())
         try:
@@ -274,6 +392,27 @@ def commit_body(tree_sha, release):
     return body, t.git_sha(raw, "commit")
 
 
+def _commit_identity(body):
+    """Exact fixed-author single-parent commit bytes, including the terminal LF."""
+    t.require(type(body) is dict and set(body) == {"message", "tree", "parents", "author", "committer"}, "exact commit body fields")
+    t.require(type(body["message"]) is str and 0 < len(body["message"].encode("utf-8")) <= 4096
+        and body["message"].endswith("\n") and not body["message"].endswith("\n\n") and "\r" not in body["message"], "fixed bounded commit message")
+    t.require(type(body["tree"]) is str and t.HEAD.fullmatch(body["tree"])
+        and type(body["parents"]) is list and len(body["parents"]) == 1
+        and type(body["parents"][0]) is str and t.HEAD.fullmatch(body["parents"][0]), "fixed commit Git identities")
+    author = body["author"]
+    t.require(type(author) is dict and set(author) == {"name", "email", "date"} and body["committer"] == author,
+        "fixed identical commit persons")
+    _equal(author, AUTHOR, "fixed publisher commit author")
+    stamp = author["date"]
+    t.require(type(stamp) is str and re.fullmatch(r"20[0-9]{2}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z", stamp), "fixed commit timestamp")
+    timestamp = int(datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp())
+    person = author["name"] + " <" + author["email"] + "> " + str(timestamp) + " +0000"
+    raw = ("tree " + body["tree"] + "\nparent " + body["parents"][0] + "\nauthor " + person
+        + "\ncommitter " + person + "\n\n" + body["message"]).encode("utf-8")
+    return t.git_sha(raw, "commit")
+
+
 def verify_commit(value, expected_sha, expected_body):
     _equal(value, {"sha": expected_sha}, "true precomputed commit identity")
     message = expected_body["message"]
@@ -291,7 +430,8 @@ def verify_commit(value, expected_sha, expected_body):
 
 
 _TRANSFER_STAGES = frozenset(("validate_local_package", "verify_actual_run_source", "verify_destination_absent",
-    "create_blobs", "create_tree", "create_commit", "create_ref", "immutable_postpublish_readback", "readback_verified"))
+    "create_blobs", "create_tree", "create_commit", "create_ref", "immutable_postpublish_readback", "readback_verified",
+    "create_checkpoint_ref", "immutable_checkpoint_readback", "checkpoint_verified"))
 _TRANSFER_STATUSES = frozenset(("upload_plan_prepared", "publication_failed_or_unconfirmed_no_retry", "same_identity_readback_verified"))
 
 
@@ -340,6 +480,25 @@ def transfer_record(identity, progress, status, error=None):
     if rows is not None:
         t.require(size is not None and all(v is not None for v in digests.values()) and
             sum(row["bytes"] for row in rows if row["path"] != t.manifest_path()) == size, "complete transfer byte plan")
+    wire = {}
+    for key, cap in (("blob_api_attempt_count", len(rows) + 1 if rows else 50),
+            ("blob_recovery_get_count", 1), ("blob_retry_count", 1)):
+        value = progress.get(key)
+        t.require(value is None or (type(value) is int and 0 <= value <= cap), "bounded wire attempt counts")
+        wire[key] = value
+    checkpoint = {}
+    branch = progress.get("checkpoint_branch")
+    t.require(branch is None or branch == t.POLICY["result_branch"] + "-checkpoint", "fixed observation checkpoint branch")
+    checkpoint["checkpoint_branch"] = branch
+    for key, expected_key in (("checkpoint_commit", "expected_result_commit"), ("checkpoint_tree", "expected_result_tree")):
+        value = progress.get(key)
+        t.require(value is None or (type(value) is str and t.HEAD.fullmatch(value)
+            and (progress.get(expected_key) is None or value == progress[expected_key])), "fixed checkpoint identity")
+        checkpoint[key] = value
+    for key in ("checkpoint_created", "checkpoint_verified", "checkpoint_preserved"):
+        value = progress.get(key)
+        t.require(value is None or type(value) is bool, "fixed checkpoint confirmation")
+        checkpoint[key] = value
     code = None; http_status = None
     if error is not None:
         code = next((known.__name__ for known in (ValueError, TypeError, OSError, TimeoutError, PublicationError)
@@ -351,13 +510,14 @@ def transfer_record(identity, progress, status, error=None):
     for key in ("publication_confirmed", "readback_confirmed"):
         t.require(progress.get(key) is None or type(progress[key]) is bool, "transfer confirmation observation")
     return {"schema": "k1-asr18-publisher-transfer-observation-v1", "identity": dict(identity),
-        "status": status, "stage": stage, "planned_blobs": rows, **numeric, **digests, "archive_bytes": size,
+        "status": status, "stage": stage, "planned_blobs": rows, **numeric, **wire, **digests, **checkpoint, "archive_bytes": size,
         "http_status": http_status, "error_type": code,
         "publication_confirmed": progress.get("publication_confirmed"), "readback_confirmed": progress.get("readback_confirmed"),
         "attempted_blob_count_scope": "blob_api_invocations_not_confirmed_http_sends",
         "observation_delivery": "best_effort_stdout",
         "unconfirmed_request_may_have_written": True, "original_http_body_included": False,
-        "native_success_established": False, "retry_authorized": False}
+        "native_success_established": False, "retry_authorized": False, "limited_blob_retry_cap": 1,
+        "retry_authorized_scope": "whole_publication_or_host_rerun"}
 
 
 def _emit_transfer(observer, identity, progress, status, error=None, directory=None):
@@ -386,14 +546,139 @@ def _emit_transfer(observer, identity, progress, status, error=None, directory=N
         return False
 
 
+def finalize_exact_ref(api, result_branch, expected_commit, *, progress=None, observer=None):
+    """Create one exact final ref, then read it back; never update an existing ref.
+
+    The admitted caller must already have verified its complete pinned immutable
+    checkpoint and checked final absence. This primitive grants no admission.
+    """
+    _branch(result_branch)
+    t.require(type(expected_commit) is str and t.HEAD.fullmatch(expected_commit), "immutable final commit")
+    ref = "refs/heads/" + result_branch
+    # The server may persist a ref before its response is lost. Null means the
+    # attempted creation is unknown, not that the ref was never created.
+    if progress is not None: progress["publication_confirmed"] = None
+    created = api("POST", BASE + "/git/refs", {"ref": ref, "sha": expected_commit}, expected=201)
+    _equal(created, {"ref": ref}, "created exact final ref")
+    _equal(created.get("object"), {"type": "commit", "sha": expected_commit}, "created final ref exact commit")
+    if progress is not None: progress.update(publication_confirmed=True, stage="immutable_postpublish_readback")
+    _observe(observer, "immutable_postpublish_readback")
+    final = api("GET", BASE + "/git/ref/heads/" + result_branch)
+    _equal(final, {"ref": ref}, "readback final ref")
+    _equal(final.get("object"), {"type": "commit", "sha": expected_commit}, "readback final commit")
+    return final
+
+
+def _transport_counts(api, progress):
+    # Fakes may not expose wire counters. Never confuse absent observations with zero.
+    for key in ("blob_api_attempt_count", "blob_recovery_get_count", "blob_retry_count"):
+        value = getattr(api, key, None)
+        if type(value) is int: progress[key] = value
+
+
+def write_checked_files(*, api, raw_get, files, original, source_tree, expected_body, expected_commit,
+        result_branch, checkpoint_branch, verify_readback, progress=None, observer=None, before_write=None,
+        checkpoint_only=False):
+    """Shared bounded wire writer after caller-specific admission and validation.
+
+    The normal ASR entry always validates the whole scientific package first.
+    Qualification callers have separate fixed synthetic admission. No callback
+    can skip exact-byte/tree checks or make an ASR schema claim through this path.
+    checkpoint_only is internal and unavailable from the normal publisher CLI.
+    """
+    progress = {} if progress is None else progress
+    _branch(result_branch)
+    t.require(checkpoint_branch == getattr(api, "checkpoint_branch", result_branch + "-checkpoint"), "exact checkpoint branch")
+    t.require(type(checkpoint_only) is bool and callable(verify_readback), "fixed shared writer mode")
+    t.require(type(files) is dict and 2 <= len(files) <= 49, "bounded complete output file set")
+    for name, raw in files.items():
+        t.path(name)
+        t.require(type(raw) is bytes and 0 < len(raw) <= t.MAX_CHUNK, "bounded immutable output bytes")
+        scope = getattr(api, "_file_caps", None)
+        if type(scope) is dict:
+            t.require(name in scope and len(raw) <= scope[name], "exact admitted output path and cap")
+    t.require(sum(map(len, files.values())) <= t.MAX_BODY, "complete output body cap")
+    files = dict(files)
+    t.require(t.tree_identity(original)[0] == source_tree, "exact preserved source tree")
+    tree_rows = [{"path": name, "mode": "100644", "type": "blob", "sha": t.git_sha(raw)} for name, raw in sorted(files.items())]
+    expected_tree, _ = t.tree_identity(original + tree_rows)
+    t.require(expected_body.get("tree") == expected_tree and type(expected_body.get("parents")) is list
+        and len(expected_body["parents"]) == 1, "exact computed merged tree and sole source parent")
+    api.bind_result(expected_commit, expected_tree)
+    _observe(observer, "verify_destination_absent")
+    progress.update(stage="verify_destination_absent", publication_confirmed=False, readback_confirmed=False,
+        checkpoint_branch=checkpoint_branch, checkpoint_commit=expected_commit, checkpoint_tree=expected_tree,
+        checkpoint_created=False, checkpoint_verified=False, checkpoint_preserved=False)
+    api("GET", BASE + "/git/ref/heads/" + result_branch, expected=404)
+    api("GET", BASE + "/git/ref/heads/" + checkpoint_branch, expected=404)
+    _observe(observer, "create_blobs")
+    progress.update(stage="create_blobs", attempted_blob_count=0, confirmed_blob_count=0,
+        expected_result_commit=expected_commit, expected_result_tree=expected_tree,
+        planned_blobs=[{"path": row["path"], "bytes": len(files[row["path"]]),
+            "sha256": t.sha(files[row["path"]]), "git_blob_sha": row["sha"]} for row in tree_rows])
+    _transport_counts(api, progress)
+    if before_write is not None: before_write()
+    sent_blobs = set()
+    for row in tree_rows:
+        if row["sha"] not in sent_blobs:
+            progress["attempted_blob_count"] += 1
+            try:
+                blob = api("POST", BASE + "/git/blobs", {"content": base64.b64encode(files[row["path"]]).decode("ascii"), "encoding": "base64"}, expected=201)
+            finally:
+                _transport_counts(api, progress)
+            _equal(blob, {"sha": row["sha"]}, "true Git blob identity")
+            sent_blobs.add(row["sha"])
+            progress["confirmed_blob_count"] = len(sent_blobs)
+    _observe(observer, "create_tree"); progress["stage"] = "create_tree"
+    tree = api("POST", BASE + "/git/trees", {"base_tree": source_tree, "tree": tree_rows}, expected=201)
+    _equal(tree, {"sha": expected_tree}, "true computed merged Git tree")
+    _observe(observer, "create_commit"); progress["stage"] = "create_commit"
+    verify_commit(api("POST", BASE + "/git/commits", expected_body, expected=201), expected_commit, expected_body)
+    _observe(observer, "create_checkpoint_ref"); progress["stage"] = "create_checkpoint_ref"
+    checkpoint_ref = "refs/heads/" + checkpoint_branch
+    progress["checkpoint_created"] = None  # An uncertain response may follow a persisted ref.
+    created = api("POST", BASE + "/git/refs", {"ref": checkpoint_ref, "sha": expected_commit}, expected=201)
+    _equal(created, {"ref": checkpoint_ref}, "created exact checkpoint ref")
+    _equal(created.get("object"), {"type": "commit", "sha": expected_commit}, "created checkpoint exact commit")
+    progress["checkpoint_created"] = True
+    _observe(observer, "immutable_checkpoint_readback"); progress["stage"] = "immutable_checkpoint_readback"
+    checkpoint = api("GET", BASE + "/git/ref/heads/" + checkpoint_branch)
+    _equal(checkpoint, {"ref": checkpoint_ref}, "readback checkpoint ref")
+    _equal(checkpoint.get("object"), {"type": "commit", "sha": expected_commit}, "readback checkpoint commit")
+    verify_commit(api("GET", BASE + "/git/commits/" + expected_commit), expected_commit, expected_body)
+    actual = verify_tree(api("GET", BASE + "/git/trees/" + expected_tree + "?recursive=1"), expected_tree)
+    t.require(sorted(actual, key=lambda row: row["path"]) == sorted(original + tree_rows, key=lambda row: row["path"]), "exact preserved source and new output paths")
+    read = raw_get(expected_commit)
+    got_files = {}
+    for name, expected_raw in sorted(files.items()):
+        raw = read(name)
+        t.require(type(raw) is bytes and raw == expected_raw, "exact complete immutable file readback")
+        got_files[name] = raw
+    t.require(verify_readback(got_files) is True, "caller-specific complete readback validation")
+    _observe(observer, "checkpoint_verified")
+    progress.update(stage="checkpoint_verified", checkpoint_verified=True, checkpoint_preserved=True)
+    result = {"checkpoint_branch": checkpoint_branch, "checkpoint_commit": expected_commit, "checkpoint_tree": expected_tree,
+        "checkpoint_created": True, "checkpoint_verified": True, "checkpoint_preserved": True,
+        "result_commit": expected_commit, "result_tree": expected_tree, "raw_gets": len(got_files),
+        "readback_body_bytes": sum(map(len, got_files.values()))}
+    if not checkpoint_only:
+        _observe(observer, "create_ref"); progress["stage"] = "create_ref"
+        finalize_exact_ref(api, result_branch, expected_commit, progress=progress, observer=observer)
+        _observe(observer, "readback_verified")
+        progress.update(stage="readback_verified", publication_confirmed=True, readback_confirmed=True)
+    result.update(publication_confirmed=progress["publication_confirmed"], readback_confirmed=progress["readback_confirmed"])
+    _transport_counts(api, progress)
+    result.update({key: progress.get(key) for key in ("attempted_blob_count", "confirmed_blob_count", "blob_api_attempt_count", "blob_recovery_get_count", "blob_retry_count")})
+    return result
+
+
 def publish(env, event, release, payload, api, raw_get, progress=None, observer=None, transfer_directory=None):
     progress = {} if progress is None else progress
     _observe(observer, "validate_local_package")
     progress.update(stage="validate_local_package", publication_confirmed=False, readback_confirmed=False)
     identity = context(env, event, release); purpose = release["purpose"]; p = t.policy(purpose)
     t.validate_archive(payload, identity)
-    _observe(observer, "verify_actual_run_source")
-    progress["stage"] = "verify_actual_run_source"
+    _observe(observer, "verify_actual_run_source"); progress["stage"] = "verify_actual_run_source"
     numeric_job_id = verify_run(api, identity, release)
     routes = endpoints(identity, release)
     source = api("GET", routes["source"])
@@ -404,68 +689,31 @@ def publish(env, event, release, payload, api, raw_get, progress=None, observer=
     directory = p["directory"]
     t.require(not any(row["path"] == directory or row["path"].startswith(directory + "/")
         or directory.startswith(row["path"] + "/") for row in original), "result directory absent; no replacement")
-    _observe(observer, "verify_destination_absent")
-    progress["stage"] = "verify_destination_absent"
-    api("GET", routes["ref"], expected=404)
     files = t.build_file_set(payload, identity, release["source_closure_sha256"], numeric_job_id, purpose)
     tree_rows = [{"path": name, "mode": "100644", "type": "blob", "sha": t.git_sha(raw)} for name, raw in sorted(files.items())]
     expected_tree, _ = t.tree_identity(original + tree_rows)
     expected_body, expected_commit = commit_body(expected_tree, release)
-    api.bind_result(expected_commit, expected_tree)
-    _observe(observer, "create_blobs")
-    progress.update(stage="create_blobs", attempted_blob_count=0, confirmed_blob_count=0, expected_result_commit=expected_commit,
-                    expected_result_tree=expected_tree, archive_sha256=t.sha(payload), archive_bytes=len(payload),
-                    planned_blobs=[{"path": row["path"], "bytes": len(files[row["path"]]),
-                        "sha256": t.sha(files[row["path"]]), "git_blob_sha": row["sha"]} for row in tree_rows])
-    _emit_transfer(observer, identity, progress, "upload_plan_prepared", directory=transfer_directory)
-    sent_blobs = set()
-    for row in tree_rows:
-        if row["sha"] not in sent_blobs:
-            progress["attempted_blob_count"] += 1
-            blob = api("POST", BASE + "/git/blobs", {"content": base64.b64encode(files[row["path"]]).decode("ascii"), "encoding": "base64"}, expected=201)
-            _equal(blob, {"sha": row["sha"]}, "true Git blob identity")
-            sent_blobs.add(row["sha"])
-            progress["confirmed_blob_count"] = len(sent_blobs)
-    _observe(observer, "create_tree")
-    progress["stage"] = "create_tree"
-    tree = api("POST", BASE + "/git/trees", {"base_tree": release["source_tree"], "tree": tree_rows}, expected=201)
-    _equal(tree, {"sha": expected_tree}, "true computed merged Git tree")
-    _observe(observer, "create_commit")
-    progress["stage"] = "create_commit"
-    commit = api("POST", BASE + "/git/commits", expected_body, expected=201)
-    verify_commit(commit, expected_commit, expected_body)
-    _observe(observer, "create_ref")
-    progress["stage"] = "create_ref"
-    ref = "refs/heads/" + p["result_branch"]
-    created = api("POST", BASE + "/git/refs", {"ref": ref, "sha": expected_commit}, expected=201)
-    _equal(created, {"ref": ref}, "created exact ref")
-    _equal(created.get("object"), {"type": "commit", "sha": expected_commit}, "created ref exact commit")
-    _observe(observer, "immutable_postpublish_readback")
-    progress.update(stage="immutable_postpublish_readback", publication_confirmed=True)
-    final_ref = api("GET", routes["ref"])
-    _equal(final_ref, {"ref": ref}, "readback ref")
-    _equal(final_ref.get("object"), {"type": "commit", "sha": expected_commit}, "readback commit")
-    verify_commit(api("GET", BASE + "/git/commits/" + expected_commit), expected_commit, expected_body)
-    actual = verify_tree(api("GET", BASE + "/git/trees/" + expected_tree + "?recursive=1"), expected_tree)
-    t.require(sorted(actual, key=lambda row: row["path"]) == sorted(original + tree_rows, key=lambda row: row["path"]), "exact preserved source and new output paths")
-    # Factory receives immutable commit and fixed purpose; no arbitrary remote URL.
-    read = raw_get(expected_commit, purpose)
-    outer = read(t.manifest_path(purpose))
-    t.require(outer == files[t.manifest_path(purpose)], "exact outer manifest readback")
-    m = t.parse_manifest(outer, identity, release["source_closure_sha256"], numeric_job_id, purpose)
-    chunks = [(row["path"], read(row["path"])) for row in m["chunks"]]
-    got = t.reassemble(outer, chunks, identity, release["source_closure_sha256"], numeric_job_id, purpose)
-    t.require(got == payload, "same complete audio-free evidence archive readback")
-    t.validate_archive(got, identity)
-    _observe(observer, "readback_verified")
-    progress.update(stage="readback_verified", readback_confirmed=True)
+    progress.update(archive_sha256=t.sha(payload), archive_bytes=len(payload))
+    def checked_readback(got_files):
+        outer = got_files[t.manifest_path(purpose)]
+        manifest = t.parse_manifest(outer, identity, release["source_closure_sha256"], numeric_job_id, purpose)
+        got = t.reassemble(outer, [(row["path"], got_files[row["path"]]) for row in manifest["chunks"]],
+            identity, release["source_closure_sha256"], numeric_job_id, purpose)
+        t.require(got == payload, "same complete audio-free evidence archive readback")
+        t.validate_archive(got, identity)
+        return True
+    result = write_checked_files(api=api, raw_get=lambda commit: raw_get(commit, purpose), files=files,
+        original=original, source_tree=release["source_tree"], expected_body=expected_body, expected_commit=expected_commit,
+        result_branch=p["result_branch"], checkpoint_branch=p["result_branch"] + "-checkpoint",
+        verify_readback=checked_readback, progress=progress, observer=observer,
+        before_write=lambda: _emit_transfer(observer, identity, progress, "upload_plan_prepared", directory=transfer_directory))
     return {"schema": "k1-asr18-evidence-publication-receipt-v1", "status": "same_identity_readback_verified",
         "identity": identity, "purpose": purpose, "numeric_job_id": numeric_job_id,
-        "result_branch": p["result_branch"], "result_commit": expected_commit, "result_tree": expected_tree,
+        "result_branch": p["result_branch"], **result,
         "source_closure_sha256": release["source_closure_sha256"], "archive_sha256": t.sha(payload),
-        "archive_bytes": len(payload), "outer_manifest_sha256": t.sha(outer),
-        "raw_gets": 1 + len(chunks), "readback_body_bytes": len(outer) + len(payload),
-        "semantic_inference_success_not_established_by_publisher": True, "retry_authorized": False}
+        "archive_bytes": len(payload), "outer_manifest_sha256": t.sha(files[t.manifest_path(purpose)]),
+        "semantic_inference_success_not_established_by_publisher": True, "retry_authorized": False, "limited_blob_retry_cap": 1,
+        "retry_authorized_scope": "whole_publication_or_host_rerun"}
 
 
 def _safe_directory(root):
@@ -514,7 +762,8 @@ def run_once(env, event, release, payload, api, raw_get, receipt_directory, obse
         signal.setitimer(signal.ITIMER_REAL, 0)
         result = {"schema": "k1-asr18-evidence-publication-receipt-v1", "status": "publication_failed_or_unconfirmed_no_retry",
             "identity": identity, "purpose": release["purpose"], "error_type": type(error).__name__ if type(error) in (ValueError, TypeError, OSError, TimeoutError, PublicationError) else "OtherException",
-            "retry_authorized": False, "new_native_calls_authorized": False, **progress}
+            "retry_authorized": False, "limited_blob_retry_cap": 1, "retry_authorized_scope": "whole_publication_or_host_rerun",
+            "new_native_calls_authorized": False, **progress}
         if type(error) is PublicationError:
             fields = BaseException.__dict__["__dict__"].__get__(error)
             status = dict.get(fields, "status")
@@ -545,16 +794,27 @@ def disabled_publication_release():
         "root_publication_release": False, "independent_source_review": False,
         "same_repository_ephemeral_token_only": True, "source_branch": t.POLICY["source_branch"],
         "result_branch": t.POLICY["result_branch"], "workflow": t.POLICY["workflow"],
-        "job_key": "asr18", "run_attempt": 1, "retry_authorized": False}
+        "job_key": "asr18", "run_attempt": 1, "retry_authorized": False, "limited_blob_retry_cap": 1,
+        "effective_execution_envelope": dict(c.EFFECTIVE_EXECUTION_ENVELOPE),
+        "scientific_campaign_baseline_minutes": 70}
 
 
-def publication_gate(control):
+def _publication_scope(control):
     fixed = disabled_publication_release()
     approvals = ("enabled", "root_publication_release", "independent_source_review")
     t.require(type(control) is dict and set(control) == set(fixed), "fixed publication control fields")
     t.require(all(type(control[k]) is type(v) and control[k] == v for k, v in fixed.items() if k not in approvals),
         "fixed same-repository create-only publication scope")
-    if not all(control[k] is True for k in approvals):
+    envelope = control["effective_execution_envelope"]
+    t.require(type(envelope) is dict and set(envelope) == set(c.EFFECTIVE_EXECUTION_ENVELOPE)
+        and all(type(value) is int and value == c.EFFECTIVE_EXECUTION_ENVELOPE[key] for key, value in envelope.items()),
+        "exact effective execution envelope integer limits")
+    t.require(all(type(control[key]) is bool for key in approvals), "publication approval boolean fields")
+
+
+def publication_gate(control):
+    _publication_scope(control)
+    if not all(control[key] is True for key in ("enabled", "root_publication_release", "independent_source_review")):
         raise PublicationDisabled("ASR18 publication disabled or review absent")
 
 
@@ -593,6 +853,52 @@ def _source_timestamp(event, head):
     return stamp
 
 
+def validate_transfer_workflow(raw, control=None):
+    """Fixed workflow inspection, not a permissive general YAML interpreter.
+
+    The scientific 70-minute baseline remains bound by historical proofs. The
+    effective current job is 80 minutes, including its separately bounded
+    publisher; neither the baseline nor the ASR/model execution budget expands.
+    """
+    t.require(type(c.LIMITS.get("workflow_minutes")) is int and c.LIMITS["workflow_minutes"] == 70
+        and type(c.EFFECTIVE_EXECUTION_ENVELOPE) is dict
+        and c.EFFECTIVE_EXECUTION_ENVELOPE == {"workflow_minutes": 80, "publisher_seconds": 600, "host_seconds": 3600}
+        and all(type(value) is int for value in c.EFFECTIVE_EXECUTION_ENVELOPE.values()),
+        "fixed historical scientific and effective transfer workflow limits")
+    if control is not None: _publication_scope(control)
+    t.require(type(raw) is bytes and 0 < len(raw) <= 256 * 1024, "bounded exact workflow bytes")
+    text = raw.decode("ascii")
+    t.require("\r" not in text and "\t" not in text and text.count("    steps:\n") == 1,
+        "fixed workflow layout")
+    head, steps = text.split("    steps:\n")
+    t.require(head.count("jobs:\n") == 1 and head.split("jobs:\n")[1].startswith("  asr18:\n")
+        and re.findall(r"(?m)^    timeout-minutes:.*$", head) == ["    timeout-minutes: 80"],
+        "effective current workflow job timeout eighty minutes")
+    blocks = re.split(r"(?m)(?=^      - )", steps)
+    expected = (
+        ("      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1", 2),
+        ("      - name: K1 punctuation6 ASR18 offline source contracts", 5),
+        ("      - name: Admit complete new input and run fixed ASR18 once", 61),
+        ("      - name: Publish complete audio-free bounded evidence", 11),
+    )
+    t.require(blocks[0] == "" and len(blocks) == len(expected) + 1 and text.count("timeout-minutes") == 5,
+        "exact fixed bounded workflow step roster")
+    for block, (first, minutes) in zip(blocks[1:], expected):
+        t.require(block.splitlines()[0] == first and re.findall(r"(?m)^        timeout-minutes:.*$", block)
+            == ["        timeout-minutes: " + str(minutes)], "fixed checkout contracts host publisher step timeouts")
+    t.require(sum(minutes for _, minutes in expected) == 79 < c.EFFECTIVE_EXECUTION_ENVELOPE["workflow_minutes"]
+        and TIMEOUT == c.EFFECTIVE_EXECUTION_ENVELOPE["publisher_seconds"] == 600 < 11 * 60
+        and c.LIMITS["host_seconds"] == c.EFFECTIVE_EXECUTION_ENVELOPE["host_seconds"] == 3600 < 61 * 60,
+        "separate host publisher and workflow timeout margins")
+
+
+def _validate_workflow_transfer_scope():
+    actual = c.read_bytes(ROOT / t.POLICY["workflow"], cap=256 * 1024)
+    template = c.read_bytes(HERE / "workflow.yml", cap=256 * 1024)
+    t.require(actual == template, "exact actual workflow and template bytes")
+    validate_transfer_workflow(actual)
+
+
 def bound_release(env, event, observer=None):
     """Clean exact source + separately approved freeze; never trust a self hash.
 
@@ -616,6 +922,7 @@ def bound_release(env, event, observer=None):
     tree = _source_git("rev-parse", "HEAD^{tree}")
     t.require(head == env.get("GITHUB_SHA") and t.HEAD.fullmatch(head) and t.HEAD.fullmatch(tree), "actual clean executed Git source")
     _observe(observer, "source_freeze")
+    _validate_workflow_transfer_scope()
     import prepare_freeze
     t.require(Path(prepare_freeze.__file__).resolve() == HERE / "prepare_freeze.py", "fixed source-freeze builder")
     t.require(t.canonical(prepare_freeze.build(ROOT)) == freeze_raw, "all exact executed source closure bytes")

@@ -50,7 +50,7 @@ class MockAPI:
     def __init__(self, env, event, release, source):
         self.identity = p.context(env, event, release); self.release = release
         self.paths = p.endpoints(self.identity, release); self.policy = t.policy(release["purpose"])
-        self.calls = []; self.blobs = {}; self.source = source; self.mutations = {}; self.ref = None
+        self.calls = []; self.blobs = {}; self.source = source; self.mutations = {}; self.ref = None; self.refs = {}
         self.repo = {"full_name": t.REPOSITORY, "private": False}
         self.run = {"id": 123, "run_attempt": 1, "head_sha": release["source_sha"], "head_branch": self.policy["source_branch"],
             "event": "push", "path": self.policy["workflow"], "status": "in_progress", "repository": self.repo}
@@ -74,11 +74,13 @@ class MockAPI:
             if route == self.paths["jobs"]: return self.jobs
             if route == self.paths["source"]: return {"sha": self.release["source_sha"], "tree": {"sha": self.release["source_tree"]}}
             if route == self.paths["source_tree"]: return tree_response(self.source)
-            if route == self.paths["ref"]:
+            if route in (self.paths["ref"], self.paths.get("checkpoint_ref")):
+                fullref = "refs/heads/" + route.split("/git/ref/heads/", 1)[1]
+                current = self.ref if route == self.paths["ref"] else self.refs.get(fullref)
                 if expected == 404:
-                    if self.ref: raise p.PublicationError(200)
+                    if current: raise p.PublicationError(200)
                     return None
-                return self.ref
+                return current
             if route == p.BASE + "/git/commits/" + self.expected_commit: return self.commit
             if route == p.BASE + "/git/trees/" + self.expected_tree + "?recursive=1": return tree_response(self.result_rows)
         elif route == p.BASE + "/git/blobs":
@@ -95,9 +97,11 @@ class MockAPI:
                 "parents": [{"sha": v} for v in body["parents"]], "author": body["author"], "committer": body["committer"]}
             return self.commit
         elif route == p.BASE + "/git/refs":
-            if self.ref: raise p.PublicationError(422)
-            self.ref = {"ref": body["ref"], "object": {"type": "commit", "sha": body["sha"]}}
-            return self.ref
+            if body["ref"] in self.refs: raise p.PublicationError(422)
+            value = {"ref": body["ref"], "object": {"type": "commit", "sha": body["sha"]}}
+            self.refs[body["ref"]] = value
+            if body["ref"] == "refs/heads/" + self.policy["result_branch"]: self.ref = value
+            return value
         raise AssertionError("unexpected request")
 
     def raw_factory(self, commit, purpose):
@@ -986,7 +990,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
     LICENSE_ID={'bytes':5306,'sha256':'7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8'}
     # Exact root-reviewed current source closure, including released controls.
     # Historical executed snapshots remain immutable; this is a synthetic fixture.
-    FROZEN_SOURCE_SHA256='b40a1c84e1ebac952fa6d0c19d3251324b6fe7440e93e771600066d0c8b4ab7b'
+    FROZEN_SOURCE_SHA256='310147b40db0a1d6aaad8c3f3ef66c1e43656b5519089aaa833abac70f0c7549'
     SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json','prepare-prerequisite.json'))
 
     def setUp(self):
@@ -997,7 +1001,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
         self.guard=mock.patch('http.client.HTTPSConnection',side_effect=AssertionError('no live network'))
         self.guard.start();self.addCleanup(self.guard.stop)
         self.roster=self.freezer.declared_rosters(ROOT)['host_code']
-        self.assertEqual(len(self.roster),116)
+        self.assertEqual(len(self.roster),118)
         self.assertEqual(t.SOURCE_TEXT_EXCEPTIONS,{self.LICENSE:self.LICENSE_ID})
 
     def full_fixture(self, *, synthetic_native=False):
