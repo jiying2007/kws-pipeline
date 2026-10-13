@@ -3,8 +3,10 @@ import base64
 import ast
 import copy
 import io
+import json
 import os
 from pathlib import Path
+from functools import lru_cache
 import sys
 import subprocess
 import tempfile
@@ -46,10 +48,43 @@ def setup(purpose="asr18"):
     return env, event, release, source
 
 
+
+@lru_cache(maxsize=1)
+def _bound_fixture_template():
+    """One immutable source-byte mother per isolated test process, never a grant."""
+    from claim_consumer_fixtures import bound_public_fixture
+    return bound_public_fixture()
+
+
+def bound_test_fixture():
+    # Mutating cases receive independent dictionaries and byte strings. Actual
+    # collector, archive and source/owner validation are never cached or skipped.
+    return copy.deepcopy(_bound_fixture_template())
+
+def bound_setup(fixture):
+    """Full current-source publisher controls derived from actual fixture bytes."""
+    files=fixture['files'];run=fixture['identity'];owner=fixture['owner_fixture']['identity']
+    prefix='source/research/k1-punctuation6-asr18-v1/'
+    execution=c.decode_json(files[prefix+'execution-release.json'],require_canonical=False)
+    env,event,release,_=setup()
+    release.update(schema='k1-asr18-publisher-bound-release-v2',source_sha=run['executed_head_sha'],
+        source_tree=fixture['source_tree'],source_closure_sha256=t.sha(files['authority/execution-freeze.json']),
+        prior_claim_history_sha256=execution['prior_public_claim_history_sha256'],
+        commit_timestamp=fixture['source_commit_timestamp'],claim_admission_mode='git-owner-v2',
+        execution_release_sha256=t.sha(files[prefix+'execution-release.json']),
+        claim_admission_control_sha256=t.sha(files[prefix+c.CLAIM_CONTROL_FILE]),
+        **{key:owner[key] for key in ('source_branch','workflow','result_branch')})
+    env.update(GITHUB_RUN_ID=str(run['run_id']),GITHUB_SHA=run['executed_head_sha'],
+        GITHUB_WORKFLOW_SHA=run['executed_head_sha'],GITHUB_REF='refs/heads/'+owner['source_branch'],
+        GITHUB_WORKFLOW_REF=t.REPOSITORY+'/'+owner['workflow']+'@refs/heads/'+owner['source_branch'])
+    event.update(after=run['executed_head_sha'],ref=env['GITHUB_REF'])
+    return env,event,release,fixture['source_rows']
+
+
 class MockAPI:
     def __init__(self, env, event, release, source):
         self.identity = p.context(env, event, release); self.release = release
-        self.paths = p.endpoints(self.identity, release); self.policy = t.policy(release["purpose"])
+        self.paths = p.endpoints(self.identity, release); self.policy = p.publisher_policy(release)
         self.calls = []; self.blobs = {}; self.source = source; self.mutations = {}; self.ref = None; self.refs = {}
         self.repo = {"full_name": t.REPOSITORY, "private": False}
         self.run = {"id": 123, "run_attempt": 1, "head_sha": release["source_sha"], "head_branch": self.policy["source_branch"],
@@ -58,11 +93,23 @@ class MockAPI:
         self.job = {"id": 456, "run_id": 123, "head_sha": release["source_sha"], "head_branch": self.policy["source_branch"],
             "name": self.policy["job_key"], "run_url": "https://api.github.com" + self.paths["run"], "status": "in_progress", "conclusion": None}
         self.jobs = {"total_count": 1, "jobs": [self.job]}
+        self.response_bodies = {}
+        if release['schema']=='k1-asr18-publisher-bound-release-v2':
+            self.run.update(id=self.identity['run_id'],run_number=1,workflow_id=9,conclusion=None,
+                head_repository=copy.deepcopy(self.repo))
+            self.job.update(run_id=self.identity['run_id'])
+            later=copy.deepcopy(self.run);later.update(id=self.identity['run_id']+1,run_number=2,status='queued')
+            self.history={'total_count':2,'workflow_runs':[self.run,later]}
 
     def bind_result(self, commit, tree):
         self.expected_commit = commit; self.expected_tree = tree
 
     def __call__(self, method, route, body=None, expected=200):
+        value=self._request(method,route,body,expected)
+        if value is not None:self.response_bodies[route]=json.dumps(value,indent=2).encode()+b'\n'
+        return value
+
+    def _request(self, method, route, body=None, expected=200):
         self.calls.append((method, route, copy.deepcopy(body), expected))
         mutation = self.mutations.get((method, route, expected))
         if isinstance(mutation, BaseException): raise mutation
@@ -72,7 +119,7 @@ class MockAPI:
             if route == self.paths["run"]: return self.run
             if route == self.paths["history"]: return self.history
             if route == self.paths["jobs"]: return self.jobs
-            if route == self.paths["source"]: return {"sha": self.release["source_sha"], "tree": {"sha": self.release["source_tree"]}}
+            if route == self.paths["source"]: return {"sha": self.release["source_sha"], "tree": {"sha": self.release["source_tree"]}, "committer":{"date":self.release["commit_timestamp"]}}
             if route == self.paths["source_tree"]: return tree_response(self.source)
             if route in (self.paths["ref"], self.paths.get("checkpoint_ref")):
                 fullref = "refs/heads/" + route.split("/git/ref/heads/", 1)[1]
@@ -154,16 +201,11 @@ class TransportTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="asr18-invented-transport-")
         self.addCleanup(self.temp.cleanup); self.root = Path(self.temp.name)
-        self.env, self.event, self.release, self.source = setup()
-        self.identity = p.context(self.env, self.event, self.release)
-        self.files = invented_files(self.identity)
-        self.source = [{"path": name[len("source/"):], "type": "blob", "mode": "100644", "sha": t.git_sha(raw)}
-            for name, raw in self.files.items() if name.startswith("source/")]
-        self.release["source_tree"] = tree_response(self.source)["sha"]
-        self.release["source_closure_sha256"] = t.sha(self.files["authority/execution-freeze.json"])
-        self.files["host-receipt.json"] = t.canonical({"schema": "invented-test-host-only", "identity": self.identity,
-            "executed_tree_sha": self.release["source_tree"]})
-        self.files["run-preflight.json"] = t.canonical({"schema": "invented-test-preflight-only", "numeric_job_id": 456})
+        self.fixture=bound_test_fixture()
+        self.env,self.event,self.release,self.source=bound_setup(self.fixture)
+        self.identity=self.fixture['identity']
+        self.owner_identity=self.fixture['owner_fixture']['identity']
+        self.files=self.fixture['files']
         self.host = fake_host(self.files)
         self.guard = mock.patch("http.client.HTTPSConnection", side_effect=AssertionError("no live network"))
         self.guard.start(); self.addCleanup(self.guard.stop)
@@ -194,8 +236,8 @@ class TransportTests(unittest.TestCase):
     def test_complete_source_missing_or_mutated_rejected(self):
         for mode in ("missing", "changed"):
             files = dict(self.files)
-            if mode == "missing": del files["source/research/invented-fixture.py"]
-            else: files["source/research/invented-fixture.py"] += b"extra"
+            if mode == "missing": del files["source/research/k1-punctuation6-asr18-v1/claim_admission.py"]
+            else: files["source/research/k1-punctuation6-asr18-v1/claim_admission.py"] += b"extra"
             with self.subTest(mode=mode), self.assertRaises(ValueError): t.validate_members(files, self.identity)
 
     def test_private_audio_binaries_unknown_paths_never_admitted(self):
@@ -377,7 +419,7 @@ class PublisherTests(TransportTests):
     def test_fake_create_only_whole_immutable_readback(self):
         api=self.api();receipt=p.run_once(self.env,self.event,self.release,self.package(),api,api.raw_factory,self.root)
         self.assertEqual(receipt['status'],'same_identity_readback_verified')
-        self.assertEqual(receipt['raw_gets'],2)
+        self.assertEqual(receipt['raw_gets'],len(t.build_file_set(self.package(),self.identity,self.release['source_closure_sha256'],456)))
         self.assertFalse(receipt['retry_authorized'])
         self.assertFalse(any(call[0] in ('PUT','PATCH','DELETE') for call in api.calls))
         self.assertEqual([call[0] for call in api.calls[:7]],['GET']*7)
@@ -430,7 +472,7 @@ class PublisherTests(TransportTests):
             'author':body['author'],'committer':body['committer']}
         changes=[('sha','e'*40),('message',body['message'].rstrip()+' '),('message',body['message']+'\n'),
             ('message',body['message'][:-1]+'\r\n'),('tree',{'sha':'e'*40}),('parents',[{'sha':'e'*40}]),
-            ('author',{**body['author'],'date':'2026-10-13T00:00:00Z'}),('committer',{**body['committer'],'name':'Other'})]
+            ('author',{**body['author'],'date':'2026-10-14T00:00:00Z'}),('committer',{**body['committer'],'name':'Other'})]
         for key,value in changes:
             with self.subTest(key=key,value=value),self.assertRaises(ValueError):p.verify_commit({**good,key:value},digest,body)
 
@@ -444,7 +486,7 @@ class PublisherTests(TransportTests):
             self.assertEqual(api.calls,[])
 
     def test_run_history_job_mutations_and_existing_ref_stop_before_posts(self):
-        for target,key,value in [('history','total_count',2),('run','run_attempt',True),('run','status','completed'),
+        for target,key,value in [('history','total_count',3),('run','run_attempt',True),('run','status','completed'),
             ('run','head_branch','old'),('job','id',True),('job','name','old'),('repo','private',True)]:
             api=self.api();getattr(api,target)[key]=value
             with self.assertRaises(ValueError):self.publish(api)
@@ -464,7 +506,7 @@ class PublisherTests(TransportTests):
         # Never rewrite the production controls or replace a production gate.
         folder=self.root/'disabled-source-copy'/'research'/'k1-punctuation6-asr18-v1'
         folder.mkdir(parents=True)
-        for name in ('evidence_publisher.py','evidence_transport.py','campaign_contract.py','asr18_metadata.py','failure_observer.py'):
+        for name in ('evidence_publisher.py','evidence_transport.py','campaign_contract.py','asr18_metadata.py','failure_observer.py','claim-admission-control.json'):
             body=(HERE/name).read_bytes();(folder/name).write_bytes(body)
             self.assertEqual((folder/name).read_bytes(),body)
         (folder/'publication-release.json').write_bytes(t.canonical(p.disabled_publication_release()))
@@ -544,7 +586,11 @@ class PublisherTests(TransportTests):
         source=self.disabled_cli_source()
         publication=p.disabled_publication_release()
         for key in ('enabled','root_publication_release','independent_source_review'):publication[key]=True
-        execution=c.read_json(HERE/'execution-release.json')
+        control=copy.deepcopy(self.fixture['owner_fixture']['control'])
+        control_raw=c.canonical(control)
+        (source/c.CLAIM_CONTROL_FILE).write_bytes(control_raw)
+        execution=c.current_disabled_release(control_raw)
+        execution.update({key:self.fixture['owner_fixture']['release'][key] for key in c.RELEASE_AUTHORITIES})
         for key in c.RELEASE_APPROVALS:execution[key]=True
         execution['prepare_prerequisite_sha256']=None
         (source/'publication-release.json').write_bytes(t.canonical(publication))
@@ -612,8 +658,8 @@ if violations or any(name.split('.')[0] in native_roots for name in sys.modules)
     raise RuntimeError('side effect observed')
 print('exact production authority gate; zero side effects')
 '''
-        for extra,reason in (({},'actual execution authority unavailable'),
-                ({'KWS_SOURCE_FREEZE_SHA256':freeze_sha},'actual execution authority unavailable')):
+        for extra,reason in (({},'released source authority required'),
+                ({'KWS_SOURCE_FREEZE_SHA256':freeze_sha},'released source authority required')):
             with self.subTest(reason=reason):
                 isolated_env={**env,**extra}
                 direct=subprocess.run(['python3','-I','-B',str(source/'evidence_publisher.py')],cwd=cwd,
@@ -929,8 +975,8 @@ class FakeHTTPTests(unittest.TestCase):
 class RealHostTransportIntegration(unittest.TestCase):
     """Invented authority files through the real collector and all validators."""
     def setUp(self):
-        from test_asr18_host import public_fixture
-        self.files,self.identity=public_fixture()
+        self.fixture=bound_test_fixture()
+        self.files,self.identity=self.fixture['files'],self.fixture['identity']
         self.guard=mock.patch('http.client.HTTPSConnection',side_effect=AssertionError('live network prohibited'))
         self.guard.start();self.addCleanup(self.guard.stop)
         self.temp=tempfile.TemporaryDirectory(prefix='asr18-real-validator-invented-');self.addCleanup(self.temp.cleanup)
@@ -952,9 +998,7 @@ class RealHostTransportIntegration(unittest.TestCase):
         self.assertEqual(manifest,verified)
         self.assertNotIn('authority/source-claim.json',manifest['members'])
         self.assertEqual(len(t.decode(self.files['terminal-outcomes.json'])['slots']),18)
-        env,event,release,_=setup()
-        release.update(source_sha=self.identity['executed_head_sha'],source_tree=self.source_tree,
-            source_closure_sha256=t.sha(self.files['authority/execution-freeze.json']))
+        env,event,release,_=bound_setup(self.fixture)
         env.update(GITHUB_SHA=release['source_sha'],GITHUB_WORKFLOW_SHA=release['source_sha'])
         event['after']=release['source_sha']
         api=MockAPI(env,event,release,self.source)
@@ -970,8 +1014,8 @@ class RealHostTransportIntegration(unittest.TestCase):
 
     def test_actual_immutable_source_authority_mismatch_prevents_all_posts(self):
         payload,_=t.build_package(self.root,self.identity)
-        env,event,release,_=setup()
-        release.update(source_sha=self.identity['executed_head_sha'],source_tree=self.source_tree,source_closure_sha256='f'*64)
+        env,event,release,_=bound_setup(self.fixture)
+        release['source_closure_sha256']='f'*64
         env.update(GITHUB_SHA=release['source_sha'],GITHUB_WORKFLOW_SHA=release['source_sha']);event['after']=release['source_sha']
         api=MockAPI(env,event,release,self.source)
         with self.assertRaises(ValueError):p.publish(env,event,release,payload,api,api.raw_factory)
@@ -981,17 +1025,18 @@ class RealHostTransportIntegration(unittest.TestCase):
 class CompleteSourceLicenseIntegration(unittest.TestCase):
     """Full real source roster; native results are explicitly synthetic only.
 
-    All-notrun uses all 114 current source bodies and actual input metadata.
+    All-notrun uses all 120 current source bodies and actual input metadata.
     Native semantic cases reuse the existing zero-model host fixture and replace
-    exactly four metadata bodies, listed below, to bind its invented inputs.
+    the exact six synthetic control bodies listed below, to bind its invented inputs.
     No actual ASR identity/result, model, download or remote claim is created.
     """
     LICENSE='source/research/qwen6_asr/FUNASR_MODEL_LICENSE'
     LICENSE_ID={'bytes':5306,'sha256':'7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8'}
     # Exact root-reviewed current source closure, including released controls.
     # Historical executed snapshots remain immutable; this is a synthetic fixture.
-    FROZEN_SOURCE_SHA256='52aa3bbd584009a21b0f3eaf69d4b290fce9f754f80fce72f94bddd33db039ed'
-    SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json','prepare-prerequisite.json'))
+    # Current checked-in freeze is compared byte-for-byte with the full builder.
+    # Historical frozen SHA52aa… belongs only to the preserved original snapshot.
+    SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json','prepare-prerequisite.json','claim-admission-control.json','publication-release.json'))
 
     def setUp(self):
         import hosted_run
@@ -1001,12 +1046,11 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
         self.guard=mock.patch('http.client.HTTPSConnection',side_effect=AssertionError('no live network'))
         self.guard.start();self.addCleanup(self.guard.stop)
         self.roster=self.freezer.declared_rosters(ROOT)['host_code']
-        self.assertEqual(len(self.roster),118)
+        self.assertEqual(len(self.roster),120)
         self.assertEqual(t.SOURCE_TEXT_EXCEPTIONS,{self.LICENSE:self.LICENSE_ID})
 
     def full_fixture(self, *, synthetic_native=False):
         checked=c.read_bytes(HERE/'execution-freeze.json')
-        self.assertEqual(t.sha(checked),self.FROZEN_SOURCE_SHA256)
         self.assertEqual(checked,t.canonical(self.freezer.build(ROOT)))
         freeze=t.decode(checked)
         source={'source/'+name:c.read_bytes(ROOT/name) for name in freeze['host_code']}
@@ -1017,7 +1061,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
                 'prepare-prerequisite.json':files['source/'+self.host.NEW+'prepare-prerequisite.json'],
                 'input-freeze.json':files['input-freeze.json'],
                 'tts-source-authority.json':t.canonical(inp['actual_screening_receipt']['tts_authority'])}
-            self.assertEqual(set(substitutions),self.SYNTHETIC_CONTROLS)
+            self.assertEqual(set(substitutions),self.SYNTHETIC_CONTROLS-{'claim-admission-control.json','publication-release.json'})
             for leaf,body in substitutions.items():
                 name=self.host.NEW+leaf;source['source/'+name]=body
                 for role in ('host_code','setup_code','inference_code'):
@@ -1061,6 +1105,9 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
         files['source/'+self.host.NEW+'execution-freeze.json']=raw
         host=t.decode(files['host-receipt.json']);host['source_freeze_sha256']=t.sha(raw)
         files['host-receipt.json']=t.canonical(host)
+        from claim_consumer_fixtures import bound_public_fixture
+        self._full_fixture=bound_public_fixture(base_files=files,run=run)
+        files,run=self._full_fixture['files'],self._full_fixture['identity']
         self.assert_complete_source(files,synthetic_native=synthetic_native)
         return files,run
 
@@ -1070,7 +1117,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
         self.assertEqual({'bytes':len(files[self.LICENSE]),'sha256':t.sha(files[self.LICENSE])},self.LICENSE_ID)
         files[self.LICENSE].decode('utf-8')
         differences={name for name in self.roster if files['source/'+name]!=c.read_bytes(ROOT/name)}
-        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else {self.host.NEW+'execution-release.json',self.host.NEW+'prepare-prerequisite.json'})
+        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else {self.host.NEW+leaf for leaf in ('execution-release.json','prepare-prerequisite.json','claim-admission-control.json','publication-release.json')})
 
     def materialize(self, root, files):
         for name,body in files.items():
@@ -1119,7 +1166,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
                 else:
                     with self.assertRaises(ValueError):operation(root,run)
 
-    def test_full_116_current_source_all_notrun_and_license_negatives(self):
+    def test_full_current_source_all_notrun_and_license_negatives(self):
         files,run=self.full_fixture()
         with tempfile.TemporaryDirectory(prefix='synthetic-run-real-source-all-notrun-') as temp:
             root=Path(temp);self.materialize(root,files)
@@ -1203,16 +1250,15 @@ print(json.dumps({'accepted_sha256':hashlib.sha256(body).hexdigest(),'origins':o
                 phase='first_failure_18_denominator' if fail_native else 'synthetic_18_success')
             observed.append('final');return result
         case=self.host_tests.CompleteSyntheticEndToEnd()
-        with mock.patch.object(self.host_tests,'public_fixture',return_value=(files,run)), \
-             mock.patch.object(t,'package_budget_preflight',side_effect=proof), \
+        with mock.patch.object(t,'package_budget_preflight',side_effect=proof), \
              mock.patch.object(t,'build_package',side_effect=package):
-            case.run_case(fail_native=fail_native)
+            case.run_case(fail_native=fail_native,fixture=self._full_fixture)
         self.assertEqual(observed,['prepared','final'])
 
-    def test_full_116_roster_prepared_and_synthetic_18_success_license_negatives(self):
+    def test_full_current_roster_prepared_and_synthetic_18_success_license_negatives(self):
         self.full_native_case(False)
 
-    def test_full_116_roster_prepared_and_synthetic_first_failure_license_negatives(self):
+    def test_full_current_roster_prepared_and_synthetic_first_failure_license_negatives(self):
         self.full_native_case(True)
 
 
@@ -1290,9 +1336,9 @@ class OfficialWhisperSourceTransportTests(unittest.TestCase):
 
     def setUp(self):
         import hosted_run
-        from test_asr18_host import public_fixture
         self.host = hosted_run
-        self.files, self.run = public_fixture()
+        fixture=bound_test_fixture()
+        self.files, self.run = fixture['files'],fixture['identity']
         self.lock = c.read_bytes(ROOT / "research/source-screen32-whisper-v1/source-lock.json")
         self.bodies = {self.PREFIX + name: raw for name, raw in self.REAL_TEXT.items()}
         self.bodies[self.PREFIX + "whisper/assets/mel_filters.npz"] = base64.b85decode(self.REAL_MEL_BASE85)

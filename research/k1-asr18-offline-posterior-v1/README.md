@@ -11,7 +11,7 @@ unavailable; this tool cannot reconstruct missing bodies from hashes.
 `asr_posterior.py` imports the existing repository modules only after verifying
 `validator-dependencies.json` against its embedded SHA-256 and checking every
 listed body. Import origins are also fixed. The dependency manifest lists the
-174 existing public source paths from the reviewed closure, excluding only the
+explicit reviewed public source closure, including the v2 issuer and contract, excluding only the
 non-runtime consolidation retention index. That index records this new tool and
 cannot also be its own transitive content pin. No validator tree is copied here.
 
@@ -38,6 +38,12 @@ identity/tree/date; this is not reconstruction of a signed source commit.
 The command does not call the recovery writer or use its in-progress execution
 predicate as a terminal-success predicate. Failed, unknown or unfinished
 recovery yields observation-only output with no native completion claim.
+
+## Source-bound v2 owner custody
+
+A v2 request pins the original producer owner identity, claim ref and owner commit. Independent original ref/commit bodies are required alongside the source, run/job/history, package and publication evidence. The proof binds actual release/control member bytes and the same source freeze. Full producer history may truthfully contain later ordinals; only API-confirmed ordinal one/attempt one may own this v2 claim. A caller cannot turn a legacy request into v2 by supplying a success flag, or use v1 to bypass a source-selected v2 contract. The historical v1 branch retains its original history-one predicate. The current v2 producer selectors derive from the single compiled campaign scope; full archive binding rejects a detached future control/proof paired with either a future ref or the old r3 ref. Future source materialization must update that scope and the matching frozen authority together. The explicit legacy release/history predicates do not drift with future producer constants. Outer package paths and result-ref custody remain fixed to this verifier revision's compiled scope; old v1 complete custody requires its original-scope frozen verifier after a future scope change. No universal cross-version archive compatibility is claimed.
+
+Both normal and recovered custody use the same strict archive/native validators. Recovery retains the producer's failed publisher status and separately checks the recovery run's completed-success terminal contract. Its own history remains singular. This command is read-only and does not call the issuer, consume a private handoff, or call transfer recovery. Actual authority remains absent until independently pinned original evidence is provided.
 
 ## Phase-aware scientific and resource completion
 
@@ -118,7 +124,8 @@ The three base cases are cached immutably and returned as deep copies; mutations
 cannot contaminate later cases. Repeated generation is checked for deterministic
 ZIP hashes. Each optimization mode runs in a separate process.
 
-Run `test_asr_posterior.py` and `test_offline_custody.py` in normal, `-O` and `-OO`
+Run `test_asr_posterior.py`, `test_offline_custody.py` and
+`test_claim_posterior_integration.py` in normal, `-O` and `-OO`
 with `-I -S -B`. The A–I matrix covers complete ordinary and recovered evidence;
 preflight, first-slot and started-unknown partials; missing or hash-only bodies;
 identity/source/input/Git drift; native/claim/resource omissions; uncertain

@@ -75,9 +75,17 @@ class ObserverTests(unittest.TestCase):
 
     def test_synthetic_enabled_cli_rejects_missing_event_without_sideeffects(self):
         with synthetic_enabled_source(HERE) as source, tempfile.TemporaryDirectory(prefix='k1-synthetic-enabled-no-event-') as name:
+            control=c.read_json(source/c.CLAIM_CONTROL_FILE)
+            head=c.digest(b'zero-model missing-event test source')[:40]
+            env={'PATH':'/usr/bin:/bin','RUNNER_TEMP':name,'GITHUB_ACTIONS':'true',
+                'GITHUB_REPOSITORY':c.BOUND_REPOSITORY,'GITHUB_RUN_ID':'123','GITHUB_RUN_NUMBER':'1',
+                'GITHUB_RUN_ATTEMPT':'1','GITHUB_EVENT_NAME':'push','GITHUB_JOB':'asr18',
+                'GITHUB_REF':'refs/heads/'+control['source_ref'],'GITHUB_SHA':head,
+                'GITHUB_WORKFLOW_REF':c.BOUND_REPOSITORY+'/'+control['workflow']+'@refs/heads/'+control['source_ref'],
+                'GITHUB_WORKFLOW_SHA':head,'RUNNER_ENVIRONMENT':'github-hosted',
+                'RUNNER_OS':'Linux','RUNNER_ARCH':'X64','ImageOS':'ubuntu24'}
             proc=subprocess.run([sys.executable,'-I','-B',str(source/'hosted_run.py')],cwd=name,
-                env={'PATH':'/usr/bin:/bin','GITHUB_TOKEN':SECRET,'GH_TOKEN':SECRET,'RUNNER_TEMP':name},
-                capture_output=True,text=True,timeout=10)
+                env=env,capture_output=True,text=True,timeout=10)
             self.assertEqual(list(Path(name).iterdir()),[])
         self.assertEqual(proc.returncode,2)
         self.assertNotIn(SECRET,proc.stdout+proc.stderr)
@@ -363,19 +371,21 @@ class StaticValidationCodeTests(unittest.TestCase):
     def test_codes_are_unique_static_gate_messages_in_reviewed_sources(self):
         import ast
         messages=set()
-        for name in ('hosted_run.py','evidence_transport.py','evidence_publisher.py',
+        for name in ('hosted_run.py','evidence_transport.py','evidence_publisher.py','campaign_contract.py','claim_admission.py',
                      '../k1-punctuation6-prepare-diagnostic-v1/prepare_host.py'):
             for node in ast.walk(ast.parse((HERE/name).read_bytes())):
                 if isinstance(node,ast.Call) and len(node.args)>1 and isinstance(node.args[1],ast.Constant):
-                    if isinstance(node.func,ast.Name) and node.func.id=='require' or isinstance(node.func,ast.Attribute) and node.func.attr=='require':
+                    if isinstance(node.func,ast.Name) and node.func.id in ('require','need') or isinstance(node.func,ast.Attribute) and node.func.attr in ('require','need'):
                         messages.add(node.args[1].value)
         self.assertEqual(len(f.VALIDATION_CODES),len(set(f.VALIDATION_CODES.values())))
         self.assertTrue(set(f.VALIDATION_CODES)<=messages)
         for message,code in f.VALIDATION_CODES.items():
             self.assertRegex(code,r'^[a-z][a-z0-9_]{1,63}$')
             result=f.error_metadata(ValueError(message))
-            self.assertEqual(result['validation_code'],code)
-            self.assertNotIn(message,json.dumps(result))
+            self.assertEqual(result,{'error_type':'ValueError',
+                'error_text':'omitted_by_fixed_privacy_policy','validation_code':code})
+            # The exact allowlisted enum may share a static message prefix;
+            # no exception text or arbitrary extra fields are returned.
 
     def test_unknown_prefix_subclass_multiarg_and_hostile_content_stay_generic(self):
         known=next(iter(f.VALIDATION_CODES))

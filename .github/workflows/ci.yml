@@ -81,10 +81,28 @@ jobs:
         timeout-minutes: 5
         run: |
           set -euo pipefail
-          asr18_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-asr18-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_asr18_binding", "test_asr18_contract", "test_asr18_prerequisite", "test_asr18_entrypoints", "test_asr18_freeze", "test_asr18_failure_observer", "test_publisher_observation", "test_publisher_checkpoint", "test_transfer_recovery", "test_asr18_host", "test_asr18_metadata", "test_asr18_raw_data_reader", "test_asr18_receipts", "test_asr18_resources", "test_asr18_transport", "test_asr18_worker")); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
-          python3 -I -S -B -c "$asr18_tests"
-          python3 -I -S -B -O -c "$asr18_tests"
-          python3 -I -S -B -OO -c "$asr18_tests"
+          asr18_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-asr18-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_asr18_binding", "test_asr18_contract", "test_asr18_prerequisite", "test_asr18_entrypoints", "test_asr18_freeze", "test_asr18_failure_observer", "test_publisher_observation", "test_publisher_checkpoint", "test_transfer_recovery", "test_asr18_host", "test_asr18_metadata", "test_asr18_raw_data_reader", "test_asr18_receipts", "test_asr18_resources", "test_asr18_transport", "test_asr18_worker", "test_bound_claim_contract", "test_claim_admission_host", "test_claim_consumer_integration")); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
+          mode_logs="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/k1-asr18-contracts.XXXXXX")"
+          stop_contracts() {
+            running="$(jobs -pr)"
+            if [ -n "$running" ]; then kill $running 2>/dev/null || true; fi
+            wait || true
+            exit 2
+          }
+          trap stop_contracts INT TERM
+          python3 -I -S -B -c "$asr18_tests" > "$mode_logs/normal.log" 2>&1 & normal_pid=$!
+          python3 -I -S -B -O -c "$asr18_tests" > "$mode_logs/O.log" 2>&1 & optimized_pid=$!
+          python3 -I -S -B -OO -c "$asr18_tests" > "$mode_logs/OO.log" 2>&1 & double_optimized_pid=$!
+          failed=0
+          for test_pid in "$normal_pid" "$optimized_pid" "$double_optimized_pid"; do
+            wait "$test_pid" || failed=1
+          done
+          trap - INT TERM
+          for mode in normal O OO; do
+            printf 'ASR18_CONTRACT_MODE=%s\n' "$mode"
+            cat "$mode_logs/$mode.log"
+          done
+          exit "$failed"
       - name: Verify tracked worktree after K1 punctuation6 ASR18 contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "K1 punctuation6 ASR18 contracts"'
       - name: Fixed zero-model hosted transfer contracts
@@ -359,7 +377,7 @@ jobs:
       - name: Read-only ASR evidence acceptance contracts
         run: |
           set -euo pipefail
-          posterior_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-asr18-offline-posterior-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(tuple(name[:-3] for name in ("test_asr_posterior.py", "test_offline_custody.py"))); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
+          posterior_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-asr18-offline-posterior-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(tuple(name[:-3] for name in ("test_asr_posterior.py", "test_offline_custody.py", "test_claim_posterior_integration.py"))); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
           python3 -I -S -B -c "$posterior_tests"
           python3 -I -S -B -O -c "$posterior_tests"
           python3 -I -S -B -OO -c "$posterior_tests"

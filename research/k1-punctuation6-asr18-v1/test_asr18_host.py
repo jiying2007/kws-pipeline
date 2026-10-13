@@ -47,28 +47,28 @@ def release_fixture():
 
 
 def context():
-    env={'GITHUB_REPOSITORY':h.REPOSITORY,'GITHUB_REF':'refs/heads/'+h.SOURCE_REF,
+    env={'GITHUB_ACTIONS':'true','GITHUB_RUN_NUMBER':'1','GITHUB_REPOSITORY':h.REPOSITORY,'GITHUB_REF':'refs/heads/'+c.LEGACY_V1_SCOPE['source_branch'],
         'GITHUB_EVENT_NAME':'push','GITHUB_RUN_ATTEMPT':'1','GITHUB_JOB':'asr18',
         'RUNNER_ENVIRONMENT':'github-hosted','RUNNER_OS':'Linux','RUNNER_ARCH':'X64','ImageOS':'ubuntu24',
-        'GITHUB_SHA':'c'*40,'GITHUB_RUN_ID':'123','GITHUB_WORKFLOW_REF':h.REPOSITORY+'/'+h.WORKFLOW+'@refs/heads/'+h.SOURCE_REF,
+        'GITHUB_SHA':'c'*40,'GITHUB_RUN_ID':'123','GITHUB_WORKFLOW_REF':h.REPOSITORY+'/'+c.LEGACY_V1_SCOPE['workflow']+'@refs/heads/'+c.LEGACY_V1_SCOPE['source_branch'],
         'GITHUB_WORKFLOW_SHA':'c'*40}
     event={'created':True,'deleted':False,'forced':False,'before':'0'*40,'after':'c'*40,
-        'ref':'refs/heads/'+h.SOURCE_REF,'repository':{'full_name':h.REPOSITORY,'private':False}}
+        'ref':'refs/heads/'+c.LEGACY_V1_SCOPE['source_branch'],'repository':{'full_name':h.REPOSITORY,'private':False}}
     return env,event,h.event_identity(env,event)
 
 
 class FakeAPI:
     def __init__(self):
         self.calls=[]; self.response_body_bytes=0; _,_,run=context(); base='/repos/'+h.REPOSITORY
-        current={'id':123,'run_attempt':1,'status':'in_progress','conclusion':None,'event':'push','head_branch':h.SOURCE_REF,'head_sha':'c'*40,
-            'path':h.WORKFLOW,'repository':{'full_name':h.REPOSITORY,'private':False},
+        current={'id':123,'run_attempt':1,'status':'in_progress','conclusion':None,'event':'push','head_branch':c.LEGACY_V1_SCOPE['source_branch'],'head_sha':'c'*40,
+            'path':c.LEGACY_V1_SCOPE['workflow'],'repository':{'full_name':h.REPOSITORY,'private':False},
             'head_repository':{'full_name':h.REPOSITORY},'workflow_id':9}
-        self.rows={base+'/actions/runs/123':current,base+'/actions/workflows/9':{'id':9,'path':h.WORKFLOW},
-            base+'/actions/workflows/9/runs?branch='+h.urllib.parse.quote(h.SOURCE_REF,safe='')+'&per_page=100&page=1':{'total_count':1,'workflow_runs':[current]},
+        self.rows={base+'/actions/runs/123':current,base+'/actions/workflows/9':{'id':9,'path':c.LEGACY_V1_SCOPE['workflow']},
+            base+'/actions/workflows/9/runs?branch='+h.urllib.parse.quote(c.LEGACY_V1_SCOPE['source_branch'],safe='')+'&per_page=100&page=1':{'total_count':1,'workflow_runs':[current]},
             base+'/actions/runs/123/attempts/1/jobs?per_page=100&page=1':{'total_count':1,'jobs':[{'id':456,'name':'asr18','run_id':123,'head_sha':'c'*40,'status':'in_progress','conclusion':None,
                 'labels':['ubuntu-24.04'],'runner_name':'GitHub Actions 1','runner_group_name':'GitHub Actions'}]},
-            base+'/git/ref/heads/'+h.SOURCE_REF:{'ref':'refs/heads/'+h.SOURCE_REF,'object':{'type':'commit','sha':'c'*40}},
-            base+'/git/ref/heads/'+h.EVIDENCE_REF:None}
+            base+'/git/ref/heads/'+c.LEGACY_V1_SCOPE['source_branch']:{'ref':'refs/heads/'+c.LEGACY_V1_SCOPE['source_branch'],'object':{'type':'commit','sha':'c'*40}},
+            base+'/git/ref/heads/'+c.LEGACY_V1_SCOPE['result_branch']:None}
     def get(self,path,*,absent=False):
         self.calls.append(path)
         value=copy.deepcopy(self.rows[path])
@@ -119,6 +119,12 @@ def public_fixture():
     return files,run
 
 
+def bound_fixture():
+    from claim_consumer_fixtures import bound_public_fixture
+    fixture=bound_public_fixture()
+    return fixture['files'],fixture['identity']
+
+
 class HostTests(unittest.TestCase):
     def test_checked_in_r3_controls_closed_and_all54_prior_slots_not_reclaimed(self):
         for filename,keys in DISABLED_APPROVALS.items():
@@ -126,7 +132,7 @@ class HostTests(unittest.TestCase):
             self.assertTrue(all(value[key] is False for key in keys))
         release=c.read_json(HERE/'execution-release.json');history=h.prior_history_identity()
         self.assertIs(release['historical_screening_reviewed'],True)
-        with self.assertRaisesRegex(ValueError,'execution release disabled'):h.release_first()
+        with self.assertRaisesRegex(ValueError,'claim admission closed|execution release disabled'):h.release_first()
         self.assertEqual(release['experiment'],'k1-punctuation6-asr18-r3')
         self.assertEqual(release['source_ref'],'research/k1-punctuation6-asr18-r3')
         self.assertEqual(release['evidence_ref'],'evidence/k1-punctuation6-asr18-r3')
@@ -135,7 +141,8 @@ class HostTests(unittest.TestCase):
         self.assertEqual(release['retries'],0)
         self.assertEqual(history['prior_runs'],[])
         self.assertEqual(history['prior_runs_scope'],'only_new_source_branch_and_fixed_workflow')
-        self.assertEqual(release['prior_public_claim_history_sha256'],c.digest(c.canonical(history)))
+        self.assertEqual(release['prior_public_claim_history_sha256'],c.digest(c.canonical(
+            h.bound_prior_history_identity(c.read_json(HERE/c.CLAIM_CONTROL_FILE)))))
         prior=history['sealed_prior_campaigns']
         self.assertEqual([row['run_id'] for row in prior],[38207026177,38219171568,38286042984])
         self.assertEqual([row['executed_head_sha'] for row in prior],list(c.SEALED_ASR_SOURCES))
@@ -175,12 +182,14 @@ class HostTests(unittest.TestCase):
         before=c.read_bytes(HERE/'execution-release.json')
         with tempfile.TemporaryDirectory() as temp:
             source=Path(temp)
-            (source/'execution-release.json').write_bytes(c.canonical(c.disabled_release()))
+            control_raw=c.canonical(c.disabled_claim_control())
+            (source/c.CLAIM_CONTROL_FILE).write_bytes(control_raw)
+            (source/'execution-release.json').write_bytes(c.canonical(c.current_disabled_release(control_raw)))
             with patch.object(h,'HERE',source), patch.object(h,'PublicAPI',side_effect=AssertionError('network')) as api, \
                  patch.object(h,'git_read',side_effect=AssertionError('git')) as git, \
                  patch.object(h,'execute',side_effect=AssertionError('runtime')) as execute, \
                  patch.dict(os.environ,{},clear=True):
-                with self.assertRaisesRegex(ValueError,'disabled'):h.main([])
+                with self.assertRaisesRegex(ValueError,'disabled|closed'):h.main([])
                 api.assert_not_called();git.assert_not_called();execute.assert_not_called()
         self.assertEqual(c.read_bytes(HERE/'execution-release.json'),before)
 
@@ -241,15 +250,19 @@ class HostTests(unittest.TestCase):
             release=h.release_first()
             self.assertEqual(c.canonical(release),production)
             self.assertTrue(all(release[key] is True for key in c.RELEASE_APPROVALS))
+            control=c.read_json(h.HERE/c.CLAIM_CONTROL_FILE)
             self.assertEqual(release['prior_public_claim_history_sha256'],
-                '80670524b9a53bfcc5f296331c72ee9c1f8b060ba6ad76f292e4354ca7d97b1f')
-            run=h.event_identity(host,event)
-            api=FakeAPI();base='/repos/'+h.REPOSITORY
-            api.rows[base+'/actions/runs/123']['head_sha']=head
-            next(v for k,v in api.rows.items() if '/jobs?' in k)['jobs'][0]['head_sha']=head
-            api.rows[base+'/git/ref/heads/'+h.SOURCE_REF]['object']['sha']=head
-            preflight=h.api_preflight(api,run,release)
-            frozen,freeze_sha,tree=h.source_authority(run,release)
+                c.digest(c.canonical(h.bound_prior_history_identity(control))))
+            run=h.event_identity(host,event,control=control)
+            frozen,freeze_sha,tree=h.source_authority(run,release,control=control)
+            from test_bound_claim_contract import fixture as owner_fixture
+            from test_claim_admission_host import Public
+            owner=owner_fixture(count=2,release=release,release_raw=production,control=control,
+                control_raw=c.read_bytes(h.HERE/c.CLAIM_CONTROL_FILE),run=run,source_tree=tree,
+                source_timestamp='2000-01-01T00:00:00Z',source_freeze_sha256=freeze_sha,numeric_job_id=456,workflow_id=9)
+            api=Public(owner)
+            preflight=h.api_preflight(api,run,release,control=control,freeze_sha=freeze_sha,
+                tree=tree,timestamp='2000-01-01T00:00:00Z',release_raw=production)
             inputs,authority=h.input_authorities(release,frozen)
             self.assertEqual(frozen,source)
             self.assertEqual(freeze_sha,c.digest(source_raw))
@@ -257,7 +270,7 @@ class HostTests(unittest.TestCase):
             self.assertEqual(preflight['identity'],run)
             self.assertEqual(preflight['numeric_job_id'],456)
             self.assertEqual(preflight['prior_public_claim_history_sha256'],
-                c.digest(c.canonical(h.prior_history_identity())))
+                c.digest(c.canonical(h.bound_prior_history_identity(control))))
             self.assertEqual(len(api.calls),6)
             self.assertTrue(preflight['evidence_ref_absent'])
             self.assertEqual(c.digest(c.canonical(inputs)),release['actual_input_freeze_sha256'])
@@ -277,19 +290,17 @@ class HostTests(unittest.TestCase):
         # do not rewrite the observer or substitute a synthetic released value.
         production=c.read_bytes(HERE/'execution-release.json')
         release=h.release_first()
-        canonical=c.canonical(h.prior_history_identity())
-        raw_observer=canonical+b'\n'
-        self.assertEqual(c.decode_json(raw_observer,require_canonical=False),h.prior_history_identity())
-        self.assertEqual(c.digest(canonical),'80670524b9a53bfcc5f296331c72ee9c1f8b060ba6ad76f292e4354ca7d97b1f')
-        self.assertEqual(c.digest(raw_observer),'0101226db6f13fd501ae791d818f2fe4ba56311fb9c3b43b4cbbb348140a0288')
+        control=c.read_json(HERE/c.CLAIM_CONTROL_FILE)
+        history=h.bound_prior_history_identity(control)
+        canonical=c.canonical(history);raw_observer=canonical+b'\n'
+        self.assertEqual(c.decode_json(raw_observer,require_canonical=False),history)
+        self.assertNotEqual(c.digest(canonical),c.digest(raw_observer))
         self.assertEqual(release['prior_public_claim_history_sha256'],c.digest(canonical))
-        wrong=copy.deepcopy(release)
-        wrong['prior_public_claim_history_sha256']=c.digest(raw_observer)
+        wrong=copy.deepcopy(release);wrong['prior_public_claim_history_sha256']=c.digest(raw_observer)
         _,_,run=context();api=FakeAPI()
         with self.assertRaisesRegex(ValueError,'independently released prior public claim history'):
-            h.api_preflight(api,run,wrong)
-        self.assertEqual(len(api.calls),3)
-        self.assertFalse(any('/jobs?' in path or '/git/ref/' in path for path in api.calls))
+            h.api_preflight(api,run,wrong,control=control)
+        self.assertEqual(api.calls,[])
         self.assertEqual(c.read_bytes(HERE/'execution-release.json'),production)
 
     @synthetic_enabled_host_test
@@ -306,7 +317,7 @@ class HostTests(unittest.TestCase):
                 traps.append(stack.enter_context(patch.object(module,name,
                     side_effect=AssertionError('forbidden downstream operation: '+name))))
             stack.enter_context(patch.dict(os.environ,{'GITHUB_EVENT_PATH':'/must-not-read'},clear=True))
-            with self.assertRaisesRegex(ValueError,'execution release disabled'):h.main([])
+            with self.assertRaisesRegex(ValueError,'claim admission closed|execution release disabled'):h.main([])
             for trap in traps:trap.assert_not_called()
         self.assertEqual(c.read_bytes(HERE/'execution-release.json'),production)
 
@@ -331,7 +342,7 @@ class HostTests(unittest.TestCase):
                     traps.append(stack.enter_context(patch.object(module,name,
                         side_effect=AssertionError('forbidden downstream operation: '+name))))
                 stack.enter_context(patch.dict(os.environ,env,clear=True))
-                with self.assertRaisesRegex(ValueError,'fixed public standard|first public source creation'):
+                with self.assertRaisesRegex(ValueError,'fixed public standard|first public source creation|claim_ordinal_attempt_source_gate'):
                     h.main([])
                 for trap in traps:trap.assert_not_called()
         self.assertEqual(c.read_bytes(HERE/'execution-release.json'),production)
@@ -416,17 +427,18 @@ class HostTests(unittest.TestCase):
             with patch.object(h,'git_read',side_effect=values),self.assertRaisesRegex(ValueError,'clean actual'): h.source_authority(run,release_fixture())
 
     def test_exact_once_claim_is_worker_compatible(self):
-        _,_,run=context(); release=release_fixture(); pre=h.api_preflight(FakeAPI(),run,release)
-        claim=h.source_claim(run,release,pre,'f'*64); raw=c.canonical(claim)
-        self.assertEqual(c.validate_source_claim(raw,expected_sha256=c.digest(raw),release=release,source_freeze_sha256='f'*64,
-            run_id='123',executed_head_sha='c'*40),claim)
+        from claim_consumer_fixtures import bound_public_fixture
+        fixture=bound_public_fixture();owner=fixture['owner_fixture'];claim=owner['claim'];raw=c.canonical(claim)
+        self.assertEqual(c.validate_source_claim(raw,expected_sha256=c.digest(raw),release=owner['release'],
+            source_freeze_sha256=owner['identity']['freeze_sha256'],run_id=str(owner['run']['run_id']),
+            executed_head_sha=owner['run']['executed_head_sha']),claim)
 
     def test_immutable_input_authority_needed_before_reader(self):
         with patch('raw_data_reader.RawDataReader',side_effect=AssertionError('reader must not be reached')):
             with self.assertRaises(ValueError): h.input_authorities(release_fixture(),{})
 
     def test_policy_identity_is_exact_reviewed_source_bytes_before_reader(self):
-        files,run=public_fixture();freeze=json.loads(files['authority/execution-freeze.json'])
+        files,run=bound_fixture();freeze=json.loads(files['authority/execution-freeze.json'])
         inp=json.loads(files['input-freeze.json']);release=json.loads(files['source/'+h.NEW+'execution-release.json'])
         authority=setup_binding()[1]['actual_authority']
         self.assertEqual(h.screening_policy_identity(freeze),c.identity(HERE/'asr18_metadata.py'))
@@ -451,7 +463,7 @@ class HostTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'one frozen'):h.screening_policy_identity(changed)
 
     def test_public_archive_policy_rechecks_pinned_algorithm_bytes(self):
-        files,run=public_fixture()
+        files,run=bound_fixture()
         files['source/'+h.NEW+'asr18_metadata.py']+=b'\n# synthetic changed policy body\n'
         with self.assertRaisesRegex(ValueError,'verified scientific source byte identity'):h.validate_public_evidence(files,run)
 
@@ -518,7 +530,7 @@ class HostTests(unittest.TestCase):
             self.assertEqual(h.collect_public(root),[])
 
     def test_preclaim_failure_keeps_source_and_all18_public_rows(self):
-        files,run=public_fixture();self.assertTrue(h.validate_public_evidence(files,run))
+        files,run=bound_fixture();self.assertTrue(h.validate_public_evidence(files,run))
         import evidence_transport as t
         t.validate_members(files,run)
         payload,manifest,_=t._zip_files(files,run)
@@ -526,7 +538,7 @@ class HostTests(unittest.TestCase):
         t.validate_archive(payload,run)
 
     def test_public_receipt_separates_scientific_baseline_and_effective_window(self):
-        files,run=public_fixture(); host=json.loads(files['host-receipt.json'])
+        files,run=bound_fixture(); host=json.loads(files['host-receipt.json'])
         self.assertEqual(host['limits']['workflow_minutes'],70)
         self.assertEqual(host['limits_scope'],c.SCIENTIFIC_LIMITS_SCOPE)
         self.assertEqual(host['effective_execution_envelope'],
@@ -549,7 +561,7 @@ class HostTests(unittest.TestCase):
 
     def test_extra_host_private_field_or_omitted_row_block_archive(self):
         for kind in ('extra','missing_row','forged_complete','claimed_success'):
-            files,run=public_fixture()
+            files,run=bound_fixture()
             name='terminal-outcomes.json' if kind in ('missing_row','forged_complete') else 'host-receipt.json'
             value=json.loads(files[name])
             if kind=='extra':value['private_inventory']={'must':'not leak'}
@@ -586,7 +598,7 @@ class HostTests(unittest.TestCase):
     def test_fixed_candidate_workflow_matches_reviewed_template(self):
         text=(HERE/'workflow.yml').read_text()
         self.assertIn('timeout-minutes: 80',text);self.assertIn('persist-credentials: false',text)
-        self.assertEqual(text.count('GITHUB_TOKEN:'),1)
+        self.assertEqual(text.count('GITHUB_TOKEN:'),2)
         for value in ('workflow_dispatch:','schedule:','pull_request:','upload-artifact','self-hosted'):self.assertNotIn(value,text)
         self.assertEqual(c.read_bytes(h.ROOT/h.WORKFLOW),c.read_bytes(HERE/'workflow.yml'))
 
@@ -625,29 +637,15 @@ class NativeReceiptIntegration(unittest.TestCase):
             self.assertTrue(ledger['accounting_valid'])
 
     def test_source_bound_preclaim_failure_executes_no_runtime_and_retains_denominator(self):
-        files,run=public_fixture(); frozen=json.loads(files['authority/execution-freeze.json'])
-        inp=json.loads(files['input-freeze.json']); release=json.loads(files['source/'+h.NEW+'execution-release.json'])
-        preflight=json.loads(files['run-preflight.json'])
-        observed=[]
-        def source_stage(roster,where):
-            where.mkdir()
-            for name in roster:
-                path=where/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(files['source/'+name])
-        def package(root,identity):
-            captured={name:c.read_bytes(root/name) for name in h.collect_public(root)}
-            h.validate_public_evidence(captured,identity)
-            observed.append(captured)
-            return b'synthetic-local-package',{}
-        with tempfile.TemporaryDirectory() as temp, patch.object(h,'input_authorities',return_value=(inp,{})), \
-             patch.object(h,'verify_download',side_effect=ValueError('synthetic rejected complete package')), \
-             patch.object(r,'stage_source',side_effect=source_stage),patch.object(r,'setup_runtimes',side_effect=AssertionError('no setup')), \
-             patch('resource_host.MeteredDocker',side_effect=AssertionError('no Docker')), \
-             patch('evidence_transport.build_package',side_effect=package),patch('evidence_transport.write_package') as publish, \
-             patch.object(h.signal,'signal'),patch.object(h.signal,'setitimer'),patch('builtins.print'):
-            code=h.execute({'RUNNER_TEMP':temp},run,release,frozen,c.digest(c.canonical(frozen)),'d'*40,preflight)
-        self.assertEqual(code,1); self.assertEqual(len(observed),1);publish.assert_called_once()
-        self.assertNotIn('authority/source-claim.json',observed[0])
-        self.assertEqual(len(json.loads(observed[0]['terminal-outcomes.json'])['slots']),18)
+        import evidence_transport as t
+        with patch.object(r,'setup_runtimes',side_effect=AssertionError('no setup')) as setup:
+            result=CompleteSyntheticEndToEnd().run_case(fail_input=True)
+        setup.assert_not_called()
+        self.assertNotIn('authority/source-claim.json',result['manifest']['members'])
+        self.assertIn('admission.json',result['manifest']['members'])
+        self.assertEqual(len(result['terminal']['slots']),18)
+        self.assertTrue(all(row['status']=='not_run' for row in result['terminal']['slots']))
+        t.validate_archive(result['payload'],result['identity'])
 
     def test_launch_inspect_rejects_token_env_and_substituted_mount(self):
         with tempfile.TemporaryDirectory() as temp,patch.object(os,'getuid',return_value=1001):
@@ -672,7 +670,8 @@ class NativeReceiptIntegration(unittest.TestCase):
 
 class MockFlowTests(unittest.TestCase):
     def flow(self, fail_decode=False):
-        files,run=public_fixture(); frozen=json.loads(files['authority/execution-freeze.json'])
+        from claim_consumer_fixtures import bound_public_fixture,execute_bound_fixture
+        fixture=bound_public_fixture();files,run=fixture['files'],fixture['identity']; frozen=json.loads(files['authority/execution-freeze.json'])
         inp=json.loads(files['input-freeze.json']); release=json.loads(files['source/'+h.NEW+'execution-release.json'])
         preflight=json.loads(files['run-preflight.json']); events=[]; captured=[]
         job,plan,binding=inp['actual_blind_job'],inp['actual_opaque_order'],inp['actual_worker_binding']
@@ -729,7 +728,7 @@ class MockFlowTests(unittest.TestCase):
              patch.object(h,'_completion',return_value={}),patch.object(os,'getuid',return_value=1001), \
              patch.object(h.shutil,'disk_usage',return_value=types.SimpleNamespace(free=12*c.GIB)), \
              patch.object(h.signal,'signal'),patch.object(h.signal,'setitimer'),patch('builtins.print'):
-            code=h.execute({'RUNNER_TEMP':temp},run,release,frozen,c.digest(c.canonical(frozen)),'d'*40,preflight)
+            code=execute_bound_fixture(fixture,{'RUNNER_TEMP':temp})
         return code,events,captured[0]
 
     def test_exact_three_prepare_then_proof_then_three_fresh_decode(self):
@@ -761,8 +760,10 @@ class CompleteSyntheticEndToEnd(unittest.TestCase):
         from test_asr18_receipts import ReceiptFixture
         from asr_native_fixtures import native_fixture,rebind_native_fixture
         from test_asr18_binding import members_fixture
-        files,run=public_fixture() if fixture is None else (fixture['files'],fixture['identity'])
-        tree='d'*40 if fixture is None else fixture['source_tree']
+        from claim_consumer_fixtures import bound_public_fixture
+        fixture=bound_public_fixture() if fixture is None else fixture
+        files,run=fixture['files'],fixture['identity']
+        tree=fixture['source_tree']
         freeze=json.loads(files['authority/execution-freeze.json'])
         inp=json.loads(files['input-freeze.json']); release=json.loads(files['source/'+h.NEW+'execution-release.json'])
         preflight=json.loads(files['run-preflight.json'])
@@ -894,6 +895,12 @@ class CompleteSyntheticEndToEnd(unittest.TestCase):
         original_recognition_stages=resource_host.recognition_stages
         def deterministic_stages(*args,**kwargs):
             return original_recognition_stages(*args,clock=lambda:1000.0,**kwargs)
+        original_read=h.read_bytes
+        actual_uid=os.getuid
+        def source_read(path, **kwargs):
+            name=str(Path(path).relative_to(h.ROOT)) if Path(path).is_relative_to(h.ROOT) else None
+            if name is not None and 'source/'+name in files:return files['source/'+name]
+            return original_read(path, **kwargs)
         # No collect_public, policy, native receipts, budget validator, compressor,
         # archive validator or publication-stash helper is replaced by this test.
         with tempfile.TemporaryDirectory() as temp,patch.object(h,'input_authorities',return_value=(inp,kwargs['actual_authority'])), \
@@ -905,8 +912,22 @@ class CompleteSyntheticEndToEnd(unittest.TestCase):
              patch.object(h.shutil,'disk_usage',return_value=types.SimpleNamespace(free=12*c.GIB)), \
              patch.object(h.signal,'signal'),patch.object(h.signal,'setitimer'), \
              patch.object(h.time,'monotonic',return_value=1000.0), \
-             patch.object(resource_host,'recognition_stages',new=deterministic_stages),patch('builtins.print'):
-            code=h.execute({'RUNNER_TEMP':temp},run,release,freeze,c.digest(c.canonical(freeze)),tree,preflight)
+             patch.object(resource_host,'recognition_stages',new=deterministic_stages),patch('builtins.print'), \
+             patch.object(h,'read_bytes',side_effect=source_read):
+            import test_claim_admission_host as handoff
+            import claim_admission
+            owner_fixture=fixture['owner_fixture']
+            with patch.object(os,'getuid',new=actual_uid), \
+                 patch.object(claim_admission.secrets,'token_hex',return_value=c.digest(b'public-test-fixture-private-nonce')):
+                with patch.dict(os.environ,handoff.environment(owner_fixture,temp,token=True),clear=True):
+                    ready,issuer_wire=handoff.issue(owner_fixture,temp)
+                with patch.dict(os.environ,handoff.environment(owner_fixture,temp),clear=True):
+                    preflight,actual_permit,host_reads=handoff.consume(owner_fixture,temp)
+                self.assertIs(ready,True)
+                self.assertEqual(len(issuer_wire.calls),13)
+                self.assertEqual(len(host_reads.calls),6)
+            code=h.execute({'RUNNER_TEMP':temp},run,release,freeze,c.digest(c.canonical(freeze)),tree,preflight,
+                admission_permit=actual_permit,timestamp=fixture['source_commit_timestamp'])
             root=Path(temp)/(c.EXPERIMENT+'-123')
             result=c.read_json(root/'host-receipt.json');terminal=c.read_json(root/'terminal-outcomes.json')
             # Surface a fixed diagnostic type if this assertion fails; no model/log text.

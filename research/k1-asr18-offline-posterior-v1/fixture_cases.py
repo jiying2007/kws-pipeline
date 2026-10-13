@@ -56,56 +56,43 @@ def source_tree_response(rows):
 
 
 def fresh_fixture(name):
-    """Bind a fresh six-WAV helper to a deterministic synthetic public Git tree.
-
-    The tree contains the helper's explicit current public source closure, with
-    invented test-only release/prerequisite metadata already supplied by
-    public_fixture(). It is not a claim about any repository's actual HEAD.
-    """
-    t.require(name in ("success18", "first_native_failure18", "all_notrun"), "fixed synthetic fixture name")
+    """Current source plus a real generated public owner proof; fake native work."""
     from contextlib import ExitStack
     from unittest.mock import patch
-    from test_asr18_host import CompleteSyntheticEndToEnd, public_fixture
-    files, identity = public_fixture()
-    import prepare_freeze
-    freeze = prepare_freeze.build(SOURCE)
-    source_files = {name: (files["source/" + name] if "source/" + name in files else
-                          t.c.read_bytes(SOURCE / name, cap=8 * t.c.MIB))
-                    for name in sorted(freeze["host_code"])}
-    for role in ("host_code", "setup_code", "inference_code"):
-        freeze[role] = {name: {"bytes": len(source_files[name]), "sha256": t.sha(source_files[name])}
-                        for name in freeze[role]}
-    freeze_raw = t.canonical(freeze)
-    source_files[CAMPAIGN + "execution-freeze.json"] = freeze_raw
-    files.update({"source/" + name: raw for name, raw in source_files.items()})
-    files["authority/execution-freeze.json"] = freeze_raw
-    rows = [{"path": path[7:], "mode": "100644", "type": "blob", "sha": t.git_sha(raw)}
-            for path, raw in sorted(files.items()) if path.startswith("source/")]
-    tree = source_tree_response(rows)["sha"]
-    stamp = "2026-10-13T00:00:00Z"
-    person = "Synthetic Fixture <fixture@example.invalid> 1791849600 +0000"
-    commit_raw = ("tree " + tree + "\nauthor " + person + "\ncommitter " + person +
-                  "\n\nSynthetic current public source closure; zero model fixture only\n").encode("ascii")
-    head = t.git_sha(commit_raw, "commit")
-    previous_head = identity["executed_head_sha"]
-    def rebind(value):
-        if type(value) is dict:return {key: rebind(item) for key, item in value.items()}
-        if type(value) is list:return [rebind(item) for item in value]
-        return head if value == previous_head else value
-    identity = rebind(identity)
-    files = {path: (raw if path.startswith("source/") else t.canonical(rebind(t.decode(raw))))
-             for path, raw in files.items()}
-    fixture = {"files": files, "identity": identity, "source_tree": tree}
-    # Guard the zero-I/O test boundary even if a helper regresses later.
+    from test_asr18_host import CompleteSyntheticEndToEnd
+    from claim_consumer_fixtures import bound_public_fixture
+    t.require(name in ("success18", "first_native_failure18", "all_notrun"), "fixed synthetic fixture name")
+    fixture = bound_public_fixture()
     with ExitStack() as stack:
         for target in ("subprocess.Popen", "socket.create_connection", "socket.socket.connect", "urllib.request.urlopen"):
             stack.enter_context(patch(target, side_effect=AssertionError("synthetic fixtures forbid network/process execution")))
         result = CompleteSyntheticEndToEnd().run_case(fail_native=name == "first_native_failure18",
             fail_input=name == "all_notrun", fixture=fixture)
-    t.validate_source_binding(result["payload"], identity,
-        t.sha(files["authority/execution-freeze.json"]), rows, 456, tree)
-    result.update(source_rows=rows, source_commit_timestamp=stamp, source_commit_raw=commit_raw)
+    t.validate_source_binding(result["payload"], fixture["identity"],
+        t.sha(fixture["files"]["authority/execution-freeze.json"]), fixture["source_rows"],456,fixture["source_tree"])
+    result.update({key:fixture[key] for key in ("source_rows","source_commit_timestamp","source_commit_raw","owner_fixture")})
     return result
+
+
+def bind_owner_records(case):
+    """Fake independent current history and separate owner custody reads."""
+    files = members(case.payload)
+    admission = t.decode(files['admission.json']);owner = admission['owner'];identity=owner['identity']
+    current = case.records['producer_run']
+    current.update(t.c.bound_run_row(identity),head_repository={'full_name':t.REPOSITORY,'private':False})
+    later = copy.deepcopy(current);later.update(id=identity['run_id']+1,run_number=2,status='queued',conclusion=None)
+    page={'total_count':2,'workflow_runs':[copy.deepcopy(current),later]}
+    case.records['producer_history']=page
+    raw=json.dumps(page,indent=2).encode()+b'\n'
+    case.records['_response_bodies']={'producer_history':raw}
+    ref_raw=json.dumps(t.decode(admission['acquisition_responses']['ref_readback']['raw_body_utf8'].encode()),indent=3).encode()+b'\n'
+    commit_raw=json.dumps(t.decode(admission['acquisition_responses']['owner_readback']['raw_body_utf8'].encode()),indent=3).encode()+b'\n'
+    case.records.update(claim_ref=ref_raw,claim_commit=commit_raw)
+    case.expected['schema']='k1-asr18-offline-acceptance-v2'
+    case.expected['claim_owner']={'ref':owner['claim_ref'],'commit':admission['commit']['sha'],
+        'ref_response_sha256':t.sha(ref_raw),'commit_response_sha256':t.sha(commit_raw),
+        **{key:identity[key] for key in ('source_branch','workflow','result_branch')}}
+    return case
 
 
 def verify_native_layout(payload, name):
@@ -154,7 +141,7 @@ def verify_native_layout(payload, name):
 def mark_api_records(case):
     """API-shaped snapshots always carry an explicit local synthetic marker."""
     for role, value in case.records.items():
-        if type(value) is dict and role != "recovery_receipt":
+        if type(value) is dict and role not in ("recovery_receipt", "_response_bodies", "producer_history"):
             value.update(synthetic=True, synthetic_notice=SYNTHETIC_NOTICE)
     return case
 
@@ -245,7 +232,8 @@ def _normal_case(name="success18"):
         "strict_source_binding_verified": True,
         "source_file_count": len(rows), "source_commit_raw": generated["source_commit_raw"].decode("ascii"),
         "archive_generated_by": "CompleteSyntheticEndToEnd.run_case -> hosted_run.execute -> collect_public/build_package"}
-    return mark_api_records(case)
+    mark_api_records(case)
+    return bind_owner_records(case)
 
 
 def original_case(name="success18"):
@@ -278,6 +266,7 @@ def recovery_case(name="success18", *, producer_case=None):
     case.records.update(run_records("producer", producer["identity"], producer["numeric_job_id"],
         t.POLICY["source_branch"], t.POLICY["workflow"], producer["terminal"],
         [(r.HOST_STEP, producer["terminal"]["host_step_conclusion"]), (r.PUBLISHER_STEP, "failure")]))
+    bind_owner_records(case)
     authority = recovery_authority(case)
     r.validate_authority(authority)
     control = r.disabled_release()
@@ -328,6 +317,9 @@ def recovery_case(name="success18", *, producer_case=None):
         "archive_sha256": authority["archive_sha256"], "archive_bytes": authority["archive_bytes"],
         "outer_manifest_sha256": authority["outer_manifest_sha256"], "native_success_established": False,
         "new_native_calls_authorized": False, "retry_authorized": False}
+    admission=t.decode(members(case.payload)['admission.json'])
+    receipt['producer_history']=t.c.api_bound_history(admission['owner']['identity'],case.records['producer_history'],
+        'posterior',raw_sha256=t.sha(case.records['_response_bodies']['producer_history']))
     case.records["recovery_receipt"] = receipt
     case.logs["recovery"] = t.canonical(receipt) + b"\n"
     return mark_api_records(case)

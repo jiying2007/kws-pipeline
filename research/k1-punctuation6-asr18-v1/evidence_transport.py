@@ -6,6 +6,7 @@ model import, network operation, inference claim, or history inventory input.
 """
 from __future__ import annotations
 import hashlib
+import ast
 import importlib
 import io
 import json
@@ -32,10 +33,9 @@ SHA = re.compile(r"[0-9a-f]{64}\Z")
 HEAD = re.compile(r"[0-9a-f]{40}\Z")
 MEMBER_MANIFEST = "__native_evidence_manifest__.json"
 HERE = Path(__file__).resolve().parent
-POLICY = {"source_branch": "research/k1-punctuation6-asr18-r3",
-    "result_branch": "evidence/k1-punctuation6-asr18-r3",
-    "directory": "research/k1-punctuation6-asr18-v1/evidence/asr18-r3",
-    "workflow": ".github/workflows/k1-punctuation6-asr18-v1.yml", "job_key": "asr18"}
+_POLICY_KEYS = ("source_branch", "result_branch", "directory", "workflow", "job_key")
+POLICY = {key: c.current_scope()[key] for key in _POLICY_KEYS}
+LEGACY_POLICY = {key: c.LEGACY_V1_SCOPE[key] for key in _POLICY_KEYS}
 require = c.require
 canonical = c.canonical
 decode = lambda raw: c.decode_json(raw, require_canonical=False)
@@ -82,7 +82,7 @@ ROOT_JSON = frozenset(("host-receipt.json", "terminal-outcomes.json", "run-prefl
     "input-freeze.json", "public-screening-receipt.json", "new-cell-projection.json",
     "acquisition-receipt.json", "image-transfer.json", "asr-setup-public.json", "cpu-receipt.json",
     "cleanup-receipt.json", "supervision-receipt.json", "authority/execution-freeze.json",
-    "authority/source-claim.json", "order/execution-plan.json", "order/worker-input-binding.json",
+    "authority/source-claim.json", "admission.json", "order/execution-plan.json", "order/worker-input-binding.json",
     "policy/policy.json", "policy/policy-freeze.json", "policy/budget-proof.json"))
 WORKER_JSON = frozenset(("prepared.json", "run-identity.json", "kernel-scope.json", "cpu-process-guard.json",
     "blind-job.json", "execution-plan.json", "progress.json", "contract.json", "decoder-inputs.json",
@@ -288,6 +288,7 @@ def validate_members(files, run_identity, *, phase="final"):
             ".safetensors", ".whl", ".pkl", ".pickle", ".key", ".pem", ".zip", ".gz", ".bin"), "audio/weights/packages/credentials prohibited")
     official = official_whisper_source_members(files)
     source = _source_members(files)
+    _source_claim_mode(files)
     native = _native_body_members(files)
     for name, raw in files.items():
         if name in source or name in official: continue
@@ -2843,6 +2844,96 @@ def validate_member_json(name, value):
 
 
 
+def archive_job_identity(payload, run_identity):
+    """Read a job candidate only after complete native/archive validation.
+
+    This local observation is still cross-checked against the independent API
+    job before publication. It does not independently establish Actions truth.
+    """
+    manifest, _ = validate_archive(payload, run_identity)
+    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+        preflight = decode(archive.read("run-preflight.json"))
+    number = preflight.get("numeric_job_id")
+    require(type(number) is int and 0 < number < 10 ** 20, "bounded archived actual job")
+    return number
+
+
+def _source_claim_mode(files):
+    """Read one literal source-compiled policy, never execute archived code."""
+    prefix = "source/research/k1-punctuation6-asr18-v1/"
+    release = c.decode_json(files[prefix + "execution-release.json"], require_canonical=False)
+    source = files[prefix + "campaign_contract.py"]
+    declarations = []
+    for node in ast.parse(source).body:
+        if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "CURRENT_CLAIM_MODE" for target in node.targets):
+            require(isinstance(node.value, ast.Constant) and type(node.value.value) is str,
+                "literal archived source admission policy")
+            declarations.append(node.value.value)
+    bound = c.is_bound_release(release)
+    require(declarations == (["git-owner-v2"] if bound else []),
+        "actual archived source policy and release version must agree")
+    return bound
+
+
+def bind_archive_admission(files, run_identity, freeze_sha256, numeric_job_id, source_tree):
+    """Bind public owner proof to exact archived source bytes, never its schema alone.
+
+    Callers must additionally verify every source member against the original
+    immutable Git tree. Native/archive validation retains the same obligations.
+    """
+    prefix = "source/research/k1-punctuation6-asr18-v1/"
+    release_raw = files[prefix + "execution-release.json"]
+    release = c.decode_json(release_raw, require_canonical=False)
+    if not _source_claim_mode(files):
+        require("admission.json" not in files, "legacy source cannot self-promote using public admission")
+        if "authority/source-claim.json" in files:
+            c.validate_legacy_source_claim(files["authority/source-claim.json"],
+                expected_sha256=sha(files["authority/source-claim.json"]), release=release,
+                source_freeze_sha256=freeze_sha256, run_id=str(run_identity["run_id"]),
+                executed_head_sha=run_identity["executed_head_sha"])
+        return None
+    control_raw = files[prefix + c.CLAIM_CONTROL_FILE]
+    control = c.require_claim_admission(release, control_raw)
+    c.require_current_scope(control)
+    admission_raw = files["admission.json"]
+    require(type(admission_raw) is bytes and len(admission_raw) <= c.MAX_BOUND_ADMISSION,
+        "existing bounded public admission bytes")
+    admission = c.decode_json(admission_raw)
+    owner = admission["owner"]["identity"]
+    preflight = decode(files["run-preflight.json"])
+    # Workflow/job are local candidates here, independently checked by the
+    # existing current run/jobs GETs. Freeze/release are exact source bodies.
+    identity = c.sourcebound_identity(run_identity, numeric_job_id, release, source_tree,
+        owner["source_timestamp"], freeze_sha256, sha(release_raw), control,
+        preflight.get("workflow_id"))
+    c.validate_bound_admission(admission, identity)
+    c.require_current_scope(identity)
+    claim = None
+    if "authority/source-claim.json" in files:
+        claim = c.bind_source_claim(files["authority/source-claim.json"], run_identity, release,
+            numeric_job_id, source_tree, release_raw=release_raw, control_raw=control_raw,
+            source_freeze_sha256=freeze_sha256)
+        require(c.exact_json(claim["admission"], admission), "same fixed public admission and worker claim")
+    return {"mode": "git-owner-v2", "identity": identity, "admission": admission,
+        "source_claim": claim, "release_sha256": sha(release_raw), "control_sha256": sha(control_raw)}
+
+
+def validate_publisher_source_release(payload, release, proof):
+    """Do not let detached publisher metadata downgrade an actual v2 source."""
+    if proof is None:
+        require(release["schema"] == "k1-asr18-publisher-bound-release-v1", "legacy publisher source policy")
+        return
+    c.require_current_scope(proof["identity"])
+    require(release["commit_timestamp"] == proof["identity"]["source_timestamp"], "publisher actual source timestamp")
+    require(all(release[key] == proof["identity"][key] for key in ("source_branch", "workflow", "result_branch")),
+        "publisher immutable source selectors")
+    require(release["schema"] == "k1-asr18-publisher-bound-release-v2" and
+        release["claim_admission_mode"] == proof["mode"] and
+        release["execution_release_sha256"] == proof["release_sha256"] and
+        release["claim_admission_control_sha256"] == proof["control_sha256"],
+        "publisher binds exact immutable release and control bytes")
+
+
 def validate_source_binding(payload, run_identity, freeze_sha256, source_rows, numeric_job_id, source_tree):
     """Bind archived source bytes to the independently read exact Git source tree."""
     manifest, _ = validate_archive(payload, run_identity)
@@ -2864,6 +2955,8 @@ def validate_source_binding(payload, run_identity, freeze_sha256, source_rows, n
             claim = decode(archive.read("authority/source-claim.json"))
             require(type(claim.get("numeric_job_id")) is int and claim["numeric_job_id"] == numeric_job_id,
                 "same actual once-source-claim job")
+        files = {name: archive.read(name) for name in manifest["members"]}
+    return bind_archive_admission(files, run_identity, freeze_sha256, numeric_job_id, source_tree)
 
 
 

@@ -1,4 +1,8 @@
-"""Zero-model fault tests for publisher checkpoints; all execution/network mocked."""
+"""Zero-model publisher observations with real source-bound v2 archives.
+
+Narrow transfer-record tests use explicitly invented protocol values; they do
+not claim whole-archive admission, model execution or live publication.
+"""
 from contextlib import ExitStack, redirect_stdout
 import importlib.util
 import io
@@ -15,6 +19,7 @@ S = HERE if (HERE / 'campaign_contract.py').is_file() else R / 'phase3-asr-licen
 sys.path.insert(0, str(S))
 import campaign_contract as c
 import evidence_transport as t
+from test_claim_consumer_integration import f, publication
 
 def local_module(name, leaf):
     spec = importlib.util.spec_from_file_location(name, HERE / leaf)
@@ -29,6 +34,10 @@ SENTINEL = 'ghs_SYNTHETIC_SECRET_/private/audio.wav_你好小窝'
 
 
 class PublisherObservationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.normal = f.normal_case()
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(dir=HERE)
         self.addCleanup(self.temp.cleanup)
@@ -41,18 +50,25 @@ class PublisherObservationTests(unittest.TestCase):
     def patch(self, obj, name, **kw):
         return self.stack.enter_context(mock.patch.object(obj, name, **kw))
 
-    def main_setup(self):
-        control = p.disabled_publication_release()
-        for key in ('enabled', 'root_publication_release', 'independent_source_review'): control[key] = True
-        self.patch(c, 'read_json', side_effect=lambda path, **kwargs: control if path.name == 'publication-release.json' else {})
-        self.stack.enter_context(mock.patch.dict(p.os.environ, {
-            'GITHUB_EVENT_PATH': str(self.root / 'synthetic-event.json'), 'RUNNER_TEMP': str(self.root),
-            'GITHUB_TOKEN': SENTINEL}, clear=True))
-        self.patch(p, 'bound_release', return_value={'purpose': 'asr18'})
-        self.patch(p, 'context', return_value=RUN)
-        self.patch(t, 'read_package', return_value=b'SYNTHETIC_NOT_A_REAL_ARCHIVE')
-        self.patch(p, 'GitHubAPI', return_value=object())
-        self.patch(p, 'run_once', return_value={'synthetic_return': True})
+    def main_setup(self, *, real_run_once=False):
+        env, event, release, api = publication(self.normal)
+        files = f.members(self.normal.payload)
+        control_raw = files['source/' + f.CAMPAIGN + 'publication-release.json']
+        (self.root / 'publication-release.json').write_bytes(control_raw)
+        event_path = self.root / 'synthetic-event.json'
+        event_path.write_bytes(c.canonical(event))
+        run_identity = p.context(env, event, release)
+        t.write_package(self.root, self.normal.payload, run_identity)
+        env.update(GITHUB_EVENT_PATH=str(event_path), RUNNER_TEMP=str(self.root), GITHUB_TOKEN=SENTINEL)
+        self.stack.enter_context(mock.patch.dict(p.os.environ, env, clear=True))
+        self.patch(p, 'HERE', new=self.root)
+        # Source Git/API and final writer are explicit synthetic boundaries.
+        # Gate, context, package read and all archive validators remain real.
+        self.patch(p, 'bound_release', return_value=release)
+        self.patch(p, 'GitHubAPI', return_value=api)
+        if not real_run_once:
+            self.patch(p, 'run_once', return_value={'synthetic_return': True})
+        return c.read_json(self.root / 'publication-release.json')
 
     def final(self):
         lines = [json.loads(line) for line in self.stdout.getvalue().splitlines()]
@@ -84,8 +100,8 @@ class PublisherObservationTests(unittest.TestCase):
         self.assertEqual(list(self.root.iterdir()), [])
 
     def test_event_read_error_has_stage_and_no_content(self):
-        self.main_setup()
-        self.patch(c, 'read_json', side_effect=[c.read_json(S / 'publication-release.json'), ValueError(SENTINEL)])
+        control = self.main_setup()
+        self.patch(c, 'read_json', side_effect=[control, ValueError(SENTINEL)])
         with self.assertRaises(ValueError): p.main([])
         record = self.final()['record']
         self.assertEqual(record['stage'], 'event_read')
@@ -104,10 +120,10 @@ class PublisherObservationTests(unittest.TestCase):
         p.run_once.assert_not_called(); p.GitHubAPI.assert_not_called()
 
     def test_invalid_archive_same_stage_no_native_or_publish(self):
-        self.main_setup(); self.patch(t, 'read_package', side_effect=ValueError(SENTINEL))
+        self.main_setup(); self.patch(t, 'read_package', return_value=b'SYNTHETIC_NOT_A_REAL_ARCHIVE')
         with self.assertRaises(ValueError): p.main([])
         self.assertEqual(self.final()['record']['stage'], 'package_read')
-        p.run_once.assert_not_called()
+        p.run_once.assert_not_called(); p.GitHubAPI.assert_not_called()
 
     def test_token_admission_error_reports_no_secret(self):
         self.main_setup(); self.patch(p, 'GitHubAPI', side_effect=ValueError(SENTINEL))
@@ -143,19 +159,14 @@ class PublisherObservationTests(unittest.TestCase):
         self.assertIs(got.exception, original)
 
     def test_started_receipt_fault_is_independently_reported(self):
-        self.main_setup()
-        # Undo only mocked run_once so main traverses its real started boundary.
-        self.stack.close(); self.stack = ExitStack(); self.addCleanup(self.stack.close)
-        self.stack.enter_context(redirect_stdout(self.stdout))
-        original_once = p.run_once
-        self.main_setup(); self.patch(p, 'run_once', side_effect=original_once)
+        self.main_setup(real_run_once=True)
         writer = self.patch(p, 'write_once', side_effect=OSError(SENTINEL))
         publish = self.patch(p, 'publish', side_effect=AssertionError('remote touched'))
         with self.assertRaises(OSError): p.main([])
         self.assertEqual(self.final()['record']['stage'], 'publication_started')
         self.assertEqual(writer.call_count, 1); publish.assert_not_called()
 
-    def test_no_observer_direct_run_once_preserves_legacy_silence(self):
+    def test_no_observer_direct_run_once_protocol_boundary_is_silent(self):
         self.patch(p, 'context', return_value=RUN)
         self.patch(p, 'write_once', return_value=None)
         self.patch(p, 'publish', return_value={'synthetic': True})

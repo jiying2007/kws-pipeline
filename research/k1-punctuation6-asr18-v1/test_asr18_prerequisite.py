@@ -18,9 +18,9 @@ ROOT = HERE.parents[1]
 
 
 def fixture():
-    release = c.disabled_release()
+    release = c.current_disabled_release(c.read_bytes(HERE / c.CLAIM_CONTROL_FILE))
     for key in c.RELEASE_APPROVALS: release[key] = True
-    for key in c.RELEASE_AUTHORITIES: release[key] = 'a'*64
+    for key in c.RELEASE_AUTHORITIES: release[key] = c.digest(('prerequisite-fixture-' + key).encode())
     freeze = prepare_freeze.build(ROOT)
     raw = synthetic_prerequisite(release, root=ROOT, freeze=freeze)
     return release, freeze, raw
@@ -32,6 +32,9 @@ class PreparePrerequisite(unittest.TestCase):
         raw=c.read_bytes(HERE/'prepare-prerequisite.json',cap=65536)
         release=c.read_json(HERE/'execution-release.json')
         freeze=c.read_json(HERE/'execution-freeze.json')
+        self.assertEqual(release['schema'], c.BOUND_RELEASE_SCHEMA)
+        self.assertEqual(release['claim_admission_mode'], c.CURRENT_CLAIM_MODE)
+        self.assertEqual(release['claim_admission_control_sha256'], c.digest(c.read_bytes(HERE / c.CLAIM_CONTROL_FILE)))
         self.assertEqual(c.digest(raw),release['prepare_prerequisite_sha256'])
         value=p.validate_receipt(raw,release,source_freeze=freeze,source_root=ROOT)
         self.assertEqual(value['outcome'],'complete_prepare_verified')
@@ -42,7 +45,7 @@ class PreparePrerequisite(unittest.TestCase):
             for key in keys:self.assertIs(c.read_json(HERE/filename)[key],False)
 
     def test_explicit_unestablished_prerequisite_template_remains_closed(self):
-        release=c.disabled_release()
+        release=c.current_disabled_release()
         self.assertIsNone(release['prepare_prerequisite_sha256'])
         with self.assertRaisesRegex(ValueError,'unestablished'):
             p.validate_receipt(c.canonical(p.disabled_receipt()),release)

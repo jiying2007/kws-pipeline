@@ -37,7 +37,7 @@ def disabled_source():
 
 
 class ActualEntrypoints(unittest.TestCase):
-    def check_diagnostic(self,raw,*,role,stages,terminal=False):
+    def check_diagnostic(self,raw,*,role,stages,terminal=False,validation_code=None):
         def canonical(value):
             return json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
         lines=raw.splitlines()
@@ -80,14 +80,26 @@ class ActualEntrypoints(unittest.TestCase):
         self.assertEqual(set(error),{'stage','detail','explanation'})
         self.assertEqual(error['stage'],stages[-1])
         self.assertEqual(error['explanation'],'operation_failed_at_fixed_stage; exception_content_omitted')
-        self.assertEqual(error['detail'],{'error_type':'UnlistedError' if stages==['publication_gate'] else 'ValueError',
-            'error_text':'omitted_by_fixed_privacy_policy'})
+        expected_detail={'error_type':'UnlistedError' if stages==['publication_gate'] else 'ValueError',
+            'error_text':'omitted_by_fixed_privacy_policy'}
+        if validation_code is not None:expected_detail['validation_code']=validation_code
+        self.assertEqual(error['detail'],expected_detail)
 
     def test_checked_in_asr_controls_are_explicitly_closed(self):
         for filename,keys in DISABLED_APPROVALS.items():
             value=json.loads((HERE/filename).read_bytes())
             self.assertTrue(all(value[key] is False for key in keys))
-        self.assertIs(json.loads((HERE/'execution-release.json').read_bytes())['historical_screening_reviewed'],True)
+        release=json.loads((HERE/'execution-release.json').read_bytes())
+        control_raw=(HERE/'claim-admission-control.json').read_bytes();control=json.loads(control_raw)
+        self.assertEqual(release['schema'],'k1-asr18-execution-release-v2')
+        self.assertEqual(release['claim_admission_mode'],'git-owner-v2')
+        self.assertEqual(release['claim_admission_control_sha256'],hashlib.sha256(control_raw).hexdigest())
+        self.assertEqual(control['schema'],'k1-asr18-claim-admission-control-v2')
+        self.assertEqual(control['mode'],'git-owner-v2')
+        for key in ('enabled','independent_source_review','root_execution_release'):self.assertIs(control[key],False)
+        for key in ('campaign','source_ref','evidence_ref','claim_ref','workflow','workflow_id'):self.assertIsNone(control[key])
+        self.assertEqual(control['workflow_id_source'],'actual_run_api_plus_path')
+        self.assertIs(release['historical_screening_reviewed'],True)
 
     def call(self,path,args=()):
         with tempfile.TemporaryDirectory(prefix='k1-entry-negative-') as name:
@@ -106,7 +118,7 @@ class ActualEntrypoints(unittest.TestCase):
         with disabled_source() as source:
             value=self.call(source/'hosted_run.py')
         self.assertEqual((value.returncode,value.stderr),(2,b''))
-        self.check_diagnostic(value.stdout,role='host',stages=['release'],terminal=True)
+        self.check_diagnostic(value.stdout,role='host',stages=['release'],terminal=True,validation_code='claim_admission_closed')
 
     def test_real_workflow_publisher_command_hits_explicit_disabled_gate(self):
         with disabled_source() as source:
@@ -117,7 +129,7 @@ class ActualEntrypoints(unittest.TestCase):
     def test_actual_closed_workflow_commands_reject_before_context_without_effects(self):
         value=self.call(HERE/'hosted_run.py')
         self.assertEqual((value.returncode,value.stderr),(2,b''))
-        self.check_diagnostic(value.stdout,role='host',stages=['release'],terminal=True)
+        self.check_diagnostic(value.stdout,role='host',stages=['release'],terminal=True,validation_code='claim_admission_closed')
         value=self.call(HERE/'evidence_publisher.py')
         self.assertEqual((value.returncode,value.stderr),(1,b'ASR18 publication disabled or review absent.\n'))
         self.check_diagnostic(value.stdout,role='publisher',stages=['publication_gate'])
@@ -131,7 +143,7 @@ class ActualEntrypoints(unittest.TestCase):
         program='''import hashlib,json,os,pathlib,runpy,sys
 path=pathlib.Path(sys.argv[1]);seen=[];effects=[]
 def profile(frame,event,arg):
- if event in ('call','return') and frame.f_code.co_name in ('release_first','event_identity','publication_gate','bound_release','require_execution_release','_source_git','execute','run_once'):
+ if event in ('call','return') and frame.f_code.co_name in ('release_first','host_environment','early_environment','event_identity','publication_gate','bound_release','require_execution_release','_source_git','execute','run_once'):
   seen.append([event,frame.f_code.co_name,frame.f_code.co_filename])
 def audit(event,args):
  if event.startswith('socket.') or event in ('subprocess.Popen','os.system','os.mkdir'):
@@ -142,12 +154,15 @@ except SystemExit as e:code=e.code
 finally:sys.setprofile(None)
 print(json.dumps({'code':code,'seen':seen,'effects':effects}))
 '''
-        for filename in ('hosted_run.py','evidence_publisher.py'):
-            with self.subTest(filename=filename),tempfile.TemporaryDirectory(prefix='k1-enabled-cli-') as name:
+        cases=(('hosted_run.py',SENTINELS,'claim_host_credentials_rejected'),
+               ('hosted_run.py',{},'claim_ordinal_attempt_rejected'),
+               ('evidence_publisher.py',SENTINELS,None))
+        for filename,credentials,host_code in cases:
+            with self.subTest(filename=filename,credentials=bool(credentials)),tempfile.TemporaryDirectory(prefix='k1-enabled-cli-') as name:
                 temp=Path(name);event=temp/'event.json';event.write_text('{}')
                 expected=hashlib.sha256((source/'execution-freeze.json').read_bytes()).hexdigest()
                 env={'PATH':'/usr/bin:/bin','HOME':'/nonexistent','RUNNER_TEMP':name,
-                    'GITHUB_EVENT_PATH':str(event),'GITHUB_ACTIONS':'false','KWS_SOURCE_FREEZE_SHA256':expected,**SENTINELS}
+                    'GITHUB_EVENT_PATH':str(event),'GITHUB_ACTIONS':'false','KWS_SOURCE_FREEZE_SHA256':expected,**credentials}
                 value=subprocess.run([sys.executable,'-I','-B',*OPT,'-c',program,str(source/filename)],
                     cwd=temp,env=env,capture_output=True,timeout=20)
                 self.assertEqual(value.returncode,0,value.stderr.decode())
@@ -155,21 +170,28 @@ print(json.dumps({'code':code,'seen':seen,'effects':effects}))
                 observation=json.loads(chunks[-1])
                 self.check_diagnostic(b''.join(chunks[:-1]),
                     role='host' if filename=='hosted_run.py' else 'publisher',
-                    stages=['release','arguments','event_read','context'] if filename=='hosted_run.py' else
+                    stages=['release','arguments'] if filename=='hosted_run.py' else
                            ['publication_gate','arguments','event_read','source_release'],
-                    terminal=filename=='hosted_run.py')
+                    terminal=filename=='hosted_run.py',
+                    validation_code=host_code)
                 self.assertEqual(observation['effects'],[])
                 self.assertEqual(sorted(x.name for x in temp.iterdir()),['event.json'])
                 calls={row[1] for row in observation['seen'] if row[0]=='call'}
                 self.assertFalse(calls & {'_source_git','execute','run_once'})
                 if filename=='hosted_run.py':
                     self.assertEqual(observation['code'],2)
-                    self.assertTrue({'release_first','event_identity'}<=calls)
+                    self.assertTrue({'release_first','host_environment'}<=calls)
+                    self.assertEqual('early_environment' in calls,not bool(credentials))
+                    self.assertNotIn('event_identity',calls)
                 else:
                     self.assertEqual(observation['code'],'ASR18 publication blocked or unconfirmed; no retry.')
                     self.assertTrue({'publication_gate','bound_release','require_execution_release'}<=calls)
                     self.assertIn(['return','require_execution_release',str(source/'campaign_contract.py')],observation['seen'])
                 for secret in SENTINELS.values():self.assertNotIn(secret.encode(),value.stdout+value.stderr)
+
+    def test_real_claim_issuer_is_closed_before_client_or_private_directory(self):
+        value=self.call(HERE/'claim_admission.py')
+        self.assertEqual((value.returncode,value.stdout,value.stderr),(2,b'{"ready":false}\n',b''))
 
     def test_real_native_family_mode_commands_import_and_reject(self):
         for family in ('qwen06','sensevoice','whisper'):

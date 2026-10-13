@@ -153,7 +153,7 @@ class WorkerTests(unittest.TestCase):
         for family in contract.FAMILIES:
             for mode in ("prepare", "decode"):
                 with self.subTest(family=family, mode=mode), \
-                     mock.patch.object(worker, "_json", return_value=contract.disabled_release()), \
+                     mock.patch.object(worker, "_json", return_value=contract.read_json(HERE / "execution-release.json")), \
                      mock.patch.object(worker, "_construct_native") as construct, \
                      mock.patch.object(worker, "_verify_closed_sources") as closed:
                     with self.assertRaisesRegex(ValueError, "disabled"):
@@ -162,13 +162,23 @@ class WorkerTests(unittest.TestCase):
                     closed.assert_not_called()
 
     def test_direct_real_constructor_and_loader_also_fail_disabled(self):
-        with mock.patch.object(worker, "_json", return_value=contract.disabled_release()), \
+        with mock.patch.object(worker, "_json", return_value=contract.read_json(HERE / "execution-release.json")), \
              mock.patch.object(worker.importlib.util, "spec_from_file_location") as importer:
             with self.assertRaisesRegex(ValueError, "disabled"):
                 worker._construct_native("qwen06", Path("/runtime"), Path("/input"), Path("/output"), {}, "900", "d" * 40)
             with self.assertRaisesRegex(ValueError, "disabled"):
                 worker._fixed_module("retained_worker")
             importer.assert_not_called()
+
+    def test_current_worker_rejects_archived_v1_release_before_source_or_model_work(self):
+        with mock.patch.object(worker, "_json", return_value=contract.disabled_release()) as read, \
+             mock.patch.object(worker, "_construct_native") as construct, \
+             mock.patch.object(worker, "_verify_closed_sources") as closed:
+            with self.assertRaisesRegex(ValueError, "source-selected v2 execution release required"):
+                worker.run_family("qwen06", "decode")
+            self.assertEqual(read.call_count, 1)
+            construct.assert_not_called()
+            closed.assert_not_called()
 
     def test_zero_eligible_and_hidden_conditioning_fail_before_load(self):
         changes = (

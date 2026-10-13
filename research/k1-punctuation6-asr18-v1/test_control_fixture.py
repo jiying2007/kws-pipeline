@@ -34,6 +34,7 @@ def synthetic_prerequisite(release, *, root=None, freeze=None):
 APPROVALS = {
     'execution-release.json': tuple(c.RELEASE_APPROVALS),
     'publication-release.json': ('enabled','independent_source_review','root_publication_release'),
+    'claim-admission-control.json': tuple(c.CLAIM_APPROVALS),
 }
 
 DISABLED_APPROVALS = {name:tuple(key for key in keys if key!='historical_screening_reviewed')
@@ -63,8 +64,15 @@ def synthetic_enabled_source(source):
                 'synthetic copy changes only approval flags')
             (copied/filename).write_bytes(c.canonical(value))
         release=c.read_json(copied/'execution-release.json')
+        control=c.read_json(copied/c.CLAIM_CONTROL_FILE)
+        control.update(campaign=release['experiment'],source_ref=release['source_ref'],
+            evidence_ref=release['evidence_ref'],workflow=release['workflow'],
+            claim_ref='refs/heads/claims/'+release['experiment'])
+        control_raw=c.canonical(control)
+        (copied/c.CLAIM_CONTROL_FILE).write_bytes(control_raw)
+        release['claim_admission_control_sha256']=c.digest(control_raw)
         import hosted_run
-        release['prior_public_claim_history_sha256']=c.digest(c.canonical(hosted_run.prior_history_identity()))
+        release['prior_public_claim_history_sha256']=c.digest(c.canonical(hosted_run.bound_prior_history_identity(control)))
         raw=synthetic_prerequisite(release,root=target,freeze=prepare_freeze.build(target))
         (copied/'prepare-prerequisite.json').write_bytes(raw)
         (copied/'execution-release.json').write_bytes(c.canonical(release))

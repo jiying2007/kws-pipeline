@@ -51,9 +51,24 @@ class PublicationDisabled(ValueError):
 
 
 def validate_release(release):
-    t.require(type(release) is dict and set(release) == {"schema", "purpose", "source_sha", "source_tree",
-        "source_closure_sha256", "prior_claim_history_sha256", "commit_timestamp"}, "reviewed detached release fields")
-    t.require(release["schema"] == "k1-asr18-publisher-bound-release-v1", "release schema")
+    fields = {"schema", "purpose", "source_sha", "source_tree", "source_closure_sha256",
+        "prior_claim_history_sha256", "commit_timestamp"}
+    t.require(type(release) is dict, "reviewed detached release object")
+    bound = release.get("schema") == "k1-asr18-publisher-bound-release-v2"
+    if bound:
+        fields |= {"claim_admission_mode", "execution_release_sha256", "claim_admission_control_sha256",
+            "source_branch", "workflow", "result_branch"}
+        for key in ("source_branch", "result_branch"):
+            _branch(release.get(key))
+        t.require(type(release.get("workflow")) is str and re.fullmatch(r"\.github/workflows/[A-Za-z0-9_-]+\.ya?ml", release["workflow"]), "fixed source-bound workflow path")
+        t.require(release.get("claim_admission_mode") == "git-owner-v2", "source-bound admission mode")
+        for key in ("execution_release_sha256", "claim_admission_control_sha256"):
+            c.sha(release.get(key))
+        t.require(all(release[key] == c.current_scope()[key]
+            for key in ("source_branch", "workflow", "result_branch")), "publisher compiled source scope")
+    else:
+        t.require(release.get("schema") == "k1-asr18-publisher-bound-release-v1", "release schema")
+    t.require(set(release) == fields, "reviewed detached release fields")
     t.policy(release["purpose"])
     for key in ("source_sha", "source_tree"):
         t.require(type(release[key]) is str and t.HEAD.fullmatch(release[key]), "reviewed source Git binding")
@@ -64,9 +79,25 @@ def validate_release(release):
     datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ")
 
 
+def publisher_policy(release):
+    policy = t.policy(release["purpose"])
+    if release.get("schema") == "k1-asr18-publisher-bound-release-v2":
+        t.require(all(release[key] == c.current_scope()[key]
+            for key in ("source_branch", "workflow", "result_branch")), "publisher compiled source scope")
+    elif release["purpose"] == t.PURPOSE:
+        policy = dict(t.LEGACY_POLICY)
+    return policy
+
+
+def producer_history_route(owner):
+    c.validate_bound_identity(owner)
+    c.require_current_scope(owner)
+    return BASE + "/actions/workflows/" + owner["workflow"].split("/")[-1] + "/runs?branch=" + owner["source_branch"] + "&per_page=100"
+
+
 def context(env, event, release):
     validate_release(release)
-    p = t.policy(release["purpose"])
+    p = publisher_policy(release)
     t.require(type(env) is dict and type(event) is dict and type(event.get("repository")) is dict, "push context")
     t.require(env.get("GITHUB_REPOSITORY") == t.REPOSITORY
         and event["repository"].get("full_name") == t.REPOSITORY
@@ -88,11 +119,12 @@ def context(env, event, release):
 
 
 def endpoints(identity, release):
-    p = t.policy(release["purpose"])
+    p = publisher_policy(release)
     run = str(identity["run_id"])
     return {"repo": BASE, "run": BASE + "/actions/runs/" + run,
         "jobs": BASE + "/actions/runs/" + run + "/attempts/1/jobs?per_page=100",
-        "history": BASE + "/actions/workflows/" + p["workflow"].split("/")[-1] + "/runs?event=push&branch=" + p["source_branch"] + "&per_page=100",
+        "history": BASE + "/actions/workflows/" + p["workflow"].split("/")[-1] +
+            ("/runs?branch=" if release["schema"] == "k1-asr18-publisher-bound-release-v2" else "/runs?event=push&branch=") + p["source_branch"] + "&per_page=100",
         "source": BASE + "/git/commits/" + release["source_sha"],
         "source_tree": BASE + "/git/trees/" + release["source_tree"] + "?recursive=1",
         "ref": BASE + "/git/ref/heads/" + p["result_branch"],
@@ -111,7 +143,7 @@ class GitHubAPI:
         self.release = t.decode(t.canonical(release))
         self._initialize(token, get_routes=set(endpoints(identity, release).values()),
             source_sha=release["source_sha"], source_tree=release["source_tree"],
-            result_branch=t.policy(release["purpose"])["result_branch"],
+            result_branch=publisher_policy(release)["result_branch"],
             paths={t.manifest_path(release["purpose"]): t.MAX_MANIFEST,
                 **{t.chunk_path(i, release["purpose"]): t.MAX_CHUNK for i in range(t.MAX_CHUNKS)}})
 
@@ -149,6 +181,7 @@ class GitHubAPI:
         self.max_requests = max_requests; self.max_upload = max_upload; self.max_body = max_body
         self.deadline = time.monotonic() + timeout
         self.count = 0; self.body_bytes = 0; self.request_bytes = 0; self.seen = set(); self.posts = set()
+        self.response_bodies = {}
         self.blob_api_attempt_count = 0; self.blob_confirmed_count = 0
         self.blob_recovery_get_count = 0; self.blob_retry_count = 0; self._recovery_consumed = False
         self._retry_request = None
@@ -266,6 +299,7 @@ class GitHubAPI:
             if expected == 404: return None
             value = t.decode(response_body)
             t.require(type(value) is dict, "API object response")
+            self.response_bodies[route] = response_body
             return value
         except PublicationError:
             raise
@@ -333,8 +367,17 @@ def _equal(record, expected, label):
         t.require(type(record.get(key)) is type(value) and record[key] == value, label)
 
 
-def verify_run(api, identity, release):
-    routes = endpoints(identity, release); p = t.policy(release["purpose"])
+def history_observation(api, route, owner, page, phase):
+    raw = getattr(api, "response_bodies", {}).get(route)
+    t.require(type(raw) is bytes and 0 < len(raw) <= MAX_RESPONSE and
+        c.exact_json(t.decode(raw), page), "original bounded history response bytes required")
+    return c.api_bound_history(owner, page, phase, raw_sha256=t.sha(raw))
+
+
+def verify_run(api, identity, release, *, source_claim=None, observations=None):
+    if source_claim is not None:
+        c.require_current_scope(source_claim["identity"])
+    routes = endpoints(identity, release); p = publisher_policy(release)
     repo = api("GET", routes["repo"])
     _equal(repo, {"full_name": t.REPOSITORY, "private": False}, "API canonical public repository")
     run = api("GET", routes["run"])
@@ -343,9 +386,21 @@ def verify_run(api, identity, release):
     _equal(run, expected, "actual run binding")
     _equal(run.get("repository"), {"full_name": t.REPOSITORY, "private": False}, "actual run repository")
     history = api("GET", routes["history"])
-    _equal(history, {"total_count": 1}, "exact one run for fresh source ref")
-    t.require(type(history.get("workflow_runs")) is list and len(history["workflow_runs"]) == 1, "complete one-use history")
-    _equal(history["workflow_runs"][0], expected, "history actual run binding")
+    if source_claim is None:
+        t.require(release["schema"] == "k1-asr18-publisher-bound-release-v1", "v2 publisher requires source-bound admission")
+        _equal(history, {"total_count": 1}, "exact one run for fresh source ref")
+        t.require(type(history.get("workflow_runs")) is list and len(history["workflow_runs"]) == 1, "complete one-use history")
+        _equal(history["workflow_runs"][0], expected, "history actual run binding")
+    else:
+        owner = source_claim["identity"]
+        c.validate_bound_admission(source_claim["admission"], owner)
+        t.require(owner["run_id"] == identity["run_id"] and owner["source_sha"] == identity["executed_head_sha"]
+            and owner["source_tree"] == release["source_tree"], "same source-bound publisher owner")
+        _equal(run, c.bound_run_row(owner), "same actual owner run identity")
+        _equal(run.get("head_repository"), {"full_name": t.REPOSITORY, "private": False}, "public owner head repository")
+        observation = history_observation(api, routes["history"], owner, history, "publication")
+        if observations is not None: observations["producer_history"] = observation
+        _equal(run, {"run_number": 1, "run_attempt": 1, "conclusion": None}, "eligible live immutable owner")
     jobs = api("GET", routes["jobs"])
     t.require(type(jobs.get("total_count")) is int and 1 <= jobs["total_count"] <= 100
         and type(jobs.get("jobs")) is list and len(jobs["jobs"]) == jobs["total_count"], "bounded complete jobs")
@@ -356,6 +411,8 @@ def verify_run(api, identity, release):
         "run_url": "https://api.github.com" + routes["run"], "status": "in_progress", "conclusion": None}, "actual numeric job binding")
     if "run_attempt" in job: _equal(job, {"run_attempt": 1}, "job attempt one")
     t.require(type(job.get("id")) is int and job["id"] > 0, "numeric job ID")
+    if source_claim is not None:
+        t.require(job["id"] == source_claim["identity"]["job_id"], "same independently observed owner job")
     return job["id"]
 
 
@@ -676,16 +733,26 @@ def publish(env, event, release, payload, api, raw_get, progress=None, observer=
     progress = {} if progress is None else progress
     _observe(observer, "validate_local_package")
     progress.update(stage="validate_local_package", publication_confirmed=False, readback_confirmed=False)
-    identity = context(env, event, release); purpose = release["purpose"]; p = t.policy(purpose)
+    identity = context(env, event, release); purpose = release["purpose"]; p = publisher_policy(release)
     t.validate_archive(payload, identity)
     _observe(observer, "verify_actual_run_source"); progress["stage"] = "verify_actual_run_source"
-    numeric_job_id = verify_run(api, identity, release)
     routes = endpoints(identity, release)
     source = api("GET", routes["source"])
     _equal(source, {"sha": release["source_sha"]}, "reviewed source commit")
     _equal(source.get("tree"), {"sha": release["source_tree"]}, "reviewed source tree")
+    if release["schema"] == "k1-asr18-publisher-bound-release-v2":
+        t.require(type(source.get("committer")) is dict and
+            _utc_timestamp(source["committer"].get("date")) == release["commit_timestamp"], "actual source commit timestamp")
     original = verify_tree(api("GET", routes["source_tree"]), release["source_tree"])
-    t.validate_source_binding(payload, identity, release["source_closure_sha256"], original, numeric_job_id, release["source_tree"])
+    # The independently read source tree selects the history policy. A claim's
+    # own schema, or an untrusted caller flag, can never promote legacy source.
+    local_job = t.archive_job_identity(payload, identity)
+    source_claim = t.validate_source_binding(payload, identity, release["source_closure_sha256"],
+        original, local_job, release["source_tree"])
+    t.validate_publisher_source_release(payload, release, source_claim)
+    observations = {}
+    numeric_job_id = verify_run(api, identity, release, source_claim=source_claim, observations=observations)
+    t.require(numeric_job_id == local_job, "archive job equals independent current job")
     directory = p["directory"]
     t.require(not any(row["path"] == directory or row["path"].startswith(directory + "/")
         or directory.startswith(row["path"] + "/") for row in original), "result directory absent; no replacement")
@@ -709,6 +776,7 @@ def publish(env, event, release, payload, api, raw_get, progress=None, observer=
         before_write=lambda: _emit_transfer(observer, identity, progress, "upload_plan_prepared", directory=transfer_directory))
     return {"schema": "k1-asr18-evidence-publication-receipt-v1", "status": "same_identity_readback_verified",
         "identity": identity, "purpose": purpose, "numeric_job_id": numeric_job_id,
+        **observations,
         "result_branch": p["result_branch"], **result,
         "source_closure_sha256": release["source_closure_sha256"], "archive_sha256": t.sha(payload),
         "archive_bytes": len(payload), "outer_manifest_sha256": t.sha(files[t.manifest_path(purpose)]),
@@ -790,7 +858,7 @@ def run_once(env, event, release, payload, api, raw_get, receipt_directory, obse
 
 
 def disabled_publication_release():
-    return {"schema": "k1-asr18-publication-control-v1", "enabled": False,
+    return {"schema": "k1-asr18-publication-control-v2", "claim_admission_mode": "git-owner-v2", "enabled": False,
         "root_publication_release": False, "independent_source_review": False,
         "same_repository_ephemeral_token_only": True, "source_branch": t.POLICY["source_branch"],
         "result_branch": t.POLICY["result_branch"], "workflow": t.POLICY["workflow"],
@@ -801,6 +869,10 @@ def disabled_publication_release():
 
 def _publication_scope(control):
     fixed = disabled_publication_release()
+    if type(control) is dict and control.get("schema") == "k1-asr18-publication-control-v1":
+        fixed = {key: value for key, value in fixed.items() if key != "claim_admission_mode"}
+        fixed["schema"] = "k1-asr18-publication-control-v1"
+        fixed.update({key: t.LEGACY_POLICY[key] for key in ("source_branch", "result_branch", "workflow")})
     approvals = ("enabled", "root_publication_release", "independent_source_review")
     t.require(type(control) is dict and set(control) == set(fixed), "fixed publication control fields")
     t.require(all(type(control[k]) is type(v) and control[k] == v for k, v in fixed.items() if k not in approvals),
@@ -814,7 +886,7 @@ def _publication_scope(control):
 
 def publication_gate(control):
     _publication_scope(control)
-    if not all(control[key] is True for key in ("enabled", "root_publication_release", "independent_source_review")):
+    if control["schema"] != "k1-asr18-publication-control-v2" or not all(control[key] is True for key in ("enabled", "root_publication_release", "independent_source_review")):
         raise PublicationDisabled("ASR18 publication disabled or review absent")
 
 
@@ -853,7 +925,7 @@ def _source_timestamp(event, head):
     return stamp
 
 
-def validate_transfer_workflow(raw, control=None):
+def validate_transfer_workflow(raw, control=None, *, admission_control=None):
     """Fixed workflow inspection, not a permissive general YAML interpreter.
 
     The scientific 70-minute baseline remains bound by historical proofs. The
@@ -875,28 +947,50 @@ def validate_transfer_workflow(raw, control=None):
         and re.findall(r"(?m)^    timeout-minutes:.*$", head) == ["    timeout-minutes: 80"],
         "effective current workflow job timeout eighty minutes")
     blocks = re.split(r"(?m)(?=^      - )", steps)
+    bound = (admission_control is not None or
+        type(control) is dict and control.get("schema") == "k1-asr18-publication-control-v2" or
+        "      - name: Reserve fixed campaign owner without models\n" in steps)
+    if admission_control is not None:
+        c.validate_claim_control(admission_control)
     expected = (
         ("      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1", 2),
-        ("      - name: K1 punctuation6 ASR18 offline source contracts", 5),
+        ("      - name: K1 punctuation6 ASR18 offline source contracts", 4 if bound else 5),
+        *(((("      - name: Reserve fixed campaign owner without models", 1),)) if bound else ()) ,
         ("      - name: Admit complete new input and run fixed ASR18 once", 61),
         ("      - name: Publish complete audio-free bounded evidence", 11),
     )
-    t.require(blocks[0] == "" and len(blocks) == len(expected) + 1 and text.count("timeout-minutes") == 5,
+    t.require(blocks[0] == "" and len(blocks) == len(expected) + 1 and text.count("timeout-minutes") == len(expected) + 1,
         "exact fixed bounded workflow step roster")
     for block, (first, minutes) in zip(blocks[1:], expected):
         t.require(block.splitlines()[0] == first and re.findall(r"(?m)^        timeout-minutes:.*$", block)
             == ["        timeout-minutes: " + str(minutes)], "fixed checkout contracts host publisher step timeouts")
+    if bound:
+        issuer, host, publisher = blocks[3:6]
+        issuer_lines = issuer.splitlines()
+        t.require(issuer_lines == [
+            "      - name: Reserve fixed campaign owner without models", "        id: campaign_claim",
+            "        if: ${{ success() && steps.asr18_contracts.outcome == 'success' && github.run_number == 1 && github.run_attempt == 1 }}",
+            "        timeout-minutes: 1", "        env:", "          GITHUB_TOKEN: ${{ github.token }}",
+            "        run: |", "          python3 -I -B research/k1-punctuation6-asr18-v1/claim_admission.py"],
+            "one isolated fixed claim issuer invocation and token scope")
+        t.require("        if: ${{ success() && steps.asr18_contracts.outcome == 'success' && steps.campaign_claim.outcome == 'success' && steps.campaign_claim.outputs.ready == 'true' }}" in host.splitlines(),
+            "host requires durable issuer readiness")
+        t.require("GITHUB_TOKEN" not in head + blocks[1] + blocks[2] + host
+            and text.count("          GITHUB_TOKEN: ${{ github.token }}") == 2
+            and publisher.count("          GITHUB_TOKEN: ${{ github.token }}") == 1,
+            "token only in isolated issuer and publisher")
     t.require(sum(minutes for _, minutes in expected) == 79 < c.EFFECTIVE_EXECUTION_ENVELOPE["workflow_minutes"]
         and TIMEOUT == c.EFFECTIVE_EXECUTION_ENVELOPE["publisher_seconds"] == 600 < 11 * 60
         and c.LIMITS["host_seconds"] == c.EFFECTIVE_EXECUTION_ENVELOPE["host_seconds"] == 3600 < 61 * 60,
         "separate host publisher and workflow timeout margins")
 
 
-def _validate_workflow_transfer_scope():
-    actual = c.read_bytes(ROOT / t.POLICY["workflow"], cap=256 * 1024)
+def _validate_workflow_transfer_scope(execution=None, admission_control=None):
+    workflow=t.POLICY["workflow"] if execution is None else execution["workflow"]
+    actual = c.read_bytes(ROOT / workflow, cap=256 * 1024)
     template = c.read_bytes(HERE / "workflow.yml", cap=256 * 1024)
     t.require(actual == template, "exact actual workflow and template bytes")
-    validate_transfer_workflow(actual)
+    validate_transfer_workflow(actual, admission_control=admission_control)
 
 
 def bound_release(env, event, observer=None):
@@ -908,7 +1002,11 @@ def bound_release(env, event, observer=None):
     """
     _observe(observer, "source_release")
     publication_gate(c.read_json(HERE / "publication-release.json", cap=65536))
-    execution = c.read_json(HERE / "execution-release.json", cap=65536)
+    execution_raw = c.read_bytes(HERE / "execution-release.json", cap=65536)
+    execution = t.decode(execution_raw)
+    control_raw = c.read_bytes(HERE / "claim-admission-control.json", cap=65536)
+    admission_control = c.require_claim_admission(execution, control_raw)
+    c.require_current_scope(admission_control)
     freeze_raw = c.read_bytes(HERE / "execution-freeze.json", cap=8 * 1024 ** 2)
     freeze = t.decode(freeze_raw)
     expected = env.get("KWS_SOURCE_FREEZE_SHA256")
@@ -922,7 +1020,7 @@ def bound_release(env, event, observer=None):
     tree = _source_git("rev-parse", "HEAD^{tree}")
     t.require(head == env.get("GITHUB_SHA") and t.HEAD.fullmatch(head) and t.HEAD.fullmatch(tree), "actual clean executed Git source")
     _observe(observer, "source_freeze")
-    _validate_workflow_transfer_scope()
+    _validate_workflow_transfer_scope(execution, admission_control)
     import prepare_freeze
     t.require(Path(prepare_freeze.__file__).resolve() == HERE / "prepare_freeze.py", "fixed source-freeze builder")
     t.require(t.canonical(prepare_freeze.build(ROOT)) == freeze_raw, "all exact executed source closure bytes")
@@ -930,7 +1028,10 @@ def bound_release(env, event, observer=None):
     # Bind the push timestamp to the exact local commit instant, never a clock
     # or remote-server timestamp, and keep the fixed final UTC release contract.
     stamp = _source_timestamp(event, head)
-    release = {"schema": "k1-asr18-publisher-bound-release-v1", "purpose": t.PURPOSE,
+    release = {"schema": "k1-asr18-publisher-bound-release-v2", "purpose": t.PURPOSE,
+        "claim_admission_mode": "git-owner-v2", "execution_release_sha256": t.sha(execution_raw),
+        "claim_admission_control_sha256": t.sha(control_raw),
+        "source_branch": execution["source_ref"], "workflow": execution["workflow"], "result_branch": execution["evidence_ref"],
         "source_sha": head, "source_tree": tree, "source_closure_sha256": expected,
         "prior_claim_history_sha256": execution["prior_public_claim_history_sha256"], "commit_timestamp": stamp}
     validate_release(release)
@@ -957,6 +1058,7 @@ def main(argv=None):
         observer.attach(run_identity, Path(env["RUNNER_TEMP"]))
         _observe(observer, "package_read")
         payload = t.read_package(Path(env["RUNNER_TEMP"]), run_identity)
+        t.validate_archive(payload, run_identity)
         # The worker never sees this token. Only the separate reviewed Actions
         # publisher step receives the same-repository short-lived GITHUB_TOKEN.
         _observe(observer, "token_admission")
