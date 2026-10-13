@@ -428,15 +428,14 @@ class CheckpointTests(unittest.TestCase):
             with self.assertRaises(ValueError): api('POST', p.BASE + '/git/' + noun, value, expected=201)
         self.assertEqual(api.count, 0); self.assertFalse(self.wire.calls)
 
-    def test_actual_local_controls_match_exact_active_publication_scope(self):
+    def test_actual_local_controls_match_exact_closed_publication_scope(self):
         value = t.decode((HERE / 'publication-release.json').read_bytes())
-        expected = p.disabled_publication_release()
-        for key in ('enabled', 'root_publication_release', 'independent_source_review'):
-            expected[key] = True
-        self.assertEqual(value, expected)
-        p.publication_gate(value)
+        self.assertEqual(value, p.disabled_publication_release())
+        with self.assertRaises(p.PublicationDisabled):p.publication_gate(value)
         execution = t.decode((HERE / 'execution-release.json').read_bytes())
-        self.assertTrue(all(execution[key] is True for key in p.c.RELEASE_APPROVALS))
+        self.assertTrue(all(execution[key] is False for key in p.c.RELEASE_APPROVALS
+            if key != 'historical_screening_reviewed'))
+        self.assertIs(execution['historical_screening_reviewed'], True)
         self.assertEqual(value['source_branch'], 'research/k1-punctuation6-asr18-r3')
         self.assertEqual(value['result_branch'], 'evidence/k1-punctuation6-asr18-r3')
         self.assertFalse(self.wire.calls)
@@ -444,7 +443,11 @@ class CheckpointTests(unittest.TestCase):
     def test_explicit_false_publication_approvals_reject_before_wire_operations(self):
         original = (HERE / 'publication-release.json').read_bytes()
         for key in ('enabled', 'root_publication_release', 'independent_source_review'):
-            value = t.decode(original); value[key] = False
+            # Explicit isolated positive control; reject each approval independently.
+            value = t.decode(original)
+            for approval in ('enabled', 'root_publication_release', 'independent_source_review'):
+                value[approval] = True
+            value[key] = False
             with self.subTest(key=key), tempfile.TemporaryDirectory() as temp:
                 control = Path(temp) / 'publication-release.json'
                 control.write_bytes(t.canonical(value))
