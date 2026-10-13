@@ -1,0 +1,46 @@
+name: K1 evidence transfer hosted qualification v1
+on:
+  push:
+    branches:
+      - research/k1-hosted-transfer-checkpoint-v1
+      - research/k1-hosted-transfer-recovery-v1
+permissions:
+  contents: read
+concurrency:
+  group: k1-evidence-transfer-qualification-v1
+  cancel-in-progress: false
+jobs:
+  transfer_qualification:
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && (github.ref == 'refs/heads/research/k1-hosted-transfer-checkpoint-v1' || github.ref == 'refs/heads/research/k1-hosted-transfer-recovery-v1') && github.event.created == true && github.event.deleted == false && github.event.forced == false && github.event.repository.private == false && github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Fixed zero-model transfer contracts
+        id: contracts
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          python3 -I -S -B research/k1-evidence-transfer-qualification-v1/test_qualification.py
+          python3 -I -S -B -O research/k1-evidence-transfer-qualification-v1/test_qualification.py
+          python3 -I -S -B -OO research/k1-evidence-transfer-qualification-v1/test_qualification.py
+      - name: Fixed public fixture transfer only
+        id: transfer
+        if: ${{ success() && steps.contracts.outcome == 'success' }}
+        timeout-minutes: 11
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          export KWS_TRANSFER_SOURCE_FREEZE_SHA256="$(env -i PATH=/usr/bin:/bin HOME=/nonexistent GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 LC_ALL=C sh -eu -c 'git --no-optional-locks -c core.fsmonitor=false -c core.hooksPath=/dev/null show "$1:research/k1-evidence-transfer-qualification-v1/source-freeze.json" | sha256sum | cut -d " " -f 1' sh "$GITHUB_SHA")"
+          python3 -I -B research/k1-evidence-transfer-qualification-v1/qualification.py
+      # The first phase intentionally fails only after complete checkpoint verification.
+      # No model, Artifact, cache, payload log, dispatch, rerun or permissions expansion.

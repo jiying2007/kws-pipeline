@@ -28,6 +28,10 @@ LIMITS = {'clips': 6, 'campaign_slots': 18, 'old_calls_allowed': 0, 'new_starts'
     'host_seconds': 3600, 'workflow_minutes': 70,
     'cpu_threshold_seconds': {'setup': 3600, 'qwen06': 600, 'sensevoice': 600, 'whisper': 1800},
     'cpu_total_threshold_seconds': 6600, 'cpu_poll_seconds': 0.2, 'kill_command_seconds': 5}
+# LIMITS.workflow_minutes is the exact historical scientific admission baseline.
+# The separate publication-only window gives the current job its effective total.
+EFFECTIVE_EXECUTION_ENVELOPE = {'workflow_minutes': 80, 'publisher_seconds': 600, 'host_seconds': 3600}
+SCIENTIFIC_LIMITS_SCOPE = 'original_prepare_scientific_admission_baseline'
 BOUNDARY = {'scope': EXPERIMENT, 'training_admitted': False, 'human_gold': False,
     'shipping_approved': False, 'acoustic_verbatim_completeness': 'unknown'}
 SHA = re.compile(r'[0-9a-f]{64}\Z')

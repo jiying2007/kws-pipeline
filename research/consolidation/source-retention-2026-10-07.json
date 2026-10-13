@@ -15253,387 +15253,388 @@
     {
       "path": ".github/workflows/acoustic-boundary-segmentation.yml",
       "mode": "100644",
-      "git_blob_sha1": "f7e659bff283fc49da39c17d28d9005abfeab330",
+      "bytes": 9010,
       "sha256": "6a37608043e03937fa46260d61a5dd807dad38c56df6a776d9ad261b242dc089",
-      "bytes": 9010
+      "git_blob_sha1": "f7e659bff283fc49da39c17d28d9005abfeab330"
     },
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 44535,
-      "sha256": "99fcf173885a50b86a351b610a0ecb36e50f3d8e8d060b9d1060932f7054b1e3",
-      "git_blob_sha1": "0d33afd0575fdb19c849c05d5c8ea2f6c5da2dc6"
+      "bytes": 45197,
+      "sha256": "d9216af85975cc292b6d52e24f7a16745e77c2dffb2f76bf58792cf559f8271f",
+      "git_blob_sha1": "c7b71e31ad1672fa743c21263a7d943514625da2"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
       "mode": "100644",
-      "git_blob_sha1": "e3ff7412135c661e8159363ff1612002b55c0dd4",
+      "bytes": 8555,
       "sha256": "973101add617d9a584b8ca2b266bf525d4715ad5a186a41f6b550e9af891e54c",
-      "bytes": 8555
+      "git_blob_sha1": "e3ff7412135c661e8159363ff1612002b55c0dd4"
     },
     {
       "path": ".github/workflows/decoder-boundary-requalification.yml",
       "mode": "100644",
-      "git_blob_sha1": "99eac834cc8737a237d3b8cf5f3025c72bbd627f",
+      "bytes": 12417,
       "sha256": "0f195ca8237d78a4f79849deb4c457162a9f1d5f50417d1d474eb60d5a3fc8f1",
-      "bytes": 12417
+      "git_blob_sha1": "99eac834cc8737a237d3b8cf5f3025c72bbd627f"
     },
     {
       "path": ".github/workflows/decoder-boundary-separability.yml",
       "mode": "100644",
-      "git_blob_sha1": "758d106802b1f13155a1fcf761fd968ae8353367",
+      "bytes": 9046,
       "sha256": "df627697d915972501bb528af873296c359a05d6d8eab060d31ce6d57bc5b63f",
-      "bytes": 9046
+      "git_blob_sha1": "758d106802b1f13155a1fcf761fd968ae8353367"
     },
     {
       "path": ".github/workflows/deployment-release.yml",
       "mode": "100644",
-      "git_blob_sha1": "8d913de0be1c408f19c512af19d1aa61f8974010",
+      "bytes": 18908,
       "sha256": "3cd63debcd6ba2ccc1b1f6761f0e6b9e9dde71362b60f09666d27ed04c76b4d3",
-      "bytes": 18908
+      "git_blob_sha1": "8d913de0be1c408f19c512af19d1aa61f8974010"
     },
     {
       "path": ".github/workflows/experiment-quality-guards.yml",
       "mode": "100644",
-      "git_blob_sha1": "8ed245655eca703543563e6382cb212ea95b6ef8",
+      "bytes": 2555,
       "sha256": "3c2c64bad335b31a5d22624f84055a8dc52eed83aaaf152698d2d2e60c131920",
-      "bytes": 2555
+      "git_blob_sha1": "8ed245655eca703543563e6382cb212ea95b6ef8"
     },
     {
       "path": ".github/workflows/far-nightly.yml",
       "mode": "100644",
-      "git_blob_sha1": "6ce40d434372460dc0f7060cc8612dfce77c41db",
+      "bytes": 13500,
       "sha256": "e60172d69e24e1e8ada780c912e20ce097dc14196551de57934850dff5beaf8a",
-      "bytes": 13500
+      "git_blob_sha1": "6ce40d434372460dc0f7060cc8612dfce77c41db"
     },
     {
       "path": ".github/workflows/frozen-far-source-replay.yml",
       "mode": "100644",
-      "git_blob_sha1": "958233cd273564e22928acf6107381320c746776",
+      "bytes": 20470,
       "sha256": "bca1406b1c57a0fac40331a5c3535316129e6fe958cc8e03f6604a5429fae839",
-      "bytes": 20470
+      "git_blob_sha1": "958233cd273564e22928acf6107381320c746776"
     },
     {
       "path": ".github/workflows/github-hosted-resource-probe.yml",
       "mode": "100644",
-      "git_blob_sha1": "0f6778fa9f8a55c5bd8c9e219cdaf05a36c7a5b2",
+      "bytes": 13154,
       "sha256": "b6bb538d9ff51240ff54602e3b4ad9c81d0dffbd126e7fa1c6088f5f872b6a14",
-      "bytes": 13154
+      "git_blob_sha1": "0f6778fa9f8a55c5bd8c9e219cdaf05a36c7a5b2"
     },
     {
       "path": ".github/workflows/k1-fixed-slot-math.yml",
       "mode": "100644",
-      "git_blob_sha1": "ecbd1a9a70281120e3aa44872c42d85ab66bd611",
+      "bytes": 1391,
       "sha256": "86e40d74698431884dee7b167a729d10ac53dfba48e745be60df38e5d4ea2896",
-      "bytes": 1391
+      "git_blob_sha1": "ecbd1a9a70281120e3aa44872c42d85ab66bd611"
     },
     {
       "path": ".github/workflows/kws-landing-status.yml",
       "mode": "100644",
-      "git_blob_sha1": "97833b44ad2d01f0b98490fd8642f6b967ad2aa2",
+      "bytes": 2134,
       "sha256": "cebe23b9d0fd5992dd3aaa22b9ca61c60454a318d76533d1c621a486820c435a",
-      "bytes": 2134
+      "git_blob_sha1": "97833b44ad2d01f0b98490fd8642f6b967ad2aa2"
     },
     {
       "path": ".github/workflows/model-family-resource-contract.yml",
       "mode": "100644",
       "bytes": 2667,
-      "git_blob_sha1": "b43d837d6cdd4faadc2f9754b6079100b1ac9441",
-      "sha256": "419ec0f21bf2754f4c3c7500d1b3e74c6a4bdff09189c26fb594927433716db8"
+      "sha256": "419ec0f21bf2754f4c3c7500d1b3e74c6a4bdff09189c26fb594927433716db8",
+      "git_blob_sha1": "b43d837d6cdd4faadc2f9754b6079100b1ac9441"
     },
     {
       "path": ".github/workflows/model-promotion.yml",
       "mode": "100644",
       "bytes": 13177,
-      "git_blob_sha1": "b551452f1baa827ef3a4947f0f84e0446d2b5dcd",
-      "sha256": "ba0eaa7ceeac336a1edb68344ae031cb164612dce6d94a8587f1ef964e59bc91"
+      "sha256": "ba0eaa7ceeac336a1edb68344ae031cb164612dce6d94a8587f1ef964e59bc91",
+      "git_blob_sha1": "b551452f1baa827ef3a4947f0f84e0446d2b5dcd"
     },
     {
       "path": ".github/workflows/model-registry-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "7a9c87aabe3bf7017085be11b463059887cc4c7f",
+      "bytes": 3190,
       "sha256": "62d85777eda3188f97075c67b4f22c46cd52ef5bf02d979935d97ac33d8ddb9f",
-      "bytes": 3190
+      "git_blob_sha1": "7a9c87aabe3bf7017085be11b463059887cc4c7f"
     },
     {
       "path": ".github/workflows/model-training-preflight.yml",
       "mode": "100644",
-      "git_blob_sha1": "3d2e6121f4b64104b1e9e9fdfb847bdfa30c17f2",
+      "bytes": 16061,
       "sha256": "ec6ff044f922bcbe6d7ea3838ebcd496df09ea35b62bc5d1394ea9a387c3183f",
-      "bytes": 16061
+      "git_blob_sha1": "3d2e6121f4b64104b1e9e9fdfb847bdfa30c17f2"
     },
     {
       "path": ".github/workflows/model-training.yml",
       "mode": "100644",
-      "git_blob_sha1": "e444bc88070a21a3b650f7f15a3501a842040ea4",
+      "bytes": 13945,
       "sha256": "6e15d45973875b7b05e8f55bfeca5c07da1f4765814e92182334c1d0501e5834",
-      "bytes": 13945
+      "git_blob_sha1": "e444bc88070a21a3b650f7f15a3501a842040ea4"
     },
     {
       "path": ".github/workflows/native-a20-quality-tools.yml",
       "mode": "100644",
-      "git_blob_sha1": "a5ff424679ba72b6ec025a7c2d4ab39492d58355",
+      "bytes": 1355,
       "sha256": "768bee0c5d499a375e75596a50f84fd103fe2c3fffbc02664706453d03d6ae42",
-      "bytes": 1355
+      "git_blob_sha1": "a5ff424679ba72b6ec025a7c2d4ab39492d58355"
     },
     {
       "path": ".github/workflows/product-development-experiment.yml",
       "mode": "100644",
-      "git_blob_sha1": "0e192eeffcbb46ff1b49e9f47ccee5b3650e19d3",
+      "bytes": 35404,
       "sha256": "ef11d02f986f6db7b00d94ae8c23ea8f4f24e93c3da5c0d09e1809d60b0b38b6",
-      "bytes": 35404
+      "git_blob_sha1": "0e192eeffcbb46ff1b49e9f47ccee5b3650e19d3"
     },
     {
       "path": ".github/workflows/product-development-pair-analysis.yml",
       "mode": "100644",
-      "git_blob_sha1": "3f646cf1c3c48a4925162374b96f43c70ad54f49",
+      "bytes": 4456,
       "sha256": "227af540dd4f54233e8a7d9235edbf63c4cdb4a8cc6969ed2b3265e0518949ed",
-      "bytes": 4456
+      "git_blob_sha1": "3f646cf1c3c48a4925162374b96f43c70ad54f49"
     },
     {
       "path": ".github/workflows/product-development-paired-experiment.yml",
       "mode": "100644",
-      "git_blob_sha1": "9f9a2376bd55d7e6aba7de5d791c6a270ff3fb96",
+      "bytes": 16063,
       "sha256": "a744849d0a3ae45e6858b89caff247dcf70d301c6b76f75ff4229ff2b9e3faa4",
-      "bytes": 16063
+      "git_blob_sha1": "9f9a2376bd55d7e6aba7de5d791c6a270ff3fb96"
     },
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
       "bytes": 28189,
-      "git_blob_sha1": "cc8ad60322b17f1c8aeb88855ca4f2d432dc8491",
-      "sha256": "4c4f80d261c0fb71a8890ac45bb3f7f4385b0eb8dae848b333ff7daa10412a9b"
+      "sha256": "4c4f80d261c0fb71a8890ac45bb3f7f4385b0eb8dae848b333ff7daa10412a9b",
+      "git_blob_sha1": "cc8ad60322b17f1c8aeb88855ca4f2d432dc8491"
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
       "mode": "100644",
-      "git_blob_sha1": "409fa360592fe7e6d6865287063f80b6bbf449f7",
+      "bytes": 14973,
       "sha256": "82a1b7de2b9837240f0564eb22274a7e8cdc9e6ffdcd123724c15d3489d5f33d",
-      "bytes": 14973
+      "git_blob_sha1": "409fa360592fe7e6d6865287063f80b6bbf449f7"
     },
     {
       "path": ".github/workflows/release.yml",
       "mode": "100644",
-      "git_blob_sha1": "ff808152fd3a947d323f865f4e4bad101419eed1",
+      "bytes": 16901,
       "sha256": "57e9059fce5d6d4069679be97cc4f35af9621caadff23509545be4fedfa7cf39",
-      "bytes": 16901
+      "git_blob_sha1": "ff808152fd3a947d323f865f4e4bad101419eed1"
     },
     {
       "path": ".github/workflows/repository-cleanup.yml",
       "mode": "100644",
-      "bytes": 18101,
-      "sha256": "7e3464f7378f810de3bb0c986c6e15f0e9e06a6564f863bd35133a1d2070df23",
-      "git_blob_sha1": "a5ef1a72ce6c9db63169710cb551e7afeefa1968"
+      "bytes": 18191,
+      "sha256": "f2c57bd1ec587b01c55176cf579e270e600ddf892bfaad716128070aec7fce55",
+      "git_blob_sha1": "84ae8cad67a2e6cc590c0e2ef076826c67721ad8"
     },
     {
       "path": ".github/workflows/research-arm-runtime.yml",
       "mode": "100644",
-      "git_blob_sha1": "a76b39e1f50942d63f358a3944cb19e359dc5ad8",
+      "bytes": 996,
       "sha256": "5b3df899bcf50c6d7e534b4be44b277791c099328b996df846a39a4f2be12ae2",
-      "bytes": 996
+      "git_blob_sha1": "a76b39e1f50942d63f358a3944cb19e359dc5ad8"
     },
     {
       "path": ".github/workflows/research-asr-evidence.yml",
       "mode": "100644",
-      "git_blob_sha1": "b96b6ae8e4d5e345dccc2f51c4965ec63124f1da",
+      "bytes": 1037,
       "sha256": "746683227221f4917b73d4783f0ce792bebcbecfd7ae83379d99ec72b720a0f5",
-      "bytes": 1037
+      "git_blob_sha1": "b96b6ae8e4d5e345dccc2f51c4965ec63124f1da"
     },
     {
       "path": ".github/workflows/research-consolidation.yml",
       "mode": "100644",
-      "git_blob_sha1": "78f7fa38913cc1b7f5df2a91ed82b7f499572721",
+      "bytes": 840,
       "sha256": "0ee5f1b9d037d308654aea822069631bc586d789126d5b4b0594dd26f7975eff",
-      "bytes": 840
+      "git_blob_sha1": "78f7fa38913cc1b7f5df2a91ed82b7f499572721"
     },
     {
       "path": ".github/workflows/research-donor-fbank.yml",
       "mode": "100644",
-      "git_blob_sha1": "f672261c99f8a16c7abef085d8872f03254176d9",
+      "bytes": 3696,
       "sha256": "27267a2658bc1c1ed7c36782f99a108a6e9733589b559531d02839c0e8358c69",
-      "bytes": 3696
+      "git_blob_sha1": "f672261c99f8a16c7abef085d8872f03254176d9"
     },
     {
       "path": ".github/workflows/research-donor-fsmn.yml",
       "mode": "100644",
-      "git_blob_sha1": "cc54faaf2c12b6b9d2570abc1e9ae2b357fa94eb",
+      "bytes": 1705,
       "sha256": "79ebc9c2f9935fbb06bf59d80e72d1bccd49edbc3ac0a4fcdd55fe3e0b2dbf80",
-      "bytes": 1705
+      "git_blob_sha1": "cc54faaf2c12b6b9d2570abc1e9ae2b357fa94eb"
     },
     {
       "path": ".github/workflows/research-native-a20.yml",
       "mode": "100644",
       "bytes": 3635,
-      "git_blob_sha1": "1c504623407b6e0c46e83bd62d7479ce081b1daa",
-      "sha256": "29476f609f896158d20c27ab1be5e87403ff6e1aa659deb7f877ee13addedd32"
+      "sha256": "29476f609f896158d20c27ab1be5e87403ff6e1aa659deb7f877ee13addedd32",
+      "git_blob_sha1": "1c504623407b6e0c46e83bd62d7479ce081b1daa"
     },
     {
       "path": ".github/workflows/research-sherpa-host.yml",
       "mode": "100644",
-      "git_blob_sha1": "4501ea147d1fed3a4c77df2083b2123a15a38337",
+      "bytes": 973,
       "sha256": "c7abe51344e301039e5854008d6434d885fdc218858e470f521e2ae236024ebd",
-      "bytes": 973
+      "git_blob_sha1": "4501ea147d1fed3a4c77df2083b2123a15a38337"
     },
     {
       "path": ".github/workflows/research-sherpa-pcm.yml",
       "mode": "100644",
-      "git_blob_sha1": "20aaee5cac8cb75ce68fa66b61b065568ef46d75",
+      "bytes": 1054,
       "sha256": "77fe083c0fddeb7c06c00e59ca08ac530bf53d0b3b7c016c2a11989337120760",
-      "bytes": 1054
+      "git_blob_sha1": "20aaee5cac8cb75ce68fa66b61b065568ef46d75"
     },
     {
       "path": ".github/workflows/retained-ctc-keyword-competition-gradient.yml",
       "mode": "100644",
-      "git_blob_sha1": "3a77c0b3a2791d36c3806b26901353abe627f030",
+      "bytes": 9891,
       "sha256": "1e995aa218c64a8e58c77b51955a054b0810c9b11b322ed4fb643b68c9f72eeb",
-      "bytes": 9891
+      "git_blob_sha1": "3a77c0b3a2791d36c3806b26901353abe627f030"
     },
     {
       "path": ".github/workflows/retained-ctc-label-prior-gradient.yml",
       "mode": "100644",
-      "git_blob_sha1": "008b9526e292f85b9da25d78c6f444737b781854",
+      "bytes": 8965,
       "sha256": "633c83438c5c1bc3e9725908fe6fb7acdbc0efbeb94bc154aaa77bb8890fc333",
-      "bytes": 8965
+      "git_blob_sha1": "008b9526e292f85b9da25d78c6f444737b781854"
     },
     {
       "path": ".github/workflows/retained-ctc-token-state-blank-gradient.yml",
       "mode": "100644",
-      "git_blob_sha1": "bea9fdc76cf9beeca5249ce50bae2612f3599ea7",
+      "bytes": 9092,
       "sha256": "276ed42f84911d0f22f9e1b976add9c4df8b2ebe5762d9abe75bcc252b9b2391",
-      "bytes": 9092
+      "git_blob_sha1": "bea9fdc76cf9beeca5249ce50bae2612f3599ea7"
     },
     {
       "path": ".github/workflows/retained-decoder-search-path-decomposition.yml",
       "mode": "100644",
-      "git_blob_sha1": "d98310c1486c02b25b304ff849b13dcd91ad5eae",
+      "bytes": 13120,
       "sha256": "201955494cff930a528f1dd27dc2cd59928a1b214d611853bc3658b32f4ee96a",
-      "bytes": 13120
+      "git_blob_sha1": "d98310c1486c02b25b304ff849b13dcd91ad5eae"
     },
     {
       "path": ".github/workflows/retained-frozen-far-context-path-summary.yml",
       "mode": "100644",
-      "git_blob_sha1": "81dbbb8e74df1b97d608ff459c735c3fcf69aa28",
+      "bytes": 5319,
       "sha256": "1f6431df5bdfe11e0df433e0379b9b3fde62c683d8469cb58fd27a99ad089a1a",
-      "bytes": 5319
+      "git_blob_sha1": "81dbbb8e74df1b97d608ff459c735c3fcf69aa28"
     },
     {
       "path": ".github/workflows/retained-full-speech-objective-gradient.yml",
       "mode": "100644",
-      "git_blob_sha1": "682a192d9b8594afed73703d99a0cac3c7fae383",
+      "bytes": 10226,
       "sha256": "1cd750aa3d269baab4311f49a84829e96d8b79401119e72d5b718cc4e90810e3",
-      "bytes": 10226
+      "git_blob_sha1": "682a192d9b8594afed73703d99a0cac3c7fae383"
     },
     {
       "path": ".github/workflows/retained-sequence-margin-runtime-gap-decomposition.yml",
       "mode": "100644",
-      "git_blob_sha1": "fcf52f8f7a3285e89862142d9b29afc98a83bf10",
+      "bytes": 9408,
       "sha256": "495a7b728e997fb7efa3ca3d3387699cd8cc7b11f5e3f78d0c8fe5af0831bb2f",
-      "bytes": 9408
+      "git_blob_sha1": "fcf52f8f7a3285e89862142d9b29afc98a83bf10"
     },
     {
       "path": ".github/workflows/shipping-approval.yml",
       "mode": "100644",
-      "git_blob_sha1": "37c6838173feb9d15d945a3e1139727d26f174d1",
+      "bytes": 16583,
       "sha256": "255fb744b388ce32a372c2d72478c2ffdbe67627d730d81e83935d26e4fa2648",
-      "bytes": 16583
+      "git_blob_sha1": "37c6838173feb9d15d945a3e1139727d26f174d1"
     },
     {
       "path": ".github/workflows/speech-like-base-index-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "dfc9e17936cb8a65defa8acf104cc4836aad73f7",
+      "bytes": 6703,
       "sha256": "a61a399bf51d00516f5ea4972b13d0dde825e8d6bbcecb2e6c43e5d549cf9060",
-      "bytes": 6703
+      "git_blob_sha1": "dfc9e17936cb8a65defa8acf104cc4836aad73f7"
     },
     {
       "path": ".github/workflows/speech-like-command-provider-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "f4499cdebdc406884c6b6e3524b94195d0005043",
+      "bytes": 8954,
       "sha256": "b72bc40e692a8e6d2054752cb3052846b9b7752fdee16ba79f8a45dd6b000413",
-      "bytes": 8954
+      "git_blob_sha1": "f4499cdebdc406884c6b6e3524b94195d0005043"
     },
     {
       "path": ".github/workflows/speech-like-corpus-generation-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "9327db5ee8f27951eb93c8e8d04628bc5bbc56fa",
+      "bytes": 17590,
       "sha256": "8a0990d9f9446486fd81316ef62e177dd3afd13fc670c32b3ac021e45917e0a5",
-      "bytes": 17590
+      "git_blob_sha1": "9327db5ee8f27951eb93c8e8d04628bc5bbc56fa"
     },
     {
       "path": ".github/workflows/speech-like-corpus-plan-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "d5a7f4f4e111301f90b74cee96d4bb249ec79444",
+      "bytes": 11835,
       "sha256": "53f657113c919d8829792065946ad44d0f9b6a0e8c5bab74e7b1fd58c4d84d93",
-      "bytes": 11835
+      "git_blob_sha1": "d5a7f4f4e111301f90b74cee96d4bb249ec79444"
     },
     {
       "path": ".github/workflows/speech-like-external-base-bundle-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "c14f609a8fc5d898ecc7cb79a64796bb626aa6ae",
+      "bytes": 7687,
       "sha256": "d6fdb0d57b9026519c02c3d4997286c9ec50cd0ce34c5224cd6ed42cb0fbe591",
-      "bytes": 7687
+      "git_blob_sha1": "c14f609a8fc5d898ecc7cb79a64796bb626aa6ae"
     },
     {
       "path": ".github/workflows/speech-like-label-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "98ed1c19346d87240febe06d15e38384f4f01a08",
+      "bytes": 5381,
       "sha256": "c0b3f4b928ac59d28f912f921e2f853db64d202e6cf0254cdb9021d782dbe146",
-      "bytes": 5381
+      "git_blob_sha1": "98ed1c19346d87240febe06d15e38384f4f01a08"
     },
     {
       "path": ".github/workflows/speech-like-provider-materialization-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "aa64b718450998373f4c97d7903c78638099c6af",
+      "bytes": 34783,
       "sha256": "37e48dfd8abc8c730c64c33b9220524ccfa3c8aa3edeb7424e71e6bb1f221507",
-      "bytes": 34783
+      "git_blob_sha1": "aa64b718450998373f4c97d7903c78638099c6af"
     },
     {
       "path": ".github/workflows/speech-like-stage-a-bootstrap-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "a04ed9fd3630aec0c28df956c0fb17a126ee04aa",
+      "bytes": 20071,
       "sha256": "1f671b58df277c3f64e17317c5e53637cce6e49e0e2bdcd72da0708e05d7a4ff",
-      "bytes": 20071
+      "git_blob_sha1": "a04ed9fd3630aec0c28df956c0fb17a126ee04aa"
     },
     {
       "path": ".github/workflows/speech-like-synthetic-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "e0ed70d323ff675b44fcef681590631e3b28806c",
+      "bytes": 6787,
       "sha256": "5364e25d901de2123be7eb84750c89f5d5b14070420faff564df4e5415270d2e",
-      "bytes": 6787
+      "git_blob_sha1": "e0ed70d323ff675b44fcef681590631e3b28806c"
     },
     {
       "path": ".github/workflows/target-cohort-promotion.yml",
       "mode": "100644",
-      "git_blob_sha1": "f5474e96339b3a0a996dd96c86c79eceb2878522",
+      "bytes": 10505,
       "sha256": "6d83eace1ed35937d9073677de8da100e8d2ae3b56a1c36cd4da3910de6af18d",
-      "bytes": 10505
+      "git_blob_sha1": "f5474e96339b3a0a996dd96c86c79eceb2878522"
     },
     {
       "path": ".github/workflows/target-dut-qualification.yml",
       "mode": "100644",
-      "git_blob_sha1": "bbf3b8ad4c349873e3e623aca41d5244dfc0e696",
+      "bytes": 11666,
       "sha256": "c4ce46581d6681856ce72e3b7bf629db9ed9a6af65f66accca7bc1890f58855b",
-      "bytes": 11666
+      "git_blob_sha1": "bbf3b8ad4c349873e3e623aca41d5244dfc0e696"
     },
     {
       "path": ".github/workflows/training-audit-closure.yml",
       "mode": "100644",
-      "git_blob_sha1": "993319a679c5823592dbd6fb3b5edea104b39aa8",
+      "bytes": 3011,
       "sha256": "64f33a545a3ebda433cc54ae0f4fad7416256aa8a81024018a9afbab0c846724",
-      "bytes": 3011
+      "git_blob_sha1": "993319a679c5823592dbd6fb3b5edea104b39aa8"
     },
     {
       "path": ".github/workflows/training-integration.yml",
       "mode": "100644",
-      "git_blob_sha1": "6c82340bc9a18f35deb72229bcf3fa62496f9ea5",
+      "bytes": 4582,
       "sha256": "7ada549a0b8c83d5c421c479b74b05b4b82ab129863f82e95bc8dd5a766b67b3",
-      "bytes": 4582
+      "git_blob_sha1": "6c82340bc9a18f35deb72229bcf3fa62496f9ea5"
     }
   ],
   "allowed_new_active_workflows": [
     ".github/workflows/research-source-consolidation.yml",
     ".github/workflows/qwen12-native-admission-v1.yml",
     ".github/workflows/k1-punctuation6-asr18-v1.yml",
-    ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml"
+    ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml",
+    ".github/workflows/k1-evidence-transfer-qualification-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -22954,15 +22955,498 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-13",
+      "operation_id": "k1-checkpoint-transfer-hosted-qualification-v1",
+      "public_main_base_commit": "276e56062b8d9eeac11ea93348a792b6bd008c8c",
+      "public_main_base_tree": "3e9e1617e0210cce80854c9ddcfb926b7d35d9a2",
+      "workflow_source_changed": true,
+      "scope": "Bounded same-repository checkpoint readback before final evidence ref; one globally limited same-blob reconciliation; disabled ASR transfer-only recovery; a separate fixed synthetic hosted qualification first phase. All model/prepare execution flags remain false.",
+      "rationale": "A complete retained ref plus original byte readback is required before preservation is established. Unknown/incomplete uploads remain unpreserved. Old failed runs and missing ASR-r2 bodies remain sealed. Normal strict source/native/input gates and all 47 scientific members are unchanged. ASR job total80 minutes only accommodates independent publisher600 seconds; model host3600 seconds, engine/slot/resource limits do not increase. First synthetic qualification phase intentionally exits after checkpoint readback; recovery remains disabled/null until actual checkpoint and producer terminal pin. No Artifact, payload logging, new credential or permission scope.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 44535,
+            "sha256": "99fcf173885a50b86a351b610a0ecb36e50f3d8e8d060b9d1060932f7054b1e3",
+            "git_blob_sha1": "0d33afd0575fdb19c849c05d5c8ea2f6c5da2dc6"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 45197,
+            "sha256": "d9216af85975cc292b6d52e24f7a16745e77c2dffb2f76bf58792cf559f8271f",
+            "git_blob_sha1": "c7b71e31ad1672fa743c21263a7d943514625da2"
+          }
+        },
+        {
+          "path": ".github/workflows/k1-evidence-transfer-qualification-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/k1-evidence-transfer-qualification-v1.yml",
+            "mode": "100644",
+            "bytes": 2421,
+            "sha256": "0a0f5b24b917962b644fb4fc6aaa67decbc70d347f9bc1b8edd63091d2cb04df",
+            "git_blob_sha1": "77bd8f58ac862d4c36807722f8407202ff181fa6"
+          }
+        },
+        {
+          "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+          "before": {
+            "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+            "mode": "100644",
+            "bytes": 2969,
+            "sha256": "4f063b32d6aad5d472d4e3b6d19cfc7a4908e72e8294e970693606f8c8e08844",
+            "git_blob_sha1": "84306944efcbd125aaa99713b62a1646f1f09ced"
+          },
+          "after": {
+            "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+            "mode": "100644",
+            "bytes": 3110,
+            "sha256": "148a311e48b1c0f0cd193819fc442cd1f878dbcaa561d93c897f0c79af2b6389",
+            "git_blob_sha1": "0b6bd1f1e968472203e13493055d5b51461409b4"
+          }
+        },
+        {
+          "path": ".github/workflows/repository-cleanup.yml",
+          "before": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "bytes": 18101,
+            "sha256": "7e3464f7378f810de3bb0c986c6e15f0e9e06a6564f863bd35133a1d2070df23",
+            "git_blob_sha1": "a5ef1a72ce6c9db63169710cb551e7afeefa1968"
+          },
+          "after": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "bytes": 18191,
+            "sha256": "f2c57bd1ec587b01c55176cf579e270e600ddf892bfaad716128070aec7fce55",
+            "git_blob_sha1": "84ae8cad67a2e6cc590c0e2ef076826c67721ad8"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_ci_structure.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 38508,
+            "sha256": "5362852e31a1f47f122da74ca95ee27979162ea87e8c579237dced864ea5fd7e",
+            "git_blob_sha1": "7c9f026a57a7f06dbd6d9cb165bdc5d3d15e0577"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 42717,
+            "sha256": "d26c41d7be5b9ceb38686a29eb606c610dcd3e035ab25740bc0cba34892e7843",
+            "git_blob_sha1": "5e9aa702ab67ef3e20224673020c1307a9a1401e"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 30779,
+            "sha256": "be41a6fc620b4753e6b7390d7a098a3f0796eb4e24c4c9bc05748b83eefd3333",
+            "git_blob_sha1": "1aa6b401fb849d2e5e5d393f3fffd79d80f4942b"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 32597,
+            "sha256": "8a015bf6dc5921b1adac3398c69ed8eff5e5f58e6bc94598380aedac09fa2dea",
+            "git_blob_sha1": "5901ee1a3299e57b03d511c08b6a80c8e1584016"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_cleanup_retention.py",
+          "before": {
+            "path": "research/consolidation/tests/test_cleanup_retention.py",
+            "mode": "100644",
+            "bytes": 14793,
+            "sha256": "be1e7210a4bd9b0f54667232bab32c61307f2d6b7356864defdb5287dac25de9",
+            "git_blob_sha1": "826d418b9a2e7aee9114eb5eb4947bfd151bf06c"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_cleanup_retention.py",
+            "mode": "100644",
+            "bytes": 15433,
+            "sha256": "6a23b06b0cad2b50689ce54c01ab3a10e5e47cefff71e097577caf11d60f7c57",
+            "git_blob_sha1": "46b75438c0a4ded0e09344a286a3c6ffa492cc49"
+          }
+        },
+        {
+          "path": "research/k1-evidence-transfer-qualification-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/k1-evidence-transfer-qualification-v1/README.md",
+            "mode": "100644",
+            "bytes": 8476,
+            "sha256": "b2e4b11fe77dbc8f52eb1642f66c82713aad5a71cb9e385ce3d20f9402420b21",
+            "git_blob_sha1": "f66cbca49080754c09cdd0ab4e754ca49caa2b55"
+          }
+        },
+        {
+          "path": "research/k1-evidence-transfer-qualification-v1/fixture-lock.json",
+          "before": null,
+          "after": {
+            "path": "research/k1-evidence-transfer-qualification-v1/fixture-lock.json",
+            "mode": "100644",
+            "bytes": 5942,
+            "sha256": "46e92337af77bcaf1e4a4c6970d5cf16a085071110af4b357c445b73622a43b1",
+            "git_blob_sha1": "7dc0639758ad5fd3b9abe3e2c2b60455020de9fe"
+          }
+        },
+        {
+          "path": "research/k1-evidence-transfer-qualification-v1/qualification-control.json",
+          "before": null,
+          "after": {
+            "path": "research/k1-evidence-transfer-qualification-v1/qualification-control.json",
+            "mode": "100644",
+            "bytes": 517,
+            "sha256": "96025b8d61a6bc2abb8b79b276c9329498a86c31be4d624127057b489ee38544",
+            "git_blob_sha1": "d1a7c35cc2006ad698046863b170386379abd755"
+          }
+        },
+        {
+          "path": "research/k1-evidence-transfer-qualification-v1/qualification.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-evidence-transfer-qualification-v1/qualification.py",
+            "mode": "100644",
+            "bytes": 35422,
+            "sha256": "4330b3bdaa9482be513fbd2e9d5026874dc88e601fbfe5fbdcf722fce3b6289a",
+            "git_blob_sha1": "97b76783f24a894b3e889bee1f95ecdc1cbb8f33"
+          }
+        },
+        {
+          "path": "research/k1-evidence-transfer-qualification-v1/source-freeze.json",
+          "before": null,
+          "after": {
+            "path": "research/k1-evidence-transfer-qualification-v1/source-freeze.json",
+            "mode": "100644",
+            "bytes": 2168,
+            "sha256": "5b8140497bf39390de89e3312cdca69fb9a2fdfff7a6eb19a72c36deebe2c112",
+            "git_blob_sha1": "a4b75df37986834625eb9080266b10df0e0dfa8e"
+          }
+        },
+        {
+          "path": "research/k1-evidence-transfer-qualification-v1/source_authority.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-evidence-transfer-qualification-v1/source_authority.py",
+            "mode": "100644",
+            "bytes": 2011,
+            "sha256": "eff7ef4d10d16943468ac1081042f5e0d8c6d073cf97467f49a79312bd1db7a9",
+            "git_blob_sha1": "d7f931d52329902f64df2a016d285c7a9a20d31c"
+          }
+        },
+        {
+          "path": "research/k1-evidence-transfer-qualification-v1/test_qualification.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-evidence-transfer-qualification-v1/test_qualification.py",
+            "mode": "100644",
+            "bytes": 34309,
+            "sha256": "75556f0acbbab2e88c51ade38d6d03fa6b78b43c53b22c2430ec296fd82c3cb2",
+            "git_blob_sha1": "78e302215a091de218f31dc4042bb3913395ba63"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/IMPLEMENTATION.md",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/IMPLEMENTATION.md",
+            "mode": "100644",
+            "bytes": 21701,
+            "sha256": "8da4eb06f29d0d86e506eeb514e5fb17ed8732458861ef65724ebb901f9b558b",
+            "git_blob_sha1": "28d9093b3ca171362489ef26a27e229c2c7d8a56"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/IMPLEMENTATION.md",
+            "mode": "100644",
+            "bytes": 26075,
+            "sha256": "e7e98d545226b8bca3cf72825db595cbaacd22a7007165a704edfcea72a992c6",
+            "git_blob_sha1": "f6fa57de9d1e2a29fdd591b870b3799278bc53b6"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/campaign_contract.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/campaign_contract.py",
+            "mode": "100644",
+            "bytes": 23069,
+            "sha256": "8de0aa1ee695ef491d2ad45122e1d4bf648ce02aba667ec24522eb33ecca3240",
+            "git_blob_sha1": "185a8d8fa6ba54a302a499e79afdaa2e15e926a0"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/campaign_contract.py",
+            "mode": "100644",
+            "bytes": 23411,
+            "sha256": "c86c3e84375f6c662bdf1b9ab04dad7adbf901781cec6e18c312a97ef6a5b05b",
+            "git_blob_sha1": "153687d140b74abf60be9281fd9fc11eb3989500"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/evidence_publisher.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/evidence_publisher.py",
+            "mode": "100644",
+            "bytes": 40818,
+            "sha256": "bcaa400a5487d856e1bf89dd46d3d9bc2f5d652d6d7bd5bff39b8a3ef789042c",
+            "git_blob_sha1": "58b162b53d601f0dceff02d9e023e0147f136a55"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/evidence_publisher.py",
+            "mode": "100644",
+            "bytes": 62182,
+            "sha256": "da971b8c83162b1514177d0af4d4404638016b3625af478cedef50dba61cc86d",
+            "git_blob_sha1": "953becdda2c9d5a2e63e6ce1491c81d427c68659"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 32554,
+            "sha256": "b40a1c84e1ebac952fa6d0c19d3251324b6fe7440e93e771600066d0c8b4ab7b",
+            "git_blob_sha1": "b0142490b11a050833f74b121ee9f6f55087224a"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 32860,
+            "sha256": "310147b40db0a1d6aaad8c3f3ef66c1e43656b5519089aaa833abac70f0c7549",
+            "git_blob_sha1": "36ee5c74db845eda0a73b92fb6793c68b34e1617"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/failure_observer.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/failure_observer.py",
+            "mode": "100644",
+            "bytes": 22768,
+            "sha256": "15760dea8db1762ece2e2ccee7a494d0f46d6f5672f177d0142946a599bfae28",
+            "git_blob_sha1": "eb873045609c9eb27b0600f156da40684b2f0869"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/failure_observer.py",
+            "mode": "100644",
+            "bytes": 22851,
+            "sha256": "01673d6c80a795074704329e96ed5ef67195130b5dbff537159e7574dc29710a",
+            "git_blob_sha1": "24d5ad1d3e1e6301ae91117c9ae2735b7357bf73"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/hosted_run.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/hosted_run.py",
+            "mode": "100644",
+            "bytes": 63528,
+            "sha256": "dcf2ea9940aa485af65c497deec356665e5a1b220d2edea5e4734aa798d6e171",
+            "git_blob_sha1": "84451a438768cdff82530c4507f1be6a21c8afa3"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/hosted_run.py",
+            "mode": "100644",
+            "bytes": 64178,
+            "sha256": "7045e007ef9de7eca9d34eefb9aceb28de94fbf8e9c0d2438139e8502c87a041",
+            "git_blob_sha1": "0fb4453bf61452a5480598023f7f842cb0a4e161"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/prepare_freeze.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/prepare_freeze.py",
+            "mode": "100644",
+            "bytes": 8438,
+            "sha256": "40e2b29d369688eb6edcad057c52f036fe94ad45b86a728554d466a7d47e70e1",
+            "git_blob_sha1": "c477df9c5b642b8a9dc4a7568b726086a0fc9c24"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/prepare_freeze.py",
+            "mode": "100644",
+            "bytes": 8500,
+            "sha256": "fe18a00c30b3c6aa4f9519248c247c10bfe2ec49d7d8f9aeaa1864aee2a76476",
+            "git_blob_sha1": "9e83c1e9b4936750016415516e27eb493808983f"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/publication-release.json",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/publication-release.json",
+            "mode": "100644",
+            "bytes": 394,
+            "sha256": "3e79786320adb58b7c20b79edeabbb1795f43045120d1b4ed13a030590188b67",
+            "git_blob_sha1": "2bb57bf39dd6b1d512e89be038fedbcc1f693252"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/publication-release.json",
+            "mode": "100644",
+            "bytes": 562,
+            "sha256": "18fcf6ead92c113233705a1bc818f2bdd831983040c6a0cfdba43c2300f3c16e",
+            "git_blob_sha1": "5c2ccbc0514f5a647b2172aabe2cc427f3195b3b"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+            "mode": "100644",
+            "bytes": 58137,
+            "sha256": "4f7ddd15383810443006dd063a90bc27115975b28fe36ccaf8322bfbc5efa747",
+            "git_blob_sha1": "b0b2bacb44707de3c5489af666a1df0dd2d9df49"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+            "mode": "100644",
+            "bytes": 59827,
+            "sha256": "69ca2ead424d6aae0919b86ac35b2deeea044e96453a9593f2bfae5158934a7a",
+            "git_blob_sha1": "36806fd7fa47d6d06ba950499bfb9a6f6a24dc19"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+            "mode": "100644",
+            "bytes": 98491,
+            "sha256": "5ab845961f525d269ffe8e78e2ea51d53c178f7439e539accbd2e0035fedc217",
+            "git_blob_sha1": "bf93169b3bd57148e67a05a8a9defb0c24b43da2"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+            "mode": "100644",
+            "bytes": 98859,
+            "sha256": "f4e4db869f4660206372ff7339ed028e944bc8d5b6df075f20222a694192a247",
+            "git_blob_sha1": "face695b54f2aa339c91184e40f073985cdba436"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_publisher_checkpoint.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_publisher_checkpoint.py",
+            "mode": "100644",
+            "bytes": 40146,
+            "sha256": "aa8debd789de25e587df49ab929f07d3e516d21832560d53cfb6d79f9a44dd01",
+            "git_blob_sha1": "24724421a8a1b8fbb3029c951b3468bd4ea620e0"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_publisher_observation.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_publisher_observation.py",
+            "mode": "100644",
+            "bytes": 17350,
+            "sha256": "c6d49ea171b04e8f7c9aaa2614f943939c02a227dea0f18f7d04e253d609d424",
+            "git_blob_sha1": "63579403740e4f3ddaa68c63c3c3e15a68fc6011"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_publisher_observation.py",
+            "mode": "100644",
+            "bytes": 17350,
+            "sha256": "32438977cf63b9da42316b4aef3c2580999908a8cbe2d7af77398655070eac1e",
+            "git_blob_sha1": "4437e4d9cec4fb86db8ae05a35d92360de8c3e7e"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_transfer_recovery.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_transfer_recovery.py",
+            "mode": "100644",
+            "bytes": 23842,
+            "sha256": "595b061008a8e67e8c30eb1e7ce43d3868f96fde4279034e2ef55fb2f83761b0",
+            "git_blob_sha1": "1cf89622dac2bcf28835ba3d8a5ed18056e4744b"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/transfer-recovery-release.json",
+          "before": null,
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/transfer-recovery-release.json",
+            "mode": "100644",
+            "bytes": 482,
+            "sha256": "7f3dc25275a4743ffd6c0f2860f6967015cb3439f899fac69c1120859511853c",
+            "git_blob_sha1": "b2021a328959eca2311eb868cb8e63eba5fe5457"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/transfer_recovery.py",
+          "before": null,
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/transfer_recovery.py",
+            "mode": "100644",
+            "bytes": 23031,
+            "sha256": "ffa4f4057fb6620a99e161b98bbc72b99721fbe318dc3c4b76968f0e513cf1e9",
+            "git_blob_sha1": "e4abe73d19d5d352d956bdec6bd5bffc1b577e4b"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/workflow.yml",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 2969,
+            "sha256": "4f063b32d6aad5d472d4e3b6d19cfc7a4908e72e8294e970693606f8c8e08844",
+            "git_blob_sha1": "84306944efcbd125aaa99713b62a1646f1f09ced"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 3110,
+            "sha256": "148a311e48b1c0f0cd193819fc442cd1f878dbcaa561d93c897f0c79af2b6389",
+            "git_blob_sha1": "0b6bd1f1e968472203e13493055d5b51461409b4"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json",
+            "mode": "100644",
+            "bytes": 42503,
+            "sha256": "3221d5f48ba81ce2e92d9ad4f25026c93d7286f31e4b2d527325e43194f0a363",
+            "git_blob_sha1": "b29f2476094074e84d4b0d2784153fb9a6c2cf18"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json",
+            "mode": "100644",
+            "bytes": 42809,
+            "sha256": "e2f0693c4a7c59a4cd94f287dccdfa22818ad9b1840eaaae42a822ce1d08b87a",
+            "git_blob_sha1": "0a979f113e8e9b063dd1c4a07da5001a4c8d874f"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 13924,
+            "sha256": "59a28719590e9b79eb6c852836b1f0e3922a23143bb914b0c887b6261637c3bc",
+            "git_blob_sha1": "1d6f4ad69a89df1c0fec886d05ccce83bcefd333"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 14003,
+            "sha256": "f1caa116ac25fcf233584fb7d30041867469c3a177c835576088cbebca1f0eaa",
+            "git_blob_sha1": "b24f7c82b363a2ca003cf17c842f6342497aab29"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
     {
       "path": ".github/workflows/research-source-consolidation.yml",
       "mode": "100644",
-      "git_blob_sha1": "c14276804ed442e73ca7f2e3ad5e906992f30f94",
+      "bytes": 3719,
       "sha256": "49681bf1a17017f958bda4f2949cb20d1c724d2add2dc70bc6fc45cff54cfcdb",
-      "bytes": 3719
+      "git_blob_sha1": "c14276804ed442e73ca7f2e3ad5e906992f30f94"
     },
     {
       "path": ".github/workflows/qwen12-native-admission-v1.yml",
@@ -22974,9 +23458,9 @@
     {
       "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
       "mode": "100644",
-      "bytes": 2969,
-      "sha256": "4f063b32d6aad5d472d4e3b6d19cfc7a4908e72e8294e970693606f8c8e08844",
-      "git_blob_sha1": "84306944efcbd125aaa99713b62a1646f1f09ced"
+      "bytes": 3110,
+      "sha256": "148a311e48b1c0f0cd193819fc442cd1f878dbcaa561d93c897f0c79af2b6389",
+      "git_blob_sha1": "0b6bd1f1e968472203e13493055d5b51461409b4"
     },
     {
       "path": ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml",
@@ -22984,6 +23468,13 @@
       "bytes": 2871,
       "sha256": "37516a899d95b688d4d75b297fa02f3e0b98b05a2a4c4e73ab58b72b83cec9df",
       "git_blob_sha1": "9e85399ae28a14b0012c6e88ae0b4d3e101c3d3b"
+    },
+    {
+      "path": ".github/workflows/k1-evidence-transfer-qualification-v1.yml",
+      "mode": "100644",
+      "bytes": 2421,
+      "sha256": "0a0f5b24b917962b644fb4fc6aaa67decbc70d347f9bc1b8edd63091d2cb04df",
+      "git_blob_sha1": "77bd8f58ac862d4c36807722f8407202ff181fa6"
     }
   ],
   "current_source_revision": {

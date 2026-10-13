@@ -480,6 +480,28 @@ class HostTests(unittest.TestCase):
         self.assertTrue(payload.startswith(b'PK'))
         t.validate_archive(payload,run)
 
+    def test_public_receipt_separates_scientific_baseline_and_effective_window(self):
+        files,run=public_fixture(); host=json.loads(files['host-receipt.json'])
+        self.assertEqual(host['limits']['workflow_minutes'],70)
+        self.assertEqual(host['limits_scope'],c.SCIENTIFIC_LIMITS_SCOPE)
+        self.assertEqual(host['effective_execution_envelope'],
+            {'workflow_minutes':80,'publisher_seconds':600,'host_seconds':3600})
+        self.assertTrue(h.validate_public_evidence(files,run))
+        for kind in ('missing_scope','wrong_scope','missing_effective','baseline_as_effective',
+                     'publisher_expanded','host_expanded','bool_minutes','extra_effective'):
+            value=json.loads(files['host-receipt.json'])
+            if kind=='missing_scope':value.pop('limits_scope')
+            elif kind=='wrong_scope':value['limits_scope']='current_execution_budget'
+            elif kind=='missing_effective':value.pop('effective_execution_envelope')
+            elif kind=='baseline_as_effective':value['effective_execution_envelope']['workflow_minutes']=70
+            elif kind=='publisher_expanded':value['effective_execution_envelope']['publisher_seconds']=601
+            elif kind=='host_expanded':value['effective_execution_envelope']['host_seconds']=3601
+            elif kind=='bool_minutes':value['effective_execution_envelope']['workflow_minutes']=True
+            else:value['effective_execution_envelope']['extra']=1
+            altered=dict(files);altered['host-receipt.json']=c.canonical(value)
+            with self.subTest(kind=kind),self.assertRaises((ValueError,KeyError)):
+                h.validate_public_evidence(altered,run)
+
     def test_extra_host_private_field_or_omitted_row_block_archive(self):
         for kind in ('extra','missing_row','forged_complete','claimed_success'):
             files,run=public_fixture()
@@ -518,7 +540,7 @@ class HostTests(unittest.TestCase):
 
     def test_fixed_candidate_workflow_matches_reviewed_template(self):
         text=(HERE/'workflow.yml').read_text()
-        self.assertIn('timeout-minutes: 70',text);self.assertIn('persist-credentials: false',text)
+        self.assertIn('timeout-minutes: 80',text);self.assertIn('persist-credentials: false',text)
         self.assertEqual(text.count('GITHUB_TOKEN:'),1)
         for value in ('workflow_dispatch:','schedule:','pull_request:','upload-artifact','self-hosted'):self.assertNotIn(value,text)
         self.assertEqual(c.read_bytes(h.ROOT/h.WORKFLOW),c.read_bytes(HERE/'workflow.yml'))

@@ -222,7 +222,7 @@ class CIContracts(unittest.TestCase):
 
 ASR18_MODULES = (
     'test_asr18_binding', 'test_asr18_contract', 'test_asr18_prerequisite', 'test_asr18_entrypoints',
-    'test_asr18_freeze', 'test_asr18_failure_observer', 'test_publisher_observation', 'test_asr18_host', 'test_asr18_metadata',
+    'test_asr18_freeze', 'test_asr18_failure_observer', 'test_publisher_observation', 'test_publisher_checkpoint', 'test_transfer_recovery', 'test_asr18_host', 'test_asr18_metadata',
     'test_asr18_raw_data_reader', 'test_asr18_receipts', 'test_asr18_resources',
     'test_asr18_transport', 'test_asr18_worker',
 )
@@ -339,9 +339,9 @@ class ASR18CIContracts(unittest.TestCase):
         self.check_wiring(self.ci, self.workflow, self.template)
         actual = {p.stem for p in (ROOT / 'research/k1-punctuation6-asr18-v1').iterdir()
                   if p.is_file() and (p.name.startswith('test_asr18_') and p.suffix == '.py'
-                                     or p.name == 'test_publisher_observation.py')}
+                                     or p.name in ('test_publisher_observation.py', 'test_publisher_checkpoint.py', 'test_transfer_recovery.py'))}
         self.assertEqual(actual, set(ASR18_MODULES))
-        self.assertEqual(len(ASR18_MODULES), 14)
+        self.assertEqual(len(ASR18_MODULES), 16)
         for name in ASR18_MODULES:
             self.assertTrue((ROOT / 'research/k1-punctuation6-asr18-v1' / (name + '.py')).is_file())
 
@@ -617,6 +617,47 @@ class PrepareDiagnosticCIContracts(unittest.TestCase):
                     self.assertEqual(output.exists(), fail_at in (0, 4))
                     if output.exists():
                         self.assertEqual(output.read_text(), 'started=true\n')
+
+
+class HostedTransferCIContracts(unittest.TestCase):
+    PATH='.github/workflows/k1-evidence-transfer-qualification-v1.yml'
+    JOB_IF="${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && (github.ref == 'refs/heads/research/k1-hosted-transfer-checkpoint-v1' || github.ref == 'refs/heads/research/k1-hosted-transfer-recovery-v1') && github.event.created == true && github.event.deleted == false && github.event.forced == false && github.event.repository.private == false && github.run_attempt == 1 }}"
+    COMMAND=('set -euo pipefail\n'+''.join('python3 -I -S -B'+mode+' research/k1-evidence-transfer-qualification-v1/test_qualification.py\n' for mode in ('',' -O',' -OO')))
+    def check(self,workflow,ci):
+        self.assertEqual(workflow.split('permissions:',1)[0], 'name: K1 evidence transfer hosted qualification v1\non:\n  push:\n    branches:\n      - research/k1-hosted-transfer-checkpoint-v1\n      - research/k1-hosted-transfer-recovery-v1\n')
+        self.assertEqual(set(jobs(workflow)), {'transfer_qualification'})
+        job=jobs(workflow)['transfer_qualification']
+        self.assertIn('    if: '+self.JOB_IF+'\n',job)
+        for line in ('    runs-on: ubuntu-24.04\n','    timeout-minutes: 18\n','      contents: write\n','      actions: read\n','          persist-credentials: false\n','          fetch-depth: 1\n'):
+            self.assertIn(line,job)
+        self.assertEqual(re.findall(r'uses: ([^\s]+)',job), ['actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'])
+        contracts=named_step(job,'Fixed zero-model transfer contracts')
+        self.assertIn('        id: contracts\n',contracts)
+        self.assertEqual(contract_command(contracts),self.COMMAND)
+        self.assertNotIn('        env:',contracts)
+        transfer=named_step(job,'Fixed public fixture transfer only')
+        self.assertEqual(step_if(transfer),"${{ success() && steps.contracts.outcome == 'success' }}")
+        self.assertIn('        timeout-minutes: 11\n',transfer)
+        self.assertIn('          GITHUB_TOKEN: ${{ github.token }}\n',transfer)
+        self.assertIn('env -i PATH=/usr/bin:/bin HOME=/nonexistent',transfer)
+        self.assertIn('GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null',transfer)
+        self.assertIn('research/k1-evidence-transfer-qualification-v1/source-freeze.json',transfer)
+        self.assertIn('python3 -I -B research/k1-evidence-transfer-qualification-v1/qualification.py\n',transfer)
+        self.assertEqual(workflow.count('GITHUB_TOKEN:'),1)
+        for word in ('workflow_dispatch:', 'workflow_run:', 'continue-on-error:', 'upload-artifact@', 'actions/cache@', 'hosted_run.py', 'prepare_host.py'):
+            self.assertNotIn(word,workflow)
+        shared=jobs(ci)['python-contracts']
+        step=named_step(shared,'Fixed zero-model hosted transfer contracts')
+        self.assertEqual(contract_command(step),self.COMMAND)
+        self.assertNotIn('        if:',step)
+        self.assertIn('"$RUNNER_TEMP/check-tracked-worktree.sh" "Hosted transfer contracts"',shared)
+    def test_fixed_hosted_and_main_pr_offline_wiring(self):
+        self.check((ROOT/self.PATH).read_text(),(ROOT/'.github/workflows/ci.yml').read_text())
+    def test_wrong_ref_permissions_or_missing_test_mode_rejected(self):
+        source=(ROOT/self.PATH).read_text();ci=(ROOT/'.github/workflows/ci.yml').read_text()
+        for old,new in (('research/k1-hosted-transfer-checkpoint-v1','research/k1-hosted-transfer-checkpoint-v2'),('github.run_attempt == 1','github.run_attempt == 2'),('github.event.created == true','github.event.created == false'),('      contents: write','      contents: read'),('persist-credentials: false','persist-credentials: true'),('python3 -I -S -B -OO','python3 -I -S -B'),('env -i PATH=', 'env PATH=')):
+            with self.subTest(change=old),self.assertRaises(AssertionError):self.check(source.replace(old,new),ci)
+        with self.assertRaises(AssertionError):self.check(source,ci.replace('python3 -I -S -B -OO research/k1-evidence-transfer-qualification-v1/test_qualification.py','true'))
 
 if __name__ == '__main__':
     unittest.main()

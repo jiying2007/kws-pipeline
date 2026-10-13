@@ -24,6 +24,7 @@ STAGES = frozenset(('entry','release','arguments','event_read','context','api_pr
     'receipt_directory','publication_started','remote_publish','receipt_write','validate_local_package',
     'verify_actual_run_source','verify_destination_absent','create_blobs','create_tree','create_commit',
     'create_ref','immutable_postpublish_readback','readback_verified',
+    'create_checkpoint_ref','immutable_checkpoint_readback','checkpoint_verified',
     'prepare_qwen06','prepare_sensevoice','prepare_whisper','decode_qwen06','decode_sensevoice','decode_whisper'))
 MAX_RECORD = 16384
 MAX_CHECKPOINTS = 96
