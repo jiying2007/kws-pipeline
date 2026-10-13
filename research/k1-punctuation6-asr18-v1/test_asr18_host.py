@@ -703,15 +703,22 @@ class MockFlowTests(unittest.TestCase):
 
 
 class CompleteSyntheticEndToEnd(unittest.TestCase):
-    def run_case(self,fail_native=False):
-        """Only acquisition/container/model constructors are fakes; archive path is real."""
+    def run_case(self,fail_native=False,*,fixture=None,fail_input=False):
+        """Return fresh synthetic evidence from real native/collector/archive paths.
+
+        Optional fixture binds current public bytes to a computed synthetic Git
+        identity. Resources use original CpuLedger/cleanup writers with fake
+        kernel observations; no model, Docker, network or Git is invoked.
+        """
         import evidence_transport as t
         import native_worker as nw
         import worker_receipts as wr
         from test_asr18_receipts import ReceiptFixture
         from asr_native_fixtures import native_fixture,rebind_native_fixture
         from test_asr18_binding import members_fixture
-        files,run=public_fixture(); freeze=json.loads(files['authority/execution-freeze.json'])
+        files,run=public_fixture() if fixture is None else (fixture['files'],fixture['identity'])
+        tree='d'*40 if fixture is None else fixture['source_tree']
+        freeze=json.loads(files['authority/execution-freeze.json'])
         inp=json.loads(files['input-freeze.json']); release=json.loads(files['source/'+h.NEW+'execution-release.json'])
         preflight=json.loads(files['run-preflight.json'])
         raw,kwargs=setup_binding();verified=verify_screening_receipt(raw,**kwargs)
@@ -722,15 +729,40 @@ class CompleteSyntheticEndToEnd(unittest.TestCase):
             'retries':0,'redirects':0,'extra_source_gets':0,'failed':False,'execution_enabled':False}
         events=[];results=[]
         synthetic=object.__new__(ReceiptFixture);synthetic.captures={};synthetic.configs={}
-        class Docker:
-            def __init__(self,root,deadline):self.root=root;self.deadline=deadline;self.stage='setup'
-            def finish(self):events.append('cleanup')
+        from resource_host import MeteredDocker as OriginalDocker, safe_error
+        class Docker(OriginalDocker):
+            """Invented kernel observations; original CPU/cleanup receipt writers."""
+            def raw(self,*args,timeout=5):
+                if args[0]=='inspect':return '{"Paused":true}'
+                self_test.assertIn(args[0],('pause','rm'))
+                return ''
+            def gate_result(self,name):
+                return {'schema':'qwen12-gated-command-v1','status':'valid',
+                    'exit_code':self.names[name].get('synthetic_exit',0)}
+            def observed_stage(self,family,mode,error=None):
+                suffix='setup' if family=='setup' else family+'-'+mode
+                name=c.EXPERIMENT+'-'+str(run['run_id'])+'-'+suffix
+                self.gate(name)
+                state=self.names[name]
+                state.update(create_attempted=True,created=True,container_id=c.digest(name.encode()),
+                    start_attempted=True,registered=True,reader=lambda:1000,synthetic_exit=int(error is not None))
+                self.ledger.register(name,self.stage,state['reader'])
+                self.remove(name)
+                self.supervisions.append({'name':name,'family':family,'mode':mode,
+                    'status':'complete' if error is None else 'failed','worker_exit_success':error is None,
+                    'primary_error':None if error is None else safe_error(error),'cleanup_error':None,
+                    'wall_seconds':0.0,'gate_result':self.gate_result(name)})
+                r.atomic(self.root/'supervision-receipt.json',
+                    {'schema':'k1-asr18-supervision-v1','stages':self.supervisions})
+            def finish(self):
+                events.append('cleanup');super().finish()
+        self_test=self
         def source_stage(roster,where):
             where.mkdir()
             for name in roster:
                 path=where/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(files['source/'+name])
-        def setup(root,*_args):
-            events.append('setup')
+        def setup(root,freeze,docker,*_args):
+            events.append('setup');docker.observed_stage('setup',None)
             return {'runtimes':{f:root/'synthetic-runtime' for f in c.FAMILIES},'code':root/'synthetic-code',
                 'image':'synthetic-image','seconds':0.0,'asr_body_bytes':0,'whisper':None}
         def construct(family,runtime,inputs,output,job,run_id,head):
@@ -809,37 +841,57 @@ class CompleteSyntheticEndToEnd(unittest.TestCase):
             except BaseException as error:
                 c.write_once(output/'worker-failure.json',{'status':'failed_no_retry','error_type':nw._safe_error_type(error),
                     'diagnostic':nw._failure_diagnostic(error)})
+                docker.observed_stage(family,mode,error)
                 raise
             c.write_once(output/'worker-complete.json',result)
+            docker.observed_stage(family,mode)
+        import resource_host
+        original_recognition_stages=resource_host.recognition_stages
+        def deterministic_stages(*args,**kwargs):
+            return original_recognition_stages(*args,clock=lambda:1000.0,**kwargs)
         # No collect_public, policy, native receipts, budget validator, compressor,
         # archive validator or publication-stash helper is replaced by this test.
         with tempfile.TemporaryDirectory() as temp,patch.object(h,'input_authorities',return_value=(inp,kwargs['actual_authority'])), \
-             patch.object(h,'verify_download',return_value=(bound,data)),patch.object(r,'stage_source',side_effect=source_stage), \
+             patch.object(h,'verify_download',return_value=(bound,data),
+                side_effect=ValueError('synthetic input preflight stop') if fail_input else None), \
+             patch.object(r,'stage_source',side_effect=source_stage), \
              patch.object(r,'setup_runtimes',side_effect=setup),patch.object(r,'supervise',side_effect=supervise), \
              patch('resource_host.MeteredDocker',Docker),patch.object(os,'getuid',return_value=1001), \
              patch.object(h.shutil,'disk_usage',return_value=types.SimpleNamespace(free=12*c.GIB)), \
-             patch.object(h.signal,'signal'),patch.object(h.signal,'setitimer'),patch('builtins.print'):
-            code=h.execute({'RUNNER_TEMP':temp},run,release,freeze,c.digest(c.canonical(freeze)),'d'*40,preflight)
+             patch.object(h.signal,'signal'),patch.object(h.signal,'setitimer'), \
+             patch.object(h.time,'monotonic',return_value=1000.0), \
+             patch.object(resource_host,'recognition_stages',new=deterministic_stages),patch('builtins.print'):
+            code=h.execute({'RUNNER_TEMP':temp},run,release,freeze,c.digest(c.canonical(freeze)),tree,preflight)
             root=Path(temp)/(c.EXPERIMENT+'-123')
             result=c.read_json(root/'host-receipt.json');terminal=c.read_json(root/'terminal-outcomes.json')
             # Surface a fixed diagnostic type if this assertion fails; no model/log text.
-            self.assertEqual(code,int(fail_native),result.get('primary_error'))
+            self.assertEqual(code,int(fail_native or fail_input),result.get('primary_error'))
             self.assertEqual([row['status'] for row in terminal['slots']],
-                ['failed_no_retry']+['not_run']*17 if fail_native else ['complete']*18)
-            proof=c.read_json(root/'policy/budget-proof.json')
-            self.assertEqual(proof['eligible_clip_count'],6);self.assertGreater(proof['worst_fixture_members'],1300)
+                ['not_run']*18 if fail_input else ['failed_no_retry']+['not_run']*17 if fail_native else ['complete']*18)
+            proof=None if fail_input else c.read_json(root/'policy/budget-proof.json')
+            if proof is not None:
+                self.assertEqual(proof['eligible_clip_count'],6);self.assertGreater(proof['worst_fixture_members'],1300)
             payload=t.read_package(temp,run);manifest,header=t.validate_archive(payload,run)
             self.assertEqual(len(manifest['members']),len(h.collect_public(root)))
             self.assertTrue(all(not name.endswith('.wav') for name in manifest['members']))
-            self.assertEqual(sum(name.endswith('/started.json') for name in manifest['members']),1 if fail_native else 18)
-            self.assertEqual(sum(name.endswith('/completed.json') for name in manifest['members']),0 if fail_native else 18)
-            self.assertEqual(sum(name.startswith('frozen/') and name.endswith('/prepared.json') for name in manifest['members']),3)
-            mutated={name:c.read_bytes(root/name) for name in h.collect_public(root)}
-            mutated['frozen/qwen06/worker-failure.json']=c.canonical({'synthetic':'conflicting prepare failure'})
-            with self.assertRaisesRegex(ValueError,'prepare failure'):h.validate_public_evidence(mutated,run)
-        self.assertEqual(sum(item.startswith('synthetic-call:') for item in events),1 if fail_native else 18)
+            self.assertEqual(sum(name.endswith('/started.json') for name in manifest['members']),0 if fail_input else 1 if fail_native else 18)
+            self.assertEqual(sum(name.endswith('/completed.json') for name in manifest['members']),0 if fail_input or fail_native else 18)
+            self.assertEqual(sum(name.startswith('frozen/') and name.endswith('/prepared.json') for name in manifest['members']),0 if fail_input else 3)
+            collected=h.collect_public(root)
+            if not fail_input:
+                mutated={name:c.read_bytes(root/name) for name in collected}
+                mutated['frozen/qwen06/worker-failure.json']=c.canonical({'synthetic':'conflicting prepare failure'})
+                with self.assertRaisesRegex(ValueError,'prepare failure'):h.validate_public_evidence(mutated,run)
+            staged_audio=sorted(path.name for path in (root/'input/audio').glob('*.wav'))
+            self.assertEqual(len(staged_audio),0 if fail_input else 6)
+        self.assertEqual(sum(item.startswith('synthetic-call:') for item in events),0 if fail_input else 1 if fail_native else 18)
         self.assertEqual([item for item in events if item.startswith(('prepare:','decode:'))],
-            [*[f'prepare:{f}' for f in c.FAMILIES],*[f'decode:{f}' for f in (('qwen06',) if fail_native else c.FAMILIES)]])
+            [] if fail_input else [*[f'prepare:{f}' for f in c.FAMILIES],
+                *[f'decode:{f}' for f in (('qwen06',) if fail_native else c.FAMILIES)]])
+        return {'payload':payload,'identity':run,'source_tree':tree,'host':result,
+            'terminal':terminal,'manifest':manifest,'events':events,'staged_wavs':staged_audio,
+            'public_source':{name[7:]:body for name,body in files.items() if name.startswith('source/')},
+            'synthetic':True,'collector_member_count':len(collected),'budget_proof':proof}
 
     def test_real_prepare_proof_fresh18_receipts_and_complete_audiofree_package(self):
         self.run_case()

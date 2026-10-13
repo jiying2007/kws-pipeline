@@ -337,6 +337,26 @@ jobs:
       - name: Verify tracked worktree after Python syntax
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Python syntax"'
 
+  asr-offline-posterior:
+    # Stdlib-only evidence fixtures; never setup, load or run a model.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Read-only ASR evidence acceptance contracts
+        run: |
+          set -euo pipefail
+          posterior_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-asr18-offline-posterior-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(tuple(name[:-3] for name in ("test_asr_posterior.py", "test_offline_custody.py"))); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
+          python3 -I -S -B -c "$posterior_tests"
+          python3 -I -S -B -O -c "$posterior_tests"
+          python3 -I -S -B -OO -c "$posterior_tests"
+          python3 -I -S -B tools/test_inventory.py --root research/k1-asr18-offline-posterior-v1 --workflow .github/workflows/ci.yml
+      - name: Verify unchanged tracked source after offline posterior contracts
+        if: always()
+        run: git diff --exit-code HEAD --
+
   research-sources:
     needs: python-contracts
     if: ${{ needs.python-contracts.outputs.research_required == 'true' }}
