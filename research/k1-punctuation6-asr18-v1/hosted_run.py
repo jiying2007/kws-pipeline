@@ -33,8 +33,8 @@ from campaign_contract import require, canonical, digest, read_json, read_bytes,
 REPOSITORY = 'jiying2007/kws-pipeline'
 NEW = 'research/k1-punctuation6-asr18-v1/'
 WORKFLOW = '.github/workflows/k1-punctuation6-asr18-v1.yml'
-SOURCE_REF = 'research/k1-punctuation6-asr18-r2'
-EVIDENCE_REF = 'evidence/k1-punctuation6-asr18-r2'
+SOURCE_REF = 'research/k1-punctuation6-asr18-r3'
+EVIDENCE_REF = 'evidence/k1-punctuation6-asr18-r3'
 HOST_STAGES = ('admitted', 'input', 'setup', 'prepare', 'policy_freeze', 'capacity_proof', 'decode', 'cleanup', 'package')
 SHARED = frozenset(('prepared.json','run-identity.json','kernel-scope.json','cpu-process-guard.json',
     'blind-job.json','execution-plan.json','progress.json','contract.json','decoder-inputs.json',
@@ -145,6 +145,13 @@ def prior_history_identity():
                 'result_branch': 'evidence/k1-punctuation6-asr18-r1',
                 'run_id': 38219171568, 'run_attempt': 1,
                 'executed_head_sha': '054213c551eb83494b9a4ba8cd6d3ca4c1f488dd',
+                'planned_slots': 18, 'actual_consumed_attempts': None, 'reusable_slots': 0,
+                'status': 'failed_consumption_unknown_sealed'},
+                {'observation': 'frozen_existing_public_failure_observation', 'experiment': 'k1-punctuation6-asr18-r2',
+                'source_branch': 'research/k1-punctuation6-asr18-r2',
+                'result_branch': 'evidence/k1-punctuation6-asr18-r2',
+                'run_id': 38286042984, 'run_attempt': 1,
+                'executed_head_sha': 'd3b7ce54c8909df8e962d8547a546c3d460dcbc8',
                 'planned_slots': 18, 'actual_consumed_attempts': None, 'reusable_slots': 0,
                 'status': 'failed_consumption_unknown_sealed'}]}
 

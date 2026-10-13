@@ -246,15 +246,19 @@ class QualificationTests(unittest.TestCase):
         _, pin, _ = self.recovery()
         q.control_gate(control('recovery', pin), 'recovery')
 
-    def test_checked_in_asr_execution_publication_and_recovery_remain_disabled(self):
+    def test_checked_in_asr_r3_release_is_separate_from_closed_qualification_and_recovery(self):
         for filename, root_flag in (
                 ('execution-release.json', 'root_execution_release'),
                 ('publication-release.json', 'root_publication_release'),
                 ('transfer-recovery-release.json', 'root_transfer_recovery_release')):
             value = q.transport.decode((q.ASR / filename).read_bytes())
             with self.subTest(filename=filename):
+                active_asr = filename != 'transfer-recovery-release.json'
                 for key in ('enabled', 'independent_source_review', root_flag):
-                    self.assertIs(value[key], False)
+                    self.assertIs(value[key], active_asr)
+                if active_asr:
+                    branch = value.get('source_ref', value.get('source_branch'))
+                    self.assertEqual(branch, 'research/k1-punctuation6-asr18-r3')
                 if filename == 'transfer-recovery-release.json':
                     self.assertIsNone(value['authority'])
                     self.assertIs(value['new_native_calls_authorized'], False)
@@ -532,8 +536,22 @@ class QualificationTests(unittest.TestCase):
         with mock.patch.object(q, 'context', return_value=who()), \
              mock.patch.object(q.publisher, '_source_git', return_value='dirty'), \
              mock.patch.object(q.publisher.GitHubAPI, '_initialize', side_effect=AssertionError('token admission')):
-            with self.assertRaisesRegex(ValueError, 'clean source checkout'):
+            # Current ASR-r3 authority never authorizes a qualification job.
+            with self.assertRaisesRegex(ValueError, 'original ASR source remains disabled'):
                 q.source_release(env, {}, 'checkpoint', control())
+            # Explicit disabled control copies expose the separate dirty-source gate.
+            with tempfile.TemporaryDirectory(prefix='qualification-disabled-asr-') as name:
+                asr = Path(name)
+                for filename in ('execution-release.json', 'publication-release.json'):
+                    value = q.transport.decode((q.ASR / filename).read_bytes())
+                    root_flag = ('root_execution_release' if filename == 'execution-release.json'
+                                 else 'root_publication_release')
+                    for key in ('enabled', 'independent_source_review', root_flag):
+                        value[key] = False
+                    (asr / filename).write_bytes(q.transport.canonical(value))
+                with mock.patch.object(q, 'ASR', asr):
+                    with self.assertRaisesRegex(ValueError, 'clean source checkout'):
+                        q.source_release(env, {}, 'checkpoint', control())
 
     def test_raw_two_pass_counter_deadline_and_repeated_reader(self):
         released, api, receipt = self.producer()

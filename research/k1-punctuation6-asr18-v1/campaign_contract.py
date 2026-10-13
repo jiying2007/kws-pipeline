@@ -13,10 +13,11 @@ import stat
 
 import asr18_metadata as metadata
 
-EXPERIMENT = 'k1-punctuation6-asr18-r2'
-SEALED_ASR_RUNS = (38207026177, 38219171568)
+EXPERIMENT = 'k1-punctuation6-asr18-r3'
+SEALED_ASR_RUNS = (38207026177, 38219171568, 38286042984)
 SEALED_ASR_SOURCES = ('0f3cc89a3235c4b3af294dc6b5816ff9877c0f42',
-                      '054213c551eb83494b9a4ba8cd6d3ca4c1f488dd')
+                      '054213c551eb83494b9a4ba8cd6d3ca4c1f488dd',
+                      'd3b7ce54c8909df8e962d8547a546c3d460dcbc8')
 FAMILIES = ('qwen06', 'sensevoice', 'whisper')
 CELLS = metadata.CELLS
 MIB, GIB = 1024 ** 2, 1024 ** 3
@@ -329,8 +330,8 @@ def disabled_release():
     return {'schema': 'k1-asr18-execution-release-v1', 'experiment': EXPERIMENT,
         **{key: False for key in RELEASE_APPROVALS}, **{key: None for key in RELEASE_AUTHORITIES},
         'max_new_asr_calls': 18, 'old_calls_allowed': 0, 'retries': 0, 'run_attempt': 1,
-        'source_ref': 'research/k1-punctuation6-asr18-r2',
-        'evidence_ref': 'evidence/k1-punctuation6-asr18-r2',
+        'source_ref': 'research/k1-punctuation6-asr18-r3',
+        'evidence_ref': 'evidence/k1-punctuation6-asr18-r3',
         'workflow': '.github/workflows/k1-punctuation6-asr18-v1.yml', 'job_key': 'asr18'}
 
 
