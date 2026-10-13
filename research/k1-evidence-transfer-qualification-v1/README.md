@@ -36,11 +36,13 @@ non-forced push, run attempt 1, exact workflow/source SHA and one actual run/job
 are admitted. The workflow's fixed job is `transfer_qualification`. No dispatch,
 schedule, workflow-run trigger, matrix, rerun or branch update is authority.
 
-## Two separately reviewed source phases
+## Completed qualification and closed controls
 
-The checked-in second-phase control disables checkpoint production and enables
-only recovery from the exact static 13-field producer pin. Its canonical pin
-SHA-256 is `8192b7d5d1bd47bd76df3d67f0da1389558f024068a393eeb2f97c7b13a5fb8f`.
+The checked-in closeout control sets `checkpoint_enabled`, `recovery_enabled`,
+`root_transfer_release` and `independent_source_review` to literal `false`.
+Both phases reject before environment/token admission or transport side effects.
+The exact historical 13-field producer pin is retained and independently
+validated even though execution is closed. Its canonical pin SHA-256 is `8192b7d5d1bd47bd76df3d67f0da1389558f024068a393eeb2f97c7b13a5fb8f`.
 The original first-phase source enabled only checkpoint qualification, with
 recovery disabled and a null producer pin. Twelve model, decode, retry, storage
 and credential flags remain literally false. Separate ASR execution, publication
@@ -62,11 +64,48 @@ and deterministic commit timestamp `2026-10-13T02:37:04Z`. The producer reached
 the deliberately injected exit code `86` after verified checkpoint readback;
 its terminal run/job conclusion is and remains `failure`.
 
-This source candidate does not yet have a published recovery source commit or
-actual recovery run/job identity. Those values must come from the separately
-reviewed execution and cannot replace the pinned original producer identity.
-The only admitted archive is the original 5,884,370-byte synthetic fixture with
-SHA-256 `5a75f40a03388dffa6366aa5a39b740582f4b6ea9f36f0d7212d17a1ad8ab901`.
+The completed, separately reviewed public qualification is:
+
+- Original [producer run 38338993274](https://github.com/jiying2007/kws-pipeline/actions/runs/38338993274),
+  [job 115105508103](https://github.com/jiying2007/kws-pipeline/actions/runs/38338993274/job/115105508103),
+  [source c666679327f37a82097626e879322dd4adf79875](https://github.com/jiying2007/kws-pipeline/commit/c666679327f37a82097626e879322dd4adf79875):
+  terminal `failure`, preserving the deliberate exit `86` after complete
+  checkpoint readback. It has not been relabeled as success.
+- Independent [recovery run 38362428620](https://github.com/jiying2007/kws-pipeline/actions/runs/38362428620),
+  [job 115179538442](https://github.com/jiying2007/kws-pipeline/actions/runs/38362428620/job/115179538442),
+  attempt `1`, [source 39ae72215e2a3468407d11dddcb109f62fe4747e](https://github.com/jiying2007/kws-pipeline/commit/39ae72215e2a3468407d11dddcb109f62fe4747e):
+  terminal run/job `success`. Its source tree is
+  `8b6a12489599532f42329ee2e3d453aa2032ee01`; source-freeze SHA-256 is
+  `4e34627200403071a873847d594553fb54beb99e38785b40b99520dc643b8ba0`.
+- Checkpoint and final refs were independently observed at the same immutable
+  [result commit 9ff0777d39aeae8978ce16685da6be9b8364d473](https://github.com/jiying2007/kws-pipeline/commit/9ff0777d39aeae8978ce16685da6be9b8364d473),
+  tree `71511b7be342a022202481bf63c6c8d14a9dd7ac`.
+  The [result manifest and 23 chunks](https://github.com/jiying2007/kws-pipeline/tree/9ff0777d39aeae8978ce16685da6be9b8364d473/evidence/k1-hosted-transfer-qualification-v1)
+  retain the original producer identity and the unchanged 5,884,370-byte
+  synthetic ZIP, SHA-256
+  `5a75f40a03388dffa6366aa5a39b740582f4b6ea9f36f0d7212d17a1ad8ab901`.
+
+The actual recovery writer's runtime receipt reports 17 API requests, 24 raw
+reads and 5,890,510 returned raw-body bytes (manifest plus chunks), with one
+124-byte final-ref POST and no blob creation or retry. This is the writer's
+reported observation, corroborated by the frozen code, successful hosted step
+and unchanged result identity. Per-request writer HTTP telemetry was not
+independently observed or reconstructed. HTTP framing and socket partial bytes
+not returned by the bounded read are outside those reported byte counts.
+
+The independent observer revalidated the existing 24 actual body captures at
+that same immutable result commit, totaling 5,890,510 bytes, with zero new raw
+HTTP requests. These reused body observations are not a second live download
+and do not replace the writer's runtime request counts.
+
+This closes only the fixed pure-fixture transfer qualification. It supplies no
+ASR transcripts, native18 results, KWS quality measurements or recovered lost
+ASR-r2 bytes. No hosted blob-upload timeout or global-network-loss scenario was
+exercised. The known risk before initial checkpoint persistence remains.
+
+## Historical two-phase protocol
+
+The following describes the completed protocol, not a new execution release.
 
 1. Read and verify all 24 original immutable fixture bodies. Using the production
    bounded writer, verify both output refs absent and create the 24 output blobs,
@@ -90,7 +129,8 @@ SHA-256 `5a75f40a03388dffa6366aa5a39b740582f4b6ea9f36f0d7212d17a1ad8ab901`.
    the checkpoint intact.
 
 Source PR/main CI is offline only; it never invokes `qualification.py` as a live
-entry. The new one-use source refs are created only after source review and CI.
+entry. The consumed one-use source refs were created only after source review and CI.
+The closeout grants no new source-ref or execution authority.
 The two phases are independently bounded executions; the review gap is not
 misrepresented as one uninterrupted 600-second deadline.
 
@@ -140,10 +180,12 @@ backup guarantee.
 `python3 -I -S -B research/k1-evidence-transfer-qualification-v1/test_qualification.py`
 runs only invented local service fixtures. Repeat with `-O` and `-OO`. Tests
 exercise the actual shared writer; they do not replace it with a success stub.
-They cover the exact checked-in 13-field producer pin and recovery-only control,
-disabled standalone ASR releases, exact first-phase API/raw counts, a fresh
-recovery with all local file reads forbidden, exact original identity retention,
-final-ref-only writes, explicit temporary disabled-before-token controls, strict
+They cover the exact checked-in 13-field producer pin independently of the
+closed gates, both actual checked-in phases rejecting before environment/token
+or transport side effects, exact source-freeze reproduction, explicit synthetic
+enabled controls, disabled standalone ASR releases, exact first-phase API/raw
+counts, a fresh recovery with all local file reads forbidden, exact original
+identity retention, final-ref-only writes, strict
 source events for both phases, synthetic-ASR rejection,
 corrupt/missing/reordered bytes, substituted identity/hash pins, preexisting refs,
 deadline rejection and checkpoint retention after final failure.

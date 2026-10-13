@@ -201,13 +201,11 @@ class QualificationTests(unittest.TestCase):
         api = FakeAPI(current, 'recovery', old, producer)
         return current, pin, api
 
-    def test_checked_in_source_authority_is_exact_pinned_recovery_only(self):
+    def test_checked_in_source_authority_is_closed_with_exact_original_pin(self):
         value = q.read_json(HERE / 'qualification-control.json')
-        q.control_gate(value, 'recovery')
-        self.assertIs(value['checkpoint_enabled'], False)
-        self.assertIs(value['recovery_enabled'], True)
-        self.assertIs(value['root_transfer_release'], True)
-        self.assertIs(value['independent_source_review'], True)
+        for key in ('checkpoint_enabled', 'recovery_enabled',
+                    'root_transfer_release', 'independent_source_review'):
+            self.assertIs(value[key], False)
         self.assertEqual(len(q.FALSE_FLAGS), 12)
         self.assertTrue(all(value[key] is False for key in q.FALSE_FLAGS))
         expected_pin = {
@@ -231,8 +229,22 @@ class QualificationTests(unittest.TestCase):
         self.assertEqual(value['producer_pin'], expected_pin)
         self.assertEqual(q.digest(q.canonical(value['producer_pin'])),
             '8192b7d5d1bd47bd76df3d67f0da1389558f024068a393eeb2f97c7b13a5fb8f')
-        with self.assertRaises(q.QualificationDisabled):
-            q.control_gate(value, 'checkpoint')
+        # A closed control must not hide a malformed or substituted historic pin.
+        self.assertEqual(q.validate_pin(value['producer_pin']), expected_pin)
+        for phase in ('checkpoint', 'recovery'):
+            with self.subTest(phase=phase), self.assertRaises(q.QualificationDisabled):
+                q.control_gate(value, phase)
+
+    def test_checked_in_source_freeze_rebuilds_exact_bytes(self):
+        self.assertEqual((HERE / 'source-freeze.json').read_bytes(),
+                         q.authority.canonical(q.authority.build(q.ROOT)))
+
+    def test_synthetic_enabled_controls_remain_admissible(self):
+        # Explicit invented controls preserve positive gate coverage; no
+        # checked-in gate is changed or inherited as execution authority.
+        q.control_gate(control('checkpoint'), 'checkpoint')
+        _, pin, _ = self.recovery()
+        q.control_gate(control('recovery', pin), 'recovery')
 
     def test_checked_in_asr_execution_publication_and_recovery_remain_disabled(self):
         for filename, root_flag in (
@@ -281,20 +293,34 @@ class QualificationTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 q.control_gate(value, 'checkpoint')
 
-    def test_disabled_gate_precedes_environment_or_token(self):
-        # Explicit temporary disabled controls exercise both phase histories;
-        # neither inherits live authority from the checked-in recovery source.
-        checkpoint = control(); checkpoint['checkpoint_enabled'] = False
-        recovery = q.read_json(HERE / 'qualification-control.json')
-        recovery['recovery_enabled'] = False
+    def test_checked_in_disabled_gate_precedes_environment_token_and_side_effects(self):
+        # Read the actual checked-in control without a synthetic replacement.
+        # Both source-ref contexts must stop before any environment/token,
+        # event/source admission, timer, transport or phase execution access.
         class NoEnv(dict):
             def get(self, *args):
                 raise AssertionError('environment access while disabled')
             def __contains__(self, key):
                 raise AssertionError('environment access while disabled')
-        for value in (checkpoint, recovery):
-            with self.subTest(pin_present=value['producer_pin'] is not None), \
-                 mock.patch.object(q, 'read_json', return_value=value), mock.patch.object(q.os, 'environ', NoEnv()):
+            def __getitem__(self, key):
+                raise AssertionError('environment access while disabled')
+            def __iter__(self):
+                raise AssertionError('environment access while disabled')
+        for phase in ('checkpoint', 'recovery'):
+            env = NoEnv(GITHUB_REF='refs/heads/' + q.PHASES[phase],
+                        GITHUB_TOKEN='synthetic-never-read')
+            with self.subTest(phase=phase), \
+                 mock.patch.object(q.os, 'environ', env), \
+                 mock.patch.object(q, 'context', side_effect=AssertionError('event admission')), \
+                 mock.patch.object(q, 'source_release', side_effect=AssertionError('source admission')), \
+                 mock.patch.object(q.publisher.c, 'read_bytes', side_effect=AssertionError('event read')), \
+                 mock.patch.object(q.publisher.GitHubAPI, '_initialize', side_effect=AssertionError('token admission')), \
+                 mock.patch.object(q, 'bounded_raw_factory', side_effect=AssertionError('raw factory')), \
+                 mock.patch.object(q, 'checkpoint_phase', side_effect=AssertionError('checkpoint run')), \
+                 mock.patch.object(q, 'recovery_phase', side_effect=AssertionError('recovery run')), \
+                 mock.patch.object(q.signal, 'getitimer', side_effect=AssertionError('timer read')), \
+                 mock.patch.object(q.signal, 'setitimer', side_effect=AssertionError('timer write')), \
+                 mock.patch.object(q.publisher.http.client, 'HTTPSConnection', side_effect=AssertionError('HTTP')):
                 with self.assertRaises(q.QualificationDisabled):
                     q.main([])
 
