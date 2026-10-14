@@ -187,7 +187,8 @@ def verify(root, manifest):
                 '.github/workflows/k1-evidence-transfer-qualification-v1.yml',
                 '.github/workflows/k1-atomic-claim-qualification-v1.yml',
                 '.github/workflows/k1-punctuation6-asr18-r4.yml',
-                '.github/workflows/k1-punctuation6-asr18-r5.yml']
+                '.github/workflows/k1-punctuation6-asr18-r5.yml',
+                '.github/workflows/tts-quality-probe-20261014-v1.yml']
     if additions != approved:
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed additions

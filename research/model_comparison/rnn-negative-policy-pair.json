@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "experiment_id": "rnn64-negative-policy-20261014",
+  "development_only": true,
+  "source_policy": "exact-pr-head-paired-same-runner-v1",
+  "protected_evidence_used": false,
+  "reason": "Same admitted dataset and RNN architecture; change only executable negative sequence-margin policy. Historical known FA replay remains development-only.",
+  "common_overrides": {
+    "train.ctc_primary_policy": "standard-v1"
+  },
+  "variable": {
+    "name": "train.sequence_margin_negative_policy",
+    "control": "sparse-chronological-v1",
+    "treatment": "runtime-executable-v1"
+  }
+}

@@ -1,0 +1,34 @@
+name: TTS quality new campaign resource probes
+on:
+  push:
+    branches: [research/tts-quality-probe-20261014-v1]
+permissions:
+  contents: read
+concurrency:
+  group: tts-quality-probe-20261014-v1
+  cancel-in-progress: false
+jobs:
+  probe:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 && github.run_number == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        engine: [qwen06, qwen17]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Generate one resource probe per engine
+        run: python3 -B research/tts-quality-pilot-v1/run_probe.py '${{ matrix.engine }}'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: tts-quality-probe-${{ matrix.engine }}
+          path: tqp-${{ matrix.engine }}/artifact/
+          retention-days: 14
+          if-no-files-found: error
