@@ -1,0 +1,452 @@
+{
+  "audio_transcripts_models_binaries_included": false,
+  "destination_prefix": "research/alimeeting-continuous-intake-v1/",
+  "file_count": 88,
+  "files": [
+    {
+      "bytes": 13469,
+      "path": "README.md",
+      "sha256": "208e5a614e1067f7ca9660daba35234408c6ddaaf27520cf49de5fb1313601d0"
+    },
+    {
+      "bytes": 8191,
+      "path": "RESULT.md",
+      "sha256": "e359c93613c1cc70a6bee647b0728ea5d174587daca47d2a9299f637d87a576c"
+    },
+    {
+      "bytes": 4335,
+      "path": "PUBLIC-PACKAGE-BOUNDARY.md",
+      "sha256": "88bfe63336dfef52ec7476732a6395c10942e0c5c5968ea0b6c4c9f23b1699d1"
+    },
+    {
+      "bytes": 4620,
+      "path": "source-plan.json",
+      "sha256": "4e39d89b412a86777b5299487dd896a3d6912578d53a387f0739015c9e856538"
+    },
+    {
+      "bytes": 24781,
+      "path": "alimeeting_eval.py",
+      "sha256": "732c589760ddf2940d27c4454372e5f63fed74399ed996209818b6b2dc595eef"
+    },
+    {
+      "bytes": 19319,
+      "path": "test_alimeeting_eval.py",
+      "sha256": "e299f57810f20ec49b7348e01f9dc534695951faf4d0c7c339fc86050c873199"
+    },
+    {
+      "bytes": 11102,
+      "path": "diagnostic_runner.py",
+      "sha256": "05559ec796c55bad33252b7c46f4c4353a43eb9ca93c35da70f10af75a092305"
+    },
+    {
+      "bytes": 2428,
+      "path": "test_diagnostic_runner.py",
+      "sha256": "516be736c5edb9df4d2d71b2720177ef9ab98b1dc5aeb3c269eaa38d2fb6cf20"
+    },
+    {
+      "bytes": 5182,
+      "path": "model-scope-audit.json",
+      "sha256": "528e584b9a2a6f84b8234b095700a52eeaff386d05c3da668c9be15aa47469d2"
+    },
+    {
+      "bytes": 10460,
+      "path": "positive-control-review/review.json",
+      "sha256": "ce43738664c5f9cdbfb0c9ec9efd877252b193dc05363a445de306540934f4dd"
+    },
+    {
+      "bytes": 407,
+      "path": "textgrid-rescan-v5.json",
+      "sha256": "7b2cc010c7f1fc4cc2dee927836fa4bab927eb11cd140503da82df745f51653f"
+    },
+    {
+      "bytes": 1199,
+      "path": "raw/acquisition.json",
+      "sha256": "42a2700339b99b97cad53c4c12a1d2a5dbc496a8004d5c7de59b29c4a487bdb5"
+    },
+    {
+      "bytes": 24004,
+      "path": "audit/audit.json",
+      "sha256": "95b2f7b6abd409fe0a17e597f49a01aa0bbd97f86f4ec807762c609fd5a0aca3"
+    },
+    {
+      "bytes": 3013,
+      "path": "audit/review-template.json",
+      "sha256": "1a833d9642e265a4d6289a5cbf70d12f60d47744a2391a00deeb46366a6ee3f2"
+    },
+    {
+      "bytes": 1390,
+      "path": "audit/reference-candidates.jsonl",
+      "sha256": "2aa9fa46202667a92daf8da70c83b7ce9c8b7fe2edae88ceb1269c04bb59b25d"
+    },
+    {
+      "bytes": 936,
+      "path": "versions/v1/source-plan.json",
+      "sha256": "c5c66069e5e279e582beaac18b167bfc70014991a995f544d9c9bf560a23fae1"
+    },
+    {
+      "bytes": 24753,
+      "path": "versions/v4/alimeeting_eval.py",
+      "sha256": "c68005b0290e48fcb1caa2316943d28a0b94e138a9e417c9b4bc65defa1c854b"
+    },
+    {
+      "bytes": 16860,
+      "path": "overlap/compare_overlap.py",
+      "sha256": "64d3b23e19a4baeed5805028cbf2eedb094b7fae764b370eb606bcd89a09e3bb"
+    },
+    {
+      "bytes": 4764,
+      "path": "overlap/test_compare_overlap.py",
+      "sha256": "d7b3dc179368d71e0ea3252f826fa39fe34f2d77520f14868cfc2d5257eb519a"
+    },
+    {
+      "bytes": 9646,
+      "path": "overlap/summary.json",
+      "sha256": "071cfb80d4f76e70f89ff888c1aa98cd17ae61bdc5c7da7d22cade251679bc44"
+    },
+    {
+      "bytes": 3059,
+      "path": "overlap/alimeeting-overlap-result.json",
+      "sha256": "7ff9a189c3c592948747e96c32e53e86ac5e6c1bc489299a6b1ea5ed79f0c5f4"
+    },
+    {
+      "bytes": 42920,
+      "path": "diagnostic-build/build-receipt.json",
+      "sha256": "78b2988e60a4bf6b875934222fd5e732633ca34de64e470c433e74289f57ac8a"
+    },
+    {
+      "bytes": 15338,
+      "path": "diagnostic-build/build_frozen_runner.py",
+      "sha256": "93a54b6774bd8699572d2fccbf2c349dcb18232b498654532efbe46747622e88"
+    },
+    {
+      "bytes": 1826,
+      "path": "diagnostic-build/receipt-static-validation.json",
+      "sha256": "83cd3b60b5a647b3f3c30e63e86b15ac212644f9d50aba8eb862cd7575280d85"
+    },
+    {
+      "bytes": 1812,
+      "path": "diagnostic-build/build-commands.sh",
+      "sha256": "e3536e9dab76f8067afeae473b73c3cf4f462bc8a8eddacecf81a57cca4fefbe"
+    },
+    {
+      "bytes": 3571,
+      "path": "diagnostic-build/commands.json",
+      "sha256": "8e279ee7c238af3ae467fefe63f9703a8bd00edda68d6c195add888cc7c06142"
+    },
+    {
+      "bytes": 13771,
+      "path": "diagnostic-build/build/compile_commands.json",
+      "sha256": "fa4a2f7f508f81264cf9cf6f97b3ecb4abbf411f2109523e0f76b353238cd28e"
+    },
+    {
+      "bytes": 170,
+      "path": "diagnostic-build/build/CMakeFiles/kws_wav.dir/link.txt",
+      "sha256": "cc94cbb4b8356d2165a3f53a9933c7442d71e97ade3ec746dddea871dfac71fd"
+    },
+    {
+      "bytes": 491,
+      "path": "diagnostic-build/build/generated/kws_build_config.h",
+      "sha256": "cc26c543327e29d1eb85b2b0b4ca8304089b6ecba63a46fa9ec358d100e9fff6"
+    },
+    {
+      "bytes": 9560,
+      "path": "diagnostic-build/build/generated/kws_parameter_limits.h",
+      "sha256": "bd81e6d357487a400b759d49e97ef1aca88ee9e38f83d13c7d8bd075941a32cb"
+    },
+    {
+      "bytes": 164,
+      "path": "diagnostic-build/build/generated/kws_source_revision.h",
+      "sha256": "666e46bb0c9430a820ac1efa4b2af40d836da662d6001c50b2d64aed7cc7a1e1"
+    },
+    {
+      "bytes": 949,
+      "path": "diagnostic-plan/preexecution-p4-final.json",
+      "sha256": "d2f91c7b6e575536e32bff49afe5f62d193e7514ab3ac12e07877d04f28f16b3"
+    },
+    {
+      "bytes": 814,
+      "path": "diagnostic-execution.stdout.log",
+      "sha256": "ec64b08fedee63a308223b9eaac7bccd6cb9b22916b57ee3a96be8f089498e70"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-execution.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "diagnostic-execution.exitcode",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 4615,
+      "path": "tests-normal.log",
+      "sha256": "22698fb9c095291e0106ea999ebdd09b20e999446411e376d5803960773a836f"
+    },
+    {
+      "bytes": 4615,
+      "path": "tests-O.log",
+      "sha256": "e9346cfb1f8140849f73bde66c5313ee321c627109dc7fb876058cc594bacfc3"
+    },
+    {
+      "bytes": 4615,
+      "path": "tests-OO.log",
+      "sha256": "e9346cfb1f8140849f73bde66c5313ee321c627109dc7fb876058cc594bacfc3"
+    },
+    {
+      "bytes": 4615,
+      "path": "tests-isolated.log",
+      "sha256": "0a516d8a835c56df08958fe0ca57cdb8302d00986a7fc25b124fc194fb4b61c8"
+    },
+    {
+      "bytes": 916,
+      "path": "tests-diagnostic.log",
+      "sha256": "a969c700eb2ed85e41e46909d4763d5832c2ed5688889831403b0735dd471e69"
+    },
+    {
+      "bytes": 916,
+      "path": "tests-diagnostic-O.log",
+      "sha256": "a969c700eb2ed85e41e46909d4763d5832c2ed5688889831403b0735dd471e69"
+    },
+    {
+      "bytes": 916,
+      "path": "tests-diagnostic-OO.log",
+      "sha256": "a969c700eb2ed85e41e46909d4763d5832c2ed5688889831403b0735dd471e69"
+    },
+    {
+      "bytes": 1677,
+      "path": "overlap/tests-isolated.log",
+      "sha256": "95ab3e0281806c837b895b0ff5496fb024a96c70fc46ff4cceae75ba6e972b86"
+    },
+    {
+      "bytes": 1677,
+      "path": "overlap/tests-O.log",
+      "sha256": "80f1d59a19bc4a0e84e26416189cbc25ec249e281f516bb059f450554cd47434"
+    },
+    {
+      "bytes": 1677,
+      "path": "overlap/tests-OO.log",
+      "sha256": "80f1d59a19bc4a0e84e26416189cbc25ec249e281f516bb059f450554cd47434"
+    },
+    {
+      "bytes": 658,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.completion.json",
+      "sha256": "370d1a7e9f62af86f6069e8871566f89f6eefb4f08b9d0bdebb33ac4e224582b"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.detections.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1105,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.invocation.json",
+      "sha256": "666a57eaee019eb950cccc4e93358d31f4884d02e62a6f4949aa09c96bc822d0"
+    },
+    {
+      "bytes": 321,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.stats.json",
+      "sha256": "b108cc05d4a0a7f369b3f751e384ccea5d89d18f877418c4a3af510983748a98"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 658,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.completion.json",
+      "sha256": "12f6efd590e308c7eaa41817eb06c3b884f43305fd3c7fcddfe965d4193947ae"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.detections.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1105,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.invocation.json",
+      "sha256": "a06083a92ec1ea692022a43ff4f93a80eea8c0c12594d1a17d74b290a67e65c4"
+    },
+    {
+      "bytes": 323,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.stats.json",
+      "sha256": "4a0a5c65f10f49c791747f2ccc03a2b9c950f9731cb48855b83cac511eb05ea7"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 663,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.completion.json",
+      "sha256": "412cf6ce396c171cd07df405b6d69faab319659681f4938074cd02cded82d99f"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.detections.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1105,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.invocation.json",
+      "sha256": "d2e66c9bd5efa560fed5e9e69cc56427724dfe5d4a08c6f1088c8452d4d9684f"
+    },
+    {
+      "bytes": 321,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.stats.json",
+      "sha256": "f3bf0d5d33d83edfb4a1543254c7699b8121c42ba50b695157770f38be74d3ae"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 658,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.completion.json",
+      "sha256": "bf0a6c745c94fe28a4cf6f4a4145f9e382371bea2e325b6f7875bb3834d66b68"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.detections.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1105,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.invocation.json",
+      "sha256": "54f5ecfcd4ecf02926a6c205c80c427dc1fa0e693dd611f986f35d4c1d919c61"
+    },
+    {
+      "bytes": 321,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.stats.json",
+      "sha256": "cf60dc60e1769a2a66f60ab7784e99729598a47a1d84dcb0f50bc131f643d989"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 661,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.completion.json",
+      "sha256": "269481847cfb6261b847dd29e868dd382b94932d1f64d59e15f64fa4ee301274"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.detections.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1105,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.invocation.json",
+      "sha256": "c703a57b5ec8d4b1e0a2d8d9f033efb906633517bba7ae362db7ad5cf6f71729"
+    },
+    {
+      "bytes": 323,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.stats.json",
+      "sha256": "ff317ae66360955dbdfb8db76c01fe689d6f8fee4d0ce95d7aa6f7717d7f83d0"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 658,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.completion.json",
+      "sha256": "86dc2eb37a025e5852aafa05de0bfa84635c33e49fabe6c74e4f913606a4f0fe"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.detections.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1105,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.invocation.json",
+      "sha256": "e0edc268bd3e82977a0e2cc7f6678e46a0a8f59d05aa78eaf318da14441dd3be"
+    },
+    {
+      "bytes": 321,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.stats.json",
+      "sha256": "84d1dcf962d247a0f64431e774345568943c67a461197944117b3b2b0682be76"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 657,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.completion.json",
+      "sha256": "eb86404f595e70f74a14b693565b2ffb7ebf344faeb4291d2aadcdd15b212f8a"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.detections.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1105,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.invocation.json",
+      "sha256": "4cecd64929691f1c938e2bc6f4b62b8e737dce10b92bcb605fc85369f682e533"
+    },
+    {
+      "bytes": 321,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.stats.json",
+      "sha256": "48f6422404f8f78cdfcb82530008dc3a64c36a24d675bd19752723d68370cb88"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 663,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.completion.json",
+      "sha256": "90b334ef8697014e5653460e5ac5c6c0ce3bf4238500dbff0e4a7a7b69615849"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.detections.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1105,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.invocation.json",
+      "sha256": "b2717e4d457b081bcb04d567fdc59b423ae2e4ecfa1a97967d6ce5d955f42a27"
+    },
+    {
+      "bytes": 321,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.stats.json",
+      "sha256": "a65baef8d7fd5ea06fcb7b9af6b9f4e46ef5d733afe775935773db6ccdf71b7d"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "diagnostic-run-p4-11b93abe/events.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 8715,
+      "path": "diagnostic-run-p4-11b93abe/inputs.json",
+      "sha256": "fd751047bfda95f44beeff0f204a97b623b4fcc370bba1615944d8f1d36a9fa2"
+    },
+    {
+      "bytes": 7050,
+      "path": "diagnostic-run-p4-11b93abe/summary.json",
+      "sha256": "e34600b0cc8816e3e23dda888782c8eabb831fb9bea658518bb41a12f51f1c06"
+    }
+  ],
+  "fully_self_contained_acoustic_bundle": false,
+  "omitted_body_policy": "See PUBLIC-PACKAGE-BOUNDARY.md",
+  "schema": "alimeeting-public-small-package-allowlist-v1",
+  "stable_for_overlay": true,
+  "total_bytes": 343998
+}

@@ -1,0 +1,27 @@
+{
+  "blank_top1_frames": 111,
+  "development_only": true,
+  "duration_s": 2.24,
+  "event_count": 0,
+  "exit_code": 0,
+  "human_gold": false,
+  "keyword_id": 2,
+  "label_source": "machine_three_asr",
+  "matching_event_count": 0,
+  "native_wav_sha256": "31c7243b5f884329510e18bfe0a1ad51e606eab53aa21a874c26c3f1ac6dac08",
+  "outputs": {
+    "tqp-qwen06-14.events.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tqp-qwen06-14.stats.json": "abbdb33884041ab4339d22a54fd9ee6d108a44def144e240ac57a2b2ba160cf8",
+    "tqp-qwen06-14.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "pcm_sha256": "d82c64c4272e8c68d307639f949c667bfabf49f4e24c926abb226b4cba9e5f42",
+  "processed_frames": 111,
+  "sample_count": 35840,
+  "sample_id": "tqp-qwen06-14",
+  "speech_frames": 68,
+  "target_text": "小窝小窝",
+  "training_admitted": false,
+  "tts_engine": "qwen06",
+  "wav_sha256": "8898ce4f311ca788e004b56b6d7496578591566ec118cdfe53a9e640ef211dfd",
+  "wrong_keyword_event_count": 0
+}

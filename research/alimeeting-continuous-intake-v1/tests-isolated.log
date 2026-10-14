@@ -1,0 +1,41 @@
+test_acquire_hashes_mock_response_and_does_not_claim_trusted_lock (__main__.IntakeTests.test_acquire_hashes_mock_response_and_does_not_claim_trusted_lock) ... ok
+test_acquire_rejects_changed_or_truncated_body (__main__.IntakeTests.test_acquire_rejects_changed_or_truncated_body) ... ok
+test_acquire_rejects_redirect_and_wrong_length (__main__.IntakeTests.test_acquire_rejects_redirect_and_wrong_length) ... ok
+test_acquire_rejects_wrong_expected_hash (__main__.IntakeTests.test_acquire_rejects_wrong_expected_hash) ... ok
+test_acquire_requires_explicit_flag_before_creating_output (__main__.IntakeTests.test_acquire_requires_explicit_flag_before_creating_output) ... ok
+test_all_eight_synthetic_sessions_default_count (__main__.IntakeTests.test_all_eight_synthetic_sessions_default_count) ... ok
+test_archive_mutation_during_audit_rejected (__main__.IntakeTests.test_archive_mutation_during_audit_rejected) ... ok
+test_archive_symlink_rejected (__main__.IntakeTests.test_archive_symlink_rejected) ... ok
+test_cross_interval_and_all_tier_target_screening (__main__.IntakeTests.test_cross_interval_and_all_tier_target_screening) ... ok
+test_default_plan_is_offline_and_has_no_publisher_hash (__main__.IntakeTests.test_default_plan_is_offline_and_has_no_publisher_hash) ... ok
+test_duplicate_canonical_member_rejected (__main__.IntakeTests.test_duplicate_canonical_member_rejected) ... ok
+test_duplicate_pcm_rejected (__main__.IntakeTests.test_duplicate_pcm_rejected) ... ok
+test_extended_headers_rejected_before_body_parser (__main__.IntakeTests.test_extended_headers_rejected_before_body_parser) ... ok
+test_failed_acquisition_retains_partial_bytes_and_receipt (__main__.IntakeTests.test_failed_acquisition_retains_partial_bytes_and_receipt) ... ok
+test_links_and_traversal_rejected_even_if_unselected (__main__.IntakeTests.test_links_and_traversal_rejected_even_if_unselected) ... ok
+test_member_and_expansion_bounds (__main__.IntakeTests.test_member_and_expansion_bounds) ... ok
+test_missing_textgrid_rejected (__main__.IntakeTests.test_missing_textgrid_rejected) ... ok
+test_nearphone_not_relabelled_positive (__main__.IntakeTests.test_nearphone_not_relabelled_positive) ... ok
+test_no_silent_partial_selection (__main__.IntakeTests.test_no_silent_partial_selection) ... ok
+test_non_pcm_or_invalid_extensible_formats_rejected (__main__.IntakeTests.test_non_pcm_or_invalid_extensible_formats_rejected) ... ok
+test_nonstandard_audio_and_truncation_rejected (__main__.IntakeTests.test_nonstandard_audio_and_truncation_rejected) ... ok
+test_official_sparse_annotations_keep_gaps_and_tail_explicit (__main__.IntakeTests.test_official_sparse_annotations_keep_gaps_and_tail_explicit) ... ok
+test_output_directory_not_overwritten (__main__.IntakeTests.test_output_directory_not_overwritten) ... ok
+test_overlapping_full_targets_are_not_silently_skipped (__main__.IntakeTests.test_overlapping_full_targets_are_not_silently_skipped) ... ok
+test_partial_frame_rejected_even_with_consistent_riff_lengths (__main__.IntakeTests.test_partial_frame_rejected_even_with_consistent_riff_lengths) ... ok
+test_pax_expansion_bypass_regression (__main__.IntakeTests.test_pax_expansion_bypass_regression) ... ok
+test_phrase_hits_have_real_interval_span_and_all_occurrences (__main__.IntakeTests.test_phrase_hits_have_real_interval_span_and_all_occurrences) ... ok
+test_quoted_unicode_and_utf16 (__main__.IntakeTests.test_quoted_unicode_and_utf16) ... ok
+test_real_layout_extensible_pcm16_preserves_first_channel (__main__.IntakeTests.test_real_layout_extensible_pcm16_preserves_first_channel) ... ok
+test_short_malformed_nonfinite_and_incomplete_textgrid_rejected (__main__.IntakeTests.test_short_malformed_nonfinite_and_incomplete_textgrid_rejected) ... ok
+test_shorter_textgrid_extent_does_not_trim_or_admit_audio (__main__.IntakeTests.test_shorter_textgrid_extent_does_not_trim_or_admit_audio) ... ok
+test_single_channel_identity_and_unique_duration (__main__.IntakeTests.test_single_channel_identity_and_unique_duration) ... ok
+test_stage_receipts_do_not_claim_acquisition_before_download (__main__.IntakeTests.test_stage_receipts_do_not_claim_acquisition_before_download) ... ok
+test_textgrid_extent_mismatch_rejected (__main__.IntakeTests.test_textgrid_extent_mismatch_rejected) ... ok
+test_wrong_archive_hash_rejected_before_outputs (__main__.IntakeTests.test_wrong_archive_hash_rejected_before_outputs) ... ok
+test_wrong_block_alignment_and_bits_rejected (__main__.IntakeTests.test_wrong_block_alignment_and_bits_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 36 tests in 0.044s
+
+OK

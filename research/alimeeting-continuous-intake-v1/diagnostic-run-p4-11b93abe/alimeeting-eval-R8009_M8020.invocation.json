@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/kws_wav",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/xiaowo-model.kwm",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/xiaowo-keywords.kwk",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/audit/mono/R8009_M8020_MS810.wav",
+    "alimeeting-eval-R8009_M8020",
+    "--block-samples",
+    "160",
+    "--stats-json",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.stats.json"
+  ],
+  "input_samples": 30567097,
+  "pcm_sha256": "619d19a55238c767d51ac19c6c9ccdcf52bd9bdf774f6a1788a58d272347109d",
+  "source_wav_sha256": "51190a947a182294b103e37ab4a29ee6adeb3fb1ee94572769da82a96f7ce952",
+  "textgrid_sha256": "6d82a5c11a1d237b8f462aeca2844dd969b5b473e13b7fa2bb45722a2f12e032",
+  "wav_sha256": "4fd9fa229c7fa2fe69fd9c7f8b6413097949cb5a66adec48357f27448d6087d8"
+}

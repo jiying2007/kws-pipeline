@@ -1,0 +1,971 @@
+{
+  "audio_executed": false,
+  "build_argv": [
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-3.31.6/cmake/data/bin/cmake",
+    "--build",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+    "--target",
+    "kws_wav",
+    "--parallel",
+    "2",
+    "--verbose"
+  ],
+  "build_command": "env -i PATH=/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/usr/bin:/bin HOME=/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/home TMPDIR=/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/tmp LANG=C LC_ALL=C PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 /workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-3.31.6/cmake/data/bin/cmake --build /workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build --target kws_wav --parallel 2 --verbose",
+  "build_configuration_digest": "584d9cb86e675fd0e1647fd3c921f368da0d838802df3bff31b79cecd4d64b31",
+  "build_exit_code": 0,
+  "build_identity_embedding": {
+    "compiled_identity_object": {
+      "bytes": 2032,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/CMakeFiles/kws_pipeline.dir/src/build_info.c.o",
+      "sha256": "bf1f356160809d71b334e457a4b628c53c41b97cff750186a3f4005abe39f0bc"
+    },
+    "config_digest_literal_in_runner": false,
+    "core_archive": {
+      "bytes": 38856,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/libkws_pipeline.a",
+      "sha256": "de07b4c6b572989b68c95dedd58d8eaeff1bac4290cad5beb0591c5cf60430fe"
+    },
+    "generated_headers_and_compiled_identity_object_verified": true,
+    "note": "Unmodified kws_wav does not call kws_build_info(); the static linker omits the unreferenced build_info object from the final executable. Exact runner provenance is supplied by this build receipt and executable hash.",
+    "source_revision_literal_in_runner": false,
+    "tool_io_archive": {
+      "bytes": 9582,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/libkws_tool_io.a",
+      "sha256": "400d383f6c35e5e91f7afbc28b79c95cd86c20db4d03de42e4e451ec49750370"
+    }
+  },
+  "build_script": {
+    "bytes": 15338,
+    "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build_frozen_runner.py",
+    "sha256": "93a54b6774bd8699572d2fccbf2c349dcb18232b498654532efbe46747622e88"
+  },
+  "build_type": "Release",
+  "built_translation_unit_count": 9,
+  "built_translation_units": [
+    "src/build_info.c",
+    "src/decoder.c",
+    "src/frontend.c",
+    "src/keyword_pack.c",
+    "src/kws.c",
+    "src/model.c",
+    "tools/kws_wav.c",
+    "tools/sha256.c",
+    "tools/tool_io.c"
+  ],
+  "built_translation_units_strict_release_verified": true,
+  "cmake": {
+    "bytes": 18810744,
+    "install_receipt": {
+      "bytes": 1082,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-install-receipt.json",
+      "sha256": "fcdb0749edf93ef3d840e97748ec6e23023d21a37c9ef45a3e85118eb15afbc6"
+    },
+    "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-3.31.6/cmake/data/bin/cmake",
+    "sha256": "57452fa01ed0f69552c06d3e25edd0d9375347b982dfb709393526cb45396d6b",
+    "version": "cmake version 3.31.6\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake)."
+  },
+  "cmake_cache": {
+    "bytes": 18056,
+    "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/CMakeCache.txt",
+    "sha256": "8b12d29c921c434841acab9fc8d729f30221433c53266e9a668b7d2feee28685"
+  },
+  "compile_commands": {
+    "bytes": 13771,
+    "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/compile_commands.json",
+    "sha256": "fa4a2f7f508f81264cf9cf6f97b3ecb4abbf411f2109523e0f76b353238cd28e"
+  },
+  "compile_commands_scope": "CMake configured tools; only kws_wav and required libraries were built",
+  "compiler": {
+    "bytes": 1162264,
+    "invoked_path": "/usr/bin/gcc",
+    "path": "/usr/bin/x86_64-linux-gnu-gcc-14",
+    "sha256": "a23ecab8ff08f09ad8c80602c2c5df7f49e09c25905cb8975902e101bf72635f",
+    "target_triple": "x86_64-linux-gnu",
+    "version": "gcc (Debian 14.2.0-19) 14.2.0\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    "version_number": "14.2.0"
+  },
+  "compiler_components": [
+    {
+      "bytes": 34148896,
+      "compiler_query": "-print-prog-name=cc1",
+      "path": "/usr/libexec/gcc/x86_64-linux-gnu/14/cc1",
+      "sha256": "02675980109a4a5496cddf67d5286de57942759edc830deaa525e36f9a2a0291"
+    },
+    {
+      "bytes": 795184,
+      "compiler_query": "-print-prog-name=as",
+      "path": "/usr/bin/x86_64-linux-gnu-as",
+      "sha256": "07dd8551ea0aa065975e4dddb8e1bb7dc308d12d54eca22c3858db79467c7cb9"
+    },
+    {
+      "bytes": 1861256,
+      "compiler_query": "-print-prog-name=ld",
+      "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+      "sha256": "d2766988b6a1b1d1518cdc09242e726d1f24e151e16410ada3092b11ffd9081b"
+    },
+    {
+      "bytes": 422136,
+      "compiler_query": "-print-prog-name=collect2",
+      "path": "/usr/libexec/gcc/x86_64-linux-gnu/14/collect2",
+      "sha256": "ea31a4cebd9df1b6428c463428d461ccecfe66c897936409d5b2cde0b3af9e27"
+    }
+  ],
+  "compiler_dependency_files": [
+    {
+      "bytes": 1402,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/CMakeFiles/kws_pipeline.dir/src/build_info.c.o.d",
+      "sha256": "ea00a1546a8676f22ea6decc4a4e6d1da977d9d2aa3246411f597dd2697f1956"
+    },
+    {
+      "bytes": 2088,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/CMakeFiles/kws_pipeline.dir/src/decoder.c.o.d",
+      "sha256": "b06e28f2f4423f7863910e1072ad412386bae34b7014b38c6f6800a2a22be10d"
+    },
+    {
+      "bytes": 2091,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/CMakeFiles/kws_pipeline.dir/src/frontend.c.o.d",
+      "sha256": "660fd1a58de507e4268523bbe8b6fc0950481b557bdd1577b411cfe145f4fd24"
+    },
+    {
+      "bytes": 2006,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/CMakeFiles/kws_pipeline.dir/src/keyword_pack.c.o.d",
+      "sha256": "9e4058842818a4dfb9259f5ee03473eb5caf3b78bdfd26cca75fe31a73c437a8"
+    },
+    {
+      "bytes": 2267,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/CMakeFiles/kws_pipeline.dir/src/kws.c.o.d",
+      "sha256": "607f11b5a5a4f375398e19a48f9dde8d33cd2dad43b281ba5d3eede52777203f"
+    },
+    {
+      "bytes": 2009,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/CMakeFiles/kws_pipeline.dir/src/model.c.o.d",
+      "sha256": "23ecb0a773a1ecfa2b440d0d50c24b81aedd29719d20c1bdb638cfa599afa3c3"
+    },
+    {
+      "bytes": 1971,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/CMakeFiles/kws_tool_io.dir/tools/sha256.c.o.d",
+      "sha256": "d4e44f34cd37c32cd88a2f1ba7eff69f5f99bddbcc127f789c1b49e27b41eaf4"
+    },
+    {
+      "bytes": 3484,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/CMakeFiles/kws_tool_io.dir/tools/tool_io.c.o.d",
+      "sha256": "56fcc215d10b99ee455f38acd0ad45e08154d0f81e59a1a5d867112a96809eb9"
+    },
+    {
+      "bytes": 4707,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/CMakeFiles/kws_wav.dir/tools/kws_wav.c.o.d",
+      "sha256": "2235e8dbfdf522b82ac537831f5bcced682f509e00b9ebf0f54e483c7b73d86e"
+    }
+  ],
+  "completed_at_utc": "2026-10-14T13:44:15.007381+00:00",
+  "configure_argv": [
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-3.31.6/cmake/data/bin/cmake",
+    "-S",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate",
+    "-B",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+    "-G",
+    "Unix Makefiles",
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DKWS_STRICT=ON",
+    "-DKWS_SOURCE_REVISION=11b93abe92427c3ece2a01f9a497cdb74bab0062",
+    "-DCMAKE_C_COMPILER=/usr/bin/gcc",
+    "-DCMAKE_MAKE_PROGRAM=/usr/bin/make",
+    "-DPython3_EXECUTABLE=/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+    "-DKWS_BUILD_TESTS=OFF",
+    "-DKWS_BUILD_BENCH=OFF",
+    "-DKWS_BUILD_TOOLS=ON",
+    "-DKWS_BUILD_FUZZ=OFF",
+    "-DCMAKE_INSTALL_PREFIX=/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/install"
+  ],
+  "configure_command": "env -i PATH=/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/usr/bin:/bin HOME=/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/home TMPDIR=/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/tmp LANG=C LC_ALL=C PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 /workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-3.31.6/cmake/data/bin/cmake -S /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate -B /workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON -DKWS_SOURCE_REVISION=11b93abe92427c3ece2a01f9a497cdb74bab0062 -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_MAKE_PROGRAM=/usr/bin/make -DPython3_EXECUTABLE=/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DKWS_BUILD_TESTS=OFF -DKWS_BUILD_BENCH=OFF -DKWS_BUILD_TOOLS=ON -DKWS_BUILD_FUZZ=OFF -DCMAKE_INSTALL_PREFIX=/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/install",
+  "configure_exit_code": 0,
+  "environment": {
+    "HOME": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/home",
+    "LANG": "C",
+    "LC_ALL": "C",
+    "PATH": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "TMPDIR": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/tmp"
+  },
+  "generated_headers": [
+    {
+      "bytes": 491,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated/kws_build_config.h",
+      "sha256": "cc26c543327e29d1eb85b2b0b4ca8304089b6ecba63a46fa9ec358d100e9fff6"
+    },
+    {
+      "bytes": 9560,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated/kws_parameter_limits.h",
+      "sha256": "bd81e6d357487a400b759d49e97ef1aca88ee9e38f83d13c7d8bd075941a32cb"
+    },
+    {
+      "bytes": 164,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated/kws_source_revision.h",
+      "sha256": "666e46bb0c9430a820ac1efa4b2af40d836da662d6001c50b2d64aed7cc7a1e1"
+    }
+  ],
+  "keyword_pack": {
+    "bytes": 120,
+    "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/xiaowo-keywords.kwk",
+    "sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723"
+  },
+  "link_command": {
+    "bytes": 170,
+    "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/CMakeFiles/kws_wav.dir/link.txt",
+    "sha256": "cc94cbb4b8356d2165a3f53a9933c7442d71e97ade3ec746dddea871dfac71fd"
+  },
+  "logs": [
+    {
+      "bytes": 342,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/configure.log",
+      "sha256": "faff270d1913e469dd5ae64513c55dab611cce555f6fa741843c2c765cc94f9c"
+    },
+    {
+      "bytes": 13033,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build.log",
+      "sha256": "3eb25b57bf7dc8b16e27ff172b45260fa78e7f634399cb77ada6bd988f6385fe"
+    },
+    {
+      "bytes": 589,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/initial-configure.log",
+      "sha256": "1a84fda2f67c8373674b74709f211d0cddf2e8c0bd03c15fc7f4da7da73e8657"
+    },
+    {
+      "bytes": 14242,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/initial-build.log",
+      "sha256": "475558b1bf42e34f7f65d4f1fd2739e41e7e393f325e1932fdef9784831c0885"
+    }
+  ],
+  "make": {
+    "bytes": 278448,
+    "path": "/usr/bin/make",
+    "sha256": "8a229baf64671988cfb5af43ba3070c6ce7214cf32bcf96155115559d1466fa7",
+    "version": "GNU Make 4.4.1\nBuilt for x86_64-pc-linux-gnu\nCopyright (C) 1988-2023 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+  },
+  "manifest_inputs": [
+    {
+      "bytes": 556597,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/WHOLE-TREE.json",
+      "sha256": "dfa032c448f26e4c0b29f009b3bc93409865b29ca583150593a433445eb730b3"
+    },
+    {
+      "bytes": 1491,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/CANDIDATE-MANIFEST.json",
+      "sha256": "2e15ef68012ac5310c55daa7ec69795ae33c873dd31bd5a2f48f2c0cf31e4d7d"
+    },
+    {
+      "bytes": 47914,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/SOURCE-ALLOWLIST.json",
+      "sha256": "ff0b19be1a99756762aa2ed1ffa55b43f20005f83cf7f3115da21ce790b2d268"
+    },
+    {
+      "bytes": 274,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/GIT-NATIVE-CROSSCHECK.json",
+      "sha256": "c2847073668d3525b33afaf348eaf65b5d4333ca5b30978ea04f3970b8fb0389"
+    },
+    {
+      "bytes": 202,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/root-publication/merge.wrapper.json",
+      "sha256": "5d77cd5ac4df771d490cd285032a5b6515a23716cd6c2924d3ae2d0b901e8528"
+    },
+    {
+      "bytes": 143,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/root-publication/tree.wrapper.json",
+      "sha256": "fd443512bf54a41fa0749a8ccc574757208059caeac245a6425abedb966c36df"
+    }
+  ],
+  "missing_unrelated_archive_leaf": {
+    "body_observation": "unavailable_locally_inherited_immutable_base_git_object",
+    "bytes": 1048576,
+    "git_blob_sha1": "7ee50410f434ad99b35402582857ba3e6d72e81f",
+    "mode": "100644",
+    "path": "research/source-screen32-whisper-v1/evidence/run-38126849922/chunks/terminal.zip.part-000",
+    "sha256": null
+  },
+  "model": {
+    "bytes": 6812,
+    "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/xiaowo-model.kwm",
+    "sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402"
+  },
+  "model_executed": false,
+  "python": {
+    "bytes": 30894944,
+    "invoked_path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12",
+    "sha256": "fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7",
+    "version": "Python 3.12.14"
+  },
+  "runner": {
+    "bytes": 48304,
+    "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/kws_wav",
+    "sha256": "53a5dcb50c599d88bb72b2cfbaf6ff5d6e7a379ecef3011f28f5820261d155a9"
+  },
+  "schema": "kws-frozen-diagnostic-build-receipt-v1",
+  "source_inputs": [
+    {
+      "bytes": 13209,
+      "git_blob_sha1": "d5c25af874923f972b0122a64197cdb0ffe55f12",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/CMakeLists.txt",
+      "repository_path": "CMakeLists.txt",
+      "sha256": "cfe16827b5e9df5e92da677891f1b29155a0ebe897b1d3f6a1b27ed6e74b7aca"
+    },
+    {
+      "bytes": 5193,
+      "git_blob_sha1": "3fcfa6b35fadb2b940c07aca032cc68a0e652203",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/cmake/KwsBuildIdentity.cmake",
+      "repository_path": "cmake/KwsBuildIdentity.cmake",
+      "sha256": "54a9b1335201ebc129c162d3915b046d62bfdf4b76f1abc1c466357c83adc8c3"
+    },
+    {
+      "bytes": 118,
+      "git_blob_sha1": "b644697980004abcbbdb155dbc2d46d638ffb127",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/cmake/KwsPipelineConfig.cmake.in",
+      "repository_path": "cmake/KwsPipelineConfig.cmake.in",
+      "sha256": "1a7de8a75f3c279c4538afc8c1a95c0ea7aec961777fa56d90cfaffc4942da3b"
+    },
+    {
+      "bytes": 2772,
+      "git_blob_sha1": "572d1a4edf1ee4b903c990687c12e84a23b9c837",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/cmake/KwsSourceRevision.cmake",
+      "repository_path": "cmake/KwsSourceRevision.cmake",
+      "sha256": "ed0ca5f5b2586e8120348754d5a220f3cc002cdc7d2761a6e727c703276dc5dc"
+    },
+    {
+      "bytes": 308,
+      "git_blob_sha1": "c5f0daab56fac372381ac3bdb74223bd44506972",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/cmake/kws-pipeline.pc.in",
+      "repository_path": "cmake/kws-pipeline.pc.in",
+      "sha256": "d2c22a39ba9ddde6dc84d438f3bb5fb6af5e2136e819ce908ef6c0cbc33b6637"
+    },
+    {
+      "bytes": 513,
+      "git_blob_sha1": "db7a1dd8595949a97be10b3fe38c18d6f965213e",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/cmake/kws_build_config.h.in",
+      "repository_path": "cmake/kws_build_config.h.in",
+      "sha256": "46ea897e10ab6d12769ae8089b86207f19a101ec37056ff2b81404512c6712c1"
+    },
+    {
+      "bytes": 151,
+      "git_blob_sha1": "bfa57b9b94e090d05db5fedde40dad6c3fdd3b2e",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/cmake/kws_source_revision.h.in",
+      "repository_path": "cmake/kws_source_revision.h.in",
+      "sha256": "7194c40f9c1a45b08762d7b198426b3bf4fcbaf23c345a77a6fac8202d7eaedc"
+    },
+    {
+      "bytes": 6794,
+      "git_blob_sha1": "bcb53fa1ca1a8240acd9d751f137a955f4531835",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/configs/parameter-contract.json",
+      "repository_path": "configs/parameter-contract.json",
+      "sha256": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06"
+    },
+    {
+      "bytes": 13139,
+      "git_blob_sha1": "28b1f8a0a3d93855e1835288b2cc56f63e1e2a04",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include/kws_pipeline/kws.h",
+      "repository_path": "include/kws_pipeline/kws.h",
+      "sha256": "3405855e97cde28cf2842bb9c607e931347395790fe3ed268617e662af676496"
+    },
+    {
+      "bytes": 465,
+      "git_blob_sha1": "66e68f1f91179c1e32c7bfc27d7cf3e010d73b3f",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/build_info.c",
+      "repository_path": "src/build_info.c",
+      "sha256": "8e900d3a077af5e7006909941b666481248fadecdeb3274eb546c8f56030ac7b"
+    },
+    {
+      "bytes": 22986,
+      "git_blob_sha1": "96464ce66976003d13257b6131286546a7b9fe5f",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/decoder.c",
+      "repository_path": "src/decoder.c",
+      "sha256": "8eb2631073482414916c36afeb6fc0578ca137b9f9ab995dd9d579f9c32d8f2a"
+    },
+    {
+      "bytes": 3023,
+      "git_blob_sha1": "49dc4703a32e089ef488d7389e49e11cbd6b840b",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/decoder.h",
+      "repository_path": "src/decoder.h",
+      "sha256": "3357a957cd2b07108bdb7fa7657b8c807db347950eeeda94f490a0505604c76b"
+    },
+    {
+      "bytes": 5997,
+      "git_blob_sha1": "da95828946f948f3927a156dc2ffbad64bc76ff9",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/frontend.c",
+      "repository_path": "src/frontend.c",
+      "sha256": "4b15da591837859232a91200b81a70ffc683a79f08bf12b0adb368ae5e680b27"
+    },
+    {
+      "bytes": 842,
+      "git_blob_sha1": "af101f9c18d021f381ca82568af23585328657cd",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/frontend.h",
+      "repository_path": "src/frontend.h",
+      "sha256": "1c9a3663970e60d2a83e862e6a13aa04860c466ab9f54a7dbdc56864e4de63dd"
+    },
+    {
+      "bytes": 4495,
+      "git_blob_sha1": "94fbfc8cebfdde07d3c911bf793e636ae51f1e08",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/keyword_pack.c",
+      "repository_path": "src/keyword_pack.c",
+      "sha256": "967f415850a7fbf87ad088f310ed0b2fdd78317c9ca07fc1128622cabdcc9b57"
+    },
+    {
+      "bytes": 24791,
+      "git_blob_sha1": "7227def7216014d76737c99ff568e9bba12922b7",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/kws.c",
+      "repository_path": "src/kws.c",
+      "sha256": "cb7fbffd0ff8617b78ad4d7afd5557c1c13fec06250acfdc10713c463d54f171"
+    },
+    {
+      "bytes": 2554,
+      "git_blob_sha1": "7e8450b74c0985ffcbc5d52297dd8c1c1ad0decf",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/kws_debug.h",
+      "repository_path": "src/kws_debug.h",
+      "sha256": "f5f84746df743ef8d6601e383014413fcee302fdf315445bfd7ff76a9d8c0b16"
+    },
+    {
+      "bytes": 4998,
+      "git_blob_sha1": "63bb94ccc44c5727226afdce1c5c7688f68124c8",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/model.c",
+      "repository_path": "src/model.c",
+      "sha256": "af783d7123126f40f7c30f576290cc961ecfc2c987e7abb1c24c633a138adf83"
+    },
+    {
+      "bytes": 95,
+      "git_blob_sha1": "3abc8ec562d426bf25629435b6c319bd2af80ab6",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/model.h",
+      "repository_path": "src/model.h",
+      "sha256": "a3d9286d5653c340b0b6d513b0987feefc51d7f9a9e550480026d36b2664f12d"
+    },
+    {
+      "bytes": 17960,
+      "git_blob_sha1": "3b9e31b5cc9fa14d602e32e2f25591f27f03a689",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/gen_parameter_limits.py",
+      "repository_path": "tools/gen_parameter_limits.py",
+      "sha256": "a7fc02bcd26962f0c1a91b221651f7329465ea760076b775577d5918e02fbcb8"
+    },
+    {
+      "bytes": 4380,
+      "git_blob_sha1": "3002fafe6d430a31daa40b7130956a0f553555f0",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_timeline.h",
+      "repository_path": "tools/kws_timeline.h",
+      "sha256": "94087f896c9892f7f0c8cc5be70faba51216b89b548b66161f17215deac79022"
+    },
+    {
+      "bytes": 7820,
+      "git_blob_sha1": "001b143864be2172aa315486afabcd96c1c6e214",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_wav.c",
+      "repository_path": "tools/kws_wav.c",
+      "sha256": "41ae7fa10b6f41afc8c2d80bc586ecf5476fc6d8185ffbaf2a807ea69135e4de"
+    },
+    {
+      "bytes": 6685,
+      "git_blob_sha1": "6b5d22aaa1c84900b2505b79770973ef846a131b",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/sha256.c",
+      "repository_path": "tools/sha256.c",
+      "sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066"
+    },
+    {
+      "bytes": 252,
+      "git_blob_sha1": "881936888a505afde57493b29f7ad5a5826c6a9e",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/sha256.h",
+      "repository_path": "tools/sha256.h",
+      "sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723"
+    },
+    {
+      "bytes": 3764,
+      "git_blob_sha1": "1376cbceea379f3a0357abb80e154c7212270eac",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/tool_io.c",
+      "repository_path": "tools/tool_io.c",
+      "sha256": "c8aef71ea35ced4b6e1648eb9154420c861d0e4daf8ae2758f930160d295d114"
+    },
+    {
+      "bytes": 407,
+      "git_blob_sha1": "44e014cc43bb2788ce861acde9a681c44d3d1ca2",
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/tool_io.h",
+      "repository_path": "tools/tool_io.h",
+      "sha256": "a321ab3bb2c7520a6e31cb9f20f2873d30b4059c390021705ac82e8cc2dd4c95"
+    }
+  ],
+  "source_revision": "11b93abe92427c3ece2a01f9a497cdb74bab0062",
+  "source_revision_basis": "retained successful merge response plus authorized fixed merge SHA; generated and compiled override is a label, not an independent Git checkout assertion",
+  "source_root": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate",
+  "source_tree": "b8ae29e82097c38e92dbb1bb1cd4db10ade6cdc6",
+  "source_tree_basis": "all 2382 available manifest leaves verified by size, SHA-256 and Git blob SHA-1; exact tree recomputed with one inherited unavailable research archive blob ID",
+  "source_unchanged": true,
+  "started_at_utc": "2026-10-14T13:44:13.658971+00:00",
+  "status": "built-not-executed",
+  "strict": true,
+  "system_header_inputs": [
+    {
+      "bytes": 1203,
+      "path": "/usr/include/alloca.h",
+      "sha256": "8655ed58a5aedda99207d636aba00cbbf9842cfed6722593876a083700b4d138"
+    },
+    {
+      "bytes": 1612,
+      "path": "/usr/include/asm-generic/errno-base.h",
+      "sha256": "2c148e92b8318deeb767fabd60822113e575ee664ff09a1873aed8f7a495793c"
+    },
+    {
+      "bytes": 5648,
+      "path": "/usr/include/asm-generic/errno.h",
+      "sha256": "fb7b5a504015f3a9074c641e7371b250d867d751d90e4a22a8ac17fced3d50af"
+    },
+    {
+      "bytes": 2299,
+      "path": "/usr/include/endian.h",
+      "sha256": "537adf5fc94e17547d825a375723b666e89ff1f0a3c29fb7a78e223d22e0e210"
+    },
+    {
+      "bytes": 1679,
+      "path": "/usr/include/errno.h",
+      "sha256": "2b170be13aeb5a0ec9443803cea7fc4ce31ceae6708e0405b1afdae9300ac278"
+    },
+    {
+      "bytes": 1532,
+      "path": "/usr/include/features-time64.h",
+      "sha256": "89036fa88ac19881ddfb07d4e65beb620a083d770cbf1c925f148c9ea1ce5a63"
+    },
+    {
+      "bytes": 19214,
+      "path": "/usr/include/features.h",
+      "sha256": "20c5358da5ab2353b26bda1b36e66400290fbd2b16d30a6a21dc16f4f22ab280"
+    },
+    {
+      "bytes": 11309,
+      "path": "/usr/include/inttypes.h",
+      "sha256": "551dfff797d3f445de7045e134e5e7b057320febea176f9e5e0fb33ece1b8d69"
+    },
+    {
+      "bytes": 5706,
+      "path": "/usr/include/limits.h",
+      "sha256": "59dccd0e0f84037a0be75a01efe840b7b1ebe8502cdfb49742697c49290ce18f"
+    },
+    {
+      "bytes": 23,
+      "path": "/usr/include/linux/errno.h",
+      "sha256": "a47fb2f49bce0546a1e88805cec954338abb1b2ac87de042166e8e3a74b23261"
+    },
+    {
+      "bytes": 937,
+      "path": "/usr/include/linux/limits.h",
+      "sha256": "567dbb4893d20bb986996f0a8b8f774b02ca6cb7df8e4b642895eade7e7ffcd9"
+    },
+    {
+      "bytes": 49289,
+      "path": "/usr/include/math.h",
+      "sha256": "a048a56f2b20ed5a192616b64b7a01508437eaaf9c04e83f69d60527f5416c7d"
+    },
+    {
+      "bytes": 2462,
+      "path": "/usr/include/stdc-predef.h",
+      "sha256": "82975831ea2d1f95b60225f37ddd6130225f0c3de2318674cb178fea661ad87b"
+    },
+    {
+      "bytes": 8155,
+      "path": "/usr/include/stdint.h",
+      "sha256": "38751c3803361248b73bba3d8b48aa7015ccb94c2c31f247f587b157c4ee344a"
+    },
+    {
+      "bytes": 34172,
+      "path": "/usr/include/stdio.h",
+      "sha256": "e5094b40bd7ab3bea3a4e80a4071069882c2e9a4488ff2b1b03174352a0db0b1"
+    },
+    {
+      "bytes": 41039,
+      "path": "/usr/include/stdlib.h",
+      "sha256": "999cb2acafbb64984f99ee410a42dfd79815de184a0312d7c136e31795a952d2"
+    },
+    {
+      "bytes": 19969,
+      "path": "/usr/include/string.h",
+      "sha256": "2829e08094d8e97155e863a0aa5ea37cf09d4ffcd6ce86e572571276c2e21a8a"
+    },
+    {
+      "bytes": 4753,
+      "path": "/usr/include/strings.h",
+      "sha256": "c337c6ee3a39d2465795897080331e7bc7c385d91bbbbbb5c7dfb0094dcdf804"
+    },
+    {
+      "bytes": 1283,
+      "path": "/usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h",
+      "sha256": "05531d0ae2a64ce741fe96a6c992190ef77eff1dc72e9e8f9bd0ff3b6bd7ff57"
+    },
+    {
+      "bytes": 2450,
+      "path": "/usr/include/x86_64-linux-gnu/bits/byteswap.h",
+      "sha256": "07044d37a88f3a088ecf65df86a5d4a2c03e2966747b680ae8e0a01753cf97a1"
+    },
+    {
+      "bytes": 1905,
+      "path": "/usr/include/x86_64-linux-gnu/bits/endian.h",
+      "sha256": "f559fd70d8a24202805d1d8a3546e28c427f6ce7808296002687cb6c636fd21f"
+    },
+    {
+      "bytes": 273,
+      "path": "/usr/include/x86_64-linux-gnu/bits/endianness.h",
+      "sha256": "659a7060004eda113671a38852c4d1e9cb97a35932bcd1d8540f98c09c180747"
+    },
+    {
+      "bytes": 1426,
+      "path": "/usr/include/x86_64-linux-gnu/bits/errno.h",
+      "sha256": "d6875c7a15ed169ab16e706bf2af52bd8d48ea067f02adbdb34e8bb9198fb014"
+    },
+    {
+      "bytes": 10325,
+      "path": "/usr/include/x86_64-linux-gnu/bits/floatn-common.h",
+      "sha256": "a8a1a20b3e3c9811b348f9f7c4a3825d0eae6b27615991d1ca50dd1338e32a00"
+    },
+    {
+      "bytes": 4929,
+      "path": "/usr/include/x86_64-linux-gnu/bits/floatn.h",
+      "sha256": "959a6fafb663ca665daa89066124c126291603e14d727d8a1d59823e9fd92451"
+    },
+    {
+      "bytes": 1215,
+      "path": "/usr/include/x86_64-linux-gnu/bits/flt-eval-method.h",
+      "sha256": "23a5215104041d3bf0aec17ced13d17beaaa7f48346dd48022ef4b6f47f912bf"
+    },
+    {
+      "bytes": 1216,
+      "path": "/usr/include/x86_64-linux-gnu/bits/fp-fast.h",
+      "sha256": "face0a968a557c3fe56fafa0d45043d763d92314fa03621bb86c0ea48c8b8814"
+    },
+    {
+      "bytes": 1012,
+      "path": "/usr/include/x86_64-linux-gnu/bits/fp-logb.h",
+      "sha256": "4c9d15c0730ae3b77c8f5efb12561bb3efa43eda4d8043683f241584b65d9083"
+    },
+    {
+      "bytes": 4286,
+      "path": "/usr/include/x86_64-linux-gnu/bits/libc-header-start.h",
+      "sha256": "06256b79e2535489e5dce8c21854d3b0bd72d5479a3d013170f09261defc0a4f"
+    },
+    {
+      "bytes": 10089,
+      "path": "/usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h",
+      "sha256": "26cbdf8bdae4735c1f5dcdd124b8d48253cf3ed69837c381f532c7d76977ea37"
+    },
+    {
+      "bytes": 3175,
+      "path": "/usr/include/x86_64-linux-gnu/bits/local_lim.h",
+      "sha256": "b38fad51045d65239da3868ea94c4f31850901ec1f7e56349452fca45f70717e"
+    },
+    {
+      "bytes": 970,
+      "path": "/usr/include/x86_64-linux-gnu/bits/long-double.h",
+      "sha256": "30f74e9207fbbbe7fafb7b5e3e54124997abc44549506c514f2adae054ee3d56"
+    },
+    {
+      "bytes": 5402,
+      "path": "/usr/include/x86_64-linux-gnu/bits/math-vector.h",
+      "sha256": "daa745b265e601145966f0e2e0f31ec632b45acf95db7c7d9954747f4b0282b4"
+    },
+    {
+      "bytes": 1863,
+      "path": "/usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h",
+      "sha256": "6010275c8748fc750862c4b99475171250dcfb2b6d4cdb6a04a2ba7263d04425"
+    },
+    {
+      "bytes": 2216,
+      "path": "/usr/include/x86_64-linux-gnu/bits/mathcalls-macros.h",
+      "sha256": "9d82c07d16ca739b615328f1c4cdec17d4062ca2a6c44b27d77ed5b94f4c2a83"
+    },
+    {
+      "bytes": 15484,
+      "path": "/usr/include/x86_64-linux-gnu/bits/mathcalls.h",
+      "sha256": "ed098a1872adcc16ae513aaea668207b684cb415e559d43f768c1f76fcda6ab0"
+    },
+    {
+      "bytes": 5198,
+      "path": "/usr/include/x86_64-linux-gnu/bits/posix1_lim.h",
+      "sha256": "ea4252c4bb02abfad2e734c657d9f323e98f406b35be6377f43c7eb78699b8d6"
+    },
+    {
+      "bytes": 2867,
+      "path": "/usr/include/x86_64-linux-gnu/bits/posix2_lim.h",
+      "sha256": "53647564016cc8ecba361bd9cb7c706b9755ef604213ece31a1307ebc4cd08d1"
+    },
+    {
+      "bytes": 1214,
+      "path": "/usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h",
+      "sha256": "aa07727cdcd5a7d9e2159e03b2db63f0e9ab75efd5332b565b5c8623ab9b714f"
+    },
+    {
+      "bytes": 951,
+      "path": "/usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h",
+      "sha256": "d91d2b37f8e1d47a8d2da1960ff67873f8a1e5ee069905ab4dee9adb5321b2f9"
+    },
+    {
+      "bytes": 1838,
+      "path": "/usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h",
+      "sha256": "c838de98779156e73b927940c1db8d3e385624980d2c4ca37c352ad69955074b"
+    },
+    {
+      "bytes": 3072,
+      "path": "/usr/include/x86_64-linux-gnu/bits/pthreadtypes.h",
+      "sha256": "acad99a6a3ef489327e806c8d29b25797ca2126cd5489233837e5c9c01516cd1"
+    },
+    {
+      "bytes": 1505,
+      "path": "/usr/include/x86_64-linux-gnu/bits/select.h",
+      "sha256": "576acd13d6fba6206bdf24b1f9b6567e46da81bcf20fb2f5529434c59cfb9c3e"
+    },
+    {
+      "bytes": 1037,
+      "path": "/usr/include/x86_64-linux-gnu/bits/stdint-intn.h",
+      "sha256": "88f639a4e588077b6edfad36b3bb045f0cc052b5f9d194f8e706ee27cd846f67"
+    },
+    {
+      "bytes": 1305,
+      "path": "/usr/include/x86_64-linux-gnu/bits/stdint-least.h",
+      "sha256": "f2f6cc431ef00e9182f7367cd06fb1130740c41a1f4dd1c61f146a1e761a4474"
+    },
+    {
+      "bytes": 1049,
+      "path": "/usr/include/x86_64-linux-gnu/bits/stdint-uintn.h",
+      "sha256": "8ce3858074e8073db1eed4d25d69b3c14d41e826fa2351c5fc5246bb546161f8"
+    },
+    {
+      "bytes": 5599,
+      "path": "/usr/include/x86_64-linux-gnu/bits/stdio.h",
+      "sha256": "182891bcd563185c52e7c01f4fdbd885f943f70682dd758ceab319eeaf917c08"
+    },
+    {
+      "bytes": 1059,
+      "path": "/usr/include/x86_64-linux-gnu/bits/stdio_lim.h",
+      "sha256": "436ad57abe906d460631967c822c0622dc100da1e1bd3e0fa8879b6f7f2c6654"
+    },
+    {
+      "bytes": 1516,
+      "path": "/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h",
+      "sha256": "231afa57a5d88ab4ede48d5d0808f7343986405ee89f85505dd06e1d31971a88"
+    },
+    {
+      "bytes": 1115,
+      "path": "/usr/include/x86_64-linux-gnu/bits/stdlib-float.h",
+      "sha256": "fdd6c94e471e2aa2e03bae449f993392a6593044490fc82601b77d7116381201"
+    },
+    {
+      "bytes": 1816,
+      "path": "/usr/include/x86_64-linux-gnu/bits/struct_mutex.h",
+      "sha256": "700e77ca8b5d27b19649358abe229e64b238cb4ce79474fc1194d7831dc3a34f"
+    },
+    {
+      "bytes": 2027,
+      "path": "/usr/include/x86_64-linux-gnu/bits/struct_rwlock.h",
+      "sha256": "7d1b998c8def8d264af5114e869bcb37c484daa23ec8ac54a2110dbdd9c05a95"
+    },
+    {
+      "bytes": 3962,
+      "path": "/usr/include/x86_64-linux-gnu/bits/thread-shared-types.h",
+      "sha256": "f16fd912b0b1e8a222af4acb11dbbc9c68ba485c381a0dcf49be60b38e581c37"
+    },
+    {
+      "bytes": 1340,
+      "path": "/usr/include/x86_64-linux-gnu/bits/time64.h",
+      "sha256": "b0c5f25ce84037dda2c42408543a4616e129d70d6ebf10bd3ecc8b756466582a"
+    },
+    {
+      "bytes": 1109,
+      "path": "/usr/include/x86_64-linux-gnu/bits/timesize.h",
+      "sha256": "d949eed9646ca5916b338e1f02ffaf31a4c62907738805aba4ffa329a365f8f2"
+    },
+    {
+      "bytes": 180,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/FILE.h",
+      "sha256": "37515f78be386f2edad4746f2947c928f480728c56d9a94e25302ebbdaef3c96"
+    },
+    {
+      "bytes": 110,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/__FILE.h",
+      "sha256": "26c909942e8a6bc82725e9c402f393aed9e32d94190257ddf71e1b5f819b4e5e"
+    },
+    {
+      "bytes": 410,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h",
+      "sha256": "8afae3abf006beb39fd9d4d4bae38745cdf08a91e6217ddf25833c8d4b04751b"
+    },
+    {
+      "bytes": 381,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h",
+      "sha256": "603e58ab31ed75b7e0ab09a2ca94e99955f7fbc63310466321ce27c906227eb4"
+    },
+    {
+      "bytes": 1661,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/__locale_t.h",
+      "sha256": "d2513e510029ea0f2fc3868e9f1c990173b2df593d40bb8957b63c8035a1eb35"
+    },
+    {
+      "bytes": 564,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h",
+      "sha256": "c561df72d5b987ccbd022059fdb1bcb6899c3e94b403997a0576ef3e1afb0f94"
+    },
+    {
+      "bytes": 206,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h",
+      "sha256": "05291a7d38bb1d0da1ed01c09fe85fa2b1f4d5bc708e06bb930efec672db08d5"
+    },
+    {
+      "bytes": 143,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/clock_t.h",
+      "sha256": "81e60e8a8d99b28bc723c14b156d7f7fc8ff663d98a857a3f5aea90431f577e3"
+    },
+    {
+      "bytes": 174,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/clockid_t.h",
+      "sha256": "dcd64d184855b245e5c7acf21910a0aaca590f1faf094e400da5d30551d11eb0"
+    },
+    {
+      "bytes": 2725,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h",
+      "sha256": "f3a731752c167e53c1786b20e5460ec3696e1a35521f883d5ca84da85d983d9f"
+    },
+    {
+      "bytes": 983,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/locale_t.h",
+      "sha256": "aee0f473e9900ae9c3f9845cfabce44fb4d60ddf2706a30f802ea89bc6411d4c"
+    },
+    {
+      "bytes": 195,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/sigset_t.h",
+      "sha256": "3db5ded9d98a694e8c7196a06690b2e816ec6bb82689940d281f6504533f37e1"
+    },
+    {
+      "bytes": 4239,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h",
+      "sha256": "5b1e0312496e150398e71409ffd203e00cdff92365772ffa6aa4a198c3b8ea53"
+    },
+    {
+      "bytes": 877,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h",
+      "sha256": "798e773d0c7f3796033c043910db2b093d1e43116c4b3d2cf3be85f8c4304cf1"
+    },
+    {
+      "bytes": 416,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h",
+      "sha256": "6585bf0dcd3d5a780d6246da841031f9b314ceb7400a3210f34815f5da93b1fa"
+    },
+    {
+      "bytes": 208,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/time_t.h",
+      "sha256": "d1cc45e24a80009117f61ee4ae9cae5d12f69f38d691e0a933f989f7a1d27bb0"
+    },
+    {
+      "bytes": 159,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types/timer_t.h",
+      "sha256": "d96a2452da0d933941273d11d1048ea525f033306892835b0a7a0999b13853aa"
+    },
+    {
+      "bytes": 8806,
+      "path": "/usr/include/x86_64-linux-gnu/bits/types.h",
+      "sha256": "74d92766725404961cc2908de587aeaf24a5a8ef49a0103c5d3fb9f9fe9dead0"
+    },
+    {
+      "bytes": 3737,
+      "path": "/usr/include/x86_64-linux-gnu/bits/typesizes.h",
+      "sha256": "49656ffcee2a7091ae16f8ad737c63c1d3e06ecdb84c3fa1c6f65b0b6784262a"
+    },
+    {
+      "bytes": 1542,
+      "path": "/usr/include/x86_64-linux-gnu/bits/uintn-identity.h",
+      "sha256": "f2854176fc9476ed0d2f52241b4911861bdc41a133f4bd2a3e9fd1073278086f"
+    },
+    {
+      "bytes": 1697,
+      "path": "/usr/include/x86_64-linux-gnu/bits/waitflags.h",
+      "sha256": "fe55139021b16f8d4a2b00309ce9818b679626ba2d685a63ea527414d852d7b3"
+    },
+    {
+      "bytes": 2287,
+      "path": "/usr/include/x86_64-linux-gnu/bits/waitstatus.h",
+      "sha256": "af2b2a279b806c772f9dafe54473029d42a06d3c9547a76718745a29565fdbbb"
+    },
+    {
+      "bytes": 1906,
+      "path": "/usr/include/x86_64-linux-gnu/bits/wchar.h",
+      "sha256": "169453a3eb0c5e504b513fb3bad0bda7780bb84c7139c501e3deeb75ac731f35"
+    },
+    {
+      "bytes": 398,
+      "path": "/usr/include/x86_64-linux-gnu/bits/wordsize.h",
+      "sha256": "948177c0fc84c4746588f62252029880ec4c6f88b743ba55d952f980303ebfbb"
+    },
+    {
+      "bytes": 481,
+      "path": "/usr/include/x86_64-linux-gnu/gnu/stubs-64.h",
+      "sha256": "0b6ab3e2ed3ba79b30fe6ba81a68fc41f57965b8d56662763633431b703c9289"
+    },
+    {
+      "bytes": 384,
+      "path": "/usr/include/x86_64-linux-gnu/gnu/stubs.h",
+      "sha256": "ef444295a0a9e8f5c40918399a00cc91ba0bd79774110cdf6e652baa6cfadb2e"
+    },
+    {
+      "bytes": 34638,
+      "path": "/usr/include/x86_64-linux-gnu/sys/cdefs.h",
+      "sha256": "69a3c3625bac01b58ab781d02c7800592b5082c4ea962a456260dcf288216f68"
+    },
+    {
+      "bytes": 5049,
+      "path": "/usr/include/x86_64-linux-gnu/sys/select.h",
+      "sha256": "0e36149f12e27b0d38e28e25dd392c4a3c75c06a3cf85c3d906bc9fef4a45e4b"
+    },
+    {
+      "bytes": 5713,
+      "path": "/usr/include/x86_64-linux-gnu/sys/types.h",
+      "sha256": "3134ee1a8359f7d4d69e40db42b70f94c10f1e9e40b9925454bccbf7608d5ced"
+    },
+    {
+      "bytes": 20749,
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/14/include/float.h",
+      "sha256": "0924f0708449d918e3152d00087efdf18e3f26c92030c464a6b4a77da1439f57"
+    },
+    {
+      "bytes": 6507,
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/14/include/limits.h",
+      "sha256": "bc572350077d8caa24f82d5439119aa2dc184e72cc4ea325b4cd0137db51580f"
+    },
+    {
+      "bytes": 4303,
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/14/include/stdarg.h",
+      "sha256": "7ead4a2428691baf94bec3fd2db8984dbb1c5f597edf0f9bc3068fb43dad22f7"
+    },
+    {
+      "bytes": 13735,
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/14/include/stddef.h",
+      "sha256": "c93f57f1538121cdbc27b59a47f1ed82b078d40e404b46481c83bafadd5deada"
+    },
+    {
+      "bytes": 328,
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/14/include/stdint.h",
+      "sha256": "86a7914ab7d6a18465a6fb9a7b54f945cad604fdbf3ca0d10e4e0254e0037911"
+    },
+    {
+      "bytes": 330,
+      "path": "/usr/lib/gcc/x86_64-linux-gnu/14/include/syslimits.h",
+      "sha256": "22dd0ab81baadd5a8d455b445855f341d419c7b0267beca235de00b7ec78e529"
+    },
+    {
+      "bytes": 31,
+      "path": "/usr/lib/linux/uapi/x86/asm/errno.h",
+      "sha256": "4ee384515a4325315992e61dd957f0fa91f3858fe7c079de59f56edded51de86"
+    }
+  ],
+  "target": "kws_wav",
+  "tests_not_run": "Scope is dedicated build only. No kws_wav execution, CTest, model, audio, tuning, training or benchmark invocation.",
+  "tree": "b8ae29e82097c38e92dbb1bb1cd4db10ade6cdc6",
+  "verification_after": {
+    "bytes": 676054,
+    "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/source-verification-after.json",
+    "sha256": "348e6be9d022cf7a606322cfad3a5cd4d79ecb9981221196ff470d167fe79d48"
+  },
+  "verification_before": {
+    "bytes": 676054,
+    "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/source-verification-before.json",
+    "sha256": "348e6be9d022cf7a606322cfad3a5cd4d79ecb9981221196ff470d167fe79d48"
+  },
+  "working_directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build"
+}

@@ -1,0 +1,16 @@
+{
+  "audio_after_textgrid_end_s": 22.896999999999935,
+  "duration_s": 1573.85,
+  "event_count": 0,
+  "events_per_input_hour": 0.0,
+  "exit_code": 0,
+  "outputs": {
+    "alimeeting-eval-R8001_M8004.detections.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "alimeeting-eval-R8001_M8004.stats.json": "b108cc05d4a0a7f369b3f751e384ccea5d89d18f877418c4a3af510983748a98",
+    "alimeeting-eval-R8001_M8004.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processed_frames": 78692,
+  "recording": "alimeeting-eval-R8001_M8004",
+  "sample_count": 25181600,
+  "wall_seconds": 1.4186495729954913
+}

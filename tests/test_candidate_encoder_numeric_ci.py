@@ -43,6 +43,39 @@ class CandidateNumericCIContracts(unittest.TestCase):
             self.assertIn(path, original)
         self.assertEqual(changes.scopes(["tools/candidate_numeric_ci_changes.py"]), (True, True))
 
+    def test_continuous_intake_complete_exact_dependency_closure(self):
+        # The actual CI suite reads every package member through its manifest,
+        # plus the separately archived ASR results/independent audit.
+        prefixes = ("research/alimeeting-continuous-intake-v1",
+                    "research/tts-pilot-screening-v1/evidence/asr-run-38573117922")
+        dependencies = {path.relative_to(ROOT).as_posix()
+                        for prefix in prefixes for path in (ROOT / prefix).rglob("*")
+                        if path.is_file() and "__pycache__" not in path.parts
+                        and path.suffix != ".pyc"}
+        self.assertGreaterEqual(len(dependencies), 204)
+        filters = [path for _, path in exact_path_filters(ROOT / changes.WORKFLOW)]
+        for dependency in sorted(dependencies):
+            with self.subTest(dependency=dependency):
+                self.assertEqual(filters.count(dependency), 2,
+                                 "complete exact coverage in both push and PR filters")
+                self.assertEqual(changes.scopes([dependency]), (True, False))
+                self.assertEqual(changes.scopes([dependency,
+                                 "research/candidate_encoders/torch_models.py"]), (True, True))
+
+    def test_actual_product_scopes_entrypoint_accepts_current_workflow(self):
+        self.assertEqual(changes.scopes([]), (False, False))
+        self.assertEqual(changes.scopes([
+            "research/alimeeting-continuous-intake-v1/test_suite.py",
+            "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/report.json"
+        ]), (True, False))
+
+    def test_non_candidate_glob_still_rejected_with_complete_candidate_filters(self):
+        filters = exact_path_filters(ROOT / changes.WORKFLOW)
+        with patch.object(changes, "exact_path_filters",
+                          return_value=filters + [(99999, "research/alimeeting-continuous-intake-v1/**")]):
+            with self.assertRaisesRegex(ValueError, "existing product filters must be nonempty exact paths"):
+                changes.scopes(["research/alimeeting-continuous-intake-v1/test_suite.py"])
+
     def test_scopes_fail_closed_on_unsupported_original_filters(self):
         with patch.object(changes, "exact_path_filters", return_value=[(1, "training/**")]):
             with self.assertRaises(ValueError):

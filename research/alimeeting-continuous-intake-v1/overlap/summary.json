@@ -1,0 +1,250 @@
+{
+  "current_split_manifests": [
+    {
+      "bytes": 0,
+      "path": "research/effect-data-inventory-v2/train.jsonl",
+      "role": "train",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 386647,
+      "path": "research/effect-data-inventory-v2/development.jsonl",
+      "role": "development",
+      "rows": 385,
+      "sha256": "bc4ca47ef47645bb2cd80dc969d2bf637dfd4c852d49df33c14211904c3aea74"
+    },
+    {
+      "bytes": 0,
+      "path": "research/effect-data-inventory-v2/sealed_acceptance.jsonl",
+      "role": "sealed_acceptance",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "research/effect-data-inventory-v2/quarantine.jsonl",
+      "role": "quarantine",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "datasets": [
+    {
+      "evidence": "retained training provenance; no waveform bodies reread in this task",
+      "name": "historical_training_1856",
+      "record_count": 1856,
+      "sources": [
+        "models/registry/model-749187ec1d66/xiaowo-model-provenance.json"
+      ],
+      "unique_hash_counts": {
+        "file_sha256": 1856,
+        "pcm_sha256": 1856
+      }
+    },
+    {
+      "evidence": "224 shared injected domain WAV identities; PCM bridged by exact file SHA256 to retained measured inventory",
+      "name": "far_injected_224",
+      "record_count": 224,
+      "sources": [
+        "research/known-far-diagnostic-v1/original-injections-1103.jsonl.gz",
+        "research/known-far-diagnostic-v1/original-injections-3301.jsonl.gz",
+        "research/known-far-diagnostic-v1/original-domain-index.jsonl.gz",
+        "research/effect-data-inventory-v2/report.json"
+      ],
+      "unique_hash_counts": {
+        "file_sha256": 224,
+        "pcm_sha256": 224,
+        "source_pcm_sha256": 112,
+        "source_wav_sha256": 112
+      }
+    },
+    {
+      "evidence": "120 original source files/families in frozen domain metadata",
+      "name": "far_original_sources_120",
+      "record_count": 120,
+      "sources": [
+        "research/known-far-diagnostic-v1/original-domain-index.jsonl.gz"
+      ],
+      "unique_hash_counts": {
+        "file_sha256": 120,
+        "pcm_sha256": 120
+      }
+    },
+    {
+      "evidence": "retained inventory previously measured actual mono 16-kHz PCM16 bytes; not reread by this extraction",
+      "name": "measured_inventory_385",
+      "record_count": 385,
+      "sources": [
+        "research/effect-data-inventory-v2/report.json",
+        "research/effect-data-inventory-v2/development.jsonl"
+      ],
+      "unique_hash_counts": {
+        "file_sha256": 385,
+        "pcm_sha256": 385,
+        "source_pcm_sha256": 120
+      }
+    },
+    {
+      "evidence": "native non-PCM16 source files; file-byte SHA256 only, no canonical PCM identity",
+      "name": "noncanonical_native_sources_22",
+      "record_count": 22,
+      "sources": [
+        "research/effect-data-inventory-v2/report.json"
+      ],
+      "unique_hash_counts": {
+        "file_sha256": 22
+      }
+    }
+  ],
+  "far_schedule_summary": {
+    "complete_domain_rows": 240,
+    "complete_original_source_families": 120,
+    "entries": {
+      "1103": 339,
+      "3301": 371
+    },
+    "shared_injected_ancestor_families": 112,
+    "shared_injected_file_hashes": 224
+  },
+  "independence_verified": false,
+  "index_sha256": "cc94769b33b8bdf1285ed6b32497760a2a9f1a4066dd7a72e9f096f7c351d938",
+  "limitations": [
+    "Only exact declared whole-file and mono 16-kHz PCM16 hash identities are compared.",
+    "Historical metadata is retained evidence, not live reverification of historical waveform bodies.",
+    "No match does not exclude excerpts, other channels, gain changes, resampling, remixes, or transformed derivatives.",
+    "Historical speaker/session identities are missing; no exact match cannot establish speaker/session independence.",
+    "Local current training manifests are incomplete; this is not an exhaustive audit of all training corpora or pretrained models.",
+    "AliMeeting transcript/negative-label review and release/license decisions are outside this comparison."
+  ],
+  "name_scan": {
+    "files_scanned": 875,
+    "matches": [],
+    "meaning": "name-string scan only; renamed/missing provenance cannot be ruled out",
+    "pattern": "alimeeting|ali[_ -]meeting|eval_ali_(?:far|near)|R\\d{4}_M\\d{4}"
+  },
+  "nearby_training_manifest_checks": [
+    {
+      "bytes": 0,
+      "path": "kws-effect-data-v2-20261014/cli-verified/train.jsonl",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "kws-effect-data-v2-20261014/cli-verified-385/train.jsonl",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "kws-effect-data-v2-20261014/cli-verified-final/train.jsonl",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "kws-effect-data-v2-20261014/cli-verified-history-fix/train.jsonl",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "kws-effect-data-v2-20261014/cli-verified-placeholder-fix/train.jsonl",
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "remote_metadata_only": [
+    {
+      "normalized_sample_rate_hz": 16000,
+      "recordings": 384,
+      "recovery_entrypoint": "training/materialize_governed_product_base.sh",
+      "release_archive": "speech-like-base-5204b798033f.tar.gz",
+      "release_archive_sha256": "18c0401b6b8d2d4a01d6b28f3d17ffbacb33a6c359e50e890d7882f478e4bfd6",
+      "release_tag": "speech-like-base-5204b798033f",
+      "source": "configs/training/product-speech-like-base-v1.json",
+      "source_sample_rate_hz": 8000,
+      "source_sha256": "4b8fb675b85d1793fb22183486ab71f619f755cde7a7d52e5ee28761c15fc18d",
+      "splits": {
+        "calibration": 64,
+        "qualification": 128,
+        "test": 64,
+        "train": 128
+      },
+      "status": "declared_public_release_not_materialized_by_this_inventory",
+      "train_scope": "retain original train-only scope; never recycle calibration/test/qualification",
+      "voice_slots": 24
+    }
+  ],
+  "repository_root": "/workspace/scratch/6c2ef8b5a46e/kws-effect-iteration-v2-20261014/candidate",
+  "schema": "historical-audio-identity-index-v1",
+  "sealed_qualification_allowed": false,
+  "sources": {
+    "models/registry/model-749187ec1d66/xiaowo-model-provenance.json": {
+      "bytes": 883535,
+      "path": "models/registry/model-749187ec1d66/xiaowo-model-provenance.json",
+      "sha256": "5a3d354f35eed4313da37e4d818000e747f1cbe5f39a7e925081e056687fbdee"
+    },
+    "research/effect-data-inventory-v2/development.jsonl": {
+      "bytes": 386647,
+      "path": "research/effect-data-inventory-v2/development.jsonl",
+      "sha256": "bc4ca47ef47645bb2cd80dc969d2bf637dfd4c852d49df33c14211904c3aea74"
+    },
+    "research/effect-data-inventory-v2/quarantine.jsonl": {
+      "bytes": 0,
+      "path": "research/effect-data-inventory-v2/quarantine.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "research/effect-data-inventory-v2/report.json": {
+      "bytes": 456459,
+      "path": "research/effect-data-inventory-v2/report.json",
+      "sha256": "7cd0e01fb0d248dccde31d3fc2d60caa1d1edf6af6ac2004339440d1c0fb33f1"
+    },
+    "research/effect-data-inventory-v2/sealed_acceptance.jsonl": {
+      "bytes": 0,
+      "path": "research/effect-data-inventory-v2/sealed_acceptance.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "research/effect-data-inventory-v2/train.jsonl": {
+      "bytes": 0,
+      "path": "research/effect-data-inventory-v2/train.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "research/known-far-diagnostic-v1/original-domain-index.jsonl.gz": {
+      "bytes": 44069,
+      "path": "research/known-far-diagnostic-v1/original-domain-index.jsonl.gz",
+      "sha256": "7a357f34e06a97ec8d65a4eee1ed19058f58ec1791b47a83c8905890de0b84df"
+    },
+    "research/known-far-diagnostic-v1/original-injections-1103.jsonl.gz": {
+      "bytes": 16032,
+      "path": "research/known-far-diagnostic-v1/original-injections-1103.jsonl.gz",
+      "sha256": "df3c4e3d6c8453247085c8b83aaa3cb3aa58fd50a722b20e57ea0a02fd5f73e1"
+    },
+    "research/known-far-diagnostic-v1/original-injections-3301.jsonl.gz": {
+      "bytes": 18096,
+      "path": "research/known-far-diagnostic-v1/original-injections-3301.jsonl.gz",
+      "sha256": "28afc54fb05863ace901cfc49969a780739f4570c90aabbb2aa5907d45aaccb9"
+    }
+  },
+  "training_receipt": {
+    "corpus_digest_verified": "d4a0966510ca007f5f84b4f15d2b2dfe1d7d5d55f425375ace6213ea2fa15b3c",
+    "declared_manifest_digests": [
+      {
+        "name": "train.tsv",
+        "sha256": "562ebb8a5ff446673713986ad19cf7a28a85fc62d50e6a8886239685691deadf"
+      },
+      {
+        "name": "hard-negatives.tsv",
+        "sha256": "09dfaa6ed0f55b10faa0db96a4f259da50f055c960adf5529e5696b770d44e19"
+      }
+    ],
+    "known_session_ids": 0,
+    "known_speaker_ids": 0,
+    "manifest_counts": {
+      "hard-negatives.tsv": 128,
+      "train.tsv": 1728
+    },
+    "training_manifest_bodies_present_in_candidate": []
+  }
+}

@@ -1,0 +1,309 @@
+{
+  "acoustic_dump_calls_in_receipt": 13,
+  "all_blank_clips": 6,
+  "all_calls_attempt_one_exit_zero": true,
+  "analysis_sha256": "87e42ae33d0bab894c0e6a5cc7e249e2919cd6b9394fec49a3f162247bb7fe3c",
+  "binary_trace_headers_frames_logits_and_derived_json_recomputed": true,
+  "build_outputs_checked": 37,
+  "builds_by_auditor": 0,
+  "calls_recorded_and_claims_verified": 39,
+  "clips": [
+    {
+      "frames": 127,
+      "path_output_sha256": "b87f9a805863ad2d252b7128011d0400de8f40d5a59f979def209d8123559e1a",
+      "sample_id": "tqp-qwen06-03",
+      "speech_frames": 56,
+      "target_max_depth": 0,
+      "target_max_terminal_confidence": null,
+      "target_max_terminal_retention_log": null,
+      "target_retention_pass_frames": 0,
+      "target_text": "小窝小窝",
+      "target_threshold_pass_frames": 0,
+      "top1_histogram": {
+        "0": 127
+      },
+      "trace_sha256": "5719e4dddf201028599e01579271c02af510bae4826b125fbb2cfc82171d52a5"
+    },
+    {
+      "frames": 71,
+      "path_output_sha256": "f9d4046276d0c856cd9bc8c622fe27b00fc8b8638797d5140454dc45bf7260ad",
+      "sample_id": "tqp-qwen06-05",
+      "speech_frames": 38,
+      "target_max_depth": 4,
+      "target_max_terminal_confidence": 0.0075291493,
+      "target_max_terminal_retention_log": -22.625349,
+      "target_retention_pass_frames": 0,
+      "target_text": "你好小窝",
+      "target_threshold_pass_frames": 0,
+      "top1_histogram": {
+        "0": 51,
+        "1": 15,
+        "2": 5
+      },
+      "trace_sha256": "2e84a1d46d073ed85b07e6bcd8f045d661cf39e8243eb969c5c483ac1091d183"
+    },
+    {
+      "frames": 83,
+      "path_output_sha256": "bf48d1079ce98ab90cd8123703faa4045a397a344ff1635f13592d2dcf2fd86d",
+      "sample_id": "tqp-qwen06-06",
+      "speech_frames": 57,
+      "target_max_depth": 0,
+      "target_max_terminal_confidence": null,
+      "target_max_terminal_retention_log": null,
+      "target_retention_pass_frames": 0,
+      "target_text": "小窝小窝",
+      "target_threshold_pass_frames": 0,
+      "top1_histogram": {
+        "0": 81,
+        "1": 2
+      },
+      "trace_sha256": "17e3d109efaef4c53b26f96455c4de79f6e394081aa3ab8769cbd2519bf8f77d"
+    },
+    {
+      "frames": 191,
+      "path_output_sha256": "2e054a4c409a208179018079b4137cd36d696b806add81de475a083c72f9bc26",
+      "sample_id": "tqp-qwen06-10",
+      "speech_frames": 99,
+      "target_max_depth": 0,
+      "target_max_terminal_confidence": null,
+      "target_max_terminal_retention_log": null,
+      "target_retention_pass_frames": 0,
+      "target_text": "小窝小窝",
+      "target_threshold_pass_frames": 0,
+      "top1_histogram": {
+        "0": 191
+      },
+      "trace_sha256": "2e8cd80cc79e7ab4a225f9cf4ba58f1f7ef146dbf11a3f98b3f68daafbe10766"
+    },
+    {
+      "frames": 255,
+      "path_output_sha256": "53ca26a1c6757823f03ce254ee114672dfc3eca6175c29c409e3f04cb7cd7517",
+      "sample_id": "tqp-qwen06-11",
+      "speech_frames": 106,
+      "target_max_depth": 0,
+      "target_max_terminal_confidence": null,
+      "target_max_terminal_retention_log": null,
+      "target_retention_pass_frames": 0,
+      "target_text": "小窝小窝",
+      "target_threshold_pass_frames": 0,
+      "top1_histogram": {
+        "0": 255
+      },
+      "trace_sha256": "8c3807175ab89f80434ac43bd5a721a45d0bfc56237fcb00de0e297df16d1db8"
+    },
+    {
+      "frames": 111,
+      "path_output_sha256": "16260347cd9026fd1afc3b419b9a99db53634a6c341a45e828942f5214b34ae3",
+      "sample_id": "tqp-qwen06-14",
+      "speech_frames": 68,
+      "target_max_depth": 0,
+      "target_max_terminal_confidence": null,
+      "target_max_terminal_retention_log": null,
+      "target_retention_pass_frames": 0,
+      "target_text": "小窝小窝",
+      "target_threshold_pass_frames": 0,
+      "top1_histogram": {
+        "0": 111
+      },
+      "trace_sha256": "b56383a42762a244d4128c57d1464d5e0003f65cc3656b94790f0612da737ab2"
+    },
+    {
+      "frames": 95,
+      "path_output_sha256": "991c56159982167561495612ecdd34259ef12722450b515c37cf3ab84c6cecd7",
+      "sample_id": "tqp-qwen06-15",
+      "speech_frames": 57,
+      "target_max_depth": 0,
+      "target_max_terminal_confidence": null,
+      "target_max_terminal_retention_log": null,
+      "target_retention_pass_frames": 0,
+      "target_text": "小窝小窝",
+      "target_threshold_pass_frames": 0,
+      "top1_histogram": {
+        "0": 95
+      },
+      "trace_sha256": "dcf0ca6b7f5925620c42f9e0c09c423581b6803bd8af88ce9dc9079a27cf2aeb"
+    },
+    {
+      "frames": 67,
+      "path_output_sha256": "ef332b85c97640c889317d4e21b2947f20807bec634826535452d4992ef203fa",
+      "sample_id": "tqp-qwen17-01",
+      "speech_frames": 52,
+      "target_max_depth": 4,
+      "target_max_terminal_confidence": 0.0132638067,
+      "target_max_terminal_retention_log": -16.5,
+      "target_retention_pass_frames": 0,
+      "target_text": "你好小窝",
+      "target_threshold_pass_frames": 0,
+      "top1_histogram": {
+        "0": 50,
+        "1": 3,
+        "2": 14
+      },
+      "trace_sha256": "78354dc5d1c0f1efbe600c8ce26d79291259cdafae1626dd185a232c44a9ada6"
+    },
+    {
+      "frames": 87,
+      "path_output_sha256": "cbcfc38fca9fa3bcac2910392a15de54967c1bd76534215500236fca12518028",
+      "sample_id": "tqp-qwen17-02",
+      "speech_frames": 82,
+      "target_max_depth": 0,
+      "target_max_terminal_confidence": null,
+      "target_max_terminal_retention_log": null,
+      "target_retention_pass_frames": 0,
+      "target_text": "小窝小窝",
+      "target_threshold_pass_frames": 0,
+      "top1_histogram": {
+        "0": 81,
+        "2": 1,
+        "4": 5
+      },
+      "trace_sha256": "6b00186da6a21473d49e69783720b36085f539fde71b11dd6444acc319271ab3"
+    },
+    {
+      "frames": 59,
+      "path_output_sha256": "7471cca3d7be761373359d0b53b4ac1dc523d22a6b17d42308d3c851dfbcba62",
+      "sample_id": "tqp-qwen17-03",
+      "speech_frames": 55,
+      "target_max_depth": 0,
+      "target_max_terminal_confidence": null,
+      "target_max_terminal_retention_log": null,
+      "target_retention_pass_frames": 0,
+      "target_text": "小窝小窝",
+      "target_threshold_pass_frames": 0,
+      "top1_histogram": {
+        "0": 57,
+        "2": 2
+      },
+      "trace_sha256": "9ff9c3d6d938cfb59fc8772985d7484ee724d6bad85f5f5e4c11d195c934d730"
+    },
+    {
+      "frames": 83,
+      "path_output_sha256": "6d7fbce81d0ef462e70553c6ac97cfabc18da92e5bcf9d1bf69eefc0002edb32",
+      "sample_id": "tqp-qwen17-06",
+      "speech_frames": 79,
+      "target_max_depth": 0,
+      "target_max_terminal_confidence": null,
+      "target_max_terminal_retention_log": null,
+      "target_retention_pass_frames": 0,
+      "target_text": "小窝小窝",
+      "target_threshold_pass_frames": 0,
+      "top1_histogram": {
+        "0": 74,
+        "1": 9
+      },
+      "trace_sha256": "e0a1d5c4c6a3a3c6d19e0b96ed324d3c9ad274df54b8af0b6a5f2e60c8bfc591"
+    },
+    {
+      "frames": 83,
+      "path_output_sha256": "4813abcdfaf327a96bc5b51c858fea0ea91a8c2cc37bc43e7a632de89377ed8d",
+      "sample_id": "tqp-qwen17-14",
+      "speech_frames": 71,
+      "target_max_depth": 0,
+      "target_max_terminal_confidence": null,
+      "target_max_terminal_retention_log": null,
+      "target_retention_pass_frames": 0,
+      "target_text": "小窝小窝",
+      "target_threshold_pass_frames": 0,
+      "top1_histogram": {
+        "0": 81,
+        "1": 2
+      },
+      "trace_sha256": "c19f76bbce36060d296b1c7b6993ae38407d5124e06089f39831007cb6354fc1"
+    },
+    {
+      "frames": 63,
+      "path_output_sha256": "1c2b152d4ff6de9670b2dbbae9685754769515dcf8fd78700e595d972ca20bf7",
+      "sample_id": "tqp-qwen17-15",
+      "speech_frames": 59,
+      "target_max_depth": 0,
+      "target_max_terminal_confidence": null,
+      "target_max_terminal_retention_log": null,
+      "target_retention_pass_frames": 0,
+      "target_text": "小窝小窝",
+      "target_threshold_pass_frames": 0,
+      "top1_histogram": {
+        "0": 63
+      },
+      "trace_sha256": "2f1dbbaf00900b1fc21a31c8287cc9cc425abacd5d25b9239965bf708ec6c5c5"
+    }
+  ],
+  "core_and_tool_io_archives_identical_to_P4": true,
+  "decoder_only_calls_in_receipt": 26,
+  "decoder_replays_by_auditor": 0,
+  "diagnosis_summary_sha256": "93ef9b5a3612668a6d1a1dcf6eb6630306a53fda5e543f3df72b551094529c27",
+  "exact_same_selected_wavs": 13,
+  "independent_source_build_validation_sha256": "c60ac3957953d502d94fc1a0a7fec177fd11a6d867f8ab2ded53194f18f1dffa",
+  "input_hashes_checked": 129,
+  "interpretation": "Stored traces support immediate failure of the xiao3 root-start condition and greeting paths failing both frozen retention and confidence gates on these 13 machine-labelled development clips. Root cause such as training-domain versus historical frontend/quantization parity remains unproven. These observations are not human-gold FRR, FAR, or generalization evidence.",
+  "model_calls_by_auditor": 0,
+  "observation_build_receipt_sha256": "23f960bf1e0ecc54815d5e1adfe4ff3dccccad5361c5895acf3b0736d5aefd47",
+  "observation_receipt_sha256": "64241cc3dd05aadc4322071df8593c099f51195a07d88eef2aa057c0e7c4e1c9",
+  "observation_run_files_unchanged_during_review": 145,
+  "observe_script_sha256": "835091c0a13f3afb0a125c61bba6a379f85c402404ac657c1989e541ca947b86",
+  "original_alimeeting_summary_sha256_unchanged": "e34600b0cc8816e3e23dda888782c8eabb831fb9bea658518bb41a12f51f1c06",
+  "original_and_observation_events_byte_identical": true,
+  "original_control_files_unchanged_during_review": 81,
+  "original_control_summary_sha256_unchanged": "4510f8f8d2b5008da89c274d8cb074fae646788855753a161e098c6cca32647a",
+  "original_files_modified": false,
+  "pack": [
+    {
+      "grace_frames": 0,
+      "keyword_id": 1,
+      "min_trailing_blanks": 0,
+      "prefix_policy": 0,
+      "threshold": 0.550000011920929,
+      "tokens": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "grace_frames": 0,
+      "keyword_id": 2,
+      "min_trailing_blanks": 0,
+      "prefix_policy": 0,
+      "threshold": 0.550000011920929,
+      "tokens": [
+        3,
+        4,
+        3,
+        4
+      ]
+    }
+  ],
+  "path_summary_matches_raw_path_output": true,
+  "per_clip_frame_blank_and_VAD_aggregates_match_original_control": true,
+  "processed_frames": 1375,
+  "review_scope": "Read-only stored observation, source, build, and result validation; one new independent report only. No execution of models, decoders, or build scripts.",
+  "reviewed_at_utc": "2026-10-14T14:16:22.608003+00:00",
+  "reviewed_candidate_selection_exact": true,
+  "root_start_logit_margin": 0.5,
+  "run_outputs_checked": 144,
+  "schema": "positive-trace-independent-observation-audit-v1",
+  "scope_limit": "This audit did not inspect heldout data or unrelated registry summaries and does not independently verify historical training-parity claims or producer-reported earlier information exposure.",
+  "selected_denominators": {
+    "你好小窝": 2,
+    "小窝小窝": 11
+  },
+  "selected_fuzzy_provenance_matches_actual_trace_frames": true,
+  "shadow_gate": {
+    "all_path_invocations_exit_zero_and_stderr_empty": true,
+    "fail_closed_on_inactive_state_or_lane_mismatch": true,
+    "interpretation": "The existing path runner validates every frame against runtime state with its declared tolerance; no independent decoder replay was performed.",
+    "lane_absolute_tolerance": 0.0002,
+    "source_sha256": "180abd6371df76b9f9291703e8855c9e1845cbf894ac6d700460a0a1180ed365"
+  },
+  "speech_frames": 879,
+  "status": "pass",
+  "token3_top1_frames": 0,
+  "top1_counts": {
+    "0": 1317,
+    "1": 31,
+    "2": 22,
+    "4": 5
+  },
+  "xiao3_max_exact_softmax": 0.05985397648528075,
+  "xiao3_min_top_logit_gap": 2.2800590991973877
+}

@@ -1,0 +1,60 @@
+{
+  "status": "pass",
+  "scope": "13 machine-label development positives, observational only",
+  "frames": 1375,
+  "top1_counts": {
+    "0": 1317,
+    "1": 31,
+    "2": 22,
+    "4": 5
+  },
+  "speech_frames": 879,
+  "all_blank_clips": 6,
+  "xiao3_min_top_logit_gap": 2.2800590991973877,
+  "xiao3_max_exact_softmax": 0.05985397648528075,
+  "findings": [
+    "All 11 xiaowo-xiaowo target paths have max_depth_reached=0.",
+    "Both nihao-xiaowo clips have greedy tokens [1,2,1]; fuzzy terminal paths fail both retention budget and acoustic confidence.",
+    "Pack is immediate with min_trailing_blanks=0 and grace=0; no trailing confirmation wait exists.",
+    "No stale-config token fingerprint mismatch found; sample rate/front-end geometry match.",
+    "Causal training-domain versus historical frontend/quantization mismatch remains unproven without frozen training-side parity evidence."
+  ],
+  "limits": [
+    "Machine ASR agreement is not human gold.",
+    "No heldout/qualification bodies used; an earlier overbroad registry JSON read inadvertently exposed historical qualification summary headers; these are excluded from this diagnosis and any selection.",
+    "Current training frontend/model source hashes differ from provenance; current code is not proof of historical train/inference parity.",
+    "No threshold adjustment, weight change, padding, resampling or new synthesis."
+  ],
+  "next_falsifiable_step": "Read-only fetch exact training frontend/frontend_spec/model and rendering config at provenance repository_sha a849d7ccbbfec83863115d726f40bbdd0121f948, verify stored SHA before parity reasoning; if authorized later, run fixed-input training-vs-C frontend and dequantized-vs-float numerical comparison without tuning or new corpus exposure.",
+  "model_binding": {
+    "model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+    "pack_sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+    "token_sha256": "af113e57eb6375b3c364b3845c6698ea460e29f718c8303657777183d6eda8c7",
+    "vocab_fingerprint": "0x316aea1a94b303bf",
+    "feature_dim": 32,
+    "hidden_dim": 64,
+    "vocab_size": 5,
+    "frontend": "logmel",
+    "sample_rate": 16000,
+    "frame_length": 400,
+    "frame_hop": 320,
+    "keyword_tokens": [
+      [
+        1,
+        2,
+        3,
+        4
+      ],
+      [
+        3,
+        4,
+        3,
+        4
+      ]
+    ],
+    "threshold": 0.550000011920929,
+    "prefix_policy": "immediate",
+    "min_trailing_blanks": 0,
+    "grace_frames": 0
+  }
+}

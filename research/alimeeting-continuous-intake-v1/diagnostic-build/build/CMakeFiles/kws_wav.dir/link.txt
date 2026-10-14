@@ -1,0 +1,1 @@
+/usr/bin/gcc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/kws_wav.dir/link.d CMakeFiles/kws_wav.dir/tools/kws_wav.c.o -o kws_wav  libkws_pipeline.a libkws_tool_io.a -lm

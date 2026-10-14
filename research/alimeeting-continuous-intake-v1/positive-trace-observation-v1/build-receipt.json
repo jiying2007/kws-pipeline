@@ -1,0 +1,247 @@
+{
+  "source_revision": "11b93abe92427c3ece2a01f9a497cdb74bab0062",
+  "source_tree": "b8ae29e82097c38e92dbb1bb1cd4db10ade6cdc6",
+  "source_inputs": {
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/CMakeLists.txt": "cfe16827b5e9df5e92da677891f1b29155a0ebe897b1d3f6a1b27ed6e74b7aca",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/cmake/KwsBuildIdentity.cmake": "54a9b1335201ebc129c162d3915b046d62bfdf4b76f1abc1c466357c83adc8c3",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/cmake/KwsPipelineConfig.cmake.in": "1a7de8a75f3c279c4538afc8c1a95c0ea7aec961777fa56d90cfaffc4942da3b",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/cmake/KwsSourceRevision.cmake": "ed0ca5f5b2586e8120348754d5a220f3cc002cdc7d2761a6e727c703276dc5dc",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/cmake/kws-pipeline.pc.in": "d2c22a39ba9ddde6dc84d438f3bb5fb6af5e2136e819ce908ef6c0cbc33b6637",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/cmake/kws_build_config.h.in": "46ea897e10ab6d12769ae8089b86207f19a101ec37056ff2b81404512c6712c1",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/cmake/kws_source_revision.h.in": "7194c40f9c1a45b08762d7b198426b3bf4fcbaf23c345a77a6fac8202d7eaedc",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/configs/parameter-contract.json": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include/kws_pipeline/kws.h": "3405855e97cde28cf2842bb9c607e931347395790fe3ed268617e662af676496",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/build_info.c": "8e900d3a077af5e7006909941b666481248fadecdeb3274eb546c8f56030ac7b",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/decoder.c": "8eb2631073482414916c36afeb6fc0578ca137b9f9ab995dd9d579f9c32d8f2a",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/decoder.h": "3357a957cd2b07108bdb7fa7657b8c807db347950eeeda94f490a0505604c76b",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/frontend.c": "4b15da591837859232a91200b81a70ffc683a79f08bf12b0adb368ae5e680b27",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/frontend.h": "1c9a3663970e60d2a83e862e6a13aa04860c466ab9f54a7dbdc56864e4de63dd",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/keyword_pack.c": "967f415850a7fbf87ad088f310ed0b2fdd78317c9ca07fc1128622cabdcc9b57",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/kws.c": "cb7fbffd0ff8617b78ad4d7afd5557c1c13fec06250acfdc10713c463d54f171",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/kws_debug.h": "f5f84746df743ef8d6601e383014413fcee302fdf315445bfd7ff76a9d8c0b16",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/model.c": "af783d7123126f40f7c30f576290cc961ecfc2c987e7abb1c24c633a138adf83",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/model.h": "a3d9286d5653c340b0b6d513b0987feefc51d7f9a9e550480026d36b2664f12d",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/gen_parameter_limits.py": "a7fc02bcd26962f0c1a91b221651f7329465ea760076b775577d5918e02fbcb8",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_timeline.h": "94087f896c9892f7f0c8cc5be70faba51216b89b548b66161f17215deac79022",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_wav.c": "41ae7fa10b6f41afc8c2d80bc586ecf5476fc6d8185ffbaf2a807ea69135e4de",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/sha256.c": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/sha256.h": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/tool_io.c": "c8aef71ea35ced4b6e1648eb9154420c861d0e4daf8ae2758f930160d295d114",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/tool_io.h": "a321ab3bb2c7520a6e31cb9f20f2873d30b4059c390021705ac82e8cc2dd4c95",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/xiaowo-model.kwm": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/xiaowo-keywords.kwk": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/kws_wav": "53a5dcb50c599d88bb72b2cfbaf6ff5d6e7a379ecef3011f28f5820261d155a9",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-3.31.6/cmake/data/bin/cmake": "57452fa01ed0f69552c06d3e25edd0d9375347b982dfb709393526cb45396d6b",
+    "/usr/bin/x86_64-linux-gnu-gcc-14": "a23ecab8ff08f09ad8c80602c2c5df7f49e09c25905cb8975902e101bf72635f",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_posterior_dump.c": "397cee588487720b772d556ef72071e163ce502dfe8257c4d69c8d91799a9221",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_decoder_replay.c": "86ff25540faa33c54b275ca943bdb8bfc7b96893c4542da2c78fd1340bae8483",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_decoder_path_replay.c": "180abd6371df76b9f9291703e8855c9e1845cbf894ac6d700460a0a1180ed365",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_trace_io.c": "2f66cf4e8181462dc35e4a5d45a2b3578411b712db1ef22fca048c86232fab96",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_trace_io.h": "b8a28a5257294ebebc44e52bd65f03d8f175ae855e0da4cc8422a363221a1349"
+  },
+  "environment": {
+    "HOME": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/home",
+    "LANG": "C",
+    "LC_ALL": "C",
+    "PATH": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "TMPDIR": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/tmp"
+  },
+  "parent_build_receipt_sha256": "78b2988e60a4bf6b875934222fd5e732633ca34de64e470c433e74289f57ac8a",
+  "commands": [
+    {
+      "argv": [
+        "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-3.31.6/cmake/data/bin/cmake",
+        "-S",
+        "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate",
+        "-B",
+        "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/build",
+        "-G",
+        "Unix Makefiles",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DKWS_STRICT=ON",
+        "-DKWS_SOURCE_REVISION=11b93abe92427c3ece2a01f9a497cdb74bab0062",
+        "-DCMAKE_C_COMPILER=/usr/bin/gcc",
+        "-DCMAKE_MAKE_PROGRAM=/usr/bin/make",
+        "-DPython3_EXECUTABLE=/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DKWS_BUILD_TESTS=OFF",
+        "-DKWS_BUILD_BENCH=OFF",
+        "-DKWS_BUILD_TOOLS=ON",
+        "-DKWS_BUILD_FUZZ=OFF",
+        "-DCMAKE_INSTALL_PREFIX=/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/build/install"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 1.8908222000027308
+    },
+    {
+      "argv": [
+        "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-3.31.6/cmake/data/bin/cmake",
+        "--build",
+        "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/build",
+        "--target",
+        "kws_posterior_dump",
+        "kws_decoder_replay",
+        "kws_decoder_path_replay",
+        "--parallel",
+        "2",
+        "--verbose"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 4.311460702003387
+    }
+  ],
+  "outputs": {
+    "build/libkws_tool_io.a": {
+      "bytes": 9582,
+      "sha256": "400d383f6c35e5e91f7afbc28b79c95cd86c20db4d03de42e4e451ec49750370"
+    },
+    "build/kws_decoder_path_replay": {
+      "bytes": 56792,
+      "sha256": "9092ee1539a6d7b5f55f932009ea7bf387d961850b21773a58952e67a12249db"
+    },
+    "build/libkws_trace_io.a": {
+      "bytes": 8242,
+      "sha256": "8c41ece7f4af73313d220962601e7a1773dc656a1feb5a2cd2c86e4f4f413c6e"
+    },
+    "build/libkws_pipeline.a": {
+      "bytes": 38856,
+      "sha256": "de07b4c6b572989b68c95dedd58d8eaeff1bac4290cad5beb0591c5cf60430fe"
+    },
+    "build/kws_decoder_replay": {
+      "bytes": 48688,
+      "sha256": "f146d77b7d5c7537fab7dde5cb324d30fc121be0c3c106fad76c1ad74cd67be5"
+    },
+    "build/kws_posterior_dump": {
+      "bytes": 48472,
+      "sha256": "405c56e6cc9ec9b863d3303d57eab6005f28d441ee8227b27b519acf80d06e56"
+    },
+    "build/compile_commands.json": {
+      "bytes": 14174,
+      "sha256": "8f1409c9074d2c12266b4ba76d9278637b8f949859df99c9fad367729391823a"
+    },
+    "build/generated/kws_build_config.h": {
+      "bytes": 491,
+      "sha256": "cc26c543327e29d1eb85b2b0b4ca8304089b6ecba63a46fa9ec358d100e9fff6"
+    },
+    "build/generated/kws_source_revision.h": {
+      "bytes": 164,
+      "sha256": "666e46bb0c9430a820ac1efa4b2af40d836da662d6001c50b2d64aed7cc7a1e1"
+    },
+    "build/generated/kws_parameter_limits.h": {
+      "bytes": 9560,
+      "sha256": "bd81e6d357487a400b759d49e97ef1aca88ee9e38f83d13c7d8bd075941a32cb"
+    },
+    "build/CMakeFiles/kws_posterior_dump.dir/link.d": {
+      "bytes": 3392,
+      "sha256": "a6f6ec44d97ae630bbea8269d2e558b31ac7109007eaab9ab6818ed3986d1570"
+    },
+    "build/CMakeFiles/kws_decoder_path_replay.dir/link.d": {
+      "bytes": 3417,
+      "sha256": "d7382662514e69bb5223d6684dc639a7311dab445687d1c07590f84d6a21e301"
+    },
+    "build/CMakeFiles/kws_decoder_replay.dir/link.d": {
+      "bytes": 3392,
+      "sha256": "746356b1368053cb78634848bcb9a0ba043ea9742a37aa98b74a7143c1477d82"
+    },
+    "build/CMakeFiles/kws_pipeline.dir/src/build_info.c.o.d": {
+      "bytes": 1428,
+      "sha256": "ec0c43fb6d2391b705ed0aa80c817ceb1831d6959d9da464ef40c3f97da3ab70"
+    },
+    "build/CMakeFiles/kws_pipeline.dir/src/keyword_pack.c.o.d": {
+      "bytes": 2019,
+      "sha256": "9a35ecfc7efbf33d114dd1c3acbcbf7056746a8d88beb5dcf1ec7636b66adf77"
+    },
+    "build/CMakeFiles/kws_pipeline.dir/src/build_info.c.o": {
+      "bytes": 2032,
+      "sha256": "bf1f356160809d71b334e457a4b628c53c41b97cff750186a3f4005abe39f0bc"
+    },
+    "build/CMakeFiles/kws_pipeline.dir/src/keyword_pack.c.o": {
+      "bytes": 5192,
+      "sha256": "b5a56d7cf90fea315e034e93fbb4db4e93bd362b4e4c0a143559899768c972d2"
+    },
+    "build/CMakeFiles/kws_pipeline.dir/src/model.c.o.d": {
+      "bytes": 2009,
+      "sha256": "23ecb0a773a1ecfa2b440d0d50c24b81aedd29719d20c1bdb638cfa599afa3c3"
+    },
+    "build/CMakeFiles/kws_pipeline.dir/src/kws.c.o.d": {
+      "bytes": 2280,
+      "sha256": "0d9df919329159a617d3296e4f55dd29addcb7aa65983beb2c2bbfd5d876e081"
+    },
+    "build/CMakeFiles/kws_pipeline.dir/src/kws.c.o": {
+      "bytes": 10984,
+      "sha256": "f03c2aba4bbf450620126020f4e8bd5deb7e27da16eef8a9685f2621674f6e7d"
+    },
+    "build/CMakeFiles/kws_pipeline.dir/src/model.c.o": {
+      "bytes": 2176,
+      "sha256": "05a2dc44f988e4fa1eca553ec2031930fd4a8aaa4e216468b116f32371582995"
+    },
+    "build/CMakeFiles/kws_pipeline.dir/src/decoder.c.o": {
+      "bytes": 10960,
+      "sha256": "7f0cf8fd24f919fb7fd3b16d257d14eb10f48a5e4e29d36d3ba8d7b09c6ba730"
+    },
+    "build/CMakeFiles/kws_pipeline.dir/src/decoder.c.o.d": {
+      "bytes": 2101,
+      "sha256": "4dd7921573495e42522ab11b02f758481e25f2424ad9450c3e8d4609cf1b9cdc"
+    },
+    "build/CMakeFiles/kws_pipeline.dir/src/frontend.c.o": {
+      "bytes": 6184,
+      "sha256": "71f09ff89945e4534b5587dc75b387ae853e51d531b18653178714163dec0c07"
+    },
+    "build/CMakeFiles/kws_pipeline.dir/src/frontend.c.o.d": {
+      "bytes": 2104,
+      "sha256": "cd9f86932d0700a4086c702c7a860d3be2cac9693f4c012c34ca670bebc80200"
+    },
+    "build/CMakeFiles/kws_posterior_dump.dir/tools/kws_posterior_dump.c.o.d": {
+      "bytes": 3799,
+      "sha256": "099b26bdd2b6a14672e9f4b850804dae0282749ddcc15446b4a372929dbc2748"
+    },
+    "build/CMakeFiles/kws_posterior_dump.dir/tools/kws_posterior_dump.c.o": {
+      "bytes": 6424,
+      "sha256": "5c4ec8eba675ebd30929016f9872dfec4d18485f83e3e42eeb3348625f92e75b"
+    },
+    "build/CMakeFiles/kws_decoder_path_replay.dir/tools/kws_decoder_path_replay.c.o.d": {
+      "bytes": 4411,
+      "sha256": "ac2b5f3670c356aee74365bcf66c5d5ef07dbb33f66834c40942aa10d9ed48d0"
+    },
+    "build/CMakeFiles/kws_decoder_path_replay.dir/tools/kws_decoder_path_replay.c.o": {
+      "bytes": 17440,
+      "sha256": "98407eabb8c078ef83b3e81f9b0035bc228a66b60b35bcb7f46c953597b3357a"
+    },
+    "build/CMakeFiles/kws_tool_io.dir/tools/tool_io.c.o": {
+      "bytes": 4048,
+      "sha256": "a6105fac5c6b440acb3db5f31f193dca4623f800b1535c9e4a1a6c4070baae54"
+    },
+    "build/CMakeFiles/kws_tool_io.dir/tools/tool_io.c.o.d": {
+      "bytes": 3484,
+      "sha256": "56fcc215d10b99ee455f38acd0ad45e08154d0f81e59a1a5d867112a96809eb9"
+    },
+    "build/CMakeFiles/kws_tool_io.dir/tools/sha256.c.o": {
+      "bytes": 5216,
+      "sha256": "3d6cce2a57b5b45a45716673f86a97c6f2c51ea5e2639ed7ba6c3c62b144134d"
+    },
+    "build/CMakeFiles/kws_tool_io.dir/tools/sha256.c.o.d": {
+      "bytes": 1971,
+      "sha256": "d4e44f34cd37c32cd88a2f1ba7eff69f5f99bddbcc127f789c1b49e27b41eaf4"
+    },
+    "build/CMakeFiles/kws_trace_io.dir/tools/kws_trace_io.c.o": {
+      "bytes": 7872,
+      "sha256": "a3c8fa4a4d9a0f683d86da9082d3f5dfe0e3d689c4051c1003fc1a50a1f79953"
+    },
+    "build/CMakeFiles/kws_trace_io.dir/tools/kws_trace_io.c.o.d": {
+      "bytes": 2568,
+      "sha256": "3dee7bf4c6f1ad7697dd32f153baabfcc4521b14c298f2def71790d7d230d12c"
+    },
+    "build/CMakeFiles/kws_decoder_replay.dir/tools/kws_decoder_replay.c.o": {
+      "bytes": 8504,
+      "sha256": "d6dd866b93da8a1ccf21b2be3ddbb3834390a8317191062801b1c4acdff6a094"
+    },
+    "build/CMakeFiles/kws_decoder_replay.dir/tools/kws_decoder_replay.c.o.d": {
+      "bytes": 4603,
+      "sha256": "67508464dd30acbe1ac83f9ec73d5d21b83f5c55e8111cc1217eb0ca0e907021"
+    }
+  },
+  "input_unchanged_after": true,
+  "status": "pass"
+}

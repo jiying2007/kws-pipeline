@@ -1,0 +1,127 @@
+{
+  "accepted_negative_duration_s": 0,
+  "accuracy_improvement_claimed": false,
+  "all_output_weight_rows_identical": false,
+  "all_zero_or_constant_weights": false,
+  "bootstrap_assessment": "No explicit bootstrap flag found in checked provenance; nonconstant dense learned-weight matrices and AdamW provenance are inconsistent with a zero/constant fixture. This remains a tiny synthetic-trained model, not evidence of a qualified real-human-speech model.",
+  "build_receipt_sha256": "78b2988e60a4bf6b875934222fd5e732633ca34de64e470c433e74289f57ac8a",
+  "confirmed_far_available": false,
+  "current_same_runner_positive_response_control_executed": false,
+  "diagnostic_summary_sha256": "e34600b0cc8816e3e23dda888782c8eabb831fb9bea658518bb41a12f51f1c06",
+  "explicit_model_kind_field_in_checked_provenance": null,
+  "keyword_pack_sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+  "model_header": {
+    "abi_version": 2,
+    "bytes": 6812,
+    "feature_dim": 32,
+    "frame_hop_samples": 320,
+    "frame_length_samples": 400,
+    "frontend_kind": 0,
+    "hidden_dim": 64,
+    "magic": "KWSP",
+    "sample_rate_hz": 16000,
+    "vocab_size": 5
+  },
+  "model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+  "new_unconfirmed_TTS_is_not_recall_evidence": true,
+  "positive_response_control_required_to_interpret_zero_events": true,
+  "recalibration_required": true,
+  "recall_or_frr_available": false,
+  "runner_sha256": "53a5dcb50c599d88bb72b2cfbaf6ff5d6e7a379ecef3011f28f5820261d155a9",
+  "runtime_family_from_header_and_C_source": "int8-per-matrix quantized dense tanh recurrent neural network, TinyStreamingRNN-equivalent",
+  "runtime_path_evidence": {
+    "blank_top1_frame_fraction": 0.986344389322306,
+    "direct_posterior_trace_saved": false,
+    "inference_before_decoder_for_every_complete_feature_frame": true,
+    "nonblank_top1_frames": 10336,
+    "observed_stats": {
+      "blank_top1_frames": 746569,
+      "decoder_hits": 0,
+      "detections": 0,
+      "discontinuities": 0,
+      "external_vad_frames": 0,
+      "lost_samples": 0,
+      "processed_frames": 756905,
+      "processed_samples": 242211440,
+      "refractory_suppressed": 0,
+      "speech_frames": 621690
+    },
+    "plain_wav_runner_uses_no_debug_posterior_replay": true,
+    "source": "src/kws.c: infer_frame and kws_engine_accept_pcm16_ex",
+    "speech_frame_fraction": 0.8213580304001162,
+    "vad_controls_decoder_speech_active_not_inference_execution": true
+  },
+  "schema": "alimeeting-frozen-model-scope-audit-v1",
+  "scope": "Static model/header/weight summaries, retained training metadata, C dispatch review, existing diagnostic counters only. No additional model or audio replay.",
+  "shipping_approved": false,
+  "source_revision": "11b93abe92427c3ece2a01f9a497cdb74bab0062",
+  "source_tree": "b8ae29e82097c38e92dbb1bb1cd4db10ade6cdc6",
+  "speed_context": {
+    "dense_dot_terms_per_frame": 6464,
+    "interpretation": "Fast host execution alone is not proof of a bypass; no product-board performance claim is made.",
+    "nominal_dense_dot_terms_over_all_frames": 4892633920,
+    "observed_host_wall_seconds": 19.85398665699904
+  },
+  "training_data_scope": "Retained training limitations say synthetic TTS/tone and simulated acoustic scenes, not real-human speech. Current matching family config uses tone backend, but current config is not an exact byte verification of the historical generator revision.",
+  "training_receipt": {
+    "epochs": 36,
+    "examples": 1856,
+    "optimizer": "AdamW",
+    "provenance_sha256": "5a3d354f35eed4313da37e4d818000e747f1cbe5f39a7e925081e056687fbdee",
+    "recorded_training_repository_sha": "a849d7ccbbfec83863115d726f40bbdd0121f948",
+    "seed": 1337,
+    "training_manifests": [
+      {
+        "name": "train.tsv",
+        "sha256": "562ebb8a5ff446673713986ad19cf7a28a85fc62d50e6a8886239685691deadf"
+      },
+      {
+        "name": "hard-negatives.tsv",
+        "sha256": "09dfaa6ed0f55b10faa0db96a4f259da50f055c960adf5529e5696b770d44e19"
+      }
+    ]
+  },
+  "weight_statistics_not_weight_arrays": {
+    "bh": {
+      "element_count": 64,
+      "maximum": 0.6251017451286316,
+      "minimum": -0.6251009106636047,
+      "nonzero_count": 64,
+      "population_stddev": 0.32221113039361354,
+      "unique_value_count": 64
+    },
+    "bo": {
+      "element_count": 5,
+      "maximum": 0.38278108835220337,
+      "minimum": -1.0138381719589233,
+      "nonzero_count": 5,
+      "population_stddev": 0.4646367549953265,
+      "unique_value_count": 5
+    },
+    "wh": {
+      "element_count": 4096,
+      "maximum": 127,
+      "minimum": -79,
+      "nonzero_count": 3999,
+      "population_stddev": 19.64809188993848,
+      "unique_value_count": 137
+    },
+    "wo": {
+      "distinct_output_rows": 5,
+      "element_count": 320,
+      "maximum": 127,
+      "minimum": -98,
+      "nonzero_count": 311,
+      "population_stddev": 32.189814085504985,
+      "unique_value_count": 123
+    },
+    "wx": {
+      "element_count": 2048,
+      "maximum": 127,
+      "minimum": -124,
+      "nonzero_count": 2015,
+      "population_stddev": 28.010539859790693,
+      "unique_value_count": 176
+    }
+  }
+}

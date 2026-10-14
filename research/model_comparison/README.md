@@ -2,9 +2,18 @@
 
 ## Status and boundaries
 
-Source and stdlib tests only. **Training, model inference, numerical integration,
-quality measurements, C1 export, and SSC305 measurements have NOT_RUN status.**
-The invented receipts inside tests are arithmetic fixtures, never experiments.
+The initial source-only preparation was followed by a successful numerical smoke
+run [38552529009](https://github.com/jiying2007/kws-pipeline/actions/runs/38552529009).
+Its retained [numeric receipt](../effect-data-model-v2/evidence/numeric-run-38552529009/numeric-receipt.json)
+records **actual artificial-PCM fixture training and inference**: two optimizer
+updates per arm, complete-stream versus chunked parity at chunk sizes1/2/7/25,
+source-binding rejection, and execution of the score interface. This is
+`artificial-pcm-numeric-contract-only` evidence, not a speech-quality experiment.
+
+**Matched RNN/C1 quality training and evaluation on newly admitted data, C1 C
+export/target parity, and SSC305 measurements remain NOT_RUN.** No quality metrics
+or shipping approval are claimed. The invented receipts inside unit tests remain
+arithmetic fixtures; they are distinct from the retained actual numeric run.
 This addition does not edit a product config, frozen model, registry, or r1–r5
 artifact and does not enable a workflow or disabled historical research plan.
 
@@ -50,8 +59,8 @@ numpy 2.3.2 and CPU Torch 2.13.0. Do not invent an OCI digest or silently upgrad
 packages. The runner uses no pretrained download, GPU or paid service.
 `model.py` pins one thread and deterministic CPU dispatch before importing Torch.
 
-The root executor owns training/inference. No such commands were executed while
-preparing this patch. A conservative **pilot limit**, not a speed prediction, is
+The root executor owns training/inference. No such commands were executed during the initial
+source-only preparation; the later fixture-only numeric run is recorded above. A conservative **pilot limit**, not a speed prediction, is
 2 epochs and 600 seconds per arm. Runtime and memory need measurement on actual
 input. `process_peak_rss_bytes` is the cumulative process high-water mark, not an
 independent per-arm resource comparison; use fresh processes/external accounting
@@ -204,9 +213,13 @@ timeout 120s .venv-objective/bin/python tests/test_model_comparison_numeric.py \
 
 Use an independent CI job with the existing pinned action/runtime setup and a
 job timeout covering dependency installation plus this bounded test. Upload the
-numeric receipt only after success. No numeric PASS is claimed until the actual
-job and exact-source receipt are inspected. Local preparation reran only the
-24 stdlib tests and py_compile; the numeric entry point remains NOT_RUN here.
+numeric receipt only after success. During the initial source-only preparation,
+only the 24 stdlib tests and py_compile had run; numeric execution was NOT_RUN
+at that historical stage. The later actual run38552529009 and its retained
+[exact-source numeric receipt](../effect-data-model-v2/evidence/numeric-run-38552529009/numeric-receipt.json)
+now establish fixture-only numeric PASS, as summarized at the top of this page.
+This does not change the NOT_RUN status of matched quality A/B on newly admitted
+data, C1 Cexport/target parity, or SSC305 measurements.
 
 The pilot deliberately fixes **logmel** in both arms and records it in each
 checkpoint. This does not claim equivalence to an arbitrary current shipping

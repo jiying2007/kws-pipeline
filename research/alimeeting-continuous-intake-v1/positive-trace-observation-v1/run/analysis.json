@@ -1,0 +1,1134 @@
+[
+  {
+    "sample_id": "tqp-qwen06-03",
+    "target_text": "小窝小窝",
+    "keyword_id": 2,
+    "frames": 127,
+    "top1_histogram": {
+      "0": 127
+    },
+    "top1_run_tokens": [
+      0
+    ],
+    "ctc_greedy_tokens": [],
+    "speech_frames": 56,
+    "paths": {
+      "recording": "tqp-qwen06-03",
+      "frames": 127,
+      "decoder": {
+        "token_boost": 1.5,
+        "retention_log": -0.0618754067,
+        "silence_retention_log": -0.356674939,
+        "fuzzy_child_retention_cost_log": -8.25
+      },
+      "keywords": [
+        {
+          "keyword_id": 1,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        },
+        {
+          "keyword_id": 2,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        }
+      ]
+    },
+    "events_byte_identical": true,
+    "trace_sha256": "5719e4dddf201028599e01579271c02af510bae4826b125fbb2cfc82171d52a5"
+  },
+  {
+    "sample_id": "tqp-qwen06-05",
+    "target_text": "你好小窝",
+    "keyword_id": 1,
+    "frames": 71,
+    "top1_histogram": {
+      "0": 51,
+      "1": 15,
+      "2": 5
+    },
+    "top1_run_tokens": [
+      0,
+      1,
+      0,
+      2,
+      0,
+      1,
+      0
+    ],
+    "ctc_greedy_tokens": [
+      1,
+      2,
+      1
+    ],
+    "speech_frames": 38,
+    "paths": {
+      "recording": "tqp-qwen06-05",
+      "frames": 71,
+      "decoder": {
+        "token_boost": 1.5,
+        "retention_log": -0.0618754067,
+        "silence_retention_log": -0.356674939,
+        "fuzzy_child_retention_cost_log": -8.25
+      },
+      "keywords": [
+        {
+          "keyword_id": 1,
+          "target_depth": 4,
+          "max_depth_reached": 4,
+          "root_alive_frames": 36,
+          "terminal_alive_frames": 38,
+          "terminal_speech_alive_frames": 28,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": 0.0075291493,
+          "max_terminal_retention_log": -22.625349,
+          "selected_path": {
+            "best_retention": {
+              "retention_log": -22.625349,
+              "confidence": 0.00120433012,
+              "provenance": {
+                "token_advances": 4,
+                "exact_top_advances": 1,
+                "fuzzy_advances": 2,
+                "fuzzy_logit_gap_sum": 26.7447472,
+                "fuzzy_logit_gap_max": 19.196476,
+                "fuzzy_target_rank_sum": 8,
+                "fuzzy_target_rank_max": 5,
+                "fuzzy_events": [
+                  {
+                    "frame_index": 56,
+                    "depth": 3,
+                    "target_token": 3,
+                    "top_token": 2,
+                    "logit_gap": 7.54827166,
+                    "target_rank": 3
+                  },
+                  {
+                    "frame_index": 57,
+                    "depth": 4,
+                    "target_token": 4,
+                    "top_token": 2,
+                    "logit_gap": 19.196476,
+                    "target_rank": 5
+                  }
+                ],
+                "root_exact_starts": 1,
+                "root_ambiguous_starts": 0,
+                "same_token_retentions": 1,
+                "blank_retentions": 17
+              }
+            },
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        },
+        {
+          "keyword_id": 2,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        }
+      ]
+    },
+    "events_byte_identical": true,
+    "trace_sha256": "2e84a1d46d073ed85b07e6bcd8f045d661cf39e8243eb969c5c483ac1091d183"
+  },
+  {
+    "sample_id": "tqp-qwen06-06",
+    "target_text": "小窝小窝",
+    "keyword_id": 2,
+    "frames": 83,
+    "top1_histogram": {
+      "0": 81,
+      "1": 2
+    },
+    "top1_run_tokens": [
+      0,
+      1,
+      0
+    ],
+    "ctc_greedy_tokens": [
+      1
+    ],
+    "speech_frames": 57,
+    "paths": {
+      "recording": "tqp-qwen06-06",
+      "frames": 83,
+      "decoder": {
+        "token_boost": 1.5,
+        "retention_log": -0.0618754067,
+        "silence_retention_log": -0.356674939,
+        "fuzzy_child_retention_cost_log": -8.25
+      },
+      "keywords": [
+        {
+          "keyword_id": 1,
+          "target_depth": 4,
+          "max_depth_reached": 4,
+          "root_alive_frames": 39,
+          "terminal_alive_frames": 36,
+          "terminal_speech_alive_frames": 25,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": 0.0161552038,
+          "max_terminal_retention_log": -24.75,
+          "selected_path": {
+            "best_retention": {
+              "retention_log": -24.75,
+              "confidence": 0.000486460427,
+              "provenance": {
+                "token_advances": 4,
+                "exact_top_advances": 0,
+                "fuzzy_advances": 3,
+                "fuzzy_logit_gap_sum": 29.2738762,
+                "fuzzy_logit_gap_max": 13.3471489,
+                "fuzzy_target_rank_sum": 12,
+                "fuzzy_target_rank_max": 5,
+                "fuzzy_events": [
+                  {
+                    "frame_index": 41,
+                    "depth": 2,
+                    "target_token": 2,
+                    "top_token": 1,
+                    "logit_gap": 13.3471489,
+                    "target_rank": 5
+                  },
+                  {
+                    "frame_index": 42,
+                    "depth": 3,
+                    "target_token": 3,
+                    "top_token": 1,
+                    "logit_gap": 9.58580112,
+                    "target_rank": 4
+                  },
+                  {
+                    "frame_index": 43,
+                    "depth": 4,
+                    "target_token": 4,
+                    "top_token": 0,
+                    "logit_gap": 6.34092712,
+                    "target_rank": 3
+                  }
+                ],
+                "root_exact_starts": 0,
+                "root_ambiguous_starts": 1,
+                "same_token_retentions": 0,
+                "blank_retentions": 0
+              }
+            },
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        },
+        {
+          "keyword_id": 2,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        }
+      ]
+    },
+    "events_byte_identical": true,
+    "trace_sha256": "17e3d109efaef4c53b26f96455c4de79f6e394081aa3ab8769cbd2519bf8f77d"
+  },
+  {
+    "sample_id": "tqp-qwen06-10",
+    "target_text": "小窝小窝",
+    "keyword_id": 2,
+    "frames": 191,
+    "top1_histogram": {
+      "0": 191
+    },
+    "top1_run_tokens": [
+      0
+    ],
+    "ctc_greedy_tokens": [],
+    "speech_frames": 99,
+    "paths": {
+      "recording": "tqp-qwen06-10",
+      "frames": 191,
+      "decoder": {
+        "token_boost": 1.5,
+        "retention_log": -0.0618754067,
+        "silence_retention_log": -0.356674939,
+        "fuzzy_child_retention_cost_log": -8.25
+      },
+      "keywords": [
+        {
+          "keyword_id": 1,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        },
+        {
+          "keyword_id": 2,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        }
+      ]
+    },
+    "events_byte_identical": true,
+    "trace_sha256": "2e8cd80cc79e7ab4a225f9cf4ba58f1f7ef146dbf11a3f98b3f68daafbe10766"
+  },
+  {
+    "sample_id": "tqp-qwen06-11",
+    "target_text": "小窝小窝",
+    "keyword_id": 2,
+    "frames": 255,
+    "top1_histogram": {
+      "0": 255
+    },
+    "top1_run_tokens": [
+      0
+    ],
+    "ctc_greedy_tokens": [],
+    "speech_frames": 106,
+    "paths": {
+      "recording": "tqp-qwen06-11",
+      "frames": 255,
+      "decoder": {
+        "token_boost": 1.5,
+        "retention_log": -0.0618754067,
+        "silence_retention_log": -0.356674939,
+        "fuzzy_child_retention_cost_log": -8.25
+      },
+      "keywords": [
+        {
+          "keyword_id": 1,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        },
+        {
+          "keyword_id": 2,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        }
+      ]
+    },
+    "events_byte_identical": true,
+    "trace_sha256": "8c3807175ab89f80434ac43bd5a721a45d0bfc56237fcb00de0e297df16d1db8"
+  },
+  {
+    "sample_id": "tqp-qwen06-14",
+    "target_text": "小窝小窝",
+    "keyword_id": 2,
+    "frames": 111,
+    "top1_histogram": {
+      "0": 111
+    },
+    "top1_run_tokens": [
+      0
+    ],
+    "ctc_greedy_tokens": [],
+    "speech_frames": 68,
+    "paths": {
+      "recording": "tqp-qwen06-14",
+      "frames": 111,
+      "decoder": {
+        "token_boost": 1.5,
+        "retention_log": -0.0618754067,
+        "silence_retention_log": -0.356674939,
+        "fuzzy_child_retention_cost_log": -8.25
+      },
+      "keywords": [
+        {
+          "keyword_id": 1,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        },
+        {
+          "keyword_id": 2,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        }
+      ]
+    },
+    "events_byte_identical": true,
+    "trace_sha256": "b56383a42762a244d4128c57d1464d5e0003f65cc3656b94790f0612da737ab2"
+  },
+  {
+    "sample_id": "tqp-qwen06-15",
+    "target_text": "小窝小窝",
+    "keyword_id": 2,
+    "frames": 95,
+    "top1_histogram": {
+      "0": 95
+    },
+    "top1_run_tokens": [
+      0
+    ],
+    "ctc_greedy_tokens": [],
+    "speech_frames": 57,
+    "paths": {
+      "recording": "tqp-qwen06-15",
+      "frames": 95,
+      "decoder": {
+        "token_boost": 1.5,
+        "retention_log": -0.0618754067,
+        "silence_retention_log": -0.356674939,
+        "fuzzy_child_retention_cost_log": -8.25
+      },
+      "keywords": [
+        {
+          "keyword_id": 1,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        },
+        {
+          "keyword_id": 2,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        }
+      ]
+    },
+    "events_byte_identical": true,
+    "trace_sha256": "dcf0ca6b7f5925620c42f9e0c09c423581b6803bd8af88ce9dc9079a27cf2aeb"
+  },
+  {
+    "sample_id": "tqp-qwen17-01",
+    "target_text": "你好小窝",
+    "keyword_id": 1,
+    "frames": 67,
+    "top1_histogram": {
+      "0": 50,
+      "1": 3,
+      "2": 14
+    },
+    "top1_run_tokens": [
+      0,
+      1,
+      2,
+      0,
+      1
+    ],
+    "ctc_greedy_tokens": [
+      1,
+      2,
+      1
+    ],
+    "speech_frames": 52,
+    "paths": {
+      "recording": "tqp-qwen17-01",
+      "frames": 67,
+      "decoder": {
+        "token_boost": 1.5,
+        "retention_log": -0.0618754067,
+        "silence_retention_log": -0.356674939,
+        "fuzzy_child_retention_cost_log": -8.25
+      },
+      "keywords": [
+        {
+          "keyword_id": 1,
+          "target_depth": 4,
+          "max_depth_reached": 4,
+          "root_alive_frames": 3,
+          "terminal_alive_frames": 51,
+          "terminal_speech_alive_frames": 40,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": 0.0132638067,
+          "max_terminal_retention_log": -16.5,
+          "selected_path": {
+            "best_retention": {
+              "retention_log": -16.5,
+              "confidence": 4.46120466e-05,
+              "provenance": {
+                "token_advances": 4,
+                "exact_top_advances": 1,
+                "fuzzy_advances": 2,
+                "fuzzy_logit_gap_sum": 39.3394012,
+                "fuzzy_logit_gap_max": 24.074585,
+                "fuzzy_target_rank_sum": 9,
+                "fuzzy_target_rank_max": 5,
+                "fuzzy_events": [
+                  {
+                    "frame_index": 15,
+                    "depth": 3,
+                    "target_token": 3,
+                    "top_token": 2,
+                    "logit_gap": 15.2648144,
+                    "target_rank": 4
+                  },
+                  {
+                    "frame_index": 16,
+                    "depth": 4,
+                    "target_token": 4,
+                    "top_token": 2,
+                    "logit_gap": 24.074585,
+                    "target_rank": 5
+                  }
+                ],
+                "root_exact_starts": 1,
+                "root_ambiguous_starts": 0,
+                "same_token_retentions": 0,
+                "blank_retentions": 0
+              }
+            },
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        },
+        {
+          "keyword_id": 2,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        }
+      ]
+    },
+    "events_byte_identical": true,
+    "trace_sha256": "78354dc5d1c0f1efbe600c8ce26d79291259cdafae1626dd185a232c44a9ada6"
+  },
+  {
+    "sample_id": "tqp-qwen17-02",
+    "target_text": "小窝小窝",
+    "keyword_id": 2,
+    "frames": 87,
+    "top1_histogram": {
+      "0": 81,
+      "4": 5,
+      "2": 1
+    },
+    "top1_run_tokens": [
+      0,
+      4,
+      0,
+      2,
+      0
+    ],
+    "ctc_greedy_tokens": [
+      4,
+      2
+    ],
+    "speech_frames": 82,
+    "paths": {
+      "recording": "tqp-qwen17-02",
+      "frames": 87,
+      "decoder": {
+        "token_boost": 1.5,
+        "retention_log": -0.0618754067,
+        "silence_retention_log": -0.356674939,
+        "fuzzy_child_retention_cost_log": -8.25
+      },
+      "keywords": [
+        {
+          "keyword_id": 1,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        },
+        {
+          "keyword_id": 2,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        }
+      ]
+    },
+    "events_byte_identical": true,
+    "trace_sha256": "6b00186da6a21473d49e69783720b36085f539fde71b11dd6444acc319271ab3"
+  },
+  {
+    "sample_id": "tqp-qwen17-03",
+    "target_text": "小窝小窝",
+    "keyword_id": 2,
+    "frames": 59,
+    "top1_histogram": {
+      "0": 57,
+      "2": 2
+    },
+    "top1_run_tokens": [
+      0,
+      2,
+      0
+    ],
+    "ctc_greedy_tokens": [
+      2
+    ],
+    "speech_frames": 55,
+    "paths": {
+      "recording": "tqp-qwen17-03",
+      "frames": 59,
+      "decoder": {
+        "token_boost": 1.5,
+        "retention_log": -0.0618754067,
+        "silence_retention_log": -0.356674939,
+        "fuzzy_child_retention_cost_log": -8.25
+      },
+      "keywords": [
+        {
+          "keyword_id": 1,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        },
+        {
+          "keyword_id": 2,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        }
+      ]
+    },
+    "events_byte_identical": true,
+    "trace_sha256": "9ff9c3d6d938cfb59fc8772985d7484ee724d6bad85f5f5e4c11d195c934d730"
+  },
+  {
+    "sample_id": "tqp-qwen17-06",
+    "target_text": "小窝小窝",
+    "keyword_id": 2,
+    "frames": 83,
+    "top1_histogram": {
+      "0": 74,
+      "1": 9
+    },
+    "top1_run_tokens": [
+      0,
+      1,
+      0,
+      1,
+      0
+    ],
+    "ctc_greedy_tokens": [
+      1,
+      1
+    ],
+    "speech_frames": 79,
+    "paths": {
+      "recording": "tqp-qwen17-06",
+      "frames": 83,
+      "decoder": {
+        "token_boost": 1.5,
+        "retention_log": -0.0618754067,
+        "silence_retention_log": -0.356674939,
+        "fuzzy_child_retention_cost_log": -8.25
+      },
+      "keywords": [
+        {
+          "keyword_id": 1,
+          "target_depth": 4,
+          "max_depth_reached": 4,
+          "root_alive_frames": 51,
+          "terminal_alive_frames": 48,
+          "terminal_speech_alive_frames": 48,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": 0.0061699287,
+          "max_terminal_retention_log": -24.7499962,
+          "selected_path": {
+            "best_retention": {
+              "retention_log": -24.7499962,
+              "confidence": 0.000243528571,
+              "provenance": {
+                "token_advances": 4,
+                "exact_top_advances": 0,
+                "fuzzy_advances": 3,
+                "fuzzy_logit_gap_sum": 33.0096321,
+                "fuzzy_logit_gap_max": 12.8804598,
+                "fuzzy_target_rank_sum": 12,
+                "fuzzy_target_rank_max": 5,
+                "fuzzy_events": [
+                  {
+                    "frame_index": 34,
+                    "depth": 2,
+                    "target_token": 2,
+                    "top_token": 1,
+                    "logit_gap": 11.2885838,
+                    "target_rank": 4
+                  },
+                  {
+                    "frame_index": 35,
+                    "depth": 3,
+                    "target_token": 3,
+                    "top_token": 1,
+                    "logit_gap": 8.84058857,
+                    "target_rank": 3
+                  },
+                  {
+                    "frame_index": 36,
+                    "depth": 4,
+                    "target_token": 4,
+                    "top_token": 1,
+                    "logit_gap": 12.8804598,
+                    "target_rank": 5
+                  }
+                ],
+                "root_exact_starts": 1,
+                "root_ambiguous_starts": 0,
+                "same_token_retentions": 0,
+                "blank_retentions": 0
+              }
+            },
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        },
+        {
+          "keyword_id": 2,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        }
+      ]
+    },
+    "events_byte_identical": true,
+    "trace_sha256": "e0a1d5c4c6a3a3c6d19e0b96ed324d3c9ad274df54b8af0b6a5f2e60c8bfc591"
+  },
+  {
+    "sample_id": "tqp-qwen17-14",
+    "target_text": "小窝小窝",
+    "keyword_id": 2,
+    "frames": 83,
+    "top1_histogram": {
+      "0": 81,
+      "1": 2
+    },
+    "top1_run_tokens": [
+      0,
+      1,
+      0
+    ],
+    "ctc_greedy_tokens": [
+      1
+    ],
+    "speech_frames": 71,
+    "paths": {
+      "recording": "tqp-qwen17-14",
+      "frames": 83,
+      "decoder": {
+        "token_boost": 1.5,
+        "retention_log": -0.0618754067,
+        "silence_retention_log": -0.356674939,
+        "fuzzy_child_retention_cost_log": -8.25
+      },
+      "keywords": [
+        {
+          "keyword_id": 1,
+          "target_depth": 4,
+          "max_depth_reached": 4,
+          "root_alive_frames": 17,
+          "terminal_alive_frames": 14,
+          "terminal_speech_alive_frames": 13,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": 0.000450734631,
+          "max_terminal_retention_log": -24.75,
+          "selected_path": {
+            "best_retention": {
+              "retention_log": -24.75,
+              "confidence": 0.000450734631,
+              "provenance": {
+                "token_advances": 4,
+                "exact_top_advances": 0,
+                "fuzzy_advances": 3,
+                "fuzzy_logit_gap_sum": 29.7070332,
+                "fuzzy_logit_gap_max": 13.0795717,
+                "fuzzy_target_rank_sum": 11,
+                "fuzzy_target_rank_max": 5,
+                "fuzzy_events": [
+                  {
+                    "frame_index": 67,
+                    "depth": 2,
+                    "target_token": 2,
+                    "top_token": 1,
+                    "logit_gap": 13.0795717,
+                    "target_rank": 5
+                  },
+                  {
+                    "frame_index": 68,
+                    "depth": 3,
+                    "target_token": 3,
+                    "top_token": 0,
+                    "logit_gap": 9.00584984,
+                    "target_rank": 4
+                  },
+                  {
+                    "frame_index": 69,
+                    "depth": 4,
+                    "target_token": 4,
+                    "top_token": 0,
+                    "logit_gap": 7.62161016,
+                    "target_rank": 2
+                  }
+                ],
+                "root_exact_starts": 1,
+                "root_ambiguous_starts": 0,
+                "same_token_retentions": 0,
+                "blank_retentions": 0
+              }
+            },
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        },
+        {
+          "keyword_id": 2,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        }
+      ]
+    },
+    "events_byte_identical": true,
+    "trace_sha256": "c19f76bbce36060d296b1c7b6993ae38407d5124e06089f39831007cb6354fc1"
+  },
+  {
+    "sample_id": "tqp-qwen17-15",
+    "target_text": "小窝小窝",
+    "keyword_id": 2,
+    "frames": 63,
+    "top1_histogram": {
+      "0": 63
+    },
+    "top1_run_tokens": [
+      0
+    ],
+    "ctc_greedy_tokens": [],
+    "speech_frames": 59,
+    "paths": {
+      "recording": "tqp-qwen17-15",
+      "frames": 63,
+      "decoder": {
+        "token_boost": 1.5,
+        "retention_log": -0.0618754067,
+        "silence_retention_log": -0.356674939,
+        "fuzzy_child_retention_cost_log": -8.25
+      },
+      "keywords": [
+        {
+          "keyword_id": 1,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        },
+        {
+          "keyword_id": 2,
+          "target_depth": 4,
+          "max_depth_reached": 0,
+          "root_alive_frames": 0,
+          "terminal_alive_frames": 0,
+          "terminal_speech_alive_frames": 0,
+          "terminal_retention_pass_frames": 0,
+          "terminal_threshold_pass_frames": 0,
+          "pending_frames": 0,
+          "detections": 0,
+          "threshold": 0.550000012,
+          "max_terminal_confidence": null,
+          "max_terminal_retention_log": null,
+          "selected_path": {
+            "best_retention": null,
+            "best_confidence_retention_pass": null,
+            "best_eligible": null
+          }
+        }
+      ]
+    },
+    "events_byte_identical": true,
+    "trace_sha256": "2f1dbbaf00900b1fc21a31c8287cc9cc425abacd5d25b9239965bf708ec6c5c5"
+  }
+]

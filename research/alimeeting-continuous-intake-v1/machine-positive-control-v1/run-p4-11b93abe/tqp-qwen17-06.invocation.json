@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/kws_wav",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/xiaowo-model.kwm",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/xiaowo-keywords.kwk",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen17-06.wav",
+    "tqp-qwen17-06",
+    "--block-samples",
+    "160",
+    "--stats-json",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-06.stats.json"
+  ],
+  "input": {
+    "development_only": true,
+    "duration_s": 1.68,
+    "human_gold": false,
+    "keyword_id": 2,
+    "label_source": "machine_three_asr",
+    "native_wav_sha256": "d7827cf04dd1740d211ce8052830d0603f60295a7a93cbf0cbcfe389cf104714",
+    "pcm_sha256": "32bc6992b96af29ca25bdc2be3adfa9135a23c4c09a96e4afec73cee62902769",
+    "sample_count": 26880,
+    "sample_id": "tqp-qwen17-06",
+    "target_text": "小窝小窝",
+    "training_admitted": false,
+    "tts_engine": "qwen17",
+    "wav_sha256": "2af1e4cb8f18d5f4512303f2d9c8413231e27397a7f774d2d9fbb19b0072c679"
+  }
+}
