@@ -28048,8 +28048,8 @@
             "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
             "mode": "100644",
             "bytes": 40879,
-            "sha256": "cabcea8a6cf291b51dfade2e852ecd460ac7af1de7380ac46229bb163ce6ac50",
-            "git_blob_sha1": "c2768e6126d9a58c1a2c277287252e82af877cc8"
+            "sha256": "6106839c991cb1df9318006115f870788b100f8399ceff75e97e44f86d05a1f6",
+            "git_blob_sha1": "38781b824f5eb6b77935d9c6d641ed0121361d27"
           }
         },
         {
@@ -28065,8 +28065,8 @@
             "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
             "mode": "100644",
             "bytes": 40427,
-            "sha256": "348f1ce10568f1c327aa5be2a9964ab9c5a0ad6455d003d7a240537d41f834a5",
-            "git_blob_sha1": "fd4b411ed9f9aba5feb18cfd53b08bd602e976c8"
+            "sha256": "8a8890e43f731aff21e899e1199fc2e915259ae0e811844d0bbab7a2490492b5",
+            "git_blob_sha1": "31dc4e398261b29f3bcc0a3c29a2491d2fb9c3c7"
           }
         },
         {
@@ -28602,6 +28602,23 @@
             "bytes": 11119,
             "sha256": "e374ac36d6f423a15df35f18bd6ac6583cb7fda3310d9187750cd3a595fe344f",
             "git_blob_sha1": "7889b1060836572e91af0e0af83854991b76ded6"
+          }
+        },
+        {
+          "path": "tools/test_execution_contracts.json",
+          "before": {
+            "bytes": 3196,
+            "git_blob_sha1": "090121540fb15ef92c6bf26181cc08a48b61798c",
+            "mode": "100644",
+            "path": "tools/test_execution_contracts.json",
+            "sha256": "829b15869e9ffacd8145ed1c9a732e9ab5f9dd14139494fe8a8c939fec3710a8"
+          },
+          "after": {
+            "path": "tools/test_execution_contracts.json",
+            "mode": "100644",
+            "bytes": 3196,
+            "sha256": "5e193342d91c5454ade8aae47c23433e2b7966e5d3ec2c1b60985b72e604553f",
+            "git_blob_sha1": "78c9541b51b968872c05af3bd4f0ffbd54c4fea6"
           }
         },
         {
