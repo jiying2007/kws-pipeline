@@ -144,6 +144,11 @@ class CheckedExecution(unittest.TestCase):
                 checked.validate_report(good, self.spec, 'fixture', self.mode)
 
     def test_source_contracts_are_nonzero_unique_and_three_mode(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text()
+        # runner context is unavailable at job-level env evaluation time.
+        self.assertNotIn('KWS_TEST_REPORT_DIR: ${{ runner.temp }}', workflow)
+        initializer = "run: printf 'KWS_TEST_REPORT_DIR=%s/checked-unittest\\n' \"$RUNNER_TEMP\" >> \"$GITHUB_ENV\""
+        self.assertEqual(workflow.count(initializer), 2)
         source = json.loads((ROOT / 'tools/test_execution_contracts.json').read_text())
         for name, entry in source['suites'].items():
             self.assertGreater(entry['count'], 0, name)

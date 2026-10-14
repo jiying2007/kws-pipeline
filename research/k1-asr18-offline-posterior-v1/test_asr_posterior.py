@@ -599,7 +599,8 @@ print(json.dumps({'status':'synthetic guarded acceptance passed', **observed,
 """
         self.assertIn(report_upload, job)
         self.assertNotIn('upload-artifact', job.replace(report_upload, '', 1))
-        self.assertIn('KWS_TEST_REPORT_DIR: ${{ runner.temp }}/checked-unittest', job)
+        self.assertNotIn('KWS_TEST_REPORT_DIR: ${{ runner.temp }}', job)
+        self.assertIn("run: printf 'KWS_TEST_REPORT_DIR=%s/checked-unittest\\n' \"$RUNNER_TEMP\" >> \"$GITHUB_ENV\"", job)
         self.assertIn('--verify-reports "$KWS_TEST_REPORT_DIR" --suite posterior', job)
         shared = workflow.split('  python-contracts:\n', 1)[1].split('  asr-offline-posterior:\n', 1)[0]
         self.assertNotIn('test_asr_posterior.py', shared)

@@ -16,11 +16,11 @@ jobs:
   python-contracts:
     outputs:
       research_required: ${{ steps.research_changes.outputs.required }}
-    env:
-      KWS_TEST_REPORT_DIR: ${{ runner.temp }}/checked-unittest
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
+      - name: Initialize execution report directory
+        run: printf 'KWS_TEST_REPORT_DIR=%s/checked-unittest\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -405,11 +405,11 @@ jobs:
 
   asr-offline-posterior:
     # Stdlib-only evidence fixtures; never setup, load or run a model.
-    env:
-      KWS_TEST_REPORT_DIR: ${{ runner.temp }}/checked-unittest
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
+      - name: Initialize execution report directory
+        run: printf 'KWS_TEST_REPORT_DIR=%s/checked-unittest\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
