@@ -10,6 +10,8 @@ are unchanged by this consolidation.
 
 ## Current research and retention / 当前研究与保留状态
 
+**2026-10-14 current iteration:** [Known FAR original-prefix diagnostic](known-far-diagnostic-v1/README.md) retains both reproduced failures and logits/VAD/decoder traces; it does not clear FAR. [Closed campaign preparation](campaign-capsules-v1/README.md) generates review-only control projections without activating a run. [Actual test execution evidence](../docs/TEST_EXECUTION_EVIDENCE.md) distinguishes guarded cases from declarations.
+
 **2026-10-11 source/evidence audit:** [Confirmed defects, corrections and verification boundaries](../docs/KWS_AUDIT_2026-10-11.md) covers output reliability, AFE and promotion admission, optimized-mode guards and fixture-only evaluation. It does not qualify acoustic performance.
 
 **2026-10-11 completed three-ASR source screen ([PR #535](https://github.com/jiying2007/kws-pipeline/pull/535)):**

@@ -26,15 +26,17 @@ class CIContracts(unittest.TestCase):
 
     def test_required_hosted_checks_fail_when_shared_checks_fail(self):
         job = jobs(self.ci)['hosted']
-        self.assertIn('    needs: [python-contracts, research-sources]\n', job)
+        self.assertIn('    needs: [python-contracts, research-sources, asr-offline-posterior, hosted-build, coverage, sanitizers, fuzz, armv7-cross]\n', job)
         self.assertIn('    if: ${{ always() }}\n', job)
         self.assertIn('CONTRACT_RESULT: ${{ needs.python-contracts.result }}', job)
-        self.assertIn('test "$CONTRACT_RESULT" = success', job)
+        self.assertIn('test "$result" = success', job)
         self.assertIn('cc: [gcc, clang]', job)
 
     def test_independent_checks_run_once_and_runner_checks_stay_matrixed(self):
         shared = jobs(self.ci)['python-contracts']
-        hosted = jobs(self.ci)['hosted']
+        hosted = jobs(self.ci)['hosted-build']
+        self.assertNotIn('    needs:', hosted)
+        self.assertNotRegex(hosted, r'(?m)^    if:')
         corpus_commands = [
             'python3 tests/test_corpus_identity.py',
             'python3 -S -B -O tests/test_corpus_identity.py',
@@ -71,6 +73,20 @@ class CIContracts(unittest.TestCase):
         self.assertIn('python3 -B tests/test_board_bench.py --runner ./build/kws_board_bench', benchmark)
         for mode in ('-O', '-OO'):
             self.assertIn('python3 -B ' + mode + ' tests/test_board_bench.py --statistics-only', benchmark)
+
+    def test_promotion_guards_run_once_per_mode_without_compiler_duplication(self):
+        shared = jobs(self.ci)['python-contracts']
+        build = jobs(self.ci)['hosted-build']
+        for suite in ('promotion-admission', 'promotion-source'):
+            for mode in ('', ' -O', ' -OO'):
+                command = 'python3 -S -B' + mode + ' tools/checked_unittest.py --suite ' + suite
+                self.assertEqual(shared.count(command + '\n'), 1)
+                self.assertNotIn(command, build)
+        self.assertIn('python3 tests/test_model_promotion.py', shared)
+        self.assertNotIn('test_model_promotion', build)
+        for suite in ('asr18', 'prepare', 'promotion-admission', 'promotion-source'):
+            self.assertIn('--suite ' + suite, shared)
+        self.assertIn('--verify-reports "$KWS_TEST_REPORT_DIR"', shared)
 
     def test_only_ordinary_same_pr_ci_is_cancelled(self):
         self.assertIn("cancel-in-progress: ${{ github.event_name == 'pull_request' }}", self.ci)
@@ -120,12 +136,30 @@ class CIContracts(unittest.TestCase):
                 for result in ('success', 'failure', 'cancelled', 'skipped', ''):
                     completed = subprocess.run(['bash', '-e', '-c', command], env={
                         'CONTRACT_RESULT': contract, 'RESEARCH_REQUIRED': required,
-                        'RESEARCH_RESULT': result})
+                        'RESEARCH_RESULT': result, **{key: 'success' for key in
+                        ('POSTERIOR_RESULT', 'BUILD_RESULT', 'COVERAGE_RESULT',
+                         'SANITIZERS_RESULT', 'FUZZ_RESULT', 'ARM_RESULT')}})
                     expected = contract == 'success' and (
                         (required == 'true' and result == 'success') or
                         (required == 'false' and result == 'skipped'))
                     self.assertEqual(completed.returncode == 0, expected,
                                      (contract, required, result))
+
+    def test_aggregate_rejects_each_cancelled_missing_or_skipped_dependency(self):
+        hosted = jobs(self.ci)['hosted']
+        command = textwrap.dedent(hosted.split('        run: |\n', 1)[1])
+        keys = ('CONTRACT_RESULT', 'POSTERIOR_RESULT', 'BUILD_RESULT', 'COVERAGE_RESULT',
+                'SANITIZERS_RESULT', 'FUZZ_RESULT', 'ARM_RESULT')
+        env = {key: 'success' for key in keys}
+        env.update(RESEARCH_REQUIRED='false', RESEARCH_RESULT='skipped')
+        for key in keys:
+            for result in ('failure', 'cancelled', 'skipped', ''):
+                with self.subTest(key=key, result=result):
+                    self.assertNotEqual(subprocess.run(['bash', '-e', '-c', command],
+                        env=dict(env, **{key: result}), capture_output=True).returncode, 0)
+        self.assertNotIn('continue-on-error:', hosted)
+        self.assertNotIn('        if:', hosted)
+        self.assertIn('    if: ${{ always() }}', hosted)
 
     def test_expensive_checks_called_once_and_inherit_read_only_permissions(self):
         caller = jobs(self.ci)['research-sources']
@@ -301,13 +335,18 @@ class ASR18CIContracts(unittest.TestCase):
         self.workflow = (ROOT / '.github/workflows/k1-punctuation6-asr18-r5.yml').read_text()
         self.template = (ROOT / 'research/k1-punctuation6-asr18-v1/workflow.yml').read_text()
 
-    def expected_command(self):
+    def expected_command(self, checked=False):
         program = ('import sys,unittest; from pathlib import Path; '
                    'sys.path.insert(0,str(Path("research/k1-punctuation6-asr18-v1").resolve())); '
                    'suite=unittest.defaultTestLoader.loadTestsFromNames('
                    + repr(ASR18_MODULES).replace("'", '"') + '); '
                    'result=unittest.TextTestRunner(verbosity=2).run(suite); '
                    'raise SystemExit(not result.wasSuccessful())')
+        if checked:
+            program = program.replace('result=unittest.TextTestRunner(verbosity=2).run(suite); '
+                'raise SystemExit(not result.wasSuccessful())',
+                'sys.path.insert(0,str(Path("tools").resolve())); from checked_unittest import run_checked_suite; '
+                'raise SystemExit(run_checked_suite(suite, "asr18"))')
         return ("set -euo pipefail\nasr18_tests='" + program + "'\n" + ASR18_PARALLEL_MODES)
 
     def check_wiring(self, ci, workflow, template):
@@ -329,7 +368,7 @@ class ASR18CIContracts(unittest.TestCase):
             self.assertNotIn('        if:', step)
             self.assertNotIn('continue-on-error:', step)
             self.assertNotIn('        env:', step)
-            self.assertEqual(contract_command(step), self.expected_command(), name)
+            self.assertEqual(contract_command(step), self.expected_command(checked=name == 'ci'), name)
         claim = named_step(execution, 'Reserve fixed campaign owner without models')
         self.assertEqual(step_if(claim), ASR18_CLAIM_IF)
         self.assertIn('        id: campaign_claim\n', claim)
@@ -514,13 +553,18 @@ class PrepareDiagnosticCIContracts(unittest.TestCase):
         self.workflow = (ROOT / '.github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml').read_text()
         self.template = (ROOT / PREPARE_PATH / 'workflow.yml').read_text()
 
-    def expected_command(self):
+    def expected_command(self, checked=False):
         program = ('import sys,unittest; from pathlib import Path; '
                    'sys.path.insert(0,str(Path("' + PREPARE_PATH + '").resolve())); '
                    'suite=unittest.defaultTestLoader.loadTestsFromNames('
                    + repr(PREPARE_MODULES).replace("'", '"') + '); '
                    'result=unittest.TextTestRunner(verbosity=2).run(suite); '
                    'raise SystemExit(not result.wasSuccessful())')
+        if checked:
+            program = program.replace('result=unittest.TextTestRunner(verbosity=2).run(suite); '
+                'raise SystemExit(not result.wasSuccessful())',
+                'sys.path.insert(0,str(Path("tools").resolve())); from checked_unittest import run_checked_suite; '
+                'raise SystemExit(run_checked_suite(suite, "prepare"))')
         return ("set -euo pipefail\nprepare_tests='" + program + "'\n" + ''.join(
             'python3 -I -S -B' + mode + ' -c "$prepare_tests"\n' for mode in ('', ' -O', ' -OO')))
 
@@ -553,7 +597,7 @@ class PrepareDiagnosticCIContracts(unittest.TestCase):
             self.assertNotIn('        if:', step)
             self.assertNotIn('continue-on-error:', step)
             self.assertNotIn('        env:', step)
-            self.assertEqual(contract_command(step), self.expected_command(), name)
+            self.assertEqual(contract_command(step), self.expected_command(checked=name == 'ci'), name)
         host = named_step(execution, 'Admit fixed six inputs and prepare three models without recognition')
         publish = named_step(execution, 'Publish complete audio-free prepare diagnostic evidence')
         self.assertIn('        id: host\n', host)

@@ -99,6 +99,15 @@ Pending candidates (`longest`/`grace`) rank deeper path first, then higher prior
 
 Each frame selects its best pending candidate before updating the held state. Refreshing the held winner's confidence preserves its grace age; traversal-order-dependent temporary replacements cannot restart the wait. The pending state is fixed-size. Emission resets decoder state, preserving one-detection-per-call semantics.
 
+A pending candidate must remain supported by its terminal or a live descendant
+path within the existing retention budget. `grace` allows a bounded interruption
+until its configured age; the liveness check applies at that age and afterward.
+This preserves short/long prefix competition without letting a dead candidate
+wait indefinitely for a later blank. Expiry precedes new-candidate arbitration,
+so a stale deeper keyword cannot suppress a fresh shorter one. The default
+`immediate`/zero-blank path is unaffected; runtime source changes still require
+recalibration and source-bound requalification.
+
 ## Domain-aware offline loop
 
 `training/iterate_domain.py` is an offline orchestration layer around the same deployable runtime:

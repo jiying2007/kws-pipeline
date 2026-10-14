@@ -99,7 +99,7 @@ class ReleaseCommands(unittest.TestCase):
 
     def test_decoder_replay_contract_uses_built_runner_in_ci_and_release(self):
         replay = 'python3 tests/test_decoder_policy_replay.py --path-runner ./build/kws_decoder_path_replay'
-        self.assertEqual(command(job(self.ci, 'hosted'), 'Decoder path shadow/runtime replay contract'), replay)
+        self.assertEqual(command(job(self.ci, 'hosted-build'), 'Decoder path shadow/runtime replay contract'), replay)
         self.assertNotIn('test_decoder_policy_replay.py', job(self.ci, 'python-contracts'))
         self.assertIn(replay, command(job(self.release, 'hosted'), 'Python/product tests'))
 
@@ -110,7 +110,7 @@ class ReleaseCommands(unittest.TestCase):
             self.assertIn(f'python3 tests/{name}', corpus.splitlines())
             for mode in ('-O', '-OO'):
                 self.assertIn(f'python3 -S -B {mode} tests/{name}', corpus.splitlines())
-        qualification = command(job(self.ci, 'hosted'), 'Release qualification manifest and gate')
+        qualification = command(job(self.ci, 'hosted-build'), 'Release qualification manifest and gate')
         self.assertEqual(qualification.splitlines(), [
             'python3 tests/test_release_qualification.py',
             'python3 -S -B -O tests/test_release_qualification.py --event-metadata-only',

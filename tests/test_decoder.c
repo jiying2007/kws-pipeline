@@ -848,7 +848,200 @@ static void test_stable_identity_is_only_the_final_tie_break(void) {
   }
 }
 
+static void test_pending_wait_expires_after_unrelated_speech(void) {
+  const uint16_t tokens[] = {1u};
+  const float token[4] = {-8.0f, 8.0f, -8.0f, -8.0f};
+  const float other[4] = {-8.0f, -8.0f, -8.0f, 8.0f};
+  const float blank[4] = {8.0f, -8.0f, -8.0f, -8.0f};
+  const unsigned gaps[] = {1u, 80u};
+
+  for (uint8_t policy = (uint8_t)KWS_PREFIX_LONGEST;
+       policy <= (uint8_t)KWS_PREFIX_GRACE; ++policy) {
+    for (size_t gap = 0u; gap < sizeof(gaps) / sizeof(gaps[0]); ++gap) {
+      kws_decoder_t decoder;
+      kws_keyword_t item = keyword(160u, tokens, 1u, 0.50f);
+      uint32_t id = 0u;
+      float confidence = 0.0f;
+      item.prefix_policy = policy;
+      item.min_trailing_blanks = 1u;
+      item.grace_frames = policy == (uint8_t)KWS_PREFIX_GRACE ? 2u : 0u;
+      kws_decoder_init(&decoder, 1.5f, 0.94f);
+      CHECK(kws_decoder_set_keywords(&decoder, &item, 1u, 4u) == KWS_OK);
+      CHECK(kws_decoder_step(&decoder, token, 4u, 1, &id, &confidence) == 0);
+      for (unsigned frame = 0u; frame < gaps[gap]; ++frame) {
+        CHECK(kws_decoder_step(&decoder, other, 4u, 1, &id, &confidence) == 0);
+      }
+      /* All frames remain speech-active: the inactive-boundary reset cannot
+       * hide a stale pending candidate behind an unrelated nonblank run. */
+      for (unsigned frame = 0u; frame < 80u; ++frame) {
+        CHECK(kws_decoder_step(&decoder, blank, 4u, 1, &id, &confidence) == 0);
+        CHECK(decoder.pending_keyword == -1);
+      }
+      CHECK(id == 0u && confidence == 0.0f);
+      CHECK(decoder.inactive_frames == 0u);
+      /* Expiry must not poison a new occurrence, including its blank gate. */
+      CHECK(kws_decoder_step(&decoder, token, 4u, 1, &id, &confidence) == 0);
+      for (unsigned frame = 1u; frame <= 2u; ++frame) {
+        unsigned wait = policy == (uint8_t)KWS_PREFIX_GRACE ? 2u : 1u;
+        CHECK(kws_decoder_step(&decoder, blank, 4u, 1, &id, &confidence) ==
+              (frame == wait));
+      }
+      CHECK(id == 160u && confidence > 0.50f);
+    }
+  }
+}
+
+static void test_grace_without_blank_gate_cannot_release_dead_candidate(void) {
+  kws_decoder_t decoder;
+  const uint16_t tokens[] = {1u};
+  kws_keyword_t item = keyword(161u, tokens, 1u, 0.50f);
+  const float token[4] = {-8.0f, 8.0f, -8.0f, -8.0f};
+  const float other[4] = {-8.0f, -8.0f, -8.0f, 8.0f};
+  uint32_t id = 0u;
+  float confidence = 0.0f;
+  item.prefix_policy = (uint8_t)KWS_PREFIX_GRACE;
+  item.grace_frames = 2u;
+  kws_decoder_init(&decoder, 1.5f, 0.94f);
+  CHECK(kws_decoder_set_keywords(&decoder, &item, 1u, 4u) == KWS_OK);
+  CHECK(kws_decoder_step(&decoder, token, 4u, 1, &id, &confidence) == 0);
+  CHECK(kws_decoder_step(&decoder, other, 4u, 1, &id, &confidence) == 0);
+  CHECK(decoder.pending_keyword == 0);
+  CHECK(decoder.pending_age_frames == 1u);
+  CHECK(kws_decoder_step(&decoder, other, 4u, 1, &id, &confidence) == 0);
+  CHECK(decoder.pending_keyword == -1);
+  CHECK(decoder.pending_age_frames == 0u);
+  CHECK(id == 0u && confidence == 0.0f);
+}
+
+static void test_pending_wait_obeys_path_retention_budget(void) {
+  const uint16_t tokens[] = {1u};
+  const float token[4] = {-8.0f, 8.0f, -8.0f, -8.0f};
+  const float blank[4] = {8.0f, -8.0f, -8.0f, -8.0f};
+  for (uint8_t policy = (uint8_t)KWS_PREFIX_LONGEST;
+       policy <= (uint8_t)KWS_PREFIX_GRACE; ++policy) {
+    kws_decoder_t decoder;
+    kws_keyword_t item = keyword(162u, tokens, 1u, 0.50f);
+    uint32_t id = 0u;
+    float confidence = 0.0f;
+    item.prefix_policy = policy;
+    item.min_trailing_blanks = 2u;
+    item.grace_frames = policy == (uint8_t)KWS_PREFIX_GRACE ? 2u : 0u;
+    kws_decoder_init(&decoder, 1.5f, 0.94f);
+    CHECK(kws_decoder_set_keywords(&decoder, &item, 1u, 4u) == KWS_OK);
+    CHECK(kws_decoder_debug_set_search_policy(&decoder, 0.0001f, -8.25f) == KWS_OK);
+    CHECK(kws_decoder_step(&decoder, token, 4u, 1, &id, &confidence) == 0);
+    CHECK(kws_decoder_step(&decoder, blank, 4u, 1, &id, &confidence) == 0);
+    CHECK(decoder.pending_keyword == 0);
+    CHECK(kws_decoder_step(&decoder, blank, 4u, 1, &id, &confidence) == 0);
+    CHECK(decoder.pending_keyword == -1);
+    CHECK(id == 0u && confidence == 0.0f);
+  }
+}
+
+static void test_pending_short_prefix_survives_live_longer_continuation(void) {
+  const uint16_t short_tokens[] = {1u};
+  const uint16_t long_tokens[] = {1u, 2u, 3u};
+  const float first[5] = {-8.0f, 8.0f, -8.0f, -8.0f, -8.0f};
+  const float middle[5] = {-8.0f, -8.0f, 8.0f, -8.0f, -8.0f};
+  const float last[5] = {-8.0f, -8.0f, -8.0f, 8.0f, -8.0f};
+  const float blank[5] = {8.0f, -8.0f, -8.0f, -8.0f, -8.0f};
+  for (uint8_t policy = (uint8_t)KWS_PREFIX_LONGEST;
+       policy <= (uint8_t)KWS_PREFIX_GRACE; ++policy) {
+    for (unsigned complete_long = 0u; complete_long <= 1u; ++complete_long) {
+      kws_decoder_t decoder;
+      kws_keyword_t items[2] = {
+          keyword(163u, short_tokens, 1u, 0.50f),
+          keyword(164u, long_tokens, 3u, 0.50f),
+      };
+      uint32_t id = 0u;
+      float confidence = 0.0f;
+      for (size_t k = 0u; k < 2u; ++k) {
+        items[k].prefix_policy = policy;
+        items[k].min_trailing_blanks = 1u;
+        items[k].grace_frames = policy == (uint8_t)KWS_PREFIX_GRACE ? 3u : 0u;
+      }
+      kws_decoder_init(&decoder, 1.5f, 0.94f);
+      CHECK(kws_decoder_set_keywords(&decoder, items, 2u, 5u) == KWS_OK);
+      CHECK(kws_decoder_step(&decoder, first, 5u, 1, &id, &confidence) == 0);
+      CHECK(kws_decoder_step(&decoder, middle, 5u, 1, &id, &confidence) == 0);
+      CHECK(decoder.nodes[decoder.terminal_nodes[0]].score < -1.0e20f);
+      CHECK(decoder.pending_keyword == 0);
+      CHECK(decoder.pending_age_frames == 1u);
+      if (complete_long != 0u) {
+        CHECK(kws_decoder_step(&decoder, last, 5u, 1, &id, &confidence) == 0);
+        CHECK(decoder.pending_keyword == 1);
+        CHECK(decoder.pending_age_frames == 0u);
+      }
+      unsigned wait = policy == (uint8_t)KWS_PREFIX_LONGEST ? 1u
+                       : complete_long != 0u ? 3u : 2u;
+      for (unsigned frame = 1u; frame <= wait; ++frame) {
+        CHECK(kws_decoder_step(&decoder, blank, 5u, 1, &id, &confidence) ==
+              (frame == wait));
+      }
+      CHECK(id == (complete_long != 0u ? 164u : 163u));
+      CHECK(confidence > 0.50f);
+
+      /* A live continuation is a bounded fallback, not permanent permission:
+       * unrelated speech kills the subtree, then late blanks must stay quiet. */
+      const float other[5] = {-8.0f, -8.0f, -8.0f, -8.0f, 8.0f};
+      id = 0u;
+      confidence = 0.0f;
+      CHECK(kws_decoder_step(&decoder, first, 5u, 1, &id, &confidence) == 0);
+      CHECK(kws_decoder_step(&decoder, middle, 5u, 1, &id, &confidence) == 0);
+      for (unsigned frame = 0u; frame < 80u; ++frame) {
+        CHECK(kws_decoder_step(&decoder, other, 5u, 1, &id, &confidence) == 0);
+      }
+      CHECK(decoder.pending_keyword == -1);
+      for (unsigned frame = 0u; frame < 80u; ++frame) {
+        CHECK(kws_decoder_step(&decoder, blank, 5u, 1, &id, &confidence) == 0);
+      }
+      CHECK(id == 0u && confidence == 0.0f);
+    }
+  }
+}
+
+static void test_expired_pending_does_not_block_fresh_shorter_keyword(void) {
+  const uint16_t old_tokens[] = {1u, 2u};
+  const uint16_t fresh_tokens[] = {3u};
+  const float first[4] = {-8.0f, 8.0f, -8.0f, -8.0f};
+  const float second[4] = {-8.0f, -8.0f, 8.0f, -8.0f};
+  const float fresh[4] = {-8.0f, -8.0f, -8.0f, 8.0f};
+  const float blank[4] = {8.0f, -8.0f, -8.0f, -8.0f};
+  for (uint8_t policy = (uint8_t)KWS_PREFIX_LONGEST;
+       policy <= (uint8_t)KWS_PREFIX_GRACE; ++policy) {
+    for (unsigned reverse = 0u; reverse <= 1u; ++reverse) {
+      kws_decoder_t decoder;
+      kws_keyword_t items[2];
+      uint32_t id = 0u;
+      float confidence = 0.0f;
+      items[reverse] = keyword(165u, old_tokens, 2u, 0.50f);
+      items[1u - reverse] = keyword(166u, fresh_tokens, 1u, 0.50f);
+      for (size_t k = 0u; k < 2u; ++k) {
+        items[k].prefix_policy = policy;
+        items[k].min_trailing_blanks = 1u;
+        items[k].grace_frames = policy == (uint8_t)KWS_PREFIX_GRACE ? 1u : 0u;
+      }
+      kws_decoder_init(&decoder, 1.5f, 0.94f);
+      CHECK(kws_decoder_set_keywords(&decoder, items, 2u, 4u) == KWS_OK);
+      CHECK(kws_decoder_step(&decoder, first, 4u, 1, &id, &confidence) == 0);
+      CHECK(kws_decoder_step(&decoder, second, 4u, 1, &id, &confidence) == 0);
+      CHECK(decoder.keyword_ids[decoder.pending_keyword] == 165u);
+      CHECK(kws_decoder_step(&decoder, fresh, 4u, 1, &id, &confidence) == 0);
+      CHECK(decoder.pending_keyword >= 0);
+      CHECK(decoder.keyword_ids[decoder.pending_keyword] == 166u);
+      CHECK(decoder.pending_age_frames == 0u);
+      CHECK(kws_decoder_step(&decoder, blank, 4u, 1, &id, &confidence) == 1);
+      CHECK(id == 166u && confidence > 0.50f);
+    }
+  }
+}
+
 int main(void) {
+  test_pending_wait_expires_after_unrelated_speech();
+  test_grace_without_blank_gate_cannot_release_dead_candidate();
+  test_pending_wait_obeys_path_retention_budget();
+  test_pending_short_prefix_survives_live_longer_continuation();
+  test_expired_pending_does_not_block_fresh_shorter_keyword();
   test_arbitration_is_independent_of_keyword_order();
   test_stable_identity_is_only_the_final_tie_break();
   test_grace_pending_refresh_and_replacement_are_order_independent();

@@ -37,7 +37,7 @@ python3 -m py_compile tools/*.py training/*.py eval/*.py tests/*.py
 
 CI additionally runs the complete synthetic/domain/FAR matrix, Clang static analysis, a C line-coverage gate, ASan/UBSan, `.kwm/.kwk` libFuzzer smoke, Cortex-A32 ARMv7 hard-float cross-build, two independent SDK builds with byte-for-byte install-tree comparison and clean SDK consumer checks.
 
-Do not add a new `tests/test_*.py` without wiring it into an official workflow. `tools/test_inventory.py` enforces this.
+Do not add a new `tests/test_*.py` without wiring it into an official workflow. `tools/test_inventory.py` checks executable declarations and reports their scope; this is not proof of execution. See [actual test execution evidence](docs/TEST_EXECUTION_EVIDENCE.md) for the exact guarded suites, modes and fail-closed outcome checks.
 
 ## Real-time data-plane invariants
 
