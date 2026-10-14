@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "suites": {
+    "asr18": {
+      "root": "research/k1-punctuation6-asr18-v1",
+      "modules": [
+        "test_asr18_binding",
+        "test_asr18_contract",
+        "test_asr18_entrypoints",
+        "test_asr18_failure_observer",
+        "test_asr18_freeze",
+        "test_asr18_host",
+        "test_asr18_metadata",
+        "test_asr18_prerequisite",
+        "test_asr18_raw_data_reader",
+        "test_asr18_receipts",
+        "test_asr18_resources",
+        "test_asr18_transport",
+        "test_asr18_worker",
+        "test_bound_claim_contract",
+        "test_claim_admission_host",
+        "test_claim_consumer_integration",
+        "test_publisher_checkpoint",
+        "test_publisher_observation",
+        "test_transfer_recovery"
+      ],
+      "count": 504,
+      "ids_sha256": "4ab876c66417977dedb9cdfe3e0830b268c73166f960209017c447d0e1afccf7",
+      "modes": [
+        "normal",
+        "O",
+        "OO"
+      ],
+      "allowed_skips": {}
+    },
+    "prepare": {
+      "root": "research/k1-punctuation6-prepare-diagnostic-v1",
+      "modules": [
+        "test_prepare_hosted",
+        "test_prepare_launch_ci",
+        "test_prepare_only",
+        "test_prepare_transport"
+      ],
+      "count": 92,
+      "ids_sha256": "ab1bb113ae1f495ef7b14f79fa9dd64a751aebb88f9293b1409ec0a7c17ae861",
+      "modes": [
+        "normal",
+        "O",
+        "OO"
+      ],
+      "allowed_skips": {}
+    },
+    "posterior": {
+      "root": "research/k1-asr18-offline-posterior-v1",
+      "modules": [
+        "test_asr_posterior",
+        "test_claim_posterior_integration",
+        "test_offline_custody"
+      ],
+      "count": 71,
+      "ids_sha256": "2b808ace5dea3dc327510fe621cc93c8153158bf324fc135f2898fd74e7da157",
+      "modes": [
+        "normal",
+        "O",
+        "OO"
+      ],
+      "allowed_skips": {}
+    },
+    "promotion-admission": {
+      "root": "tests",
+      "modules": [
+        "test_model_promotion_admission"
+      ],
+      "count": 9,
+      "ids_sha256": "f3d1796efb2905ff039c613f0173ce02f0b595717c71c4c6710f95d6a44415cb",
+      "modes": [
+        "normal",
+        "O",
+        "OO"
+      ],
+      "allowed_skips": {}
+    },
+    "promotion-source": {
+      "root": "tests",
+      "modules": [
+        "test_model_promotion_source"
+      ],
+      "count": 17,
+      "ids_sha256": "387417e07c9ed160882812a97e82785d9eaa4e93a3bb364ab80c4783a863aa7c",
+      "modes": [
+        "normal",
+        "O",
+        "OO"
+      ],
+      "allowed_skips": {}
+    },
+    "campaign-capsule": {
+      "root": "research/campaign-capsules-v1",
+      "modules": [
+        "test_campaign_capsule"
+      ],
+      "count": 32,
+      "ids_sha256": "6aa2e4d55a7bf5aa384906cacf98d7bc2ac71c6481b98238462d8ea1721e327c",
+      "modes": [
+        "normal",
+        "O",
+        "OO"
+      ],
+      "allowed_skips": {}
+    },
+    "execution-guards": {
+      "root": "tests",
+      "modules": [
+        "test_checked_unittest",
+        "test_test_inventory"
+      ],
+      "count": 19,
+      "ids_sha256": "667718477a3c928098db15521f539716037fa1eacff7eb1d1fc32ad5497e28df",
+      "modes": [
+        "normal",
+        "O",
+        "OO"
+      ],
+      "allowed_skips": {}
+    }
+  }
+}

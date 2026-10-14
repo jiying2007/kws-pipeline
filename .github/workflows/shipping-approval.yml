@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      actions: read
       id-token: write
       attestations: write
     steps:
@@ -129,6 +130,16 @@ jobs:
           test "$(jq -r '.budget_id' "$budget")" = "$(jq -r '.resource_budget_id' "$summary")"
           test "$(jq -r '.status' "$budget")" = approved
 
+      - name: Require latest exact-deployment continuous FAR regression
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/far_regression_receipt.py fetch \
+            --deployment build/approval/deployment/deployment-manifest.json \
+            --repository "$GITHUB_REPOSITORY" --output build/approval/regression
+
       - name: Assemble terminal shipping approval manifest
         id: manifest
         env:
@@ -153,6 +164,9 @@ jobs:
           budget = load(root/'phase-b/resource-budget.json')
           governance = load(root/'governance/verification.json')
           policy = load(root/'policies/target-qualification.policy.json')
+          regression = load(root/'regression/verification.json')
+          if regression.get('qualified') is not True or regression['deployment_manifest_sha256'] != sha(root/'deployment/deployment-manifest.json'):
+              raise SystemExit('current deployment regression is missing, failed or mismatched')
           for label, value, version in (
               ('target policy', policy, 3), ('resource budget', budget, 2),
               ('target cohort', cohort, 2), ('target cohort receipt', cohort_receipt, 2),
@@ -181,6 +195,13 @@ jobs:
               'deployment_target': os.environ['TARGET_SHA'],
               'deployment_manifest_sha256': sha(root/'deployment/deployment-manifest.json'),
               'model_release': deployment['model_release'],
+              'current_tuple_regression': {
+                  'verification_sha256': sha(root/'regression/verification.json'),
+                  'artifact_sha256': regression['artifact_sha256'],
+                  'receipt_sha256': regression['receipt_sha256'],
+                  'selection': regression['selection'],
+                  'identity': regression['identity'],
+              },
               'shipping_wake_words': shipping['shipping_wake_words'],
               'qualification_policies': {
                   'phase_a_sha256': sha(root/'policies/real-human-qualification.policy.json'),
@@ -219,7 +240,7 @@ jobs:
           jq -e '.shipping_approved == true and .shipping_approval_blockers == [] and .status == "shipping-approved"' build/approval/shipping-approval-manifest.json >/dev/null
           cp governance/main-ruleset-target.json build/approval/governance/
           (cd build/approval && sha256sum \
-            shipping-approval-manifest.json \
+            shipping-approval-manifest.json regression/verification.json \
             deployment/deployment-manifest.json deployment/shipping.xiaowo.json \
             phase-a/public-phase-a-receipt.json phase-a/real-human-qualification-summary.json \
             phase-b/public-target-cohort-receipt.json phase-b/target-cohort-qualification-summary.json phase-b/resource-budget.json \
@@ -246,9 +267,11 @@ jobs:
             echo "shipping approval already exists: $TAG" >&2
             exit 2
           fi
+          python3 tools/far_regression_receipt.py recheck --record build/approval/regression/verification.json
           gh release create "$TAG" \
             build/approval/shipping-approval-manifest.json \
             build/approval/SHIPPING_APPROVAL_SHA256SUMS \
+            build/approval/regression/verification.json \
             build/approval/phase-a/public-phase-a-receipt.json \
             build/approval/phase-a/real-human-qualification-summary.json \
             build/approval/phase-b/public-target-cohort-receipt.json \

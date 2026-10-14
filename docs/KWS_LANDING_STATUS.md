@@ -90,6 +90,8 @@ a new acoustic evaluation of current main. The original 2026-10-09 observation
 above is retained unchanged. No source-only CI pass clears FAR, recalibration,
 real-human/final-AFE, physical-board or shipping gates.
 
+A later [bounded original-prefix diagnostic](../research/known-far-diagnostic-v1/README.md) restored both failed events with the original-equivalent runtime, retained logits/VAD/decoder state, and keeps the original regression failed. It does not qualify this changed main or clear recalibration.
+
 ## Current entry points
 
 Use the [research map](../research/README.md) and its

@@ -204,6 +204,18 @@ immediate terminals compete by priority, then depth, then confidence, then the
 smaller unsigned keyword ID. Reset,
 discontinuity and keyword replacement clear these waits.
 
+`longest` pending state expires when neither its qualified terminal nor any
+longer shared-prefix continuation has a live path within the existing retention
+budget. `grace` permits interruption and confidence refresh until its configured
+grace age; at that age and afterward, the same liveness requirement applies.
+Expiry is checked before accepting the frame's new pending candidate and before
+emission, so a dead deeper candidate cannot block a fresh shorter keyword or
+fire after an unrelated speech run eventually reaches blank. A still-live
+longer continuation preserves the shorter fallback even after the shorter
+terminal itself disappears. These rules affect explicit `longest`/`grace`
+policies; the shipping `immediate`/zero-blank policy is unchanged. Changed decoder
+source still requires source-bound recalibration and requalification.
+
 Use `longest` when one wake word is a prefix of another (for example `小窝`
 against `小窝小窝`). Use `grace` when the longer variant may arrive late.
 

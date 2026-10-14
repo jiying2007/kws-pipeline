@@ -587,9 +587,20 @@ print(json.dumps({'status':'synthetic guarded acceptance passed', **observed,
         self.assertIn('if: always()', job)
         self.assertIn('git diff --exit-code HEAD --', job)
         self.assertIn('  contents: read\n', workflow.split('jobs:', 1)[0])
-        for forbidden in ('contents: write', 'pip install', 'GITHUB_TOKEN', 'upload-artifact',
+        for forbidden in ('contents: write', 'pip install', 'GITHUB_TOKEN',
                           'qualification.py', 'hosted_run.py', 'transfer_recovery.py'):
             self.assertNotIn(forbidden, job)
+        report_upload = """      - name: Retain actual posterior execution evidence
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: checked-unittest-posterior
+          path: ${{ env.KWS_TEST_REPORT_DIR }}/*.json
+          if-no-files-found: error
+"""
+        self.assertIn(report_upload, job)
+        self.assertNotIn('upload-artifact', job.replace(report_upload, '', 1))
+        self.assertIn('KWS_TEST_REPORT_DIR: ${{ runner.temp }}/checked-unittest', job)
+        self.assertIn('--verify-reports "$KWS_TEST_REPORT_DIR" --suite posterior', job)
         shared = workflow.split('  python-contracts:\n', 1)[1].split('  asr-offline-posterior:\n', 1)[0]
         self.assertNotIn('test_asr_posterior.py', shared)
         self.assertNotIn('test_offline_custody.py', shared)

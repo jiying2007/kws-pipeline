@@ -1,0 +1,173 @@
+{
+  "actual_audio_generation": "deterministic restoration of existing tone/proxy source, not new speech TTS and not real human speech",
+  "actual_prefixes_s": {
+    "1103": 7194,
+    "3301": 2375
+  },
+  "asr_calls": 0,
+  "build_method": "direct GCC, unused build_info metadata translation unit omitted; not canonical SDK qualification",
+  "cold_start_audio_seconds": 8.0,
+  "cold_start_rows": [
+    {
+      "detections": [],
+      "pcm_sha256": "cf16ec6fb1b91b21f2454266852374e2bc65e8cd3cf78ab8f8c9aead61208221",
+      "returncode": 0,
+      "seed": 1103,
+      "stderr": "",
+      "wav_sha256": "a69e68f0aa8d0b14eec4d1ca719d41b21d40cddbf7c464e4e911c8f57382c098"
+    },
+    {
+      "detections": [
+        {
+          "confidence": 0.993992,
+          "keyword_id": 2,
+          "recording": "cold-capture-3301",
+          "time_s": 2.005
+        }
+      ],
+      "pcm_sha256": "f66c69436d72f6605fb70711688481f69f3fdddca4137c8b69b979b1c45fbe82",
+      "returncode": 0,
+      "seed": 3301,
+      "stderr": "",
+      "wav_sha256": "f6e6a2ae65f0f9c47ab129f01801b479f67014bfa1974ffa14421dedf3d69c32"
+    }
+  ],
+  "compile_flags": [
+    "-std=c11",
+    "-O3",
+    "-DNDEBUG",
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic",
+    "-Werror",
+    "-Wconversion",
+    "-Wshadow",
+    "-Wcast-qual"
+  ],
+  "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+  "confidence_precision_note": "seed1103 direct GCC confidence 0.603047 vs original 0.603046; equal event timestamp is not bitwise cross-compiler equivalence",
+  "core_source_equivalent_baseline": "2e4cc45be0714df060ee8f4865d96341f8cd1677",
+  "created_at_utc": "2026-10-14T08:23:00Z",
+  "diagnostic_instrumentation_note": "existing read-only debug accessors; parsed detection objects match the uninstrumented local run; initial byte-comparison rejected JSON key ordering only",
+  "domain_rows_identical_except_local_paths": 240,
+  "human_gold": false,
+  "independent_evaluation": false,
+  "instrumented_runner_sha256": "2e8a7af16bb568554a9497f0975d1916bcb9bb1b45afcdafedd55bcabcbc64c4",
+  "keyword_pack_sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+  "model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+  "negative_wav_sha256_verified": 224,
+  "original_metadata_members": [
+    {
+      "bytes": 44069,
+      "original_artifact_member": "nightly-domain/domain-index.jsonl",
+      "path": "original-domain-index.jsonl.gz",
+      "sha256": "7a357f34e06a97ec8d65a4eee1ed19058f58ec1791b47a83c8905890de0b84df",
+      "uncompressed_bytes": 361718,
+      "uncompressed_sha256": "8e19e359c230562254aebf461f32118184a9a1412ce0fb75f23e40def87cdd8c"
+    },
+    {
+      "bytes": 16032,
+      "original_artifact_member": "far-run-1103/hard-negative-injections.jsonl",
+      "path": "original-injections-1103.jsonl.gz",
+      "sha256": "df3c4e3d6c8453247085c8b83aaa3cb3aa58fd50a722b20e57ea0a02fd5f73e1",
+      "uncompressed_bytes": 99914,
+      "uncompressed_sha256": "027892e6a179f5b3adc289b9e08f525f2a235835e7e7622280e99ff6a617682d"
+    },
+    {
+      "bytes": 18096,
+      "original_artifact_member": "far-run-3301/hard-negative-injections.jsonl",
+      "path": "original-injections-3301.jsonl.gz",
+      "sha256": "28afc54fb05863ace901cfc49969a780739f4570c90aabbb2aa5907d45aaccb9",
+      "uncompressed_bytes": 109584,
+      "uncompressed_sha256": "173aae6771946a6a6ec364fa20dc2c7883e08fac68169801e7b8a5067bae1203"
+    }
+  ],
+  "original_run_id": 38482297930,
+  "original_scheduled_duration_s": 7200,
+  "original_source": "1c8d9c049170e9547b39807d77498e10c19712bf",
+  "qualification_allowed": false,
+  "runtime": "unchanged original-equivalent default immediate/0 policy",
+  "schema": "known-far-prefix-diagnostic-v1",
+  "shipping_approved": false,
+  "stream_reconstruction": [
+    {
+      "actual_seconds": 7194,
+      "detections": [
+        {
+          "confidence": 0.603047,
+          "keyword_id": 2,
+          "recording": "far-stream-seed-1103",
+          "time_s": 7191.345
+        }
+      ],
+      "original_capture_pcm_equal": true,
+      "original_capture_pcm_sha256": "cf16ec6fb1b91b21f2454266852374e2bc65e8cd3cf78ab8f8c9aead61208221",
+      "original_detections": [
+        {
+          "confidence": 0.603046,
+          "keyword_id": 2,
+          "recording": "far-stream-seed-1103",
+          "time_s": 7191.345
+        }
+      ],
+      "prefix_pcm_bytes": 230208000,
+      "prefix_pcm_sha256": "ea11d34144e45c8f594be5be9727392a81633323e8f3309f1a3e60773f7100be",
+      "schedule_entries_match": 339,
+      "seed": 1103
+    },
+    {
+      "actual_seconds": 2375,
+      "detections": [
+        {
+          "confidence": 0.962665,
+          "keyword_id": 2,
+          "recording": "far-stream-seed-3301",
+          "time_s": 2372.645
+        }
+      ],
+      "original_capture_pcm_equal": true,
+      "original_capture_pcm_sha256": "f66c69436d72f6605fb70711688481f69f3fdddca4137c8b69b979b1c45fbe82",
+      "original_detections": [
+        {
+          "confidence": 0.962665,
+          "keyword_id": 2,
+          "recording": "far-stream-seed-3301",
+          "time_s": 2372.645
+        }
+      ],
+      "prefix_pcm_bytes": 76000000,
+      "prefix_pcm_sha256": "5d4f76c67a7551e468eddbef2bfca4b18e353201ade57af29f8f19848d16adc5",
+      "schedule_entries_match": 120,
+      "seed": 3301
+    }
+  ],
+  "trace_members": [
+    {
+      "bytes": 37040,
+      "detected_end_samples": [
+        115061520
+      ],
+      "frames": 533,
+      "path": "trace-1103.jsonl.gz",
+      "sha256": "c2190f4b5c1cfb023fad8b9220ab5debfe42c36ff70eebc8b16aaa5eec4f8c04",
+      "uncompressed_bytes": 832519,
+      "uncompressed_sha256": "2bc04b28eb1cb8dc84611a71598238a2a6cad63196f73139c26d76b8f5375b70"
+    },
+    {
+      "bytes": 51168,
+      "detected_end_samples": [
+        37962320
+      ],
+      "frames": 518,
+      "path": "trace-3301.jsonl.gz",
+      "sha256": "5021022107e720e20101d61ad41835894c907469a0c81ca4ead2fa2c2dd1c4c8",
+      "uncompressed_bytes": 781818,
+      "uncompressed_sha256": "784ef3ddc3fe491d9853258c03a2758389e8e482bdb4dbaa654a076bfe2ebb50"
+    }
+  ],
+  "trace_source_sha256": "2735b5aa063221a0b7c935738b47c15d5a72605b7c9b38578f57d360924256e4",
+  "training_calls": 0,
+  "tts_model_calls": 0,
+  "uninstrumented_runner_sha256": "b34a1e2be336cf6defc9d8bd11f50b3afef7af12d612a296fd82a61f77d4786c",
+  "wall_seconds": 190.99333423400094
+}

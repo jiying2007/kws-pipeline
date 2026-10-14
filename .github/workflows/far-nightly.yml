@@ -278,6 +278,17 @@ jobs:
           --min-hard-negative-injections 800
           --min-hard-negative-audio-seconds 800
 
+      - name: Bind current-source regression evidence without historical fallback
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/far-regression
+          cp configs/shipping.xiaowo.json configs/nightly.xiaowo-frozen-model.json configs/parameter-contract.json build/far-regression/
+          if test -f build/kws_raw_stream; then cp build/kws_raw_stream build/far-regression/; fi
+          python3 tools/far_regression_receipt.py produce --root build \
+            --source "$GITHUB_SHA" --run-id "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT"
+
       - name: Retain frozen-model nightly FAR evidence and captures
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -296,5 +307,6 @@ jobs:
             build/nightly-negative.tsv
             build/far-run-*/
             build/far-aggregate.json
+            build/far-regression/
           if-no-files-found: warn
           retention-days: 30

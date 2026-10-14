@@ -356,6 +356,40 @@ static int pending_ready(const kws_decoder_t *d) {
   return 1;
 }
 
+/* A held short keyword may lose its own terminal while a longer shared-prefix
+ * path advances. Keep that fallback while any path in its subtree is live and
+ * within the same retention budget used for terminal admission. */
+static int pending_has_live_path(const kws_decoder_t *d) {
+  uint16_t terminal = d->terminal_nodes[d->pending_keyword];
+  uint16_t depth = d->nodes[terminal].depth;
+
+  for (uint16_t i = terminal; i < d->node_count; ++i) {
+    const kws_trie_node_t *node = &d->nodes[i];
+    uint16_t ancestor = i;
+    int use_nonblank;
+    float score;
+    float acoustic;
+    if (node->depth < depth) {
+      continue;
+    }
+    while (d->nodes[ancestor].depth > depth) {
+      ancestor = d->nodes[ancestor].parent;
+    }
+    if (ancestor != terminal) {
+      continue;
+    }
+    use_nonblank = node->score >= node->blank_score;
+    score = use_nonblank != 0 ? node->score : node->blank_score;
+    acoustic = use_nonblank != 0 ? node->acoustic_score
+                                 : node->blank_acoustic_score;
+    if (score > NEG_INF / 2.0f && acoustic > NEG_INF / 2.0f &&
+        score - acoustic >= KWS_MIN_PATH_RETENTION_LOG) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 int kws_decoder_step(kws_decoder_t *d,
                      const float *logits,
                      uint16_t vocab_size,
@@ -548,6 +582,20 @@ int kws_decoder_step(kws_decoder_t *d,
           pending_depth = d->nodes[i].depth;
         }
       }
+    }
+  }
+
+  if (d->pending_keyword >= 0) {
+    int kw = d->pending_keyword;
+    int within_grace = d->prefix_policies[kw] == (uint8_t)KWS_PREFIX_GRACE &&
+                       d->pending_age_frames < d->grace_frames[kw];
+    /* Grace permits a bounded interruption/refresh. Once that window ends,
+     * neither policy may wait indefinitely for blanks after its terminal and
+     * every longer continuation have died or exhausted their retention budget.
+     * Expire before offering this frame's winner so a stale deeper candidate
+     * cannot suppress a fresh shorter keyword. */
+    if (within_grace == 0 && pending_has_live_path(d) == 0) {
+      clear_pending(d);
     }
   }
 

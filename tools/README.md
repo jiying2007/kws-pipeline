@@ -152,3 +152,8 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`verify_research_consolidation.py`](verify_research_consolidation.py)
 - [`verify_research_publication.py`](verify_research_publication.py)
 - [`verify_research_sources.py`](verify_research_sources.py)
+
+## Verified test execution and current regression
+
+- [`checked_unittest.py`](checked_unittest.py) — Enforce reviewed test IDs, counts, modes and outcomes; no automatic contract rewriting.
+- [`far_regression_receipt.py`](far_regression_receipt.py) — Recompute saved continuous-FAR evidence and bind the latest exact-deployment run before shipping approval; no model execution.

@@ -16,6 +16,8 @@ jobs:
   python-contracts:
     outputs:
       research_required: ${{ steps.research_changes.outputs.required }}
+    env:
+      KWS_TEST_REPORT_DIR: ${{ runner.temp }}/checked-unittest
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -81,7 +83,7 @@ jobs:
         timeout-minutes: 5
         run: |
           set -euo pipefail
-          asr18_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-asr18-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_asr18_binding", "test_asr18_contract", "test_asr18_prerequisite", "test_asr18_entrypoints", "test_asr18_freeze", "test_asr18_failure_observer", "test_publisher_observation", "test_publisher_checkpoint", "test_transfer_recovery", "test_asr18_host", "test_asr18_metadata", "test_asr18_raw_data_reader", "test_asr18_receipts", "test_asr18_resources", "test_asr18_transport", "test_asr18_worker", "test_bound_claim_contract", "test_claim_admission_host", "test_claim_consumer_integration")); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
+          asr18_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-asr18-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_asr18_binding", "test_asr18_contract", "test_asr18_prerequisite", "test_asr18_entrypoints", "test_asr18_freeze", "test_asr18_failure_observer", "test_publisher_observation", "test_publisher_checkpoint", "test_transfer_recovery", "test_asr18_host", "test_asr18_metadata", "test_asr18_raw_data_reader", "test_asr18_receipts", "test_asr18_resources", "test_asr18_transport", "test_asr18_worker", "test_bound_claim_contract", "test_claim_admission_host", "test_claim_consumer_integration")); sys.path.insert(0,str(Path("tools").resolve())); from checked_unittest import run_checked_suite; raise SystemExit(run_checked_suite(suite, "asr18"))'
           mode_logs="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/k1-asr18-contracts.XXXXXX")"
           stop_contracts() {
             running="$(jobs -pr)"
@@ -131,7 +133,7 @@ jobs:
         timeout-minutes: 5
         run: |
           set -euo pipefail
-          prepare_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-prepare-diagnostic-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_prepare_only", "test_prepare_transport", "test_prepare_hosted", "test_prepare_launch_ci")); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
+          prepare_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-prepare-diagnostic-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_prepare_only", "test_prepare_transport", "test_prepare_hosted", "test_prepare_launch_ci")); sys.path.insert(0,str(Path("tools").resolve())); from checked_unittest import run_checked_suite; raise SystemExit(run_checked_suite(suite, "prepare"))'
           python3 -I -S -B -c "$prepare_tests"
           python3 -I -S -B -O -c "$prepare_tests"
           python3 -I -S -B -OO -c "$prepare_tests"
@@ -357,6 +359,41 @@ jobs:
           python3 -B tools/test_inventory.py --root research/experiment_quality_guards/tests --workflow .github/workflows/ci.yml
       - name: Verify tracked worktree after Saved review and dataset quality guards
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Saved review and dataset quality guards"'
+      - name: Model promotion contract
+        run: |
+          python3 tests/test_model_promotion.py
+          python3 -S -B tools/checked_unittest.py --suite promotion-admission
+          python3 -S -B -O tools/checked_unittest.py --suite promotion-admission
+          python3 -S -B -OO tools/checked_unittest.py --suite promotion-admission
+          python3 -S -B tools/checked_unittest.py --suite promotion-source
+          python3 -S -B -O tools/checked_unittest.py --suite promotion-source
+          python3 -S -B -OO tools/checked_unittest.py --suite promotion-source
+          python3 tests/test_feature_cache_contract.py
+      - name: Verify tracked worktree after Model promotion contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Model promotion contract"'
+      - name: Closed offline campaign capsule contracts
+        run: |
+          python3 -I -S -B tools/checked_unittest.py --suite campaign-capsule
+          python3 -I -S -B -O tools/checked_unittest.py --suite campaign-capsule
+          python3 -I -S -B -OO tools/checked_unittest.py --suite campaign-capsule
+      - name: Checked unittest runner regressions
+        run: |
+          python3 -S -B tools/checked_unittest.py --suite execution-guards
+          python3 -S -B -O tools/checked_unittest.py --suite execution-guards
+          python3 -S -B -OO tools/checked_unittest.py --suite execution-guards
+      - name: Verify actual compiler-independent suite execution
+        run: >-
+          python3 -I -S -B tools/checked_unittest.py
+          --verify-reports "$KWS_TEST_REPORT_DIR"
+          --suite asr18 --suite prepare
+          --suite promotion-admission --suite promotion-source
+          --suite campaign-capsule --suite execution-guards
+      - name: Retain actual compiler-independent execution evidence
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: checked-unittest-python-contracts
+          path: ${{ env.KWS_TEST_REPORT_DIR }}/*.json
+          if-no-files-found: error
       - name: Python test inventory
         run: python3 tools/test_inventory.py --official-workflows
       - name: Verify tracked worktree after Python test inventory
@@ -368,6 +405,8 @@ jobs:
 
   asr-offline-posterior:
     # Stdlib-only evidence fixtures; never setup, load or run a model.
+    env:
+      KWS_TEST_REPORT_DIR: ${{ runner.temp }}/checked-unittest
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -377,11 +416,19 @@ jobs:
       - name: Read-only ASR evidence acceptance contracts
         run: |
           set -euo pipefail
-          posterior_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-asr18-offline-posterior-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(tuple(name[:-3] for name in ("test_asr_posterior.py", "test_offline_custody.py", "test_claim_posterior_integration.py"))); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
+          posterior_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-asr18-offline-posterior-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(tuple(name[:-3] for name in ("test_asr_posterior.py", "test_offline_custody.py", "test_claim_posterior_integration.py"))); sys.path.insert(0,str(Path("tools").resolve())); from checked_unittest import run_checked_suite; raise SystemExit(run_checked_suite(suite, "posterior"))'
           python3 -I -S -B -c "$posterior_tests"
           python3 -I -S -B -O -c "$posterior_tests"
           python3 -I -S -B -OO -c "$posterior_tests"
           python3 -I -S -B tools/test_inventory.py --root research/k1-asr18-offline-posterior-v1 --workflow .github/workflows/ci.yml
+      - name: Verify actual posterior suite execution
+        run: python3 -I -S -B tools/checked_unittest.py --verify-reports "$KWS_TEST_REPORT_DIR" --suite posterior
+      - name: Retain actual posterior execution evidence
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: checked-unittest-posterior
+          path: ${{ env.KWS_TEST_REPORT_DIR }}/*.json
+          if-no-files-found: error
       - name: Verify unchanged tracked source after offline posterior contracts
         if: always()
         run: git diff --exit-code HEAD --
@@ -392,8 +439,42 @@ jobs:
     uses: ./.github/workflows/research-source-consolidation.yml
 
   hosted:
-    needs: [python-contracts, research-sources]
+    # Preserve the existing required check names. always() prevents a failed or
+    # skipped dependency from turning this required gate into a successful skip.
+    needs: [python-contracts, research-sources, asr-offline-posterior, hosted-build, coverage, sanitizers, fuzz, armv7-cross]
     if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        cc: [gcc, clang]
+    steps:
+      - name: Require every applicable CI dependency
+        env:
+          CONTRACT_RESULT: ${{ needs.python-contracts.result }}
+          RESEARCH_REQUIRED: ${{ needs.python-contracts.outputs.research_required }}
+          RESEARCH_RESULT: ${{ needs.research-sources.result }}
+          POSTERIOR_RESULT: ${{ needs.asr-offline-posterior.result }}
+          BUILD_RESULT: ${{ needs.hosted-build.result }}
+          COVERAGE_RESULT: ${{ needs.coverage.result }}
+          SANITIZERS_RESULT: ${{ needs.sanitizers.result }}
+          FUZZ_RESULT: ${{ needs.fuzz.result }}
+          ARM_RESULT: ${{ needs.armv7-cross.result }}
+        run: |
+          set -euo pipefail
+          for result in "$CONTRACT_RESULT" "$POSTERIOR_RESULT" "$BUILD_RESULT" "$COVERAGE_RESULT" "$SANITIZERS_RESULT" "$FUZZ_RESULT" "$ARM_RESULT"; do
+            test "$result" = success
+          done
+          if [[ "$RESEARCH_REQUIRED" == true ]]; then
+            test "$RESEARCH_RESULT" = success
+          else
+            test "$RESEARCH_REQUIRED" = false
+            test "$RESEARCH_RESULT" = skipped
+          fi
+
+  hosted-build:
+    # Actual compiler-dependent work starts immediately, without Python/research needs.
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -401,19 +482,6 @@ jobs:
       matrix:
         cc: [gcc, clang]
     steps:
-      - name: Require compiler-independent contracts
-        env:
-          CONTRACT_RESULT: ${{ needs.python-contracts.result }}
-          RESEARCH_REQUIRED: ${{ needs.python-contracts.outputs.research_required }}
-          RESEARCH_RESULT: ${{ needs.research-sources.result }}
-        run: |
-          test "$CONTRACT_RESULT" = success
-          if [[ "$RESEARCH_REQUIRED" == true ]]; then
-            test "$RESEARCH_RESULT" = success
-          else
-            test "$RESEARCH_REQUIRED" = false
-            test "$RESEARCH_RESULT" = skipped
-          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -562,18 +630,6 @@ jobs:
         run: python3 tests/test_training_supply_chain.py
       - name: Verify tracked worktree after Training supply-chain contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Training supply-chain contract"'
-      - name: Model promotion contract
-        run: |
-          python3 tests/test_model_promotion.py
-          python3 -S -B tests/test_model_promotion_admission.py
-          python3 -S -B -O tests/test_model_promotion_admission.py
-          python3 -S -B -OO tests/test_model_promotion_admission.py
-          python3 -S -B tests/test_model_promotion_source.py
-          python3 -S -B -O tests/test_model_promotion_source.py
-          python3 -S -B -OO tests/test_model_promotion_source.py
-          python3 tests/test_feature_cache_contract.py
-      - name: Verify tracked worktree after Model promotion contract
-        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Model promotion contract"'
       - name: Model family resource dimension contracts
         run: |
           python3 -S -B tests/test_model_family_resource_estimate.py
@@ -620,10 +676,6 @@ jobs:
         run: python3 tests/test_frozen_replay_build_contract.py
       - name: Verify tracked worktree after Frozen replay build contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Frozen replay build contract"'
-      - name: Test inventory tool contract
-        run: python3 tests/test_test_inventory.py
-      - name: Verify tracked worktree after Test inventory tool contract
-        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Test inventory tool contract"'
       - name: Model release contract pin
         run: python3 tests/test_model_release_pin.py
       - name: Verify tracked worktree after Model release contract pin

@@ -785,6 +785,9 @@ def main() -> int:
         context_cli_cases(root, args.context_fixtures)
         fixture_preparation_cases(root, args.context_fixtures)
 
+    from effect_regression_cases import run as run_effect_regression_cases
+    run_effect_regression_cases()
+
     print("test_eval: ok")
     return 0
 
