@@ -1,0 +1,3 @@
+--index-url https://pypi.org/simple
+numpy==2.3.2 --hash=sha256:8145dd6d10df13c559d1e4314df29695613575183fa2e2d11fac4c208c8a1f73
+scipy==1.17.1 --hash=sha256:02ae3b274fde71c5e92ac4d54bc06c42d80e399fec704383dcd99b301df37458

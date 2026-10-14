@@ -78,3 +78,12 @@ training candidates with the third ASR, root must explicitly review and bind
 training_candidate_confirmation before the first execution. No run/artifact
 identity or budget guard changes. See ../TRAINING_CONFIRMATION.md for selection,
 quality and tier semantics; missing admission policy does not enable expansion.
+
+
+## P5 actual evidence preparation
+
+The checked-in configuration now binds the four actual probe/remaining ZIP inventories. Both Qwen lanes generated 16 native samples; offline restore/combine/derive succeeds for all 32. The 16 Cosy design slots remain blocked. Evidence summaries are under `../evidence/tts-input-20261014/`; no audio/archive payloads or private data are added to the source tree. Technical quality is not transcription agreement.
+
+The explicit selected policy is `training_candidate_confirmation`: successful blind primary target-consensus candidates with technically valid audio may receive the one third-model confirmation, alongside the original disagreement review. Total limits remain 144 design/96 current Qwen ASR slots. Only actual three matching outputs produce three-model consensus, never human gold. The final P5 configuration enables the one-shot binding for the verified installed workflow ID 384344728. The retained registration and preexecution-history JSON show the actual identity and zero prior runs at inspection. These are not runtime admission evidence: current run identity, first-created push, run1/attempt1 and single lifetime history remain mandatory execution-time gates. The earlier missing-ID FULL-PREFLIGHT.json is retained as historical disabled-stage evidence.
+
+`source_files` hashes the reviewed module, activation Python entrypoints, registered workflow, numeric-only requirements and audit summaries. It explicitly excludes activation.json itself; its complete identity belongs in the external publication manifest, avoiding self/mutual hashes. Source edits require refreshing these identities before admission. The NumPy/SciPy lock targets CPython3.12 Ubuntu24 x86_64 and does not change any model container runtime.

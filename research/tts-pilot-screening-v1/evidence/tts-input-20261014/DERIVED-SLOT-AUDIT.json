@@ -1,0 +1,901 @@
+{
+  "schema": "tts-quality-pilot-asr-input-v1",
+  "slots": [
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-00.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "c02f1ee81d7f9ea1947e400beb2fd258368655e3da783a073ed1fc7f6a185966",
+      "sample_id": "tqp-qwen06-00",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "f1a7712f8d1d38483ab603136b488fcadef8dedad0ff43f072caa022f98332ec"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-01.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "6f606e5df50939ccd277253cbfecd60115a203bfdcaaed5468691187ebf224d6",
+      "sample_id": "tqp-qwen06-01",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "3bef07d1a6d59ddb68309e3d971cfdf54ee53195b2818dc0ee86ca9a3b695dcd"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-02.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "964c26a198a20e4c05f1e9259de4ba3bb054ec9732648b08fa611668ce71962b",
+      "sample_id": "tqp-qwen06-02",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "fc3a7721c36eab2b33e99efd6fc51d0b1a967196d64bffa0be87e04c91142061"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-03.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "7c95c69d319876d17247190aee45fe7a772f5df15783e2168cfb18e270b22948",
+      "sample_id": "tqp-qwen06-03",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "b0ca9ef504520d0cedc8eb78bb9004fc3fff96063d873e7b769e9d9c66db9dbd"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-04.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "66e050bc526c8ec6374b1d3b93774627b529b06eca2af46b0106c7e164d85cf8",
+      "sample_id": "tqp-qwen06-04",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "359749cbe48db5d1642f9f0300476eb956310612100d27ed1e61234cb3229b7d"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-05.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "6b0526ac43a9a1b8ba97180ea19476959062256b8d46ba8abd3f3c4630a40dcc",
+      "sample_id": "tqp-qwen06-05",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "83fd70f99b3c98168aac162e59f95722fa7d97b8b4f696baff43e27c467efd4e"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-06.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "8ec1d11fc5ee36c15877ff9638a732874e87ccd184d0f02b42177090fe8ae411",
+      "sample_id": "tqp-qwen06-06",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "ec8211229fdc775925b8623f772e502f7978a05cb65132aeedbde81267fa1e89"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-07.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "1e888100086591bece993b9635e446f0b3ed3de58671c4989fc5a0b2e10a6e5b",
+      "sample_id": "tqp-qwen06-07",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "bf039f39d8e238b69a081f23cfad7b9cf2503f1b0b2cd2f2f7cf2963a56ae9c0"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-08.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "f209a31894e6e69388b117480aa86acef42fd2dfa3690a795d5a747eb57d502e",
+      "sample_id": "tqp-qwen06-08",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "cea907fc4612ba873944a256ea1e039b3b29900db6bc120fd0829e1aa573e318"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-09.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "643b4801f4c50996115d9caabb7a057f3239b0eb2e7048072ef8dab8a31e3db9",
+      "sample_id": "tqp-qwen06-09",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "adf8213fe86f957fab6489228be05979f82d682b8372b3e4af0bb0ac436c289e"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-10.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "ba7837fa216e4975ae435644ce81e3bcbacb09e849fa25bb5cf0fa596893de5b",
+      "sample_id": "tqp-qwen06-10",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "d8f378ae3e1ec5d1e16b62adc6ded396eab5b148fc5b3da60243b22d68040d2a"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-11.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "95b8b56ae61426e1ff082abb52aeff0487ff3390cff49066b81126d1d722d018",
+      "sample_id": "tqp-qwen06-11",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "855bfbca9dd3b1688d29e5182cf3cab275d72963c8a97b0643bc6dbd3261590e"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-12.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "9b47daadc5b8efeb3f25b6ed1c526211a3d90fddbc6d62c5e51c6f5cb8571ed9",
+      "sample_id": "tqp-qwen06-12",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "7a31abd735de574377adebb799cf63c890fd50ba0f652a98244d11205b092d6b"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-13.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "c0293bd9dc9c46bc2150fc608da54d448095c3e9e1c86b2146bdf23be1c8fc1b",
+      "sample_id": "tqp-qwen06-13",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "5fc5d3746d94561322d6522ad1db9e0592cbaf247b11dc00cf5c293d241765e8"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-14.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "31c7243b5f884329510e18bfe0a1ad51e606eab53aa21a874c26c3f1ac6dac08",
+      "sample_id": "tqp-qwen06-14",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "8898ce4f311ca788e004b56b6d7496578591566ec118cdfe53a9e640ef211dfd"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen06-15.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen06",
+      "native_wav_sha256": "eae717740ed4ac5ea03c718dcd9c58274ebe5f3028c19c641f8fa191f90e7489",
+      "sample_id": "tqp-qwen06-15",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "c4e5f1035c4d902c51b2cd7beff477631f3eab5a83143c9eededbef780c5a46c"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-00.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "3fb627082b11a2d9c19f6ac8b80addb92171361c39fc0894d48fdbbb4b63b6a5",
+      "sample_id": "tqp-qwen17-00",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "0e0e5d63767c1cee6cc859f15f6da0d9f4e560df5f6506ef939b5650ec204ceb"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-01.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "9ddaa46b1bc728c1051f87c4a3e81a06eb4b21da3e230c81f9f9b3e6f2e44e54",
+      "sample_id": "tqp-qwen17-01",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "f2ffc39fc50157a6f0acbe6a9cb67052130849253a5d01db80c8412a0e6d9133"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-02.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "232c78b9a1098a769581e3470bcb87515a61d1e786ca7ec59a0271604e80b99e",
+      "sample_id": "tqp-qwen17-02",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "a8b6ed61f36ba0d46e50648e341bceb26c13519cd5db8d4fd63849124ec87a3c"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-03.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "c098e367120f088c774474a28b501d3ab9914b3039199c14e80d8b7b8970cb08",
+      "sample_id": "tqp-qwen17-03",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "67c1c9cd4f797c88a442a0c8e73dce05e60d9394214079eda8431de55edbba9e"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-04.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "7b19e8cd0bafb0eca31eb7564e4196bda3ed03f9b58f251637631f09415a7dd6",
+      "sample_id": "tqp-qwen17-04",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "4ac2915ce8df55234991effeb68111bdf5b4b8786299ef83d603f77eab7701e5"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-05.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "c5924b32ae7bd3a6a03603525d8fa9f7b60a4d3a9ce8d8f59ed15b4ca0733605",
+      "sample_id": "tqp-qwen17-05",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "9365c610d60d4e8bd488ac18a068eed313c005a23614cec782f641d868b56293"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-06.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "d7827cf04dd1740d211ce8052830d0603f60295a7a93cbf0cbcfe389cf104714",
+      "sample_id": "tqp-qwen17-06",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "2af1e4cb8f18d5f4512303f2d9c8413231e27397a7f774d2d9fbb19b0072c679"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-07.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "647256890d2ebf85b966f41375de9dc0604afe718a1dd10fafd646ad4fea90f1",
+      "sample_id": "tqp-qwen17-07",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "ad38093c2977ab4597bfdd1ba32ee8232db57541353a9fe24e7cfbb5f0f96f7b"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-08.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "aa838fb69235188674930405f037b114f9ecd834bdc8545dd9f3ea28399af6a6",
+      "sample_id": "tqp-qwen17-08",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "766d47bfc7a923038ae4c2038ea0ef4e54c669dc696cab88356c076d9c16356b"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-09.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "164e5e8e4c43547af88d9ae6949eed48539019ecb0c357db38998c2e7464ae7c",
+      "sample_id": "tqp-qwen17-09",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "4fca980123510338b2ff8265e020016b2571ca985c9633cc9cad8a8197caeec6"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-10.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "45d0b33ab743ad3fbfeb2647ea4c02ebce7a4a4877e70da5f3b5533c2c263928",
+      "sample_id": "tqp-qwen17-10",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "39679093f06761492df03ebd577af046f988101b957bafe95e779a15d57b26b6"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-11.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "79bc7322df9a688ed55bc8a5e8f12cf19edd12d5a525ab4d8ffe1943c69b26eb",
+      "sample_id": "tqp-qwen17-11",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "80894bc9ca01a920bedcd67be56fab13c279dc11eb6c8d81c0b3f00b1edd9436"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-12.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "5bed3326ccc4c019067f794d7d9c7c730362c64d48be97b5636c3fefde455e15",
+      "sample_id": "tqp-qwen17-12",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "9413829ca25788cd396ab5412a9f801b62f3b2df7bcf87f11e9db088ced5377b"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-13.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "e5aab7e654cd0421f29a57e3bf442644daba7cf4fdda8e5f94884e16cb5dd9d7",
+      "sample_id": "tqp-qwen17-13",
+      "status": "success",
+      "target_text": "你好小窝",
+      "wav_sha256": "55a19f0d02b922a60afb6d54279eb3182834777e649644a89f4d03ec14f26269"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-14.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "a576f4177e50ecfe92c1515ffc4acc301023f45e699442df7d8c91ce608088c2",
+      "sample_id": "tqp-qwen17-14",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "62f3d6aac59eaab087e7f93d44631ed94bec7bb4738235bc74491cef7953dd4e"
+    },
+    {
+      "audio_quality_pass": true,
+      "audio_relpath": "tqp-qwen17-15.wav",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "engine": "qwen17",
+      "native_wav_sha256": "78e5a33c18cb02ba96775fc11483f00b85faa07709d0b720d1e812d7fd4958e5",
+      "sample_id": "tqp-qwen17-15",
+      "status": "success",
+      "target_text": "小窝小窝",
+      "wav_sha256": "2fdcfe09a177e69e39ad337f9e3dbe5dfb0da4d57d9a02c04e1359e4a1f7f6ce"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-00",
+      "status": "blocked",
+      "target_text": "你好小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-01",
+      "status": "blocked",
+      "target_text": "你好小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-02",
+      "status": "blocked",
+      "target_text": "小窝小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-03",
+      "status": "blocked",
+      "target_text": "小窝小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-04",
+      "status": "blocked",
+      "target_text": "你好小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-05",
+      "status": "blocked",
+      "target_text": "你好小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-06",
+      "status": "blocked",
+      "target_text": "小窝小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-07",
+      "status": "blocked",
+      "target_text": "小窝小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-08",
+      "status": "blocked",
+      "target_text": "你好小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-09",
+      "status": "blocked",
+      "target_text": "你好小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-10",
+      "status": "blocked",
+      "target_text": "小窝小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-11",
+      "status": "blocked",
+      "target_text": "小窝小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-12",
+      "status": "blocked",
+      "target_text": "你好小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-13",
+      "status": "blocked",
+      "target_text": "你好小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-14",
+      "status": "blocked",
+      "target_text": "小窝小窝"
+    },
+    {
+      "audio_quality_pass": false,
+      "engine": "cosy3",
+      "reason": "authorized_reference_voices_missing",
+      "sample_id": "tqp-cosy3-15",
+      "status": "blocked",
+      "target_text": "小窝小窝"
+    }
+  ]
+}
