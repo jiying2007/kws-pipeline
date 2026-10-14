@@ -15,7 +15,7 @@ import unittest
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[1]
 sys.path.insert(0,str(HERE))
-from test_control_fixture import APPROVALS, DISABLED_APPROVALS, synthetic_enabled_source
+from test_control_fixture import DISABLED_APPROVALS, synthetic_enabled_source
 import campaign_contract as c
 OPT=['-'+'O'*sys.flags.optimize] if sys.flags.optimize else []
 SENTINELS={key:'SYNTHETIC_'+key+'_NOT_A_CREDENTIAL' for key in
@@ -87,10 +87,11 @@ class ActualEntrypoints(unittest.TestCase):
         if validation_code is not None:expected_detail['validation_code']=validation_code
         self.assertEqual(error['detail'],expected_detail)
 
-    def test_checked_in_asr_controls_are_explicitly_authorized_for_current_scope(self):
-        for filename,keys in APPROVALS.items():
+    def test_checked_in_asr_controls_are_explicitly_closed_for_current_scope(self):
+        self.assertEqual(sum(map(len,DISABLED_APPROVALS.values())),9)
+        for filename,keys in DISABLED_APPROVALS.items():
             value=json.loads((HERE/filename).read_bytes())
-            self.assertTrue(all(value[key] is True for key in keys))
+            self.assertTrue(all(value[key] is False for key in keys))
         release=json.loads((HERE/'execution-release.json').read_bytes())
         control_raw=(HERE/'claim-admission-control.json').read_bytes();control=json.loads(control_raw)
         self.assertEqual(release['schema'],'k1-asr18-execution-release-v2')
@@ -98,8 +99,12 @@ class ActualEntrypoints(unittest.TestCase):
         self.assertEqual(release['claim_admission_control_sha256'],hashlib.sha256(control_raw).hexdigest())
         self.assertEqual(control['schema'],'k1-asr18-claim-admission-control-v2')
         self.assertEqual(control['mode'],'git-owner-v2')
-        for key in c.CLAIM_APPROVALS:self.assertIs(control[key],True)
-        self.assertEqual(c.require_current_scope(control),c.current_scope())
+        for key in c.CLAIM_APPROVALS:self.assertIs(control[key],False)
+        scope=c.current_scope()
+        for key,field in (('campaign','campaign'),('source_ref','source_branch'),
+                ('evidence_ref','result_branch'),('claim_ref','claim_ref'),('workflow','workflow'),('job_key','job_key')):
+            self.assertEqual(control[key],scope[field])
+        with self.assertRaisesRegex(ValueError,'claim admission closed'):c.require_current_scope(control)
         self.assertIsNone(control['workflow_id'])
         self.assertEqual(control['workflow_id_source'],'actual_run_api_plus_path')
         self.assertIs(release['historical_screening_reviewed'],True)
@@ -129,34 +134,39 @@ class ActualEntrypoints(unittest.TestCase):
         self.assertEqual((value.returncode,value.stderr),(1,b'ASR18 publication disabled or review absent.\n'))
         self.check_diagnostic(value.stdout,role='publisher',stages=['publication_gate'])
 
-    def test_actual_authorized_workflow_commands_reject_missing_context_without_effects(self):
-        self.check_enabled_workflow_commands_reject_nonexecution_context(HERE)
+    def test_actual_closed_workflow_commands_reject_before_context_or_side_effects(self):
+        self.check_workflow_commands_reject_nonexecution_context(HERE,closed=True)
 
     def test_synthetic_enabled_workflow_commands_reject_nonexecution_context_without_effects(self):
         with synthetic_enabled_source(HERE) as source:
-            self.check_enabled_workflow_commands_reject_nonexecution_context(source)
+            self.check_workflow_commands_reject_nonexecution_context(source)
 
-    def check_enabled_workflow_commands_reject_nonexecution_context(self,source):
+    def check_workflow_commands_reject_nonexecution_context(self,source,*,closed=False):
         # No gate patch, import-path injection or network blocker in the child.
         program='''import hashlib,json,os,pathlib,runpy,sys
-path=pathlib.Path(sys.argv[1]);seen=[];effects=[]
+path=pathlib.Path(sys.argv[1]);seen=[];effects=[];event_reads=[]
 def profile(frame,event,arg):
- if event in ('call','return') and frame.f_code.co_name in ('release_first','host_environment','early_environment','event_identity','publication_gate','bound_release','require_execution_release','_source_git','execute','run_once'):
+ if event in ('call','return') and frame.f_code.co_name in ('release_first','host_environment','issuer_environment','early_environment','event_identity','publication_gate','bound_release','require_claim_admission','require_execution_release','_source_git','execute','run_once','issue'):
   seen.append([event,frame.f_code.co_name,frame.f_code.co_filename])
 def audit(event,args):
  if event.startswith('socket.') or event in ('subprocess.Popen','os.system','os.mkdir'):
   effects.append(event)
+ if event=='open':
+  name,mode,flags=args
+  if name==os.environ['GITHUB_EVENT_PATH']:event_reads.append(name)
+  if flags & (os.O_WRONLY|os.O_RDWR|os.O_CREAT|os.O_TRUNC|os.O_APPEND):effects.append('file_write')
 sys.addaudithook(audit);sys.setprofile(profile);sys.argv=[str(path)]
 try:runpy.run_path(str(path),run_name='__main__')
 except SystemExit as e:code=e.code
 finally:sys.setprofile(None)
-print(json.dumps({'code':code,'seen':seen,'effects':effects}))
+print(json.dumps({'code':code,'seen':seen,'effects':effects,'event_reads':event_reads}))
 '''
         cases=(('hosted_run.py',SENTINELS,'claim_host_credentials_rejected'),
                ('hosted_run.py',{},'claim_ordinal_attempt_rejected'),
                ('evidence_publisher.py',SENTINELS,None))
+        if closed:cases+= (('claim_admission.py',SENTINELS,None),)
         for filename,credentials,host_code in cases:
-            with self.subTest(filename=filename,credentials=bool(credentials)),tempfile.TemporaryDirectory(prefix='k1-enabled-cli-') as name:
+            with self.subTest(filename=filename,credentials=bool(credentials)),tempfile.TemporaryDirectory(prefix='k1-gated-cli-') as name:
                 temp=Path(name);event=temp/'event.json';event.write_text('{}')
                 expected=hashlib.sha256((source/'execution-freeze.json').read_bytes()).hexdigest()
                 env={'PATH':'/usr/bin:/bin','HOME':'/nonexistent','RUNNER_TEMP':name,
@@ -166,28 +176,43 @@ print(json.dumps({'code':code,'seen':seen,'effects':effects}))
                 self.assertEqual(value.returncode,0,value.stderr.decode())
                 chunks=value.stdout.splitlines(keepends=True)
                 observation=json.loads(chunks[-1])
-                self.check_diagnostic(b''.join(chunks[:-1]),
-                    role='host' if filename=='hosted_run.py' else 'publisher',
-                    stages=['release','arguments'] if filename=='hosted_run.py' else
-                           ['publication_gate','arguments','event_read','source_release'],
-                    terminal=filename=='hosted_run.py',
-                    validation_code=host_code)
                 self.assertEqual(observation['effects'],[])
                 self.assertEqual(sorted(x.name for x in temp.iterdir()),['event.json'])
                 calls={row[1] for row in observation['seen'] if row[0]=='call'}
-                self.assertFalse(calls & {'_source_git','execute','run_once'})
-                if filename=='hosted_run.py':
-                    self.assertEqual(observation['code'],2)
-                    self.assertTrue({'release_first','host_environment'}<=calls)
-                    self.assertEqual('early_environment' in calls,not bool(credentials))
-                    self.assertNotIn('event_identity',calls)
+                self.assertFalse(calls & {'_source_git','execute','run_once','issue'})
+                if closed:
+                    self.assertEqual(observation['event_reads'],[])
+                    self.assertFalse(calls & {'host_environment','issuer_environment','early_environment',
+                        'event_identity','bound_release'})
+                    if filename=='evidence_publisher.py':
+                        self.assertEqual(observation['code'],'ASR18 publication disabled or review absent.')
+                        self.assertIn('publication_gate',calls)
+                        self.check_diagnostic(b''.join(chunks[:-1]),role='publisher',stages=['publication_gate'])
+                    else:
+                        self.assertEqual(observation['code'],2)
+                        self.assertTrue({'release_first','require_claim_admission'}<=calls)
+                        if filename=='hosted_run.py':
+                            self.check_diagnostic(b''.join(chunks[:-1]),role='host',stages=['release'],
+                                terminal=True,validation_code='claim_admission_closed')
+                        else:self.assertEqual(b''.join(chunks[:-1]),b'{"ready":false}\n')
                 else:
-                    self.assertEqual(observation['code'],'ASR18 publication blocked or unconfirmed; no retry.')
-                    self.assertTrue({'publication_gate','bound_release','require_execution_release'}<=calls)
-                    self.assertIn(['return','require_execution_release',str(source/'campaign_contract.py')],observation['seen'])
+                    self.check_diagnostic(b''.join(chunks[:-1]),
+                        role='host' if filename=='hosted_run.py' else 'publisher',
+                        stages=['release','arguments'] if filename=='hosted_run.py' else
+                               ['publication_gate','arguments','event_read','source_release'],
+                        terminal=filename=='hosted_run.py',validation_code=host_code)
+                    if filename=='hosted_run.py':
+                        self.assertEqual(observation['code'],2)
+                        self.assertTrue({'release_first','host_environment'}<=calls)
+                        self.assertEqual('early_environment' in calls,not bool(credentials))
+                        self.assertNotIn('event_identity',calls)
+                    else:
+                        self.assertEqual(observation['code'],'ASR18 publication blocked or unconfirmed; no retry.')
+                        self.assertTrue({'publication_gate','bound_release','require_execution_release'}<=calls)
+                        self.assertIn(['return','require_execution_release',str(source/'campaign_contract.py')],observation['seen'])
                 for secret in SENTINELS.values():self.assertNotIn(secret.encode(),value.stdout+value.stderr)
 
-    def test_real_claim_issuer_rejects_missing_context_before_client_or_private_directory(self):
+    def test_real_claim_issuer_rejects_closed_release_before_client_or_private_directory(self):
         value=self.call(HERE/'claim_admission.py')
         self.assertEqual((value.returncode,value.stdout,value.stderr),(2,b'{"ready":false}\n',b''))
 
@@ -213,13 +238,12 @@ finally:sys.setprofile(None)
 if code!=1:raise SystemExit(2)
 print(json.dumps(seen))
 '''
-        with disabled_source() as source:
-            value=subprocess.run([sys.executable,'-I','-B',*OPT,'-c',program,str(source/'native_worker.py')],
-                capture_output=True,timeout=20,env={'PATH':'/usr/bin:/bin','HOME':'/nonexistent'})
-            self.assertEqual(value.returncode,0,value.stderr.decode())
-            seen=json.loads(value.stdout)
-            self.assertIn(['_production_gate',str(source/'native_worker.py')],seen)
-            self.assertIn(['require_execution_release',str(source/'campaign_contract.py')],seen)
+        value=subprocess.run([sys.executable,'-I','-B',*OPT,'-c',program,str(HERE/'native_worker.py')],
+            capture_output=True,timeout=20,env={'PATH':'/usr/bin:/bin','HOME':'/nonexistent'})
+        self.assertEqual(value.returncode,0,value.stderr.decode())
+        seen=json.loads(value.stdout)
+        self.assertIn(['_production_gate',str(HERE/'native_worker.py')],seen)
+        self.assertIn(['require_execution_release',str(HERE/'campaign_contract.py')],seen)
 
     def test_real_setup_entry_rejects_wrong_mount_before_scope_or_acquisition(self):
         for stage in ('setup','verify'):

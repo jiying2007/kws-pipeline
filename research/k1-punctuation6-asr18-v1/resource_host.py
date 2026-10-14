@@ -375,9 +375,13 @@ class MeteredDocker:
             try:
                 # Reserve the last five seconds for stopping, before optional absence proof.
                 operation_deadline=deadline-5 if kind in ('pause','inspect_paused') else deadline
+                # Optional proof cannot extend the host window. Stopping an already
+                # running owned scope keeps the original best-effort cleanup reserve.
+                if kind=='verify_absence':operation_deadline=min(operation_deadline,self.deadline)
                 remaining=operation_deadline-time.monotonic();require(remaining>0,'cleanup deadline exhausted')
-                allowance=min(timeout,5,remaining);item['timeout_seconds']=allowance
+                allowance=min(timeout,1 if kind=='verify_absence' else 5,remaining);item['timeout_seconds']=allowance
                 item['status']='started';value=self.raw(*args,timeout=allowance)
+                if kind=='verify_absence':require(time.monotonic()<operation_deadline,'absence proof deadline exhausted')
                 item.update(status='succeeded',returncode=0);return value
             except BaseException as error:
                 item.update(status='failed',**safe_error(error));raise
@@ -406,9 +410,21 @@ class MeteredDocker:
             except BaseException as error:
                 errors.append({'operation':'force_remove',**safe_error(error)})
                 try:
-                    listed=operation('verify_absence','ps','--all','--no-trunc','--filter','id='+cid,'--format','{{.ID}}')
-                    require(listed=='','exact owned ID absence unconfirmed')
-                    row['removed']=True;record['removal_proof']='successful_empty_exact_id_query'
+                    # The one force-remove may still be completing in the daemon.
+                    # Observe only this immutable ID; never retransmit removal or
+                    # accept a failed, malformed or foreign-ID response as absence.
+                    # Four close/stop operations plus at most ten reads fit the
+                    # existing sixteen-operation public receipt bound.
+                    for attempt in range(10):
+                        listed=operation('verify_absence','ps','--all','--no-trunc','--filter','id='+cid,'--format','{{.ID}}')
+                        if listed=='':
+                            row['removed']=True;record['removal_proof']='successful_empty_exact_id_query'
+                            break
+                        require(listed in (cid,cid+'\n'),'unexpected exact owned ID query response')
+                        require(attempt<9,'exact owned ID still present after bounded queries')
+                        remaining=min(deadline,self.deadline)-time.monotonic()
+                        require(remaining>0,'absence proof deadline exhausted')
+                        time.sleep(min(1,remaining))
                 except BaseException as verification_error:
                     errors.append({'operation':'verify_absence',**safe_error(verification_error)})
         except BaseException as error:errors.append({'operation':'ownership',**safe_error(error)})

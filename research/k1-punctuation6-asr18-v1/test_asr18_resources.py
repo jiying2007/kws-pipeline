@@ -125,6 +125,341 @@ class CpuTests(unittest.TestCase):
         self.assertEqual(run(0,arch=0x40000003),0x80000000)
 
 
+class CleanupAbsenceTests(unittest.TestCase):
+    """One uncertain stop, bounded read-only proof, and no real Docker/model work."""
+    CID='a'*64
+    NAME='cleanup-owned-scope'
+
+    def setUp(self):
+        self.now=100.0;self.sleeps=[]
+        clock=patch.object(host.time,'monotonic',side_effect=lambda:self.now)
+        sleep=patch.object(host.time,'sleep',side_effect=self.sleep)
+        subprocess_guard=patch.object(host.subprocess,'run',side_effect=AssertionError('real subprocess forbidden'))
+        for replacement in (clock,sleep,subprocess_guard):
+            replacement.start();self.addCleanup(replacement.stop)
+
+    def sleep(self,seconds):
+        self.assertGreater(seconds,0);self.assertLessEqual(seconds,1)
+        self.sleeps.append(seconds);self.now+=seconds
+
+    def scope(self,queries=(),*,host_seconds=100,registered=True,rm_ack=False,
+              rm_seconds=5.007,pause_error=None,inspect_result='{"Paused":true}',stage='setup'):
+        self.now=100.0;self.sleeps=[];self.calls=[];self.queries=list(queries)
+        directory=tempfile.TemporaryDirectory();self.addCleanup(directory.cleanup)
+        docker=host.MeteredDocker(directory.name,self.now+host_seconds);docker.stage=stage;gate=docker.gate(self.NAME)
+        (gate/'result.json').write_text('{"schema":"qwen12-gated-command-v1","exit_code":0}')
+        row=docker.names[self.NAME]
+        row.update(create_attempted=True,created=True,container_id=self.CID,
+            start_attempted=registered,registered=registered,reader=lambda:2)
+        if registered:docker.ledger.register(self.NAME,stage,lambda:1)
+        def raw(*args,timeout=5):
+            self.calls.append({'args':args,'timeout':timeout,'started':self.now})
+            self.assertGreater(timeout,0);self.assertLessEqual(timeout,5)
+            if args[0]=='pause':
+                if pause_error is not None:raise pause_error
+                return ''
+            if args[0]=='inspect':return inspect_result
+            if args[0]=='rm':
+                self.assertEqual(args,('rm','--force',self.CID));self.now+=rm_seconds
+                if not rm_ack:raise subprocess.TimeoutExpired('fixed synthetic rm',timeout)
+                return ''
+            self.assertEqual(args,('ps','--all','--no-trunc','--filter','id='+self.CID,'--format','{{.ID}}'))
+            self.assertLessEqual(timeout,1)
+            seconds,value=self.queries.pop(0) if self.queries else (0,self.CID+'\n')
+            self.now+=seconds
+            if isinstance(value,BaseException):raise value
+            return value
+        docker.raw=raw
+        self.docker=docker;self.row=row
+        return docker
+
+    def reads(self):return [row for row in self.calls if row['args'][0]=='ps']
+
+    def assert_receipt(self,*,removed,okay):
+        import evidence_transport as transport
+        receipt=c.read_json(self.docker.root/'cleanup-receipt.json')
+        transport.validate_member_json('cleanup-receipt.json',receipt)
+        self.assertEqual(receipt['all_removed'],removed)
+        self.assertEqual(receipt['all_cleanup_verified'],okay)
+        record=receipt['containers'][0]
+        self.assertEqual(record['cleanup_budget_seconds'],15)
+        self.assertEqual(record['cleanup_ok'],okay)
+        self.assertLessEqual(len(record['operations']),14)
+        self.assertLessEqual(len(record['errors']),16)
+        self.assertLessEqual(len(record['receipt_errors']),16)
+        self.assertEqual(sum(row['args'][0]=='rm' for row in self.calls),1)
+        self.assertLessEqual(len(self.reads()),10)
+        return record
+
+    def test_acknowledged_remove_keeps_fast_path_without_absence_queries(self):
+        docker=self.scope(rm_ack=True,rm_seconds=.01)
+        self.assertEqual(docker.remove(self.NAME),'');docker.finish()
+        self.assertEqual(self.reads(),[]);self.assertEqual(self.sleeps,[])
+        record=self.assert_receipt(removed=True,okay=True)
+        self.assertEqual(record['removal_proof'],'acknowledged_remove')
+        self.assertEqual([row['operation'] for row in record['operations']],
+            ['pause','inspect_paused','final_cpu_close','force_remove'])
+
+    def test_r4_shaped_delayed_deletion_uses_remaining_window(self):
+        docker=self.scope([(.019,self.CID+'\n'),(.01,'')])
+        self.assertEqual(docker.remove(self.NAME),'');docker.finish()
+        record=self.assert_receipt(removed=True,okay=True)
+        self.assertEqual(record['removal_proof'],'successful_empty_exact_id_query')
+        self.assertTrue(record['pause_acknowledged'])
+        self.assertEqual(record['accounting_status'],'final_usage_verified')
+        self.assertEqual(record['gate_result']['exit_code'],0)
+        self.assertEqual(len(self.reads()),2);self.assertEqual(self.sleeps,[1])
+        self.assertAlmostEqual(record['cleanup_seconds'],6.036)
+        self.assertEqual([row['operation'] for row in record['errors']],['force_remove'])
+
+    def test_tenth_successful_empty_query_is_within_existing_operation_cap(self):
+        docker=self.scope([(0,self.CID)]*9+[(0,'')],rm_seconds=5)
+        docker.remove(self.NAME)
+        record=self.assert_receipt(removed=True,okay=True)
+        self.assertEqual(len(self.reads()),10);self.assertEqual(len(record['operations']),14)
+        self.assertEqual(record['cleanup_seconds'],14);self.assertEqual(self.sleeps,[1]*9)
+
+    def test_persistent_exact_id_stops_after_ten_queries(self):
+        docker=self.scope()
+        with self.assertRaisesRegex(ValueError,'cleanup unconfirmed'):docker.remove(self.NAME)
+        record=self.assert_receipt(removed=False,okay=False)
+        self.assertEqual(len(self.reads()),10);self.assertEqual(len(record['operations']),14)
+        self.assertEqual([row['operation'] for row in record['errors']],['force_remove','verify_absence'])
+        self.assertNotIn('removal_proof',record)
+        with self.assertRaises(ValueError):docker.finish()
+
+    def test_all_metered_stages_keep_same_success_and_failure_rules(self):
+        for stage in ('setup',*c.FAMILIES):
+            for gone in (False,True):
+                with self.subTest(stage=stage,gone=gone):
+                    docker=self.scope([(0,self.CID),(0,'')] if gone else (),stage=stage)
+                    if gone:docker.remove(self.NAME);docker.finish()
+                    else:
+                        with self.assertRaises(ValueError):docker.remove(self.NAME)
+                        with self.assertRaises(ValueError):docker.finish()
+                    record=self.assert_receipt(removed=gone,okay=gone)
+                    self.assertEqual(record['stage'],stage)
+                    self.assertEqual(record['accounting_status'],'final_usage_verified')
+
+    def test_query_error_or_timeout_stops_without_retrying_that_read(self):
+        failures=(subprocess.CalledProcessError(1,['private'],output=b'',stderr=b'PRIVATE'),
+            subprocess.TimeoutExpired('private',1,output=b''),OSError('PRIVATE'),UnicodeError('PRIVATE'))
+        for failure in failures:
+            with self.subTest(kind=type(failure).__name__):
+                docker=self.scope([(0,self.CID+'\n'),(1,failure),(0,'')])
+                with self.assertRaises(ValueError):docker.remove(self.NAME)
+                record=self.assert_receipt(removed=False,okay=False)
+                self.assertEqual(len(self.reads()),2);self.assertEqual(self.sleeps,[1])
+                self.assertEqual(self.queries,[(0,'')])
+                self.assertNotIn('PRIVATE',c.canonical(record).decode())
+
+    def test_malformed_or_foreign_query_result_never_becomes_absence(self):
+        for result in ('\n',' ','b'*64+'\n',self.CID[:12]+'\n',self.CID+'\n'+self.CID+'\n',
+                       self.CID+'\r\n',' '+self.CID,self.CID.upper()+'\n',b''):
+            with self.subTest(result=repr(result)):
+                docker=self.scope([(0,result),(0,'')])
+                with self.assertRaises(ValueError):docker.remove(self.NAME)
+                self.assert_receipt(removed=False,okay=False)
+                self.assertEqual(len(self.reads()),1);self.assertEqual(self.sleeps,[])
+
+    def test_unknown_or_malformed_owned_id_never_sends_docker_commands(self):
+        for cid,created in ((None,False),(self.CID,False),('a'*12,True),('A'*64,True),('a'*64+'\n',True)):
+            with self.subTest(cid=cid,created=created):
+                docker=self.scope();self.row.update(container_id=cid,created=created)
+                with self.assertRaises(ValueError):docker.remove(self.NAME)
+                self.assertEqual(self.calls,[]);self.assertFalse(self.row['cleanup_ok'])
+
+    def test_absence_cannot_repair_pause_failure_or_missing_pause_ack(self):
+        for options in ({'pause_error':subprocess.TimeoutExpired('pause',5)},
+                        {'inspect_result':'{"Paused":false}'},{'inspect_result':'not-json'}):
+            with self.subTest(options=options):
+                docker=self.scope([(0,self.CID),(0,'')],**options)
+                with self.assertRaises(ValueError):docker.remove(self.NAME)
+                record=self.assert_receipt(removed=True,okay=False)
+                self.assertFalse(record['pause_acknowledged']);self.assertFalse(self.row['cpu_closed'])
+                self.assertEqual(record['accounting_status'],'final_usage_unverified')
+                self.assertIn('final_accounting',[row['operation'] for row in record['errors']])
+                with self.assertRaises(ValueError):docker.finish()
+
+    def test_absence_cannot_repair_missing_or_reset_final_cpu_usage(self):
+        for reader in (lambda:0,lambda:(_ for _ in ()).throw(OSError('PRIVATE final CPU'))):
+            with self.subTest(reader=reader):
+                docker=self.scope([(0,'')]);self.row['reader']=reader
+                with self.assertRaises(ValueError):docker.remove(self.NAME)
+                record=self.assert_receipt(removed=True,okay=False)
+                self.assertTrue(record['pause_acknowledged']);self.assertFalse(self.row['cpu_closed'])
+                self.assertEqual(record['accounting_status'],'final_usage_unverified')
+                with self.assertRaises(ValueError):docker.finish()
+
+    def test_absence_cannot_repair_unregistered_started_cpu_scope(self):
+        docker=self.scope([(0,'')],registered=False);self.row['start_attempted']=True
+        with self.assertRaises(ValueError):docker.remove(self.NAME)
+        record=self.assert_receipt(removed=True,okay=False)
+        self.assertEqual(record['accounting_status'],'final_usage_unverified')
+
+    def test_absence_keeps_never_started_owned_scope_cleanup_semantics(self):
+        docker=self.scope([(0,'')],registered=False);docker.remove(self.NAME);docker.finish()
+        record=self.assert_receipt(removed=True,okay=True)
+        self.assertEqual(record['accounting_status'],'not_started');self.assertFalse(record['pause_acknowledged'])
+
+    def test_absence_cannot_hide_final_or_preexisting_cpu_threshold_failure(self):
+        for prior in (False,True):
+            with self.subTest(prior=prior):
+                docker=self.scope([(0,self.CID),(0,'')])
+                if prior:docker.ledger.failed=True
+                else:self.row['reader']=lambda:c.LIMITS['cpu_threshold_seconds']['setup']*1000000
+                with self.assertRaises(ValueError):docker.remove(self.NAME)
+                record=self.assert_receipt(removed=True,okay=False)
+                self.assertEqual(record['accounting_status'],'final_usage_verified')
+                self.assertTrue(docker.ledger.failed)
+                with self.assertRaises(ValueError):docker.finish()
+
+    def test_host_deadline_limits_each_query_and_cumulative_wait(self):
+        docker=self.scope([(0,self.CID),(.25,subprocess.TimeoutExpired('ps',.25)),(0,'')],
+            host_seconds=6.25,rm_seconds=5)
+        with self.assertRaises(ValueError):docker.remove(self.NAME)
+        record=self.assert_receipt(removed=False,okay=False)
+        self.assertEqual([row['timeout'] for row in self.reads()],[1,.25])
+        self.assertEqual(self.sleeps,[1]);self.assertEqual(record['cleanup_seconds'],6.25)
+        self.assertTrue(record['host_deadline_overrun'])
+
+    def test_sleep_uses_only_remaining_host_window_and_no_new_query(self):
+        docker=self.scope([(0,self.CID),(0,'')],host_seconds=5.25,rm_seconds=5)
+        with self.assertRaises(ValueError):docker.remove(self.NAME)
+        record=self.assert_receipt(removed=False,okay=False)
+        self.assertEqual(self.sleeps,[.25]);self.assertEqual(len(self.reads()),1)
+        self.assertEqual(record['cleanup_seconds'],5.25)
+
+    def test_cleanup_deadline_is_cumulative_across_queries_and_sleeps(self):
+        docker=self.scope([(1,self.CID)]*10,rm_seconds=5)
+        with self.assertRaises(ValueError):docker.remove(self.NAME)
+        record=self.assert_receipt(removed=False,okay=False)
+        self.assertEqual(len(self.reads()),5);self.assertEqual(self.sleeps,[1]*5)
+        self.assertEqual(record['cleanup_seconds'],15);self.assertEqual(record['cleanup_overrun_seconds'],0)
+        self.assertTrue(all(row['started']+row['timeout']<=115 for row in self.reads()))
+
+    def test_late_empty_result_at_either_deadline_is_not_removal_proof(self):
+        for host_seconds,query_seconds in ((6,1),(100,10)):
+            with self.subTest(host_seconds=host_seconds):
+                docker=self.scope([(query_seconds,'')],host_seconds=host_seconds,rm_seconds=5)
+                with self.assertRaises(ValueError):docker.remove(self.NAME)
+                record=self.assert_receipt(removed=False,okay=False)
+                self.assertNotIn('removal_proof',record);self.assertEqual(len(self.reads()),1)
+
+    def test_expired_host_still_attempts_owned_stop_but_skips_optional_queries(self):
+        for host_seconds,rm_ack in ((0,False),(-1,True),(2,False),(2,True)):
+            with self.subTest(host_seconds=host_seconds,rm_ack=rm_ack):
+                docker=self.scope(host_seconds=host_seconds,rm_ack=rm_ack)
+                with self.assertRaises(ValueError):docker.remove(self.NAME)
+                record=self.assert_receipt(removed=rm_ack,okay=False)
+                self.assertEqual(self.reads(),[]);self.assertEqual(self.sleeps,[])
+                self.assertTrue(record['host_deadline_overrun'])
+                self.assertEqual(record['host_deadline_expired_at_start'],host_seconds<=0)
+                self.assertEqual(record['accounting_status'],'final_usage_verified')
+
+    def test_original_pause_and_final_close_reserve_still_leaves_one_stop(self):
+        docker=self.scope([(0,'')],rm_seconds=5)
+        original=docker.raw
+        def delayed(*args,**kwargs):
+            if args[0] in ('pause','inspect'):self.now+=5
+            return original(*args,**kwargs)
+        docker.raw=delayed
+        with self.assertRaises(ValueError):docker.remove(self.NAME)
+        record=self.assert_receipt(removed=False,okay=False)
+        self.assertFalse(self.row['cpu_closed']);self.assertEqual(self.reads(),[])
+        self.assertEqual(record['cleanup_seconds'],15)
+        self.assertEqual(next(row['timeout'] for row in self.calls if row['args'][0]=='rm'),5)
+
+    def test_expired_final_cpu_read_still_stops_and_stays_failed(self):
+        docker=self.scope([(0,'')],host_seconds=1,rm_ack=True,rm_seconds=.1)
+        def reader():self.now+=2;return 2
+        self.row['reader']=reader
+        with self.assertRaises(ValueError):docker.remove(self.NAME)
+        record=self.assert_receipt(removed=True,okay=False)
+        self.assertTrue(record['host_deadline_overrun']);self.assertEqual(self.reads(),[])
+
+    def test_caller_timeout_never_expands_remove_or_read_allowance(self):
+        for timeout in (.25,50):
+            with self.subTest(timeout=timeout):
+                docker=self.scope([(0,self.CID),(0,'')],rm_seconds=.2)
+                docker.remove(self.NAME,timeout=timeout)
+                self.assert_receipt(removed=True,okay=True)
+                self.assertEqual(next(row['timeout'] for row in self.calls if row['args'][0]=='rm'),min(timeout,5))
+                self.assertTrue(all(row['timeout']<=min(timeout,1) for row in self.reads()))
+
+    def test_cleanup_called_again_never_retries_or_takes_over_scope(self):
+        for confirmed in (False,True):
+            with self.subTest(confirmed=confirmed):
+                docker=self.scope([(0,'')] if confirmed else ())
+                if confirmed:docker.remove(self.NAME)
+                else:
+                    with self.assertRaises(ValueError):docker.remove(self.NAME)
+                previous=copy.deepcopy(self.calls);sleep_count=len(self.sleeps)
+                self.queries=[(0,'')]
+                if confirmed:docker.remove(self.NAME);docker.finish()
+                else:
+                    with self.assertRaises(ValueError):docker.remove(self.NAME)
+                    with self.assertRaises(ValueError):docker.finish()
+                self.assertEqual(self.calls,previous);self.assertEqual(len(self.sleeps),sleep_count)
+                self.assertEqual(len(docker.cleanup),1)
+                with self.assertRaisesRegex(ValueError,'new container only'):docker.gate(self.NAME)
+
+    def test_supervisor_cleanup_failure_prevents_policy_and_decode(self):
+        import runtime_session as runtime
+        docker=self.scope();events=[]
+        def command(_docker,*args,**kwargs):
+            events.append(args[0])
+            return '[{}]' if args[0]=='inspect' else self.CID
+        def prepare(family,remaining):
+            runtime.supervise(docker,['create','--name',self.NAME],docker.root,
+                family=family,mode='prepare',deadline=docker.deadline)
+        with patch.object(runtime,'gated_arguments',side_effect=lambda args,*rest:args), \
+             patch.object(runtime,'validate_launch'),patch.object(host.MeteredDocker,'__call__',new=command), \
+             patch.object(docker,'check'),self.assertRaisesRegex(ValueError,'cleanup unconfirmed'):
+            host.recognition_stages(prepare,lambda:self.fail('policy frozen after unresolved cleanup'),
+                lambda *args:self.fail('decode after unresolved cleanup'),clock=lambda:self.now)
+        self.assertEqual(events,['create','inspect','start'])
+        self.assert_receipt(removed=False,okay=False)
+        self.assertEqual(len(docker.supervisions),1)
+        supervision=docker.supervisions[0]
+        self.assertTrue(supervision['worker_exit_success']);self.assertIsNone(supervision['primary_error'])
+        self.assertEqual(supervision['status'],'failed');self.assertIsNotNone(supervision['cleanup_error'])
+        with self.assertRaises(ValueError):docker.finish()
+
+    def test_supervisor_unresolved_decode_cleanup_prevents_later_families(self):
+        import runtime_session as runtime
+        docker=self.scope(stage='qwen06');events=[]
+        def command(_docker,*args,**kwargs):return '[{}]' if args[0]=='inspect' else self.CID
+        def decode(family,remaining):
+            events.append(('decode',family))
+            runtime.supervise(docker,['create','--name',self.NAME],docker.root,
+                family=family,mode='decode',deadline=docker.deadline)
+        with patch.object(runtime,'gated_arguments',side_effect=lambda args,*rest:args), \
+             patch.object(runtime,'validate_launch'),patch.object(host.MeteredDocker,'__call__',new=command), \
+             patch.object(docker,'check'),self.assertRaisesRegex(ValueError,'cleanup unconfirmed'):
+            host.recognition_stages(lambda family,_:events.append(('prepare',family)),
+                lambda:events.append(('freeze',)),decode,clock=lambda:self.now)
+        self.assertEqual(events,[*[('prepare',family) for family in c.FAMILIES],('freeze',),('decode','qwen06')])
+        self.assert_receipt(removed=False,okay=False)
+        self.assertEqual(docker.supervisions[0]['status'],'failed')
+
+    def test_supervisor_worker_error_is_not_hidden_by_eventual_absence(self):
+        import runtime_session as runtime
+        for family,mode in (('setup',None),('qwen06','prepare'),('qwen06','decode')):
+            with self.subTest(family=family,mode=mode):
+                docker=self.scope([(0,self.CID),(0,'')]);failure=ValueError('synthetic worker failure')
+                def command(_docker,*args,**kwargs):return '[{}]' if args[0]=='inspect' else self.CID
+                with patch.object(runtime,'gated_arguments',side_effect=lambda args,*rest:args), \
+                     patch.object(runtime,'validate_launch'),patch.object(host.MeteredDocker,'__call__',new=command), \
+                     patch.object(docker,'completed',side_effect=failure),self.assertRaises(ValueError) as caught:
+                    runtime.supervise(docker,['create','--name',self.NAME],docker.root,
+                        family=family,mode=mode,deadline=docker.deadline)
+                self.assertIs(caught.exception,failure);self.assert_receipt(removed=True,okay=True)
+                record=docker.supervisions[0]
+                self.assertEqual(record['status'],'failed');self.assertFalse(record['worker_exit_success'])
+                self.assertIsNotNone(record['primary_error']);self.assertIsNone(record['cleanup_error'])
+
+
 class FilesystemSamplingTests(unittest.TestCase):
     def docker(self,root):return host.MeteredDocker(root,host.time.monotonic()+30)
     def partial(self,n=3):return dict(observed_bytes=n,vanished_entries=1,complete=False,missing_root=False,root_missing_at_start=False,coverage='incomplete_lower_bound')
