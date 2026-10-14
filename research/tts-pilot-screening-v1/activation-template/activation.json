@@ -1,0 +1,15 @@
+{
+  "schema": "tts-pilot-asr-activation-v1",
+  "enabled": false,
+  "repository": "jiying2007/kws-pipeline",
+  "branch": "research/tts-pilot-asr-20261014-v1",
+  "workflow_path": ".github/workflows/tts-pilot-asr-20261014-v1.yml",
+  "max_asr_slots": 144,
+  "current_qwen_call_cap": 96,
+  "input_artifacts": null,
+  "source_files": null,
+  "numeric_requirements_file": null,
+  "note": "Disabled. Bind actual reviewed probe and remaining runs, sources, artifact IDs, ZIP hashes and exact member hashes after terminal results exist. Null identities never authorize execution.",
+  "workflow_id": null,
+  "third_policy": "disagreement_only"
+}

@@ -41,6 +41,14 @@ on:
       - "tests/test_model_comparison_numeric.py"
       - "tests/test_model_comparison.py"
       - "research/tts-pilot-screening-v1/README.md"
+      - "research/tts-pilot-screening-v1/TRAINING_CONFIRMATION.md"
+      - "research/tts-pilot-screening-v1/activation-template/README.md"
+      - "research/tts-pilot-screening-v1/activation-template/activation.json"
+      - "research/tts-pilot-screening-v1/activation-template/finalize_input.py"
+      - "research/tts-pilot-screening-v1/activation-template/launcher.py"
+      - "research/tts-pilot-screening-v1/activation-template/test_activation.py"
+      - "research/tts-pilot-screening-v1/activation-template/workflow.yml"
+      - "research/tts-pilot-screening-v1/test_confirmation_policy.py"
       - "research/tts-pilot-screening-v1/blind_utils.py"
       - "research/tts-pilot-screening-v1/boundary.py"
       - "research/tts-pilot-screening-v1/campaign.py"
@@ -145,6 +153,14 @@ on:
       - "tests/test_model_comparison_numeric.py"
       - "tests/test_model_comparison.py"
       - "research/tts-pilot-screening-v1/README.md"
+      - "research/tts-pilot-screening-v1/TRAINING_CONFIRMATION.md"
+      - "research/tts-pilot-screening-v1/activation-template/README.md"
+      - "research/tts-pilot-screening-v1/activation-template/activation.json"
+      - "research/tts-pilot-screening-v1/activation-template/finalize_input.py"
+      - "research/tts-pilot-screening-v1/activation-template/launcher.py"
+      - "research/tts-pilot-screening-v1/activation-template/test_activation.py"
+      - "research/tts-pilot-screening-v1/activation-template/workflow.yml"
+      - "research/tts-pilot-screening-v1/test_confirmation_policy.py"
       - "research/tts-pilot-screening-v1/blind_utils.py"
       - "research/tts-pilot-screening-v1/boundary.py"
       - "research/tts-pilot-screening-v1/campaign.py"
@@ -413,7 +429,7 @@ jobs:
         run: |
           .venv-objective/bin/python -B tests/test_candidate_encoder_numeric.py \
             --report build/candidate-encoder-numeric.json
-      - name: ASR native audio derivation numeric contracts
+      - name: ASR audio derivation and explicit third-confirmation contracts
         timeout-minutes: 3
         run: |
           .venv-objective/bin/python -B research/tts-pilot-screening-v1/test_suite.py --require-numeric

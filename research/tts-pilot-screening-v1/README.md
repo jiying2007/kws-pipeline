@@ -116,3 +116,12 @@ For the required numerical CI job, run `test_suite.py --require-numeric` in the
 pinned NumPy/SciPy environment. Missing dependencies fail immediately, and any
 skipped test makes this full-suite invocation fail. Never use the no-site skip
 as evidence that numerical derivation was validated.
+
+## Optional explicit third confirmation
+
+See `TRAINING_CONFIRMATION.md` for the inactive
+`third_policy=training_candidate_confirmation` extension. The compatibility
+default remains `disagreement_only`; expanded selection requires a new explicit
+activation/admission field. It can produce actual three-ASR machine training
+candidates within the same 96 current / 144 design slot ceiling, never human gold.
+The updated suite has 40 numeric-enabled tests (36 stdlib contracts).
