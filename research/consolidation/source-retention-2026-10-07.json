@@ -25422,7 +25422,7 @@
       "public_main_base_tree": "43f8155994736c2be807053f75eb949ec0519321",
       "workflow_source_changed": true,
       "scope": "One newly authorized r4 six-input/three-family campaign, at most 18 one-shot recognition starts; dedicated ordinal-one workflow and source-bound owner admission.",
-      "rationale": "Materialize only the current r4 compiled scope, claim/execution/publication approval triples, corresponding workflow, disabled transfer recovery result selector, tested source closure, validator dependencies and retention identities. Four older campaigns retain 72 planned nonreusable slots with unknown actual consumption; r3 has two observed runs within one 18-slot campaign. Preserve original six WAV authorities, all 47 scientific source bodies, actual complete prepare-r2 prerequisite, 80 minute workflow, 13 API/45 second issuer, original six host GETs/3600 second host, and 67 API/600 second publisher. All TTS, prepare, qualifications and standalone recovery remain disabled. No actual r4 run, owner, checkpoint or recognition result is asserted by this source revision.",
+      "rationale": "Materialize only the current r4 compiled scope, claim/execution/publication approval triples, corresponding workflow, disabled transfer recovery result selector, tested source closure, validator dependencies and retention identities. Four older campaigns retain 72 planned nonreusable slots with unknown actual consumption; r3 has two observed runs within one 18-slot campaign. Preserve original six WAV authorities, all 47 scientific source bodies, actual complete prepare-r2 prerequisite, 80 minute workflow, 13 API/45 second issuer, original six host GETs/3600 second host, and 67 API/600 second publisher. All TTS, prepare, qualifications and standalone recovery remain disabled. No actual r4 run, owner, checkpoint or recognition result is asserted by this source revision. Extend only offline posterior custody to a complete all-event repository branch history, preserving original raw bytes/locator and every public row while explicitly projecting the original workflow-id-and-path subset. Existing target history checks, runtime API routes, attempts and budgets remain unchanged.",
       "files": [
         {
           "path": ".github/workflows/k1-punctuation6-asr18-r4.yml",
@@ -25504,6 +25504,23 @@
           }
         },
         {
+          "path": "research/k1-asr18-offline-posterior-v1/README.md",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/README.md",
+            "mode": "100644",
+            "bytes": 9405,
+            "sha256": "dc166dd447b643ca6dac62134369170a25720f5ea1898f95d1103e2516df23f8",
+            "git_blob_sha1": "47091ad0d98a09ba29f702409d5d888df1557b25"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/README.md",
+            "mode": "100644",
+            "bytes": 10468,
+            "sha256": "049125c89f585a123722655fd2470d9c4b24f384709c0906e203dd58188fb406",
+            "git_blob_sha1": "bb8e28601cd293947d662757dc1e456fccde8cee"
+          }
+        },
+        {
           "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
           "before": {
             "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
@@ -25515,9 +25532,26 @@
           "after": {
             "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
             "mode": "100644",
-            "bytes": 40144,
-            "sha256": "e9bb75d1ba69b0261b38d53f3f422e917493a2a8b14df764cf345644c3e9c495",
-            "git_blob_sha1": "00bf312be5feb0c9ef5f8b8f774f4a376602774f"
+            "bytes": 40879,
+            "sha256": "aa53d93b085fe53a516be0555ef822215ba0a3659d643674cf0a623599d2259f",
+            "git_blob_sha1": "0bb8e014fbeac544f6ef923ddbb85a950922bff4"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/test_claim_posterior_integration.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/test_claim_posterior_integration.py",
+            "mode": "100644",
+            "bytes": 4655,
+            "sha256": "5c4adf6355d939c0d19d4547bc28a740b598a9240ed61706511245d88c905e72",
+            "git_blob_sha1": "70ccf03475816181f31a584f1808089ce98b20ec"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/test_claim_posterior_integration.py",
+            "mode": "100644",
+            "bytes": 18785,
+            "sha256": "bd182a1ab63f12172853564174d4fc7dc7b837a87fd866b95ac55eca6b35f808",
+            "git_blob_sha1": "f15272536606976add3c3b325bb8ec69b3c2ec83"
           }
         },
         {
@@ -25533,8 +25567,8 @@
             "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
             "mode": "100644",
             "bytes": 39651,
-            "sha256": "94682f89813fdb81cf50307f27893fd46ea49dea288b4a501c9a033d353e29eb",
-            "git_blob_sha1": "d9c37c0df8446a552fd2a4f364b94a3a2b517ea7"
+            "sha256": "af042487876c4463fd541ed69e7eb6f94500f895c131df30072ac7c6be610b4f",
+            "git_blob_sha1": "16bf2d7861a13f72cc2e3cfd754c03fe2b64d2ff"
           }
         },
         {
@@ -25550,8 +25584,8 @@
             "path": "research/k1-evidence-transfer-qualification-v1/source-freeze.json",
             "mode": "100644",
             "bytes": 2169,
-            "sha256": "59ea4d684f4fbef5cfc96b418e28572e8cb5f704cb39950426b1a4123fc891ef",
-            "git_blob_sha1": "a0a3b2a948280e54f7bc754f994181fc243cc715"
+            "sha256": "d4b76e6127883300e78916214b8467cdd0f0c5f954c9c02726b3c5b10f890210",
+            "git_blob_sha1": "87fd1a2fe12b2e3536dbab8572c27fdbbe0a76ac"
           }
         },
         {
@@ -25623,6 +25657,23 @@
           }
         },
         {
+          "path": "research/k1-punctuation6-asr18-v1/evidence_publisher.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/evidence_publisher.py",
+            "mode": "100644",
+            "bytes": 69309,
+            "sha256": "5576fbe0dfcca0c0fabfc07ea51a5bb28952ad7b3191508fb6205a0c1708597f",
+            "git_blob_sha1": "b18d3860e6cba92635fb4ae1e250fb5e5a8d2b24"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/evidence_publisher.py",
+            "mode": "100644",
+            "bytes": 72997,
+            "sha256": "bd2a7a658688d5b226e0f47f29a14634a89e9c84fcacf266df38d342966325d9",
+            "git_blob_sha1": "f5710e32eb735973001bc9f57723d70ff5dee17a"
+          }
+        },
+        {
           "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
           "before": {
             "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
@@ -25635,8 +25686,8 @@
             "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
             "mode": "100644",
             "bytes": 33162,
-            "sha256": "79c4359b79917204006019b389a8ebeacf68f59d8427819463ebaab5a1dfd1c1",
-            "git_blob_sha1": "57a954b8d2f71ac9ad3cc99ad29d22423a98d2cd"
+            "sha256": "c8af9fe89e8daf4f973dca157ed2458c0831c3e52b1839dbac2f025244f0674c",
+            "git_blob_sha1": "2502a3fe4f3e6bb27592cdb6a37690ad0bb7ad1b"
           }
         },
         {
@@ -25890,8 +25941,8 @@
             "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json",
             "mode": "100644",
             "bytes": 43111,
-            "sha256": "e51a2a52925391e78c522d5671c44fee90800c7d3eb84d0f1569ec3bd229176f",
-            "git_blob_sha1": "bfbb767be28abc1ccd6c79f5e1c0a1ad8855eec3"
+            "sha256": "18c6cbe24681fbab14422e8281e97996f512d22e57cbb5a7f3c9c843ece59fc9",
+            "git_blob_sha1": "0bf26c75f99b0066d1363f8ca2ef027e01499540"
           }
         },
         {

@@ -90,9 +90,22 @@ cannot grant itself that authority. Null actual-input fields are rejected.
 Every custody row binds a role, relative file path, length, SHA-256 and original
 resource locator. Original API JSON, connector logs, immutable bytes and locally
 reassembled ZIP are distinct roles. No original writer receipt, HTTP status,
-request count or wire telemetry is reconstructed. Complete branch-scoped push
-history can support the narrower workflow predicate only as an explicitly
-identified semantic adaptation of that original route.
+request count or wire telemetry is reconstructed. For v2 producer history, the
+offline reader also accepts the exact repository branch collection with no event
+or status filter. Its original body and resource locator remain pinned. A complete
+single page requires total count equal to all returned rows and at most100 rows;
+no pagination or truncation inference is added. Every row must have a valid
+public same-repository, same-branch identity. Run IDs are globally unique within
+the page; ordinals are unique within each workflow. A target row must match both
+the original numeric workflow ID and fixed path; a one-sided match is rejected.
+Only that explicitly identified subset is passed to the unchanged target-history
+predicate, which still enforces source, event, attempt and the unique owner.
+Other workflows remain in the bounded public-field custody projection and the
+original raw body. The result records the actual repository locator, raw hash,
+original count and selected/excluded IDs. It does not claim that the repository
+response came from a workflow endpoint. This adaptation is offline-only; live
+issuer, host, publisher and recovery API routes and budgets are unchanged. Legacy
+v1 branch-and-push custody retains its existing revision-bound behavior.
 
 Local reads reject links, special files, path aliases, duplicate roles, wrong
 locators and inconsistent bodies. Caps are12MiB ZIP, the existing32MiB expanded
