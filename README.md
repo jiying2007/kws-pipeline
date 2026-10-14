@@ -4,7 +4,7 @@
 
 Research: [reusable modules, retained results and qualification boundaries](research/README.md)
 
-Latest source research: [completed three-ASR source screen](research/source-screen32-whisper-v1/evidence/run-38126849922/README.md) and [near-pronunciation source tooling](research/near_pronunciation_v1/README.md). Agreement and source/synthetic checks do not establish real-world FAR or recall improvement; see the [current evidence scopes](docs/KWS_LANDING_STATUS.md#current-entry-points).
+Current research entry: [r5 native-completion result and source-only optimization boundaries](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry). The completed three-ASR source screen and near-pronunciation tooling remain linked there. Native completion, ASR agreement and source/synthetic checks do not establish real-world FAR or recall improvement.
 
 Current archive delivery: [complete public archive, index and verified restoration](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md). The old expanded-copy target is cancelled; its historical status remains NOT_PUSHED. D20 numerical failure and D90 not yet tested, fixed50 inconclusive support and the old-model nightly failure remain separate; human/device qualification is deferred.
 
@@ -57,7 +57,7 @@ These are **historical release qualification results**. The later frozen-model
 [nightly run 37860130019](https://github.com/jiying2007/kws-pipeline/actions/runs/37860130019)
 failed: **2 false accepts / 8 hours**, upper95 **0.786974 FA/h** (gate: 0 false
 accepts and upper95 ≤ 0.40). It tested this same old model, not D20/D90. Shipping
-approval remains false. See the [current audit](research/consolidation/CI_AUDIT_2026-10-09.md).
+approval remains false. See the [current audit](research/consolidation/CI_AUDIT_2026-10-09.md). The separate [2026-10-14 entry](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry) links later nightly failure `38482297930` on its exact historical source; it is not a new acoustic evaluation of current main.
 
 `configs/shipping.xiaowo.json` is the machine-readable product contract. It intentionally records `shipping_approved=false`: synthetic qualification is engineering evidence, not a substitute for final real-human/final-AFE acoustic qualification and physical target-board evidence.
 

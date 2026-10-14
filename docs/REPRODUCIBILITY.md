@@ -8,6 +8,27 @@
 
 Deterministic tar metadata alone satisfies none of the compiled-binary claims. Release documentation must use the strongest claim actually proved by the current gates.
 
+## Deployment runtime source equivalence
+
+The commercial-candidate publication gate compares the qualified model's exact
+training commit with the candidate commit across `CMakeLists.txt`, `cmake/`,
+`include/`, `src/`, `configs/parameter-contract.json`, and
+`tools/gen_parameter_limits.py`. The last two are configure-time inputs to the
+private `kws_parameter_limits.h`; changing either can change compiled decoder or
+frontend behavior even when every C/CMake file is unchanged. Differences,
+including deletions and renames, reject publication. Documentation-only changes
+outside this set can pass. The manifest's `runtime_equivalence_paths` comes from
+the exact path array successfully checked by the gate.
+
+This is repository runtime-input equality, not compiler/environment or binary
+identity, and is not a fresh acoustic qualification. CMake source/configuration
+identity and installed-SDK byte comparison retain their separate roles. Hosted
+evaluation tools are not installed into the core SDK; their runners and model/
+keyword-pack bytes remain separately bound by the qualification evidence. New
+core build inputs must extend this gate and its offline tests in
+`tests/test_release_workflow_contract.py`. Real-human final-AFE, physical-board,
+source provenance, and explicit shipping-approval gates remain required.
+
 
 ## Runtime build configuration identity
 

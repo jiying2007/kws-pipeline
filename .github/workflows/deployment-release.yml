@@ -98,11 +98,19 @@ jobs:
 
           git fetch --force --no-tags origin "refs/tags/${model_tag}:refs/tags/${model_tag}"
           test "$(git rev-list -n1 "$model_tag")" = "$trained_head"
-          git diff --quiet "$trained_head" "$GITHUB_SHA" -- CMakeLists.txt cmake include src || {
+          # Include the configure-time generator and its data, not just C/CMake.
+          # Pass this exact checked set to the manifest; do not maintain a copy.
+          runtime_paths=(
+            CMakeLists.txt cmake include src
+            configs/parameter-contract.json tools/gen_parameter_limits.py
+          )
+          git diff --quiet --no-ext-diff --no-textconv "$trained_head" "$GITHUB_SHA" -- "${runtime_paths[@]}" || {
             echo 'runtime surface differs from the source used by the qualified model' >&2
-            git diff --stat "$trained_head" "$GITHUB_SHA" -- CMakeLists.txt cmake include src >&2
+            git diff --stat --no-ext-diff --no-textconv "$trained_head" "$GITHUB_SHA" -- "${runtime_paths[@]}" >&2
             exit 2
           }
+          printf 'runtime_equivalence_paths=%s\n' \
+            "$(printf '%s\n' "${runtime_paths[@]}" | jq -Rsc 'split("\n")[:-1]')" >> "$GITHUB_OUTPUT"
 
           if gh release view "$deployment_tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "deployment release already exists: $deployment_tag" >&2
@@ -160,6 +168,7 @@ jobs:
           MODEL_TAG: ${{ steps.identity.outputs.model_tag }}
           MODEL_RELEASE_ID: ${{ steps.identity.outputs.model_release_id }}
           TRAINED_HEAD: ${{ steps.identity.outputs.trained_head }}
+          RUNTIME_EQUIVALENCE_PATHS: ${{ steps.identity.outputs.runtime_equivalence_paths }}
           TRAINING_RUN: ${{ steps.identity.outputs.training_run }}
           QUALIFICATION_SEED: ${{ steps.identity.outputs.qualification_seed }}
         shell: bash
@@ -243,7 +252,7 @@ jobs:
               'sdk_project_version': os.environ['PROJECT_VERSION'],
               'runtime_surface_equivalent_to_qualified_source': True,
               'runtime_equivalence_base_sha': os.environ['TRAINED_HEAD'],
-              'runtime_equivalence_paths': ['CMakeLists.txt', 'cmake', 'include', 'src'],
+              'runtime_equivalence_paths': json.loads(os.environ['RUNTIME_EQUIVALENCE_PATHS']),
               'shipping_contract_sha256': sha(root / 'configs/shipping.xiaowo.json'),
               'nightly_contract_sha256': sha(root / 'configs/nightly.xiaowo-frozen-model.json'),
               'repository_governance': {

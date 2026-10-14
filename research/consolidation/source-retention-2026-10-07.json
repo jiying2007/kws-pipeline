@@ -15288,9 +15288,9 @@
     {
       "path": ".github/workflows/deployment-release.yml",
       "mode": "100644",
-      "bytes": 18908,
-      "sha256": "3cd63debcd6ba2ccc1b1f6761f0e6b9e9dde71362b60f09666d27ed04c76b4d3",
-      "git_blob_sha1": "8d913de0be1c408f19c512af19d1aa61f8974010"
+      "bytes": 19514,
+      "sha256": "8dd6ba074874704bf62f97c4a4f3d4140327c993d43b997971748239f9b8412a",
+      "git_blob_sha1": "2ccee7da43e89bdf6827f0eeb6c87e98d09e949f"
     },
     {
       "path": ".github/workflows/experiment-quality-guards.yml",
@@ -27098,6 +27098,136 @@
             "bytes": 26700,
             "sha256": "5cfaff940374ecfc66281ced5a253540fe2874848c7afc338374322b2764c4d5",
             "git_blob_sha1": "e9632709a4e4635048fe78ed8ab4d02791cc6576"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-14",
+      "operation_id": "kws-runtime-equivalence-p0-v1",
+      "public_main_base_commit": "2e4cc45be0714df060ee8f4865d96341f8cd1677",
+      "public_main_base_tree": "71a5f0ac6ac1e1c0184725d165cd69ca956791c6",
+      "workflow_source_changed": true,
+      "scope": "Close the deployment runtime equivalence surface over configure-time parameter inputs and add current evidence navigation; preserve original execution evidence and all nine disabled r5 approvals.",
+      "rationale": "This source-only P0 closes the deployment runtime equivalence comparison over parameter-contract.json and its configure-time generator, reuses the exact checked paths in the release manifest, and adds real-Git mutation regressions. Current navigation links the already completed r5 result and later failed nightly with their original source identities; no acoustic or shipping improvement is claimed. The original 72 retention records, all executed r4/r5 source and evidence, current nine disabled r5 approval flags, model, parameters, thresholds and resource budgets remain unchanged. This record contains public source metadata only.",
+      "files": [
+        {
+          "path": ".github/workflows/deployment-release.yml",
+          "before": {
+            "bytes": 18908,
+            "git_blob_sha1": "8d913de0be1c408f19c512af19d1aa61f8974010",
+            "mode": "100644",
+            "path": ".github/workflows/deployment-release.yml",
+            "sha256": "3cd63debcd6ba2ccc1b1f6761f0e6b9e9dde71362b60f09666d27ed04c76b4d3"
+          },
+          "after": {
+            "path": ".github/workflows/deployment-release.yml",
+            "mode": "100644",
+            "bytes": 19514,
+            "sha256": "8dd6ba074874704bf62f97c4a4f3d4140327c993d43b997971748239f9b8412a",
+            "git_blob_sha1": "2ccee7da43e89bdf6827f0eeb6c87e98d09e949f"
+          }
+        },
+        {
+          "path": "README.md",
+          "before": {
+            "bytes": 18946,
+            "git_blob_sha1": "89347e906bff11ad55ebec9287f56f22c04c51ec",
+            "mode": "100644",
+            "path": "README.md",
+            "sha256": "03b2d705d1b51e2393e8844eb6354a24aceb7b5a986fb7fe38c298206abcd39f"
+          },
+          "after": {
+            "path": "README.md",
+            "mode": "100644",
+            "bytes": 19134,
+            "sha256": "04aee348f9ea51c888b73bb6bc3274851ae16831c674a084f43938cb433042a6",
+            "git_blob_sha1": "57d56fa16e3cb3ae946a8f6eb8ad73c7c0470775"
+          }
+        },
+        {
+          "path": "README.zh-CN.md",
+          "before": {
+            "bytes": 17886,
+            "git_blob_sha1": "66334afe2b8ff9bbf01ff25ebc92b9d403c44e91",
+            "mode": "100644",
+            "path": "README.zh-CN.md",
+            "sha256": "c0cfca216fc8f11fbcbe7c189b23539de2b9cc8e1609d0202d71f14d0e723f37"
+          },
+          "after": {
+            "path": "README.zh-CN.md",
+            "mode": "100644",
+            "bytes": 18049,
+            "sha256": "4c24f043d5a0d5663035d867a65a50065a8e42f27e3f857bf14ebc5cd7143801",
+            "git_blob_sha1": "c091ec01498811f7f3e8252cca8dcc2bc68edfab"
+          }
+        },
+        {
+          "path": "docs/KWS_LANDING_STATUS.md",
+          "before": {
+            "bytes": 6431,
+            "git_blob_sha1": "849633268c8912473adcb66369fb1a31b9d8ebc1",
+            "mode": "100644",
+            "path": "docs/KWS_LANDING_STATUS.md",
+            "sha256": "11c2741c9fad47f960127140bbfebf9f0b261a9659e177b804c2463b8ec1f160"
+          },
+          "after": {
+            "path": "docs/KWS_LANDING_STATUS.md",
+            "mode": "100644",
+            "bytes": 8394,
+            "sha256": "edb9562c0a33181d58c1cbb0fed0b4a62887b85ef1220f6f0d710a04b1eef573",
+            "git_blob_sha1": "b69ae196802e3c7c0b6629bf15368d3783e6a586"
+          }
+        },
+        {
+          "path": "docs/REPRODUCIBILITY.md",
+          "before": {
+            "bytes": 7486,
+            "git_blob_sha1": "5d2da5de844754c9f309c39e79dc3bd9da0635ce",
+            "mode": "100644",
+            "path": "docs/REPRODUCIBILITY.md",
+            "sha256": "82bd882f147c365227a07dc4482c6b535876101b05cce7ccd49af77c91691f3a"
+          },
+          "after": {
+            "path": "docs/REPRODUCIBILITY.md",
+            "mode": "100644",
+            "bytes": 8808,
+            "sha256": "a3eba0e2104d64943b0da5fce21251707a03861a3a8d0df5de94147762048ee1",
+            "git_blob_sha1": "7dcd788ea492caf92890568a57f5ea4e6c4665c6"
+          }
+        },
+        {
+          "path": "tests/test_release_workflow_contract.py",
+          "before": {
+            "bytes": 33192,
+            "git_blob_sha1": "b23dd466d86de78cf7622ee5a106ceebe9a7bf3f",
+            "mode": "100644",
+            "path": "tests/test_release_workflow_contract.py",
+            "sha256": "e5f0f288369a90bd4dcb359b1455af2e593b88797e75d3f642119eb357f5d8fa"
+          },
+          "after": {
+            "path": "tests/test_release_workflow_contract.py",
+            "mode": "100644",
+            "bytes": 41666,
+            "sha256": "70278f49d11873061cd701e26b1c5d5290f0eee50cabeb5575985d0144a3e579",
+            "git_blob_sha1": "15b8f4a37922f870e2445c3bd452359b4fdfb36b"
+          }
+        },
+        {
+          "path": "tests/test_terminal_docs.py",
+          "before": {
+            "bytes": 25423,
+            "git_blob_sha1": "14dcd6760ab903f11271556659caac8065898186",
+            "mode": "100644",
+            "path": "tests/test_terminal_docs.py",
+            "sha256": "5771eb10aa53e700c3bd0827181ae10535169d45cee925b36965a53a84c17ff7"
+          },
+          "after": {
+            "path": "tests/test_terminal_docs.py",
+            "mode": "100644",
+            "bytes": 25601,
+            "sha256": "5ccdc284c1c5251845427e8ae5dc8295330ac0985afd08ea69473c6603778826",
+            "git_blob_sha1": "58863d78f8f34a788071f33fcad805d92e435d05"
           }
         }
       ]
