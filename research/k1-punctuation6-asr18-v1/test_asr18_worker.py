@@ -153,7 +153,7 @@ class WorkerTests(unittest.TestCase):
         for family in contract.FAMILIES:
             for mode in ("prepare", "decode"):
                 with self.subTest(family=family, mode=mode), \
-                     mock.patch.object(worker, "_json", return_value=contract.read_json(HERE / "execution-release.json")), \
+                     mock.patch.object(worker, "_json", return_value=contract.current_disabled_release()), \
                      mock.patch.object(worker, "_construct_native") as construct, \
                      mock.patch.object(worker, "_verify_closed_sources") as closed:
                     with self.assertRaisesRegex(ValueError, "disabled"):
@@ -162,7 +162,7 @@ class WorkerTests(unittest.TestCase):
                     closed.assert_not_called()
 
     def test_direct_real_constructor_and_loader_also_fail_disabled(self):
-        with mock.patch.object(worker, "_json", return_value=contract.read_json(HERE / "execution-release.json")), \
+        with mock.patch.object(worker, "_json", return_value=contract.current_disabled_release()), \
              mock.patch.object(worker.importlib.util, "spec_from_file_location") as importer:
             with self.assertRaisesRegex(ValueError, "disabled"):
                 worker._construct_native("qwen06", Path("/runtime"), Path("/input"), Path("/output"), {}, "900", "d" * 40)

@@ -11,7 +11,7 @@ import unittest
 import campaign_contract as c
 import prepare_freeze
 import prepare_prerequisite as p
-from test_control_fixture import DISABLED_APPROVALS, synthetic_prerequisite, synthetic_enabled_source
+from test_control_fixture import APPROVALS, synthetic_prerequisite, synthetic_enabled_source
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -27,7 +27,7 @@ def fixture():
 
 
 class PreparePrerequisite(unittest.TestCase):
-    def test_checked_in_complete_prerequisite_is_exactly_pinned_and_asr_closed(self):
+    def test_checked_in_complete_prerequisite_is_exactly_pinned_for_authorized_asr(self):
         # Read the actual root-reviewed projection; never synthesize its proof.
         raw=c.read_bytes(HERE/'prepare-prerequisite.json',cap=65536)
         release=c.read_json(HERE/'execution-release.json')
@@ -41,8 +41,8 @@ class PreparePrerequisite(unittest.TestCase):
         self.assertEqual(value['diagnostic_forward_calls'],0)
         self.assertEqual(c.digest(raw),'27762aeebffd67243808c56a71f4c4c125fe76f79496f6169a3dd250abb67c77')
         self.assertIs(release['historical_screening_reviewed'],True)
-        for filename,keys in DISABLED_APPROVALS.items():
-            for key in keys:self.assertIs(c.read_json(HERE/filename)[key],False)
+        for filename,keys in APPROVALS.items():
+            for key in keys:self.assertIs(c.read_json(HERE/filename)[key],True)
 
     def test_explicit_unestablished_prerequisite_template_remains_closed(self):
         release=c.current_disabled_release()
@@ -147,8 +147,9 @@ class PreparePrerequisite(unittest.TestCase):
 
     def test_archive_validation_rechecks_prerequisite_bytes_before_any_outcome_path(self):
         import hosted_run as host
-        from test_asr18_host import public_fixture
-        files,identity=public_fixture()
+        from claim_consumer_fixtures import bound_public_fixture
+        fixture=bound_public_fixture()
+        files,identity=fixture['files'],fixture['identity']
         self.assertTrue(host.validate_public_evidence(files,identity))
         key='source/'+host.NEW+'prepare-prerequisite.json'
         original=c.decode_json(files[key])

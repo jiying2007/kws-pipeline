@@ -158,7 +158,7 @@ class CheckpointTests(unittest.TestCase):
             for key in ('repo', 'run', 'jobs', 'history', 'source', 'source_tree'): self.api('GET', self.wire.routes[key])
         return p.write_checked_files(api=self.api, raw_get=lambda sha: p.RawReader(sha, 'asr18'), files=files,
             original=self.source, source_tree=self.release['source_tree'], expected_body=body, expected_commit=commit,
-            result_branch=t.POLICY['result_branch'], checkpoint_branch=t.POLICY['result_branch'] + '-checkpoint',
+            result_branch=self.wire.policy['result_branch'], checkpoint_branch=self.wire.policy['result_branch'] + '-checkpoint',
             verify_readback=callback or (lambda values: values == files), progress=self.progress, checkpoint_only=checkpoint_only)
 
     def posts(self, noun=None):
@@ -167,7 +167,7 @@ class CheckpointTests(unittest.TestCase):
     def test_full_checkpoint_precedes_same_commit_final_and_reads_raw_once(self):
         files = self.synthetic_files(); result = self.write(files)
         refs = [t.decode(call[3]) for call in self.posts('refs')]
-        self.assertEqual([value['ref'] for value in refs], ['refs/heads/' + t.POLICY['result_branch'] + '-checkpoint', 'refs/heads/' + t.POLICY['result_branch']])
+        self.assertEqual([value['ref'] for value in refs], ['refs/heads/' + self.wire.policy['result_branch'] + '-checkpoint', 'refs/heads/' + self.wire.policy['result_branch']])
         self.assertEqual(len({value['sha'] for value in refs}), 1)
         self.assertTrue(result['checkpoint_verified'] and result['checkpoint_preserved'] and result['publication_confirmed'] and result['readback_confirmed'])
         self.assertEqual(result['raw_gets'], len(files)); self.assertEqual(len(self.wire.raw_calls), len(files))
@@ -185,7 +185,7 @@ class CheckpointTests(unittest.TestCase):
     def test_either_existing_ref_stops_before_first_post(self):
         for suffix in ('', '-checkpoint'):
             with self.subTest(suffix=suffix):
-                self.configure(); name = 'refs/heads/' + t.POLICY['result_branch'] + suffix
+                self.configure(); name = 'refs/heads/' + self.wire.policy['result_branch'] + suffix
                 self.wire.refs[name] = {'ref': name, 'object': {'sha': 'e' * 40, 'type': 'commit'}}
                 with self.assertRaises(p.PublicationError): self.write()
                 self.assertFalse(self.posts())
@@ -234,7 +234,7 @@ class CheckpointTests(unittest.TestCase):
                     return answer
                 self.wire.faults[('POST', p.BASE + '/git/refs')] = [persist_then_drop, persist_then_drop]
                 with self.assertRaises(p.PublicationError): self.write()
-                branch = 'refs/heads/' + t.POLICY['result_branch'] + ('-checkpoint' if target == 'checkpoint' else '')
+                branch = 'refs/heads/' + self.wire.policy['result_branch'] + ('-checkpoint' if target == 'checkpoint' else '')
                 self.assertIn(branch, self.wire.refs)
                 self.assertIsNone(self.progress['checkpoint_created'] if target == 'checkpoint' else self.progress['publication_confirmed'])
                 self.assertIs(self.progress['checkpoint_verified'], target == 'final')
@@ -344,10 +344,10 @@ class CheckpointTests(unittest.TestCase):
     def test_exact_two_refs_only_and_each_create_consumed_once(self):
         result = self.write()
         for suffix in ('', '-checkpoint'):
-            body = {'ref': 'refs/heads/' + t.POLICY['result_branch'] + suffix, 'sha': result['result_commit']}
+            body = {'ref': 'refs/heads/' + self.wire.policy['result_branch'] + suffix, 'sha': result['result_commit']}
             with self.assertRaises(ValueError): self.api('POST', p.BASE + '/git/refs', body, expected=201)
         for body in ({'ref': 'refs/heads/other', 'sha': result['result_commit']},
-                {'ref': 'refs/heads/' + t.POLICY['result_branch'], 'sha': 'e' * 40}):
+                {'ref': 'refs/heads/' + self.wire.policy['result_branch'], 'sha': 'e' * 40}):
             with self.assertRaises(ValueError): self.api('POST', p.BASE + '/git/refs', body, expected=201)
         self.assertEqual(len(self.posts('refs')), 2)
 
@@ -436,24 +436,24 @@ class CheckpointTests(unittest.TestCase):
             {'path': name, 'mode': '100644', 'type': 'blob', 'sha': t.git_sha(raw)} for name, raw in files.items()])
         body, commit = p.commit_body(tree, self.release); api = p.GitHubAPI.__new__(p.GitHubAPI)
         api._initialize(TOKEN, get_routes=set(), source_sha=self.release['source_sha'], source_tree=self.release['source_tree'],
-            result_branch=t.POLICY['result_branch'], paths={name: t.MAX_CHUNK for name in files}, expected_body=body,
+            result_branch=self.wire.policy['result_branch'], paths={name: t.MAX_CHUNK for name in files}, expected_body=body,
             max_requests=17, final_ref_only=True)
         api.bind_result(commit, tree)
         for noun, value in (('blobs', {'encoding': 'base64', 'content': 'YQ=='}), ('trees', {}), ('commits', body),
-                ('refs', {'ref': 'refs/heads/' + t.POLICY['result_branch'] + '-checkpoint', 'sha': commit})):
+                ('refs', {'ref': 'refs/heads/' + self.wire.policy['result_branch'] + '-checkpoint', 'sha': commit})):
             with self.assertRaises(ValueError): api('POST', p.BASE + '/git/' + noun, value, expected=201)
         self.assertEqual(api.count, 0); self.assertFalse(self.wire.calls)
 
-    def test_actual_local_controls_match_exact_closed_publication_scope(self):
+    def test_actual_local_controls_match_authorized_current_publication_scope(self):
         value = t.decode((HERE / 'publication-release.json').read_bytes())
-        self.assertEqual(value, p.disabled_publication_release())
-        with self.assertRaises(p.PublicationDisabled):p.publication_gate(value)
+        expected = p.disabled_publication_release()
+        expected.update(enabled=True, independent_source_review=True, root_publication_release=True)
+        self.assertEqual(value, expected)
+        p.publication_gate(value)
         execution = t.decode((HERE / 'execution-release.json').read_bytes())
-        self.assertTrue(all(execution[key] is False for key in p.c.RELEASE_APPROVALS
-            if key != 'historical_screening_reviewed'))
-        self.assertIs(execution['historical_screening_reviewed'], True)
-        self.assertEqual(value['source_branch'], 'research/k1-punctuation6-asr18-r3')
-        self.assertEqual(value['result_branch'], 'evidence/k1-punctuation6-asr18-r3')
+        self.assertTrue(all(execution[key] is True for key in p.c.RELEASE_APPROVALS))
+        for key in ('source_branch', 'result_branch', 'workflow'):
+            self.assertEqual(value[key], p.c.current_scope()[key])
         self.assertFalse(self.wire.calls)
 
     def test_explicit_false_publication_approvals_reject_before_wire_operations(self):
@@ -642,7 +642,7 @@ class NormalAdmissionTests(unittest.TestCase):
                     self.assertIs(value['checkpoint_verified'], target == 'final')
                     self.assertIs(value['checkpoint_preserved'], target == 'final')
                     self.assertFalse(value['readback_confirmed'])
-                branch = 'refs/heads/' + t.POLICY['result_branch'] + ('-checkpoint' if target == 'checkpoint' else '')
+                branch = 'refs/heads/' + self.wire.policy['result_branch'] + ('-checkpoint' if target == 'checkpoint' else '')
                 self.assertIn(branch, self.wire.refs)
                 self.assertNotIn(TOKEN, output.getvalue() + repr(receipt))
 

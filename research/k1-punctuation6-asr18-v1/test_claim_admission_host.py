@@ -486,9 +486,10 @@ class ClaimIssuerHostTests(unittest.TestCase):
         with self.assertRaises(ValueError): a.HostPermit(object(), self.f['run'], self.f['admission'])
         with self.assertRaises(ValueError): h.execute({}, self.f['run'], self.f['release'], {}, 'a'*64, 'b'*40, {})
 
-    def test_actual_closed_cli_no_api_private_files_or_models(self):
+    def test_actual_authorized_cli_rejects_missing_context_without_api_private_files_or_models(self):
         for module in (a, h):
-            with self.subTest(module=module.__name__), mock.patch.object(a.DirectHTTPS, 'request', side_effect=AssertionError('HTTP forbidden')):
+            with self.subTest(module=module.__name__), mock.patch.dict(os.environ, {}, clear=True), \
+                 mock.patch.object(a.DirectHTTPS, 'request', side_effect=AssertionError('HTTP forbidden')):
                 with self.assertRaises(ValueError): module.main([])
             self.assertEqual(list(self.directory.iterdir()), [])
         for filename in ('claim_admission.py', 'hosted_run.py'):

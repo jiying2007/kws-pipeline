@@ -15,7 +15,8 @@ import unittest
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[1]
 sys.path.insert(0,str(HERE))
-from test_control_fixture import DISABLED_APPROVALS, synthetic_enabled_source
+from test_control_fixture import APPROVALS, DISABLED_APPROVALS, synthetic_enabled_source
+import campaign_contract as c
 OPT=['-'+'O'*sys.flags.optimize] if sys.flags.optimize else []
 SENTINELS={key:'SYNTHETIC_'+key+'_NOT_A_CREDENTIAL' for key in
     ('GITHUB_TOKEN','GH_TOKEN','KWS_EVIDENCE_TOKEN','ACTIONS_RUNTIME_TOKEN','ACTIONS_ID_TOKEN_REQUEST_TOKEN')}
@@ -27,12 +28,13 @@ def disabled_source():
     with tempfile.TemporaryDirectory(prefix='k1-explicit-disabled-') as name:
         target=Path(name)/'research/k1-punctuation6-asr18-v1'
         shutil.copytree(HERE,target)
-        for filename,keys in (
-            ('execution-release.json',('enabled','historical_screening_reviewed','independent_source_review','root_execution_release')),
-            ('publication-release.json',('enabled','independent_source_review','root_publication_release'))):
+        for filename,keys in DISABLED_APPROVALS.items():
             value=json.loads((target/filename).read_bytes())
             for key in keys:value[key]=False
-            (target/filename).write_text(json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(',',':'),allow_nan=False))
+            (target/filename).write_bytes(c.canonical(value))
+        release=c.read_json(target/'execution-release.json')
+        release['claim_admission_control_sha256']=c.digest((target/c.CLAIM_CONTROL_FILE).read_bytes())
+        (target/'execution-release.json').write_bytes(c.canonical(release))
         yield target
 
 
@@ -85,10 +87,10 @@ class ActualEntrypoints(unittest.TestCase):
         if validation_code is not None:expected_detail['validation_code']=validation_code
         self.assertEqual(error['detail'],expected_detail)
 
-    def test_checked_in_asr_controls_are_explicitly_closed(self):
-        for filename,keys in DISABLED_APPROVALS.items():
+    def test_checked_in_asr_controls_are_explicitly_authorized_for_current_scope(self):
+        for filename,keys in APPROVALS.items():
             value=json.loads((HERE/filename).read_bytes())
-            self.assertTrue(all(value[key] is False for key in keys))
+            self.assertTrue(all(value[key] is True for key in keys))
         release=json.loads((HERE/'execution-release.json').read_bytes())
         control_raw=(HERE/'claim-admission-control.json').read_bytes();control=json.loads(control_raw)
         self.assertEqual(release['schema'],'k1-asr18-execution-release-v2')
@@ -96,8 +98,9 @@ class ActualEntrypoints(unittest.TestCase):
         self.assertEqual(release['claim_admission_control_sha256'],hashlib.sha256(control_raw).hexdigest())
         self.assertEqual(control['schema'],'k1-asr18-claim-admission-control-v2')
         self.assertEqual(control['mode'],'git-owner-v2')
-        for key in ('enabled','independent_source_review','root_execution_release'):self.assertIs(control[key],False)
-        for key in ('campaign','source_ref','evidence_ref','claim_ref','workflow','workflow_id'):self.assertIsNone(control[key])
+        for key in c.CLAIM_APPROVALS:self.assertIs(control[key],True)
+        self.assertEqual(c.require_current_scope(control),c.current_scope())
+        self.assertIsNone(control['workflow_id'])
         self.assertEqual(control['workflow_id_source'],'actual_run_api_plus_path')
         self.assertIs(release['historical_screening_reviewed'],True)
 
@@ -126,13 +129,8 @@ class ActualEntrypoints(unittest.TestCase):
         self.assertEqual((value.returncode,value.stderr),(1,b'ASR18 publication disabled or review absent.\n'))
         self.check_diagnostic(value.stdout,role='publisher',stages=['publication_gate'])
 
-    def test_actual_closed_workflow_commands_reject_before_context_without_effects(self):
-        value=self.call(HERE/'hosted_run.py')
-        self.assertEqual((value.returncode,value.stderr),(2,b''))
-        self.check_diagnostic(value.stdout,role='host',stages=['release'],terminal=True,validation_code='claim_admission_closed')
-        value=self.call(HERE/'evidence_publisher.py')
-        self.assertEqual((value.returncode,value.stderr),(1,b'ASR18 publication disabled or review absent.\n'))
-        self.check_diagnostic(value.stdout,role='publisher',stages=['publication_gate'])
+    def test_actual_authorized_workflow_commands_reject_missing_context_without_effects(self):
+        self.check_enabled_workflow_commands_reject_nonexecution_context(HERE)
 
     def test_synthetic_enabled_workflow_commands_reject_nonexecution_context_without_effects(self):
         with synthetic_enabled_source(HERE) as source:
@@ -189,7 +187,7 @@ print(json.dumps({'code':code,'seen':seen,'effects':effects}))
                     self.assertIn(['return','require_execution_release',str(source/'campaign_contract.py')],observation['seen'])
                 for secret in SENTINELS.values():self.assertNotIn(secret.encode(),value.stdout+value.stderr)
 
-    def test_real_claim_issuer_is_closed_before_client_or_private_directory(self):
+    def test_real_claim_issuer_rejects_missing_context_before_client_or_private_directory(self):
         value=self.call(HERE/'claim_admission.py')
         self.assertEqual((value.returncode,value.stdout,value.stderr),(2,b'{"ready":false}\n',b''))
 

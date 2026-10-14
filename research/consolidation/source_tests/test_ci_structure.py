@@ -228,7 +228,7 @@ ASR18_MODULES = (
     'test_bound_claim_contract', 'test_claim_admission_host', 'test_claim_consumer_integration',
 )
 ASR18_PARALLEL_MODES = 'mode_logs="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/k1-asr18-contracts.XXXXXX")"\nstop_contracts() {\n  running="$(jobs -pr)"\n  if [ -n "$running" ]; then kill $running 2>/dev/null || true; fi\n  wait || true\n  exit 2\n}\ntrap stop_contracts INT TERM\npython3 -I -S -B -c "$asr18_tests" > "$mode_logs/normal.log" 2>&1 & normal_pid=$!\npython3 -I -S -B -O -c "$asr18_tests" > "$mode_logs/O.log" 2>&1 & optimized_pid=$!\npython3 -I -S -B -OO -c "$asr18_tests" > "$mode_logs/OO.log" 2>&1 & double_optimized_pid=$!\nfailed=0\nfor test_pid in "$normal_pid" "$optimized_pid" "$double_optimized_pid"; do\n  wait "$test_pid" || failed=1\ndone\ntrap - INT TERM\nfor mode in normal O OO; do\n  printf \'ASR18_CONTRACT_MODE=%s\\n\' "$mode"\n  cat "$mode_logs/$mode.log"\ndone\nexit "$failed"\n'
-ASR18_JOB_IF = "${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-asr18-r3' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}"
+ASR18_JOB_IF = "${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-asr18-r4' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}"
 ASR18_CLAIM_IF = "${{ success() && steps.asr18_contracts.outcome == 'success' && github.run_number == 1 && github.run_attempt == 1 }}"
 ASR18_HOST_IF = "${{ success() && steps.asr18_contracts.outcome == 'success' && steps.campaign_claim.outcome == 'success' && steps.campaign_claim.outputs.ready == 'true' }}"
 ASR18_PUBLISH_IF = "${{ always() && steps.host.outputs.started == 'true' }}"
@@ -298,7 +298,7 @@ def outcome_route(condition, *, success=False, host='', contracts='', started=''
 class ASR18CIContracts(unittest.TestCase):
     def setUp(self):
         self.ci = (ROOT / '.github/workflows/ci.yml').read_text()
-        self.workflow = (ROOT / '.github/workflows/k1-punctuation6-asr18-v1.yml').read_text()
+        self.workflow = (ROOT / '.github/workflows/k1-punctuation6-asr18-r4.yml').read_text()
         self.template = (ROOT / 'research/k1-punctuation6-asr18-v1/workflow.yml').read_text()
 
     def expected_command(self):
@@ -314,15 +314,15 @@ class ASR18CIContracts(unittest.TestCase):
         self.assertEqual(workflow, template)
         self.assertNotIn('INERT RESEARCH TEMPLATE', workflow)
         self.assertEqual(workflow.split('permissions:', 1)[0],
-            'name: K1 punctuation6 ASR18 r3 conditional once\n'
-            'on:\n  push:\n    branches:\n      - research/k1-punctuation6-asr18-r3\n')
+            'name: K1 punctuation6 ASR18 r4 conditional once\n'
+            'on:\n  push:\n    branches:\n      - research/k1-punctuation6-asr18-r4\n')
         self.assertNotIn("refs/heads/research/k1-punctuation6-asr18-v1", workflow)
         shared = jobs(ci)['python-contracts']
         self.assertNotIn('    if:', shared)
         self.assertEqual(set(jobs(workflow)), {'asr18'})
         execution = jobs(workflow)['asr18']
         self.assertIn('    if: ' + ASR18_JOB_IF + '\n', execution)
-        self.assertIn('concurrency:\n  group: k1-punctuation6-asr18-r3\n  cancel-in-progress: false\n', workflow)
+        self.assertIn('concurrency:\n  group: k1-punctuation6-asr18-r4\n  cancel-in-progress: false\n', workflow)
         for name, body in (('ci', shared), ('asr18', execution)):
             step = named_step(body, 'K1 punctuation6 ASR18 offline source contracts')
             self.assertIn('        id: asr18_contracts\n', step)
@@ -384,14 +384,14 @@ class ASR18CIContracts(unittest.TestCase):
             ('workflow', 'id: campaign_claim\n', 'id: campaign_claim\n        continue-on-error: true\n'),
             ('workflow', ASR18_PUBLISH_IF, "${{ always() && steps.host.outcome != 'skipped' }}"),
             ('workflow', "github.run_attempt == 1", 'github.run_attempt >= 1'),
-            ('workflow', '      - research/k1-punctuation6-asr18-r3\n',
+            ('workflow', '      - research/k1-punctuation6-asr18-r4\n',
              '      - research/k1-punctuation6-asr18-v1\n'),
-            ('workflow', '      - research/k1-punctuation6-asr18-r3\n',
-             '      - research/k1-punctuation6-asr18-r3\n      - research/k1-punctuation6-asr18-v1\n'),
-            ('workflow', "github.ref == 'refs/heads/research/k1-punctuation6-asr18-r3'",
+            ('workflow', '      - research/k1-punctuation6-asr18-r4\n',
+             '      - research/k1-punctuation6-asr18-r4\n      - research/k1-punctuation6-asr18-v1\n'),
+            ('workflow', "github.ref == 'refs/heads/research/k1-punctuation6-asr18-r4'",
              "github.ref == 'refs/heads/research/k1-punctuation6-asr18-v1'"),
             ('workflow', 'github.event.created == true', 'github.event.created == false'),
-            ('workflow', 'group: k1-punctuation6-asr18-r3', 'group: k1-punctuation6-asr18-v1'),
+            ('workflow', 'group: k1-punctuation6-asr18-r4', 'group: k1-punctuation6-asr18-v1'),
             ('workflow', 'id: host\n', 'id: host\n        continue-on-error: true\n'),
         )
         for target, before, after in mutations:
@@ -401,13 +401,13 @@ class ASR18CIContracts(unittest.TestCase):
                 with self.assertRaises(AssertionError):
                     self.check_wiring(ci, workflow, workflow)
 
-    def test_actual_job_guard_allows_only_fresh_independent_r1(self):
+    def test_actual_job_guard_allows_only_fresh_independent_r4(self):
         job = jobs(self.workflow)['asr18']
         condition = re.search(r'^    if: (.+)$', job, re.M).group(1)
         context = {
             'github.repository': 'jiying2007/kws-pipeline',
             'github.event_name': 'push',
-            'github.ref': 'refs/heads/research/k1-punctuation6-asr18-r3',
+            'github.ref': 'refs/heads/research/k1-punctuation6-asr18-r4',
             'github.event.created': True,
             'github.event.deleted': False,
             'github.event.repository.private': False,
@@ -419,11 +419,12 @@ class ASR18CIContracts(unittest.TestCase):
             ('github.event_name', ('workflow_dispatch', 'workflow_call', 'pull_request', 'schedule')),
             ('github.ref', ('refs/heads/research/k1-punctuation6-asr18-v1',
                             'refs/heads/research/k1-punctuation6-asr18-v2',
-                            'refs/heads/research/k1-punctuation6-asr18-r30',
-                            'refs/heads/research/k1-punctuation6-asr18-r3-extra',
+                            'refs/heads/research/k1-punctuation6-asr18-r40',
+                            'refs/heads/research/k1-punctuation6-asr18-r4-extra',
                             'refs/heads/research/k1-punctuation6-asr18-r1',
                             'refs/heads/research/k1-punctuation6-asr18-r2',
-                            'refs/heads/main', 'refs/tags/research/k1-punctuation6-asr18-r3')),
+                            'refs/heads/research/k1-punctuation6-asr18-r3',
+                            'refs/heads/main', 'refs/tags/research/k1-punctuation6-asr18-r4')),
             ('github.event.created', (False, None)),
             ('github.event.deleted', (True, None)),
             ('github.event.repository.private', (True, None)),

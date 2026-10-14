@@ -46,7 +46,7 @@ def synthetic_enabled_source(source):
     source=Path(source).resolve(); root=source.parents[1]
     rosters=prepare_freeze.declared_rosters(root)
     names=set().union(*rosters.values())
-    names.add('.github/workflows/k1-punctuation6-asr18-v1.yml')
+    names.add(c.current_scope()['workflow'])
     # Only the source package's direct public files, never a recursive data walk.
     names.update(str(path.relative_to(root)) for path in source.iterdir()
         if path.is_file() and path.suffix in ('.py','.json','.md','.yml','.yaml','.txt'))

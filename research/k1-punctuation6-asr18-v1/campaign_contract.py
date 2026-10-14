@@ -14,8 +14,8 @@ from datetime import datetime, timezone
 
 import asr18_metadata as metadata
 
-EXPERIMENT = 'k1-punctuation6-asr18-r3'
-CURRENT_WORKFLOW = '.github/workflows/k1-punctuation6-asr18-v1.yml'
+EXPERIMENT = 'k1-punctuation6-asr18-r4'
+CURRENT_WORKFLOW = '.github/workflows/k1-punctuation6-asr18-r4.yml'
 LEGACY_V1_SCOPE = {'campaign': 'k1-punctuation6-asr18-r3',
     'source_branch': 'research/k1-punctuation6-asr18-r3', 'result_branch': 'evidence/k1-punctuation6-asr18-r3',
     'directory': 'research/k1-punctuation6-asr18-v1/evidence/asr18-r3',
