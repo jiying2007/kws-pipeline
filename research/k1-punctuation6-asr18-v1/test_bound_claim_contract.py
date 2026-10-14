@@ -263,22 +263,23 @@ class BoundClaimContractTests(unittest.TestCase):
         owner = copy.deepcopy(f['owner']); owner['nonce_sha256'] = c.digest(b'other nonce')
         self.assertNotEqual(c.owner_commit(owner)[1], sha)
 
-    def test_checked_in_current_controls_enabled_and_actual_workflow_id_unbound(self):
+    def test_checked_in_current_controls_closed_and_actual_workflow_id_unbound(self):
         here = Path(c.__file__).parent
         control_raw = (here / c.CLAIM_CONTROL_FILE).read_bytes(); control = c.decode_json(control_raw)
         release = c.read_json(here / 'execution-release.json')
-        self.assertTrue(all(control[key] is True for key in c.CLAIM_APPROVALS))
+        self.assertTrue(all(control[key] is False for key in c.CLAIM_APPROVALS))
         scope=c.current_scope()
         for key,field in (('campaign','campaign'),('source_ref','source_branch'),
                 ('evidence_ref','result_branch'),('claim_ref','claim_ref'),('workflow','workflow'),('job_key','job_key')):
             self.assertEqual(control[key],scope[field])
-        self.assertEqual(c.require_current_scope(control),scope)
+        with self.assertRaisesRegex(ValueError,'claim admission closed'):c.require_current_scope(control)
         self.assertIsNone(control['workflow_id'])
         self.assertEqual(release['claim_admission_control_sha256'], c.digest(control_raw))
         self.assertEqual(c.validate_claim_control(control),control)
-        self.assertEqual(c.require_claim_admission(release, control_raw),control)
-        freeze_raw=(here / 'execution-freeze.json').read_bytes()
-        self.assertEqual(c.require_execution_release(release, expected_freeze_sha256=c.digest(freeze_raw)),release)
+        with self.assertRaisesRegex(ValueError,'claim admission closed'):
+            c.require_claim_admission(release, control_raw)
+        with self.assertRaisesRegex(ValueError,'execution release disabled'):
+            c.require_execution_release(release)
 
     def test_sealed_r4_run_and_source_cannot_be_reused_as_r5_owner(self):
         f = fixture()

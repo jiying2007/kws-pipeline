@@ -92,7 +92,7 @@ class API:
 
 
 class HostedTests(unittest.TestCase):
-    def test_prepare_closed_and_current_asr_authorized_with_pinned_prerequisite(self):
+    def test_checked_in_prepare_and_current_asr_closed_with_pinned_prerequisite(self):
         release=pc.decode(pc.regular(HERE/'prepare-release.json'))
         control=h.read_json(HERE/'publication-release.json')
         flags=[release[k] for k in ('enabled','independent_source_review','source_closure_ready')]
@@ -113,11 +113,11 @@ class HostedTests(unittest.TestCase):
                           ('publication-release.json',('enabled','independent_source_review','root_publication_release')),
                           ('claim-admission-control.json',tuple(h.c.CLAIM_APPROVALS))):
             value=h.read_json(h.ASR/name)
-            self.assertTrue(all(value[k] is True for k in keys))
+            self.assertTrue(all(value[k] is False for k in keys))
             if name=='execution-release.json':
                 self.assertEqual(value['experiment'],h.c.EXPERIMENT)
                 self.assertIs(value['historical_screening_reviewed'],True)
-                self.assertEqual(h.retained_host.release_first(),value)
+                with self.assertRaisesRegex(ValueError,'claim admission closed'):h.retained_host.release_first()
                 self.assertEqual(pc.digest(pc.regular(h.ASR/'prepare-prerequisite.json')),value['prepare_prerequisite_sha256'])
         self.assertEqual([r['run_id'] for r in h.prior_history_identity()['sealed_asr_runs']],[38207026177,38219171568])
         self.assertTrue(all(r['actual_consumed_attempts'] is None and r['reusable_slots']==0 for r in h.prior_history_identity()['sealed_asr_runs']))
