@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 51139,
-      "sha256": "0fc66056330e4b21a1e2c4e3ec86bd54ea2ad7b920c4e65314e1c2c259aa5c76",
-      "git_blob_sha1": "0043ba5236c83e1b1594300bd1fa7e1e4bef824b"
+      "bytes": 51528,
+      "sha256": "f535cc8c9ec5f1655f0a2bc33de7173505c1b76d76f331c9f90f2904cfc98c1c",
+      "git_blob_sha1": "499b4b04946ac29740cf7938db54d165d30ea54d"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -27253,9 +27253,9 @@
           "after": {
             "path": ".github/workflows/ci.yml",
             "mode": "100644",
-            "bytes": 51139,
-            "sha256": "0fc66056330e4b21a1e2c4e3ec86bd54ea2ad7b920c4e65314e1c2c259aa5c76",
-            "git_blob_sha1": "0043ba5236c83e1b1594300bd1fa7e1e4bef824b"
+            "bytes": 51528,
+            "sha256": "f535cc8c9ec5f1655f0a2bc33de7173505c1b76d76f331c9f90f2904cfc98c1c",
+            "git_blob_sha1": "499b4b04946ac29740cf7938db54d165d30ea54d"
           }
         },
         {
@@ -27506,8 +27506,8 @@
             "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
             "mode": "100644",
             "bytes": 40879,
-            "sha256": "06cc699c826ddf63f60d5417a0cebf65a619d78adb54c4204632df9af2736254",
-            "git_blob_sha1": "c7106cb42c324d62c641e7595a10e6cacf7f0e99"
+            "sha256": "5bf540b198c24cdb16a9e2689a959b548542e9b4393c2d5917e0d7177c7609b5",
+            "git_blob_sha1": "3d6e02221b313c5e8853b1e2893635be66f48884"
           }
         },
         {
@@ -27540,8 +27540,8 @@
             "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
             "mode": "100644",
             "bytes": 40427,
-            "sha256": "1708a1df49cabac040a06727d76f6493aa1bdf32dc64154564edc97cdd94e184",
-            "git_blob_sha1": "1d89e9ea887ef2c8085b0a0abea01897e02f9c5a"
+            "sha256": "93597d487cca8b4043dbca3bff2d349084ecbf1bcc92e031a6a0b94a37920b1f",
+            "git_blob_sha1": "87cd31114f057cf77beb6e41f54a0252c193a1cc"
           }
         },
         {
@@ -27661,6 +27661,50 @@
           }
         },
         {
+          "path": "tests/fixtures/near_pronunciation_v1/README.md",
+          "before": null,
+          "after": {
+            "path": "tests/fixtures/near_pronunciation_v1/README.md",
+            "mode": "100644",
+            "bytes": 1444,
+            "sha256": "71a3756c35a18e2a9f61ef0768fc96ec4eacb8f8b8d3a303d7ea11befb619837",
+            "git_blob_sha1": "006d01be4b49ecb038031fbddd2efbbc0302e21b"
+          }
+        },
+        {
+          "path": "tests/fixtures/near_pronunciation_v1/src/decoder.c",
+          "before": null,
+          "after": {
+            "path": "tests/fixtures/near_pronunciation_v1/src/decoder.c",
+            "mode": "100644",
+            "bytes": 21129,
+            "sha256": "c1cef85ba33ab37dd2e278f7c4a1f0d398b128e5508e86cfff3933819e2b78e9",
+            "git_blob_sha1": "449b2019e71ae41640644bc210a95ebc37ea1ef5"
+          }
+        },
+        {
+          "path": "tests/fixtures/near_pronunciation_v1/tests/test_decoder.c",
+          "before": null,
+          "after": {
+            "path": "tests/fixtures/near_pronunciation_v1/tests/test_decoder.c",
+            "mode": "100644",
+            "bytes": 38328,
+            "sha256": "7d70c111c9292bc8697871508746e465477ed8142e69f77056c603dcccbe9109",
+            "git_blob_sha1": "4447302901bbad76154e82df6c23e536274f670d"
+          }
+        },
+        {
+          "path": "tests/prepare_frozen_decoder_source.py",
+          "before": null,
+          "after": {
+            "path": "tests/prepare_frozen_decoder_source.py",
+            "mode": "100644",
+            "bytes": 3432,
+            "sha256": "555216e7f4bd08f1c86118da9812d1451ab13dae6e85bb4b83674aa7d87bf1d2",
+            "git_blob_sha1": "9498bb77d2e2026691e0d2a5edac49f57f234754"
+          }
+        },
+        {
           "path": "tests/test_checked_unittest.py",
           "before": null,
           "after": {
@@ -27669,6 +27713,23 @@
             "bytes": 7903,
             "sha256": "e82e7e04886d5d86bb32fa3b9547cd778770f9afbebb394d504b5a82bd665ed4",
             "git_blob_sha1": "20691350aff7b15d03d9324d7870ee00e534434a"
+          }
+        },
+        {
+          "path": "tests/test_cli_stdout.py",
+          "before": {
+            "bytes": 9261,
+            "git_blob_sha1": "c65eeede5dd2aef6671a14996fa3735c3fde0a69",
+            "mode": "100644",
+            "path": "tests/test_cli_stdout.py",
+            "sha256": "c9caca32970f9fa86f6b645407b90d1cd5236ead8036fb288a7faad6048a8352"
+          },
+          "after": {
+            "path": "tests/test_cli_stdout.py",
+            "mode": "100644",
+            "bytes": 12740,
+            "sha256": "eade1035154abc8b1e6eea4e4d67b9f8016bc64ee501eb671bf613979fe51b4b",
+            "git_blob_sha1": "b470e7ba504075e44103c9b8c96ee222a12f54f2"
           }
         },
         {

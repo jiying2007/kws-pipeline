@@ -180,11 +180,16 @@ jobs:
         run: python3 -S -B tests/test_cli_stdout.py
       - name: Verify tracked worktree after Hosted CLI stdout contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Hosted CLI stdout contracts"'
-      - name: Near-pronunciation isolated decoder synthetic verification
+      - name: Near-pronunciation historical decoder synthetic verification
         run: |
           command -v cc
+          # Qualify the unchanged historical overlay against its original pins.
+          # Current shipping decoder coverage runs separately; this is not its parity claim.
+          python3 -S -B tests/prepare_frozen_decoder_source.py \
+            --source-root . --output-dir "$RUNNER_TEMP/near-pronunciation-frozen-source"
           python3 -S -B research/near_pronunciation_v1/verify_decoder.py \
-            --source-root . --output-dir "$RUNNER_TEMP/near-pronunciation-decoder-verify"
+            --source-root "$RUNNER_TEMP/near-pronunciation-frozen-source" \
+            --output-dir "$RUNNER_TEMP/near-pronunciation-decoder-verify"
       - name: Verify tracked worktree after Near-pronunciation decoder verification
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Near-pronunciation decoder verification"'
       - name: Three-ASR pending label metadata without model execution

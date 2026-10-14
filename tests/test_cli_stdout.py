@@ -7,6 +7,7 @@ Input containers are invented here; this does not validate acoustic output.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -21,6 +22,8 @@ TOOLS = ('kws_wav', 'kws_board_bench', 'kws_feature_dump', 'kws_posterior_dump',
          'kws_decoder_replay', 'kws_decoder_path_replay', 'kws_trace_slice')
 SHA = b'ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402'
 FINGERPRINT = 0x316aea1a94b303bf
+
+from prepare_frozen_decoder_source import FIXTURES, FROZEN_FILES, OVERLAY, stage_source
 
 
 def require(value, message):
@@ -60,6 +63,70 @@ def fixtures(root):
         wav.writeframes(b'\0' * 800)
 
 
+def check_historical_source_contracts(temp):
+    """Test the helper on isolated copies; never mutate current or frozen input."""
+    source = temp / 'historical-contract-input'
+    pins = json.loads((ROOT / OVERLAY).read_bytes())['source_sha256']
+    names = [*pins, OVERLAY, *(str(Path(FIXTURES) / name) for name in FROZEN_FILES)]
+    for name in names:
+        target = source / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT / name).read_bytes())
+    before = {name: (source / name).read_bytes() for name in names}
+    output = temp / 'historical-contract-output'
+    require(stage_source(source, output) == pins, 'historical pin set changed')
+    require(all(hashlib.sha256((output / name).read_bytes()).hexdigest() == expected
+                for name, expected in pins.items()), 'staged historical source differs from pins')
+    require(all((source / name).read_bytes() == data for name, data in before.items()),
+            'historical staging modified source input')
+
+    def reject(destination):
+        try:
+            stage_source(source, destination)
+        except (OSError, ValueError):
+            return
+        raise RuntimeError('historical staging accepted an invalid input')
+
+    reject(output)
+    # Both retained files are authoritative exact bytes, not a fallback that
+    # silently rebases scientific pins to whichever current source is present.
+    for index, name in enumerate(sorted(FROZEN_FILES)):
+        path = source / FIXTURES / name
+        original = path.read_bytes()
+        path.write_bytes(original + b'\n/* fixture drift */\n')
+        refused = temp / f'refused-fixture-{index}'
+        reject(refused)
+        require(not refused.exists(), 'fixture drift left partial output')
+        path.write_bytes(original)
+    path = source / 'src/frontend.c'
+    original = path.read_bytes()
+    path.write_bytes(original + b'\n/* unretained source drift */\n')
+    refused = temp / 'refused-live-source'
+    reject(refused)
+    require(not refused.exists(), 'current source drift left partial output')
+    path.write_bytes(original)
+    outside = temp / 'outside-frontend.c'
+    outside.write_bytes(original)
+    path.unlink()
+    path.symlink_to(outside)
+    refused = temp / 'refused-symlink-escape'
+    reject(refused)
+    require(not refused.exists(), 'source symlink escape left partial output')
+    path.unlink()
+    path.write_bytes(original)
+    overlay_path = source / OVERLAY
+    original = overlay_path.read_bytes()
+    bad = json.loads(original)
+    bad['source_sha256']['../outside.c'] = '0' * 64
+    overlay_path.write_text(json.dumps(bad))
+    refused = temp / 'refused-traversal'
+    reject(refused)
+    require(not refused.exists(), 'unsafe pin path left partial output')
+    overlay_path.write_bytes(original)
+    require(all((source / name).read_bytes() == data for name, data in before.items()),
+            'historical negative tests did not restore their isolated inputs')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cc', default='cc')
@@ -73,22 +140,30 @@ def main():
         run([sys.executable, ROOT / 'tools/gen_parameter_limits.py',
              ROOT / 'configs/parameter-contract.json', generated])
         fixtures(root)
-        support = [ROOT / name for name in ('src/kws.c', 'src/decoder.c', 'src/frontend.c',
+        check_historical_source_contracts(root)
+        historical = root / 'historical-source'
+        stage_source(ROOT, historical)
+        support_names = ('src/kws.c', 'src/decoder.c', 'src/frontend.c',
                    'src/model.c', 'src/keyword_pack.c', 'tools/tool_io.c', 'tools/sha256.c',
-                   'tools/kws_trace_io.c')]
+                   'tools/kws_trace_io.c')
+        support = [ROOT / name for name in support_names]
+        historical_support = [historical / name for name in support_names]
         sys.path.insert(0, str(ROOT / 'research/near_pronunciation_v1'))
         from prepare_decoder import materialize
         derived = root / 'derived'
-        materialize(ROOT, derived)
+        materialize(historical, derived)
         def compile_tool(name, source, *, research=False):
             executable = root / name
-            selected = [derived / 'src/kws.c', derived / 'src/decoder.c', *support[2:]] if research else support
+            selected = ([derived / 'src/kws.c', derived / 'src/decoder.c', *historical_support[2:]]
+                        if research else support)
+            selected_root = historical if research else ROOT
             flags = ['-DKWS_RESEARCH_CHILD_ADMISSION=1'] if research else []
             if name.startswith('kws_bench'): flags.append('-DKWS_STDOUT_TEST_BENCH=1')
             run([compiler, '-std=c11', '-O2', '-Wall', '-Wextra', '-Wpedantic', '-Werror',
                  '-Wconversion', '-Wshadow', '-Wcast-qual', *flags,
                  f'-DKWS_STDOUT_TEST_TOOL="{source}"', f'-I{derived / "src"}' if research else f'-I{ROOT / "src"}',
-                 f'-I{ROOT / "include"}', f'-I{ROOT / "src"}', f'-I{ROOT / "tools"}', f'-I{generated}',
+                 f'-I{selected_root / "include"}', f'-I{selected_root / "src"}',
+                 f'-I{selected_root / "tools"}', f'-I{generated}',
                  ROOT / 'tests/cli_stdout_wrapper.c', *selected, '-lm', '-o', executable])
             return executable
         def command(name, executable):
