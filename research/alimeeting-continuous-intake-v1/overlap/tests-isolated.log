@@ -1,0 +1,19 @@
+test_ancestor_pcm_alias (test_compare_overlap.ComparisonTests.test_ancestor_pcm_alias) ... ok
+test_derived_pcm_match (test_compare_overlap.ComparisonTests.test_derived_pcm_match) ... ok
+test_duplicate_sessions_rejected (test_compare_overlap.ComparisonTests.test_duplicate_sessions_rejected) ... ok
+test_file_and_pcm_namespaces_do_not_cross (test_compare_overlap.ComparisonTests.test_file_and_pcm_namespaces_do_not_cross) ... ok
+test_historical_count_mismatch_rejected (test_compare_overlap.ComparisonTests.test_historical_count_mismatch_rejected) ... ok
+test_invalid_hash_is_rejected (test_compare_overlap.ComparisonTests.test_invalid_hash_is_rejected) ... ok
+test_missing_hash_is_rejected (test_compare_overlap.ComparisonTests.test_missing_hash_is_rejected) ... ok
+test_name_substring_not_session_match (test_compare_overlap.ComparisonTests.test_name_substring_not_session_match) ... ok
+test_no_match_never_means_independence (test_compare_overlap.ComparisonTests.test_no_match_never_means_independence) ... ok
+test_no_overwrite (test_compare_overlap.ComparisonTests.test_no_overwrite) ... ok
+test_original_source_wav_matches_file_alias (test_compare_overlap.ComparisonTests.test_original_source_wav_matches_file_alias) ... ok
+test_session_name_in_source_filename (test_compare_overlap.ComparisonTests.test_session_name_in_source_filename) ... ok
+test_unexpected_pcm_semantics_rejected (test_compare_overlap.ComparisonTests.test_unexpected_pcm_semantics_rejected) ... ok
+test_unknown_schemas_rejected (test_compare_overlap.ComparisonTests.test_unknown_schemas_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.002s
+
+OK

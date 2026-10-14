@@ -1,0 +1,13 @@
+test_bad_event_fields (__main__.DiagnosticContractTests.test_bad_event_fields) ... ok
+test_boolean_stats_rejected (__main__.DiagnosticContractTests.test_boolean_stats_rejected) ... ok
+test_discontinuity_and_external_vad_rejected (__main__.DiagnosticContractTests.test_discontinuity_and_external_vad_rejected) ... ok
+test_frame_geometry (__main__.DiagnosticContractTests.test_frame_geometry) ... ok
+test_no_execution_without_flag (__main__.DiagnosticContractTests.test_no_execution_without_flag) ... ok
+test_nonzero_events_and_stats (__main__.DiagnosticContractTests.test_nonzero_events_and_stats) ... ok
+test_out_of_order_events (__main__.DiagnosticContractTests.test_out_of_order_events) ... ok
+test_zero_events_require_complete_stats (__main__.DiagnosticContractTests.test_zero_events_require_complete_stats) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.001s
+
+OK

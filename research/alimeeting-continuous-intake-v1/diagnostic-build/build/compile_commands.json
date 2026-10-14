@@ -1,0 +1,104 @@
+[
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated/Release -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_pipeline.dir/src/kws.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/kws.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/kws.c",
+  "output": "CMakeFiles/kws_pipeline.dir/src/kws.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated/Release -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_pipeline.dir/src/build_info.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/build_info.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/build_info.c",
+  "output": "CMakeFiles/kws_pipeline.dir/src/build_info.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated/Release -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_pipeline.dir/src/frontend.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/frontend.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/frontend.c",
+  "output": "CMakeFiles/kws_pipeline.dir/src/frontend.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated/Release -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_pipeline.dir/src/model.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/model.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/model.c",
+  "output": "CMakeFiles/kws_pipeline.dir/src/model.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated/Release -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_pipeline.dir/src/decoder.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/decoder.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/decoder.c",
+  "output": "CMakeFiles/kws_pipeline.dir/src/decoder.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated/Release -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_pipeline.dir/src/keyword_pack.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/keyword_pack.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src/keyword_pack.c",
+  "output": "CMakeFiles/kws_pipeline.dir/src/keyword_pack.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_trace_io.dir/tools/kws_trace_io.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_trace_io.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_trace_io.c",
+  "output": "CMakeFiles/kws_trace_io.dir/tools/kws_trace_io.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_tool_io.dir/tools/tool_io.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/tool_io.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/tool_io.c",
+  "output": "CMakeFiles/kws_tool_io.dir/tools/tool_io.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_tool_io.dir/tools/sha256.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/sha256.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/sha256.c",
+  "output": "CMakeFiles/kws_tool_io.dir/tools/sha256.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_wav.dir/tools/kws_wav.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_wav.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_wav.c",
+  "output": "CMakeFiles/kws_wav.dir/tools/kws_wav.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_raw_stream.dir/tools/kws_raw_stream.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_raw_stream.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_raw_stream.c",
+  "output": "CMakeFiles/kws_raw_stream.dir/tools/kws_raw_stream.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_board_bench.dir/tools/kws_board_bench.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_board_bench.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_board_bench.c",
+  "output": "CMakeFiles/kws_board_bench.dir/tools/kws_board_bench.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_feature_dump.dir/tools/kws_feature_dump.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_feature_dump.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_feature_dump.c",
+  "output": "CMakeFiles/kws_feature_dump.dir/tools/kws_feature_dump.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_posterior_dump.dir/tools/kws_posterior_dump.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_posterior_dump.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_posterior_dump.c",
+  "output": "CMakeFiles/kws_posterior_dump.dir/tools/kws_posterior_dump.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_decoder_replay.dir/tools/kws_decoder_replay.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_decoder_replay.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_decoder_replay.c",
+  "output": "CMakeFiles/kws_decoder_replay.dir/tools/kws_decoder_replay.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/src -I/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/generated -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/include -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_decoder_path_replay.dir/tools/kws_decoder_path_replay.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_decoder_path_replay.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_decoder_path_replay.c",
+  "output": "CMakeFiles/kws_decoder_path_replay.dir/tools/kws_decoder_path_replay.c.o"
+},
+{
+  "directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+  "command": "/usr/bin/gcc  -I/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual -o CMakeFiles/kws_trace_slice.dir/tools/kws_trace_slice.c.o -c /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_trace_slice.c",
+  "file": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/tools/kws_trace_slice.c",
+  "output": "CMakeFiles/kws_trace_slice.dir/tools/kws_trace_slice.c.o"
+}
+]

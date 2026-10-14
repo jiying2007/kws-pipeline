@@ -1,0 +1,299 @@
+{
+  "schema": "frozen-positive-zero-trigger-readonly-diagnosis-v1",
+  "created_utc": "2026-10-14T14:10:21.542838+00:00",
+  "source_revision": "11b93abe92427c3ece2a01f9a497cdb74bab0062",
+  "run_path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe",
+  "scope": {
+    "model_invocations": 0,
+    "decoder_replays": 0,
+    "new_builds": 0,
+    "new_audio_runs": 0,
+    "root_source_weights_thresholds_run_receipts_changed": false,
+    "audio_read": "Only last up to 1 second of the exact 13 selected WAVs; no other corpus/heldout/qualification audio."
+  },
+  "identity": {
+    "summary_sha256": "4510f8f8d2b5008da89c274d8cb074fae646788855753a161e098c6cca32647a",
+    "inputs_sha256": "4e952e2125865957e33eb65bc83c9b3ffa9964b63f87b3db64dfbc3300b814ac",
+    "build_receipt_sha256": "78b2988e60a4bf6b875934222fd5e732633ca34de64e470c433e74289f57ac8a",
+    "source_revision": "11b93abe92427c3ece2a01f9a497cdb74bab0062",
+    "model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+    "keyword_pack_sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+    "runner_sha256": "53a5dcb50c599d88bb72b2cfbaf6ff5d6e7a379ecef3011f28f5820261d155a9",
+    "model_pack_runner_hashes_verified": true,
+    "relevant_source_hashes_match_frozen_build_receipt": true,
+    "source_sha256": {
+      "configs/parameter-contract.json": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06",
+      "src/decoder.c": "8eb2631073482414916c36afeb6fc0578ca137b9f9ab995dd9d579f9c32d8f2a",
+      "src/frontend.c": "4b15da591837859232a91200b81a70ffc683a79f08bf12b0adb368ae5e680b27",
+      "src/keyword_pack.c": "967f415850a7fbf87ad088f310ed0b2fdd78317c9ca07fc1128622cabdcc9b57",
+      "src/kws.c": "cb7fbffd0ff8617b78ad4d7afd5557c1c13fec06250acfdc10713c463d54f171",
+      "tools/kws_wav.c": "41ae7fa10b6f41afc8c2d80bc586ecf5476fc6d8185ffbaf2a807ea69135e4de"
+    }
+  },
+  "facts": {
+    "clip_count": 13,
+    "label_source": "machine_three_asr",
+    "development_only": true,
+    "human_gold": false,
+    "input_seconds": 27.76,
+    "totals": {
+      "processed_samples": 444160,
+      "processed_frames": 1375,
+      "speech_frames": 879,
+      "blank_top1_frames": 1317,
+      "decoder_hits": 0,
+      "refractory_suppressed": 0,
+      "detections": 0,
+      "external_vad_frames": 0,
+      "discontinuities": 0,
+      "lost_samples": 0
+    },
+    "blank_top1_fraction": 0.9578181818181818,
+    "nonblank_top1_frames": 58,
+    "all_blank_top1_clip_count": 6,
+    "all_blank_top1_clip_ids": [
+      "tqp-qwen06-03",
+      "tqp-qwen06-10",
+      "tqp-qwen06-11",
+      "tqp-qwen06-14",
+      "tqp-qwen06-15",
+      "tqp-qwen17-15"
+    ],
+    "some_nonblank_top1_clip_count": 7,
+    "all_clips_have_speech_active_frames": true,
+    "all_clips_exit_zero": true,
+    "all_eof_pending_keyword_indices": [
+      -1
+    ],
+    "keywords": [
+      {
+        "keyword_id": 1,
+        "threshold": 0.550000011920929,
+        "tokens": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "min_trailing_blanks": 0,
+        "priority": 0,
+        "prefix_policy_code": 0,
+        "prefix_policy": "immediate",
+        "grace_frames": 0
+      },
+      {
+        "keyword_id": 2,
+        "threshold": 0.550000011920929,
+        "tokens": [
+          3,
+          4,
+          3,
+          4
+        ],
+        "min_trailing_blanks": 0,
+        "priority": 0,
+        "prefix_policy_code": 0,
+        "prefix_policy": "immediate",
+        "grace_frames": 0
+      }
+    ]
+  },
+  "diagnosis": [
+    {
+      "conclusion": "No decoder event was admitted; no event was suppressed by the refractory window.",
+      "confidence": "established",
+      "basis": "All decoder_hits, refractory_suppressed, and detections counters are zero. Engine counts decoder hit before refractory filtering.",
+      "source": [
+        "src/kws.c:321-344"
+      ]
+    },
+    {
+      "conclusion": "Final-confirm, trailing-blank wait, and grace/lookahead policy do not explain this run.",
+      "confidence": "established for exact frozen pack",
+      "basis": "Both keywords use immediate policy, zero min_trailing_blanks and zero grace. Eligible terminals emit in the same decoder step. No separately configurable lookahead or min_score exists in this runtime; the confidence threshold is pack.threshold (0.55), separate from the -16 path-retention gate.",
+      "source": [
+        "src/keyword_pack.c:75-82",
+        "src/decoder.c:549-584",
+        "src/decoder.c:644-656",
+        "src/kws.c:247-269"
+      ]
+    },
+    {
+      "conclusion": "All-blank-top1 acoustic output is a decisive failure mechanism for six clips under the current four-token decoder policy.",
+      "confidence": "deduced from counters plus exact source",
+      "basis": "Every depth-4 path must take three non-root child advances. If every frame is blank-top1, each advance is non-top and adds -8.25 retention cost. Their combined cost is at most -24.75 before additional decay, below the required -16. Root may also be blocked if its blank-to-root gap exceeds 0.5. Thus threshold-only lowering cannot rescue these all-blank clips with unchanged search policy.",
+      "source": [
+        "src/decoder.c:505-528",
+        "src/decoder.c:549-564",
+        "generated/kws_parameter_limits.h:24-49"
+      ]
+    },
+    {
+      "conclusion": "The seven clips with nonblank frames cannot yet be assigned to missing/wrong token sequence, root-start exclusion, retention failure, VAD-at-terminal failure, or confidence-threshold failure.",
+      "confidence": "unknown without frame-level evidence",
+      "basis": "Counters omit token identities/order, logit gaps, trie depths, terminal confidence, and terminal gate history. Nonblank argmax is not evidence of the complete target sequence.",
+      "source": [
+        "tools/kws_wav.c:170-195"
+      ]
+    },
+    {
+      "conclusion": "A total speech-gate failure is ruled out, but speech gating at the relevant terminal frame is still unknown.",
+      "confidence": "established aggregate; per-terminal unknown",
+      "basis": "879 speech-active frames, and every clip has some; the speech flag is an RMS energy gate, not a speech recognizer or feature-quality check. It is required at terminal admission.",
+      "source": [
+        "src/frontend.c:147-153",
+        "src/kws.c:489-495",
+        "src/decoder.c:549-551"
+      ]
+    },
+    {
+      "conclusion": "The runner has no EOF flush, but omission of a conventional zero-padded tail flush cannot release a final-confirm event for these inputs and pack.",
+      "confidence": "static source plus tail-energy deduction; no padding experiment performed",
+      "basis": "Every clip leaves 240 new samples (15 ms), plus 80 overlap samples, in a partial 400-sample frame. Its buffered last 320 samples are all below -55 dBFS. Completing that frame with 80 zeros makes it VAD-inactive, as would all later zero-only frames. This pack has no pending or immediate trailing-blank wait and cannot newly qualify a terminal on a VAD-inactive frame. This does not judge whether TTS speech was clipped before the existing file tail.",
+      "source": [
+        "src/frontend.c:196-211",
+        "tools/kws_wav.c:98-155",
+        "src/decoder.c:549-584"
+      ]
+    }
+  ],
+  "remaining_unknowns": [
+    "Whether frontend features are collapsed, inappropriate for this audio domain, or otherwise mismatched; blank-top1 counters cannot distinguish a feature problem from acoustic-model behavior.",
+    "Exact per-frame token sequence, blank/root margins, full-path acoustic confidence, and retention provenance on the seven nonblank clips.",
+    "Whether a terminal path appeared only while the energy gate was inactive.",
+    "Human correctness/quality of labels: these are machine-labelled synthetic development positives, not human gold or a generalization evaluation."
+  ],
+  "tail_arithmetic_only": {
+    "no_padding_or_flush_executed": true,
+    "frame_length_samples": 400,
+    "hop_samples": 320,
+    "all_input_sample_counts_divisible_by_320": true,
+    "all_real_last_frame_end_samples": "input_sample_count - 240",
+    "all_new_unframed_tail_samples": 240,
+    "all_new_unframed_tail_ms": 15,
+    "overlap_plus_tail_buffer_samples": 320,
+    "hypothetical_padding_needed_for_one_frame": 80,
+    "maximum_last_320_sample_dbfs": -75.75895816953566,
+    "maximum_hypothetical_padded_frame_dbfs": -76.72801740952377,
+    "speech_gate_dbfs": -55.0,
+    "meaning": "Numerical tail energy check only. Inputs and real frame endpoints were unchanged; no padded samples, new model execution, or new decoder replay."
+  },
+  "per_clip_counts": [
+    {
+      "sample_id": "tqp-qwen06-03",
+      "target_text": "小窝小窝",
+      "frames": 127,
+      "speech_frames": 56,
+      "blank_top1_frames": 127,
+      "nonblank_top1_frames": 0
+    },
+    {
+      "sample_id": "tqp-qwen06-05",
+      "target_text": "你好小窝",
+      "frames": 71,
+      "speech_frames": 38,
+      "blank_top1_frames": 51,
+      "nonblank_top1_frames": 20
+    },
+    {
+      "sample_id": "tqp-qwen06-06",
+      "target_text": "小窝小窝",
+      "frames": 83,
+      "speech_frames": 57,
+      "blank_top1_frames": 81,
+      "nonblank_top1_frames": 2
+    },
+    {
+      "sample_id": "tqp-qwen06-10",
+      "target_text": "小窝小窝",
+      "frames": 191,
+      "speech_frames": 99,
+      "blank_top1_frames": 191,
+      "nonblank_top1_frames": 0
+    },
+    {
+      "sample_id": "tqp-qwen06-11",
+      "target_text": "小窝小窝",
+      "frames": 255,
+      "speech_frames": 106,
+      "blank_top1_frames": 255,
+      "nonblank_top1_frames": 0
+    },
+    {
+      "sample_id": "tqp-qwen06-14",
+      "target_text": "小窝小窝",
+      "frames": 111,
+      "speech_frames": 68,
+      "blank_top1_frames": 111,
+      "nonblank_top1_frames": 0
+    },
+    {
+      "sample_id": "tqp-qwen06-15",
+      "target_text": "小窝小窝",
+      "frames": 95,
+      "speech_frames": 57,
+      "blank_top1_frames": 95,
+      "nonblank_top1_frames": 0
+    },
+    {
+      "sample_id": "tqp-qwen17-01",
+      "target_text": "你好小窝",
+      "frames": 67,
+      "speech_frames": 52,
+      "blank_top1_frames": 50,
+      "nonblank_top1_frames": 17
+    },
+    {
+      "sample_id": "tqp-qwen17-02",
+      "target_text": "小窝小窝",
+      "frames": 87,
+      "speech_frames": 82,
+      "blank_top1_frames": 81,
+      "nonblank_top1_frames": 6
+    },
+    {
+      "sample_id": "tqp-qwen17-03",
+      "target_text": "小窝小窝",
+      "frames": 59,
+      "speech_frames": 55,
+      "blank_top1_frames": 57,
+      "nonblank_top1_frames": 2
+    },
+    {
+      "sample_id": "tqp-qwen17-06",
+      "target_text": "小窝小窝",
+      "frames": 83,
+      "speech_frames": 79,
+      "blank_top1_frames": 74,
+      "nonblank_top1_frames": 9
+    },
+    {
+      "sample_id": "tqp-qwen17-14",
+      "target_text": "小窝小窝",
+      "frames": 83,
+      "speech_frames": 71,
+      "blank_top1_frames": 81,
+      "nonblank_top1_frames": 2
+    },
+    {
+      "sample_id": "tqp-qwen17-15",
+      "target_text": "小窝小窝",
+      "frames": 63,
+      "speech_frames": 59,
+      "blank_top1_frames": 63,
+      "nonblank_top1_frames": 0
+    }
+  ],
+  "next_evidence_needed": "Frame-level logits/token order and exact fixed-policy decoder-path gate history. Posterior trace proposal is handled separately; no implementation performed here.",
+  "preservation": {
+    "run_receipt_files_snapshotted_and_unchanged": 68,
+    "all_completion_output_hashes_match": true
+  },
+  "evidence_boundary": {
+    "far_available": false,
+    "human_frr_available": false,
+    "shipping_approved": false,
+    "generalization_claim_available": false,
+    "training_admitted": false
+  }
+}

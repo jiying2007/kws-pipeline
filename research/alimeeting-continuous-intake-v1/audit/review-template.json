@@ -1,0 +1,72 @@
+{
+  "audit_sha256": "95b2f7b6abd409fe0a17e597f49a01aa0bbd97f86f4ec807762c609fd5a0aca3",
+  "purpose": "development only; complete BEFORE inspecting any KWS outputs",
+  "rows": [
+    {
+      "all_speakers_and_boundaries_listened": false,
+      "decision": "pending",
+      "pcm_sha256": "9557fb6c4289d5884209a1036ed4f1d4bf91ac4d42702a261d023bb22969981e",
+      "reason": "",
+      "recording": "alimeeting-eval-R8001_M8004",
+      "textgrid_sha256": "e5fe941174fe4140bb5923b7caf2cbdd68d8d2a86086e4f00c68afc90d09dbad"
+    },
+    {
+      "all_speakers_and_boundaries_listened": false,
+      "decision": "pending",
+      "pcm_sha256": "76d9a668e985e2f42e83f0ad8f100a433250dcf7e085a2b12201841fe07c21be",
+      "reason": "",
+      "recording": "alimeeting-eval-R8003_M8001",
+      "textgrid_sha256": "a015bbcc642596ad8e40de7578208510e920832d15320aa109a0e9e3256d7235"
+    },
+    {
+      "all_speakers_and_boundaries_listened": false,
+      "decision": "pending",
+      "pcm_sha256": "8e7eb2648ff392f86abe352655f25b338f2b618b6ea6e011037418c27ef68389",
+      "reason": "",
+      "recording": "alimeeting-eval-R8007_M8010",
+      "textgrid_sha256": "0ab9ae505fd81a283e645ce9896610c57e34e747e5551144f98f0cbac0604e44"
+    },
+    {
+      "all_speakers_and_boundaries_listened": false,
+      "decision": "pending",
+      "pcm_sha256": "783167fa36feabe00d2f761636d1b6c95b2251f65bd4e9d2c8bdecb75bdd4943",
+      "reason": "",
+      "recording": "alimeeting-eval-R8007_M8011",
+      "textgrid_sha256": "4baea9f7b9ef4182c4fceeb3a10d0ea966359b214fa04ae54434fab084b8c316"
+    },
+    {
+      "all_speakers_and_boundaries_listened": false,
+      "decision": "pending",
+      "pcm_sha256": "dde949cef1b1ad51355f777fa88931b2305d4bac504dc1896f11e47d30454aac",
+      "reason": "",
+      "recording": "alimeeting-eval-R8008_M8013",
+      "textgrid_sha256": "b0f938c81b95728bd38f7aec655f6804ca4dcc3182bb0facb8d05a9a84293869"
+    },
+    {
+      "all_speakers_and_boundaries_listened": false,
+      "decision": "pending",
+      "pcm_sha256": "f6f7f9b2fdaba90887d7949065163ad30dd66b7d933acd76299e16e26e87b47e",
+      "reason": "",
+      "recording": "alimeeting-eval-R8009_M8018",
+      "textgrid_sha256": "be91df9d87f0f988ade6d1b2fdba82f4533a4e994fb22f8935f27b4bd7d0300e"
+    },
+    {
+      "all_speakers_and_boundaries_listened": false,
+      "decision": "pending",
+      "pcm_sha256": "96945e3a198855c728e3f12b282dff14db547d6e91bd4edeb822f096aee28442",
+      "reason": "",
+      "recording": "alimeeting-eval-R8009_M8019",
+      "textgrid_sha256": "dd85bfb2b920ac064b61e1fb8a09ab378a9e10422b48d23cd3030e2f02271b7c"
+    },
+    {
+      "all_speakers_and_boundaries_listened": false,
+      "decision": "pending",
+      "pcm_sha256": "619d19a55238c767d51ac19c6c9ccdcf52bd9bdf774f6a1788a58d272347109d",
+      "reason": "",
+      "recording": "alimeeting-eval-R8009_M8020",
+      "textgrid_sha256": "6d82a5c11a1d237b8f462aeca2844dd969b5b473e13b7fa2bb45722a2f12e032"
+    }
+  ],
+  "sealed_qualification": false,
+  "training_source_audit": "pending"
+}

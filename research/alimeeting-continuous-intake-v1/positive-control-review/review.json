@@ -1,0 +1,178 @@
+{
+  "schema": "positive-control-readonly-review-v1",
+  "conclusion": "No current same-runner positive-control receipt found in the scoped non-heldout research and training-provenance search.",
+  "fixed_tuple": {
+    "model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+    "pack_sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+    "threshold": 0.55,
+    "requested_source_commit_prefix": "11b93abe",
+    "requested_source_tree_prefix": "b8ae29"
+  },
+  "model_metadata": {
+    "model_bytes": 6812,
+    "abi": 2,
+    "feature_dim": 32,
+    "hidden_dim": 64,
+    "vocab_size": 5,
+    "frontend_name": "logmel",
+    "frontend_kind": 0,
+    "frontend_spec_version": 2,
+    "architecture_documented": "int8-weight tanh recurrent",
+    "training_examples": 1856,
+    "training_manifest_counts": {
+      "train.tsv": 1728,
+      "hard-negatives.tsv": 128
+    },
+    "distinct_training_file_sha256": 1856,
+    "distinct_training_pcm_sha256": 1856,
+    "epochs": 36,
+    "optimizer": "AdamW",
+    "seed": 1337,
+    "training_repository_sha": "a849d7ccbbfec83863115d726f40bbdd0121f948",
+    "release_source_sha": "749187ec1d6662658f06aa9c76d47fde835968db",
+    "training_run_id": 34134789576,
+    "checkpoint_sha256": "d005bfe74188c0e24e9e665c10251fd6feea5c879ebcbe96cb8c85f6a85ea14b",
+    "training_corpus_sha256": "d4a0966510ca007f5f84b4f15d2b2dfe1d7d5d55f425375ace6213ea2fa15b3c",
+    "train_manifest_sha256": "562ebb8a5ff446673713986ad19cf7a28a85fc62d50e6a8886239685691deadf",
+    "hard_negative_training_manifest_sha256": "09dfaa6ed0f55b10faa0db96a4f259da50f055c960adf5529e5696b770d44e19",
+    "current_training_config_generator": "tone",
+    "current_training_config_afe": "proxy",
+    "scope": "Synthetic-only; no real human speech in this evidence class. Current tone config is supporting context, not a verified byte-identical historical config."
+  },
+  "historical_response_evidence": {
+    "kind": "Two synthetic-negative false accepts, not a positive-control or recall measurement",
+    "receipt": "research/saved-diagnostics-2026-10-09/shipping-diagnosis-pinned-v2.json",
+    "run_id": 37860130019,
+    "artifact_id": 11585689303,
+    "original_zip_sha256": "77e3d3fda81bef000c72927bf196dbed1b680e431c4455ee122ecdbdef1a38d0",
+    "events": 2,
+    "same_model_hash": true,
+    "current_runner_binding": false,
+    "event_state_trace_present": false,
+    "interpretation": "Historical same-model event emission weighs against an always-constant never-event characterization of the historical setup. It does not prove current-run pipeline liveness or positive sensitivity."
+  },
+  "candidate_controls": [
+    {
+      "candidate": "Original historical training positives",
+      "location": "Original train.tsv from model-training run 34134789576, corpus lineage listed in registry xiaowo-model-provenance.json",
+      "status": "Strongest same-model training control family; exact positive row labels and local waveform availability not established. Provenance supplies 1728 train and 128 training hard-negative identities, not a current positive response receipt. Do not use holdout/qualification members."
+    },
+    {
+      "candidate": "N1 human-reviewed single utterance",
+      "location": "kws-data commit 3856a7f07ad6fd571260103ce27469aabb6f4ea5, research/2026-10-07-single-k1-followed-wu",
+      "text": "你好小窝，屋里有人",
+      "source_native_frames": 65536,
+      "source_native_hz": 44100,
+      "source_pcm16_frames": 23778,
+      "status": "Explicitly exposed diagnostic material. Human review was text-exposed and not blinded; no timing/gold/admission claim. Generation run explicitly performed no KWS. Could be a separately frozen speech-response diagnostic, not an expected-pass control for the tone-trained RNN."
+    },
+    {
+      "candidate": "M1 and M2 exposed Melo development utterances",
+      "location": "research/melo5-leading-context-v1 and original public data archive references",
+      "status": "M1/M2 words have historical human labels, but response receipts are A20 not this RNN. Six-column first-prefix marginalizer results are saved posterior mathematics, not current C forward results."
+    },
+    {
+      "candidate": "Existing development inventory",
+      "location": "research/effect-data-inventory-v2/development.jsonl",
+      "rows": 385,
+      "counts": {
+        "known-far-run-38482297930": 360,
+        "screen32-run-38018029787": 16,
+        "k1-six-original-r5": 6,
+        "known-far-restoration-extra": 3
+      },
+      "status": "Not a known-positive receipt. Unconfirmed screen32/new32 TTS cannot supply recall truth. Ignore negative-only files for positive sensitivity. Exclude base/test.continuous.wav and base/qualification.continuous.wav despite development labels; calibration continuous also lacks verified positive labels in inspected metadata."
+    }
+  ],
+  "binding_gaps": [
+    "No inspected receipt binds positive input hashes, current exact C source, actual invoked executable, model, pack, threshold, complete streaming state/reset/chunking/VAD, and emitted output together.",
+    "configs/shipping.xiaowo.json explicitly sets recalibration_required=true and notes removing deprecated token_boost from floating-point arithmetic may change boundary decisions.",
+    "Historical training repository SHA differs from release SHA and current requested merged source; historical git object was unavailable locally.",
+    "N1 A20 metadata binds payload a80b233d3c958d25f49085f487ef5cde839bd69f803ed057b59bbd20adc6e43d, 1565280 bytes, not ece44 model.",
+    "k1-prefix-marginal candidate has no runtime integration and zero new model/frontend/audio calls; A>0.5 is unrelated to current keyword threshold0.55.",
+    "Model receipts describe genuine optimization and nonzero quantized matrices; no conclusion about current disabled/VAD bypass dispatch can be established from those receipts alone. Root is independently inspecting source dispatch."
+  ],
+  "method_boundaries": {
+    "model_audio_execution": 0,
+    "downloads": 0,
+    "candidate_writes": 0,
+    "qualification_or_test_waveform_reads": 0,
+    "separate_heldout_result_files_opened": 0,
+    "heldout_metrics_used": false
+  },
+  "source_metadata": [
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/registry.json",
+      "bytes": 3032,
+      "sha256": "7fabcd63d2ced31892e83f5196bc8dbf7e20ec4f6416c57535ff86c458b06706"
+    },
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/xiaowo-model-provenance.json",
+      "bytes": 883535,
+      "sha256": "5a3d354f35eed4313da37e4d818000e747f1cbe5f39a7e925081e056687fbdee"
+    },
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/training-run-summary.json",
+      "bytes": 309335,
+      "sha256": "1d2bd46c7f97ea27f0e4d385f8919179458c10c92a84edb359f995befdef79bc"
+    },
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/configs/training/xiaowo.torch-domain.json",
+      "bytes": 7504,
+      "sha256": "e61cc6136203766d8780a22195b7ade9e014b1800dcfca0d7771a89e36455405"
+    },
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/configs/shipping.xiaowo.json",
+      "bytes": 4119,
+      "sha256": "4f39810a362096f2345c8e2e3326c3899e0d30b0b5e0632a6f2622a1364d5b21"
+    },
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/research/near_pronunciation_v1/README.md",
+      "bytes": 13769,
+      "sha256": "e7c54300f6cc63518307c6604d8f7e3f77b05acf653be4420e35b09111e531bc"
+    },
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/research/single_k1_followed_wu/README.md",
+      "bytes": 7303,
+      "sha256": "88639ef18efc263759627d4f30765e303a46ae1d549e4058cf412044ccde8109"
+    },
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/research/n1-wholeclip-leading-v1/metadata/bindings.json",
+      "bytes": 24809,
+      "sha256": "292fa228c80915847da17598faf3d85ca50594cf2794f287fc9c16224f3e665e"
+    },
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/research/k1-prefix-marginal-v1/README.md",
+      "bytes": 6935,
+      "sha256": "f777d6084e4f50b8bd4c633d079f5ca2a999d49c06b4468657148482169d839b"
+    },
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/research/effect-data-inventory-v2/development.jsonl",
+      "bytes": 386647,
+      "sha256": "bc4ca47ef47645bb2cd80dc969d2bf637dfd4c852d49df33c14211904c3aea74"
+    },
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/research/saved-diagnostics-2026-10-09/shipping-diagnosis-pinned-v2.json",
+      "bytes": 3854,
+      "sha256": "f813fc33e984a7a24b76e82a18cf4b221344e27c92af2ff633b2cab1d5b235da"
+    },
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/research/near_pronunciation_v1/data_manifest.json",
+      "bytes": 19350,
+      "sha256": "22cf8b47108fdd2fc33fa3bfdd8611c705474c7b3dd94d5997106195895f8d4f"
+    }
+  ],
+  "near_pronunciation_review": {
+    "receipt": "research/near_pronunciation_v1/data_manifest.json",
+    "purpose": "saved_synthetic_mechanism_regression",
+    "status": "VERIFIED_SAVED_TRACES_NOT_REPLAYED",
+    "same_model_pack": true,
+    "threshold": 0.55,
+    "admitted_development_positive_response_results": false,
+    "reason": "Only synthetic-negative overlapping source traces, source fragments and cold controls. Source cases [3,3,3,4] and [3,4,3,1] are explicitly not positive-wake coverage. Human event truth and initial-state equivalence unknown. Independent accent positives0 and far-field positives0. Prepared decoder hypotheses and fabricated contract tests do not supply admitted positive results. Future real-data entry points are fail-closed UNVERIFIED_QUALIFIED_EVIDENCE.",
+    "source_member_identity_sha256": "5d1d3929a5c346a58c25bf1ef9a0c811083697fd711e77626597cf058af14d77",
+    "primary_saved_frames": 360598,
+    "primary_synthetic_pcm_seconds": 7212.0,
+    "interpretation": "Not an available positive control; does not certify current source acoustic sensitivity."
+  }
+}

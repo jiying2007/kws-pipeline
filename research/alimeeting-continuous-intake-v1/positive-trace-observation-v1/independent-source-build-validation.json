@@ -1,0 +1,208 @@
+{
+  "all_build_outputs_current_hashes_verified": 37,
+  "build_commands_executed": 0,
+  "build_receipt_sha256": "23f960bf1e0ecc54815d5e1adfe4ff3dccccad5361c5895acf3b0736d5aefd47",
+  "created_utc": "2026-10-14T14:14:00.011520+00:00",
+  "exact_three_targets_verified": true,
+  "identical_core_archives": {
+    "libkws_pipeline.a": {
+      "byte_identical_to_original_control_build": true,
+      "sha256": "de07b4c6b572989b68c95dedd58d8eaeff1bac4290cad5beb0591c5cf60430fe"
+    },
+    "libkws_tool_io.a": {
+      "byte_identical_to_original_control_build": true,
+      "sha256": "400d383f6c35e5e91f7afbc28b79c95cd86c20db4d03de42e4e451ec49750370"
+    }
+  },
+  "model_calls": 0,
+  "original_compiler_and_cmake_current_hashes_verified": true,
+  "other_bound_inputs": [
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/kws_wav",
+      "sha256": "53a5dcb50c599d88bb72b2cfbaf6ff5d6e7a379ecef3011f28f5820261d155a9"
+    },
+    {
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-3.31.6/cmake/data/bin/cmake",
+      "sha256": "57452fa01ed0f69552c06d3e25edd0d9375347b982dfb709393526cb45396d6b"
+    },
+    {
+      "path": "/usr/bin/x86_64-linux-gnu-gcc-14",
+      "sha256": "a23ecab8ff08f09ad8c80602c2c5df7f49e09c25905cb8975902e101bf72635f"
+    }
+  ],
+  "p4_whole_tree_sha256": "dfa032c448f26e4c0b29f009b3bc93409865b29ca583150593a433445eb730b3",
+  "parent_build_receipt_sha256": "78b2988e60a4bf6b875934222fd5e732633ca34de64e470c433e74289f57ac8a",
+  "schema": "independent-trace-source-build-validation-v1",
+  "scope": "Static hashes and recorded command inspection only. No compilation, trace generation, decoder replay, or model invocation.",
+  "source_files_verified_against_p4_git_blob_and_sha256": [
+    {
+      "git_blob_sha1": "d5c25af874923f972b0122a64197cdb0ffe55f12",
+      "path": "CMakeLists.txt",
+      "sha256": "cfe16827b5e9df5e92da677891f1b29155a0ebe897b1d3f6a1b27ed6e74b7aca"
+    },
+    {
+      "git_blob_sha1": "3fcfa6b35fadb2b940c07aca032cc68a0e652203",
+      "path": "cmake/KwsBuildIdentity.cmake",
+      "sha256": "54a9b1335201ebc129c162d3915b046d62bfdf4b76f1abc1c466357c83adc8c3"
+    },
+    {
+      "git_blob_sha1": "b644697980004abcbbdb155dbc2d46d638ffb127",
+      "path": "cmake/KwsPipelineConfig.cmake.in",
+      "sha256": "1a7de8a75f3c279c4538afc8c1a95c0ea7aec961777fa56d90cfaffc4942da3b"
+    },
+    {
+      "git_blob_sha1": "572d1a4edf1ee4b903c990687c12e84a23b9c837",
+      "path": "cmake/KwsSourceRevision.cmake",
+      "sha256": "ed0ca5f5b2586e8120348754d5a220f3cc002cdc7d2761a6e727c703276dc5dc"
+    },
+    {
+      "git_blob_sha1": "c5f0daab56fac372381ac3bdb74223bd44506972",
+      "path": "cmake/kws-pipeline.pc.in",
+      "sha256": "d2c22a39ba9ddde6dc84d438f3bb5fb6af5e2136e819ce908ef6c0cbc33b6637"
+    },
+    {
+      "git_blob_sha1": "db7a1dd8595949a97be10b3fe38c18d6f965213e",
+      "path": "cmake/kws_build_config.h.in",
+      "sha256": "46ea897e10ab6d12769ae8089b86207f19a101ec37056ff2b81404512c6712c1"
+    },
+    {
+      "git_blob_sha1": "bfa57b9b94e090d05db5fedde40dad6c3fdd3b2e",
+      "path": "cmake/kws_source_revision.h.in",
+      "sha256": "7194c40f9c1a45b08762d7b198426b3bf4fcbaf23c345a77a6fac8202d7eaedc"
+    },
+    {
+      "git_blob_sha1": "bcb53fa1ca1a8240acd9d751f137a955f4531835",
+      "path": "configs/parameter-contract.json",
+      "sha256": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06"
+    },
+    {
+      "git_blob_sha1": "28b1f8a0a3d93855e1835288b2cc56f63e1e2a04",
+      "path": "include/kws_pipeline/kws.h",
+      "sha256": "3405855e97cde28cf2842bb9c607e931347395790fe3ed268617e662af676496"
+    },
+    {
+      "git_blob_sha1": "66e68f1f91179c1e32c7bfc27d7cf3e010d73b3f",
+      "path": "src/build_info.c",
+      "sha256": "8e900d3a077af5e7006909941b666481248fadecdeb3274eb546c8f56030ac7b"
+    },
+    {
+      "git_blob_sha1": "96464ce66976003d13257b6131286546a7b9fe5f",
+      "path": "src/decoder.c",
+      "sha256": "8eb2631073482414916c36afeb6fc0578ca137b9f9ab995dd9d579f9c32d8f2a"
+    },
+    {
+      "git_blob_sha1": "49dc4703a32e089ef488d7389e49e11cbd6b840b",
+      "path": "src/decoder.h",
+      "sha256": "3357a957cd2b07108bdb7fa7657b8c807db347950eeeda94f490a0505604c76b"
+    },
+    {
+      "git_blob_sha1": "da95828946f948f3927a156dc2ffbad64bc76ff9",
+      "path": "src/frontend.c",
+      "sha256": "4b15da591837859232a91200b81a70ffc683a79f08bf12b0adb368ae5e680b27"
+    },
+    {
+      "git_blob_sha1": "af101f9c18d021f381ca82568af23585328657cd",
+      "path": "src/frontend.h",
+      "sha256": "1c9a3663970e60d2a83e862e6a13aa04860c466ab9f54a7dbdc56864e4de63dd"
+    },
+    {
+      "git_blob_sha1": "94fbfc8cebfdde07d3c911bf793e636ae51f1e08",
+      "path": "src/keyword_pack.c",
+      "sha256": "967f415850a7fbf87ad088f310ed0b2fdd78317c9ca07fc1128622cabdcc9b57"
+    },
+    {
+      "git_blob_sha1": "7227def7216014d76737c99ff568e9bba12922b7",
+      "path": "src/kws.c",
+      "sha256": "cb7fbffd0ff8617b78ad4d7afd5557c1c13fec06250acfdc10713c463d54f171"
+    },
+    {
+      "git_blob_sha1": "7e8450b74c0985ffcbc5d52297dd8c1c1ad0decf",
+      "path": "src/kws_debug.h",
+      "sha256": "f5f84746df743ef8d6601e383014413fcee302fdf315445bfd7ff76a9d8c0b16"
+    },
+    {
+      "git_blob_sha1": "63bb94ccc44c5727226afdce1c5c7688f68124c8",
+      "path": "src/model.c",
+      "sha256": "af783d7123126f40f7c30f576290cc961ecfc2c987e7abb1c24c633a138adf83"
+    },
+    {
+      "git_blob_sha1": "3abc8ec562d426bf25629435b6c319bd2af80ab6",
+      "path": "src/model.h",
+      "sha256": "a3d9286d5653c340b0b6d513b0987feefc51d7f9a9e550480026d36b2664f12d"
+    },
+    {
+      "git_blob_sha1": "3b9e31b5cc9fa14d602e32e2f25591f27f03a689",
+      "path": "tools/gen_parameter_limits.py",
+      "sha256": "a7fc02bcd26962f0c1a91b221651f7329465ea760076b775577d5918e02fbcb8"
+    },
+    {
+      "git_blob_sha1": "3002fafe6d430a31daa40b7130956a0f553555f0",
+      "path": "tools/kws_timeline.h",
+      "sha256": "94087f896c9892f7f0c8cc5be70faba51216b89b548b66161f17215deac79022"
+    },
+    {
+      "git_blob_sha1": "001b143864be2172aa315486afabcd96c1c6e214",
+      "path": "tools/kws_wav.c",
+      "sha256": "41ae7fa10b6f41afc8c2d80bc586ecf5476fc6d8185ffbaf2a807ea69135e4de"
+    },
+    {
+      "git_blob_sha1": "6b5d22aaa1c84900b2505b79770973ef846a131b",
+      "path": "tools/sha256.c",
+      "sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066"
+    },
+    {
+      "git_blob_sha1": "881936888a505afde57493b29f7ad5a5826c6a9e",
+      "path": "tools/sha256.h",
+      "sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723"
+    },
+    {
+      "git_blob_sha1": "1376cbceea379f3a0357abb80e154c7212270eac",
+      "path": "tools/tool_io.c",
+      "sha256": "c8aef71ea35ced4b6e1648eb9154420c861d0e4daf8ae2758f930160d295d114"
+    },
+    {
+      "git_blob_sha1": "44e014cc43bb2788ce861acde9a681c44d3d1ca2",
+      "path": "tools/tool_io.h",
+      "sha256": "a321ab3bb2c7520a6e31cb9f20f2873d30b4059c390021705ac82e8cc2dd4c95"
+    },
+    {
+      "git_blob_sha1": "7d10f0fa3982f4f5d6a0ba12ede9067d61e5bf4d",
+      "path": "models/registry/model-749187ec1d66/xiaowo-model.kwm",
+      "sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402"
+    },
+    {
+      "git_blob_sha1": "a3c799ec4893f930b4a16ecfe24f99e1f6b28134",
+      "path": "models/registry/model-749187ec1d66/xiaowo-keywords.kwk",
+      "sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723"
+    },
+    {
+      "git_blob_sha1": "54044d2e801f60f80e81f6feda7a6531fcadd973",
+      "path": "tools/kws_posterior_dump.c",
+      "sha256": "397cee588487720b772d556ef72071e163ce502dfe8257c4d69c8d91799a9221"
+    },
+    {
+      "git_blob_sha1": "b9e8c3c9714f0001039f50ed993ad99fdb0b9e37",
+      "path": "tools/kws_decoder_replay.c",
+      "sha256": "86ff25540faa33c54b275ca943bdb8bfc7b96893c4542da2c78fd1340bae8483"
+    },
+    {
+      "git_blob_sha1": "db4a48cd2f963f57379691fca700a26affa27fb1",
+      "path": "tools/kws_decoder_path_replay.c",
+      "sha256": "180abd6371df76b9f9291703e8855c9e1845cbf894ac6d700460a0a1180ed365"
+    },
+    {
+      "git_blob_sha1": "93fe2d49bf32910eb7c55f9b2a912d0d4273ce82",
+      "path": "tools/kws_trace_io.c",
+      "sha256": "2f66cf4e8181462dc35e4a5d45a2b3578411b712db1ef22fca048c86232fab96"
+    },
+    {
+      "git_blob_sha1": "0c43167dfe5a5b54dc7c0b085acca1cb429ec512",
+      "path": "tools/kws_trace_io.h",
+      "sha256": "b8a28a5257294ebebc44e52bd65f03d8f175ae855e0da4cc8422a363221a1349"
+    }
+  ],
+  "source_revision": "11b93abe92427c3ece2a01f9a497cdb74bab0062",
+  "source_tree": "b8ae29e82097c38e92dbb1bb1cd4db10ade6cdc6",
+  "status": "pass",
+  "strict_release_configuration_verified": true
+}

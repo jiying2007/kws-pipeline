@@ -1,0 +1,59 @@
+{
+  "schema": "positive-trace-public-small-package-v1",
+  "files": [
+    {
+      "path": "build-receipt.json",
+      "bytes": 14854,
+      "sha256": "23f960bf1e0ecc54815d5e1adfe4ff3dccccad5361c5895acf3b0736d5aefd47"
+    },
+    {
+      "path": "diagnosis-summary.json",
+      "bytes": 2538,
+      "sha256": "93ef9b5a3612668a6d1a1dcf6eb6630306a53fda5e543f3df72b551094529c27"
+    },
+    {
+      "path": "run/receipt.json",
+      "bytes": 75984,
+      "sha256": "64241cc3dd05aadc4322071df8593c099f51195a07d88eef2aa057c0e7c4e1c9"
+    },
+    {
+      "path": "run/analysis.json",
+      "bytes": 33542,
+      "sha256": "87e42ae33d0bab894c0e6a5cc7e249e2919cd6b9394fec49a3f162247bb7fe3c"
+    },
+    {
+      "path": "build_trace.py",
+      "bytes": 2225,
+      "sha256": "081c11f064d805f5c7f7a24ea065a3694df8ed5add91edae856339f70d3963f3"
+    },
+    {
+      "path": "observe.py",
+      "bytes": 4613,
+      "sha256": "835091c0a13f3afb0a125c61bba6a379f85c402404ac657c1989e541ca947b86"
+    },
+    {
+      "path": "verify_package.py",
+      "bytes": 1847,
+      "sha256": "0c0dd102e05062f575c1da6a5ffbd1f7e3bd10a77835c21c69d8783c40f2a9a6"
+    },
+    {
+      "path": "independent-source-build-validation.json",
+      "bytes": 8694,
+      "sha256": "c60ac3957953d502d94fc1a0a7fec177fd11a6d867f8ab2ded53194f18f1dffa"
+    },
+    {
+      "path": "independent-observation-audit.json",
+      "bytes": 11692,
+      "sha256": "e1ccfe99fe4538f9ce992071224974f820e616674d1c420c7e222aca544cad85"
+    }
+  ],
+  "excluded": [
+    "audio",
+    "KWTR",
+    "per-frame trace JSON",
+    "compiled binaries",
+    "build logs"
+  ],
+  "raw_evidence_retained_locally": true,
+  "independent_review": "pass"
+}

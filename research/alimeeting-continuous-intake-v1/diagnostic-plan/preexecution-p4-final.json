@@ -1,0 +1,17 @@
+{
+  "accepted_negative_duration_s": 0,
+  "all_identity_prechecks_passed": true,
+  "audit_sha256": "95b2f7b6abd409fe0a17e597f49a01aa0bbd97f86f4ec807762c609fd5a0aca3",
+  "build_receipt_sha256": "78b2988e60a4bf6b875934222fd5e732633ca34de64e470c433e74289f57ac8a",
+  "confirmed_far_available": false,
+  "orchestrator_sha256": "05559ec796c55bad33252b7c46f4c4353a43eb9ca93c35da70f10af75a092305",
+  "output_directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-run-p4-11b93abe",
+  "output_was_absent": true,
+  "planned_samples": 242211440,
+  "runner_sha256": "53a5dcb50c599d88bb72b2cfbaf6ff5d6e7a379ecef3011f28f5820261d155a9",
+  "schema": "alimeeting-diagnostic-preexecution-v1",
+  "sessions": 8,
+  "source_revision": "11b93abe92427c3ece2a01f9a497cdb74bab0062",
+  "source_tree": "b8ae29e82097c38e92dbb1bb1cd4db10ade6cdc6",
+  "supersedes": "preexecution-p4.json (build receipt finalized; no execution under prior plan)"
+}

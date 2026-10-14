@@ -1,0 +1,35 @@
+{
+  "schema": "independent-asr-result-audit-v1",
+  "status": "pass",
+  "run_id": 38573117922,
+  "head_sha": "dc715906d9be0e8758aef53eeb44f382ea1204de",
+  "workflow_id": 384344728,
+  "artifact_id": 11899008382,
+  "archive_sha256": "f8bf70a0539d6ca7bd11dfed9229a087c0c7d27b943550f73136cd765f54ef0c",
+  "archive_members": 35,
+  "source_files_checked": 30,
+  "exact_regenerated_audio": 32,
+  "results": 94,
+  "unique_sample_family": 94,
+  "attempts_per_result": 1,
+  "third_selected": 30,
+  "score_json_and_bytes_reproduced": true,
+  "three_asr_candidates": 13,
+  "tts_engine_candidates": [
+    {
+      "tts_engine": "qwen06",
+      "samples": 16,
+      "three_asr_candidates": 7,
+      "candidate_rate": 0.4375
+    },
+    {
+      "tts_engine": "qwen17",
+      "samples": 16,
+      "three_asr_candidates": 6,
+      "candidate_rate": 0.375
+    }
+  ],
+  "human_gold": false,
+  "training_admitted": false,
+  "model_calls_by_audit": 0
+}

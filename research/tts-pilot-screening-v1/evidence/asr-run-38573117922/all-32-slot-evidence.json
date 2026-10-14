@@ -1,0 +1,1138 @@
+[
+  {
+    "sample_id": "tqp-qwen06-00",
+    "tts_engine": "qwen06",
+    "speaker": "Vivian",
+    "target_text": "你好小窝",
+    "repeat": 0,
+    "candidate": false,
+    "tier": "review",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，小窝。",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好小窝",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "你好 小沃",
+        "normalized": "你好小沃",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-01",
+    "tts_engine": "qwen06",
+    "speaker": "Vivian",
+    "target_text": "你好小窝",
+    "repeat": 1,
+    "candidate": false,
+    "tier": "review",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，小窝。",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好小窝",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "你好 小沃",
+        "normalized": "你好小沃",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-02",
+    "tts_engine": "qwen06",
+    "speaker": "Vivian",
+    "target_text": "小窝小窝",
+    "repeat": 0,
+    "candidate": false,
+    "tier": "review",
+    "third_reason": "primary_disagreement",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小ia窝小窝",
+        "normalized": "小ia窝小窝",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小窝 小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-03",
+    "tts_engine": "qwen06",
+    "speaker": "Vivian",
+    "target_text": "小窝小窝",
+    "repeat": 1,
+    "candidate": true,
+    "tier": "machine_three_asr_training_candidate",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-04",
+    "tts_engine": "qwen06",
+    "speaker": "Serena",
+    "target_text": "你好小窝",
+    "repeat": 0,
+    "candidate": false,
+    "tier": "reject_or_unresolved",
+    "third_reason": "primary_disagreement",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，小窝。",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好小屋",
+        "normalized": "你好小屋",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "你好,小屋。",
+        "normalized": "你好小屋",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-05",
+    "tts_engine": "qwen06",
+    "speaker": "Serena",
+    "target_text": "你好小窝",
+    "repeat": 1,
+    "candidate": true,
+    "tier": "machine_three_asr_training_candidate",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，小窝。",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好小窝",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "你好小窝。",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-06",
+    "tts_engine": "qwen06",
+    "speaker": "Serena",
+    "target_text": "小窝小窝",
+    "repeat": 0,
+    "candidate": true,
+    "tier": "machine_three_asr_training_candidate",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小窝小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-07",
+    "tts_engine": "qwen06",
+    "speaker": "Serena",
+    "target_text": "小窝小窝",
+    "repeat": 1,
+    "candidate": false,
+    "tier": "reject_or_unresolved",
+    "third_reason": "primary_disagreement",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小娥小我",
+        "normalized": "小娥小我",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小我小我",
+        "normalized": "小我小我",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-08",
+    "tts_engine": "qwen06",
+    "speaker": "Uncle_Fu",
+    "target_text": "你好小窝",
+    "repeat": 0,
+    "candidate": false,
+    "tier": "reject_or_unresolved",
+    "third_reason": null,
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，小吴。",
+        "normalized": "你好小吴",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好小吴",
+        "normalized": "你好小吴",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-09",
+    "tts_engine": "qwen06",
+    "speaker": "Uncle_Fu",
+    "target_text": "你好小窝",
+    "repeat": 1,
+    "candidate": false,
+    "tier": "reject_or_unresolved",
+    "third_reason": "primary_disagreement",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，小窝。",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好小哦",
+        "normalized": "你好小哦",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "你好小我",
+        "normalized": "你好小我",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-10",
+    "tts_engine": "qwen06",
+    "speaker": "Uncle_Fu",
+    "target_text": "小窝小窝",
+    "repeat": 0,
+    "candidate": true,
+    "tier": "machine_three_asr_training_candidate",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-11",
+    "tts_engine": "qwen06",
+    "speaker": "Uncle_Fu",
+    "target_text": "小窝小窝",
+    "repeat": 1,
+    "candidate": true,
+    "tier": "machine_three_asr_training_candidate",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小窝 小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-12",
+    "tts_engine": "qwen06",
+    "speaker": "Dylan",
+    "target_text": "你好小窝",
+    "repeat": 0,
+    "candidate": false,
+    "tier": "reject_or_unresolved",
+    "third_reason": "primary_disagreement",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，小吴。",
+        "normalized": "你好小吴",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好小屋",
+        "normalized": "你好小屋",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "你好小屋",
+        "normalized": "你好小屋",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-13",
+    "tts_engine": "qwen06",
+    "speaker": "Dylan",
+    "target_text": "你好小窝",
+    "repeat": 1,
+    "candidate": false,
+    "tier": "reject_or_unresolved",
+    "third_reason": "primary_disagreement",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，小吴。",
+        "normalized": "你好小吴",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好小屋",
+        "normalized": "你好小屋",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "你好小屋啊",
+        "normalized": "你好小屋啊",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-14",
+    "tts_engine": "qwen06",
+    "speaker": "Dylan",
+    "target_text": "小窝小窝",
+    "repeat": 0,
+    "candidate": true,
+    "tier": "machine_three_asr_training_candidate",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen06-15",
+    "tts_engine": "qwen06",
+    "speaker": "Dylan",
+    "target_text": "小窝小窝",
+    "repeat": 1,
+    "candidate": true,
+    "tier": "machine_three_asr_training_candidate",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-00",
+    "tts_engine": "qwen17",
+    "speaker": "Vivian",
+    "target_text": "你好小窝",
+    "repeat": 0,
+    "candidate": false,
+    "tier": "review",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，小窝。",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好小窝",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "你好 小沃",
+        "normalized": "你好小沃",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-01",
+    "tts_engine": "qwen17",
+    "speaker": "Vivian",
+    "target_text": "你好小窝",
+    "repeat": 1,
+    "candidate": true,
+    "tier": "machine_three_asr_training_candidate",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，小窝。",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好小窝",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "你好,小窝。",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-02",
+    "tts_engine": "qwen17",
+    "speaker": "Vivian",
+    "target_text": "小窝小窝",
+    "repeat": 0,
+    "candidate": true,
+    "tier": "machine_three_asr_training_candidate",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小窝 小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-03",
+    "tts_engine": "qwen17",
+    "speaker": "Vivian",
+    "target_text": "小窝小窝",
+    "repeat": 1,
+    "candidate": true,
+    "tier": "machine_three_asr_training_candidate",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-04",
+    "tts_engine": "qwen17",
+    "speaker": "Serena",
+    "target_text": "你好小窝",
+    "repeat": 0,
+    "candidate": false,
+    "tier": "reject_or_unresolved",
+    "third_reason": null,
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，笑我。",
+        "normalized": "你好笑我",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好笑我",
+        "normalized": "你好笑我",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-05",
+    "tts_engine": "qwen17",
+    "speaker": "Serena",
+    "target_text": "你好小窝",
+    "repeat": 1,
+    "candidate": false,
+    "tier": "reject_or_unresolved",
+    "third_reason": "primary_disagreement",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小悟空。",
+        "normalized": "小悟空",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "啊笑我哭",
+        "normalized": "啊笑我哭",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "笑我哭",
+        "normalized": "笑我哭",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-06",
+    "tts_engine": "qwen17",
+    "speaker": "Serena",
+    "target_text": "小窝小窝",
+    "repeat": 0,
+    "candidate": true,
+    "tier": "machine_three_asr_training_candidate",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小窝 小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-07",
+    "tts_engine": "qwen17",
+    "speaker": "Serena",
+    "target_text": "小窝小窝",
+    "repeat": 1,
+    "candidate": false,
+    "tier": "review",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "想窩想窩",
+        "normalized": "想窩想窩",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-08",
+    "tts_engine": "qwen17",
+    "speaker": "Uncle_Fu",
+    "target_text": "你好小窝",
+    "repeat": 0,
+    "candidate": false,
+    "tier": "review",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，小窝。",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好小窝",
+        "normalized": "你好小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "你好小我",
+        "normalized": "你好小我",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-09",
+    "tts_engine": "qwen17",
+    "speaker": "Uncle_Fu",
+    "target_text": "你好小窝",
+    "repeat": 1,
+    "candidate": false,
+    "tier": "reject_or_unresolved",
+    "third_reason": "primary_disagreement",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，小沃。",
+        "normalized": "你好小沃",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "啊你好小沃",
+        "normalized": "啊你好小沃",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "你好 小沃",
+        "normalized": "你好小沃",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-10",
+    "tts_engine": "qwen17",
+    "speaker": "Uncle_Fu",
+    "target_text": "小窝小窝",
+    "repeat": 0,
+    "candidate": false,
+    "tier": "reject_or_unresolved",
+    "third_reason": "primary_disagreement",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小吴，小吴。",
+        "normalized": "小吴小吴",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小乌小乌",
+        "normalized": "小乌小乌",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-11",
+    "tts_engine": "qwen17",
+    "speaker": "Uncle_Fu",
+    "target_text": "小窝小窝",
+    "repeat": 1,
+    "candidate": false,
+    "tier": "reject_or_unresolved",
+    "third_reason": "primary_disagreement",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "哈哈，小窝，小窝。",
+        "normalized": "哈哈小窝小窝",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "啊哈哈小窝小窝",
+        "normalized": "啊哈哈小窝小窝",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小我小我",
+        "normalized": "小我小我",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-12",
+    "tts_engine": "qwen17",
+    "speaker": "Dylan",
+    "target_text": "你好小窝",
+    "repeat": 0,
+    "candidate": false,
+    "tier": "reject_or_unresolved",
+    "third_reason": "primary_disagreement",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "你好，小吴。",
+        "normalized": "你好小吴",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好小屋啊",
+        "normalized": "你好小屋啊",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "你好小屋啊",
+        "normalized": "你好小屋啊",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-13",
+    "tts_engine": "qwen17",
+    "speaker": "Dylan",
+    "target_text": "你好小窝",
+    "repeat": 1,
+    "candidate": false,
+    "tier": "reject_or_unresolved",
+    "third_reason": "primary_disagreement",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "您好，小吴。",
+        "normalized": "您好小吴",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "你好小屋",
+        "normalized": "你好小屋",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "你好小屋哦",
+        "normalized": "你好小屋哦",
+        "equals_target": false,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-14",
+    "tts_engine": "qwen17",
+    "speaker": "Dylan",
+    "target_text": "小窝小窝",
+    "repeat": 0,
+    "candidate": true,
+    "tier": "machine_three_asr_training_candidate",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小窝 小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  },
+  {
+    "sample_id": "tqp-qwen17-15",
+    "tts_engine": "qwen17",
+    "speaker": "Dylan",
+    "target_text": "小窝小窝",
+    "repeat": 1,
+    "candidate": true,
+    "tier": "machine_three_asr_training_candidate",
+    "third_reason": "training_candidate_confirmation",
+    "asr": [
+      {
+        "family": "qwen06",
+        "raw_text": "小窝，小窝。",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "sensevoice",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      },
+      {
+        "family": "whisper",
+        "raw_text": "小窝小窝",
+        "normalized": "小窝小窝",
+        "equals_target": true,
+        "completeness": "complete",
+        "quality_flags": []
+      }
+    ]
+  }
+]

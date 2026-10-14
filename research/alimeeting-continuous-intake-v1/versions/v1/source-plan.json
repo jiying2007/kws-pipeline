@@ -1,0 +1,22 @@
+{
+  "advertised_hours_not_denominator": 4,
+  "archive": "Eval_Ali.tar.gz",
+  "evidence_class": "proposed-development-evaluation-not-acquired",
+  "expected_sessions": 8,
+  "license": "CC-BY-SA-4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "models_run": false,
+  "network_default": false,
+  "previous_head_bytes": 3673718355,
+  "publisher_sha256": null,
+  "recalibration_required": true,
+  "schema": "alimeeting-eval-intake-plan-v1",
+  "sealed_qualification": false,
+  "selection": "all Eval_Ali_far/audio_dir/*.wav; fixed channel index 0; whole sessions",
+  "sha256_lock_status": "not-yet-acquired-or-locked",
+  "shipping_approved": false,
+  "source_page": "https://www.openslr.org/119/",
+  "source_url": "https://speech-lab-share-data.oss-cn-shanghai.aliyuncs.com/AliMeeting/openlr/Eval_Ali.tar.gz",
+  "training_allowed": false,
+  "transcripts": "Eval_Ali_far/textgrid_dir/*.TextGrid; all speaker tiers"
+}

@@ -1,0 +1,107 @@
+{
+  "schema": "asr-audit-json-archive-allowlist-v1",
+  "run_id": 38573117922,
+  "json_files": [
+    {
+      "source_group": "original_result",
+      "filename": "run.verified.json",
+      "bytes": 12568,
+      "sha256": "ff897691601551289a7221a0ba7d096f8cbd6b1fe47ef8e3ba16d4b092077aaf",
+      "destination": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/run.verified.json"
+    },
+    {
+      "source_group": "original_result",
+      "filename": "jobs.verified.json",
+      "bytes": 3184,
+      "sha256": "6776f9b53e23ed3da0667fad37f02b2e2da31ed392e5d04ba9f96e67b3046b76",
+      "destination": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/jobs.verified.json"
+    },
+    {
+      "source_group": "original_result",
+      "filename": "artifacts.verified.json",
+      "bytes": 769,
+      "sha256": "a3dc9d5c8f46806e8df4333f8ea15b9b570b9b19bc139be21453b16173480f58",
+      "destination": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/artifacts.verified.json"
+    },
+    {
+      "source_group": "original_result",
+      "filename": "report.json",
+      "bytes": 31630,
+      "sha256": "5c4c4c909d9e3b8a02e5d39b0dfbafae1630d13028227d611aef8379a50538f4",
+      "destination": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/report.json"
+    },
+    {
+      "source_group": "original_result",
+      "filename": "results.json",
+      "bytes": 14500,
+      "sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05",
+      "destination": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/results.json"
+    },
+    {
+      "source_group": "original_result",
+      "filename": "generation-receipts.json",
+      "bytes": 11937,
+      "sha256": "6662d0b13a9aaea64c70db98428b71b4f6c4d2d144d4c5fe1382b83a9159dac2",
+      "destination": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/generation-receipts.json"
+    },
+    {
+      "source_group": "independent_audit",
+      "filename": "audit-summary.json",
+      "bytes": 929,
+      "sha256": "a29ad37a9ce989602bb668bad0f7208ce4cd8f35724428ecfdcf4105698c2103",
+      "destination": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/audit-summary.json"
+    },
+    {
+      "source_group": "independent_audit",
+      "filename": "archive-members.json",
+      "bytes": 7951,
+      "sha256": "0419675efb0b092f08c12d94ce916357c88e3d375139a5446971991bae918a1d",
+      "destination": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/archive-members.json"
+    },
+    {
+      "source_group": "independent_audit",
+      "filename": "derived-audio-bindings.json",
+      "bytes": 7075,
+      "sha256": "46ac5aa5b4b1fbf923660051c0f67f01f286fb8f846e0bc69b790dc06a3da536",
+      "destination": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/derived-audio-bindings.json"
+    },
+    {
+      "source_group": "independent_audit",
+      "filename": "recomputed-report.json",
+      "bytes": 42325,
+      "sha256": "04f3c2ab1d9b03b6cf3291ad12e859b22ea12f8f7d978840f953dbfd0f4d9c10",
+      "destination": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/recomputed-report.json"
+    },
+    {
+      "source_group": "independent_audit",
+      "filename": "thirteen-candidate-evidence.json",
+      "bytes": 12354,
+      "sha256": "9cb52b6f4a890a858f5fc96af89825ba63c5035fcaaefb0349a7806f3843745d",
+      "destination": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/thirteen-candidate-evidence.json"
+    },
+    {
+      "source_group": "independent_audit",
+      "filename": "all-32-slot-evidence.json",
+      "bytes": 29504,
+      "sha256": "298bf295ac89f9d64a88e7b16a071b4b9f7bb124d598c0676cf3ccde669c3be9",
+      "destination": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/all-32-slot-evidence.json"
+    },
+    {
+      "source_group": "independent_audit",
+      "filename": "stratified-analysis.json",
+      "bytes": 8921,
+      "sha256": "64970a589b55872716aa5bb3f833967bfc6db4fb30c34017bbbdbdd999a616cc",
+      "destination": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/stratified-analysis.json"
+    }
+  ],
+  "exclusions": [
+    "public.zip",
+    "all audio WAV bodies",
+    "model weights",
+    "raw runtime logs",
+    "audit.py"
+  ],
+  "preserve_original_result_bytes": true,
+  "human_gold": false,
+  "training_admitted": false
+}

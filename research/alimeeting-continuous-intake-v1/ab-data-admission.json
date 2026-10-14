@@ -1,0 +1,215 @@
+{
+  "schema": "next-ab-machine-data-coverage-v1",
+  "status": "BLOCKED_INSUFFICIENT_KW1_GROUPS",
+  "roles": [
+    "train",
+    "calibration",
+    "selection"
+  ],
+  "grouping": "Conservatively group the same named preset voice across both TTS engines; engines/seeds are not independent speaker groups.",
+  "coverage": {
+    "你好小窝": {
+      "candidate_count": 2,
+      "independent_voice_groups": [
+        "preset-voice:Serena",
+        "preset-voice:Vivian"
+      ],
+      "minimum_required_groups": 3
+    },
+    "小窝小窝": {
+      "candidate_count": 11,
+      "independent_voice_groups": [
+        "preset-voice:Dylan",
+        "preset-voice:Serena",
+        "preset-voice:Uncle_Fu",
+        "preset-voice:Vivian"
+      ],
+      "minimum_required_groups": 3
+    }
+  },
+  "candidates": [
+    {
+      "sample_id": "tqp-qwen06-03",
+      "target_text": "小窝小窝",
+      "engine": "qwen06",
+      "speaker": "Vivian",
+      "group_id": "preset-voice:Vivian",
+      "native_wav_sha256": "7c95c69d319876d17247190aee45fe7a772f5df15783e2168cfb18e270b22948",
+      "derived_wav_sha256": "b0ca9ef504520d0cedc8eb78bb9004fc3fff96063d873e7b769e9d9c66db9dbd",
+      "human_gold": false,
+      "training_admitted": false
+    },
+    {
+      "sample_id": "tqp-qwen06-05",
+      "target_text": "你好小窝",
+      "engine": "qwen06",
+      "speaker": "Serena",
+      "group_id": "preset-voice:Serena",
+      "native_wav_sha256": "6b0526ac43a9a1b8ba97180ea19476959062256b8d46ba8abd3f3c4630a40dcc",
+      "derived_wav_sha256": "83fd70f99b3c98168aac162e59f95722fa7d97b8b4f696baff43e27c467efd4e",
+      "human_gold": false,
+      "training_admitted": false
+    },
+    {
+      "sample_id": "tqp-qwen06-06",
+      "target_text": "小窝小窝",
+      "engine": "qwen06",
+      "speaker": "Serena",
+      "group_id": "preset-voice:Serena",
+      "native_wav_sha256": "8ec1d11fc5ee36c15877ff9638a732874e87ccd184d0f02b42177090fe8ae411",
+      "derived_wav_sha256": "ec8211229fdc775925b8623f772e502f7978a05cb65132aeedbde81267fa1e89",
+      "human_gold": false,
+      "training_admitted": false
+    },
+    {
+      "sample_id": "tqp-qwen06-10",
+      "target_text": "小窝小窝",
+      "engine": "qwen06",
+      "speaker": "Uncle_Fu",
+      "group_id": "preset-voice:Uncle_Fu",
+      "native_wav_sha256": "ba7837fa216e4975ae435644ce81e3bcbacb09e849fa25bb5cf0fa596893de5b",
+      "derived_wav_sha256": "d8f378ae3e1ec5d1e16b62adc6ded396eab5b148fc5b3da60243b22d68040d2a",
+      "human_gold": false,
+      "training_admitted": false
+    },
+    {
+      "sample_id": "tqp-qwen06-11",
+      "target_text": "小窝小窝",
+      "engine": "qwen06",
+      "speaker": "Uncle_Fu",
+      "group_id": "preset-voice:Uncle_Fu",
+      "native_wav_sha256": "95b8b56ae61426e1ff082abb52aeff0487ff3390cff49066b81126d1d722d018",
+      "derived_wav_sha256": "855bfbca9dd3b1688d29e5182cf3cab275d72963c8a97b0643bc6dbd3261590e",
+      "human_gold": false,
+      "training_admitted": false
+    },
+    {
+      "sample_id": "tqp-qwen06-14",
+      "target_text": "小窝小窝",
+      "engine": "qwen06",
+      "speaker": "Dylan",
+      "group_id": "preset-voice:Dylan",
+      "native_wav_sha256": "31c7243b5f884329510e18bfe0a1ad51e606eab53aa21a874c26c3f1ac6dac08",
+      "derived_wav_sha256": "8898ce4f311ca788e004b56b6d7496578591566ec118cdfe53a9e640ef211dfd",
+      "human_gold": false,
+      "training_admitted": false
+    },
+    {
+      "sample_id": "tqp-qwen06-15",
+      "target_text": "小窝小窝",
+      "engine": "qwen06",
+      "speaker": "Dylan",
+      "group_id": "preset-voice:Dylan",
+      "native_wav_sha256": "eae717740ed4ac5ea03c718dcd9c58274ebe5f3028c19c641f8fa191f90e7489",
+      "derived_wav_sha256": "c4e5f1035c4d902c51b2cd7beff477631f3eab5a83143c9eededbef780c5a46c",
+      "human_gold": false,
+      "training_admitted": false
+    },
+    {
+      "sample_id": "tqp-qwen17-01",
+      "target_text": "你好小窝",
+      "engine": "qwen17",
+      "speaker": "Vivian",
+      "group_id": "preset-voice:Vivian",
+      "native_wav_sha256": "9ddaa46b1bc728c1051f87c4a3e81a06eb4b21da3e230c81f9f9b3e6f2e44e54",
+      "derived_wav_sha256": "f2ffc39fc50157a6f0acbe6a9cb67052130849253a5d01db80c8412a0e6d9133",
+      "human_gold": false,
+      "training_admitted": false
+    },
+    {
+      "sample_id": "tqp-qwen17-02",
+      "target_text": "小窝小窝",
+      "engine": "qwen17",
+      "speaker": "Vivian",
+      "group_id": "preset-voice:Vivian",
+      "native_wav_sha256": "232c78b9a1098a769581e3470bcb87515a61d1e786ca7ec59a0271604e80b99e",
+      "derived_wav_sha256": "a8b6ed61f36ba0d46e50648e341bceb26c13519cd5db8d4fd63849124ec87a3c",
+      "human_gold": false,
+      "training_admitted": false
+    },
+    {
+      "sample_id": "tqp-qwen17-03",
+      "target_text": "小窝小窝",
+      "engine": "qwen17",
+      "speaker": "Vivian",
+      "group_id": "preset-voice:Vivian",
+      "native_wav_sha256": "c098e367120f088c774474a28b501d3ab9914b3039199c14e80d8b7b8970cb08",
+      "derived_wav_sha256": "67c1c9cd4f797c88a442a0c8e73dce05e60d9394214079eda8431de55edbba9e",
+      "human_gold": false,
+      "training_admitted": false
+    },
+    {
+      "sample_id": "tqp-qwen17-06",
+      "target_text": "小窝小窝",
+      "engine": "qwen17",
+      "speaker": "Serena",
+      "group_id": "preset-voice:Serena",
+      "native_wav_sha256": "d7827cf04dd1740d211ce8052830d0603f60295a7a93cbf0cbcfe389cf104714",
+      "derived_wav_sha256": "2af1e4cb8f18d5f4512303f2d9c8413231e27397a7f774d2d9fbb19b0072c679",
+      "human_gold": false,
+      "training_admitted": false
+    },
+    {
+      "sample_id": "tqp-qwen17-14",
+      "target_text": "小窝小窝",
+      "engine": "qwen17",
+      "speaker": "Dylan",
+      "group_id": "preset-voice:Dylan",
+      "native_wav_sha256": "a576f4177e50ecfe92c1515ffc4acc301023f45e699442df7d8c91ce608088c2",
+      "derived_wav_sha256": "62f3d6aac59eaab087e7f93d44631ed94bec7bb4738235bc74491cef7953dd4e",
+      "human_gold": false,
+      "training_admitted": false
+    },
+    {
+      "sample_id": "tqp-qwen17-15",
+      "target_text": "小窝小窝",
+      "engine": "qwen17",
+      "speaker": "Dylan",
+      "group_id": "preset-voice:Dylan",
+      "native_wav_sha256": "78e5a33c18cb02ba96775fc11483f00b85faa07709d0b720d1e812d7fd4958e5",
+      "derived_wav_sha256": "2fdcfe09a177e69e39ad337f9e3dbe5dfb0da4d57d9a02c04e1359e4a1f7f6ce",
+      "human_gold": false,
+      "training_admitted": false
+    }
+  ],
+  "split_assignment_performed": false,
+  "heldout_reuse_allowed": false,
+  "labels_changed": false,
+  "training_admitted": false,
+  "matched_quality_ab_status": "NOT_RUN",
+  "numeric_fixture_status": "PASS",
+  "human_gold": false,
+  "limitations": [
+    "Necessary group coverage check only, not sufficient dataset admission or a full split/quality audit.",
+    "Machine consensus does not establish human pronunciation truth.",
+    "No sample reuse or heldout borrowing can repair missing independent voice groups."
+  ],
+  "sources": {
+    "numeric_fixture_receipt": {
+      "path": "research/effect-data-model-v2/evidence/numeric-run-38552529009/numeric-receipt.json",
+      "sha256": "37f206fac8a45494bf1bc273d7c40b69830baa5d5ef057806d8315d6c74408c1"
+    },
+    "native_generation_receipts": [
+      {
+        "engine": "qwen06",
+        "run_id": 38566438514,
+        "artifact_id": 11895552988,
+        "zip_sha256": "fbd39b79838dc91202fcf8e6c2af22f6486e5d11a9daf48aab15aabb05a6fba9",
+        "member": "qwen06-receipt.json",
+        "member_sha256": "1f3a853dfd6a0cd086a62b8ee838e316ee91c837cb1c6249f688906becf67f7b"
+      },
+      {
+        "engine": "qwen17",
+        "run_id": 38566438514,
+        "artifact_id": 11895324049,
+        "zip_sha256": "2bc9ceb32ea64039c04982d88dc6247a8a43879a0c2b04ccb91ef3bb54a76307",
+        "member": "qwen17-receipt.json",
+        "member_sha256": "873ef9afee5d46dd5d82afdb61d3ecc09f8c5f29eb24055b4c21de1079f3e615"
+      }
+    ],
+    "asr_report_sha256": "5c4c4c909d9e3b8a02e5d39b0dfbafae1630d13028227d611aef8379a50538f4",
+    "generation_projection_sha256": "6662d0b13a9aaea64c70db98428b71b4f6c4d2d144d4c5fe1382b83a9159dac2",
+    "frozen_plan_sha256": "b639367f3d678ca5666220a651b1d9189ec24cb318fb064a9091fae0e0a24c5a",
+    "speaker_binding_note": "Public generation projection omits speaker; actual original native receipts supply it, joined by sample ID/native hash and crosschecked against the frozen plan."
+  }
+}

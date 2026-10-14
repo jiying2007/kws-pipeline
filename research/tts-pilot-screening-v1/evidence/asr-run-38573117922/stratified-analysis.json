@@ -1,0 +1,377 @@
+{
+  "by_tts_engine": [
+    {
+      "tts_engine": "qwen06",
+      "samples": 16,
+      "three_asr_candidates": 7,
+      "candidate_rate": 0.4375
+    },
+    {
+      "tts_engine": "qwen17",
+      "samples": 16,
+      "three_asr_candidates": 6,
+      "candidate_rate": 0.375
+    }
+  ],
+  "by_speaker": [
+    {
+      "speaker": "Dylan",
+      "samples": 8,
+      "three_asr_candidates": 4,
+      "candidate_rate": 0.5
+    },
+    {
+      "speaker": "Serena",
+      "samples": 8,
+      "three_asr_candidates": 3,
+      "candidate_rate": 0.375
+    },
+    {
+      "speaker": "Uncle_Fu",
+      "samples": 8,
+      "three_asr_candidates": 2,
+      "candidate_rate": 0.25
+    },
+    {
+      "speaker": "Vivian",
+      "samples": 8,
+      "three_asr_candidates": 4,
+      "candidate_rate": 0.5
+    }
+  ],
+  "by_target": [
+    {
+      "target_text": "你好小窝",
+      "samples": 16,
+      "three_asr_candidates": 2,
+      "candidate_rate": 0.125
+    },
+    {
+      "target_text": "小窝小窝",
+      "samples": 16,
+      "three_asr_candidates": 11,
+      "candidate_rate": 0.6875
+    }
+  ],
+  "by_engine_speaker": [
+    {
+      "tts_engine": "qwen06",
+      "speaker": "Dylan",
+      "samples": 4,
+      "three_asr_candidates": 2,
+      "candidate_rate": 0.5
+    },
+    {
+      "tts_engine": "qwen06",
+      "speaker": "Serena",
+      "samples": 4,
+      "three_asr_candidates": 2,
+      "candidate_rate": 0.5
+    },
+    {
+      "tts_engine": "qwen06",
+      "speaker": "Uncle_Fu",
+      "samples": 4,
+      "three_asr_candidates": 2,
+      "candidate_rate": 0.5
+    },
+    {
+      "tts_engine": "qwen06",
+      "speaker": "Vivian",
+      "samples": 4,
+      "three_asr_candidates": 1,
+      "candidate_rate": 0.25
+    },
+    {
+      "tts_engine": "qwen17",
+      "speaker": "Dylan",
+      "samples": 4,
+      "three_asr_candidates": 2,
+      "candidate_rate": 0.5
+    },
+    {
+      "tts_engine": "qwen17",
+      "speaker": "Serena",
+      "samples": 4,
+      "three_asr_candidates": 1,
+      "candidate_rate": 0.25
+    },
+    {
+      "tts_engine": "qwen17",
+      "speaker": "Uncle_Fu",
+      "samples": 4,
+      "three_asr_candidates": 0,
+      "candidate_rate": 0.0
+    },
+    {
+      "tts_engine": "qwen17",
+      "speaker": "Vivian",
+      "samples": 4,
+      "three_asr_candidates": 3,
+      "candidate_rate": 0.75
+    }
+  ],
+  "by_engine_target": [
+    {
+      "tts_engine": "qwen06",
+      "target_text": "你好小窝",
+      "samples": 8,
+      "three_asr_candidates": 1,
+      "candidate_rate": 0.125
+    },
+    {
+      "tts_engine": "qwen06",
+      "target_text": "小窝小窝",
+      "samples": 8,
+      "three_asr_candidates": 6,
+      "candidate_rate": 0.75
+    },
+    {
+      "tts_engine": "qwen17",
+      "target_text": "你好小窝",
+      "samples": 8,
+      "three_asr_candidates": 1,
+      "candidate_rate": 0.125
+    },
+    {
+      "tts_engine": "qwen17",
+      "target_text": "小窝小窝",
+      "samples": 8,
+      "three_asr_candidates": 5,
+      "candidate_rate": 0.625
+    }
+  ],
+  "by_engine_speaker_target": [
+    {
+      "tts_engine": "qwen06",
+      "speaker": "Dylan",
+      "target_text": "你好小窝",
+      "samples": 2,
+      "three_asr_candidates": 0,
+      "candidate_rate": 0.0
+    },
+    {
+      "tts_engine": "qwen06",
+      "speaker": "Dylan",
+      "target_text": "小窝小窝",
+      "samples": 2,
+      "three_asr_candidates": 2,
+      "candidate_rate": 1.0
+    },
+    {
+      "tts_engine": "qwen06",
+      "speaker": "Serena",
+      "target_text": "你好小窝",
+      "samples": 2,
+      "three_asr_candidates": 1,
+      "candidate_rate": 0.5
+    },
+    {
+      "tts_engine": "qwen06",
+      "speaker": "Serena",
+      "target_text": "小窝小窝",
+      "samples": 2,
+      "three_asr_candidates": 1,
+      "candidate_rate": 0.5
+    },
+    {
+      "tts_engine": "qwen06",
+      "speaker": "Uncle_Fu",
+      "target_text": "你好小窝",
+      "samples": 2,
+      "three_asr_candidates": 0,
+      "candidate_rate": 0.0
+    },
+    {
+      "tts_engine": "qwen06",
+      "speaker": "Uncle_Fu",
+      "target_text": "小窝小窝",
+      "samples": 2,
+      "three_asr_candidates": 2,
+      "candidate_rate": 1.0
+    },
+    {
+      "tts_engine": "qwen06",
+      "speaker": "Vivian",
+      "target_text": "你好小窝",
+      "samples": 2,
+      "three_asr_candidates": 0,
+      "candidate_rate": 0.0
+    },
+    {
+      "tts_engine": "qwen06",
+      "speaker": "Vivian",
+      "target_text": "小窝小窝",
+      "samples": 2,
+      "three_asr_candidates": 1,
+      "candidate_rate": 0.5
+    },
+    {
+      "tts_engine": "qwen17",
+      "speaker": "Dylan",
+      "target_text": "你好小窝",
+      "samples": 2,
+      "three_asr_candidates": 0,
+      "candidate_rate": 0.0
+    },
+    {
+      "tts_engine": "qwen17",
+      "speaker": "Dylan",
+      "target_text": "小窝小窝",
+      "samples": 2,
+      "three_asr_candidates": 2,
+      "candidate_rate": 1.0
+    },
+    {
+      "tts_engine": "qwen17",
+      "speaker": "Serena",
+      "target_text": "你好小窝",
+      "samples": 2,
+      "three_asr_candidates": 0,
+      "candidate_rate": 0.0
+    },
+    {
+      "tts_engine": "qwen17",
+      "speaker": "Serena",
+      "target_text": "小窝小窝",
+      "samples": 2,
+      "three_asr_candidates": 1,
+      "candidate_rate": 0.5
+    },
+    {
+      "tts_engine": "qwen17",
+      "speaker": "Uncle_Fu",
+      "target_text": "你好小窝",
+      "samples": 2,
+      "three_asr_candidates": 0,
+      "candidate_rate": 0.0
+    },
+    {
+      "tts_engine": "qwen17",
+      "speaker": "Uncle_Fu",
+      "target_text": "小窝小窝",
+      "samples": 2,
+      "three_asr_candidates": 0,
+      "candidate_rate": 0.0
+    },
+    {
+      "tts_engine": "qwen17",
+      "speaker": "Vivian",
+      "target_text": "你好小窝",
+      "samples": 2,
+      "three_asr_candidates": 1,
+      "candidate_rate": 0.5
+    },
+    {
+      "tts_engine": "qwen17",
+      "speaker": "Vivian",
+      "target_text": "小窝小窝",
+      "samples": 2,
+      "three_asr_candidates": 2,
+      "candidate_rate": 1.0
+    }
+  ],
+  "recognizer_target_matches": [
+    {
+      "tts_engine": "qwen06",
+      "asr_family": "qwen06",
+      "called": 16,
+      "normalized_target_matches": 13
+    },
+    {
+      "tts_engine": "qwen06",
+      "asr_family": "sensevoice",
+      "called": 16,
+      "normalized_target_matches": 9
+    },
+    {
+      "tts_engine": "qwen06",
+      "asr_family": "whisper",
+      "called": 15,
+      "normalized_target_matches": 8
+    },
+    {
+      "tts_engine": "qwen17",
+      "asr_family": "qwen06",
+      "called": 16,
+      "normalized_target_matches": 9
+    },
+    {
+      "tts_engine": "qwen17",
+      "asr_family": "sensevoice",
+      "called": 16,
+      "normalized_target_matches": 10
+    },
+    {
+      "tts_engine": "qwen17",
+      "asr_family": "whisper",
+      "called": 15,
+      "normalized_target_matches": 6
+    }
+  ],
+  "not_sent_to_third": [
+    {
+      "sample_id": "tqp-qwen06-08",
+      "tts_engine": "qwen06",
+      "speaker": "Uncle_Fu",
+      "target_text": "你好小窝",
+      "repeat": 0,
+      "candidate": false,
+      "tier": "reject_or_unresolved",
+      "third_reason": null,
+      "asr": [
+        {
+          "family": "qwen06",
+          "raw_text": "你好，小吴。",
+          "normalized": "你好小吴",
+          "equals_target": false,
+          "completeness": "complete",
+          "quality_flags": []
+        },
+        {
+          "family": "sensevoice",
+          "raw_text": "你好小吴",
+          "normalized": "你好小吴",
+          "equals_target": false,
+          "completeness": "complete",
+          "quality_flags": []
+        }
+      ]
+    },
+    {
+      "sample_id": "tqp-qwen17-04",
+      "tts_engine": "qwen17",
+      "speaker": "Serena",
+      "target_text": "你好小窝",
+      "repeat": 0,
+      "candidate": false,
+      "tier": "reject_or_unresolved",
+      "third_reason": null,
+      "asr": [
+        {
+          "family": "qwen06",
+          "raw_text": "你好，笑我。",
+          "normalized": "你好笑我",
+          "equals_target": false,
+          "completeness": "complete",
+          "quality_flags": []
+        },
+        {
+          "family": "sensevoice",
+          "raw_text": "你好笑我",
+          "normalized": "你好笑我",
+          "equals_target": false,
+          "completeness": "complete",
+          "quality_flags": []
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Machine transcript consensus is not human phonetic ground truth.",
+    "No training admission is granted by this report.",
+    "7/16 versus 6/16 is one clip (6.25 percentage points); tiny paired voice/text/seed design does not establish significant model superiority.",
+    "Whisper was selectively invoked; its target-match denominator is the called subset, not a random 32-clip comparison.",
+    "48 design slots include 16 blocked Cosy slots; executable yield denominator is 32."
+  ]
+}

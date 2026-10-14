@@ -1,0 +1,10 @@
+{
+  "all_textgrid_hashes_match": true,
+  "all_textgrid_results_identical": true,
+  "audit_sha256": "95b2f7b6abd409fe0a17e597f49a01aa0bbd97f86f4ec807762c609fd5a0aca3",
+  "phrase_occurrences": 0,
+  "schema": "alimeeting-textgrid-rescan-v1",
+  "scope": "local TextGrid metadata only; no model execution",
+  "sessions": 8,
+  "source_sha256": "732c589760ddf2940d27c4454372e5f63fed74399ed996209818b6b2dc595eef"
+}

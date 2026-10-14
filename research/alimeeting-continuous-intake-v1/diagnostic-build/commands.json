@@ -1,0 +1,45 @@
+{
+  "build_argv": [
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-3.31.6/cmake/data/bin/cmake",
+    "--build",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+    "--target",
+    "kws_wav",
+    "--parallel",
+    "2",
+    "--verbose"
+  ],
+  "build_command": "env -i PATH=/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/usr/bin:/bin HOME=/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/home TMPDIR=/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/tmp LANG=C LC_ALL=C PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 /workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-3.31.6/cmake/data/bin/cmake --build /workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build --target kws_wav --parallel 2 --verbose",
+  "configure_argv": [
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-3.31.6/cmake/data/bin/cmake",
+    "-S",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate",
+    "-B",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build",
+    "-G",
+    "Unix Makefiles",
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DKWS_STRICT=ON",
+    "-DKWS_SOURCE_REVISION=11b93abe92427c3ece2a01f9a497cdb74bab0062",
+    "-DCMAKE_C_COMPILER=/usr/bin/gcc",
+    "-DCMAKE_MAKE_PROGRAM=/usr/bin/make",
+    "-DPython3_EXECUTABLE=/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+    "-DKWS_BUILD_TESTS=OFF",
+    "-DKWS_BUILD_BENCH=OFF",
+    "-DKWS_BUILD_TOOLS=ON",
+    "-DKWS_BUILD_FUZZ=OFF",
+    "-DCMAKE_INSTALL_PREFIX=/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/install"
+  ],
+  "configure_command": "env -i PATH=/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/usr/bin:/bin HOME=/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/home TMPDIR=/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/tmp LANG=C LC_ALL=C PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 /workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/cmake-3.31.6/cmake/data/bin/cmake -S /workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate -B /workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON -DKWS_SOURCE_REVISION=11b93abe92427c3ece2a01f9a497cdb74bab0062 -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_MAKE_PROGRAM=/usr/bin/make -DPython3_EXECUTABLE=/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DKWS_BUILD_TESTS=OFF -DKWS_BUILD_BENCH=OFF -DKWS_BUILD_TOOLS=ON -DKWS_BUILD_FUZZ=OFF -DCMAKE_INSTALL_PREFIX=/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/install",
+  "environment": {
+    "HOME": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/home",
+    "LANG": "C",
+    "LC_ALL": "C",
+    "PATH": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "TMPDIR": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/toolchain/tmp"
+  },
+  "working_directory": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build"
+}

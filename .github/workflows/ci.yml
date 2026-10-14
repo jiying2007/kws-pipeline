@@ -428,6 +428,13 @@ jobs:
           python3 -I -S -B -OO research/tts-pilot-screening-v1/activation-template/test_activation.py
       - name: Verify tracked worktree after ASR stage3 activation contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "ASR stage3 activation contracts"'
+      - name: Continuous audio intake offline contracts
+        run: |
+          python3 -I -S -B research/alimeeting-continuous-intake-v1/test_suite.py
+          python3 -I -S -B -O research/alimeeting-continuous-intake-v1/test_suite.py
+          python3 -I -S -B -OO research/alimeeting-continuous-intake-v1/test_suite.py
+      - name: Verify tracked worktree after continuous audio intake contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Continuous audio intake contracts"'
       - name: Bound remaining TTS continuation contracts
         run: |
           python3 -I -S -B research/tts-quality-remaining-v1/run_tests.py

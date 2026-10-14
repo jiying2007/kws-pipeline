@@ -1,0 +1,34 @@
+{
+  "schema": "kws-frozen-build-receipt-static-validation-v1",
+  "status": "pass",
+  "checked_at_utc": "2026-10-14T13:44:15.276092+00:00",
+  "receipt_path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build-receipt.json",
+  "receipt_sha256": "78b2988e60a4bf6b875934222fd5e732633ca34de64e470c433e74289f57ac8a",
+  "verified_receipt_records": 160,
+  "built_translation_units_strict_release_verified": true,
+  "build_identity_embedding": {
+    "compiled_identity_object": {
+      "bytes": 2032,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/CMakeFiles/kws_pipeline.dir/src/build_info.c.o",
+      "sha256": "bf1f356160809d71b334e457a4b628c53c41b97cff750186a3f4005abe39f0bc"
+    },
+    "config_digest_literal_in_runner": false,
+    "core_archive": {
+      "bytes": 38856,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/libkws_pipeline.a",
+      "sha256": "de07b4c6b572989b68c95dedd58d8eaeff1bac4290cad5beb0591c5cf60430fe"
+    },
+    "generated_headers_and_compiled_identity_object_verified": true,
+    "note": "Unmodified kws_wav does not call kws_build_info(); the static linker omits the unreferenced build_info object from the final executable. Exact runner provenance is supplied by this build receipt and executable hash.",
+    "source_revision_literal_in_runner": false,
+    "tool_io_archive": {
+      "bytes": 9582,
+      "path": "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/diagnostic-build/build/libkws_tool_io.a",
+      "sha256": "400d383f6c35e5e91f7afbc28b79c95cd86c20db4d03de42e4e451ec49750370"
+    }
+  },
+  "runner_executed": false,
+  "audio_or_model_executed": false,
+  "source_and_model_hashes_verified": true,
+  "source_unchanged": true
+}

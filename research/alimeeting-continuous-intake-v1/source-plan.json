@@ -1,0 +1,119 @@
+{
+  "accepted_negative_duration_s": 0,
+  "accuracy_improvement_claimed": false,
+  "actual_audit": {
+    "path": "audit/audit.json",
+    "producer_source_path": "versions/v4/alimeeting_eval.py",
+    "producer_source_sha256": "c68005b0290e48fcb1caa2316943d28a0b94e138a9e417c9b4bc65defa1c854b",
+    "sha256": "95b2f7b6abd409fe0a17e597f49a01aa0bbd97f86f4ec807762c609fd5a0aca3"
+  },
+  "actual_input_duration_s": 15138.215,
+  "actual_input_hours": 4.205059722222222,
+  "actual_sample_count": 242211440,
+  "actual_session_ids": [
+    "R8001_M8004",
+    "R8003_M8001",
+    "R8007_M8010",
+    "R8007_M8011",
+    "R8008_M8013",
+    "R8009_M8018",
+    "R8009_M8019",
+    "R8009_M8020"
+  ],
+  "advertised_hours_not_denominator": 4,
+  "archive": "Eval_Ali.tar.gz",
+  "archive_bytes": 3673718355,
+  "audio_after_textgrid_end_total_s": 47.384,
+  "channel_index": 0,
+  "confirmed_far_available": false,
+  "conversion": "lossless channel extraction; no resampling, averaging, gain, trimming, silence insertion or concatenation",
+  "current_same_runner_positive_response_control_executed": false,
+  "current_tool_sha256": "732c589760ddf2940d27c4454372e5f63fed74399ed996209818b6b2dc595eef",
+  "data_admission_review_required_before_confirmed_far": true,
+  "diagnostic_passes": 1,
+  "diagnostic_summary": {
+    "all_sessions_complete": true,
+    "path": "diagnostic-run-p4-11b93abe/summary.json",
+    "sha256": "e34600b0cc8816e3e23dda888782c8eabb831fb9bea658518bb41a12f51f1c06",
+    "trigger_event_count": 0,
+    "trigger_events_per_input_hour": 0
+  },
+  "evidence_class": "acquired-and-audited-development-candidates-not-negative-admitted",
+  "evidence_stage": "complete-local-intake-exact-hash-comparison-and-one-frozen-C-diagnostic-pass",
+  "exact_hash_comparison": {
+    "matches": 0,
+    "path": "overlap/alimeeting-overlap-result.json",
+    "sha256": "7ff9a189c3c592948747e96c32e53e86ac5e6c1bc489299a6b1ea5ed79f0c5f4"
+  },
+  "expected_sessions": 8,
+  "independence_verified": false,
+  "initial_plan": {
+    "path": "versions/v1/source-plan.json",
+    "sha256": "c5c66069e5e279e582beaac18b167bfc70014991a995f544d9c9bf560a23fae1"
+  },
+  "intake_receipt": {
+    "path": "raw/acquisition.json",
+    "sha256": "42a2700339b99b97cad53c4c12a1d2a5dbc496a8004d5c7de59b29c4a487bdb5"
+  },
+  "latest_textgrid_rescan": {
+    "path": "textgrid-rescan-v5.json",
+    "sha256": "7b2cc010c7f1fc4cc2dee927836fa4bab927eb11cd140503da82df745f51653f"
+  },
+  "license": "CC-BY-SA-4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "model_runs": 8,
+  "model_scope_audit": {
+    "path": "model-scope-audit.json",
+    "sha256": "528e584b9a2a6f84b8234b095700a52eeaff386d05c3da668c9be15aa47469d2"
+  },
+  "models_run": true,
+  "network_default": false,
+  "network_download_attempts": 1,
+  "observed_archive_sha256": "dc47343b2474b5ebcf458927e878155f6ddeb59c85e685b3645c32a1f9578d92",
+  "positive_control_review": {
+    "path": "positive-control-review/review.json",
+    "sha256": "ce43738664c5f9cdbfb0c9ec9efd877252b193dc05363a445de306540934f4dd"
+  },
+  "previous_head_bytes": 3673718355,
+  "publisher_sha256": null,
+  "recalibration_required": true,
+  "review_scope_note": "Data-admission/evaluation-evidence review, not user authorization. The authorized one-pass frozen-C diagnostic is complete and reports trigger rate only. No negative labels, FAR, recall, FRR or accuracy improvement are established.",
+  "runner_invocations": 8,
+  "schema": "alimeeting-eval-observed-source-plan-v1",
+  "screening_phrases": [
+    "你好小窝",
+    "小窝小窝",
+    "小屋",
+    "小我",
+    "小沃",
+    "小卧",
+    "小窝"
+  ],
+  "sealed_qualification": false,
+  "selection": "all Eval_Ali_far/audio_dir/*.wav; fixed channel index 0; whole sessions",
+  "sha256_lock_status": "complete-official-download-observation-pinned",
+  "shipping_approved": false,
+  "source_channel_mask": 1599,
+  "source_format_tag": 65534,
+  "source_page": "https://www.openslr.org/119/",
+  "source_pcm_subtype": "00000001-0000-0010-8000-00aa00389b71",
+  "source_url": "https://speech-lab-share-data.oss-cn-shanghai.aliyuncs.com/AliMeeting/openlr/Eval_Ali.tar.gz",
+  "synthetic_tests": {
+    "diagnostic_validation": 8,
+    "intake": 36,
+    "intake_modes": [
+      "normal",
+      "-O",
+      "-OO",
+      "-I -S"
+    ],
+    "overlap": 14
+  },
+  "textgrid_interval_count": 6457,
+  "textgrid_tier_count": 25,
+  "textual_phrase_occurrences": 0,
+  "training_allowed": false,
+  "training_runs": 0,
+  "transcript_evidence": "official human-transcribed TextGrid; all speaker tiers scanned",
+  "transcripts": "Eval_Ali_far/textgrid_dir/*.TextGrid; all speaker tiers"
+}

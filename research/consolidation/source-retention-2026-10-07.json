@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 54063,
-      "sha256": "ef54716c1403b0e32a1bb8673cdcfa6335ca319a6da8cc12ffccb81a059201bc",
-      "git_blob_sha1": "bf639e28ff1914cebc29d67959fa2a6adcb763f5"
+      "bytes": 54557,
+      "sha256": "113c814caf726039f72b9fa0e0fdbc05ad195dc8abc700ef35a1d8b4d0b5dfc4",
+      "git_blob_sha1": "f7ea325314ba68cbe5a749baa71d3f15a44fbe45"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15400,9 +15400,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "bytes": 35307,
-      "sha256": "4652e9e8c8ad0e6fad951e0c5f98e5d5d132f135b52ac6f68591a2adf4784b8b",
-      "git_blob_sha1": "e74a8b0fe6de7f9784e0f53d8d1b030146f39ad3"
+      "bytes": 35415,
+      "sha256": "5aa2ed8bec279ea96aa1b7aef77d2fb95836bfea3c7bf458aa34605fa15f4aac",
+      "git_blob_sha1": "50156e187ace77da1fa64d6593d34641bc3523e5"
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
@@ -29625,6 +29625,2346 @@
             "bytes": 221,
             "sha256": "1ab7ea707a86bce28b54f6f41cf14d9523e292c4bca98ef40904fecdc90752df",
             "git_blob_sha1": "c56f106d5eaae1f7c83a725832846ce0753f0023"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-14",
+      "operation_id": "kws-alimeeting-intake-p6-revision2",
+      "public_main_base_commit": "dc715906d9be0e8758aef53eeb44f382ea1204de",
+      "public_main_base_tree": "96471056b252bbd7c8ad0a35a4d13b5b3cf0f9e8",
+      "workflow_source_changed": true,
+      "scope": "Retain small public audit source and aggregate receipts for the actual AliMeeting continuous-audio intake and frozen-C diagnostic; add offline three-mode CI coverage. Also retain reviewed public ASR run38573117922 JSON results and independent recalculation metadata under a new evidence path. Include the separately authorized completed 13-machine-positive frozen-C response control and independently audited small observational trace receipts, with zero matching responses and no human-FRR claim. Correct numeric-fixture status documentation and record the necessary KW1 three-role independent-group coverage blocker without changing labels or split rules. The source publication/CI runs no inference and adds no corpus audio/transcript payloads, model/binary bodies, ASR activation changes or accepted-negative claims.",
+      "rationale": "Retain reproducible public intake/diagnostic tooling, source/license attribution and exact hash/aggregate evidence. Eight meetings and approximately4.205hours yielded zero diagnostic events; this is an event-rate observation, not FAR, with expected=null and zero accepted negative duration. Add offline CI only; preserve running ASR binding and all older execution controls.\nAlso archive independently reviewed public ASR run38573117922 JSON results and recalculation receipts; no audio ZIP and no edits to its frozen 30-source input binding.\nRetain the separately authorized completed 13-machine-labelled positive response control: same frozen C/model/pack, all clips complete, zero matching responses; preserve the earlier AliMeeting receipts and do not infer human FRR or low FAR.\nCorrect model_comparison README status using retained actual artificial-PCM numeric smoke38552529009: two real updates per arm and chunk parity passed; newly admitted-data matched A/B quality, C1 C export and SSC305 remain NOT_RUN. Preserve model code, budgets and historical experiment receipts.\nRevision1 adds only the reviewed10-file observational trace source/JSON package and earlier read-only addendum, plus machine-candidate voice-group coverage analysis BLOCKED_INSUFFICIENT_KW1_GROUPS. No raw traces or extra model runs by integration. Preserve the frozen original P6 candidate separately.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "bytes": 54063,
+            "git_blob_sha1": "bf639e28ff1914cebc29d67959fa2a6adcb763f5",
+            "mode": "100644",
+            "path": ".github/workflows/ci.yml",
+            "sha256": "ef54716c1403b0e32a1bb8673cdcfa6335ca319a6da8cc12ffccb81a059201bc"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 54557,
+            "sha256": "113c814caf726039f72b9fa0e0fdbc05ad195dc8abc700ef35a1d8b4d0b5dfc4",
+            "git_blob_sha1": "f7ea325314ba68cbe5a749baa71d3f15a44fbe45"
+          }
+        },
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "bytes": 35307,
+            "git_blob_sha1": "e74a8b0fe6de7f9784e0f53d8d1b030146f39ad3",
+            "mode": "100644",
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "sha256": "4652e9e8c8ad0e6fad951e0c5f98e5d5d132f135b52ac6f68591a2adf4784b8b"
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 35415,
+            "sha256": "5aa2ed8bec279ea96aa1b7aef77d2fb95836bfea3c7bf458aa34605fa15f4aac",
+            "git_blob_sha1": "50156e187ace77da1fa64d6593d34641bc3523e5"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/PUBLIC-ALLOWLIST.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/PUBLIC-ALLOWLIST.json",
+            "mode": "100644",
+            "bytes": 16295,
+            "sha256": "bfb8132459db6e3aa94beed5c7f85523099b0cc253a7b9bb82fdf100aef92a0d",
+            "git_blob_sha1": "47e18cb25b37a18fef793159a7f6ae198e7fcff2"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/PUBLIC-PACKAGE-BOUNDARY.md",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/PUBLIC-PACKAGE-BOUNDARY.md",
+            "mode": "100644",
+            "bytes": 4335,
+            "sha256": "88bfe63336dfef52ec7476732a6395c10942e0c5c5968ea0b6c4c9f23b1699d1",
+            "git_blob_sha1": "441a544a19d51e57a76bf718abc3e8be1689de9a"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/PUBLICATION.md",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/PUBLICATION.md",
+            "mode": "100644",
+            "bytes": 6749,
+            "sha256": "8794ac3df2dd0d59ecb82d10f55cd5996a4adce14a4e091ea6d41202b5c3a21c",
+            "git_blob_sha1": "b4b64f5df93ef0362884460c9338d2a4ca41d379"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/README.md",
+            "mode": "100644",
+            "bytes": 13469,
+            "sha256": "208e5a614e1067f7ca9660daba35234408c6ddaaf27520cf49de5fb1313601d0",
+            "git_blob_sha1": "facec59b5de1e291230814cbf1210fd80336863d"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/RESULT.md",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/RESULT.md",
+            "mode": "100644",
+            "bytes": 8191,
+            "sha256": "e359c93613c1cc70a6bee647b0728ea5d174587daca47d2a9299f637d87a576c",
+            "git_blob_sha1": "c1647adc8ecf2cf9a8244290ebf46d966aba002c"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/SHA256SUMS",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/SHA256SUMS",
+            "mode": "100644",
+            "bytes": 9996,
+            "sha256": "dcf8cdd9d8107e10efcc6f65745fa9dfa849c11ae183398927f702eb77b9afb5",
+            "git_blob_sha1": "56dc45832b50fd19be95a5d38844accaa43de3f0"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/ab-data-admission.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/ab-data-admission.json",
+            "mode": "100644",
+            "bytes": 8370,
+            "sha256": "2ef08b21dce3762d30304b44204c1c237035cadb24e8cea267b59b48a33c40ae",
+            "git_blob_sha1": "e366d505e97660ec66267d7ad44d6b62aec10da7"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/ab_data_admission.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/ab_data_admission.py",
+            "mode": "100644",
+            "bytes": 5393,
+            "sha256": "0da854433430d25b1592159ab32cac314f4eb6527caa7fb011ee24cbeca1058f",
+            "git_blob_sha1": "49ccd2247b86c778c5533c31e722c68da0edf121"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/alimeeting_eval.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/alimeeting_eval.py",
+            "mode": "100644",
+            "bytes": 24781,
+            "sha256": "732c589760ddf2940d27c4454372e5f63fed74399ed996209818b6b2dc595eef",
+            "git_blob_sha1": "b5203a113854aa085f13fd3abdae220d9443c0cb"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/audit/audit.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/audit/audit.json",
+            "mode": "100644",
+            "bytes": 24004,
+            "sha256": "95b2f7b6abd409fe0a17e597f49a01aa0bbd97f86f4ec807762c609fd5a0aca3",
+            "git_blob_sha1": "973ed134f5fd11e3881eedec841fd4a04e54a252"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/audit/reference-candidates.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/audit/reference-candidates.jsonl",
+            "mode": "100644",
+            "bytes": 1390,
+            "sha256": "2aa9fa46202667a92daf8da70c83b7ce9c8b7fe2edae88ceb1269c04bb59b25d",
+            "git_blob_sha1": "5267b8a22cc725f8adea88dc2ddbd42f7d39276c"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/audit/review-template.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/audit/review-template.json",
+            "mode": "100644",
+            "bytes": 3013,
+            "sha256": "1a833d9642e265a4d6289a5cbf70d12f60d47744a2391a00deeb46366a6ee3f2",
+            "git_blob_sha1": "bc27920159b4f84f3027ab79aa9915e8ea2e270d"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build-commands.sh",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build-commands.sh",
+            "mode": "100644",
+            "bytes": 1812,
+            "sha256": "e3536e9dab76f8067afeae473b73c3cf4f462bc8a8eddacecf81a57cca4fefbe",
+            "git_blob_sha1": "47bdaf18b855d0e04e2586f1ec79c73ab2a5ff24"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build-receipt.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build-receipt.json",
+            "mode": "100644",
+            "bytes": 42920,
+            "sha256": "78b2988e60a4bf6b875934222fd5e732633ca34de64e470c433e74289f57ac8a",
+            "git_blob_sha1": "a535698392415f624773036ca2a2bb6c0ca6293e"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build/CMakeFiles/kws_wav.dir/link.txt",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build/CMakeFiles/kws_wav.dir/link.txt",
+            "mode": "100644",
+            "bytes": 170,
+            "sha256": "cc94cbb4b8356d2165a3f53a9933c7442d71e97ade3ec746dddea871dfac71fd",
+            "git_blob_sha1": "ebfba8ebae41e2cfe2b40a75f8c9ca9b8317692f"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build/compile_commands.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build/compile_commands.json",
+            "mode": "100644",
+            "bytes": 13771,
+            "sha256": "fa4a2f7f508f81264cf9cf6f97b3ecb4abbf411f2109523e0f76b353238cd28e",
+            "git_blob_sha1": "7fc877d80de2d22dfc8c3360cf09aa206c2e465a"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build/generated/kws_build_config.h",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build/generated/kws_build_config.h",
+            "mode": "100644",
+            "bytes": 491,
+            "sha256": "cc26c543327e29d1eb85b2b0b4ca8304089b6ecba63a46fa9ec358d100e9fff6",
+            "git_blob_sha1": "09354df88fe68c6de6e14803894e1ba440ef75a2"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build/generated/kws_parameter_limits.h",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build/generated/kws_parameter_limits.h",
+            "mode": "100644",
+            "bytes": 9560,
+            "sha256": "bd81e6d357487a400b759d49e97ef1aca88ee9e38f83d13c7d8bd075941a32cb",
+            "git_blob_sha1": "68868cc738a4a59ee9d4b76a810256c63e09751c"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build/generated/kws_source_revision.h",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build/generated/kws_source_revision.h",
+            "mode": "100644",
+            "bytes": 164,
+            "sha256": "666e46bb0c9430a820ac1efa4b2af40d836da662d6001c50b2d64aed7cc7a1e1",
+            "git_blob_sha1": "d91d0ee56bfe150d01383a36852d10511e07fcee"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build_frozen_runner.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/build_frozen_runner.py",
+            "mode": "100644",
+            "bytes": 15338,
+            "sha256": "93a54b6774bd8699572d2fccbf2c349dcb18232b498654532efbe46747622e88",
+            "git_blob_sha1": "a41b118575c1e9e31c138e41051ee03598699d11"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/commands.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/commands.json",
+            "mode": "100644",
+            "bytes": 3571,
+            "sha256": "8e279ee7c238af3ae467fefe63f9703a8bd00edda68d6c195add888cc7c06142",
+            "git_blob_sha1": "8509b8308081c4154158918f2cbace978edfffd7"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/receipt-static-validation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-build/receipt-static-validation.json",
+            "mode": "100644",
+            "bytes": 1826,
+            "sha256": "83cd3b60b5a647b3f3c30e63e86b15ac212644f9d50aba8eb862cd7575280d85",
+            "git_blob_sha1": "8c464738c450f8b580dcc5a2d0e77dbdfc531697"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-execution.exitcode",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-execution.exitcode",
+            "mode": "100644",
+            "bytes": 2,
+            "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "git_blob_sha1": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-execution.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-execution.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-execution.stdout.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-execution.stdout.log",
+            "mode": "100644",
+            "bytes": 814,
+            "sha256": "ec64b08fedee63a308223b9eaac7bccd6cb9b22916b57ee3a96be8f089498e70",
+            "git_blob_sha1": "8d7872cda2066e495611a6129398cfd9ae96017d"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-plan/preexecution-p4-final.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-plan/preexecution-p4-final.json",
+            "mode": "100644",
+            "bytes": 949,
+            "sha256": "d2f91c7b6e575536e32bff49afe5f62d193e7514ab3ac12e07877d04f28f16b3",
+            "git_blob_sha1": "d0ff6f2ee5fb19cba59294f30b7aeb98ff7e924e"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.completion.json",
+            "mode": "100644",
+            "bytes": 658,
+            "sha256": "370d1a7e9f62af86f6069e8871566f89f6eefb4f08b9d0bdebb33ac4e224582b",
+            "git_blob_sha1": "5a92d64dd4031ca1e1f8d30016575f3d8f89fc95"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.detections.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.detections.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.invocation.json",
+            "mode": "100644",
+            "bytes": 1105,
+            "sha256": "666a57eaee019eb950cccc4e93358d31f4884d02e62a6f4949aa09c96bc822d0",
+            "git_blob_sha1": "34087faeb8ef1bded6c3ecab6dea06dc1ff3d9b4"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.stats.json",
+            "mode": "100644",
+            "bytes": 321,
+            "sha256": "b108cc05d4a0a7f369b3f751e384ccea5d89d18f877418c4a3af510983748a98",
+            "git_blob_sha1": "31365d853d5ed889fcc962f892f9496b3cf0e434"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8001_M8004.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.completion.json",
+            "mode": "100644",
+            "bytes": 658,
+            "sha256": "12f6efd590e308c7eaa41817eb06c3b884f43305fd3c7fcddfe965d4193947ae",
+            "git_blob_sha1": "49d900599e265cbe6d5af0482216ac4b83e5fd5e"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.detections.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.detections.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.invocation.json",
+            "mode": "100644",
+            "bytes": 1105,
+            "sha256": "a06083a92ec1ea692022a43ff4f93a80eea8c0c12594d1a17d74b290a67e65c4",
+            "git_blob_sha1": "0f7f000de8ffd68c26c1dd019957671185b88da6"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.stats.json",
+            "mode": "100644",
+            "bytes": 323,
+            "sha256": "4a0a5c65f10f49c791747f2ccc03a2b9c950f9731cb48855b83cac511eb05ea7",
+            "git_blob_sha1": "8fa7a4bb7fba99b225e758a58148fb647c1dc769"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8003_M8001.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.completion.json",
+            "mode": "100644",
+            "bytes": 663,
+            "sha256": "412cf6ce396c171cd07df405b6d69faab319659681f4938074cd02cded82d99f",
+            "git_blob_sha1": "3e1bc20f14fac48c174a6b2f7e04b69b411a4b49"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.detections.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.detections.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.invocation.json",
+            "mode": "100644",
+            "bytes": 1105,
+            "sha256": "d2e66c9bd5efa560fed5e9e69cc56427724dfe5d4a08c6f1088c8452d4d9684f",
+            "git_blob_sha1": "9266517b63471562c5aba1ef31a75d3bbe247fa2"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.stats.json",
+            "mode": "100644",
+            "bytes": 321,
+            "sha256": "f3bf0d5d33d83edfb4a1543254c7699b8121c42ba50b695157770f38be74d3ae",
+            "git_blob_sha1": "452c21fa8d58d79f029c78f76abaa2eeb8a2052e"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8010.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.completion.json",
+            "mode": "100644",
+            "bytes": 658,
+            "sha256": "bf0a6c745c94fe28a4cf6f4a4145f9e382371bea2e325b6f7875bb3834d66b68",
+            "git_blob_sha1": "db27a347b7cdc171727ce9bb46af658bf8378bdd"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.detections.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.detections.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.invocation.json",
+            "mode": "100644",
+            "bytes": 1105,
+            "sha256": "54f5ecfcd4ecf02926a6c205c80c427dc1fa0e693dd611f986f35d4c1d919c61",
+            "git_blob_sha1": "1ee97708f70a793bf8bf804ee47a094310f05974"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.stats.json",
+            "mode": "100644",
+            "bytes": 321,
+            "sha256": "cf60dc60e1769a2a66f60ab7784e99729598a47a1d84dcb0f50bc131f643d989",
+            "git_blob_sha1": "cf59010fabfb701a1d7798eaf04382c41cdefb73"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8007_M8011.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.completion.json",
+            "mode": "100644",
+            "bytes": 661,
+            "sha256": "269481847cfb6261b847dd29e868dd382b94932d1f64d59e15f64fa4ee301274",
+            "git_blob_sha1": "465038bb1378b7af25fc572dde19385984902491"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.detections.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.detections.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.invocation.json",
+            "mode": "100644",
+            "bytes": 1105,
+            "sha256": "c703a57b5ec8d4b1e0a2d8d9f033efb906633517bba7ae362db7ad5cf6f71729",
+            "git_blob_sha1": "c948fe8a6e44b25ba112356dad092e853efc9acd"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.stats.json",
+            "mode": "100644",
+            "bytes": 323,
+            "sha256": "ff317ae66360955dbdfb8db76c01fe689d6f8fee4d0ce95d7aa6f7717d7f83d0",
+            "git_blob_sha1": "f4cb104ae17e5c9979711193eba5424b9c567b69"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8008_M8013.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.completion.json",
+            "mode": "100644",
+            "bytes": 658,
+            "sha256": "86dc2eb37a025e5852aafa05de0bfa84635c33e49fabe6c74e4f913606a4f0fe",
+            "git_blob_sha1": "b7e12d5d688e121ddc731b6b71b51b3edb453ae3"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.detections.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.detections.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.invocation.json",
+            "mode": "100644",
+            "bytes": 1105,
+            "sha256": "e0edc268bd3e82977a0e2cc7f6678e46a0a8f59d05aa78eaf318da14441dd3be",
+            "git_blob_sha1": "4b314e6d4568c97fe44198b7af16ac929f19acb7"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.stats.json",
+            "mode": "100644",
+            "bytes": 321,
+            "sha256": "84d1dcf962d247a0f64431e774345568943c67a461197944117b3b2b0682be76",
+            "git_blob_sha1": "a6dba0312a28604b445d2e920c2118e5526a0749"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8018.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.completion.json",
+            "mode": "100644",
+            "bytes": 657,
+            "sha256": "eb86404f595e70f74a14b693565b2ffb7ebf344faeb4291d2aadcdd15b212f8a",
+            "git_blob_sha1": "548dae9562386a5dfe5d4e253de6a143af85d07e"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.detections.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.detections.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.invocation.json",
+            "mode": "100644",
+            "bytes": 1105,
+            "sha256": "4cecd64929691f1c938e2bc6f4b62b8e737dce10b92bcb605fc85369f682e533",
+            "git_blob_sha1": "87216cd106f77e0e12f19d4cfea7a63fe23bd75d"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.stats.json",
+            "mode": "100644",
+            "bytes": 321,
+            "sha256": "48f6422404f8f78cdfcb82530008dc3a64c36a24d675bd19752723d68370cb88",
+            "git_blob_sha1": "5d9a05234a010046220d7b8ee73e22eff680ed2f"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8019.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.completion.json",
+            "mode": "100644",
+            "bytes": 663,
+            "sha256": "90b334ef8697014e5653460e5ac5c6c0ce3bf4238500dbff0e4a7a7b69615849",
+            "git_blob_sha1": "f3639a43c8991280d0f2d5e1a0080b9ad3f95e50"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.detections.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.detections.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.invocation.json",
+            "mode": "100644",
+            "bytes": 1105,
+            "sha256": "b2717e4d457b081bcb04d567fdc59b423ae2e4ecfa1a97967d6ce5d955f42a27",
+            "git_blob_sha1": "b3d0bb1c017227b4d3e6fc81ed5336cd3de035ea"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.stats.json",
+            "mode": "100644",
+            "bytes": 321,
+            "sha256": "a65baef8d7fd5ea06fcb7b9af6b9f4e46ef5d733afe775935773db6ccdf71b7d",
+            "git_blob_sha1": "7a8f8905978eb2045fd04b530d078ddbb17e774a"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/alimeeting-eval-R8009_M8020.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/inputs.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/inputs.json",
+            "mode": "100644",
+            "bytes": 8715,
+            "sha256": "fd751047bfda95f44beeff0f204a97b623b4fcc370bba1615944d8f1d36a9fa2",
+            "git_blob_sha1": "58ab727d04acc06446adc62d3c345aeac928c0e0"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/summary.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic-run-p4-11b93abe/summary.json",
+            "mode": "100644",
+            "bytes": 7050,
+            "sha256": "e34600b0cc8816e3e23dda888782c8eabb831fb9bea658518bb41a12f51f1c06",
+            "git_blob_sha1": "e56bbdc1743304c68c82e933093c5d119cc3b0a2"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/diagnostic_runner.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/diagnostic_runner.py",
+            "mode": "100644",
+            "bytes": 11102,
+            "sha256": "05559ec796c55bad33252b7c46f4c4353a43eb9ca93c35da70f10af75a092305",
+            "git_blob_sha1": "55ec6d1b20ae0cd6906c890439086ad89148a49e"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/PUBLIC-ALLOWLIST.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/PUBLIC-ALLOWLIST.json",
+            "mode": "100644",
+            "bytes": 14242,
+            "sha256": "fe6e48d238783ef60c70d8b02f656d0d2fbc39abd9025e9b539c948d6d2e4f42",
+            "git_blob_sha1": "54f00adf439ed369081adf324d8269e8fb3bf3d9"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/README.md",
+            "mode": "100644",
+            "bytes": 4139,
+            "sha256": "32c239f6b31fff0d697b13c6e847d3138e6a377715a8898bfb8db79519a11d8d",
+            "git_blob_sha1": "8528e2db2255f8473024d401c1c8cab078b23e5f"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/SHA256SUMS",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/SHA256SUMS",
+            "mode": "100644",
+            "bytes": 8418,
+            "sha256": "7e4f82c4aacf5c7a8a9f9c0220936365512000905ad1a6f579893fdc6c3a3d40",
+            "git_blob_sha1": "b769cd8ae499ef9951d67e602213b67b26432f9a"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/asr-independent-audit-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/asr-independent-audit-summary.json",
+            "mode": "100644",
+            "bytes": 929,
+            "sha256": "a29ad37a9ce989602bb668bad0f7208ce4cd8f35724428ecfdcf4105698c2103",
+            "git_blob_sha1": "44659cf389d717eb2d427fa33e945e85c60b3f67"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/execution.exitcode",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/execution.exitcode",
+            "mode": "100644",
+            "bytes": 2,
+            "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "git_blob_sha1": "573541ac9702dd3969c9bc859d2b91ec1f7e6e56"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/execution.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/execution.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/execution.stdout.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/execution.stdout.log",
+            "mode": "100644",
+            "bytes": 784,
+            "sha256": "8da99f7436b6709b11f684fe5e26a691048bfb6e138e5fe2df3f3058493bdedf",
+            "git_blob_sha1": "53faf93f9115687d0a313a14169e05d043f9d04f"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/independent-validation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/independent-validation.json",
+            "mode": "100644",
+            "bytes": 8915,
+            "sha256": "d6df330aac89a6435d503755be3f4132a04bb8e844c0e34fb0cbb6ab26c6a958",
+            "git_blob_sha1": "1088505fa11666fdcfb710897c4d6c9439d16fa7"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/preexecution.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/preexecution.json",
+            "mode": "100644",
+            "bytes": 14990,
+            "sha256": "6b35c7dce3b024528999fc12735b395130432f504c01f938478f8664977fac14",
+            "git_blob_sha1": "29bba6304df3c06cb2f05465a6f234ba6530719a"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/inputs.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/inputs.json",
+            "mode": "100644",
+            "bytes": 17700,
+            "sha256": "4e952e2125865957e33eb65bc83c9b3ffa9964b63f87b3db64dfbc3300b814ac",
+            "git_blob_sha1": "3c47ab88b5fd1e4018953fcb9e9fd4f273339913"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/summary.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/summary.json",
+            "mode": "100644",
+            "bytes": 17337,
+            "sha256": "4510f8f8d2b5008da89c274d8cb074fae646788855753a161e098c6cca32647a",
+            "git_blob_sha1": "e931078787881dbf574cd347ccf3296a330b0321"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-03.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-03.completion.json",
+            "mode": "100644",
+            "bytes": 1039,
+            "sha256": "048d63de1afa0a845aed44199a58319de1670d88fe2f3a388cb3ae5584c7f570",
+            "git_blob_sha1": "68640e6370a826d5c1904cc7006e462066174ac4"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-03.events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-03.events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-03.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-03.invocation.json",
+            "mode": "100644",
+            "bytes": 1331,
+            "sha256": "30d321342716eb62673e3db65534ec34017ef0c2780e8163c5028a3d26cb545d",
+            "git_blob_sha1": "2cd895f3c7200c4f5025295a7f621f75c70aa180"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-03.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-03.stats.json",
+            "mode": "100644",
+            "bytes": 311,
+            "sha256": "7e9774aa8e9a94cc8bb3f77a6001fcaa5892b6afe8c937a38094127f55884b43",
+            "git_blob_sha1": "b8958dc048d3c17e8cba7a064f4fa0ac9ba43380"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-03.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-03.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-05.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-05.completion.json",
+            "mode": "100644",
+            "bytes": 1037,
+            "sha256": "9a5f4df235a0d79598ca52e8cbbcb0471d0fe58c1361187adcca7848a4ee2b09",
+            "git_blob_sha1": "624897265c17974dd4b1c2c8388a7d7bcbebc115"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-05.events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-05.events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-05.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-05.invocation.json",
+            "mode": "100644",
+            "bytes": 1331,
+            "sha256": "180e798665f7690611be9ee9366f0e6aa380a0b7ffd849cd35d953808feeb685",
+            "git_blob_sha1": "6d9facc0ee371891264a85ea2604cbef24333610"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-05.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-05.stats.json",
+            "mode": "100644",
+            "bytes": 309,
+            "sha256": "055706d3b96be2fb5107ba14c74ade0a52f8e63c5a8e2743d0b289cd7bc38a60",
+            "git_blob_sha1": "ac3292d7905b19fc8c3fa7f7e960044a9d8b814a"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-05.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-05.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-06.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-06.completion.json",
+            "mode": "100644",
+            "bytes": 1037,
+            "sha256": "8a89bc748ca1d495e646b0b93f2102c159404a4152cee23890c86a51e16706f1",
+            "git_blob_sha1": "303a3124f12df6336dae714af59fc604f4945b59"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-06.events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-06.events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-06.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-06.invocation.json",
+            "mode": "100644",
+            "bytes": 1331,
+            "sha256": "77e4fbabb1f4b7b30d60979e550afb70b7ea185189890bf5ac31cf209f14db07",
+            "git_blob_sha1": "c38e6439a4d3376f97f68aea87ae679fad0f8982"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-06.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-06.stats.json",
+            "mode": "100644",
+            "bytes": 309,
+            "sha256": "adc1171e0641a18d3e33303d51e6d6f1f0cd4ea55ec4effc708e4eb78a137af0",
+            "git_blob_sha1": "4b5983acd763050a8140bce99da67ceda8d9c0c6"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-06.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-06.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-10.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-10.completion.json",
+            "mode": "100644",
+            "bytes": 1039,
+            "sha256": "ac543adf0615f19427ccf8020f057367ea6127a0b29fa47b7717dd49ac40e113",
+            "git_blob_sha1": "26eb84b67f4c431ad640736a4c82dac78271d278"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-10.events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-10.events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-10.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-10.invocation.json",
+            "mode": "100644",
+            "bytes": 1331,
+            "sha256": "36238e341d346d0b2312544e3a9b86298b4747065eded4079d2e4c0c766fbce6",
+            "git_blob_sha1": "317d55428849c325f8c2dc9fbbe0ef9e528ebdf9"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-10.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-10.stats.json",
+            "mode": "100644",
+            "bytes": 311,
+            "sha256": "992acec79c67eccabdc053555d8cb854d2df697bdf746e470761291591ad8010",
+            "git_blob_sha1": "d209fa9a675c142248993cc088da23945ebb94b0"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-10.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-10.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-11.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-11.completion.json",
+            "mode": "100644",
+            "bytes": 1040,
+            "sha256": "feda280203f29600562fdabaa4c19477c23dcbe5ced8ff0db2267e0723ea69ee",
+            "git_blob_sha1": "e6d414a777aaa4cee076de9a6fa319cf55c0b0a6"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-11.events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-11.events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-11.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-11.invocation.json",
+            "mode": "100644",
+            "bytes": 1331,
+            "sha256": "05156f611b6bef2c542e5f3449aba6998d0adddd2eea72504d277d76559d9511",
+            "git_blob_sha1": "91449de9cf3f566f4feccb1796211a46e0f3b43c"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-11.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-11.stats.json",
+            "mode": "100644",
+            "bytes": 312,
+            "sha256": "ae0b332a2bb4d01bdbcae37fbe11c38123f1106c6d5e1b2cdeca96f7322a38d4",
+            "git_blob_sha1": "e925c40dbe06d129c95f0e04c78634d27e8aaa01"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-11.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-11.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-14.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-14.completion.json",
+            "mode": "100644",
+            "bytes": 1039,
+            "sha256": "7d0c3e1bcce6e9a9ccbfe699403610b2c09942558da4f5318d3de7ce23fcab48",
+            "git_blob_sha1": "904d3342df48b41651fdd6e1037b5de295c7ee17"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-14.events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-14.events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-14.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-14.invocation.json",
+            "mode": "100644",
+            "bytes": 1331,
+            "sha256": "4743a6dd776db71e65874f0410e6e9a1e352a9fe171ac6a196f4e0637888dfdc",
+            "git_blob_sha1": "a4ebf135e13d7fa605f84dd5689e663da5022d0e"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-14.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-14.stats.json",
+            "mode": "100644",
+            "bytes": 311,
+            "sha256": "abbdb33884041ab4339d22a54fd9ee6d108a44def144e240ac57a2b2ba160cf8",
+            "git_blob_sha1": "153ea7ed966b43660f6b641c65531894168a6449"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-14.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-14.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-15.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-15.completion.json",
+            "mode": "100644",
+            "bytes": 1037,
+            "sha256": "11c1de1e9a856c16b0b4096fef95b89d7a79bd7a2b8fbdd2e1bf74fafcf75c96",
+            "git_blob_sha1": "75edf01307d8b60216574554e09e0ffee597c8df"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-15.events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-15.events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-15.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-15.invocation.json",
+            "mode": "100644",
+            "bytes": 1331,
+            "sha256": "7593cfe6b396c2598a3883b981621c02c9fc2c83dd2054bf411f416470f311d0",
+            "git_blob_sha1": "c6472ce70cb7c6bd13b333cda0c22590c97c5328"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-15.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-15.stats.json",
+            "mode": "100644",
+            "bytes": 309,
+            "sha256": "05b0e09df3a8e8fcfe1831e1bc927587b6fca6c8d9269db39a72a72ab593ab1e",
+            "git_blob_sha1": "6eb80b65391c3d7cd0253cecf461a02140a2c35e"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-15.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen06-15.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-01.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-01.completion.json",
+            "mode": "100644",
+            "bytes": 1037,
+            "sha256": "efbadff47b7262c07b40730aac7bdb64a65ab6f1e81067109d130f6ef8adcf33",
+            "git_blob_sha1": "0e66e53395149aeb3f097c6784b0182678d711dd"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-01.events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-01.events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-01.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-01.invocation.json",
+            "mode": "100644",
+            "bytes": 1331,
+            "sha256": "3696c7e1eeae498809af9bc26c27a50bb92f76b111ee916a184587107d131a26",
+            "git_blob_sha1": "8e4551c89b220ebe857959dad44df3db971da6dc"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-01.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-01.stats.json",
+            "mode": "100644",
+            "bytes": 309,
+            "sha256": "5acf23a1264158ff570496f4726c54603c438811c42143d3f84cc71fd8a2d381",
+            "git_blob_sha1": "4cbd5840d3fd82cee00700f578c791b53385fbe1"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-01.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-01.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-02.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-02.completion.json",
+            "mode": "100644",
+            "bytes": 1037,
+            "sha256": "21a9ebbe27545e8afa11ab6aa9d2a8f4cc0a718964bbfc73907bd0b8aff428a9",
+            "git_blob_sha1": "911ce5cc44937a273fb6c43f413b3d9c9281a7aa"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-02.events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-02.events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-02.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-02.invocation.json",
+            "mode": "100644",
+            "bytes": 1331,
+            "sha256": "8b3f9c632b0812e7a9ced2fa13ea6d1e7c80118f48f15ba0bcf27be1281d7292",
+            "git_blob_sha1": "6fd28c53e1f33aa8afbaaaffb24bd0b4d0dc9275"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-02.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-02.stats.json",
+            "mode": "100644",
+            "bytes": 309,
+            "sha256": "51ec2f6098ecd2b7726850420dffcbe6a0a105f3b362dfe3d4c59303f8a11a52",
+            "git_blob_sha1": "826e318dc7b12d5abead871bf921e9b81712994c"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-02.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-02.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-03.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-03.completion.json",
+            "mode": "100644",
+            "bytes": 1036,
+            "sha256": "878a3423aea4a8e42003296220439d313d219e43864039667dd7ec833653ecd0",
+            "git_blob_sha1": "5150cabeb97d7b6e9034447766328a43ecc12051"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-03.events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-03.events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-03.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-03.invocation.json",
+            "mode": "100644",
+            "bytes": 1330,
+            "sha256": "f3720e010d75ed9fd1be28bff380d3e66e68160f9b14143cbfd71b110c7eba61",
+            "git_blob_sha1": "221776fc8d0fcfa9bc9803e225f67a9775599211"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-03.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-03.stats.json",
+            "mode": "100644",
+            "bytes": 309,
+            "sha256": "1e096b4cf4e38edfe2bf9e437e5a0b1fce39b15813d571246e5bf9c961339fae",
+            "git_blob_sha1": "c8cc083acd7fbe0dc977fe760cb36cc255ac4296"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-03.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-03.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-06.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-06.completion.json",
+            "mode": "100644",
+            "bytes": 1037,
+            "sha256": "750522884c75c6a5952dc3100d42033b2cdde3fea347a914e9be1d86bc12d470",
+            "git_blob_sha1": "9e1dd4076d8db70286b1e805e62ece0b20a9c8ca"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-06.events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-06.events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-06.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-06.invocation.json",
+            "mode": "100644",
+            "bytes": 1331,
+            "sha256": "8de4a80fca7c7ee050a373665e54e47f15fd6fbdf16166c0845ecbb2c99bcb9c",
+            "git_blob_sha1": "cd13c8a2458711c27094c199f2d7f806eb7e23f5"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-06.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-06.stats.json",
+            "mode": "100644",
+            "bytes": 309,
+            "sha256": "5530758537d20b2c3d5a6b472eb79ec0882ccae052d4157b6291fea5a3965f04",
+            "git_blob_sha1": "1e25df55b599c1c165086fc93cda77a5b9abe427"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-06.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-06.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-14.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-14.completion.json",
+            "mode": "100644",
+            "bytes": 1037,
+            "sha256": "b80e0940c883a6f311c357e4424eeb86f9757c71d7d626a081fe7044ea708d0a",
+            "git_blob_sha1": "2b0842d26703b0947cd953fa79e7598ec8581928"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-14.events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-14.events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-14.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-14.invocation.json",
+            "mode": "100644",
+            "bytes": 1331,
+            "sha256": "81369c6a8d482c0cd039e212a0746c95fdcc5118692626d7786be37132578763",
+            "git_blob_sha1": "f84b24fbd76c72e66c56d7602ccebd0981abbe86"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-14.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-14.stats.json",
+            "mode": "100644",
+            "bytes": 309,
+            "sha256": "7b9ef09bb3f91f143e3c3135286760897fcb57572c733053ee8042cada54a00b",
+            "git_blob_sha1": "2d15379a7e653295f6eb301f5a80cdab63fb88ab"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-14.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-14.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-15.completion.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-15.completion.json",
+            "mode": "100644",
+            "bytes": 1037,
+            "sha256": "c27684faf69aa28bf1167a6d114044f1cc0d2a2ae2bedf22d85048d7d76e5f86",
+            "git_blob_sha1": "1e12afbfd3c4d62060fc45f0c3a4488210b94477"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-15.events.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-15.events.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-15.invocation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-15.invocation.json",
+            "mode": "100644",
+            "bytes": 1331,
+            "sha256": "df3c079e2a6de3183012e0f9de837b59c7fb9f6e939eb3a8298c87a516aa30bb",
+            "git_blob_sha1": "28114f896333463d95678f668d104e400de52911"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-15.stats.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-15.stats.json",
+            "mode": "100644",
+            "bytes": 309,
+            "sha256": "81c0b2c03dcaedf37906126fced64dbc09c868a2b0fd145cb82db610fe78a475",
+            "git_blob_sha1": "592d00441c0fea10b8a40796addea7a8cfa8905e"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-15.stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run-p4-11b93abe/tqp-qwen17-15.stderr.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run_control.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/run_control.py",
+            "mode": "100644",
+            "bytes": 13520,
+            "sha256": "248355cc7ac965d928a1849002e949c532b02b75228a152902e08045cfa7d035",
+            "git_blob_sha1": "dc747af273895569eefbd01093ad152c5b21466a"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/test_run_control.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/test_run_control.py",
+            "mode": "100644",
+            "bytes": 4863,
+            "sha256": "137aa82ef63bd7c8b98f4041e1ee4479a5f72f6e8076825531ec761e7f2fdd19",
+            "git_blob_sha1": "5c6a61672722fb63f4c6974d4e1052e0bb562c66"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/tests-O.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/tests-O.log",
+            "mode": "100644",
+            "bytes": 110,
+            "sha256": "ce895947b8ffcb2e77addf8382970fd1c07ecab9486fbbfca209319a47c37f4f",
+            "git_blob_sha1": "96dc4ffa0d64a6eab03af3c26b9288284dc11694"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/tests-OO.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/tests-OO.log",
+            "mode": "100644",
+            "bytes": 110,
+            "sha256": "770a5a7cfd5ed30408387c611037fc3fb16dc0c5873dba409dd6aae6c67d7bb1",
+            "git_blob_sha1": "b639057829dd4f895e793b50fd7fab3489d892ce"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/tests-isolated.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/tests-isolated.log",
+            "mode": "100644",
+            "bytes": 110,
+            "sha256": "ce895947b8ffcb2e77addf8382970fd1c07ecab9486fbbfca209319a47c37f4f",
+            "git_blob_sha1": "96dc4ffa0d64a6eab03af3c26b9288284dc11694"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/zero-trigger-readonly-diagnosis.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/machine-positive-control-v1/zero-trigger-readonly-diagnosis.json",
+            "mode": "100644",
+            "bytes": 11763,
+            "sha256": "edb08008c54564ea1729ac1c990fba7ff4f30bf1dea5391629cdf3285877b355",
+            "git_blob_sha1": "bf2ec2beb7eb4ecfdfba0ab9db63412e4b89f034"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/model-scope-audit.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/model-scope-audit.json",
+            "mode": "100644",
+            "bytes": 5182,
+            "sha256": "528e584b9a2a6f84b8234b095700a52eeaff386d05c3da668c9be15aa47469d2",
+            "git_blob_sha1": "1d663204df1517fc64095d45e6bac0436db68c76"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/overlap/alimeeting-overlap-result.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/overlap/alimeeting-overlap-result.json",
+            "mode": "100644",
+            "bytes": 3059,
+            "sha256": "7ff9a189c3c592948747e96c32e53e86ac5e6c1bc489299a6b1ea5ed79f0c5f4",
+            "git_blob_sha1": "e660456e63eec0927319fb2c16dae0ca34031052"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/overlap/compare_overlap.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/overlap/compare_overlap.py",
+            "mode": "100644",
+            "bytes": 16860,
+            "sha256": "64d3b23e19a4baeed5805028cbf2eedb094b7fae764b370eb606bcd89a09e3bb",
+            "git_blob_sha1": "e80e77df7198c8ccaa0dc63e291df47b240c8a2f"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/overlap/summary.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/overlap/summary.json",
+            "mode": "100644",
+            "bytes": 9646,
+            "sha256": "071cfb80d4f76e70f89ff888c1aa98cd17ae61bdc5c7da7d22cade251679bc44",
+            "git_blob_sha1": "3abfd08bec0474231f1e72335686e52f6928e7ec"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/overlap/test_compare_overlap.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/overlap/test_compare_overlap.py",
+            "mode": "100644",
+            "bytes": 4764,
+            "sha256": "d7b3dc179368d71e0ea3252f826fa39fe34f2d77520f14868cfc2d5257eb519a",
+            "git_blob_sha1": "8ba61ba73cddb8c45cab3b14bb6884078222c3de"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/overlap/tests-O.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/overlap/tests-O.log",
+            "mode": "100644",
+            "bytes": 1677,
+            "sha256": "80f1d59a19bc4a0e84e26416189cbc25ec249e281f516bb059f450554cd47434",
+            "git_blob_sha1": "12ea9746d321a9e6ddd53cc1ef179e22779c8874"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/overlap/tests-OO.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/overlap/tests-OO.log",
+            "mode": "100644",
+            "bytes": 1677,
+            "sha256": "80f1d59a19bc4a0e84e26416189cbc25ec249e281f516bb059f450554cd47434",
+            "git_blob_sha1": "12ea9746d321a9e6ddd53cc1ef179e22779c8874"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/overlap/tests-isolated.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/overlap/tests-isolated.log",
+            "mode": "100644",
+            "bytes": 1677,
+            "sha256": "95ab3e0281806c837b895b0ff5496fb024a96c70fc46ff4cceae75ba6e972b86",
+            "git_blob_sha1": "ebab2c137bba0e8fab77cb212387207d8ca4dc7a"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/positive-control-review/review.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/positive-control-review/review.json",
+            "mode": "100644",
+            "bytes": 10460,
+            "sha256": "ce43738664c5f9cdbfb0c9ec9efd877252b193dc05363a445de306540934f4dd",
+            "git_blob_sha1": "875d3c5a394147868e89a0fdb883f6d6a1fa2f95"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/build-receipt.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/build-receipt.json",
+            "mode": "100644",
+            "bytes": 14854,
+            "sha256": "23f960bf1e0ecc54815d5e1adfe4ff3dccccad5361c5895acf3b0736d5aefd47",
+            "git_blob_sha1": "298147cec06cd20e17f98a51c78f2120e8db3cf9"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/build_trace.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/build_trace.py",
+            "mode": "100644",
+            "bytes": 2225,
+            "sha256": "081c11f064d805f5c7f7a24ea065a3694df8ed5add91edae856339f70d3963f3",
+            "git_blob_sha1": "19b3bf43e1b0e3b781dfeee49b21e69e22ccce32"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/diagnosis-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/diagnosis-summary.json",
+            "mode": "100644",
+            "bytes": 2538,
+            "sha256": "93ef9b5a3612668a6d1a1dcf6eb6630306a53fda5e543f3df72b551094529c27",
+            "git_blob_sha1": "f9b4d5de57a3dd7518799a8604ef4ba1c54d009e"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/independent-observation-audit.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/independent-observation-audit.json",
+            "mode": "100644",
+            "bytes": 11692,
+            "sha256": "e1ccfe99fe4538f9ce992071224974f820e616674d1c420c7e222aca544cad85",
+            "git_blob_sha1": "6287b70ee6dd7e7fe840e0afa71496128f734fae"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/independent-source-build-validation.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/independent-source-build-validation.json",
+            "mode": "100644",
+            "bytes": 8694,
+            "sha256": "c60ac3957953d502d94fc1a0a7fec177fd11a6d867f8ab2ded53194f18f1dffa",
+            "git_blob_sha1": "ed5de9957598146497b68eb5a6cc1b0386491677"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/observe.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/observe.py",
+            "mode": "100644",
+            "bytes": 4613,
+            "sha256": "835091c0a13f3afb0a125c61bba6a379f85c402404ac657c1989e541ca947b86",
+            "git_blob_sha1": "54730177af20d1250a938a295d01ac6816cc49c9"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/publication-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/publication-manifest.json",
+            "mode": "100644",
+            "bytes": 1670,
+            "sha256": "25acc3491d06884ccb116cd2ec86d27ae9c9150b85c1a81a29b734310a4408f8",
+            "git_blob_sha1": "302558fcec1939f1d33ebf0116e9d045c99bda60"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/run/analysis.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/run/analysis.json",
+            "mode": "100644",
+            "bytes": 33542,
+            "sha256": "87e42ae33d0bab894c0e6a5cc7e249e2919cd6b9394fec49a3f162247bb7fe3c",
+            "git_blob_sha1": "77ca5f7c9128362b318ac1e905b645c58ccf8417"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/run/receipt.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/run/receipt.json",
+            "mode": "100644",
+            "bytes": 75984,
+            "sha256": "64241cc3dd05aadc4322071df8593c099f51195a07d88eef2aa057c0e7c4e1c9",
+            "git_blob_sha1": "25a0f13def7e055c2b3d934941e361b017d999ee"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/verify_package.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/positive-trace-observation-v1/verify_package.py",
+            "mode": "100644",
+            "bytes": 1847,
+            "sha256": "0c0dd102e05062f575c1da6a5ffbd1f7e3bd10a77835c21c69d8783c40f2a9a6",
+            "git_blob_sha1": "b832b44d4abd1252e475f8a487838e86842ffb56"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/publication-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/publication-manifest.json",
+            "mode": "100644",
+            "bytes": 28021,
+            "sha256": "9b584eb8c56df2056504b8607bbc19c4b7afbce5d6afb41ccb8832b29ab909c3",
+            "git_blob_sha1": "221292f7f3405c10380a7f002d88612cb7c8706a"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/raw/acquisition.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/raw/acquisition.json",
+            "mode": "100644",
+            "bytes": 1199,
+            "sha256": "42a2700339b99b97cad53c4c12a1d2a5dbc496a8004d5c7de59b29c4a487bdb5",
+            "git_blob_sha1": "26aae056db72d0978615e3321f94c96493ed5f22"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/source-plan.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/source-plan.json",
+            "mode": "100644",
+            "bytes": 4620,
+            "sha256": "4e39d89b412a86777b5299487dd896a3d6912578d53a387f0739015c9e856538",
+            "git_blob_sha1": "c0b57af60231c652ecff80df3b1fcec717cb31ac"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/test_ab_data_admission.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/test_ab_data_admission.py",
+            "mode": "100644",
+            "bytes": 2478,
+            "sha256": "5a7d587a8d3bc10e31648b03658780e9aedb7a713acf54dba7fb8797960254a2",
+            "git_blob_sha1": "1b388e40e93c81e0ca944e55b7336879b4edb6d7"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/test_alimeeting_eval.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/test_alimeeting_eval.py",
+            "mode": "100644",
+            "bytes": 19319,
+            "sha256": "e299f57810f20ec49b7348e01f9dc534695951faf4d0c7c339fc86050c873199",
+            "git_blob_sha1": "5edb02be93afe151eaec88d814bab290cdb5d763"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/test_diagnostic_runner.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/test_diagnostic_runner.py",
+            "mode": "100644",
+            "bytes": 2428,
+            "sha256": "516be736c5edb9df4d2d71b2720177ef9ab98b1dc5aeb3c269eaa38d2fb6cf20",
+            "git_blob_sha1": "c6db0f875c20442610079fd332d140520111cc47"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/test_receipts.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/test_receipts.py",
+            "mode": "100644",
+            "bytes": 7608,
+            "sha256": "cdaf6aed53f82bc12997afe041bc0461eb547617a44a5b21824395e267baf8ee",
+            "git_blob_sha1": "a01170c628d3e5d752a7a373be7413e0e0684441"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/test_suite.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/test_suite.py",
+            "mode": "100644",
+            "bytes": 1023,
+            "sha256": "6c9a95c5b2dafeafbfcd3deb502aa6e47e777ac00cb0057ea17cb9c7adf81265",
+            "git_blob_sha1": "ce480bc25e67f84b497d7a7fbdf51a4b78c61b8c"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/tests-O.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/tests-O.log",
+            "mode": "100644",
+            "bytes": 4615,
+            "sha256": "e9346cfb1f8140849f73bde66c5313ee321c627109dc7fb876058cc594bacfc3",
+            "git_blob_sha1": "4e7515dea4e1d164e6b7071cd838f7b8cf1d7a7a"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/tests-OO.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/tests-OO.log",
+            "mode": "100644",
+            "bytes": 4615,
+            "sha256": "e9346cfb1f8140849f73bde66c5313ee321c627109dc7fb876058cc594bacfc3",
+            "git_blob_sha1": "4e7515dea4e1d164e6b7071cd838f7b8cf1d7a7a"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/tests-diagnostic-O.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/tests-diagnostic-O.log",
+            "mode": "100644",
+            "bytes": 916,
+            "sha256": "a969c700eb2ed85e41e46909d4763d5832c2ed5688889831403b0735dd471e69",
+            "git_blob_sha1": "598b025820dbe0141e28a30fa35d24a1072aeddf"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/tests-diagnostic-OO.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/tests-diagnostic-OO.log",
+            "mode": "100644",
+            "bytes": 916,
+            "sha256": "a969c700eb2ed85e41e46909d4763d5832c2ed5688889831403b0735dd471e69",
+            "git_blob_sha1": "598b025820dbe0141e28a30fa35d24a1072aeddf"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/tests-diagnostic.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/tests-diagnostic.log",
+            "mode": "100644",
+            "bytes": 916,
+            "sha256": "a969c700eb2ed85e41e46909d4763d5832c2ed5688889831403b0735dd471e69",
+            "git_blob_sha1": "598b025820dbe0141e28a30fa35d24a1072aeddf"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/tests-isolated.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/tests-isolated.log",
+            "mode": "100644",
+            "bytes": 4615,
+            "sha256": "0a516d8a835c56df08958fe0ca57cdb8302d00986a7fc25b124fc194fb4b61c8",
+            "git_blob_sha1": "cac32d8f12e7fe092674d1bdef5533bef135474d"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/tests-normal.log",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/tests-normal.log",
+            "mode": "100644",
+            "bytes": 4615,
+            "sha256": "22698fb9c095291e0106ea999ebdd09b20e999446411e376d5803960773a836f",
+            "git_blob_sha1": "8acfa8c5c4cbe5fbf04f9a471205dda4b8c0590c"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/textgrid-rescan-v5.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/textgrid-rescan-v5.json",
+            "mode": "100644",
+            "bytes": 407,
+            "sha256": "7b2cc010c7f1fc4cc2dee927836fa4bab927eb11cd140503da82df745f51653f",
+            "git_blob_sha1": "5e63bc0340388644fa511c3e6a13b147a5b06cf1"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/versions/v1/source-plan.json",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/versions/v1/source-plan.json",
+            "mode": "100644",
+            "bytes": 936,
+            "sha256": "c5c66069e5e279e582beaac18b167bfc70014991a995f544d9c9bf560a23fae1",
+            "git_blob_sha1": "215982b4e90ec728b023b95da901b0ac9225697b"
+          }
+        },
+        {
+          "path": "research/alimeeting-continuous-intake-v1/versions/v4/alimeeting_eval.py",
+          "before": null,
+          "after": {
+            "path": "research/alimeeting-continuous-intake-v1/versions/v4/alimeeting_eval.py",
+            "mode": "100644",
+            "bytes": 24753,
+            "sha256": "c68005b0290e48fcb1caa2316943d28a0b94e138a9e417c9b4bc65defa1c854b",
+            "git_blob_sha1": "130de1abb2fab930aee034314d18537c99ee34c1"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "bytes": 40879,
+            "git_blob_sha1": "fc7ed118a10f3d34afcf0ba5d1997c3b48c98358",
+            "mode": "100644",
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "sha256": "ced4bbfba126f3d4ef077a02e24fbcc38efac0cc1d4e9eaaa7fb25afd9f10da0"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "7baccdda69437d8e1f30adf59ce9eca42c29eaa997d35eacc5ce494657a6bdcb",
+            "git_blob_sha1": "473cdd39f845e59fdaace0e24393a3fb96a60084"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": {
+            "bytes": 40427,
+            "git_blob_sha1": "68ebea2ae0c5830767f4c9760418ba6a0063d352",
+            "mode": "100644",
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "sha256": "8f0ccbefcac1017a59cb1634f7bdbeab38eb62858f05541ddea8d5ead7cb9c0a"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40427,
+            "sha256": "1ddb259b6b2e8f82393729894aaec1232fd6146c8bccdff9cad9fddde13ecd1f",
+            "git_blob_sha1": "3617777bfe87badb42f6449893ec82406271e4f1"
+          }
+        },
+        {
+          "path": "research/model_comparison/README.md",
+          "before": {
+            "bytes": 16446,
+            "git_blob_sha1": "6b90a0a2bf8fac83be3f70f4f60bdf0fe7814865",
+            "mode": "100644",
+            "path": "research/model_comparison/README.md",
+            "sha256": "81a41f3089a7e8212afca0e246f5703cf568b35f8d3fd7d69ec8e41eebc474c3"
+          },
+          "after": {
+            "path": "research/model_comparison/README.md",
+            "mode": "100644",
+            "bytes": 17513,
+            "sha256": "21588f9515a9eba40de4799b7c1b32abcfc804de0e7373fa25982b641b57c34e",
+            "git_blob_sha1": "621d6430d5dede839597303eedbfbe1198347194"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/all-32-slot-evidence.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/all-32-slot-evidence.json",
+            "mode": "100644",
+            "bytes": 29504,
+            "sha256": "298bf295ac89f9d64a88e7b16a071b4b9f7bb124d598c0676cf3ccde669c3be9",
+            "git_blob_sha1": "500c07064b4e0760836ef8c42a34625d1c36f68e"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/archive-allowlist.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/archive-allowlist.json",
+            "mode": "100644",
+            "bytes": 4348,
+            "sha256": "3e16955d1bb7d64567f53c29e408ef28ae1098a87500ef3262d270667d0ed868",
+            "git_blob_sha1": "3c91c79fbf51ffccec199781292d6e68b17fc5fb"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/archive-members.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/archive-members.json",
+            "mode": "100644",
+            "bytes": 7951,
+            "sha256": "0419675efb0b092f08c12d94ce916357c88e3d375139a5446971991bae918a1d",
+            "git_blob_sha1": "7938016fc585a62efd9172975b9b91b6799864dd"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/artifacts.verified.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/artifacts.verified.json",
+            "mode": "100644",
+            "bytes": 769,
+            "sha256": "a3dc9d5c8f46806e8df4333f8ea15b9b570b9b19bc139be21453b16173480f58",
+            "git_blob_sha1": "3f24dbc053dd6ab626b5e4416010893bd09ebbbf"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/audit-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/audit-summary.json",
+            "mode": "100644",
+            "bytes": 929,
+            "sha256": "a29ad37a9ce989602bb668bad0f7208ce4cd8f35724428ecfdcf4105698c2103",
+            "git_blob_sha1": "44659cf389d717eb2d427fa33e945e85c60b3f67"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/derived-audio-bindings.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/derived-audio-bindings.json",
+            "mode": "100644",
+            "bytes": 7075,
+            "sha256": "46ac5aa5b4b1fbf923660051c0f67f01f286fb8f846e0bc69b790dc06a3da536",
+            "git_blob_sha1": "1712edb77d98941c39c3de78033c7ae186a2d9e4"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/generation-receipts.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/generation-receipts.json",
+            "mode": "100644",
+            "bytes": 11937,
+            "sha256": "6662d0b13a9aaea64c70db98428b71b4f6c4d2d144d4c5fe1382b83a9159dac2",
+            "git_blob_sha1": "f62f4a310be18f9785fc286674fb60fb54861f29"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/jobs.verified.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/jobs.verified.json",
+            "mode": "100644",
+            "bytes": 3184,
+            "sha256": "6776f9b53e23ed3da0667fad37f02b2e2da31ed392e5d04ba9f96e67b3046b76",
+            "git_blob_sha1": "ed65a4b4aa7fc25f615f4f3cc257cff84d6710d8"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/recomputed-report.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/recomputed-report.json",
+            "mode": "100644",
+            "bytes": 42325,
+            "sha256": "04f3c2ab1d9b03b6cf3291ad12e859b22ea12f8f7d978840f953dbfd0f4d9c10",
+            "git_blob_sha1": "a63e5d15d0f9dedbb5935144caefcc498f28b5cb"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/report.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/report.json",
+            "mode": "100644",
+            "bytes": 31630,
+            "sha256": "5c4c4c909d9e3b8a02e5d39b0dfbafae1630d13028227d611aef8379a50538f4",
+            "git_blob_sha1": "185d053d489b0f0a4fa0d47102d4c7da165fb2d3"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/results.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/results.json",
+            "mode": "100644",
+            "bytes": 14500,
+            "sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05",
+            "git_blob_sha1": "8fdd83cfcdc6728a39152d05e64ca43da8f432a7"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/run.verified.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/run.verified.json",
+            "mode": "100644",
+            "bytes": 12568,
+            "sha256": "ff897691601551289a7221a0ba7d096f8cbd6b1fe47ef8e3ba16d4b092077aaf",
+            "git_blob_sha1": "6c2569a6a857d99839495ab46f4f6df3549113a0"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/stratified-analysis.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/stratified-analysis.json",
+            "mode": "100644",
+            "bytes": 8921,
+            "sha256": "64970a589b55872716aa5bb3f833967bfc6db4fb30c34017bbbdbdd999a616cc",
+            "git_blob_sha1": "e1eb37659457dd9ab1c01c7ac294ce66051e0b30"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/thirteen-candidate-evidence.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/thirteen-candidate-evidence.json",
+            "mode": "100644",
+            "bytes": 12354,
+            "sha256": "9cb52b6f4a890a858f5fc96af89825ba63c5035fcaaefb0349a7806f3843745d",
+            "git_blob_sha1": "bf75d321134dd8d8a260b8a52b1d34649dd38b7b"
           }
         }
       ]

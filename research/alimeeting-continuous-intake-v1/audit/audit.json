@@ -1,0 +1,670 @@
+{
+  "accepted_negative_duration_s": 0,
+  "advertised_hours_not_denominator": 4,
+  "archive": "Eval_Ali.tar.gz",
+  "archive_bytes": 3673718355,
+  "archive_inventory": [
+    {
+      "bytes": 0,
+      "path": "Eval_Ali",
+      "selected_kind": null
+    },
+    {
+      "bytes": 0,
+      "path": "Eval_Ali/Eval_Ali_far",
+      "selected_kind": null
+    },
+    {
+      "bytes": 0,
+      "path": "Eval_Ali/Eval_Ali_far/audio_dir",
+      "selected_kind": null
+    },
+    {
+      "bytes": 402905680,
+      "path": "Eval_Ali/Eval_Ali_far/audio_dir/R8001_M8004_MS801.wav",
+      "selected_kind": "audio"
+    },
+    {
+      "bytes": 529408080,
+      "path": "Eval_Ali/Eval_Ali_far/audio_dir/R8003_M8001_MS801.wav",
+      "selected_kind": "audio"
+    },
+    {
+      "bytes": 475218496,
+      "path": "Eval_Ali/Eval_Ali_far/audio_dir/R8007_M8010_MS803.wav",
+      "selected_kind": "audio"
+    },
+    {
+      "bytes": 476555856,
+      "path": "Eval_Ali/Eval_Ali_far/audio_dir/R8007_M8011_MS806.wav",
+      "selected_kind": "audio"
+    },
+    {
+      "bytes": 573304528,
+      "path": "Eval_Ali/Eval_Ali_far/audio_dir/R8008_M8013_MS807.wav",
+      "selected_kind": "audio"
+    },
+    {
+      "bytes": 423592272,
+      "path": "Eval_Ali/Eval_Ali_far/audio_dir/R8009_M8018_MS809.wav",
+      "selected_kind": "audio"
+    },
+    {
+      "bytes": 505325136,
+      "path": "Eval_Ali/Eval_Ali_far/audio_dir/R8009_M8019_MS810.wav",
+      "selected_kind": "audio"
+    },
+    {
+      "bytes": 489073632,
+      "path": "Eval_Ali/Eval_Ali_far/audio_dir/R8009_M8020_MS810.wav",
+      "selected_kind": "audio"
+    },
+    {
+      "bytes": 0,
+      "path": "Eval_Ali/Eval_Ali_far/textgrid_dir",
+      "selected_kind": null
+    },
+    {
+      "bytes": 76496,
+      "path": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8001_M8004.TextGrid",
+      "selected_kind": "textgrid"
+    },
+    {
+      "bytes": 80400,
+      "path": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8003_M8001.TextGrid",
+      "selected_kind": "textgrid"
+    },
+    {
+      "bytes": 129859,
+      "path": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8007_M8010.TextGrid",
+      "selected_kind": "textgrid"
+    },
+    {
+      "bytes": 89858,
+      "path": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8007_M8011.TextGrid",
+      "selected_kind": "textgrid"
+    },
+    {
+      "bytes": 79663,
+      "path": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8008_M8013.TextGrid",
+      "selected_kind": "textgrid"
+    },
+    {
+      "bytes": 72975,
+      "path": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8009_M8018.TextGrid",
+      "selected_kind": "textgrid"
+    },
+    {
+      "bytes": 93517,
+      "path": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8009_M8019.TextGrid",
+      "selected_kind": "textgrid"
+    },
+    {
+      "bytes": 88614,
+      "path": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8009_M8020.TextGrid",
+      "selected_kind": "textgrid"
+    },
+    {
+      "bytes": 0,
+      "path": "Eval_Ali/Eval_Ali_near",
+      "selected_kind": null
+    },
+    {
+      "bytes": 0,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir",
+      "selected_kind": null
+    },
+    {
+      "bytes": 49658284,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8001_M8004_N_SPK8013.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 49658284,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8001_M8004_N_SPK8014.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 49658284,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8001_M8004_N_SPK8015.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 49658284,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8001_M8004_N_SPK8016.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 66166444,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8003_M8001_N_SPK8001.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 66166444,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8003_M8001_N_SPK8002.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 66166444,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8003_M8001_N_SPK8003.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 66166444,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8003_M8001_N_SPK8004.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 59455180,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8007_M8010_N_SPK8050.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 59455180,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8007_M8010_N_SPK8054.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 59455180,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8007_M8010_N_SPK8055.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 59455180,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8007_M8010_N_SPK8056.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 59616684,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8007_M8011_N_SPK8066.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 59616684,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8007_M8011_N_SPK8067.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 59616684,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8007_M8011_N_SPK8068.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 59616684,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8007_M8011_N_SPK8069.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 71663100,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8008_M8013_N_SPK8047.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 71663100,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8008_M8013_N_SPK8048.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 71663100,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8008_M8013_N_SPK8049.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 52945124,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8009_M8018_N_SPK8021.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 52944726,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8009_M8018_N_SPK8022.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 63168044,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8009_M8019_N_SPK8023.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 63162868,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8009_M8019_N_SPK8024.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 61132076,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8009_M8020_N_SPK8025.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 61131936,
+      "path": "Eval_Ali/Eval_Ali_near/audio_dir/R8009_M8020_N_SPK8026.wav",
+      "selected_kind": null
+    },
+    {
+      "bytes": 0,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir",
+      "selected_kind": null
+    },
+    {
+      "bytes": 32493,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8001_M8004_N_SPK8013.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 15446,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8001_M8004_N_SPK8014.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 17902,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8001_M8004_N_SPK8015.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 10960,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8001_M8004_N_SPK8016.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 12323,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8003_M8001_N_SPK8001.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 20001,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8003_M8001_N_SPK8002.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 22952,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8003_M8001_N_SPK8003.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 25419,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8003_M8001_N_SPK8004.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 30087,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8007_M8010_N_SPK8050.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 36203,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8007_M8010_N_SPK8054.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 30115,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8007_M8010_N_SPK8055.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 33759,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8007_M8010_N_SPK8056.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 24918,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8007_M8011_N_SPK8066.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 18894,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8007_M8011_N_SPK8067.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 26824,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8007_M8011_N_SPK8068.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 19527,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8007_M8011_N_SPK8069.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 27753,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8008_M8013_N_SPK8047.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 27532,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8008_M8013_N_SPK8048.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 24603,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8008_M8013_N_SPK8049.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 42355,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8009_M8018_N_SPK8021.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 30715,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8009_M8018_N_SPK8022.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 49652,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8009_M8019_N_SPK8023.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 43961,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8009_M8019_N_SPK8024.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 49908,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8009_M8020_N_SPK8025.TextGrid",
+      "selected_kind": null
+    },
+    {
+      "bytes": 38801,
+      "path": "Eval_Ali/Eval_Ali_near/textgrid_dir/R8009_M8020_N_SPK8026.TextGrid",
+      "selected_kind": null
+    }
+  ],
+  "archive_sha256": "dc47343b2474b5ebcf458927e878155f6ddeb59c85e685b3645c32a1f9578d92",
+  "candidate_duration_s": 15138.215,
+  "evidence_class": "audited-development-candidates-pending-review",
+  "expanded_member_bytes": 5385868607,
+  "expected_sessions": 8,
+  "independence_verified": false,
+  "license": "CC-BY-SA-4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "models_run": false,
+  "network_default": false,
+  "previous_head_bytes": 3673718355,
+  "publisher_sha256": null,
+  "recalibration_required": true,
+  "rows": [
+    {
+      "annotation_extent_matches_audio": false,
+      "audio_after_textgrid_end_s": 22.896999999999935,
+      "channel_index": 0,
+      "duration_s": 1573.85,
+      "independence_status": "pending-training-and-source-family-audit",
+      "member": "Eval_Ali/Eval_Ali_far/audio_dir/R8001_M8004_MS801.wav",
+      "pcm_sha256": "9557fb6c4289d5884209a1036ed4f1d4bf91ac4d42702a261d023bb22969981e",
+      "recording": "alimeeting-eval-R8001_M8004",
+      "review_status": "pending",
+      "sample_count": 25181600,
+      "sample_rate_hz": 16000,
+      "session_id": "R8001_M8004",
+      "source_channel_mask": 1599,
+      "source_format_tag": 65534,
+      "source_wav_sha256": "f5a719e6b9d9d69b3f00d0447922c09e71320724afeefd3070d25a64b7f1dcf1",
+      "textgrid": {
+        "acoustic_target_absence_verified": false,
+        "annotation_gap_count": 591,
+        "annotation_gap_semantics": "unannotated-speaker-intervals-not-missing-PCM",
+        "duration_s": 1550.953,
+        "flags": [],
+        "interval_count": 604,
+        "member": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8001_M8004.TextGrid",
+        "screening_complete": false,
+        "sha256": "e5fe941174fe4140bb5923b7caf2cbdd68d8d2a86086e4f00c68afc90d09dbad",
+        "targeted_audio_review_pending": true,
+        "text_scan_complete": true,
+        "tier_count": 4
+      },
+      "timing_alignment_status": "official-timestamps-preserved-no-offset-inferred",
+      "wav": "mono/R8001_M8004_MS801.wav",
+      "wav_sha256": "7312be8c5c34e2cfc5b53812010449023a8c5648565e1908080d481216710c9e"
+    },
+    {
+      "annotation_extent_matches_audio": false,
+      "audio_after_textgrid_end_s": 0.2909999999997126,
+      "channel_index": 0,
+      "duration_s": 2068.0,
+      "independence_status": "pending-training-and-source-family-audit",
+      "member": "Eval_Ali/Eval_Ali_far/audio_dir/R8003_M8001_MS801.wav",
+      "pcm_sha256": "76d9a668e985e2f42e83f0ad8f100a433250dcf7e085a2b12201841fe07c21be",
+      "recording": "alimeeting-eval-R8003_M8001",
+      "review_status": "pending",
+      "sample_count": 33088000,
+      "sample_rate_hz": 16000,
+      "session_id": "R8003_M8001",
+      "source_channel_mask": 1599,
+      "source_format_tag": 65534,
+      "source_wav_sha256": "33fc940588079005bf16491527e04a0e416e62bf57d5d471a4ff46bc0d6275e4",
+      "textgrid": {
+        "acoustic_target_absence_verified": false,
+        "annotation_gap_count": 674,
+        "annotation_gap_semantics": "unannotated-speaker-intervals-not-missing-PCM",
+        "duration_s": 2067.7090000000003,
+        "flags": [],
+        "interval_count": 674,
+        "member": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8003_M8001.TextGrid",
+        "screening_complete": false,
+        "sha256": "a015bbcc642596ad8e40de7578208510e920832d15320aa109a0e9e3256d7235",
+        "targeted_audio_review_pending": true,
+        "text_scan_complete": true,
+        "tier_count": 4
+      },
+      "timing_alignment_status": "official-timestamps-preserved-no-offset-inferred",
+      "wav": "mono/R8003_M8001_MS801.wav",
+      "wav_sha256": "95224cdef7bca327c9c113c4f2d3c38cbfd65f1c61e3aba3235ab399c1466341"
+    },
+    {
+      "annotation_extent_matches_audio": false,
+      "audio_after_textgrid_end_s": 2.4109375000000455,
+      "channel_index": 0,
+      "duration_s": 1856.3219375,
+      "independence_status": "pending-training-and-source-family-audit",
+      "member": "Eval_Ali/Eval_Ali_far/audio_dir/R8007_M8010_MS803.wav",
+      "pcm_sha256": "8e7eb2648ff392f86abe352655f25b338f2b618b6ea6e011037418c27ef68389",
+      "recording": "alimeeting-eval-R8007_M8010",
+      "review_status": "pending",
+      "sample_count": 29701151,
+      "sample_rate_hz": 16000,
+      "session_id": "R8007_M8010",
+      "source_channel_mask": 1599,
+      "source_format_tag": 65534,
+      "source_wav_sha256": "d92169f2c90dde2482ec6f794588a597870f2dff51a1f123e92bcf052a7ca9b2",
+      "textgrid": {
+        "acoustic_target_absence_verified": false,
+        "annotation_gap_count": 1182,
+        "annotation_gap_semantics": "unannotated-speaker-intervals-not-missing-PCM",
+        "duration_s": 1853.911,
+        "flags": [],
+        "interval_count": 1181,
+        "member": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8007_M8010.TextGrid",
+        "screening_complete": false,
+        "sha256": "0ab9ae505fd81a283e645ce9896610c57e34e747e5551144f98f0cbac0604e44",
+        "targeted_audio_review_pending": true,
+        "text_scan_complete": true,
+        "tier_count": 4
+      },
+      "timing_alignment_status": "official-timestamps-preserved-no-offset-inferred",
+      "wav": "mono/R8007_M8010_MS803.wav",
+      "wav_sha256": "60c0decb4c942bf68e7ae6c058984f4f7c72beac878d9230be66eb19d0cad25a"
+    },
+    {
+      "annotation_extent_matches_audio": false,
+      "audio_after_textgrid_end_s": 2.553000000000111,
+      "channel_index": 0,
+      "duration_s": 1861.546,
+      "independence_status": "pending-training-and-source-family-audit",
+      "member": "Eval_Ali/Eval_Ali_far/audio_dir/R8007_M8011_MS806.wav",
+      "pcm_sha256": "783167fa36feabe00d2f761636d1b6c95b2251f65bd4e9d2c8bdecb75bdd4943",
+      "recording": "alimeeting-eval-R8007_M8011",
+      "review_status": "pending",
+      "sample_count": 29784736,
+      "sample_rate_hz": 16000,
+      "session_id": "R8007_M8011",
+      "source_channel_mask": 1599,
+      "source_format_tag": 65534,
+      "source_wav_sha256": "c2140f541e74c3ab5556de158a53cb70d165cee3b58762ad653855a8d18ad857",
+      "textgrid": {
+        "acoustic_target_absence_verified": false,
+        "annotation_gap_count": 747,
+        "annotation_gap_semantics": "unannotated-speaker-intervals-not-missing-PCM",
+        "duration_s": 1858.993,
+        "flags": [],
+        "interval_count": 768,
+        "member": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8007_M8011.TextGrid",
+        "screening_complete": false,
+        "sha256": "4baea9f7b9ef4182c4fceeb3a10d0ea966359b214fa04ae54434fab084b8c316",
+        "targeted_audio_review_pending": true,
+        "text_scan_complete": true,
+        "tier_count": 4
+      },
+      "timing_alignment_status": "official-timestamps-preserved-no-offset-inferred",
+      "wav": "mono/R8007_M8011_MS806.wav",
+      "wav_sha256": "cf4ed1327f2cd5220ab8aee43a69c19318adbbb8fbafb6201b237f6d8c2c120e"
+    },
+    {
+      "annotation_extent_matches_audio": false,
+      "audio_after_textgrid_end_s": 3.9704999999999018,
+      "channel_index": 0,
+      "duration_s": 2239.4705,
+      "independence_status": "pending-training-and-source-family-audit",
+      "member": "Eval_Ali/Eval_Ali_far/audio_dir/R8008_M8013_MS807.wav",
+      "pcm_sha256": "dde949cef1b1ad51355f777fa88931b2305d4bac504dc1896f11e47d30454aac",
+      "recording": "alimeeting-eval-R8008_M8013",
+      "review_status": "pending",
+      "sample_count": 35831528,
+      "sample_rate_hz": 16000,
+      "session_id": "R8008_M8013",
+      "source_channel_mask": 1599,
+      "source_format_tag": 65534,
+      "source_wav_sha256": "aa22327ef996a60166fe2c4d8a7fa152be8dd5246e24fc38084e61208dbc5feb",
+      "textgrid": {
+        "acoustic_target_absence_verified": false,
+        "annotation_gap_count": 727,
+        "annotation_gap_semantics": "unannotated-speaker-intervals-not-missing-PCM",
+        "duration_s": 2235.5,
+        "flags": [],
+        "interval_count": 732,
+        "member": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8008_M8013.TextGrid",
+        "screening_complete": false,
+        "sha256": "b0f938c81b95728bd38f7aec655f6804ca4dcc3182bb0facb8d05a9a84293869",
+        "targeted_audio_review_pending": true,
+        "text_scan_complete": true,
+        "tier_count": 3
+      },
+      "timing_alignment_status": "official-timestamps-preserved-no-offset-inferred",
+      "wav": "mono/R8008_M8013_MS807.wav",
+      "wav_sha256": "303e73615378469b9a35c7ca7fd32d9f6c42f5afec6dc163e79789b4d315b4a1"
+    },
+    {
+      "annotation_extent_matches_audio": false,
+      "audio_after_textgrid_end_s": 3.1709999999998217,
+      "channel_index": 0,
+      "duration_s": 1654.657,
+      "independence_status": "pending-training-and-source-family-audit",
+      "member": "Eval_Ali/Eval_Ali_far/audio_dir/R8009_M8018_MS809.wav",
+      "pcm_sha256": "f6f7f9b2fdaba90887d7949065163ad30dd66b7d933acd76299e16e26e87b47e",
+      "recording": "alimeeting-eval-R8009_M8018",
+      "review_status": "pending",
+      "sample_count": 26474512,
+      "sample_rate_hz": 16000,
+      "session_id": "R8009_M8018",
+      "source_channel_mask": 1599,
+      "source_format_tag": 65534,
+      "source_wav_sha256": "6534df2cdc7e208c043ef823befaf4cb9b80164fad577915ff7b9eef9ba22e70",
+      "textgrid": {
+        "acoustic_target_absence_verified": false,
+        "annotation_gap_count": 459,
+        "annotation_gap_semantics": "unannotated-speaker-intervals-not-missing-PCM",
+        "duration_s": 1651.486,
+        "flags": [],
+        "interval_count": 665,
+        "member": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8009_M8018.TextGrid",
+        "screening_complete": false,
+        "sha256": "be91df9d87f0f988ade6d1b2fdba82f4533a4e994fb22f8935f27b4bd7d0300e",
+        "targeted_audio_review_pending": true,
+        "text_scan_complete": true,
+        "tier_count": 2
+      },
+      "timing_alignment_status": "official-timestamps-preserved-no-offset-inferred",
+      "wav": "mono/R8009_M8018_MS809.wav",
+      "wav_sha256": "257d92806998e591328dc8a87278908249bb8ffa0a1acabdc27f160a2565aa4e"
+    },
+    {
+      "annotation_extent_matches_audio": false,
+      "audio_after_textgrid_end_s": 9.255999999999858,
+      "channel_index": 0,
+      "duration_s": 1973.926,
+      "independence_status": "pending-training-and-source-family-audit",
+      "member": "Eval_Ali/Eval_Ali_far/audio_dir/R8009_M8019_MS810.wav",
+      "pcm_sha256": "96945e3a198855c728e3f12b282dff14db547d6e91bd4edeb822f096aee28442",
+      "recording": "alimeeting-eval-R8009_M8019",
+      "review_status": "pending",
+      "sample_count": 31582816,
+      "sample_rate_hz": 16000,
+      "session_id": "R8009_M8019",
+      "source_channel_mask": 1599,
+      "source_format_tag": 65534,
+      "source_wav_sha256": "67e7c91769b289bfcc6f0d4da5992934218f4f9b70e6178a92f0cae0309b8b11",
+      "textgrid": {
+        "acoustic_target_absence_verified": false,
+        "annotation_gap_count": 525,
+        "annotation_gap_semantics": "unannotated-speaker-intervals-not-missing-PCM",
+        "duration_s": 1964.67,
+        "flags": [],
+        "interval_count": 959,
+        "member": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8009_M8019.TextGrid",
+        "screening_complete": false,
+        "sha256": "dd85bfb2b920ac064b61e1fb8a09ab378a9e10422b48d23cd3030e2f02271b7c",
+        "targeted_audio_review_pending": true,
+        "text_scan_complete": true,
+        "tier_count": 2
+      },
+      "timing_alignment_status": "official-timestamps-preserved-no-offset-inferred",
+      "wav": "mono/R8009_M8019_MS810.wav",
+      "wav_sha256": "8fc9bc2f43c1e26db99bd0cf707271b0d82b9fc6d7020c44ddfcdb59fcc8d4bc"
+    },
+    {
+      "annotation_extent_matches_audio": false,
+      "audio_after_textgrid_end_s": 2.8345625000001746,
+      "channel_index": 0,
+      "duration_s": 1910.4435625,
+      "independence_status": "pending-training-and-source-family-audit",
+      "member": "Eval_Ali/Eval_Ali_far/audio_dir/R8009_M8020_MS810.wav",
+      "pcm_sha256": "619d19a55238c767d51ac19c6c9ccdcf52bd9bdf774f6a1788a58d272347109d",
+      "recording": "alimeeting-eval-R8009_M8020",
+      "review_status": "pending",
+      "sample_count": 30567097,
+      "sample_rate_hz": 16000,
+      "session_id": "R8009_M8020",
+      "source_channel_mask": 1599,
+      "source_format_tag": 65534,
+      "source_wav_sha256": "51190a947a182294b103e37ab4a29ee6adeb3fb1ee94572769da82a96f7ce952",
+      "textgrid": {
+        "acoustic_target_absence_verified": false,
+        "annotation_gap_count": 498,
+        "annotation_gap_semantics": "unannotated-speaker-intervals-not-missing-PCM",
+        "duration_s": 1907.609,
+        "flags": [],
+        "interval_count": 874,
+        "member": "Eval_Ali/Eval_Ali_far/textgrid_dir/R8009_M8020.TextGrid",
+        "screening_complete": false,
+        "sha256": "6d82a5c11a1d237b8f462aeca2844dd969b5b473e13b7fa2bb45722a2f12e032",
+        "targeted_audio_review_pending": true,
+        "text_scan_complete": true,
+        "tier_count": 2
+      },
+      "timing_alignment_status": "official-timestamps-preserved-no-offset-inferred",
+      "wav": "mono/R8009_M8020_MS810.wav",
+      "wav_sha256": "4fd9fa229c7fa2fe69fd9c7f8b6413097949cb5a66adec48357f27448d6087d8"
+    }
+  ],
+  "schema": "alimeeting-eval-audit-v1",
+  "sealed_qualification": false,
+  "selection": "all Eval_Ali_far/audio_dir/*.wav; fixed channel index 0; whole sessions",
+  "sha256_lock_status": "local-archive-verified-against-supplied-sha256",
+  "shipping_approved": false,
+  "source_page": "https://www.openslr.org/119/",
+  "source_url": "https://speech-lab-share-data.oss-cn-shanghai.aliyuncs.com/AliMeeting/openlr/Eval_Ali.tar.gz",
+  "training_allowed": false,
+  "transcripts": "Eval_Ali_far/textgrid_dir/*.TextGrid; all speaker tiers",
+  "unique_session_count": 8
+}
