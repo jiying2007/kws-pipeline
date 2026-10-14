@@ -1,0 +1,21 @@
+{
+  "schema": "tts-remaining-binding-v1",
+  "state": "unfilled_template_do_not_activate",
+  "engine": null,
+  "repository": "jiying2007/kws-pipeline",
+  "probe_run_id": null,
+  "probe_run_attempt": 1,
+  "probe_source_sha": null,
+  "workflow_path": ".github/workflows/tts-quality-probe-20261014-v1.yml",
+  "artifact_id": null,
+  "artifact_name": null,
+  "artifact_archive_sha256": null,
+  "source_manifest_sha256": null,
+  "files": {},
+  "probe_run_status": null,
+  "probe_run_conclusion": null,
+  "probe_job_id": null,
+  "probe_job_name": null,
+  "probe_job_status": null,
+  "probe_job_conclusion": null
+}

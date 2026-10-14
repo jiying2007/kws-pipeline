@@ -1,0 +1,39 @@
+{
+  "schema": "paired-research-numeric-smoke-v1",
+  "status": "PASS",
+  "evidence_scope": "artificial-pcm-numeric-contract-only",
+  "shipping_approved": false,
+  "training_updates_per_arm": 2,
+  "quality_metrics_claimed": false,
+  "numerical_checks": {
+    "torch_version": "2.13.0+cpu",
+    "numpy_version": "2.3.2",
+    "max_abs_logit_errors": {
+      "control/chunk1": 0.0,
+      "control/chunk2": 0.0,
+      "control/chunk7": 0.0,
+      "control/chunk25": 0.0,
+      "treatment/chunk1": 1.1920928955078125e-07,
+      "treatment/chunk2": 1.1920928955078125e-07,
+      "treatment/chunk7": 1.1920928955078125e-07,
+      "treatment/chunk25": 0.0
+    },
+    "complete_frames": 11,
+    "chunk_sizes": [
+      1,
+      2,
+      7,
+      25
+    ],
+    "short_eof_frames": 0,
+    "threads": [
+      1,
+      1
+    ]
+  },
+  "source_binding_rejection": true,
+  "score_interface_executed": true,
+  "runner_sha256": "35ffd8d78f619f5914847cbf9d27a53c9ddee7f2a1e04abeec20b7ea4c304efa",
+  "test_sha256": "759a1f2150c8642b38fc2947247ff7499fc4ec2f5ecae4e159f9af86961050ab",
+  "elapsed_seconds": 13.254278752000005
+}

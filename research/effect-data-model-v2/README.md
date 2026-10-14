@@ -46,3 +46,25 @@ runs must retain source SHA, audio/checkpoint hashes, runtime limits, transcript
 and raw event scores. Failed or blocked cells stay visible in fixed denominators.
 A comparison without admissible independent evaluation data cannot select a
 qualified product winner.
+
+## Verified probe checkpoint and continuation
+
+At source `89936529b86ec48f335accefc96b155025b684c9`,
+[run 38554125374](https://github.com/jiying2007/kws-pipeline/actions/runs/38554125374)
+completed the original single-cell probe for both engines. The
+[durable observation](evidence/probe-run-38554125374/RESULT.json) retains exact
+ZIP, WAV and FLOAT-value identities with authenticated public run/job/artifact
+metadata. Both probes passed technical checks, with zero ASR calls and no
+pronunciation or training-admission claim. Original peak memory was not measured.
+
+The [remaining phase](../tts-quality-remaining-v1/README.md) restores each exact
+cell 0 and is bounded to only 15 further calls per engine. Its resource receipts
+separate actual process/cgroup measurements from configured limits. Results of
+that phase remain pending until its own completed run is verified.
+
+The [actual numeric smoke](evidence/numeric-run-38552529009/numeric-receipt.json)
+performed two optimizer updates per arm and continuous inference/scoring checks.
+It uses artificial PCM, not a measured acoustic benchmark. The accompanying
+[historical metadata audit](evidence/numeric-run-38552529009/base-metadata.json)
+confirms missing speaker/session/source-family identities in the original
+128 train / 64 calibration rows; missing identities are not manufactured.

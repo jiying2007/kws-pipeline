@@ -1,0 +1,79 @@
+{
+  "bindings": {
+    "calibration": {
+      "admission_mode": null,
+      "ctc_training_allowed": null,
+      "index_sha256": "46f638fdd205bf43a4a98cd88dfde8c789b333339d7e8c1a60ea26373a67e7f3",
+      "recordings_declared": 64,
+      "summary_sha256": "d2911feaee7411ff021c90f70b7d3916b2186f23fc3a04bc8e4c267c1e46167a"
+    },
+    "train": {
+      "admission_mode": null,
+      "ctc_training_allowed": null,
+      "index_sha256": "3206442a5d8e1ad0fa485f2fd144d7ad947a0a83f8812bdc23627252fd1f8a64",
+      "recordings_declared": 128,
+      "summary_sha256": "cc7a836028489f60b7c0e534d97200aedfd04489ff9a7025c044bce4ec5c971e"
+    }
+  },
+  "coverage": {
+    "calibration": {
+      "missing": {
+        "session_id": 64,
+        "source_family_id": 64,
+        "source_id": 0,
+        "speaker_id": 64,
+        "voice_id": 0
+      },
+      "rows": 64,
+      "unique_known": {
+        "session_id": 0,
+        "source_family_id": 0,
+        "source_id": 64,
+        "speaker_id": 0,
+        "voice_id": 4
+      }
+    },
+    "train": {
+      "missing": {
+        "session_id": 128,
+        "source_family_id": 128,
+        "source_id": 0,
+        "speaker_id": 128,
+        "voice_id": 0
+      },
+      "rows": 128,
+      "unique_known": {
+        "session_id": 0,
+        "source_family_id": 0,
+        "source_id": 128,
+        "speaker_id": 0,
+        "voice_id": 8
+      }
+    }
+  },
+  "expected_counts_match": true,
+  "expected_recordings": {
+    "calibration": 64,
+    "train": 128
+  },
+  "identity_metadata_complete_and_disjoint": false,
+  "label_admission_verified": false,
+  "note": "Missing speaker/session is unknown; a voice slot is not a person/session.",
+  "overlap": {
+    "session_id": [],
+    "source_family_id": [],
+    "source_id": [],
+    "source_namespace": [],
+    "speaker_id": [],
+    "voice_id": []
+  },
+  "protected_splits_opened": [],
+  "runner_blockers": [
+    "selection manifest is not supplied; no held-out test/qualification recycling",
+    "waveform and original source lineage must be verified",
+    "reviewed training admission must be verified or explicitly diagnostic"
+  ],
+  "runner_ready": false,
+  "schema": "historical-base-selected-metadata-audit-v1",
+  "waveform_bytes_verified": false
+}
