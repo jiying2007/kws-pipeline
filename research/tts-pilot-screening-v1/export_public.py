@@ -1,6 +1,7 @@
 """Positive-list public artifact export. Never archive a runtime/output tree."""
-import argparse,json,shutil
+import argparse,json,shutil,sys
 from pathlib import Path
+sys.path.insert(0,str(Path(__file__).resolve().parent))
 from screen import manifest,score,write,require,validate_wav,FAMILIES
 from terminal import read
 

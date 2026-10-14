@@ -11,6 +11,12 @@ import wave
 FAMILIES = ('qwen06', 'sensevoice', 'whisper')
 TARGETS = ('你好小窝', '小窝小窝')
 MAX_SLOTS = 48
+THIRD_POLICIES=('disagreement_only','training_candidate_confirmation')
+
+def third_policy(data):
+    value=data.get('third_policy','disagreement_only')
+    require(value in THIRD_POLICIES,'explicit supported third-recognizer policy')
+    return value
 
 def require(ok, why):
     if not ok: raise ValueError(why)
@@ -29,6 +35,7 @@ def normalize(text):
 
 def validate_manifest(data):
     from campaign import expected_plan
+    third_policy(data)
     require(data['schema']=='tts-quality-pilot-asr-input-v1','new manifest only')
     rows=data['slots'];require(type(rows) is list and len(rows)==48,'fixed 48 design slots')
     plan=expected_plan()
@@ -93,40 +100,73 @@ def result_index(rows):
         index[key]=r
     return index
 
+def primary_candidate(slot,a,b):
+    return (slot['status']=='success' and slot.get('audio_quality_pass') is True
+            and is_ok(a) and is_ok(b)
+            and normalize(a['raw_text'])==normalize(b['raw_text'])==normalize(slot['target_text'])
+            and all(r.get('completeness')=='complete' and not r.get('quality_flags') for r in (a,b)))
+
+def third_reason(slot,a,b,policy):
+    require(policy in THIRD_POLICIES,'supported third policy')
+    if slot['status']!='success':return None
+    if disagreement(a,b):return 'primary_disagreement'
+    if policy=='training_candidate_confirmation' and primary_candidate(slot,a,b):
+        return 'training_candidate_confirmation'
+    return None
+
 def third_subset(data, results):
-    idx=result_index(results)
-    return [r['sample_id'] for r in data['slots'] if disagreement(idx.get((r['sample_id'],'qwen06')),idx.get((r['sample_id'],'sensevoice')))]
+    validate_manifest(data);idx=result_index(results);policy=third_policy(data)
+    ids={r['sample_id'] for r in data['slots']}
+    require(all(sid in ids for sid,_ in idx),'known result slots')
+    # No repeat scheduling after ANY recorded third outcome, including not_run.
+    return [r['sample_id'] for r in data['slots'] if (r['sample_id'],'whisper') not in idx
+            and third_reason(r,idx.get((r['sample_id'],'qwen06')),idx.get((r['sample_id'],'sensevoice')),policy)]
 
 def score(data, results):
     validate_manifest(data)
-    idx=result_index(results); ids={r['sample_id'] for r in data['slots']}
-    require(all(k[0] in ids for k in idx), 'unknown result slot')
+    idx=result_index(results);ids={r['sample_id'] for r in data['slots']};policy=third_policy(data)
+    require(all(k[0] in ids for k in idx),'unknown result slot')
+    require(len(idx)<=144,'fixed global ASR slot cap')
+    slot_by_id={r['sample_id']:r for r in data['slots']}
+    require(all(slot_by_id[sid]['status']=='success' or r.get('status')=='not_run' for (sid,_),r in idx.items()),'no calls for unavailable audio or blocked reference lanes')
+    require(sum(r.get('status')!='not_run' for r in idx.values())<=96,'current Qwen-only call cap')
     scored=[]
     for slot in data['slots']:
-        sid=slot['sample_id']; target=normalize(slot['target_text'])
+        sid=slot['sample_id'];target=normalize(slot['target_text'])
         a,b,c=[idx.get((sid,f)) for f in FAMILIES]
-        needs=disagreement(a,b)
-        require(c is None or needs, 'third recognizer only for successful primary disagreement')
+        reason=third_reason(slot,a,b,policy);needs=reason is not None
+        require(c is None or needs,'third result requires policy-authorized primary evidence')
         successful=[r for r in (a,b,c) if is_ok(r)]
         matches=sum(normalize(r['raw_text'])==target for r in successful)
         agreement=is_ok(a) and is_ok(b) and normalize(a['raw_text'])==normalize(b['raw_text'])
-        # Majority is review-only. High precision tier requires both independent first-pass decoders.
         target_consensus=bool(agreement and normalize(a['raw_text'])==target)
         quality=slot.get('audio_quality_pass') is True and slot['status']=='success'
-        complete=all(r.get('completeness')=='complete' and not r.get('quality_flags') for r in (a,b) if r) and len(successful)>=2
-        overall=quality and target_consensus and complete
+        primary_qualified=primary_candidate(slot,a,b)
+        triple=all(is_ok(r) for r in (a,b,c)) and len({normalize(r['raw_text']) for r in (a,b,c)})==1
+        confirmed=bool(primary_qualified and triple and matches==3 and c.get('completeness')=='complete' and not c.get('quality_flags'))
+        # Retain first-pass qualification independently; actual third disagreement
+        # downgrades final qualification and never erases the original outputs.
+        overall=primary_qualified and not (is_ok(c) and not triple)
+        primary_matches=sum(normalize(r['raw_text'])==target for r in (a,b) if is_ok(r))
+        primary_tier='machine_high_confidence_candidate' if primary_qualified else 'review' if primary_matches>=2 else 'reject_or_unresolved'
+        tier='machine_three_asr_training_candidate' if confirmed else 'review' if is_ok(c) and not triple and matches>=2 else primary_tier
+        confirmation_status=('not_requested' if reason!='training_candidate_confirmation' else 'not_run' if c is None or c.get('status')=='not_run' else 'failed' if not is_ok(c) else 'disagreed' if not triple else 'confirmed' if confirmed else 'incomplete')
         scored.append({'sample_id':sid,'engine':slot['engine'],'audio_quality_pass':quality,
-            'consensus_kind':'two-model-consensus' if agreement else 'three-model-disagreement' if is_ok(c) else 'primary-disagreement' if needs else 'unresolved','primary_text_agreement':bool(agreement),'target_text_consensus':target_consensus,
-            'target_vote_count':matches,'third_needed':needs,'third_status':c.get('status') if c else 'not_run' if needs else 'not_needed',
-            'overall_qualified':overall,'tier':'machine_high_confidence_candidate' if overall else 'review' if matches>=2 else 'reject_or_unresolved',
+            'consensus_kind':'three-model-consensus' if triple else 'three-model-disagreement' if all(is_ok(r) for r in (a,b,c)) else 'two-model-consensus' if agreement else 'primary-disagreement' if disagreement(a,b) else 'unresolved',
+            'primary_text_agreement':bool(agreement),'target_text_consensus':target_consensus,
+            'target_vote_count':matches,'third_reason':reason,'third_needed':needs,'third_status':c.get('status') if c else 'not_run' if needs else 'not_needed',
+            'overall_qualified':overall,'primary_tier':primary_tier,'tier':tier,
+            'three_model_training_candidate':confirmed,'training_confirmation_status':confirmation_status,
+            'label_source':'three_asr_machine_consensus' if confirmed else None,
             'human_gold':False,'training_admitted':False,
             'asr_slots':{f:(idx[(sid,f)]['status'] if (sid,f) in idx else 'not_needed' if f=='whisper' and not needs else 'not_run') for f in FAMILIES}})
     def metrics(rows):
         n=len(rows)
-        return {k:{'numerator':sum(r[k] for r in rows),'denominator':n,'rate':sum(r[k] for r in rows)/n if n else None} for k in ('audio_quality_pass','primary_text_agreement','target_text_consensus','overall_qualified')}
-    return {'schema':'tts-pilot-screening-report-v1','slots':scored,'metrics':metrics(scored),
+        return {k:{'numerator':sum(r[k] for r in rows),'denominator':n,'rate':sum(r[k] for r in rows)/n if n else None} for k in ('audio_quality_pass','primary_text_agreement','target_text_consensus','overall_qualified','three_model_training_candidate')}
+    return {'schema':'tts-pilot-screening-report-v1','third_policy':policy,'slots':scored,'metrics':metrics(scored),
       'per_engine':{e:metrics([r for r in scored if r['engine']==e]) for e in ('qwen06','qwen17','cosy3')},
-      'denominators':{'design_slots':len(scored),'authorized_executable_slots':sum(r['engine']!='cosy3' for r in data['slots']),'generated_decodable_slots':sum(r['status']=='success' for r in data['slots']),'blocked_reference_slots':sum(r['engine']=='cosy3' and r['status']=='blocked' for r in data['slots'])},'executable_metrics':metrics([r for r in scored if r['engine']!='cosy3']),'max_asr_slots':len(scored)*3,'human_gold':False,'training_admitted':False,
+      'denominators':{'design_slots':len(scored),'authorized_executable_slots':sum(r['engine']!='cosy3' for r in data['slots']),'generated_decodable_slots':sum(r['status']=='success' for r in data['slots']),'blocked_reference_slots':sum(r['engine']=='cosy3' and r['status']=='blocked' for r in data['slots'])},
+      'executable_metrics':metrics([r for r in scored if r['engine']!='cosy3']),'max_asr_slots':len(scored)*3,'human_gold':False,'training_admitted':False,
       'confidence_note':'Machine tier is a screening heuristic, not calibrated probability or human truth; held-out evaluation excluded.'}
 
 def main():

@@ -9,7 +9,7 @@ sys.path.insert(0,str(HERE))
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--require-numeric',action='store_true');args=parser.parse_args()
-    names=['test_screen','test_host','test_terminal','test_export']
+    names=['test_screen','test_host','test_terminal','test_export','test_confirmation_policy']
     suite=unittest.defaultTestLoader.loadTestsFromNames(names)
     if importlib.util.find_spec('numpy') is not None and importlib.util.find_spec('scipy') is not None:
         suite.addTests(unittest.defaultTestLoader.loadTestsFromName('test_derive'))
@@ -18,7 +18,7 @@ def main():
         def scipy_unavailable():raise unittest.SkipTest('NumPy/SciPy unavailable in isolated no-site runtime; resampling tests require separate dependency-enabled run')
         suite.addTest(unittest.FunctionTestCase(scipy_unavailable))
     count=suite.countTestCases()
-    if count<22:raise RuntimeError('expected nonzero complete stdlib contract test inventory')
+    if count<36:raise RuntimeError('expected nonzero complete stdlib contract test inventory')
     print('PILOT_ASR_TEST_COUNT='+str(count),flush=True)
     result=unittest.TextTestRunner(verbosity=2).run(suite)
     return 0 if result.wasSuccessful() and not (args.require_numeric and result.skipped) else 1

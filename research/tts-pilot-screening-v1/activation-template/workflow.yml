@@ -1,0 +1,92 @@
+# TEMPLATE ONLY. Do not install in .github/workflows until actual input identities
+# and source hashes are bound. activation.json is disabled and null by default.
+name: TTS pilot blind ASR once v1
+on:
+  push:
+    branches: [research/tts-pilot-asr-20261014-v1]
+permissions:
+  contents: read
+concurrency:
+  group: tts-pilot-asr-20261014-v1
+  cancel-in-progress: false
+jobs:
+  screening:
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/tts-pilot-asr-20261014-v1' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_number == 1 && github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Offline stdlib contracts
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          for optimization in '' -O -OO; do
+            python3 -I -S -B $optimization research/tts-pilot-screening-v1/test_suite.py
+          done
+          python3 -I -S -B research/tts-pilot-screening-v1/activation-template/test_activation.py
+      - name: Verify actual TTS artifacts and first workflow lifetime run
+        id: admission
+        timeout-minutes: 10
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 -I -S -B research/tts-pilot-screening-v1/activation-template/launcher.py --output "$RUNNER_TEMP/pilot-asr-input"
+          echo 'admitted=true' >> "$GITHUB_OUTPUT"
+      - name: Install reviewed numeric-only runtime and require numeric tests
+        if: ${{ steps.admission.outputs.admitted == 'true' }}
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          requirements="$(python3 -c 'import json; print(json.load(open("research/tts-pilot-screening-v1/activation-template/activation.json"))["numeric_requirements_file"])')"
+          python3 -m venv "$RUNNER_TEMP/pilot-numeric"
+          "$RUNNER_TEMP/pilot-numeric/bin/python" -m pip install --disable-pip-version-check --no-deps --only-binary=:all: --require-hashes -r "$requirements"
+          "$RUNNER_TEMP/pilot-numeric/bin/python" -I -B research/tts-pilot-screening-v1/test_suite.py --require-numeric
+      - name: Derive fixed 48-slot blind input
+        id: derive
+        if: ${{ success() && steps.admission.outputs.admitted == 'true' }}
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/pilot-numeric/bin/python" -I -B research/tts-pilot-screening-v1/derive.py --plan research/tts-pilot-screening-v1/expected-plan.json --artifact-root "$RUNNER_TEMP/pilot-asr-input/inputs" --output "$RUNNER_TEMP/pilot-derived"
+          python3 -I -S -B research/tts-pilot-screening-v1/activation-template/finalize_input.py --admission "$RUNNER_TEMP/pilot-asr-input/admitted.json" --manifest "$RUNNER_TEMP/pilot-derived/manifest.json"
+          python3 -c 'import json,os; d=json.load(open(os.environ["RUNNER_TEMP"]+"/pilot-derived/manifest.json")); print("has_audio="+str(any(r["status"]=="success" for r in d["slots"])).lower())' >> "$GITHUB_OUTPUT"
+          echo 'ready=true' >> "$GITHUB_OUTPUT"
+      - name: Record empty screening without model setup
+        if: ${{ success() && steps.derive.outputs.ready == 'true' && steps.derive.outputs.has_audio == 'false' }}
+        run: |
+          set -euo pipefail
+          mkdir "$RUNNER_TEMP/pilot-asr-output"
+          printf '[]' > "$RUNNER_TEMP/pilot-asr-output/results.json"
+      - name: Run isolated blind ASR without API token
+        id: asr
+        if: ${{ success() && steps.derive.outputs.ready == 'true' && steps.derive.outputs.has_audio == 'true' }}
+        timeout-minutes: 325
+        run: |
+          set -euo pipefail
+          # SIGINT permits host finally accounting/cleanup before outer timeout.
+          timeout --signal=INT --kill-after=120s 320m python3 -I -S -B research/tts-pilot-screening-v1/host.py --manifest "$RUNNER_TEMP/pilot-derived/manifest.json" --audio-root "$RUNNER_TEMP/pilot-derived" --output "$RUNNER_TEMP/pilot-asr-output"
+      - name: Prepare reviewed public projection only
+        id: public
+        if: ${{ always() && steps.derive.outputs.ready == 'true' }}
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          test -f "$RUNNER_TEMP/pilot-asr-output/results.json"
+          python3 -I -S -B research/tts-pilot-screening-v1/export_public.py --host-root "$RUNNER_TEMP/pilot-asr-output" --derived-root "$RUNNER_TEMP/pilot-derived" --output "$RUNNER_TEMP/pilot-asr-public"
+          echo 'ready=true' >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: ${{ always() && steps.public.outputs.ready == 'true' }}
+        with:
+          name: tts-pilot-asr-20261014-v1-public
+          path: ${{ runner.temp }}/pilot-asr-public/
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 7

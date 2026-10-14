@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 53526,
-      "sha256": "15621932cea645b60e2644155e8e484a99ff5a229226198f1f82274576a00faa",
-      "git_blob_sha1": "7c466e95e1c04faddcc04cad352084b61c057cee"
+      "bytes": 54063,
+      "sha256": "ef54716c1403b0e32a1bb8673cdcfa6335ca319a6da8cc12ffccb81a059201bc",
+      "git_blob_sha1": "bf639e28ff1914cebc29d67959fa2a6adcb763f5"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15400,9 +15400,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "bytes": 33980,
-      "sha256": "fa115c2b3eb75bfb45f39ef65eb0f68de66a78f6afd6ac56f5377a15ed604049",
-      "git_blob_sha1": "a0ecb6806f320140ca598e883e5f03fe90f48e77"
+      "bytes": 35191,
+      "sha256": "6f3684f52351fa55a31b5d1f90f6e9fe7b675322670809b6a1ab91b1d33d2c0c",
+      "git_blob_sha1": "17b90e8c26fbf40f4d9c7e3ef759370ee7f6f51a"
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
@@ -29092,6 +29092,241 @@
             "bytes": 14355,
             "sha256": "49fefd1eaee0406559744553e8134d2ecc2c6c1e17352b1b74b6dce6fd64a278",
             "git_blob_sha1": "05a48cba38ce23f1f4df233a88a2c8425cc9d7f2"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-14",
+      "operation_id": "kws-asr-stage3-integration",
+      "public_main_base_commit": "d4299582c2ec12929ef97880cb9120440e190bc0",
+      "public_main_base_tree": "1fbf6c8bd2f9f73a681d60022a1dead76758ad02",
+      "workflow_source_changed": true,
+      "scope": "Integrate the inactive ASR stage3 template and explicit third-recognizer training candidate confirmation with three-mode offline activation tests. Preserve disagreement_only defaults, disabled activation, unknown remaining identities, fixed call ceilings, all original TTS/probe/remaining controls and r4/r5 evidence; no new active workflow.",
+      "rationale": "Prepare the inactive ASR third-stage source against the exact PR575 tree. Integrate the complete disabled six-file activation template, token-redirect protection, standalone public exporter entrypoint, and explicit training_candidate_confirmation policy while preserving the disagreement_only default and all 144/96 call ceilings. Add three-mode offline activation checks and exercise the new policy in the existing required numeric suite. No new active workflow, live binding, model call, training call, release approval or old evidence mutation is authorized by this source change.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "bytes": 53526,
+            "git_blob_sha1": "7c466e95e1c04faddcc04cad352084b61c057cee",
+            "mode": "100644",
+            "path": ".github/workflows/ci.yml",
+            "sha256": "15621932cea645b60e2644155e8e484a99ff5a229226198f1f82274576a00faa"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 54063,
+            "sha256": "ef54716c1403b0e32a1bb8673cdcfa6335ca319a6da8cc12ffccb81a059201bc",
+            "git_blob_sha1": "bf639e28ff1914cebc29d67959fa2a6adcb763f5"
+          }
+        },
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "bytes": 33980,
+            "git_blob_sha1": "a0ecb6806f320140ca598e883e5f03fe90f48e77",
+            "mode": "100644",
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "sha256": "fa115c2b3eb75bfb45f39ef65eb0f68de66a78f6afd6ac56f5377a15ed604049"
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 35191,
+            "sha256": "6f3684f52351fa55a31b5d1f90f6e9fe7b675322670809b6a1ab91b1d33d2c0c",
+            "git_blob_sha1": "17b90e8c26fbf40f4d9c7e3ef759370ee7f6f51a"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "bytes": 40879,
+            "git_blob_sha1": "cd05aed857ea5c247acc2da5193785f77ae53296",
+            "mode": "100644",
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "sha256": "5c604dde3b2ab8ba6bd8cbf7202f2f34d9686af4164d1daa59930e563ee8f993"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "f03d8965268199f40ccc1a2d768e56df7d004657c3e4304cdacc0c0f9e812ee6",
+            "git_blob_sha1": "2e89597170045847b10123e88409a690c1fdb671"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": {
+            "bytes": 40427,
+            "git_blob_sha1": "8c5ebc9866d308c96ea00f68bc490bba1b0fca1c",
+            "mode": "100644",
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "sha256": "8674003b2a741bf2e055b6ea2df4d62b0a70f8b2c0af1f3fc687cadb8d30ffd5"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40427,
+            "sha256": "cf88890c38c1e4734445d7110780458477766649114b4ab5554c5dc845b2158b",
+            "git_blob_sha1": "04fd58b5ef2c1212ee011f3c09933c15009c5e37"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/README.md",
+          "before": {
+            "bytes": 7373,
+            "git_blob_sha1": "00c7d427798a673ad236e3c6c8c28d609bec46a8",
+            "mode": "100644",
+            "path": "research/tts-pilot-screening-v1/README.md",
+            "sha256": "6ae6d76fac4370fd0549db6a2d3f3ef551961e60aea95554f2c19313f73b398d"
+          },
+          "after": {
+            "path": "research/tts-pilot-screening-v1/README.md",
+            "mode": "100644",
+            "bytes": 7849,
+            "sha256": "b6c692caafce1de2c3e34870f556ab9367eb81efe7680be42ce52de5f230dde2",
+            "git_blob_sha1": "1aa48343a6a7718bba3d3d64d38caf5b1e2a38da"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/TRAINING_CONFIRMATION.md",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/TRAINING_CONFIRMATION.md",
+            "mode": "100644",
+            "bytes": 4474,
+            "sha256": "f1ccdff6c38fc21aacf40e7d7e2cdbd55d29fb6825edab2dbaebf227f82e2716",
+            "git_blob_sha1": "d89bfd214a30642c62045052ac677b00bd2fcd96"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/README.md",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/README.md",
+            "mode": "100644",
+            "bytes": 4969,
+            "sha256": "5176185ec0ee5e6b0c6690934bc4922ed1b2ed1ebb6cc93704e1eb3c4867da60",
+            "git_blob_sha1": "c8bf47e12fd067cf0bc1af9265d164074e8ad931"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/activation.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/activation.json",
+            "mode": "100644",
+            "bytes": 635,
+            "sha256": "7c61d3954ee299a7ea13ec7d62ea65131b162326a0b16a937e34d48125fa8e26",
+            "git_blob_sha1": "43d17c05b7a8bc110fc8f5dcb54317ea7e5ac59a"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/finalize_input.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/finalize_input.py",
+            "mode": "100644",
+            "bytes": 1480,
+            "sha256": "3f72ad244e99b3f604a4f91d024d7ad814720afcda3a1c353a787a9e111884c8",
+            "git_blob_sha1": "0ad0b6d259519fc061f964e747f9465e006d6c15"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/launcher.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/launcher.py",
+            "mode": "100644",
+            "bytes": 13524,
+            "sha256": "c82fa5a44629f5280c3bd104f3495db6516e75f3ca830f62b06ba64582ae040e",
+            "git_blob_sha1": "b482b7cf3a964883789089f89ec670481694777d"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "mode": "100644",
+            "bytes": 10258,
+            "sha256": "3c65aec3dce5ebd33169514a7a21cc91b0750cfebdd9b9d10178601e1798b481",
+            "git_blob_sha1": "8450b671f6a6438857b3af0c624efc50498685c1"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/workflow.yml",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/workflow.yml",
+            "mode": "100644",
+            "bytes": 5227,
+            "sha256": "30bcdcaaa7246f16b5c9316198b726ca06d0abc953199a0ca42c06543e1f94d4",
+            "git_blob_sha1": "d32481d075092cbc698d4fef817b7bbee11eab73"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/export_public.py",
+          "before": {
+            "bytes": 2764,
+            "git_blob_sha1": "38315daae959f135acdc556fe6ecc784e2eb153b",
+            "mode": "100644",
+            "path": "research/tts-pilot-screening-v1/export_public.py",
+            "sha256": "85f46f4f8dc87c57c75a94dead8a3dea8a43d8046d98e04ffb39019b97c30630"
+          },
+          "after": {
+            "path": "research/tts-pilot-screening-v1/export_public.py",
+            "mode": "100644",
+            "bytes": 2824,
+            "sha256": "efc43af4a9b62c75f23e1f187242e2f40374035f07431879af2739b1bbbc46e1",
+            "git_blob_sha1": "dfad6b21ff0e1a56c697dcbe9bdfa1b3c885c324"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/screen.py",
+          "before": {
+            "bytes": 8463,
+            "git_blob_sha1": "305ad545015629dfd45c5d7b696aa499b454a9b9",
+            "mode": "100644",
+            "path": "research/tts-pilot-screening-v1/screen.py",
+            "sha256": "336d637716201f4eba9ba4804d2dd6fa8b49146c3706480ba6776f9bdbe1863f"
+          },
+          "after": {
+            "path": "research/tts-pilot-screening-v1/screen.py",
+            "mode": "100644",
+            "bytes": 11339,
+            "sha256": "982582c0e4c7f957276520977ebfa3bad0cbb5753e16d50bbadef0835682523e",
+            "git_blob_sha1": "81f1bdc2ddcb4e3b757e77a15b6a25b5be81fbe8"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/test_confirmation_policy.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/test_confirmation_policy.py",
+            "mode": "100644",
+            "bytes": 5951,
+            "sha256": "2ece838c16d917e78e628e31b728f370d661c83cbcb7b0ded98527104a0972c5",
+            "git_blob_sha1": "33686c85f4163f71ccf53bcfad86e77a94afdd26"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/test_suite.py",
+          "before": {
+            "bytes": 1457,
+            "git_blob_sha1": "c033acf5ae36eb2de718e597616016f5f3c2fb92",
+            "mode": "100644",
+            "path": "research/tts-pilot-screening-v1/test_suite.py",
+            "sha256": "0ac1402c9ec98dc19893d01a1172b49fcdc3987f5703af2f39946cc9295c35ad"
+          },
+          "after": {
+            "path": "research/tts-pilot-screening-v1/test_suite.py",
+            "mode": "100644",
+            "bytes": 1484,
+            "sha256": "89860e42ec01ddb3eac6c691c31ce0ec6f746f12cb7c2ae37bae15a195e882af",
+            "git_blob_sha1": "2fe34fb9604de2d4bb330ad544f4213e4745437b"
           }
         }
       ]

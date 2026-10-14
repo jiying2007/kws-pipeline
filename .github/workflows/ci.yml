@@ -421,6 +421,13 @@ jobs:
           python3 -I -S -B -OO research/tts-quality-pilot-v1/test_pilot.py
       - name: Verify tracked worktree after New effect data and TTS probe offline contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "New effect data and TTS probe offline contracts"'
+      - name: Disabled ASR stage3 activation contracts
+        run: |
+          python3 -I -S -B research/tts-pilot-screening-v1/activation-template/test_activation.py
+          python3 -I -S -B -O research/tts-pilot-screening-v1/activation-template/test_activation.py
+          python3 -I -S -B -OO research/tts-pilot-screening-v1/activation-template/test_activation.py
+      - name: Verify tracked worktree after ASR stage3 activation contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "ASR stage3 activation contracts"'
       - name: Bound remaining TTS continuation contracts
         run: |
           python3 -I -S -B research/tts-quality-remaining-v1/run_tests.py
