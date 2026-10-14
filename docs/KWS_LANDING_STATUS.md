@@ -60,6 +60,36 @@ zero counts establish no zero-risk claim. Older PR/publication state in that
 snapshot remains historical; see the [selected archive delivery](../research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md)
 for the subsequent delivery decision.
 
+## 2026-10-14 current source entry
+
+The completed [r5 run 38518609834](https://github.com/jiying2007/kws-pipeline/actions/runs/38518609834)
+is summarized in the [immutable-source-derived terminal result](../research/k1-punctuation6-asr18-v1/RESULT-38518609834.json).
+[PR #570](https://github.com/jiying2007/kws-pipeline/pull/570) and
+[PR #571](https://github.com/jiying2007/kws-pipeline/pull/571) retain its publication
+and closed-source follow-through. The executed source was
+`a1159dc902634e65b1fb2a7bbf219389f84089d5`, distinct from the later closed main.
+
+- All **18 slots** have verified native completion on the original full inputs.
+  This verifies decoder/process completion, not acoustic verbatim correctness.
+- Target three-model unanimity is **0/3 without comma and 0/3 with comma**.
+  The sole unanimous machine candidate is the non-target `你好小屋`; it is not a
+  target improvement or human label. The six original cells and failed r4 result
+  remain sealed, with no retry or training admission.
+- All **nine** current execution/publication/claim approval flags are false.
+  **108 planned slots** across sealed campaigns are nonreusable; this count is
+  not measured consumption, which remains `null`.
+
+The later frozen-model [nightly run 38482297930](https://github.com/jiying2007/kws-pipeline/actions/runs/38482297930)
+also **failed** on source `1c8d9c049170e9547b39807d77498e10c19712bf`:
+**2 false accepts / 8 hours**, point estimate **0.25 FA/h**, upper95
+**0.786974202734 FA/h** against **0 false accepts / upper95 ≤ 0.40**. It used
+`model-749187ec1d66` with model SHA-256
+`ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402`.
+This dated source/model regression is separate from r5 ASR completion and is not
+a new acoustic evaluation of current main. The original 2026-10-09 observation
+above is retained unchanged. No source-only CI pass clears FAR, recalibration,
+real-human/final-AFE, physical-board or shipping gates.
+
 ## Current entry points
 
 Use the [research map](../research/README.md) and its

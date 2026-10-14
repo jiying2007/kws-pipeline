@@ -4,7 +4,7 @@
 
 研究入口：[可复用模块、保留的实验结论与资格边界](research/README.md)
 
-最新源码研究：[已完成的三路 ASR 来源筛查](research/source-screen32-whisper-v1/evidence/run-38126849922/README.md)与[近音机制研究工具](research/near_pronunciation_v1/README.md)。一致率、源码及合成测试不代表真实 FAR 或召回改善；详见[当前证据范围](docs/KWS_LANDING_STATUS.md#current-entry-points)。
+当前研究入口：[r5 原生解码完成结果与本轮仅源码优化边界](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry)。既有三路 ASR 来源筛查和近音工具仍由该入口保留链接。原生完成、一致率、源码及合成测试均不代表真实 FAR 或召回改善。
 
 当前归档交付：[完整公开归档、索引与可验证恢复](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md)。旧展开副本目标已取消；历史状态仍为 NOT_PUSHED。D20 数值失败、D90 尚未执行数值验证、fixed50 支持不足、旧模型 nightly 失败分别保留；真人与实机验证暂缓。
 
@@ -53,7 +53,7 @@
 [nightly run 37860130019](https://github.com/jiying2007/kws-pipeline/actions/runs/37860130019)
 已失败：**8 小时内 2 次误接受**，upper95 **0.786974 FA/h**（门槛为 0 次误接受且
 upper95 ≤ 0.40）。这不是 D20/D90 的结果，shipping approval 仍为 false。
-见[本次审计](research/consolidation/CI_AUDIT_2026-10-09.md)。
+见[本次审计](research/consolidation/CI_AUDIT_2026-10-09.md)。另见[2026-10-14 当前入口](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry)：后续 nightly `38482297930` 仍失败，绑定其历史执行源码，并非对当前 main 的新增声学评估。
 
 `configs/shipping.xiaowo.json` 是机器可读的当前产品 contract。它故意保持 `shipping_approved=false`：synthetic qualification 是强工程证据，但不能替代后续真实人声 + 最终 AFE 声学资格和物理目标板证据。
 

@@ -2,6 +2,7 @@
 """Offline contracts for release commands and atomic bootstrap cleanup."""
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import os
@@ -150,6 +151,160 @@ class ReleaseCommands(unittest.TestCase):
                         expr = expr.replace('github.ref', repr(current_ref)).replace('&&', 'and')
                         allowed = eval(expr, {'__builtins__': {}}, {})
                         self.assertEqual(bool(allowed), all_success and publish == 'success' and current_ref == ref)
+
+
+class DeploymentRuntimeEquivalence(unittest.TestCase):
+    """Run the publication gate itself against disposable local Git commits."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix='deployment-runtime-equivalence-')
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.repo = self.root / 'repo'
+        self.repo.mkdir()
+        self.env = {'PATH': os.environ['PATH'], 'HOME': str(self.root),
+                    'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': os.devnull}
+        self.paths = ['CMakeLists.txt', 'cmake', 'include', 'src',
+                      'configs/parameter-contract.json', 'tools/gen_parameter_limits.py']
+        for relative in self.paths:
+            source, target = ROOT / relative, self.repo / relative
+            if source.is_dir():
+                shutil.copytree(source, target)
+            else:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
+        (self.repo / 'README.md').write_text('Unqualified documentation fixture.\n')
+        self.git('init', '-q')
+        self.git('config', 'user.name', 'Offline gate fixture')
+        self.git('config', 'user.email', 'fixture@example.invalid')
+        self.base = self.commit()
+        self.workflow = (WORKFLOWS / 'deployment-release.yml').read_text()
+        identity = command(self.workflow, 'Resolve immutable qualified model identity')
+        start = identity.index('runtime_paths=(')
+        end = identity.index('\nif gh release view', start)
+        self.gate = 'set -euo pipefail\n' + identity[start:end]
+
+    def git(self, *args):
+        return subprocess.check_output(['git', *args], cwd=self.repo, env=self.env,
+                                       stderr=subprocess.PIPE, text=True).strip()
+
+    def commit(self):
+        self.git('add', '.')
+        self.git('commit', '-qm', 'Offline fixture')
+        return self.git('rev-parse', 'HEAD')
+
+    def run_gate(self, candidate, base=None):
+        output = self.root / 'github-output'
+        output.write_text('')
+        result = subprocess.run(['bash', '-c', self.gate], cwd=self.repo, text=True,
+                                capture_output=True, env=dict(self.env,
+                                trained_head=base or self.base, GITHUB_SHA=candidate,
+                                GITHUB_OUTPUT=str(output)))
+        return result, output.read_text()
+
+    def generated_header(self):
+        out = self.root / 'generated'
+        subprocess.run([sys.executable, '-I', '-S', '-B',
+                        str(self.repo / 'tools/gen_parameter_limits.py'),
+                        str(self.repo / 'configs/parameter-contract.json'), str(out)],
+                       cwd=self.repo, env=self.env, check=True, capture_output=True)
+        return (out / 'kws_parameter_limits.h').read_text()
+
+    def require_rejected(self, candidate):
+        result, output = self.run_gate(candidate)
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn('runtime surface differs', result.stderr)
+        self.assertEqual(output, '', 'a failed gate must not export checked paths')
+
+    def test_unchanged_and_documentation_only_inputs_pass(self):
+        for documentation_only in (False, True):
+            with self.subTest(documentation_only=documentation_only):
+                candidate = self.base
+                if documentation_only:
+                    (self.repo / 'README.md').write_text('Updated documentation only.\n')
+                    candidate = self.commit()
+                result, output = self.run_gate(candidate)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads(output.removeprefix('runtime_equivalence_paths=')), self.paths)
+
+    def test_constant_only_change_changes_header_and_is_rejected(self):
+        before = self.generated_header()
+        contract_path = self.repo / 'configs/parameter-contract.json'
+        contract = json.loads(contract_path.read_text())
+        contract['algorithm_constants']['KWS_ROOT_START_LOGIT_MARGIN']['default'] = 0.6
+        contract_path.write_text(json.dumps(contract, indent=2) + '\n')
+        after = self.generated_header()
+        self.assertIn('#define KWS_ROOT_START_LOGIT_MARGIN (0.5f)', before)
+        self.assertIn('#define KWS_ROOT_START_LOGIT_MARGIN (0.6f)', after)
+        self.assertNotEqual(before, after)
+        candidate = self.commit()
+        # Reproduce the old false equivalence before testing the fixed command.
+        self.assertEqual(self.git('diff', self.base, candidate, '--', *self.paths[:4]), '')
+        self.require_rejected(candidate)
+
+    def test_generator_semantics_only_change_is_rejected(self):
+        before = self.generated_header()
+        generator = self.repo / 'tools/gen_parameter_limits.py'
+        original = generator.read_text()
+        old = 'return f"{float(value)!r}f"'
+        self.assertEqual(original.count(old), 1)
+        generator.write_text(original.replace(old, 'return f"{float(value) + 0.125!r}f"'))
+        after = self.generated_header()
+        self.assertIn('#define KWS_ROOT_START_LOGIT_MARGIN (0.5f)', before)
+        self.assertIn('#define KWS_ROOT_START_LOGIT_MARGIN (0.625f)', after)
+        self.assertNotEqual(before, after)
+        candidate = self.commit()
+        self.assertEqual(self.git('diff', self.base, candidate, '--', *self.paths[:4]), '')
+        self.assertEqual(self.git('diff', self.base, candidate, '--', self.paths[-2]), '')
+        self.require_rejected(candidate)
+
+    def test_all_existing_runtime_surfaces_remain_guarded(self):
+        for relative in ('CMakeLists.txt', 'cmake/KwsBuildIdentity.cmake',
+                         'cmake/KwsSourceRevision.cmake', 'include/kws_pipeline/kws.h', 'src/decoder.c'):
+            with self.subTest(path=relative):
+                self.git('reset', '--hard', self.base)
+                path = self.repo / relative
+                self.assertTrue(path.is_file(), relative)
+                path.write_bytes(path.read_bytes() + b'\n/* Gate mutation fixture. */\n')
+                self.require_rejected(self.commit())
+
+    def test_missing_and_renamed_generated_inputs_are_rejected(self):
+        for relative in self.paths[-2:]:
+            for rename in (False, True):
+                with self.subTest(path=relative, rename=rename):
+                    self.git('reset', '--hard', self.base)
+                    path = self.repo / relative
+                    if rename:
+                        path.rename(path.with_suffix(path.suffix + '.moved'))
+                    else:
+                        path.unlink()
+                    self.require_rejected(self.commit())
+
+    def test_unknown_revision_fails_without_exporting_equivalence(self):
+        for base, candidate in ((self.base, '0' * 40), ('0' * 40, self.base)):
+            result, output = self.run_gate(candidate, base)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(output, '')
+
+    def test_manifest_uses_the_exact_checked_path_output(self):
+        assembly = step(self.workflow, 'Assemble fail-closed deployment manifest')
+        self.assertIn('RUNTIME_EQUIVALENCE_PATHS: ${{ steps.identity.outputs.runtime_equivalence_paths }}',
+                      assembly)
+        python = command(self.workflow, 'Assemble fail-closed deployment manifest')
+        python = python.split("python3 - <<'PY'\n", 1)[1].split('\nPY', 1)[0]
+        values = [value for node in ast.walk(ast.parse(python)) if isinstance(node, ast.Dict)
+                  for key, value in zip(node.keys, node.values)
+                  if isinstance(key, ast.Constant) and key.value == 'runtime_equivalence_paths']
+        self.assertEqual(len(values), 1)
+        # Execute the actual manifest expression using the gate's output. A
+        # deliberately different value also detects a duplicated literal list.
+        result, output = self.run_gate(self.base)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        expression = compile(ast.Expression(values[0]), '<manifest paths>', 'eval')
+        for paths in (json.loads(output.split('=', 1)[1]), ['fixture-checked-input']):
+            environ = {'RUNTIME_EQUIVALENCE_PATHS': json.dumps(paths)}
+            fake_os = type('FixtureEnvironment', (), {'environ': environ})
+            self.assertEqual(eval(expression, {'json': json, 'os': fake_os}), paths)
 
 
 class ReleaseTagBinding(unittest.TestCase):
