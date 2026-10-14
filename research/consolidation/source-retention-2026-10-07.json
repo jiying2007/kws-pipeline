@@ -15400,9 +15400,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "bytes": 35415,
-      "sha256": "5aa2ed8bec279ea96aa1b7aef77d2fb95836bfea3c7bf458aa34605fa15f4aac",
-      "git_blob_sha1": "50156e187ace77da1fa64d6593d34641bc3523e5"
+      "bytes": 78129,
+      "sha256": "ebe37fcd4303237b62e93bcb6b1c55f10e9d0c6abb76d47ce1d2a9fda8033a28",
+      "git_blob_sha1": "e260138d301b5f29a9a143cd6a82c6dffaffbf97"
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
@@ -29631,12 +29631,12 @@
     },
     {
       "date": "2026-10-14",
-      "operation_id": "kws-alimeeting-intake-p6-revision2",
+      "operation_id": "kws-alimeeting-intake-p6-revision3",
       "public_main_base_commit": "dc715906d9be0e8758aef53eeb44f382ea1204de",
       "public_main_base_tree": "96471056b252bbd7c8ad0a35a4d13b5b3cf0f9e8",
       "workflow_source_changed": true,
       "scope": "Retain small public audit source and aggregate receipts for the actual AliMeeting continuous-audio intake and frozen-C diagnostic; add offline three-mode CI coverage. Also retain reviewed public ASR run38573117922 JSON results and independent recalculation metadata under a new evidence path. Include the separately authorized completed 13-machine-positive frozen-C response control and independently audited small observational trace receipts, with zero matching responses and no human-FRR claim. Correct numeric-fixture status documentation and record the necessary KW1 three-role independent-group coverage blocker without changing labels or split rules. The source publication/CI runs no inference and adds no corpus audio/transcript payloads, model/binary bodies, ASR activation changes or accepted-negative claims.",
-      "rationale": "Retain reproducible public intake/diagnostic tooling, source/license attribution and exact hash/aggregate evidence. Eight meetings and approximately4.205hours yielded zero diagnostic events; this is an event-rate observation, not FAR, with expected=null and zero accepted negative duration. Add offline CI only; preserve running ASR binding and all older execution controls.\nAlso archive independently reviewed public ASR run38573117922 JSON results and recalculation receipts; no audio ZIP and no edits to its frozen 30-source input binding.\nRetain the separately authorized completed 13-machine-labelled positive response control: same frozen C/model/pack, all clips complete, zero matching responses; preserve the earlier AliMeeting receipts and do not infer human FRR or low FAR.\nCorrect model_comparison README status using retained actual artificial-PCM numeric smoke38552529009: two real updates per arm and chunk parity passed; newly admitted-data matched A/B quality, C1 C export and SSC305 remain NOT_RUN. Preserve model code, budgets and historical experiment receipts.\nRevision1 adds only the reviewed10-file observational trace source/JSON package and earlier read-only addendum, plus machine-candidate voice-group coverage analysis BLOCKED_INSUFFICIENT_KW1_GROUPS. No raw traces or extra model runs by integration. Preserve the frozen original P6 candidate separately.",
+      "rationale": "Retain reproducible public intake/diagnostic tooling, source/license attribution and exact hash/aggregate evidence. Eight meetings and approximately4.205hours yielded zero diagnostic events; this is an event-rate observation, not FAR, with expected=null and zero accepted negative duration. Add offline CI only; preserve running ASR binding and all older execution controls.\nAlso archive independently reviewed public ASR run38573117922 JSON results and recalculation receipts; no audio ZIP and no edits to its frozen 30-source input binding.\nRetain the separately authorized completed 13-machine-labelled positive response control: same frozen C/model/pack, all clips complete, zero matching responses; preserve the earlier AliMeeting receipts and do not infer human FRR or low FAR.\nCorrect model_comparison README status using retained actual artificial-PCM numeric smoke38552529009: two real updates per arm and chunk parity passed; newly admitted-data matched A/B quality, C1 C export and SSC305 remain NOT_RUN. Preserve model code, budgets and historical experiment receipts.\nRevision1 adds only the reviewed10-file observational trace source/JSON package and earlier read-only addendum, plus machine-candidate voice-group coverage analysis BLOCKED_INSUFFICIENT_KW1_GROUPS. No raw traces or extra model runs by integration. Preserve the frozen original P6 candidate separately.\nRevision3 fixes actual product select-scope rejection: replace the newly added intake glob with204 exact new-suite input dependencies in both triggers; keep selector logic and fail-closed exact-path restriction unchanged. Add real scopes-entrypoint and full dependency-coverage regression tests.",
       "files": [
         {
           "path": ".github/workflows/ci.yml",
@@ -29667,9 +29667,9 @@
           "after": {
             "path": ".github/workflows/product-training-data-contract.yml",
             "mode": "100644",
-            "bytes": 35415,
-            "sha256": "5aa2ed8bec279ea96aa1b7aef77d2fb95836bfea3c7bf458aa34605fa15f4aac",
-            "git_blob_sha1": "50156e187ace77da1fa64d6593d34641bc3523e5"
+            "bytes": 78129,
+            "sha256": "ebe37fcd4303237b62e93bcb6b1c55f10e9d0c6abb76d47ce1d2a9fda8033a28",
+            "git_blob_sha1": "e260138d301b5f29a9a143cd6a82c6dffaffbf97"
           }
         },
         {
@@ -31965,6 +31965,23 @@
             "bytes": 12354,
             "sha256": "9cb52b6f4a890a858f5fc96af89825ba63c5035fcaaefb0349a7806f3843745d",
             "git_blob_sha1": "bf75d321134dd8d8a260b8a52b1d34649dd38b7b"
+          }
+        },
+        {
+          "path": "tests/test_candidate_encoder_numeric_ci.py",
+          "before": {
+            "bytes": 11257,
+            "git_blob_sha1": "71f42e9a50d3a2dbdafd11a5b8bb36ed11c0a389",
+            "mode": "100644",
+            "path": "tests/test_candidate_encoder_numeric_ci.py",
+            "sha256": "d1f8c321dcaf40e0b9b529218a9113b241a9bbde3ea049ca7b31f389fab92b5c"
+          },
+          "after": {
+            "path": "tests/test_candidate_encoder_numeric_ci.py",
+            "mode": "100644",
+            "bytes": 13409,
+            "sha256": "33b90dd9838fefed138a737ccef433bae7a9cbd74c00e6b1b7c634e14575b52e",
+            "git_blob_sha1": "8166f3c5b60b9e488a908e4fd8e20268ecfab4ea"
           }
         }
       ]
