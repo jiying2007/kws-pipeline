@@ -263,23 +263,35 @@ class BoundClaimContractTests(unittest.TestCase):
         owner = copy.deepcopy(f['owner']); owner['nonce_sha256'] = c.digest(b'other nonce')
         self.assertNotEqual(c.owner_commit(owner)[1], sha)
 
-    def test_checked_in_current_controls_closed_and_actual_workflow_id_unbound(self):
+    def test_checked_in_current_controls_enabled_and_actual_workflow_id_unbound(self):
         here = Path(c.__file__).parent
         control_raw = (here / c.CLAIM_CONTROL_FILE).read_bytes(); control = c.decode_json(control_raw)
         release = c.read_json(here / 'execution-release.json')
-        self.assertTrue(all(control[key] is False for key in c.CLAIM_APPROVALS))
+        self.assertTrue(all(control[key] is True for key in c.CLAIM_APPROVALS))
         scope=c.current_scope()
         for key,field in (('campaign','campaign'),('source_ref','source_branch'),
                 ('evidence_ref','result_branch'),('claim_ref','claim_ref'),('workflow','workflow'),('job_key','job_key')):
             self.assertEqual(control[key],scope[field])
-        with self.assertRaisesRegex(ValueError,'claim admission closed'):c.require_current_scope(control)
+        self.assertEqual(c.require_current_scope(control),scope)
         self.assertIsNone(control['workflow_id'])
         self.assertEqual(release['claim_admission_control_sha256'], c.digest(control_raw))
         self.assertEqual(c.validate_claim_control(control),control)
-        with self.assertRaisesRegex(ValueError,'claim admission closed'):
-            c.require_claim_admission(release, control_raw)
-        with self.assertRaisesRegex(ValueError,'execution release disabled'):
-            c.require_execution_release(release)
+        self.assertEqual(c.require_claim_admission(release, control_raw),control)
+        freeze_raw=(here / 'execution-freeze.json').read_bytes()
+        self.assertEqual(c.require_execution_release(release, expected_freeze_sha256=c.digest(freeze_raw)),release)
+
+    def test_sealed_r4_run_and_source_cannot_be_reused_as_r5_owner(self):
+        f = fixture()
+        for key,value in (('run_id',38499530026),('source_sha','270364bd2c953ae312198b326f465b819d294cb9')):
+            identity=copy.deepcopy(f['identity']);identity[key]=value
+            with self.subTest(key=key),self.assertRaisesRegex(ValueError,'sealed'):
+                c.validate_bound_identity(identity)
+        prior=c.bound_prior_history_identity(f['control'])
+        for key,value in (('planned_slots',0),('planned_slots',36),('reusable_slots',18),('actual_consumed_attempts',0)):
+            changed=copy.deepcopy(prior);changed['sealed_prior_campaigns'][4][key]=value
+            release={**f['release'],'prior_public_claim_history_sha256':c.digest(c.canonical(changed))}
+            with self.subTest(key=key,value=value),self.assertRaisesRegex(ValueError,'source-bound prior history'):
+                c.require_claim_admission(release,f['control_raw'])
 
     def test_campaign_experiment_and_derived_refs_cannot_drift(self):
         f = fixture()
@@ -380,13 +392,18 @@ class BoundClaimContractTests(unittest.TestCase):
         legacy = host.prior_history_identity()
         self.assertEqual(c.digest(c.canonical(legacy)), '80670524b9a53bfcc5f296331c72ee9c1f8b060ba6ad76f292e4354ca7d97b1f')
         self.assertEqual(prior['sealed_prior_campaigns'][:3], legacy['sealed_prior_campaigns'])
-        self.assertEqual(len(prior['sealed_prior_campaigns']), 4)
+        self.assertEqual(len(prior['sealed_prior_campaigns']), 5)
         r3 = prior['sealed_prior_campaigns'][3]
         self.assertEqual((r3['experiment'], r3['authorized_campaign_count'], r3['planned_slots']),
             ('k1-punctuation6-asr18-r3', 1, 18))
         self.assertEqual([row['run_id'] for row in r3['observed_runs']], [38385589303, 38385623017])
         self.assertTrue(all(row['executed_head_sha'] == 'b012fca6bec8e0c2c1cdd5741fe8e43f0ca195b3'
             and row['run_attempt'] == 1 for row in r3['observed_runs']))
+        r4=prior['sealed_prior_campaigns'][4]
+        self.assertEqual((r4['experiment'],r4['run_id'],r4['executed_head_sha']),
+            ('k1-punctuation6-asr18-r4',38499530026,'270364bd2c953ae312198b326f465b819d294cb9'))
+        self.assertEqual((r4['run_attempt'],r4['planned_slots']),(1,18))
+        self.assertEqual(sum(row['planned_slots'] for row in prior['sealed_prior_campaigns']),90)
         for row in prior['sealed_prior_campaigns']:
             self.assertIsNone(row['actual_consumed_attempts'])
             self.assertEqual(row['reusable_slots'], 0)
@@ -397,12 +414,12 @@ class BoundClaimContractTests(unittest.TestCase):
         self.assertIsNone(actual_prior['prior_runs'])
         self.assertEqual(release['prior_public_claim_history_sha256'], c.digest(c.canonical(actual_prior)))
 
-    def test_bound_prior_unknown_or_r3_budget_cannot_be_rewritten_even_rehashed(self):
+    def test_bound_prior_unknown_or_r3_r4_budget_cannot_be_rewritten_even_rehashed(self):
         f = fixture(); prior = c.bound_prior_history_identity(f['control'])
         changes = []
         for value in ([], 0):
             changed = copy.deepcopy(prior); changed['prior_runs'] = value; changes.append(changed)
-        for index in range(4):
+        for index in range(5):
             changed = copy.deepcopy(prior); changed['sealed_prior_campaigns'][index]['actual_consumed_attempts'] = 0
             changes.append(changed)
         for key, value in (('planned_slots', 36), ('authorized_campaign_count', 2), ('reusable_slots', 18)):

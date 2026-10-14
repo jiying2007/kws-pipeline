@@ -444,13 +444,14 @@ class CheckpointTests(unittest.TestCase):
             with self.assertRaises(ValueError): api('POST', p.BASE + '/git/' + noun, value, expected=201)
         self.assertEqual(api.count, 0); self.assertFalse(self.wire.calls)
 
-    def test_actual_local_controls_match_closed_current_publication_scope(self):
+    def test_actual_local_controls_match_enabled_current_publication_scope(self):
         value = t.decode((HERE / 'publication-release.json').read_bytes())
         expected = p.disabled_publication_release()
+        expected.update(enabled=True,independent_source_review=True,root_publication_release=True)
         self.assertEqual(value, expected)
-        with self.assertRaises(p.PublicationDisabled): p.publication_gate(value)
+        self.assertIsNone(p.publication_gate(value))
         execution = t.decode((HERE / 'execution-release.json').read_bytes())
-        self.assertTrue(all(execution[key] is False for key in ('enabled','independent_source_review','root_execution_release')))
+        self.assertTrue(all(execution[key] is True for key in ('enabled','independent_source_review','root_execution_release')))
         self.assertIs(execution['historical_screening_reviewed'], True)
         for key in ('source_branch', 'result_branch', 'workflow'):
             self.assertEqual(value[key], p.c.current_scope()[key])

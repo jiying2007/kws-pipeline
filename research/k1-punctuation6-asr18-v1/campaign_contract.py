@@ -14,8 +14,8 @@ from datetime import datetime, timezone
 
 import asr18_metadata as metadata
 
-EXPERIMENT = 'k1-punctuation6-asr18-r4'
-CURRENT_WORKFLOW = '.github/workflows/k1-punctuation6-asr18-r4.yml'
+EXPERIMENT = 'k1-punctuation6-asr18-r5'
+CURRENT_WORKFLOW = '.github/workflows/k1-punctuation6-asr18-r5.yml'
 LEGACY_V1_SCOPE = {'campaign': 'k1-punctuation6-asr18-r3',
     'source_branch': 'research/k1-punctuation6-asr18-r3', 'result_branch': 'evidence/k1-punctuation6-asr18-r3',
     'directory': 'research/k1-punctuation6-asr18-v1/evidence/asr18-r3',
@@ -477,10 +477,11 @@ CLAIM_CONTROL_FILE = 'claim-admission-control.json'
 MAX_BOUND_ADMISSION = 65536
 MAX_HTTP_RESPONSE = 512 * 1024
 BOUND_REPOSITORY = 'jiying2007/kws-pipeline'
-# Later sealed r3 identities remain ineligible under v2; no consumption count
+# Later sealed r3 and r4 identities remain ineligible under v2; no consumption count
 # is inferred, and original archived-v1 history semantics stay unchanged.
-BOUND_SEALED_ASR_RUNS = SEALED_ASR_RUNS + (38385589303, 38385623017)
-BOUND_SEALED_ASR_SOURCES = SEALED_ASR_SOURCES + ('b012fca6bec8e0c2c1cdd5741fe8e43f0ca195b3',)
+BOUND_SEALED_ASR_RUNS = SEALED_ASR_RUNS + (38385589303, 38385623017, 38499530026)
+BOUND_SEALED_ASR_SOURCES = SEALED_ASR_SOURCES + ('b012fca6bec8e0c2c1cdd5741fe8e43f0ca195b3',
+    '270364bd2c953ae312198b326f465b819d294cb9')
 BOUND_AUTHOR = {'name': 'K1 ASR18 bounded claim', 'email': 'noreply@github.com'}
 BOUND_NONRECOGNITION = {'existing_slots_at_most': 18, 'issuer_model_calls': 0,
     'old_calls_allowed': 0, 'automatic_retries_allowed': 0, 'claim_proves_model_consumption': False}
@@ -575,6 +576,12 @@ def bound_prior_history_identity(control):
         'observed_runs': [{'run_id': run_id, 'run_attempt': 1,
             'executed_head_sha': 'b012fca6bec8e0c2c1cdd5741fe8e43f0ca195b3'}
             for run_id in (38385589303, 38385623017)], 'status': 'failed_consumption_unknown_sealed'})
+    sealed.append({'observation': 'frozen_existing_public_failure_observation',
+        'experiment': 'k1-punctuation6-asr18-r4', 'source_branch': 'research/k1-punctuation6-asr18-r4',
+        'result_branch': 'evidence/k1-punctuation6-asr18-r4', 'run_id': 38499530026, 'run_attempt': 1,
+        'executed_head_sha': '270364bd2c953ae312198b326f465b819d294cb9',
+        'planned_slots': 18, 'actual_consumed_attempts': None, 'reusable_slots': 0,
+        'status': 'failed_consumption_unknown_sealed'})
     return {'schema': 'k1-asr18-prior-public-claim-history-v2', 'repository': control['repository'],
         'scope': {key: control[key] for key in ('campaign', 'source_ref', 'evidence_ref', 'claim_ref',
             'workflow', 'workflow_id', 'workflow_id_source', 'job_key')},
