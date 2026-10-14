@@ -15400,9 +15400,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "bytes": 35191,
-      "sha256": "6f3684f52351fa55a31b5d1f90f6e9fe7b675322670809b6a1ab91b1d33d2c0c",
-      "git_blob_sha1": "17b90e8c26fbf40f4d9c7e3ef759370ee7f6f51a"
+      "bytes": 35307,
+      "sha256": "4652e9e8c8ad0e6fad951e0c5f98e5d5d132f135b52ac6f68591a2adf4784b8b",
+      "git_blob_sha1": "e74a8b0fe6de7f9784e0f53d8d1b030146f39ad3"
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
@@ -15639,7 +15639,8 @@
     ".github/workflows/k1-punctuation6-asr18-r4.yml",
     ".github/workflows/k1-punctuation6-asr18-r5.yml",
     ".github/workflows/tts-quality-probe-20261014-v1.yml",
-    ".github/workflows/tts-quality-remaining-20261014-v1.yml"
+    ".github/workflows/tts-quality-remaining-20261014-v1.yml",
+    ".github/workflows/tts-pilot-asr-20261014-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -29330,6 +29331,164 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-14",
+      "operation_id": "kws-asr-registration-p4",
+      "public_main_base_commit": "e09adbba0638d20e12a8cd4860403fb4f6196650",
+      "public_main_base_tree": "94433fa0327508a9c66251940966889839e094f7",
+      "workflow_source_changed": true,
+      "scope": "Register the ASR workflow file for future public REST workflow-ID discovery without running it. The only trigger is its uncreated research execution branch; main cannot trigger it. Preserve disabled/null activation, original policy and budgets, and all prior TTS/ASR execution controls and evidence. Add registration equality/path-coverage checks; no execution branch or live input binding is created.",
+      "rationale": "Register the exact reviewed ASR workflow in .github/workflows while retaining enabled=false and all workflow/source/input/numeric binding placeholders as null. main is not a trigger; the execution branch is not created. This permits later unauthenticated official REST workflow lookup by filename without consuming the first execution run. Update the explicit retained-workflow allowlist, source metadata, registration tests and CI path coverage. No inference, training, GitHub write, activation, credential or old-control change is performed by this local source preparation.",
+      "files": [
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "bytes": 35191,
+            "git_blob_sha1": "17b90e8c26fbf40f4d9c7e3ef759370ee7f6f51a",
+            "mode": "100644",
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "sha256": "6f3684f52351fa55a31b5d1f90f6e9fe7b675322670809b6a1ab91b1d33d2c0c"
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 35307,
+            "sha256": "4652e9e8c8ad0e6fad951e0c5f98e5d5d132f135b52ac6f68591a2adf4784b8b",
+            "git_blob_sha1": "e74a8b0fe6de7f9784e0f53d8d1b030146f39ad3"
+          }
+        },
+        {
+          "path": ".github/workflows/tts-pilot-asr-20261014-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/tts-pilot-asr-20261014-v1.yml",
+            "mode": "100644",
+            "bytes": 5224,
+            "sha256": "d2db3f712ea86f74e0b9917e9513bf4cf6c187e7b579806c411ccb6ca70cc8dc",
+            "git_blob_sha1": "6248844206892a95e0722f20fbd3b70e7b15166c"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "bytes": 41862,
+            "git_blob_sha1": "dd1075f736024c9b4c084c3f53a0bbcdd2081de8",
+            "mode": "100644",
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "sha256": "aca334f8ee39534f4f8d008e5f69fc3714686e77067ca177bf99a4b5c5db27cc"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 44331,
+            "sha256": "73d406c66985e0b85d8d4c01bbe733dd57cf2c036732137c73f080f2cab5e084",
+            "git_blob_sha1": "a3b4f7b388db07dc9ffc6fc563d16f6ced107d8c"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "bytes": 40879,
+            "git_blob_sha1": "2e89597170045847b10123e88409a690c1fdb671",
+            "mode": "100644",
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "sha256": "f03d8965268199f40ccc1a2d768e56df7d004657c3e4304cdacc0c0f9e812ee6"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "ced4bbfba126f3d4ef077a02e24fbcc38efac0cc1d4e9eaaa7fb25afd9f10da0",
+            "git_blob_sha1": "fc7ed118a10f3d34afcf0ba5d1997c3b48c98358"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": {
+            "bytes": 40427,
+            "git_blob_sha1": "04fd58b5ef2c1212ee011f3c09933c15009c5e37",
+            "mode": "100644",
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "sha256": "cf88890c38c1e4734445d7110780458477766649114b4ab5554c5dc845b2158b"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40427,
+            "sha256": "8f0ccbefcac1017a59cb1634f7bdbeab38eb62858f05541ddea8d5ead7cb9c0a",
+            "git_blob_sha1": "68ebea2ae0c5830767f4c9760418ba6a0063d352"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/README.md",
+          "before": {
+            "bytes": 4969,
+            "git_blob_sha1": "c8bf47e12fd067cf0bc1af9265d164074e8ad931",
+            "mode": "100644",
+            "path": "research/tts-pilot-screening-v1/activation-template/README.md",
+            "sha256": "5176185ec0ee5e6b0c6690934bc4922ed1b2ed1ebb6cc93704e1eb3c4867da60"
+          },
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/README.md",
+            "mode": "100644",
+            "bytes": 5464,
+            "sha256": "0cfcbf1cbbd5e2c13cf4b80f4fcf8a10813e54e4bf21564c9bc5f68e77389cdb",
+            "git_blob_sha1": "b8cc4b1b82be21f0b2edc09951dd3bc783ceca4b"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+          "before": {
+            "bytes": 10258,
+            "git_blob_sha1": "8450b671f6a6438857b3af0c624efc50498685c1",
+            "mode": "100644",
+            "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "sha256": "3c65aec3dce5ebd33169514a7a21cc91b0750cfebdd9b9d10178601e1798b481"
+          },
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "mode": "100644",
+            "bytes": 10771,
+            "sha256": "e607cdf8ae980f49f94c745f19a0b75a8633892be65eae30e92aa937ef7bd4de",
+            "git_blob_sha1": "09cb2ac501459e2445d4e7d6f8d45a0c9914f9ce"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/workflow.yml",
+          "before": {
+            "bytes": 5227,
+            "git_blob_sha1": "d32481d075092cbc698d4fef817b7bbee11eab73",
+            "mode": "100644",
+            "path": "research/tts-pilot-screening-v1/activation-template/workflow.yml",
+            "sha256": "30bcdcaaa7246f16b5c9316198b726ca06d0abc953199a0ca42c06543e1f94d4"
+          },
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/workflow.yml",
+            "mode": "100644",
+            "bytes": 5224,
+            "sha256": "d2db3f712ea86f74e0b9917e9513bf4cf6c187e7b579806c411ccb6ca70cc8dc",
+            "git_blob_sha1": "6248844206892a95e0722f20fbd3b70e7b15166c"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "bytes": 14355,
+            "git_blob_sha1": "05a48cba38ce23f1f4df233a88a2c8425cc9d7f2",
+            "mode": "100644",
+            "path": "tools/verify_research_sources.py",
+            "sha256": "49fefd1eaee0406559744553e8134d2ecc2c6c1e17352b1b74b6dce6fd64a278"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 14422,
+            "sha256": "4514b08f31b401d94673d2a39594cb2c11fefcff8682d612233057c8ff5e8338",
+            "git_blob_sha1": "ad6946b258a0bbdc28cbe07305141f63841a80a5"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -29402,6 +29561,13 @@
       "bytes": 1502,
       "sha256": "eecf226fcf03fe0a5be29992fc54d440eac87f79fdfdb05132f8d71968f122ae",
       "git_blob_sha1": "65d6964de0903330501b1a3946566560b7c3f068"
+    },
+    {
+      "path": ".github/workflows/tts-pilot-asr-20261014-v1.yml",
+      "mode": "100644",
+      "bytes": 5224,
+      "sha256": "d2db3f712ea86f74e0b9917e9513bf4cf6c187e7b579806c411ccb6ca70cc8dc",
+      "git_blob_sha1": "6248844206892a95e0722f20fbd3b70e7b15166c"
     }
   ],
   "current_source_revision": {

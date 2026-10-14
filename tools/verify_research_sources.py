@@ -189,7 +189,8 @@ def verify(root, manifest):
                 '.github/workflows/k1-punctuation6-asr18-r4.yml',
                 '.github/workflows/k1-punctuation6-asr18-r5.yml',
                 '.github/workflows/tts-quality-probe-20261014-v1.yml',
-                '.github/workflows/tts-quality-remaining-20261014-v1.yml']
+                '.github/workflows/tts-quality-remaining-20261014-v1.yml',
+                '.github/workflows/tts-pilot-asr-20261014-v1.yml']
     if additions != approved:
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed additions
