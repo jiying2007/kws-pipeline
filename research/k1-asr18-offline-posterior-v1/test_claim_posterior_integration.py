@@ -14,7 +14,7 @@ import test_offline_custody as custody
 
 REPOSITORY_HISTORY_LOCATOR = (
     'https://api.github.com/repos/jiying2007/kws-pipeline/actions/runs'
-    '?branch=research%2Fk1-punctuation6-asr18-r4&per_page=100'
+    '?branch=research%2Fk1-punctuation6-asr18-r5&per_page=100'
 )
 
 
@@ -277,7 +277,7 @@ class ClaimPosteriorIntegrationTests(unittest.TestCase):
         bad=(REPOSITORY_HISTORY_LOCATOR.replace('&per_page=100','&event=push&per_page=100'),
             REPOSITORY_HISTORY_LOCATOR.replace('&per_page=100','&status=completed&per_page=100'),
             REPOSITORY_HISTORY_LOCATOR+'&page=2',
-            REPOSITORY_HISTORY_LOCATOR.replace('research%2Fk1-punctuation6-asr18-r4','research%2Fforeign'),
+            REPOSITORY_HISTORY_LOCATOR.replace('research%2Fk1-punctuation6-asr18-r5','research%2Fforeign'),
             REPOSITORY_HISTORY_LOCATOR.replace('/jiying2007/kws-pipeline/','/other/public-repository/'))
         for locator in bad:
             case=self.repository_case();case.records['_response_locators']['producer_history']=locator

@@ -1117,7 +1117,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
         self.assertEqual({'bytes':len(files[self.LICENSE]),'sha256':t.sha(files[self.LICENSE])},self.LICENSE_ID)
         files[self.LICENSE].decode('utf-8')
         differences={name for name in self.roster if files['source/'+name]!=c.read_bytes(ROOT/name)}
-        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else {self.host.NEW+leaf for leaf in ('execution-release.json','prepare-prerequisite.json','claim-admission-control.json','publication-release.json')})
+        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS-{'publication-release.json'}} if synthetic_native else {self.host.NEW+leaf for leaf in ('execution-release.json','prepare-prerequisite.json','claim-admission-control.json')})
 
     def materialize(self, root, files):
         for name,body in files.items():

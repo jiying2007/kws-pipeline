@@ -246,7 +246,7 @@ class QualificationTests(unittest.TestCase):
         _, pin, _ = self.recovery()
         q.control_gate(control('recovery', pin), 'recovery')
 
-    def test_checked_in_current_asr_qualification_and_recovery_remain_closed(self):
+    def test_current_asr_authorized_while_qualification_and_recovery_remain_closed(self):
         for filename, root_flag in (
                 ('execution-release.json', 'root_execution_release'),
                 ('publication-release.json', 'root_publication_release'),
@@ -254,7 +254,7 @@ class QualificationTests(unittest.TestCase):
             value = q.transport.decode((q.ASR / filename).read_bytes())
             with self.subTest(filename=filename):
                 for key in ('enabled', 'independent_source_review', root_flag):
-                    self.assertIs(value[key], False)
+                    self.assertIs(value[key], filename != 'transfer-recovery-release.json')
                 if filename != 'transfer-recovery-release.json':
                     branch = value.get('source_ref', value.get('source_branch'))
                     self.assertEqual(branch, q.transport.c.current_scope()['source_branch'])

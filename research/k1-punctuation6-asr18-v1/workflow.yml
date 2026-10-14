@@ -1,16 +1,16 @@
-name: K1 punctuation6 ASR18 r4 conditional once
+name: K1 punctuation6 ASR18 r5 conditional once
 on:
   push:
     branches:
-      - research/k1-punctuation6-asr18-r4
+      - research/k1-punctuation6-asr18-r5
 permissions:
   contents: read
 concurrency:
-  group: k1-punctuation6-asr18-r4
+  group: k1-punctuation6-asr18-r5
   cancel-in-progress: false
 jobs:
   asr18:
-    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-asr18-r4' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-asr18-r5' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}
     runs-on: ubuntu-24.04
     timeout-minutes: 80
     permissions:

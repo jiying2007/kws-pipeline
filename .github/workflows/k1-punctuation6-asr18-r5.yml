@@ -1,0 +1,78 @@
+name: K1 punctuation6 ASR18 r5 conditional once
+on:
+  push:
+    branches:
+      - research/k1-punctuation6-asr18-r5
+permissions:
+  contents: read
+concurrency:
+  group: k1-punctuation6-asr18-r5
+  cancel-in-progress: false
+jobs:
+  asr18:
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-asr18-r5' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 80
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: K1 punctuation6 ASR18 offline source contracts
+        id: asr18_contracts
+        timeout-minutes: 4
+        run: |
+          set -euo pipefail
+          asr18_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-asr18-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_asr18_binding", "test_asr18_contract", "test_asr18_prerequisite", "test_asr18_entrypoints", "test_asr18_freeze", "test_asr18_failure_observer", "test_publisher_observation", "test_publisher_checkpoint", "test_transfer_recovery", "test_asr18_host", "test_asr18_metadata", "test_asr18_raw_data_reader", "test_asr18_receipts", "test_asr18_resources", "test_asr18_transport", "test_asr18_worker", "test_bound_claim_contract", "test_claim_admission_host", "test_claim_consumer_integration")); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
+          mode_logs="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/k1-asr18-contracts.XXXXXX")"
+          stop_contracts() {
+            running="$(jobs -pr)"
+            if [ -n "$running" ]; then kill $running 2>/dev/null || true; fi
+            wait || true
+            exit 2
+          }
+          trap stop_contracts INT TERM
+          python3 -I -S -B -c "$asr18_tests" > "$mode_logs/normal.log" 2>&1 & normal_pid=$!
+          python3 -I -S -B -O -c "$asr18_tests" > "$mode_logs/O.log" 2>&1 & optimized_pid=$!
+          python3 -I -S -B -OO -c "$asr18_tests" > "$mode_logs/OO.log" 2>&1 & double_optimized_pid=$!
+          failed=0
+          for test_pid in "$normal_pid" "$optimized_pid" "$double_optimized_pid"; do
+            wait "$test_pid" || failed=1
+          done
+          trap - INT TERM
+          for mode in normal O OO; do
+            printf 'ASR18_CONTRACT_MODE=%s\n' "$mode"
+            cat "$mode_logs/$mode.log"
+          done
+          exit "$failed"
+      - name: Reserve fixed campaign owner without models
+        id: campaign_claim
+        if: ${{ success() && steps.asr18_contracts.outcome == 'success' && github.run_number == 1 && github.run_attempt == 1 }}
+        timeout-minutes: 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 -I -B research/k1-punctuation6-asr18-v1/claim_admission.py
+      - name: Admit complete new input and run fixed ASR18 once
+        id: host
+        if: ${{ success() && steps.asr18_contracts.outcome == 'success' && steps.campaign_claim.outcome == 'success' && steps.campaign_claim.outputs.ready == 'true' }}
+        timeout-minutes: 61
+        run: |
+          printf 'started=true\n' >> "$GITHUB_OUTPUT"
+          python3 -I -B research/k1-punctuation6-asr18-v1/hosted_run.py
+      - name: Publish complete audio-free bounded evidence
+        if: ${{ always() && steps.host.outputs.started == 'true' }}
+        timeout-minutes: 11
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          export KWS_SOURCE_FREEZE_SHA256="$(env -i PATH=/usr/bin:/bin HOME=/nonexistent GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 LC_ALL=C sh -eu -c 'git --no-optional-locks -c core.fsmonitor=false -c core.hooksPath=/dev/null show "$1:research/k1-punctuation6-asr18-v1/execution-freeze.json" | sha256sum | cut -d " " -f 1' sh "$GITHUB_SHA")"
+          python3 -I -B research/k1-punctuation6-asr18-v1/evidence_publisher.py
+      # Only the isolated claim issuer and distinct publisher receive the short-lived token.
+      # No Actions artifacts, caches, audio logs, host/ASR retries or alternative triggers.
+      # The publisher alone has one bounded same-blob reconciliation retry.

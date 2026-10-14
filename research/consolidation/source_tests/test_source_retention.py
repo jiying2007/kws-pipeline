@@ -30,6 +30,7 @@ class RetentionTests(unittest.TestCase):
         admission = file('.github/workflows/qwen12-native-admission-v1.yml', b'name: disabled native; pure source CI\n')
         asr18 = file('.github/workflows/k1-punctuation6-asr18-v1.yml', b'name: disabled asr18; pure source CI\n')
         asr18_r4 = file('.github/workflows/k1-punctuation6-asr18-r4.yml', b'name: synthetic current asr18 r4\n')
+        asr18_r5 = file('.github/workflows/k1-punctuation6-asr18-r5.yml', b'name: synthetic current asr18 r5\n')
         prepare = file('.github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml', b'name: disabled prepare diagnostic; pure source CI\n')
         transfer = file('.github/workflows/k1-evidence-transfer-qualification-v1.yml', b'name: zero-model transfer qualification\n')
         atomic_claim = file('.github/workflows/k1-atomic-claim-qualification-v1.yml', b'name: zero-model atomic claim qualification\n')
@@ -40,14 +41,15 @@ class RetentionTests(unittest.TestCase):
             base_commit='b'*40, files=[archived], provenance=[provenance],
             source_projections=[dict(original_path='.github/workflows/old.yml', archive_path=archived['path'],
                 source_commit='a'*40, **{k:archived[k] for k in ('bytes','sha256','git_blob_sha1')})],
-            baseline_active_workflows=[baseline], current_added_active_workflows=[added, admission, asr18, prepare, transfer, atomic_claim, asr18_r4], pointer_only=[],
+            baseline_active_workflows=[baseline], current_added_active_workflows=[added, admission, asr18, prepare, transfer, atomic_claim, asr18_r4, asr18_r5], pointer_only=[],
             allowed_new_active_workflows=['.github/workflows/research-source-consolidation.yml',
                 '.github/workflows/qwen12-native-admission-v1.yml',
                 '.github/workflows/k1-punctuation6-asr18-v1.yml',
                 '.github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml',
                 '.github/workflows/k1-evidence-transfer-qualification-v1.yml',
                 '.github/workflows/k1-atomic-claim-qualification-v1.yml',
-                '.github/workflows/k1-punctuation6-asr18-r4.yml'])
+                '.github/workflows/k1-punctuation6-asr18-r4.yml',
+                '.github/workflows/k1-punctuation6-asr18-r5.yml'])
     def test_valid_retention(self):
         self.assertEqual(verify(self.root,self.manifest),1)
     def test_changed_bytes(self):
@@ -160,7 +162,7 @@ class RetentionTests(unittest.TestCase):
             with self.assertRaises(ValueError): verify(self.root, self.manifest)
         self.manifest['allowed_new_active_workflows'] = original
     def test_asr18_workflow_requires_exact_name_and_current_identity(self):
-        for index in (2, 6):
+        for index in (2, 6, 7):
             with self.subTest(path=self.manifest['allowed_new_active_workflows'][index]):
                 self.check_asr18_workflow_identity(index)
 
@@ -173,7 +175,7 @@ class RetentionTests(unittest.TestCase):
         for lookalike in ('.github/workflows/k1-punctuation6-asr18-v10.yml',
                           '.github/workflows/k1-punctuation6-asr18-v1-extra.yml',
                           '.github/workflows/k1-punctuation6-asr18-v2.yml',
-                          '.github/workflows/k1-punctuation6-asr18-r5.yml'):
+                          '.github/workflows/k1-punctuation6-asr18-r6.yml'):
             with self.subTest(path=lookalike):
                 replacement = self.file(lookalike, raw)
                 with self.assertRaisesRegex(ValueError, 'inventory changed'):
