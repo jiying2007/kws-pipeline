@@ -1,7 +1,10 @@
-# Unactivated new ASR workflow template
+# Registered but disabled ASR workflow
 
-This folder is not under `.github/workflows`; nothing auto-runs. `activation.json`
-is deliberately disabled, with null real input/source/workflow/numeric bindings.
+The reviewed workflow is now present at
+`.github/workflows/tts-pilot-asr-20261014-v1.yml`, byte-identical to workflow.yml
+in this folder. Its sole push trigger is the dedicated research execution branch;
+main does not match and registration does not consume an execution run.
+`activation.json` stays disabled, with null input/source/workflow/numeric bindings.
 Disabled or incomplete evidence is rejected before any network or inference. No
 run, artifact, source SHA or success receipt has been fabricated.
 
@@ -36,8 +39,12 @@ run, artifact, source SHA or success receipt has been fabricated.
    all new module code/data, launcher/finalizer/tests, and retained container
    lock. Activation JSON itself is excluded to avoid a self-referential hash.
    Retained model/helper source hashes stay enforced by source-lock.json.
-5. Install the new workflow on a nonmatching source branch without triggering it,
-   discover and bind its real GitHub workflow_id, then root enables and pushes
+5. After this registered-but-disabled source lands on the default branch,
+   discover the real workflow_id through the public official endpoint
+   `https://api.github.com/repos/jiying2007/kws-pipeline/actions/workflows/tts-pilot-asr-20261014-v1.yml`
+   without a token or workflow run. This preparation has not made that request
+   and does not guess an ID. Bind the verified response only in a later reviewed
+   activation change, then root enables and pushes
    the exact new branch once after reviewing all actual evidence. A null workflow
    ID cannot activate. Deleting/recreating the workflow changes its ID and fails
    the frozen identity check; never change identity to replenish attempts.

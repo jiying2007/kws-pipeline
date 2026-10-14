@@ -1,5 +1,5 @@
-# TEMPLATE ONLY. Do not install in .github/workflows until actual input identities
-# and source hashes are bound. activation.json is disabled and null by default.
+# REGISTERED BUT DISABLED: main does not match the sole research push branch.
+# activation.json remains disabled/null; registration is not execution admission.
 name: TTS pilot blind ASR once v1
 on:
   push:

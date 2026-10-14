@@ -16,8 +16,15 @@ class ActivationTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as t:
    value=json.loads((HERE/'activation.json').read_bytes());value.update(enabled=True,input_artifacts=None);p=Path(t)/'unbound.json';p.write_text(json.dumps(value))
    with self.assertRaises(ValueError):m.binding(p)
- def test_template_not_installed_workflow(self):
-  self.assertNotIn('.github',HERE.parts);text=(HERE/'workflow.yml').read_text();self.assertNotIn('workflow_dispatch',text);self.assertIn('github.run_attempt == 1',text);self.assertIn('github.run_number == 1',text);self.assertIn('pilot-asr-public/',text)
+ def test_registered_workflow_matches_reviewed_template(self):
+  self.assertNotIn('.github',HERE.parts)
+  registered=m.BASE.parents[1]/m.WORKFLOW
+  self.assertTrue(registered.is_file());self.assertEqual(registered.read_bytes(),(HERE/'workflow.yml').read_bytes())
+  text=registered.read_text()
+  header='\n'.join(line for line in text.split('permissions:',1)[0].splitlines() if not line.startswith('#'))
+  self.assertEqual(header.count('on:'),1);self.assertIn('branches: [research/tts-pilot-asr-20261014-v1]',header)
+  for forbidden in ('main','pull_request','schedule:','workflow_run:','branches-ignore'):self.assertNotIn(forbidden,header)
+  self.assertNotIn('workflow_dispatch',text);self.assertIn('github.run_attempt == 1',text);self.assertIn('github.run_number == 1',text);self.assertIn('pilot-asr-public/',text)
  def run_fixture(self):
   env={'GITHUB_REPOSITORY':m.REPO,'GITHUB_EVENT_NAME':'push','GITHUB_REF':'refs/heads/'+m.BRANCH,'GITHUB_RUN_ATTEMPT':'1','GITHUB_RUN_NUMBER':'1','GITHUB_RUN_ID':'123','GITHUB_SHA':'a'*40}
   event={'created':True,'deleted':False,'repository':{'private':False}}

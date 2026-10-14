@@ -33,6 +33,7 @@ class RetentionTests(unittest.TestCase):
         asr18_r5 = file('.github/workflows/k1-punctuation6-asr18-r5.yml', b'name: synthetic current asr18 r5\n')
         tts_probe = file('.github/workflows/tts-quality-probe-20261014-v1.yml', b'name: synthetic tts quality probe fixture\n')
         tts_remaining = file('.github/workflows/tts-quality-remaining-20261014-v1.yml', b'name: synthetic tts quality remaining fixture\n')
+        asr_pilot = file('.github/workflows/tts-pilot-asr-20261014-v1.yml', b'name: synthetic registered disabled ASR fixture\n')
         prepare = file('.github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml', b'name: disabled prepare diagnostic; pure source CI\n')
         transfer = file('.github/workflows/k1-evidence-transfer-qualification-v1.yml', b'name: zero-model transfer qualification\n')
         atomic_claim = file('.github/workflows/k1-atomic-claim-qualification-v1.yml', b'name: zero-model atomic claim qualification\n')
@@ -43,7 +44,7 @@ class RetentionTests(unittest.TestCase):
             base_commit='b'*40, files=[archived], provenance=[provenance],
             source_projections=[dict(original_path='.github/workflows/old.yml', archive_path=archived['path'],
                 source_commit='a'*40, **{k:archived[k] for k in ('bytes','sha256','git_blob_sha1')})],
-            baseline_active_workflows=[baseline], current_added_active_workflows=[added, admission, asr18, prepare, transfer, atomic_claim, asr18_r4, asr18_r5, tts_probe, tts_remaining], pointer_only=[],
+            baseline_active_workflows=[baseline], current_added_active_workflows=[added, admission, asr18, prepare, transfer, atomic_claim, asr18_r4, asr18_r5, tts_probe, tts_remaining, asr_pilot], pointer_only=[],
             allowed_new_active_workflows=['.github/workflows/research-source-consolidation.yml',
                 '.github/workflows/qwen12-native-admission-v1.yml',
                 '.github/workflows/k1-punctuation6-asr18-v1.yml',
@@ -53,7 +54,8 @@ class RetentionTests(unittest.TestCase):
                 '.github/workflows/k1-punctuation6-asr18-r4.yml',
                 '.github/workflows/k1-punctuation6-asr18-r5.yml',
                 '.github/workflows/tts-quality-probe-20261014-v1.yml',
-                '.github/workflows/tts-quality-remaining-20261014-v1.yml'])
+                '.github/workflows/tts-quality-remaining-20261014-v1.yml',
+                '.github/workflows/tts-pilot-asr-20261014-v1.yml'])
     def test_valid_retention(self):
         self.assertEqual(verify(self.root,self.manifest),1)
     def test_changed_bytes(self):
@@ -275,7 +277,7 @@ class RetentionTests(unittest.TestCase):
     def test_tts_probe_workflow_requires_exact_name_and_current_identity(self):
         approved = '.github/workflows/tts-quality-probe-20261014-v1.yml'
         index = 8
-        self.assertEqual(len(self.manifest['allowed_new_active_workflows']), 10)
+        self.assertEqual(len(self.manifest['allowed_new_active_workflows']), 11)
         self.assertEqual(self.manifest['allowed_new_active_workflows'][index], approved)
         path = self.root / approved
         current = copy.deepcopy(self.manifest['current_added_active_workflows'][index])
@@ -325,7 +327,7 @@ class RetentionTests(unittest.TestCase):
     def test_tts_remaining_workflow_requires_exact_name_and_current_identity(self):
         approved = '.github/workflows/tts-quality-remaining-20261014-v1.yml'
         index = 9
-        self.assertEqual(len(self.manifest['allowed_new_active_workflows']), 10)
+        self.assertEqual(len(self.manifest['allowed_new_active_workflows']), 11)
         self.assertEqual(self.manifest['allowed_new_active_workflows'][index], approved)
         path = self.root / approved
         current = copy.deepcopy(self.manifest['current_added_active_workflows'][index])
@@ -357,6 +359,43 @@ class RetentionTests(unittest.TestCase):
         path.write_bytes(raw.replace(b'synthetic', b'SYNTHETIC'))
         with self.assertRaisesRegex(ValueError, 'identity changed'):
             verify(self.root, self.manifest)
+
+    def test_registered_asr_workflow_requires_exact_name_and_current_identity(self):
+        approved = '.github/workflows/tts-pilot-asr-20261014-v1.yml'
+        index = 10
+        self.assertEqual(len(self.manifest['allowed_new_active_workflows']), 11)
+        self.assertEqual(self.manifest['allowed_new_active_workflows'][index], approved)
+        path = self.root / approved
+        current = copy.deepcopy(self.manifest['current_added_active_workflows'][index])
+        raw = path.read_bytes()
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        for lookalike in ('.github/workflows/tts-pilot-asr-20261014-v10.yml',
+                          '.github/workflows/tts-pilot-asr-20261014-v1-extra.yml',
+                          '.github/workflows/tts-pilot-asr-20261014-v2.yml',
+                          '.github/workflows/tts-pilot-asr-20261013-v1.yml',
+                          '.github/workflows/tts-pilot-asr-20261014-v1.yaml'):
+            with self.subTest(path=lookalike):
+                replacement = self.file(lookalike, raw)
+                with self.assertRaisesRegex(ValueError, 'inventory changed'):
+                    verify(self.root, self.manifest)
+                path.unlink()
+                self.manifest['allowed_new_active_workflows'][index] = lookalike
+                self.manifest['current_added_active_workflows'][index] = replacement
+                with self.assertRaisesRegex(ValueError, 'unexpected active workflow addition'):
+                    verify(self.root, self.manifest)
+                self.manifest['allowed_new_active_workflows'][index] = approved
+                with self.assertRaisesRegex(ValueError, 'unexpected current added workflow identity'):
+                    verify(self.root, self.manifest)
+                (self.root / lookalike).unlink()
+                path.write_bytes(raw)
+                self.manifest['current_added_active_workflows'][index] = current
+        path.unlink()
+        with self.assertRaisesRegex(ValueError, 'missing retained file'):
+            verify(self.root, self.manifest)
+        path.write_bytes(raw.replace(b'synthetic', b'SYNTHETIC'))
+        with self.assertRaisesRegex(ValueError, 'identity changed'):
+            verify(self.root, self.manifest)
+
 
     def test_tts_remaining_identity_cannot_be_omitted_or_replaced_by_probe_or_r5(self):
         original = copy.deepcopy(self.manifest['current_added_active_workflows'])
