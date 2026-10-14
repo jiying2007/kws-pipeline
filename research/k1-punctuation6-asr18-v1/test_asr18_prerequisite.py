@@ -27,7 +27,7 @@ def fixture():
 
 
 class PreparePrerequisite(unittest.TestCase):
-    def test_checked_in_complete_prerequisite_stays_exactly_pinned_for_new_authorization(self):
+    def test_checked_in_complete_prerequisite_stays_exactly_pinned_while_asr_closed(self):
         # Read the actual root-reviewed projection; never synthesize its proof.
         raw=c.read_bytes(HERE/'prepare-prerequisite.json',cap=65536)
         release=c.read_json(HERE/'execution-release.json')
@@ -42,7 +42,7 @@ class PreparePrerequisite(unittest.TestCase):
         self.assertEqual(c.digest(raw),'27762aeebffd67243808c56a71f4c4c125fe76f79496f6169a3dd250abb67c77')
         self.assertIs(release['historical_screening_reviewed'],True)
         for filename,keys in DISABLED_APPROVALS.items():
-            for key in keys:self.assertIs(c.read_json(HERE/filename)[key],True)
+            for key in keys:self.assertIs(c.read_json(HERE/filename)[key],False)
 
     def test_explicit_unestablished_prerequisite_template_remains_closed(self):
         release=c.current_disabled_release()

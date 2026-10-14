@@ -87,11 +87,11 @@ class ActualEntrypoints(unittest.TestCase):
         if validation_code is not None:expected_detail['validation_code']=validation_code
         self.assertEqual(error['detail'],expected_detail)
 
-    def test_checked_in_asr_controls_are_explicitly_enabled_for_current_scope(self):
+    def test_checked_in_asr_controls_are_explicitly_closed_for_current_scope(self):
         self.assertEqual(sum(map(len,DISABLED_APPROVALS.values())),9)
         for filename,keys in DISABLED_APPROVALS.items():
             value=json.loads((HERE/filename).read_bytes())
-            self.assertTrue(all(value[key] is True for key in keys))
+            self.assertTrue(all(value[key] is False for key in keys))
         release=json.loads((HERE/'execution-release.json').read_bytes())
         control_raw=(HERE/'claim-admission-control.json').read_bytes();control=json.loads(control_raw)
         self.assertEqual(release['schema'],'k1-asr18-execution-release-v2')
@@ -99,12 +99,12 @@ class ActualEntrypoints(unittest.TestCase):
         self.assertEqual(release['claim_admission_control_sha256'],hashlib.sha256(control_raw).hexdigest())
         self.assertEqual(control['schema'],'k1-asr18-claim-admission-control-v2')
         self.assertEqual(control['mode'],'git-owner-v2')
-        for key in c.CLAIM_APPROVALS:self.assertIs(control[key],True)
+        for key in c.CLAIM_APPROVALS:self.assertIs(control[key],False)
         scope=c.current_scope()
         for key,field in (('campaign','campaign'),('source_ref','source_branch'),
                 ('evidence_ref','result_branch'),('claim_ref','claim_ref'),('workflow','workflow'),('job_key','job_key')):
             self.assertEqual(control[key],scope[field])
-        self.assertEqual(c.require_current_scope(control),scope)
+        with self.assertRaisesRegex(ValueError,'claim admission closed'):c.require_current_scope(control)
         self.assertIsNone(control['workflow_id'])
         self.assertEqual(control['workflow_id_source'],'actual_run_api_plus_path')
         self.assertIs(release['historical_screening_reviewed'],True)
@@ -134,8 +134,8 @@ class ActualEntrypoints(unittest.TestCase):
         self.assertEqual((value.returncode,value.stderr),(1,b'ASR18 publication disabled or review absent.\n'))
         self.check_diagnostic(value.stdout,role='publisher',stages=['publication_gate'])
 
-    def test_actual_enabled_workflow_commands_reject_nonexecution_context_without_effects(self):
-        self.check_workflow_commands_reject_nonexecution_context(HERE)
+    def test_actual_closed_workflow_commands_reject_before_context_or_side_effects(self):
+        self.check_workflow_commands_reject_nonexecution_context(HERE,closed=True)
 
     def test_explicit_closed_workflow_commands_reject_before_context_or_side_effects(self):
         with disabled_source() as source:

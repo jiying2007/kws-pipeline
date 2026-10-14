@@ -1,0 +1,1470 @@
+{
+  "schema": "k1-asr18-r5-terminal-closeout-v1",
+  "record_scope": "Public terminal summary derived from immutable executed-source posterior and original native/resource members; the closed source below is not the producer or its frozen validator.",
+  "producer": {
+    "executed_head_sha": "a1159dc902634e65b1fb2a7bbf219389f84089d5",
+    "job_key": "asr18",
+    "repository": "jiying2007/kws-pipeline",
+    "run_attempt": 1,
+    "run_id": 38518609834,
+    "source_tree": "a296feacc661c0a45401c7bdd6bca584168d5389",
+    "numeric_job_id": 115702938144,
+    "numeric_workflow_id": 383972178,
+    "ordinal": 1,
+    "workflow_path": ".github/workflows/k1-punctuation6-asr18-r5.yml",
+    "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38518609834"
+  },
+  "fixed_refs": {
+    "execution": "research/k1-punctuation6-asr18-r5",
+    "claim": "claims/k1-punctuation6-asr18-r5",
+    "result": "evidence/k1-punctuation6-asr18-r5",
+    "checkpoint": "evidence/k1-punctuation6-asr18-r5-checkpoint"
+  },
+  "original_archive": {
+    "bytes": 5974969,
+    "checkpoint_equals_final": true,
+    "chunk_count": 23,
+    "payload_expanded_bytes": 18529824,
+    "payload_members": 1000,
+    "result_commit": "680aceb28574cdb92a39f661289e8697bce1fe84",
+    "result_leaves": 2291,
+    "result_tree": "314aa51bddf75df2c5422182059ff358e152690d",
+    "sha256": "cee3b0c48b7e166ab23fc8c68aa5a32604423d36269af45417b7efea3d76ad2d",
+    "source_leaves": 2267,
+    "zip_entries": 1001,
+    "checkpoint_commit": "680aceb28574cdb92a39f661289e8697bce1fe84",
+    "evidence_directory": "research/k1-punctuation6-asr18-v1/evidence/asr18-r5"
+  },
+  "owner": {
+    "archived_acquisition_response_statuses": {
+      "owner_readback": 200,
+      "ref_create": 201,
+      "ref_readback": 200
+    },
+    "commit": "e7293ccfbecab32ec5fb775275b334bb808640b6",
+    "model_consumption": null,
+    "one_use_public_consumed_observation_permanent_marker_durable": true,
+    "own201_ref_and_owner_readback_verified_by_source_bound_original_validators": true,
+    "private_handoff_files_independently_observed": false,
+    "proof_scope": "Original emitted public acquisition/consumed proof and reviewed one-use control flow; external exact owner/ref. Private nonce/files are not requested or independently observed."
+  },
+  "terminal": {
+    "host_receipt_status": "all_planned_native_complete",
+    "host_step_conclusion": "success",
+    "job_conclusion": "success",
+    "publisher_step_conclusion": "success",
+    "run_conclusion": "success"
+  },
+  "scientific_outcome": {
+    "acoustic_verbatim_completeness": "unknown",
+    "consumed_attempts": null,
+    "fixed_denominator": 18,
+    "human_gold": false,
+    "ledger_reported_attempts": 18,
+    "native_success_established": true,
+    "normalization": "fixed-punctuation-removal-only-v1",
+    "old_or_current_slots_reusable": false,
+    "retry_authorized": false,
+    "shipping_approved": false,
+    "status": "complete_native_verified",
+    "training_admitted": false,
+    "unanimous_cell": "k1p6-002",
+    "unanimous_machine_candidates": 1,
+    "unanimous_text": "你好小屋",
+    "verified_complete_slots": 18
+  },
+  "transcripts": [
+    {
+      "audio_frames": 26880,
+      "audio_id": "clip-000001",
+      "cell_id": "k1p6-001",
+      "distinct_normalized_transcripts": 2,
+      "human_gold": false,
+      "models": {
+        "qwen06": {
+          "normalized_transcript": "你好小吴",
+          "original_native_output": {
+            "bytes": 10485,
+            "path": "output/qwen06/clip-000001/raw-native-output.json",
+            "sha256": "68a810a84505501891a4c874a1d2bd7e4dce365b887521a8d633060a61150d10"
+          },
+          "original_transcript": {
+            "bytes": 509,
+            "path": "output/qwen06/clip-000001/raw-transcript.json",
+            "sha256": "8fc9572ad85093af039212ca2798780b0674db8587cf2a86ece50501c017546b"
+          },
+          "raw_transcript": "你好，小吴。"
+        },
+        "sensevoice": {
+          "normalized_transcript": "你好小吴",
+          "original_native_output": {
+            "bytes": 5141,
+            "path": "output/sensevoice/clip-000001/raw-native-output.json",
+            "sha256": "7fcfafbf13fbb140bde0c0d7a5a6dd6a8b96e51b57a46e63e02b45c590a7bf3c"
+          },
+          "original_transcript": {
+            "bytes": 506,
+            "path": "output/sensevoice/clip-000001/raw-transcript.json",
+            "sha256": "7c7a57515e019dd831f1b6db52bc230b7f8ab013f044151383f0f4e2a53918ee"
+          },
+          "raw_transcript": "你好小吴"
+        },
+        "whisper": {
+          "normalized_transcript": "你好小屋啊",
+          "original_native_output": {
+            "bytes": 3581,
+            "path": "output/whisper/clip-000001/raw-native-output.json",
+            "sha256": "6d14dd9feb6fe0aa4cada5146361d8f804716e12022155a83d8ae5c692eeda78"
+          },
+          "original_transcript": {
+            "bytes": 394,
+            "path": "output/whisper/clip-000001/raw-transcript.json",
+            "sha256": "0d8e618b68a2b018fd617c010c71a1e23ada9da99c6ec51ca6c09c99cbdac96e"
+          },
+          "raw_transcript": "你好小屋啊!"
+        }
+      },
+      "seconds_at_16000hz": 1.68,
+      "training_admitted": false,
+      "unanimous_machine_candidate": false
+    },
+    {
+      "audio_frames": 26880,
+      "audio_id": "clip-000002",
+      "cell_id": "k1p6-002",
+      "distinct_normalized_transcripts": 1,
+      "human_gold": false,
+      "models": {
+        "qwen06": {
+          "normalized_transcript": "你好小屋",
+          "original_native_output": {
+            "bytes": 10485,
+            "path": "output/qwen06/clip-000002/raw-native-output.json",
+            "sha256": "53b889124bebe1e950a9315bb3d8a12355244c74d98074a5f593eb3e6633a244"
+          },
+          "original_transcript": {
+            "bytes": 509,
+            "path": "output/qwen06/clip-000002/raw-transcript.json",
+            "sha256": "e619e2a43070474e2c71814338e41676678c161f996e592dfbc7f77d084a540d"
+          },
+          "raw_transcript": "你好，小屋。"
+        },
+        "sensevoice": {
+          "normalized_transcript": "你好小屋",
+          "original_native_output": {
+            "bytes": 5141,
+            "path": "output/sensevoice/clip-000002/raw-native-output.json",
+            "sha256": "9f724e412f63cbcf3dd84a34327f393c52e38d1d23047afcba0f189417080ef0"
+          },
+          "original_transcript": {
+            "bytes": 506,
+            "path": "output/sensevoice/clip-000002/raw-transcript.json",
+            "sha256": "1e75caf4a1ddd5e43b082614f8171858afa9d2abd8ec5a43bbc0f8075c1e1429"
+          },
+          "raw_transcript": "你好小屋"
+        },
+        "whisper": {
+          "normalized_transcript": "你好小屋",
+          "original_native_output": {
+            "bytes": 3578,
+            "path": "output/whisper/clip-000002/raw-native-output.json",
+            "sha256": "14515fde60b183e38086eb0617288ecac94d9d4db9fda8070355eb21e56ecdf7"
+          },
+          "original_transcript": {
+            "bytes": 390,
+            "path": "output/whisper/clip-000002/raw-transcript.json",
+            "sha256": "277dec4b50a2299b852f1030ee72d020b390d4b33d596e3390e002a0602cb459"
+          },
+          "raw_transcript": "你好小屋"
+        }
+      },
+      "seconds_at_16000hz": 1.68,
+      "training_admitted": false,
+      "unanimous_machine_candidate": true
+    },
+    {
+      "audio_frames": 37120,
+      "audio_id": "clip-000004",
+      "cell_id": "k1p6-003",
+      "distinct_normalized_transcripts": 3,
+      "human_gold": false,
+      "models": {
+        "qwen06": {
+          "normalized_transcript": "你好小窝",
+          "original_native_output": {
+            "bytes": 10485,
+            "path": "output/qwen06/clip-000004/raw-native-output.json",
+            "sha256": "95eb23bf75fef5e441640728c146f67f5d4665d41bded63dc6b76a15fba6632e"
+          },
+          "original_transcript": {
+            "bytes": 509,
+            "path": "output/qwen06/clip-000004/raw-transcript.json",
+            "sha256": "06dfff4f790103f86e64f6c3ffa67fe9f0e1e9eb1d0adb50a42bdfe2b1702691"
+          },
+          "raw_transcript": "你好，小窝。"
+        },
+        "sensevoice": {
+          "normalized_transcript": "你好小欧",
+          "original_native_output": {
+            "bytes": 5165,
+            "path": "output/sensevoice/clip-000004/raw-native-output.json",
+            "sha256": "b55db4a44b552ecc17fcd91d2ebed3683ba5d67a91a91536dd184ccbc0a5a0cd"
+          },
+          "original_transcript": {
+            "bytes": 506,
+            "path": "output/sensevoice/clip-000004/raw-transcript.json",
+            "sha256": "21e9fb62b45c7869b3308b70f27f02abbda35633766def3c1af0da31a298f249"
+          },
+          "raw_transcript": "你好小欧"
+        },
+        "whisper": {
+          "normalized_transcript": "你好小屋",
+          "original_native_output": {
+            "bytes": 3577,
+            "path": "output/whisper/clip-000004/raw-native-output.json",
+            "sha256": "3b31063db52980f6615a62478741a1d87d51664dd8f6cecf619ab2f2462ef1a3"
+          },
+          "original_transcript": {
+            "bytes": 390,
+            "path": "output/whisper/clip-000004/raw-transcript.json",
+            "sha256": "39b6f947f38f026f124861fa2a05b2af51b85e7e17c50631809a95b2c4c9320a"
+          },
+          "raw_transcript": "你好小屋"
+        }
+      },
+      "seconds_at_16000hz": 2.32,
+      "training_admitted": false,
+      "unanimous_machine_candidate": false
+    },
+    {
+      "audio_frames": 43520,
+      "audio_id": "clip-000003",
+      "cell_id": "k1p6-004",
+      "distinct_normalized_transcripts": 2,
+      "human_gold": false,
+      "models": {
+        "qwen06": {
+          "normalized_transcript": "你好小窝",
+          "original_native_output": {
+            "bytes": 10485,
+            "path": "output/qwen06/clip-000003/raw-native-output.json",
+            "sha256": "7bc2473b23930419ab692aac6023390c99171d146a18b16cd8969f557c9c9ed8"
+          },
+          "original_transcript": {
+            "bytes": 509,
+            "path": "output/qwen06/clip-000003/raw-transcript.json",
+            "sha256": "e4d25caebfb03feb7f8fc415d180fed858315ad42f2c71114d76e7e667e86888"
+          },
+          "raw_transcript": "你好，小窝。"
+        },
+        "sensevoice": {
+          "normalized_transcript": "你好小窝",
+          "original_native_output": {
+            "bytes": 5148,
+            "path": "output/sensevoice/clip-000003/raw-native-output.json",
+            "sha256": "a972eabafe718838bedb7a48c2e4d0c9ea70c159ba4ecb3734cfeab1e6590d29"
+          },
+          "original_transcript": {
+            "bytes": 506,
+            "path": "output/sensevoice/clip-000003/raw-transcript.json",
+            "sha256": "c34e8060d84c75f2dd2e8933423d1a50a94fec56131cc266b9c893b3665fdcd3"
+          },
+          "raw_transcript": "你好小窝"
+        },
+        "whisper": {
+          "normalized_transcript": "你好小翁",
+          "original_native_output": {
+            "bytes": 3583,
+            "path": "output/whisper/clip-000003/raw-native-output.json",
+            "sha256": "b346c9244893888a0e7c5a08ff4693b71c05290288588dc66adf8d0af19b10fc"
+          },
+          "original_transcript": {
+            "bytes": 391,
+            "path": "output/whisper/clip-000003/raw-transcript.json",
+            "sha256": "5863e911b499f888ea8d3acfb443c90c853ad6e2b5de943b64056f5082f14a40"
+          },
+          "raw_transcript": "你好 小翁"
+        }
+      },
+      "seconds_at_16000hz": 2.72,
+      "training_admitted": false,
+      "unanimous_machine_candidate": false
+    },
+    {
+      "audio_frames": 29440,
+      "audio_id": "clip-000006",
+      "cell_id": "k1p6-005",
+      "distinct_normalized_transcripts": 2,
+      "human_gold": false,
+      "models": {
+        "qwen06": {
+          "normalized_transcript": "你好小窝",
+          "original_native_output": {
+            "bytes": 10485,
+            "path": "output/qwen06/clip-000006/raw-native-output.json",
+            "sha256": "8a973388550535880417aea552a190a75c50e0517d3cb4bd0780f79983ba944a"
+          },
+          "original_transcript": {
+            "bytes": 509,
+            "path": "output/qwen06/clip-000006/raw-transcript.json",
+            "sha256": "b506e415455adedf1535dec5badd91cca86a1e96b5439058662b509f43446f57"
+          },
+          "raw_transcript": "你好，小窝。"
+        },
+        "sensevoice": {
+          "normalized_transcript": "你好小屋",
+          "original_native_output": {
+            "bytes": 5149,
+            "path": "output/sensevoice/clip-000006/raw-native-output.json",
+            "sha256": "df284d57cf94af4811e6841443527310020043edaeff7cb6950a3156793ed9f5"
+          },
+          "original_transcript": {
+            "bytes": 506,
+            "path": "output/sensevoice/clip-000006/raw-transcript.json",
+            "sha256": "46191aed25b5ef28c9df074bd20ccdb7b086bf0fd0476a616052ddc0f353a61a"
+          },
+          "raw_transcript": "你好小屋"
+        },
+        "whisper": {
+          "normalized_transcript": "你好小屋",
+          "original_native_output": {
+            "bytes": 3581,
+            "path": "output/whisper/clip-000006/raw-native-output.json",
+            "sha256": "4a9819bfef3f59550bb6a097a6ff58bb81ada0e65db564ace3fcfcd22e183f66"
+          },
+          "original_transcript": {
+            "bytes": 391,
+            "path": "output/whisper/clip-000006/raw-transcript.json",
+            "sha256": "1c099ad52b494ed21e64dddb0f47cbd5951aa1f5cbe63cf1833485d9ed19c0ef"
+          },
+          "raw_transcript": "你好 小屋"
+        }
+      },
+      "seconds_at_16000hz": 1.84,
+      "training_admitted": false,
+      "unanimous_machine_candidate": false
+    },
+    {
+      "audio_frames": 25600,
+      "audio_id": "clip-000005",
+      "cell_id": "k1p6-006",
+      "distinct_normalized_transcripts": 3,
+      "human_gold": false,
+      "models": {
+        "qwen06": {
+          "normalized_transcript": "您好小吴",
+          "original_native_output": {
+            "bytes": 10485,
+            "path": "output/qwen06/clip-000005/raw-native-output.json",
+            "sha256": "62839fe7b7c56a821025efa2541936257387c44fa864f481eb16e7ec5a790657"
+          },
+          "original_transcript": {
+            "bytes": 509,
+            "path": "output/qwen06/clip-000005/raw-transcript.json",
+            "sha256": "6fbedf177d793d37f8b4ad883e527e14011a7a68ee3fcfbcee93758d0d662d61"
+          },
+          "raw_transcript": "您好，小吴。"
+        },
+        "sensevoice": {
+          "normalized_transcript": "你好小窝",
+          "original_native_output": {
+            "bytes": 5149,
+            "path": "output/sensevoice/clip-000005/raw-native-output.json",
+            "sha256": "d5fc344f54ca9669e99bf18cdf72af203553348a13de19bfd12bb2d47ecb20a7"
+          },
+          "original_transcript": {
+            "bytes": 506,
+            "path": "output/sensevoice/clip-000005/raw-transcript.json",
+            "sha256": "fc6cbe3e5f861c62219c280fdf552e3205f1c4def6c7ba1f39f3c798d83668fc"
+          },
+          "raw_transcript": "你好小窝"
+        },
+        "whisper": {
+          "normalized_transcript": "您好小屋哦",
+          "original_native_output": {
+            "bytes": 3592,
+            "path": "output/whisper/clip-000005/raw-native-output.json",
+            "sha256": "064848a5bcd283a9f4e408b3954cb1d50adf34f1009f8917e91303476d82b891"
+          },
+          "original_transcript": {
+            "bytes": 394,
+            "path": "output/whisper/clip-000005/raw-transcript.json",
+            "sha256": "69ada2d002db27171e3228a8a08a9fe73bb5675307bf148fae8a3543f5bfeb04"
+          },
+          "raw_transcript": "您好 小屋哦"
+        }
+      },
+      "seconds_at_16000hz": 1.6,
+      "training_admitted": false,
+      "unanimous_machine_candidate": false
+    }
+  ],
+  "native_termination_and_input": [
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 26880,
+        "channels": 1,
+        "padding_frames": 0,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "full_input",
+        "processed_end_frame": 26880,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "capture_stage": "returned_generation_sequence",
+        "generated_token_ids": [
+          11528,
+          8453,
+          151704,
+          108386,
+          3837,
+          30709,
+          103948,
+          1773,
+          151645
+        ],
+        "generated_tokens": 9,
+        "kind": "autoregressive_eos",
+        "stop_reason": "eos_token",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-001-qwen06",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 26880,
+        "channels": 1,
+        "padding_frames": 0,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "full_input",
+        "processed_end_frame": 26880,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "inference_returned": true,
+        "kind": "full_input_ctc_return",
+        "lexical_token_ids": [
+          10153,
+          11590,
+          11885,
+          10848
+        ],
+        "metadata_boundary_verified": true,
+        "metadata_token_ids": [
+          24884,
+          25003,
+          24993,
+          25017
+        ],
+        "raw_redecode_matches_capture": true,
+        "raw_token_ids": [
+          24884,
+          25003,
+          24993,
+          25017,
+          10153,
+          11590,
+          11885,
+          10848
+        ],
+        "token_scope": "ctc_collapsed_nonblank_ids_not_framewise_logits",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-001-sensevoice",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 26880,
+        "channels": 1,
+        "padding_frames": 453120,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "zero_pad_only_480000",
+        "processed_end_frame": 26880,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "capture_stage": "decoder_update_before_finalize",
+        "completed": true,
+        "generated_token_ids": [
+          26410,
+          7322,
+          9636,
+          233,
+          4905,
+          0,
+          50257
+        ],
+        "initial_token_ids": [
+          50258,
+          50260,
+          50359,
+          50363
+        ],
+        "kind": "whisper_greedy_pre_finalize",
+        "pre_finalize_token_count": 11,
+        "step_count": 7,
+        "stop_reason": "eot",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-001-whisper",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 26880,
+        "channels": 1,
+        "padding_frames": 0,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "full_input",
+        "processed_end_frame": 26880,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "capture_stage": "returned_generation_sequence",
+        "generated_token_ids": [
+          11528,
+          8453,
+          151704,
+          108386,
+          3837,
+          30709,
+          100436,
+          1773,
+          151645
+        ],
+        "generated_tokens": 9,
+        "kind": "autoregressive_eos",
+        "stop_reason": "eos_token",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-002-qwen06",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 26880,
+        "channels": 1,
+        "padding_frames": 0,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "full_input",
+        "processed_end_frame": 26880,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "inference_returned": true,
+        "kind": "full_input_ctc_return",
+        "lexical_token_ids": [
+          10153,
+          11590,
+          11885,
+          11927
+        ],
+        "metadata_boundary_verified": true,
+        "metadata_token_ids": [
+          24884,
+          25003,
+          24993,
+          25017
+        ],
+        "raw_redecode_matches_capture": true,
+        "raw_token_ids": [
+          24884,
+          25003,
+          24993,
+          25017,
+          10153,
+          11590,
+          11885,
+          11927
+        ],
+        "token_scope": "ctc_collapsed_nonblank_ids_not_framewise_logits",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-002-sensevoice",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 26880,
+        "channels": 1,
+        "padding_frames": 453120,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "zero_pad_only_480000",
+        "processed_end_frame": 26880,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "capture_stage": "decoder_update_before_finalize",
+        "completed": true,
+        "generated_token_ids": [
+          26410,
+          7322,
+          9636,
+          233,
+          50257
+        ],
+        "initial_token_ids": [
+          50258,
+          50260,
+          50359,
+          50363
+        ],
+        "kind": "whisper_greedy_pre_finalize",
+        "pre_finalize_token_count": 9,
+        "step_count": 5,
+        "stop_reason": "eot",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-002-whisper",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 37120,
+        "channels": 1,
+        "padding_frames": 0,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "full_input",
+        "processed_end_frame": 37120,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "capture_stage": "returned_generation_sequence",
+        "generated_token_ids": [
+          11528,
+          8453,
+          151704,
+          108386,
+          3837,
+          30709,
+          105631,
+          1773,
+          151645
+        ],
+        "generated_tokens": 9,
+        "kind": "autoregressive_eos",
+        "stop_reason": "eos_token",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-003-qwen06",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 37120,
+        "channels": 1,
+        "padding_frames": 0,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "full_input",
+        "processed_end_frame": 37120,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "inference_returned": true,
+        "kind": "full_input_ctc_return",
+        "lexical_token_ids": [
+          10153,
+          11590,
+          11885,
+          13803
+        ],
+        "metadata_boundary_verified": true,
+        "metadata_token_ids": [
+          24884,
+          25009,
+          24993,
+          25017
+        ],
+        "raw_redecode_matches_capture": true,
+        "raw_token_ids": [
+          24884,
+          25009,
+          24993,
+          25017,
+          10153,
+          11590,
+          11885,
+          13803
+        ],
+        "token_scope": "ctc_collapsed_nonblank_ids_not_framewise_logits",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-003-sensevoice",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 37120,
+        "channels": 1,
+        "padding_frames": 442880,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "zero_pad_only_480000",
+        "processed_end_frame": 37120,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "capture_stage": "decoder_update_before_finalize",
+        "completed": true,
+        "generated_token_ids": [
+          26410,
+          7322,
+          9636,
+          233,
+          50257
+        ],
+        "initial_token_ids": [
+          50258,
+          50260,
+          50359,
+          50363
+        ],
+        "kind": "whisper_greedy_pre_finalize",
+        "pre_finalize_token_count": 9,
+        "step_count": 5,
+        "stop_reason": "eot",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-003-whisper",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 43520,
+        "channels": 1,
+        "padding_frames": 0,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "full_input",
+        "processed_end_frame": 43520,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "capture_stage": "returned_generation_sequence",
+        "generated_token_ids": [
+          11528,
+          8453,
+          151704,
+          108386,
+          3837,
+          30709,
+          105631,
+          1773,
+          151645
+        ],
+        "generated_tokens": 9,
+        "kind": "autoregressive_eos",
+        "stop_reason": "eos_token",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-004-qwen06",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 43520,
+        "channels": 1,
+        "padding_frames": 0,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "full_input",
+        "processed_end_frame": 43520,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "inference_returned": true,
+        "kind": "full_input_ctc_return",
+        "lexical_token_ids": [
+          10153,
+          11590,
+          11885,
+          15592
+        ],
+        "metadata_boundary_verified": true,
+        "metadata_token_ids": [
+          24884,
+          25004,
+          24993,
+          25017
+        ],
+        "raw_redecode_matches_capture": true,
+        "raw_token_ids": [
+          24884,
+          25004,
+          24993,
+          25017,
+          10153,
+          11590,
+          11885,
+          15592
+        ],
+        "token_scope": "ctc_collapsed_nonblank_ids_not_framewise_logits",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-004-sensevoice",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 43520,
+        "channels": 1,
+        "padding_frames": 436480,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "zero_pad_only_480000",
+        "processed_end_frame": 43520,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "capture_stage": "decoder_update_before_finalize",
+        "completed": true,
+        "generated_token_ids": [
+          26410,
+          43454,
+          18573,
+          223,
+          50257
+        ],
+        "initial_token_ids": [
+          50258,
+          50260,
+          50359,
+          50363
+        ],
+        "kind": "whisper_greedy_pre_finalize",
+        "pre_finalize_token_count": 9,
+        "step_count": 5,
+        "stop_reason": "eot",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-004-whisper",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 29440,
+        "channels": 1,
+        "padding_frames": 0,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "full_input",
+        "processed_end_frame": 29440,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "capture_stage": "returned_generation_sequence",
+        "generated_token_ids": [
+          11528,
+          8453,
+          151704,
+          108386,
+          3837,
+          30709,
+          105631,
+          1773,
+          151645
+        ],
+        "generated_tokens": 9,
+        "kind": "autoregressive_eos",
+        "stop_reason": "eos_token",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-005-qwen06",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 29440,
+        "channels": 1,
+        "padding_frames": 0,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "full_input",
+        "processed_end_frame": 29440,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "inference_returned": true,
+        "kind": "full_input_ctc_return",
+        "lexical_token_ids": [
+          10153,
+          11590,
+          11885,
+          11927
+        ],
+        "metadata_boundary_verified": true,
+        "metadata_token_ids": [
+          24884,
+          25004,
+          24993,
+          25017
+        ],
+        "raw_redecode_matches_capture": true,
+        "raw_token_ids": [
+          24884,
+          25004,
+          24993,
+          25017,
+          10153,
+          11590,
+          11885,
+          11927
+        ],
+        "token_scope": "ctc_collapsed_nonblank_ids_not_framewise_logits",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-005-sensevoice",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 29440,
+        "channels": 1,
+        "padding_frames": 450560,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "zero_pad_only_480000",
+        "processed_end_frame": 29440,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "capture_stage": "decoder_update_before_finalize",
+        "completed": true,
+        "generated_token_ids": [
+          26410,
+          43454,
+          9636,
+          233,
+          50257
+        ],
+        "initial_token_ids": [
+          50258,
+          50260,
+          50359,
+          50363
+        ],
+        "kind": "whisper_greedy_pre_finalize",
+        "pre_finalize_token_count": 9,
+        "step_count": 5,
+        "stop_reason": "eot",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-005-whisper",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 25600,
+        "channels": 1,
+        "padding_frames": 0,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "full_input",
+        "processed_end_frame": 25600,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "capture_stage": "returned_generation_sequence",
+        "generated_token_ids": [
+          11528,
+          8453,
+          151704,
+          111308,
+          3837,
+          30709,
+          103948,
+          1773,
+          151645
+        ],
+        "generated_tokens": 9,
+        "kind": "autoregressive_eos",
+        "stop_reason": "eos_token",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-006-qwen06",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 25600,
+        "channels": 1,
+        "padding_frames": 0,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "full_input",
+        "processed_end_frame": 25600,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "inference_returned": true,
+        "kind": "full_input_ctc_return",
+        "lexical_token_ids": [
+          10153,
+          11590,
+          11885,
+          15592
+        ],
+        "metadata_boundary_verified": true,
+        "metadata_token_ids": [
+          24884,
+          25004,
+          24993,
+          25017
+        ],
+        "raw_redecode_matches_capture": true,
+        "raw_token_ids": [
+          24884,
+          25004,
+          24993,
+          25017,
+          10153,
+          11590,
+          11885,
+          15592
+        ],
+        "token_scope": "ctc_collapsed_nonblank_ids_not_framewise_logits",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-006-sensevoice",
+      "target_context_received": false,
+      "transcript_truncated": false
+    },
+    {
+      "acoustic_verbatim_completeness": "unknown",
+      "decoder_completed": true,
+      "full_original_input": {
+        "audio_frames": 25600,
+        "channels": 1,
+        "padding_frames": 454400,
+        "pcm_format": "float32_pcm16_scale_32768",
+        "preprocessing": "zero_pad_only_480000",
+        "processed_end_frame": 25600,
+        "processed_start_frame": 0,
+        "sample_rate": 16000,
+        "trimmed_frames": 0
+      },
+      "native_termination": {
+        "capture_stage": "decoder_update_before_finalize",
+        "completed": true,
+        "generated_token_ids": [
+          23414,
+          2131,
+          43454,
+          9636,
+          233,
+          14659,
+          50257
+        ],
+        "initial_token_ids": [
+          50258,
+          50260,
+          50359,
+          50363
+        ],
+        "kind": "whisper_greedy_pre_finalize",
+        "pre_finalize_token_count": 11,
+        "step_count": 7,
+        "stop_reason": "eot",
+        "truncated": false
+      },
+      "peer_transcript_received": false,
+      "postcorrection_applied": false,
+      "slot_id": "k1p6-006-whisper",
+      "target_context_received": false,
+      "transcript_truncated": false
+    }
+  ],
+  "resources": {
+    "all_cpu_final_usage_verified": true,
+    "cleanup": {
+      "all57_owned_containers_paused_cpu_closed_and_removed": true,
+      "errors": 0,
+      "force_remove_operations": 57,
+      "limits": "R5 removal acknowledgements succeeded directly. The bounded absence-probe fallback was not exercised in this actual run; r4 timeout remains separately sealed.",
+      "maximum_cleanup_seconds": 4.945492865000006,
+      "maximum_force_remove_seconds": 4.919342946000029,
+      "per_container_cleanup_deadline_seconds": 15,
+      "proof": "57 acknowledged exact-owned-CID force_remove commands with returncode0, one per container",
+      "read_only_absence_probes": 0,
+      "remove_deadline_seconds": 5
+    },
+    "combined_setup_seconds": 403.2329892409999,
+    "configured_cpu_poll_seconds": 0.2,
+    "controlled_cgroup_cpu_seconds_by_stage": {
+      "qwen06": 100.488351,
+      "sensevoice": 31.079891,
+      "setup": 287.946645,
+      "whisper": 73.668478
+    },
+    "controlled_cgroup_cpu_total_seconds": 493.183365,
+    "controlled_containers": 57,
+    "cpu_threshold_exceeded": false,
+    "cpu_usage_scope": "controlled container cgroups through acknowledged pause before removal; excludes host/image/log/cleanup after pause",
+    "effective_execution_envelope": {
+      "host_seconds": 3600,
+      "publisher_seconds": 600,
+      "workflow_minutes": 80
+    },
+    "engine_prepare_plus_decode_wall_seconds": {
+      "qwen06": 169.54355307699996,
+      "sensevoice": 56.56099899399999,
+      "whisper": 38.536236577999944
+    },
+    "hard_cumulative_kernel_quota": false,
+    "host_status": "all_planned_native_complete",
+    "host_wall_seconds": 574.0233940960001,
+    "limits_scope": "original_prepare_scientific_admission_baseline",
+    "maximum_observed_cpu_poll_gap_seconds": 5.099481293999986,
+    "original_scientific_limits": {
+      "acquisition_cap_bytes": 6442450944,
+      "acquisition_reserved_bytes": 6056574976,
+      "campaign_slots": 18,
+      "clip_seconds": 120,
+      "clips": 6,
+      "cpu_poll_seconds": 0.2,
+      "cpu_threshold_seconds": {
+        "qwen06": 600,
+        "sensevoice": 600,
+        "setup": 3600,
+        "whisper": 1800
+      },
+      "cpu_total_threshold_seconds": 6600,
+      "engine_seconds": 600,
+      "host_seconds": 3600,
+      "initial_free_bytes": 12884901888,
+      "kill_command_seconds": 5,
+      "new_starts": 18,
+      "old_calls_allowed": 0,
+      "output_bytes": 33554432,
+      "setup_seconds": 1800,
+      "workflow_minutes": 70,
+      "workspace_bytes": 10737418240
+    },
+    "overshoot_bound": "No unconditional finite bound: host suspension or unconfirmed kill invalidates claim.",
+    "supervised_stages": [
+      {
+        "cleanup_error": null,
+        "family": "setup",
+        "gate_result": {
+          "exit_code": 0,
+          "schema": "qwen12-gated-command-v1",
+          "status": "valid"
+        },
+        "mode": null,
+        "name": "k1-punctuation6-asr18-r5-38518609834-setup",
+        "primary_error": null,
+        "status": "complete",
+        "wall_seconds": 133.472990388,
+        "worker_exit_success": true
+      },
+      {
+        "cleanup_error": null,
+        "family": "qwen06",
+        "gate_result": {
+          "exit_code": 0,
+          "schema": "qwen12-gated-command-v1",
+          "status": "valid"
+        },
+        "mode": "prepare",
+        "name": "k1-punctuation6-asr18-r5-38518609834-qwen06-prepare",
+        "primary_error": null,
+        "status": "complete",
+        "wall_seconds": 67.964493919,
+        "worker_exit_success": true
+      },
+      {
+        "cleanup_error": null,
+        "family": "sensevoice",
+        "gate_result": {
+          "exit_code": 0,
+          "schema": "qwen12-gated-command-v1",
+          "status": "valid"
+        },
+        "mode": "prepare",
+        "name": "k1-punctuation6-asr18-r5-38518609834-sensevoice-prepare",
+        "primary_error": null,
+        "status": "complete",
+        "wall_seconds": 24.078852082000026,
+        "worker_exit_success": true
+      },
+      {
+        "cleanup_error": null,
+        "family": "whisper",
+        "gate_result": {
+          "exit_code": 0,
+          "schema": "qwen12-gated-command-v1",
+          "status": "valid"
+        },
+        "mode": "prepare",
+        "name": "k1-punctuation6-asr18-r5-38518609834-whisper-prepare",
+        "primary_error": null,
+        "status": "complete",
+        "wall_seconds": 8.966115783000077,
+        "worker_exit_success": true
+      },
+      {
+        "cleanup_error": null,
+        "family": "qwen06",
+        "gate_result": {
+          "exit_code": 0,
+          "schema": "qwen12-gated-command-v1",
+          "status": "valid"
+        },
+        "mode": "decode",
+        "name": "k1-punctuation6-asr18-r5-38518609834-qwen06-decode",
+        "primary_error": null,
+        "status": "complete",
+        "wall_seconds": 101.55430001799994,
+        "worker_exit_success": true
+      },
+      {
+        "cleanup_error": null,
+        "family": "sensevoice",
+        "gate_result": {
+          "exit_code": 0,
+          "schema": "qwen12-gated-command-v1",
+          "status": "valid"
+        },
+        "mode": "decode",
+        "name": "k1-punctuation6-asr18-r5-38518609834-sensevoice-decode",
+        "primary_error": null,
+        "status": "complete",
+        "wall_seconds": 32.47244255700002,
+        "worker_exit_success": true
+      },
+      {
+        "cleanup_error": null,
+        "family": "whisper",
+        "gate_result": {
+          "exit_code": 0,
+          "schema": "qwen12-gated-command-v1",
+          "status": "valid"
+        },
+        "mode": "decode",
+        "name": "k1-punctuation6-asr18-r5-38518609834-whisper-decode",
+        "primary_error": null,
+        "status": "complete",
+        "wall_seconds": 29.565351738000004,
+        "worker_exit_success": true
+      }
+    ]
+  },
+  "original_member_commitments": {
+    "admission.json": {
+      "bytes": 11843,
+      "path": "admission.json",
+      "sha256": "2dc3072cefa2777ae0bfee01b915aeda3a53ca61374c03fc1f71e891c6dc079a"
+    },
+    "authority/source-claim.json": {
+      "bytes": 14969,
+      "path": "authority/source-claim.json",
+      "sha256": "6b774a809a725890e72c149095a9bda3e1940cd2a16d86eaa68eab35ed0c4b5b"
+    },
+    "cleanup-receipt.json": {
+      "bytes": 60165,
+      "path": "cleanup-receipt.json",
+      "sha256": "b12db3797b647e11082203a6873cbdad560a5bd2fd46c0f16655b8bf06e696a5"
+    },
+    "cpu-receipt.json": {
+      "bytes": 7289,
+      "path": "cpu-receipt.json",
+      "sha256": "4046c73f20839d747c94cf051346783bf625902b61d1af22616c432122641e2a"
+    },
+    "host-receipt.json": {
+      "bytes": 1986,
+      "path": "host-receipt.json",
+      "sha256": "dc155949b78b7b224c2f0baf58acadd7bfbd4083c09edf1ebf2736139020af9b"
+    },
+    "policy/budget-proof.json": {
+      "bytes": 774,
+      "path": "policy/budget-proof.json",
+      "sha256": "35d73c800f25467d7270df77564e251b424bbf9841d67d4ebe030e83c3e9db9f"
+    },
+    "supervision-receipt.json": {
+      "bytes": 2154,
+      "path": "supervision-receipt.json",
+      "sha256": "8774fe199824e1a0fedab1873fb710ae84a073c462db37e2903e09e3f403be6a"
+    },
+    "terminal-outcomes.json": {
+      "bytes": 1407,
+      "path": "terminal-outcomes.json",
+      "sha256": "7f0803f35d250ab1e852d00e96604ae56580e0f7d5060d25d089c1da4038cbf0"
+    }
+  },
+  "diagnostics": {
+    "actual_attributed_records": 42,
+    "null_identity_ci_or_precontext_records": 67,
+    "original_publisher_http_telemetry": "unavailable",
+    "original_writer_receipt_observed": false
+  },
+  "posterior_acceptance": {
+    "status": "complete_native_verified",
+    "verified_complete_slots": 18,
+    "root_reviewed": true,
+    "independent_executed_source_recheck_byte_identical": true,
+    "result_bytes": 28251,
+    "result_sha256": "a5cbf60a18b8e27b3d12fa4a6828c996fd887c913a8fd10bfc3d0ffd82403b01",
+    "immutable_validator": {
+      "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+      "source_commit": "a1159dc902634e65b1fb2a7bbf219389f84089d5",
+      "bytes": 40879,
+      "sha256": "13f659e3aef74dda907ca8e4fb741b2596d1b61e8d42941ef5a5788a1b2387d8"
+    },
+    "independent_review_commitment": {
+      "bytes": 55831,
+      "sha256": "346aa07d50989b8a703ea9058f934ccda75cf7c3dfc022183ce200a94c9e61b4"
+    }
+  },
+  "punctuation_comparison": {
+    "target": "你好小窝",
+    "target_three_model_unanimity": {
+      "without_comma": {
+        "matches": 0,
+        "denominator": 3
+      },
+      "with_comma": {
+        "matches": 0,
+        "denominator": 3
+      }
+    },
+    "only_unanimous_machine_candidate": {
+      "cell_id": "k1p6-002",
+      "voice": "Dylan",
+      "condition": "with_comma",
+      "normalized_text": "你好小屋",
+      "matches_target": false
+    },
+    "interpretation": "One non-target unanimous result is not target improvement. One paired seed per voice does not support a general punctuation, voice or pronunciation claim."
+  },
+  "closeout": {
+    "execution_publication_claim_approval_flags_false": 9,
+    "campaign_slots_sealed_without_reuse": 18,
+    "prior_planned_nonreusable_slots": 90,
+    "total_planned_nonreusable_slots": 108,
+    "consumed_attempts": null,
+    "new_execution_authorized": false,
+    "new_tts_authorized": false,
+    "same_audio_retry_authorized": false,
+    "training_admitted": false,
+    "note": "Planned nonreusable allowances are not measurements of actual consumption. Original run, claim, archive, checkpoints and prior failures remain immutable."
+  },
+  "next_step": "Stop rerunning or expanding these same six cells to seek a match. Prefer separately labeled near-homophone controls to calibrate the ASR agreement criterion before further TTS comparisons; any different TTS experiment requires separate authorization. This recommendation grants no execution plan or allowance.",
+  "boundaries": [
+    "Decoder EOS/EOT/CTC full-input return verifies native completion, not acoustic verbatim correctness or that speech ends at the decoder stop.",
+    "Only the frozen normalization is used; its existing fixed PUNCTUATION set includes whitespace. No synonym, homophone, case, script, or Unicode folding; raw text including spaces remains verbatim.",
+    "One unanimous machine transcript is not a human gold label, training admission, FAR result, hardware result, or shipping approval.",
+    "CPU accounting covers controlled container cgroups through acknowledged pause before removal, not host/image/log/cleanup CPU after pause; the source does not claim a hard cumulative kernel quota or unconditional polling overshoot bound.",
+    "The sealed r4 failure is not changed or rescued. This accepted r5 result grants no rerun, slot reuse, new TTS, or additional recognition."
+  ]
+}

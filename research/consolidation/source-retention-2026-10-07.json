@@ -26790,6 +26790,317 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-14",
+      "operation_id": "k1-asr-r5-terminal-closeout-v1",
+      "public_main_base_commit": "a1159dc902634e65b1fb2a7bbf219389f84089d5",
+      "public_main_base_tree": "a296feacc661c0a45401c7bdd6bca584168d5389",
+      "workflow_source_changed": false,
+      "scope": "Close all nine r5 source execution/publication/claim approvals after the single terminal run; preserve original executed source, result evidence, scientific contracts and resource budgets.",
+      "rationale": "Close all nine r5 execution/publication/claim approvals after immutable run 38518609834 at a1159dc902634e65b1fb2a7bbf219389f84089d5 received root-pinned, independent complete_native_verified acceptance for all eighteen original native slots. Preserve ledger_reported_attempts=18 and consumed_attempts=null; archive exact six-by-three transcripts and original resource commitments, including 57 acknowledged single owned-CID removals and zero actual fallback probes. Only k1p6-002 agrees on non-target 你好小屋; human_gold/training_admitted remain false and acoustic completeness unknown. Restore explicitly closed current-control test expectations while retaining enabled synthetic positives, negative owner/admission gates and existing future-name lookalike regressions; refresh only derived freezes/dependency pins/public retention metadata. Original executed source, result/checkpoint evidence, prior failure interpretation, 47 scientific bodies, six inputs, prepare proof and all model/resource/API budgets are unchanged. This ordinary closeout source grants no execution, retry or new allowance.",
+      "files": [
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "13f659e3aef74dda907ca8e4fb741b2596d1b61e8d42941ef5a5788a1b2387d8",
+            "git_blob_sha1": "218e5f983c54c31c17ebbea3541a65d1687c2e1d"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "d02cb0c72265ce12f96d174d701e91920c8dab1287f549c5a3033c547ee290bb",
+            "git_blob_sha1": "2ab06c56a3f3deaa59dd00cc2afc9cec6e659b55"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 39857,
+            "sha256": "1867f3a2d920a7c803ee2d028384e85fbef46520de55774bf15ab1d93545451a",
+            "git_blob_sha1": "99096621f14e876d7631604942fc3aab8c740e8e"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 39857,
+            "sha256": "84be10986e2923c9e6a2f8d541ec4ea10e6f033df9ce075374984f9da3a83452",
+            "git_blob_sha1": "1d08833b517944a3371ad15952f8418f9d5440e3"
+          }
+        },
+        {
+          "path": "research/k1-evidence-transfer-qualification-v1/source-freeze.json",
+          "before": {
+            "path": "research/k1-evidence-transfer-qualification-v1/source-freeze.json",
+            "mode": "100644",
+            "bytes": 2169,
+            "sha256": "d481c8c36c519619e6c9256b9ed59e28254ff433124ea68a5528f083795d9c8c",
+            "git_blob_sha1": "adc64cfa5f6050ae06ce7c4c3524f8585af0cb02"
+          },
+          "after": {
+            "path": "research/k1-evidence-transfer-qualification-v1/source-freeze.json",
+            "mode": "100644",
+            "bytes": 2169,
+            "sha256": "8d01f0a88c938aa05a4a8dc2c25151fc01d7d783f385a6a72d2953188fabf85b",
+            "git_blob_sha1": "5d34c0e17e4f1f771e01c826fd0c9b319025036b"
+          }
+        },
+        {
+          "path": "research/k1-evidence-transfer-qualification-v1/test_qualification.py",
+          "before": {
+            "path": "research/k1-evidence-transfer-qualification-v1/test_qualification.py",
+            "mode": "100644",
+            "bytes": 41598,
+            "sha256": "40850d08a4f6596f4b689b90c8f667d1960af9adfa861ae2e8f655272f70e73f",
+            "git_blob_sha1": "fbf8a8bbb2970acf43c1c4761373ab3cbf3c1cdd"
+          },
+          "after": {
+            "path": "research/k1-evidence-transfer-qualification-v1/test_qualification.py",
+            "mode": "100644",
+            "bytes": 41553,
+            "sha256": "1d5c27b86bd68035033facf9821b590d103d5bb71e7644c4e58ad77dd1a8df52",
+            "git_blob_sha1": "282f6aa464d67fa38177beeb201f79d440ff74c8"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/IMPLEMENTATION.md",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/IMPLEMENTATION.md",
+            "mode": "100644",
+            "bytes": 38102,
+            "sha256": "d4f2b3f5b4dd4c064a9e700c0518f940ff8f5f9ba7ca00a90317241092d87c7c",
+            "git_blob_sha1": "9382b6df5b52bf34788952a9dd702e72f3da0fe0"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/IMPLEMENTATION.md",
+            "mode": "100644",
+            "bytes": 39984,
+            "sha256": "71085def5757747ddfded57490dc71109f20a6fb4512908c2ebfc9fb5d2d99c1",
+            "git_blob_sha1": "12da1998fed8074793e82e5760d3ad4986d56da9"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/RESULT-38518609834.json",
+          "before": null,
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/RESULT-38518609834.json",
+            "mode": "100644",
+            "bytes": 48188,
+            "sha256": "6010b3c4f4a029b94fb06ad33d872db680d785e6f6bb48bc3bcb2434c4c6a4b2",
+            "git_blob_sha1": "5554460f1a7459c43c1252ded8b322885d79f450"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/claim-admission-control.json",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/claim-admission-control.json",
+            "mode": "100644",
+            "bytes": 527,
+            "sha256": "8b4483fdd4e38dd6ef0f31ef165f4db012f93fe15a0afef55519bfd38596f0ef",
+            "git_blob_sha1": "1c1f67a0e2b0bba83608fdff213dd45076bd7de1"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/claim-admission-control.json",
+            "mode": "100644",
+            "bytes": 530,
+            "sha256": "6a0286e9b6b6649754a246bd3bb4d492e07abe5c3e286b33f98db928fc35f19d",
+            "git_blob_sha1": "5d600fec3d1f29870bd9210f60bd2cd3026edace"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 33162,
+            "sha256": "b5b8e6fb655e265f1db1ddef00bd152d4a2e2ffb2fd47f89f42eabb64da7bc19",
+            "git_blob_sha1": "cdbe03247f5c9b4ea080ce15086ba1247792edbc"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 33162,
+            "sha256": "bd5acaba9596646bb1a0f263e926d0ac8374560f2896324d2227ac98b03fa14c",
+            "git_blob_sha1": "0327bb0f264bd1790c0fd7ea15a4ba0c4b4c827b"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/execution-release.json",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/execution-release.json",
+            "mode": "100644",
+            "bytes": 1274,
+            "sha256": "8ff351a97dbcb814f7ae582282e991aa08c980301e1bd0e35e4be083d4689d91",
+            "git_blob_sha1": "8a7f34fe1044d04ae6734369457845be9beda006"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/execution-release.json",
+            "mode": "100644",
+            "bytes": 1277,
+            "sha256": "22d8dff4f1c477a0e2fbb367dd65dad8977aa8fa3b257c0c07b6be7ddc3ded5f",
+            "git_blob_sha1": "6c8629d3f91a776974f033cd12f3661e020bd43f"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/publication-release.json",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/publication-release.json",
+            "mode": "100644",
+            "bytes": 597,
+            "sha256": "8046bd31cc7ea203ba0d252b62767b225b29dc1e1419c4c877d298cddbdbc2dc",
+            "git_blob_sha1": "42c755dc9e4a9a338e78bb88c6d03edf1bbbeba5"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/publication-release.json",
+            "mode": "100644",
+            "bytes": 600,
+            "sha256": "36459d93eeabb2056a1b6b2a93127ced9e4b6e7fc51c6d288f525b25019170b2",
+            "git_blob_sha1": "632332b3f43e76e8dca69af759da5f87ef87e8ea"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_entrypoints.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_entrypoints.py",
+            "mode": "100644",
+            "bytes": 20630,
+            "sha256": "360955b09c4ba852e8dd5dd65602457a7fccdbf1bd80cca786f8c95748b7d216",
+            "git_blob_sha1": "00380c984e623c2d6c26292cfefdd61420c563e2"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_entrypoints.py",
+            "mode": "100644",
+            "bytes": 20677,
+            "sha256": "11fc749683ccb8c97196485a9d74535c118d502729f2850f62271e54f1fe62b9",
+            "git_blob_sha1": "57a7dcddc58c51ca716ac8188bab6d16acd98c29"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+            "mode": "100644",
+            "bytes": 68420,
+            "sha256": "ced13044a1d595ecb13962097c57c181e0691c75ac02064e8dbd0c05aa59d773",
+            "git_blob_sha1": "1ac82bb6e973c94993dbdc30d1adf6abb3a741f3"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+            "mode": "100644",
+            "bytes": 68392,
+            "sha256": "41910dea8433e764b86939e06deaeb84deb1de4f9dcacfa2cdc9967e3d6daaec",
+            "git_blob_sha1": "d0e01a9ac7954c1cc333aeb89ae30e3a1d39dba2"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_prerequisite.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_prerequisite.py",
+            "mode": "100644",
+            "bytes": 13278,
+            "sha256": "f7dddb9e92a8ca1e919259050fe72aa847c4db5a0240194fa88eeff60d3e3db7",
+            "git_blob_sha1": "454e0329fa3c18bff732963a7937ca28637fd3b0"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_prerequisite.py",
+            "mode": "100644",
+            "bytes": 13274,
+            "sha256": "0cf7e79daf66e96e75749f598949e4986f8116efd08e0c43b5da9a8dbe7737d6",
+            "git_blob_sha1": "f0ce827cf551f1750e35b72de9d753f5c326ee9a"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+            "mode": "100644",
+            "bytes": 101711,
+            "sha256": "37e45d9529eb6915fafd5e00be8ac16a7f9d8b5bd80429946f4b7c5ed433d1b4",
+            "git_blob_sha1": "b0bba4b982d3adc45b95dd38ca02e55dd2f772b9"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+            "mode": "100644",
+            "bytes": 101709,
+            "sha256": "a5b2564a0104abcec4bfcf8da4053ca6225d4e69c4de67aaffa126b06c71132c",
+            "git_blob_sha1": "270530a68641edd52237ee1169408f6ef1c01a0d"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_bound_claim_contract.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_bound_claim_contract.py",
+            "mode": "100644",
+            "bytes": 33957,
+            "sha256": "c179a22b9d77d58fd3e73402994c0afa15fc2f299f39ab9c14cda6b3ab677cb3",
+            "git_blob_sha1": "2c2ed985817b3b3cc87984aa4c57df33fff70a8b"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_bound_claim_contract.py",
+            "mode": "100644",
+            "bytes": 33996,
+            "sha256": "1ff65093b8100117c9427be24224c2814fa7a321893b5b3d55ffc59999daeac6",
+            "git_blob_sha1": "b87d05a885c103fe6333ca115b6022ffdf9d6ebc"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_publisher_checkpoint.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_publisher_checkpoint.py",
+            "mode": "100644",
+            "bytes": 44611,
+            "sha256": "123df4c5aaf43d8b72416900c4f187689c823300941c1164886693406317a732",
+            "git_blob_sha1": "ce26b24e5a4a8b22a043f7aa5ed2d7424df25b33"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_publisher_checkpoint.py",
+            "mode": "100644",
+            "bytes": 44540,
+            "sha256": "8cf63d582577fb20c7fbf768064086a8d472cce3a92d0896258ebec43acff82c",
+            "git_blob_sha1": "5ff1401879a19313f2c216ceb76626f6361ac706"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json",
+            "mode": "100644",
+            "bytes": 43111,
+            "sha256": "b589f0c45171b213f9078ffca0d1c10607f251dec3541bdb61149975e4180150",
+            "git_blob_sha1": "aab88c5dfda64b5366231b1dc7efc77d157f5bc8"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json",
+            "mode": "100644",
+            "bytes": 43111,
+            "sha256": "c9420a6c172b63fda3868ea859d03cd531d8d5f779ba4edfa2bd0efc43c48923",
+            "git_blob_sha1": "e903139dce2d5167b6845cd1a8acedff20f39e36"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+            "mode": "100644",
+            "bytes": 26658,
+            "sha256": "4bc36e9801ec94eb75f389f976e07ad99d1c4390364c9e25552782de4d21a8c9",
+            "git_blob_sha1": "996350c0d4f9d1ca11e08a9a76a0b1978f2aee9d"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+            "mode": "100644",
+            "bytes": 26700,
+            "sha256": "5cfaff940374ecfc66281ced5a253540fe2874848c7afc338374322b2764c4d5",
+            "git_blob_sha1": "e9632709a4e4635048fe78ed8ab4d02791cc6576"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
