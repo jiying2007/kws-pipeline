@@ -25,6 +25,31 @@ class ActivationTests(unittest.TestCase):
   self.assertEqual(header.count('on:'),1);self.assertIn('branches: [research/tts-pilot-asr-20261014-v1]',header)
   for forbidden in ('main','pull_request','schedule:','workflow_run:','branches-ignore'):self.assertNotIn(forbidden,header)
   self.assertNotIn('workflow_dispatch',text);self.assertIn('github.run_attempt == 1',text);self.assertIn('github.run_number == 1',text);self.assertIn('pilot-asr-public/',text)
+ def test_actual_input_binding_and_acyclic_source_inventory(self):
+  value=json.loads((HERE/'activation.json').read_bytes());root=m.BASE.parents[1]
+  self.assertEqual(value['third_policy'],'training_candidate_confirmation')
+  self.assertEqual(value['max_asr_slots'],144);self.assertEqual(value['current_qwen_call_cap'],96)
+  self.assertNotIn('research/tts-pilot-screening-v1/activation-template/activation.json',value['source_files'])
+  for name,digest in value['source_files'].items():self.assertEqual(hashlib.sha256((root/name).read_bytes()).hexdigest(),digest,name)
+  self.assertEqual(len(value['input_artifacts']),4)
+  self.assertEqual({r['run_id'] for r in value['input_artifacts']},{38554125374,38566438514})
+  audit=json.loads((m.BASE/'evidence/tts-input-20261014/artifact-inventory.json').read_bytes())
+  self.assertEqual(audit['input_artifacts'],value['input_artifacts'])
+  self.assertEqual({(r['engine'],r['phase']):len(r['members']) for r in value['input_artifacts']},{('qwen06','probe'):10,('qwen17','probe'):10,('qwen06','remaining'):46,('qwen17','remaining'):46})
+ def test_real_installed_binding_accepts_offline_only(self):
+  value=m.binding(HERE/'activation.json')
+  self.assertIs(value['enabled'],True);self.assertEqual(value['workflow_id'],384344728)
+  evidence=m.BASE/'evidence/tts-input-20261014'
+  registration=json.loads((evidence/'workflow-registration.json').read_bytes())
+  self.assertEqual(registration['id'],value['workflow_id']);self.assertEqual(registration['path'],m.WORKFLOW)
+  self.assertEqual(json.loads((evidence/'workflow-preexecution-history.json').read_bytes()),{'total_count':0,'workflow_runs':[]})
+ def test_numeric_only_exact_wheel_lock(self):
+  metadata=json.loads((m.BASE/'numeric-lock-metadata.json').read_bytes())
+  requirements=(m.BASE/'numeric-requirements.txt').read_text()
+  self.assertEqual({r['package'] for r in metadata['wheels']},{'numpy','scipy'})
+  for row in metadata['wheels']:
+   self.assertIn('cp312-cp312-manylinux_2_27_x86_64',row['filename'])
+   self.assertIn(row['package']+'=='+row['version']+' --hash=sha256:'+row['sha256'],requirements)
  def run_fixture(self):
   env={'GITHUB_REPOSITORY':m.REPO,'GITHUB_EVENT_NAME':'push','GITHUB_REF':'refs/heads/'+m.BRANCH,'GITHUB_RUN_ATTEMPT':'1','GITHUB_RUN_NUMBER':'1','GITHUB_RUN_ID':'123','GITHUB_SHA':'a'*40}
   event={'created':True,'deleted':False,'repository':{'private':False}}
@@ -127,5 +152,5 @@ class ActivationTests(unittest.TestCase):
   text=(HERE/'workflow.yml').read_text();self.assertNotIn('contents: write',text);self.assertNotIn('/git/refs',(HERE/'launcher.py').read_text())
 if __name__=='__main__':
  suite=unittest.defaultTestLoader.loadTestsFromTestCase(ActivationTests)
- if suite.countTestCases()!=15:raise RuntimeError('activation test count')
+ if suite.countTestCases()!=18:raise RuntimeError('activation test count')
  result=unittest.TextTestRunner(verbosity=2).run(suite);raise SystemExit(not result.wasSuccessful())

@@ -1,0 +1,55 @@
+{
+  "schema": "p5-four-archive-offline-preflight-v1",
+  "whole_binding_admitted": false,
+  "missing_workflow_id": true,
+  "requested_third_policy": "training_candidate_confirmation",
+  "design_slots": 48,
+  "current_qwen_slots": 32,
+  "cosy_blocked_slots": 16,
+  "maximum_asr_slots": 144,
+  "current_maximum_asr_slots": 96,
+  "restore_combine_pass": true,
+  "blind_job_schema_pass": true,
+  "mapped_slots": 32,
+  "slot_statuses": {
+    "success": 32,
+    "blocked": 16
+  },
+  "per_engine": {
+    "qwen06": {
+      "statuses": {
+        "success": 16
+      },
+      "technical_quality_pass": 16
+    },
+    "qwen17": {
+      "statuses": {
+        "success": 16
+      },
+      "technical_quality_pass": 16
+    },
+    "cosy3": {
+      "statuses": {
+        "blocked": 16
+      },
+      "technical_quality_pass": 0
+    }
+  },
+  "archive_member_counts": {
+    "qwen06-probe": 10,
+    "qwen06-remaining": 46,
+    "qwen17-probe": 10,
+    "qwen17-remaining": 46
+  },
+  "source_files_excludes_activation_self": true,
+  "limitations": [
+    "No real ASR called, no transcripts or text-consensus claims.",
+    "Installed workflow ID remains unavailable; whole activation admission not validated.",
+    "Upstream metadata verified against retained official REST responses, not a new live request."
+  ],
+  "numeric_runtime": {
+    "python": "3.12.14",
+    "numpy": "2.3.2",
+    "scipy": "1.17.1"
+  }
+}

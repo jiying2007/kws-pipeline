@@ -1,0 +1,12 @@
+{
+  "id": 384344728,
+  "node_id": "W_kwDOUHHcSM4W6KKY",
+  "name": "TTS pilot blind ASR once v1",
+  "path": ".github/workflows/tts-pilot-asr-20261014-v1.yml",
+  "state": "active",
+  "created_at": "2026-10-14T13:11:15.000Z",
+  "updated_at": "2026-10-14T13:11:15.000Z",
+  "url": "https://api.github.com/repos/jiying2007/kws-pipeline/actions/workflows/384344728",
+  "html_url": "https://github.com/jiying2007/kws-pipeline/blob/main/.github/workflows/tts-pilot-asr-20261014-v1.yml",
+  "badge_url": "https://github.com/jiying2007/kws-pipeline/workflows/TTS%20pilot%20blind%20ASR%20once%20v1/badge.svg"
+}

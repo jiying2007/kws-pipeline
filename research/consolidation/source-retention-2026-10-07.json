@@ -29489,6 +29489,145 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-14",
+      "operation_id": "kws-asr-binding-p5",
+      "public_main_base_commit": "11b93abe92427c3ece2a01f9a497cdb74bab0062",
+      "public_main_base_tree": "b8ae29e82097c38e92dbb1bb1cd4db10ade6cdc6",
+      "workflow_source_changed": false,
+      "scope": "Bind four real TTS archives and audited 32-slot offline derivation; select explicit third-model training candidate confirmation with verified installed workflow ID 384344728 for the explicitly authorized one-shot 32-slot/96-call maximum, retaining historical disabled-stage evidence. Add numeric-only wheel hash lock and source self-exclusion. Preserve all prior executed evidence and controls.",
+      "rationale": "Bind four actual TTS archives and verified installed workflow ID 384344728 for the expressly authorized first one-shot blind ASR campaign. Preserve first-created/run1/attempt1 gates, 32-Qwen/96-call cap, no retry, no TTS regeneration, previous controls and original evidence. Earlier disabled-stage audit is retained as historical evidence; no runtime admission is claimed.",
+      "files": [
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/README.md",
+          "before": {
+            "bytes": 5464,
+            "git_blob_sha1": "b8cc4b1b82be21f0b2edc09951dd3bc783ceca4b",
+            "mode": "100644",
+            "path": "research/tts-pilot-screening-v1/activation-template/README.md",
+            "sha256": "0cfcbf1cbbd5e2c13cf4b80f4fcf8a10813e54e4bf21564c9bc5f68e77389cdb"
+          },
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/README.md",
+            "mode": "100644",
+            "bytes": 7236,
+            "sha256": "f02f869e7e29f4830941e3599bfee20a90397bd3d8aa093525821959e69f84ff",
+            "git_blob_sha1": "ca258ce2c05f96788791f9c222c0adbdb9b34516"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/activation.json",
+          "before": {
+            "bytes": 635,
+            "git_blob_sha1": "43d17c05b7a8bc110fc8f5dcb54317ea7e5ac59a",
+            "mode": "100644",
+            "path": "research/tts-pilot-screening-v1/activation-template/activation.json",
+            "sha256": "7c61d3954ee299a7ea13ec7d62ea65131b162326a0b16a937e34d48125fa8e26"
+          },
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/activation.json",
+            "mode": "100644",
+            "bytes": 29601,
+            "sha256": "fa1bae413c95f6d5a8a3f2cacdcca6b695df852e524c1c242abac004664a7855",
+            "git_blob_sha1": "423879461fc01ac05838d50320003f7b0a482b30"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+          "before": {
+            "bytes": 10771,
+            "git_blob_sha1": "09cb2ac501459e2445d4e7d6f8d45a0c9914f9ce",
+            "mode": "100644",
+            "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "sha256": "e607cdf8ae980f49f94c745f19a0b75a8633892be65eae30e92aa937ef7bd4de"
+          },
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "mode": "100644",
+            "bytes": 12874,
+            "sha256": "bcaa8d4cefa82ce4c93d8b0202ccdc3bea97927bfd9210b3b95e6f8a73f06dda",
+            "git_blob_sha1": "f522ee2fb27241bff32f92ad4915273c2c14969d"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/tts-input-20261014/DERIVED-SLOT-AUDIT.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/tts-input-20261014/DERIVED-SLOT-AUDIT.json",
+            "mode": "100644",
+            "bytes": 28322,
+            "sha256": "f978bb7acf1e7f13af50d3e805358c89e24cdb4a9be4b01fdc4b4db2d6a9ed7b",
+            "git_blob_sha1": "e2a508257f4b71611d8f118ef98980bd63b7a731"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/tts-input-20261014/FULL-PREFLIGHT.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/tts-input-20261014/FULL-PREFLIGHT.json",
+            "mode": "100644",
+            "bytes": 1388,
+            "sha256": "7855a91c277dc1766073224cf3c49dd91ef9dcebba4008a2b73ce9607e396f5d",
+            "git_blob_sha1": "a5dd28a28ffb8e4c1f91d401d19607ebd4ecfb38"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/tts-input-20261014/artifact-inventory.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/tts-input-20261014/artifact-inventory.json",
+            "mode": "100644",
+            "bytes": 18185,
+            "sha256": "cf20e6771eb0e0647dc890ab341a87367cbb77afb89c39b85377e8ace3c5ba4a",
+            "git_blob_sha1": "9d993421e91eb068fd9310cf114021bcb737760f"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/tts-input-20261014/workflow-preexecution-history.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/tts-input-20261014/workflow-preexecution-history.json",
+            "mode": "100644",
+            "bytes": 45,
+            "sha256": "36bd93afa62e2046cd044cd12e2a2401f7a54527b0d2296b10563c5389bf9abf",
+            "git_blob_sha1": "c57ca6af91c89311b378633a5d4933bc2d46086a"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/evidence/tts-input-20261014/workflow-registration.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/evidence/tts-input-20261014/workflow-registration.json",
+            "mode": "100644",
+            "bytes": 597,
+            "sha256": "a0a601be91338971646ca09a46a1b1ce24986269919a650a2f01329268361e9e",
+            "git_blob_sha1": "d4cb056e5ae5268a66fa8d38c5badc8b67d9b973"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/numeric-lock-metadata.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/numeric-lock-metadata.json",
+            "mode": "100644",
+            "bytes": 2311,
+            "sha256": "c81d34510e33a50f4543f88aa62808dfa4741298fa3e67d6939e7300fd48f94b",
+            "git_blob_sha1": "7534588ff41cec37b51875fb0974592a1e279563"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/numeric-requirements.txt",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/numeric-requirements.txt",
+            "mode": "100644",
+            "bytes": 221,
+            "sha256": "1ab7ea707a86bce28b54f6f41cf14d9523e292c4bca98ef40904fecdc90752df",
+            "git_blob_sha1": "c56f106d5eaae1f7c83a725832846ce0753f0023"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
