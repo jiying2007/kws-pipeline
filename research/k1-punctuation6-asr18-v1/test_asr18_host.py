@@ -24,7 +24,7 @@ import asr18_metadata as m
 from test_asr18_contract import invented_projection
 from test_asr18_binding import setup_binding as unbound_setup_binding
 from input_binding import verify_screening_receipt
-from test_control_fixture import APPROVALS, synthetic_enabled_source, synthetic_prerequisite
+from test_control_fixture import DISABLED_APPROVALS, synthetic_enabled_source, synthetic_prerequisite
 
 
 def synthetic_enabled_host_test(function):
@@ -128,10 +128,10 @@ def bound_fixture():
 
 
 class HostTests(unittest.TestCase):
-    def test_checked_in_current_controls_authorized_and_legacy_prior_slots_not_reclaimed(self):
-        for filename,keys in APPROVALS.items():
+    def test_checked_in_current_controls_closed_and_legacy_prior_slots_not_reclaimed(self):
+        for filename,keys in DISABLED_APPROVALS.items():
             value=c.read_json(HERE/filename)
-            self.assertTrue(all(value[key] is True for key in keys))
+            self.assertTrue(all(value[key] is False for key in keys))
         release=c.read_json(HERE/'execution-release.json');history=h.prior_history_identity()
         self.assertIs(release['historical_screening_reviewed'],True)
         scope=c.current_scope()
@@ -312,7 +312,7 @@ class HostTests(unittest.TestCase):
     def test_synthetic_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects(self):
         self.check_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects()
 
-    def test_actual_authorized_real_entry_rejects_missing_context_before_event_or_side_effects(self):
+    def test_actual_closed_real_entry_rejects_before_event_or_side_effects(self):
         production=c.read_bytes(HERE/'execution-release.json')
         with ExitStack() as stack:
             traps=[]
@@ -322,7 +322,7 @@ class HostTests(unittest.TestCase):
                 traps.append(stack.enter_context(patch.object(module,name,
                     side_effect=AssertionError('forbidden downstream operation: '+name))))
             stack.enter_context(patch.dict(os.environ,{'GITHUB_EVENT_PATH':'/must-not-read'},clear=True))
-            with self.assertRaisesRegex(ValueError,'claim_ordinal_attempt_source_gate'):h.main([])
+            with self.assertRaisesRegex(ValueError,'claim admission closed'):h.main([])
             for trap in traps:trap.assert_not_called()
         self.assertEqual(c.read_bytes(HERE/'execution-release.json'),production)
 

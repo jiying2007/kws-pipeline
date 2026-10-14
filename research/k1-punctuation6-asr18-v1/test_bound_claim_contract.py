@@ -263,16 +263,23 @@ class BoundClaimContractTests(unittest.TestCase):
         owner = copy.deepcopy(f['owner']); owner['nonce_sha256'] = c.digest(b'other nonce')
         self.assertNotEqual(c.owner_commit(owner)[1], sha)
 
-    def test_checked_in_current_controls_authorized_but_actual_workflow_id_unbound(self):
+    def test_checked_in_current_controls_closed_and_actual_workflow_id_unbound(self):
         here = Path(c.__file__).parent
         control_raw = (here / c.CLAIM_CONTROL_FILE).read_bytes(); control = c.decode_json(control_raw)
         release = c.read_json(here / 'execution-release.json')
-        self.assertTrue(all(control[key] is True for key in c.CLAIM_APPROVALS))
-        self.assertEqual(c.require_current_scope(control),c.current_scope())
+        self.assertTrue(all(control[key] is False for key in c.CLAIM_APPROVALS))
+        scope=c.current_scope()
+        for key,field in (('campaign','campaign'),('source_ref','source_branch'),
+                ('evidence_ref','result_branch'),('claim_ref','claim_ref'),('workflow','workflow'),('job_key','job_key')):
+            self.assertEqual(control[key],scope[field])
+        with self.assertRaisesRegex(ValueError,'claim admission closed'):c.require_current_scope(control)
         self.assertIsNone(control['workflow_id'])
         self.assertEqual(release['claim_admission_control_sha256'], c.digest(control_raw))
-        self.assertEqual(c.require_claim_admission(release, control_raw),control)
-        with self.assertRaises(ValueError): c.require_execution_release(release)
+        self.assertEqual(c.validate_claim_control(control),control)
+        with self.assertRaisesRegex(ValueError,'claim admission closed'):
+            c.require_claim_admission(release, control_raw)
+        with self.assertRaisesRegex(ValueError,'execution release disabled'):
+            c.require_execution_release(release)
 
     def test_campaign_experiment_and_derived_refs_cannot_drift(self):
         f = fixture()

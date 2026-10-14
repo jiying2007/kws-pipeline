@@ -1,0 +1,226 @@
+{
+  "accounting": {
+    "authorized_campaigns": 1,
+    "authorized_maximum_slots": 18,
+    "campaign_slots_sealed": 18,
+    "consumed_attempts": null,
+    "five_campaign_planned_slots_sealed": 90,
+    "new_attempts_authorized": false,
+    "observed_runs": 1,
+    "original_ledger_reported_attempts": 0,
+    "original_ledger_rows": 18,
+    "original_ledger_status": "all_not_run",
+    "prior_four_campaign_planned_slots_sealed": 72,
+    "retry_authorized": false,
+    "slots_reusable": 0
+  },
+  "archive": {
+    "bytes": 688451,
+    "chunks": 3,
+    "payload_members": 137,
+    "sha256": "557c8f638b36b424823a979066e32c68a2be67afac60be9988681a33aa970b13",
+    "zip_entries": 138
+  },
+  "checkpoint_commit": "ddcb303b7c07080d35a504850bd1c2026c65f640",
+  "checkpoint_ref": "evidence/k1-punctuation6-asr18-r4-checkpoint",
+  "closeout_authorizes_execution": false,
+  "evidence_commitments": {
+    "cleanup-receipt.json": {
+      "bytes": 2531,
+      "sha256": "65002140b9f2df78688de21a8ecfd02f04fa7f7677c82962b0e50d6ce9f6d99d"
+    },
+    "cpu-receipt.json": {
+      "bytes": 776,
+      "sha256": "eec0a8eba4e741fd9835063e79f6028a93797fa97887d54aba6f7c570db55eda"
+    },
+    "host-receipt.json": {
+      "bytes": 2625,
+      "sha256": "3928b165afa82a25a97a8532a2ca30d712f2826ce8ccadfb241f8cd56d6e4064"
+    },
+    "supervision-receipt.json": {
+      "bytes": 601,
+      "sha256": "267773d1e25b4fba04a2d2c8dc803d5d702c265a7aae3368c8cacacb00a37ab8"
+    },
+    "terminal-outcomes.json": {
+      "bytes": 1389,
+      "sha256": "21990c64e7664765228f0c9f138831f1ece11eb140cae52692734efdffcfd267"
+    }
+  },
+  "experiment": "k1-punctuation6-asr18-r4",
+  "failure_interpretation": {
+    "combined_setup_seconds_zero": "Default retained because setup did not return; it is not a measured zero setup duration.",
+    "direct_failure": "The sole force-remove command timed out at its five-second bound. The following successful exact-ID absence query did not establish an empty result; cleanup remained unconfirmed and the original host rejected further model stages.",
+    "scope": "Original executed source and original receipt interpretation; the new cleanup polling revision cannot change this run.",
+    "source_predicates": [
+      {
+        "executed_source_lines": [
+          404,
+          409,
+          410,
+          438,
+          448
+        ],
+        "path": "research/k1-punctuation6-asr18-v1/resource_host.py"
+      }
+    ],
+    "unknown": [
+      "Why Docker removal was slow",
+      "Exact stdout of the original absence query",
+      "Whether the container disappeared later"
+    ]
+  },
+  "human_gold": false,
+  "job_id": 115642926828,
+  "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38499530026/job/115642926828",
+  "original_history": {
+    "excluded_run_ids": [],
+    "interpretation": "complete repository branch collection; explicit workflow-id-and-path projection; no workflow HTTP response claimed",
+    "original_rows": [
+      {
+        "conclusion": "failure",
+        "event": "push",
+        "head_branch": "research/k1-punctuation6-asr18-r4",
+        "head_repository": {
+          "full_name": "jiying2007/kws-pipeline",
+          "private": false
+        },
+        "head_sha": "270364bd2c953ae312198b326f465b819d294cb9",
+        "id": 38499530026,
+        "path": ".github/workflows/k1-punctuation6-asr18-r4.yml",
+        "repository": {
+          "full_name": "jiying2007/kws-pipeline",
+          "private": false
+        },
+        "run_attempt": 1,
+        "run_number": 1,
+        "status": "completed",
+        "workflow_id": 383847777
+      }
+    ],
+    "original_total_count": 1,
+    "projection_sha256": "f71bb85791fedd4ffbed2df275d10df7dcef926a4ebe66d7b358c3ec38ae3ad2",
+    "raw_response_sha256": "bc7f3a6f499f0e2186a5ab525cc18e491555905ac6316307f1db7f07e41ffb24",
+    "resource_locator": "https://api.github.com/repos/jiying2007/kws-pipeline/actions/runs?branch=research%2Fk1-punctuation6-asr18-r4&per_page=100",
+    "schema": "k1-repository-branch-history-projection-v1",
+    "selected_run_ids": [
+      38499530026
+    ],
+    "target": {
+      "source_branch": "research/k1-punctuation6-asr18-r4",
+      "workflow": ".github/workflows/k1-punctuation6-asr18-r4.yml",
+      "workflow_id": 383847777
+    }
+  },
+  "original_job_log": {
+    "bytes": 362746,
+    "sha256": "18ab2a4e64fdca0d671086a450637d661ff910f4eda958c2d2d3c7b99bc6986d"
+  },
+  "original_publisher_http_telemetry": "unavailable",
+  "original_stage_observations": {
+    "cleanup": {
+      "accounting_status": "final_usage_verified",
+      "budget_seconds": 15,
+      "cleanup_ok": false,
+      "cleanup_overrun_seconds": 0,
+      "host_deadline_overrun": false,
+      "operations": [
+        {
+          "operation": "pause",
+          "returncode": 0,
+          "status": "succeeded",
+          "timeout_seconds": 5,
+          "wall_seconds": 0.01800721400002203
+        },
+        {
+          "operation": "inspect_paused",
+          "returncode": 0,
+          "status": "succeeded",
+          "timeout_seconds": 5,
+          "wall_seconds": 0.010180718000015077
+        },
+        {
+          "operation": "final_cpu_close",
+          "status": "succeeded",
+          "wall_seconds": 0.00012501399999109708
+        },
+        {
+          "error_type": "TimeoutExpired",
+          "operation": "force_remove",
+          "status": "failed",
+          "timeout_seconds": 5,
+          "wall_seconds": 5.007022290000009
+        },
+        {
+          "operation": "verify_absence",
+          "returncode": 0,
+          "status": "succeeded",
+          "timeout_seconds": 5,
+          "wall_seconds": 0.01076818399997137
+        }
+      ],
+      "pause_acknowledged": true,
+      "seconds": 5.046439424000027,
+      "status": "removal_unconfirmed"
+    },
+    "cpu": {
+      "all_final_usage_verified": true,
+      "threshold_exceeded": false,
+      "total_usage_usec": 100682216
+    },
+    "host_status": "cleanup_unconfirmed",
+    "setup_gate_result": {
+      "exit_code": 0,
+      "schema": "qwen12-gated-command-v1",
+      "status": "valid"
+    },
+    "setup_supervision_wall_seconds": 177.69461515399996,
+    "setup_worker_exit_success": true,
+    "setup_worker_primary_error": null,
+    "stages": {
+      "qwen06_decode": "not_run",
+      "qwen06_prepare": "not_run",
+      "sensevoice_decode": "not_run",
+      "sensevoice_prepare": "not_run",
+      "setup": "failed",
+      "whisper_decode": "not_run",
+      "whisper_prepare": "not_run"
+    }
+  },
+  "original_writer_receipt_observed": false,
+  "owner_commit": "8a88667fee6efe980e23e94d90a96764dbc00d8c",
+  "owner_ref": "claims/k1-punctuation6-asr18-r4",
+  "posterior": {
+    "bytes": 20899,
+    "custody_sha256": "1963006cd3a60bb2b7368fbd851bc776b0765b14bb25a86eb2708d23cc8329df",
+    "expected_sha256": "53263f972fb1251c640f95ea0a963621ae3e77fc9d10bc4e6d5b102bd2d4263a",
+    "input_verified_by_original_host": true,
+    "sha256": "f1ffdfe7169c9960c921bbcfb68d1d067396e5b8e43a7a764bf7cd804774e41a",
+    "source_binding_verified": true,
+    "status": "partial_native_verified",
+    "verified_complete_slots": 0
+  },
+  "recognition_texts_available": false,
+  "repository": "jiying2007/kws-pipeline",
+  "result_commit": "ddcb303b7c07080d35a504850bd1c2026c65f640",
+  "result_ref": "evidence/k1-punctuation6-asr18-r4",
+  "result_tree": "0ae704e741adb66d8b6b4589cfa07b91b54b012d",
+  "run_attempt": 1,
+  "run_id": 38499530026,
+  "run_number": 1,
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38499530026",
+  "schema": "k1-asr18-r4-cleanup-failure-closeout-v1",
+  "scientific_asr_success": false,
+  "source_branch": "research/k1-punctuation6-asr18-r4",
+  "source_commit": "270364bd2c953ae312198b326f465b819d294cb9",
+  "source_tree": "65ef74007fb1b8d6a6e1e1d768062a6f865b491d",
+  "terminal": {
+    "host_receipt_status": "cleanup_unconfirmed",
+    "host_step_conclusion": "failure",
+    "job_conclusion": "failure",
+    "publisher_step_conclusion": "success",
+    "run_conclusion": "failure"
+  },
+  "training_admitted": false,
+  "workflow": ".github/workflows/k1-punctuation6-asr18-r4.yml",
+  "workflow_id": 383847777
+}
