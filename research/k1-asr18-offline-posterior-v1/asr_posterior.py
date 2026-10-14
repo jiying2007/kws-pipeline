@@ -13,7 +13,7 @@ import zipfile
 sys.dont_write_bytecode = True
 HERE = Path(__file__).resolve().parent
 SOURCE = HERE.parents[1]
-MANIFEST_SHA = '72f1ccad8f063122781e47f3bf93c01ba13fa2b56d1179bd7fc3d6e0aba6b06f'
+MANIFEST_SHA = 'af042487876c4463fd541ed69e7eb6f94500f895c131df30072ac7c6be610b4f'
 ASR_REL = 'research/k1-punctuation6-asr18-v1/'
 MAX_LOG = 8 * 1024 ** 2
 SAFE_FAILURE = '{"schema":"k1-asr18-offline-acceptance-failure-v1","status":"blocked_or_unconfirmed","native_success_established":false,"consumed_attempts":null,"retry_authorized":false}'
@@ -138,6 +138,10 @@ def producer_terminal(e, records, *, source_claim=None):
     if source_claim is not None:
         require(e['schema'] == 'k1-asr18-offline-acceptance-v2', 'independent external owner custody required')
         routes['producer_history'] = p.producer_history_route(source_claim['identity'])
+        locator = records.get('_response_locators', {}).get('producer_history')
+        if locator is not None:
+            require(locator in locators(e)['producer_history'], 'independently pinned producer history resource')
+            routes['producer_history'] = locator.removeprefix('https://api.github.com')
         external_claim_custody(e, records, source_claim)
     else:
         require(e['schema'] == 'k1-asr18-offline-acceptance-v1', 'v2 request cannot promote legacy source')
@@ -148,9 +152,12 @@ def producer_terminal(e, records, *, source_claim=None):
         return decode(value) if type(value) is bytes else value
     get.response_bodies = {route:(records[key] if type(records[key]) is bytes else records.get('_response_bodies',{}).get(key)) for route,key in by_route.items()}
     observations = {}
+    get.history_custody_observations = {}
     number=r._verify_run(get,routes,'producer',v['identity'],policy['source_branch'],policy['workflow'],'asr18',v['terminal'],
         source_claim=source_claim, observations=observations)
     require(number==v['numeric_job_id'],'same original numeric job')
+    if get.history_custody_observations:
+        observations['producer_history_custody'] = get.history_custody_observations[routes['producer_history']]
     return observations
 
 def external_claim_custody(e, records, proof):
@@ -383,7 +390,7 @@ def locators(e):
             prefix+'_log':{'connector:github_job_log:'+str(job)}})
     if e['schema']=='k1-asr18-offline-acceptance-v2':
         owner=e['claim_owner']
-        result['producer_history']={base+'/actions/workflows/'+owner['workflow'].split('/')[-1]+'/runs?branch='+owner['source_branch']+'&per_page=100'}
+        result['producer_history']={base+'/actions/workflows/'+owner['workflow'].split('/')[-1]+'/runs?branch='+owner['source_branch']+'&per_page=100',base+'/actions/runs?branch='+owner['source_branch'].replace('/','%2F')+'&per_page=100'}
         result.update(claim_ref={base+'/git/ref/'+owner['ref'][5:]},claim_commit={base+'/git/commits/'+owner['commit']})
     commit=e['result']['commit'];tree=e['result']['tree']
     result.update(result_ref={base+'/git/ref/heads/'+policy['result_branch']},result_commit={base+'/git/commits/'+commit},result_tree={base+'/git/trees/'+tree+'?recursive=1'},outer_manifest={'https://raw.githubusercontent.com/'+t.REPOSITORY+'/'+commit+'/'+t.manifest_path()},archive={'derived:ordered-original-chunks:'+e['archive']['sha256']})
@@ -420,7 +427,9 @@ def load_and_accept(root, expected_path, expected_sha256, custody_path, custody_
     raw_roles={'archive','outer_manifest','producer_log','recovery_log','recovery_source_freeze','recovery_control','recovery_workflow'}
     if e['schema']=='k1-asr18-offline-acceptance-v2':raw_roles|={'claim_ref','claim_commit'}
     records={name:(body if name in raw_roles else decode(body)) for name,body in loaded.items() if not name.startswith('chunk_') and name not in {'archive','outer_manifest','producer_log','recovery_log'}}
-    if e['schema']=='k1-asr18-offline-acceptance-v2':records['_response_bodies']={'producer_history':loaded['producer_history']}
+    if e['schema']=='k1-asr18-offline-acceptance-v2':
+        records['_response_bodies']={'producer_history':loaded['producer_history']}
+        records['_response_locators']={row['role']:row['locator'] for row in index['entries'] if row['role']=='producer_history'}
     outer=loaded.get('outer_manifest');chunks=[]
     if outer is not None:
         m=t.parse_manifest(outer,e['producer']['identity'],e['producer']['source_closure_sha256'],e['producer']['numeric_job_id'])

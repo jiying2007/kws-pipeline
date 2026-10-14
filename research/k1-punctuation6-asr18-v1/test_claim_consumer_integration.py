@@ -339,10 +339,13 @@ class ClaimConsumerIntegrationTests(unittest.TestCase):
         self.assertEqual(api.allowed,before-{('GET',old)}|{('GET',route)})
         self.assertEqual(api.count,0)
         with self.assertRaises(ValueError):api.bind_producer_history(self.recovery.payload,fake.fixture.original_rows)
-    def test_closed_cli_rejects_before_client_or_token(self):
-        for module,client in ((p,'GitHubAPI'),(r,'RecoveryAPI')):
-            with self.subTest(module=module.__name__),mock.patch.object(module,client,side_effect=AssertionError('client forbidden')):
-                with self.assertRaises((p.PublicationDisabled,r.RecoveryDisabled)):module.main([])
+    def test_explicit_closed_cli_rejects_before_client_or_token(self):
+        from test_asr18_entrypoints import disabled_source
+        with disabled_source() as source:
+            for module,client in ((p,'GitHubAPI'),(r,'RecoveryAPI')):
+                with self.subTest(module=module.__name__),mock.patch.object(module,'HERE',source), \
+                     mock.patch.object(module,client,side_effect=AssertionError('client forbidden')):
+                    with self.assertRaises((p.PublicationDisabled,r.RecoveryDisabled)):module.main([])
     def test_v2_publication_control_cannot_select_legacy_four_step_workflow(self):
         raw=c.read_bytes(HERE/'workflow.yml')
         start=raw.index(b'      - name: Reserve fixed campaign owner without models\n')
@@ -353,6 +356,8 @@ class ClaimConsumerIntegrationTests(unittest.TestCase):
         with self.assertRaises(ValueError):p.validate_transfer_workflow(legacy,control)
         old={key:value for key,value in control.items() if key!='claim_admission_mode'}
         old['schema']='k1-asr18-publication-control-v1'
+        old.update({key:c.LEGACY_V1_SCOPE[key] for key in ('source_branch','result_branch','workflow')})
+        legacy=legacy.replace(c.current_scope()['campaign'].encode(),c.LEGACY_V1_SCOPE['campaign'].encode())
         p.validate_transfer_workflow(legacy,old)
 
     def test_exact_new_workflow_and_token_isolation(self):

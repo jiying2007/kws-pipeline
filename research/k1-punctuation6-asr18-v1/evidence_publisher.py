@@ -367,10 +367,65 @@ def _equal(record, expected, label):
         t.require(type(record.get(key)) is type(value) and record[key] == value, label)
 
 
+def repository_history_route(owner):
+    c.validate_bound_identity(owner)
+    c.require_current_scope(owner)
+    return BASE + "/actions/runs?branch=" + owner["source_branch"].replace("/", "%2F") + "&per_page=100"
+
+
+def repository_history_projection(owner, page, raw, route, phase):
+    """Offline semantic projection; retain the original complete repository page."""
+    t.require(phase == "posterior" and route == repository_history_route(owner),
+        "fixed all-event repository branch history custody only")
+    t.require(type(page) is dict and type(page.get("total_count")) is int and
+        type(page.get("workflow_runs")) is list and
+        1 <= page["total_count"] == len(page["workflow_runs"]) <= 100,
+        "complete single-page repository branch history")
+    ids, ordinals, workflow_paths, path_workflows = set(), set(), {}, {}
+    selected, excluded, original_rows = [], [], []
+    for row in page["workflow_runs"]:
+        observed = c._observed_run_fields(row, owner)
+        for key in ("id", "run_number", "run_attempt", "workflow_id"):
+            t.require(c._positive(observed[key]), "bounded real repository history identity")
+        t.require(type(observed["head_sha"]) is str and t.HEAD.fullmatch(observed["head_sha"]) and
+            observed["head_branch"] == owner["source_branch"], "same branch and valid original source")
+        path, workflow = observed["path"], observed["workflow_id"]
+        t.require(type(path) is str and re.fullmatch(r"\.github/workflows/[A-Za-z0-9_.-]+\.ya?ml", path) and
+            type(observed["event"]) is str and re.fullmatch(r"[A-Za-z0-9_]{1,64}", observed["event"]),
+            "bounded original workflow path and event")
+        t.require(observed["id"] not in ids and (workflow, observed["run_number"]) not in ordinals,
+            "unique repository run IDs and per-workflow ordinals")
+        ids.add(observed["id"]); ordinals.add((workflow, observed["run_number"]))
+        t.require(workflow_paths.get(workflow, path) == path and path_workflows.get(path, workflow) == workflow,
+            "consistent workflow ID and path pairs")
+        workflow_paths[workflow] = path; path_workflows[path] = workflow
+        same_id, same_path = workflow == owner["workflow_id"], path == owner["workflow"]
+        t.require(same_id == same_path, "target workflow ID and path must agree")
+        original_rows.append(observed)
+        if same_id: selected.append(row)
+        else: excluded.append(observed["id"])
+    projection = {"total_count": len(selected), "workflow_runs": selected}
+    observation = c.api_bound_history(owner, projection, phase, raw_sha256=t.sha(raw))
+    custody = {"schema": "k1-repository-branch-history-projection-v1",
+        "resource_locator": "https://api.github.com" + route, "raw_response_sha256": t.sha(raw),
+        "original_total_count": page["total_count"], "original_rows": original_rows,
+        "selected_run_ids": [row["id"] for row in selected], "excluded_run_ids": excluded,
+        "target": {key: owner[key] for key in ("workflow_id", "workflow", "source_branch")},
+        "projection_sha256": t.sha(t.canonical(projection)),
+        "interpretation": "complete repository branch collection; explicit workflow-id-and-path projection; no workflow HTTP response claimed"}
+    return observation, custody
+
+
 def history_observation(api, route, owner, page, phase):
     raw = getattr(api, "response_bodies", {}).get(route)
     t.require(type(raw) is bytes and 0 < len(raw) <= MAX_RESPONSE and
         c.exact_json(t.decode(raw), page), "original bounded history response bytes required")
+    if route == repository_history_route(owner):
+        observations = getattr(api, "history_custody_observations", None)
+        t.require(type(observations) is dict, "explicit offline history custody observer")
+        observation, custody = repository_history_projection(owner, page, raw, route, phase)
+        observations[route] = custody
+        return observation
     return c.api_bound_history(owner, page, phase, raw_sha256=t.sha(raw))
 
 

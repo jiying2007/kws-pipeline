@@ -100,18 +100,20 @@ class CleanupRetentionTests(unittest.TestCase):
             "research/k1-hosted-transfer-recovery-v1",
             "research/k1-punctuation6-asr18-r3",
             "research/k1-atomic-claim-qualification-v1",
+            "research/k1-punctuation6-asr18-r4",
         ]
-        self.assertEqual(len(expected), 18)
-        self.assertEqual(len(set(expected)), 18)
+        self.assertEqual(len(expected), 19)
+        self.assertEqual(len(set(expected)), 19)
         self.assertEqual(expected[8:11], ["research/k1-punctuation6-asr18-v1",
                                        "research/k1-punctuation6-asr18-r1",
                                        "research/k1-punctuation6-prepare-diagnostic-v1"])
         self.assertEqual(expected[11:13], ["research/k1-punctuation6-prepare-diagnostic-r1",
                                         "research/k1-punctuation6-asr18-r2"])
         self.assertEqual(expected[13], "research/k1-punctuation6-prepare-diagnostic-r2")
-        self.assertEqual(expected[-4:-2], ["research/k1-hosted-transfer-checkpoint-v1", "research/k1-hosted-transfer-recovery-v1"])
-        self.assertEqual(expected[-2], "research/k1-punctuation6-asr18-r3")
-        self.assertEqual(expected[-1], "research/k1-atomic-claim-qualification-v1")
+        self.assertEqual(expected[-5:-3], ["research/k1-hosted-transfer-checkpoint-v1", "research/k1-hosted-transfer-recovery-v1"])
+        self.assertEqual(expected[-3], "research/k1-punctuation6-asr18-r3")
+        self.assertEqual(expected[-2], "research/k1-atomic-claim-qualification-v1")
+        self.assertEqual(expected[-1], "research/k1-punctuation6-asr18-r4")
         self.assertEqual(folded_env("RETAINED_EXECUTION_BRANCHES"), expected)
         self.assertTrue(set(expected).isdisjoint(folded_env("RETAINED_CONSOLIDATION_BRANCHES")))
         loop = WORKFLOW[WORKFLOW.index('          for row in "${branch_rows[@]}"; do'):]
@@ -212,7 +214,7 @@ class CleanupRetentionTests(unittest.TestCase):
                     "research/k1-punctuation6-asr18-r2-extra",
                     "research/k1-punctuation6-asr18-r30",
                     "research/k1-punctuation6-asr18-r3-extra",
-                    "research/k1-punctuation6-asr18-r4",
+                    "research/k1-punctuation6-asr18-r5",
                     "research/k1-punctuation6-prepare-diagnostic-v10",
                     "research/k1-punctuation6-prepare-diagnostic-v1-extra",
                     "research/k1-punctuation6-prepare-diagnostic-v2",
@@ -256,6 +258,9 @@ class CleanupRetentionTests(unittest.TestCase):
                        "evidence/k1-punctuation6-asr18-r2",
                        "evidence/k1-punctuation6-asr18-r3",
                        "evidence/k1-punctuation6-asr18-r3-checkpoint",
+                       "evidence/k1-punctuation6-asr18-r4",
+                       "evidence/k1-punctuation6-asr18-r4-checkpoint",
+                       "claims/k1-punctuation6-asr18-r4",
                        "evidence/k1-atomic-claim-qualification-v1-race",
                        "evidence/k1-atomic-claim-qualification-v1-lost-response"):
             for scenario in ("retired", "ancestor", "merged-pr", "closed-pr"):

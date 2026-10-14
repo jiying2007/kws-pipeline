@@ -24,7 +24,7 @@ import asr18_metadata as m
 from test_asr18_contract import invented_projection
 from test_asr18_binding import setup_binding as unbound_setup_binding
 from input_binding import verify_screening_receipt
-from test_control_fixture import DISABLED_APPROVALS, synthetic_enabled_source, synthetic_prerequisite
+from test_control_fixture import APPROVALS, synthetic_enabled_source, synthetic_prerequisite
 
 
 def synthetic_enabled_host_test(function):
@@ -46,15 +46,17 @@ def release_fixture():
     return release
 
 
-def context():
-    env={'GITHUB_ACTIONS':'true','GITHUB_RUN_NUMBER':'1','GITHUB_REPOSITORY':h.REPOSITORY,'GITHUB_REF':'refs/heads/'+c.LEGACY_V1_SCOPE['source_branch'],
+def context(*, control=None):
+    scope=c.LEGACY_V1_SCOPE if control is None else {
+        'source_branch':control['source_ref'],'workflow':control['workflow']}
+    env={'GITHUB_ACTIONS':'true','GITHUB_RUN_NUMBER':'1','GITHUB_REPOSITORY':h.REPOSITORY,'GITHUB_REF':'refs/heads/'+scope['source_branch'],
         'GITHUB_EVENT_NAME':'push','GITHUB_RUN_ATTEMPT':'1','GITHUB_JOB':'asr18',
         'RUNNER_ENVIRONMENT':'github-hosted','RUNNER_OS':'Linux','RUNNER_ARCH':'X64','ImageOS':'ubuntu24',
-        'GITHUB_SHA':'c'*40,'GITHUB_RUN_ID':'123','GITHUB_WORKFLOW_REF':h.REPOSITORY+'/'+c.LEGACY_V1_SCOPE['workflow']+'@refs/heads/'+c.LEGACY_V1_SCOPE['source_branch'],
+        'GITHUB_SHA':'c'*40,'GITHUB_RUN_ID':'123','GITHUB_WORKFLOW_REF':h.REPOSITORY+'/'+scope['workflow']+'@refs/heads/'+scope['source_branch'],
         'GITHUB_WORKFLOW_SHA':'c'*40}
     event={'created':True,'deleted':False,'forced':False,'before':'0'*40,'after':'c'*40,
-        'ref':'refs/heads/'+c.LEGACY_V1_SCOPE['source_branch'],'repository':{'full_name':h.REPOSITORY,'private':False}}
-    return env,event,h.event_identity(env,event)
+        'ref':'refs/heads/'+scope['source_branch'],'repository':{'full_name':h.REPOSITORY,'private':False}}
+    return env,event,h.event_identity(env,event,control=control)
 
 
 class FakeAPI:
@@ -126,16 +128,17 @@ def bound_fixture():
 
 
 class HostTests(unittest.TestCase):
-    def test_checked_in_r3_controls_closed_and_all54_prior_slots_not_reclaimed(self):
-        for filename,keys in DISABLED_APPROVALS.items():
+    def test_checked_in_current_controls_authorized_and_legacy_prior_slots_not_reclaimed(self):
+        for filename,keys in APPROVALS.items():
             value=c.read_json(HERE/filename)
-            self.assertTrue(all(value[key] is False for key in keys))
+            self.assertTrue(all(value[key] is True for key in keys))
         release=c.read_json(HERE/'execution-release.json');history=h.prior_history_identity()
         self.assertIs(release['historical_screening_reviewed'],True)
-        with self.assertRaisesRegex(ValueError,'claim admission closed|execution release disabled'):h.release_first()
-        self.assertEqual(release['experiment'],'k1-punctuation6-asr18-r3')
-        self.assertEqual(release['source_ref'],'research/k1-punctuation6-asr18-r3')
-        self.assertEqual(release['evidence_ref'],'evidence/k1-punctuation6-asr18-r3')
+        scope=c.current_scope()
+        self.assertEqual(release['experiment'],scope['campaign'])
+        self.assertEqual(release['source_ref'],scope['source_branch'])
+        self.assertEqual(release['evidence_ref'],scope['result_branch'])
+        self.assertEqual(release['workflow'],scope['workflow'])
         self.assertEqual(release['max_new_asr_calls'],18)
         self.assertEqual(release['old_calls_allowed'],0)
         self.assertEqual(release['retries'],0)
@@ -143,6 +146,8 @@ class HostTests(unittest.TestCase):
         self.assertEqual(history['prior_runs_scope'],'only_new_source_branch_and_fixed_workflow')
         self.assertEqual(release['prior_public_claim_history_sha256'],c.digest(c.canonical(
             h.bound_prior_history_identity(c.read_json(HERE/c.CLAIM_CONTROL_FILE)))))
+        # Archived-v1 history remains revision-bound to the original r3 scope.
+        release=release_fixture()
         prior=history['sealed_prior_campaigns']
         self.assertEqual([row['run_id'] for row in prior],[38207026177,38219171568,38286042984])
         self.assertEqual([row['executed_head_sha'] for row in prior],list(c.SEALED_ASR_SOURCES))
@@ -169,7 +174,7 @@ class HostTests(unittest.TestCase):
         changes=[{'GITHUB_RUN_ID':str(run)} for run in c.SEALED_ASR_RUNS]
         changes += [{'GITHUB_SHA':head,'GITHUB_WORKFLOW_SHA':head} for head in c.SEALED_ASR_SOURCES]
         changes += [{'GITHUB_REF':'refs/heads/'+row['source_branch']} for row in prior]
-        changes += [{'GITHUB_WORKFLOW_REF':h.REPOSITORY+'/'+h.WORKFLOW+'@refs/heads/'+row['source_branch']} for row in prior]
+        changes += [{'GITHUB_WORKFLOW_REF':h.REPOSITORY+'/'+c.LEGACY_V1_SCOPE['workflow']+'@refs/heads/'+row['source_branch']} for row in prior]
         changes += [{'GITHUB_RUN_ATTEMPT':'2'}]
         for change in changes:
             with self.subTest(change=change),self.assertRaises(ValueError):h.event_identity({**env,**change},event)
@@ -207,7 +212,7 @@ class HostTests(unittest.TestCase):
         self.assertGreater(len(inputs['actual_blind_job']['clips']),0)
 
     @synthetic_enabled_host_test
-    def test_synthetic_enabled_r3_controls_pass_real_git_api_and_input_gates(self):
+    def test_synthetic_enabled_current_controls_pass_real_git_api_and_input_gates(self):
         # Keep the temporary enabled controls and re-frozen public source bytes.
         # Only the host event and six GitHub responses are invented. A clean
         # temporary local commit supplies the actual source HEAD/tree/blob;
@@ -244,7 +249,7 @@ class HostTests(unittest.TestCase):
                 traps.append(stack.enter_context(patch.object(module,name,
                     side_effect=AssertionError('forbidden downstream operation: '+name))))
             head=h.git_read('rev-parse','HEAD').decode().strip()
-            host,event,_=context()
+            host,event,_=context(control=c.read_json(h.HERE/c.CLAIM_CONTROL_FILE))
             host.update(GITHUB_SHA=head,GITHUB_WORKFLOW_SHA=head)
             event['after']=head
             release=h.release_first()
@@ -283,7 +288,7 @@ class HostTests(unittest.TestCase):
         self.assertEqual(c.read_bytes(HERE/'execution-freeze.json'),source_raw)
 
     @synthetic_enabled_host_test
-    def test_synthetic_enabled_r3_release_rejects_noncanonical_lf_history_sha(self):
+    def test_synthetic_enabled_current_release_rejects_noncanonical_lf_history_sha(self):
         # The public observer's bytes retain their trailing LF. Its file digest
         # must never stand in for the canonical JSON identity accepted by the
         # production API gate. Reconstruct only this public fixed identity;
@@ -307,7 +312,7 @@ class HostTests(unittest.TestCase):
     def test_synthetic_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects(self):
         self.check_enabled_real_entry_rejects_invalid_host_or_event_before_side_effects()
 
-    def test_actual_closed_real_entry_rejects_before_event_or_side_effects(self):
+    def test_actual_authorized_real_entry_rejects_missing_context_before_event_or_side_effects(self):
         production=c.read_bytes(HERE/'execution-release.json')
         with ExitStack() as stack:
             traps=[]
@@ -317,7 +322,7 @@ class HostTests(unittest.TestCase):
                 traps.append(stack.enter_context(patch.object(module,name,
                     side_effect=AssertionError('forbidden downstream operation: '+name))))
             stack.enter_context(patch.dict(os.environ,{'GITHUB_EVENT_PATH':'/must-not-read'},clear=True))
-            with self.assertRaisesRegex(ValueError,'claim admission closed|execution release disabled'):h.main([])
+            with self.assertRaisesRegex(ValueError,'claim_ordinal_attempt_source_gate'):h.main([])
             for trap in traps:trap.assert_not_called()
         self.assertEqual(c.read_bytes(HERE/'execution-release.json'),production)
 
@@ -332,7 +337,7 @@ class HostTests(unittest.TestCase):
             ('event',{}, {'created':False}))
         for label,env_delta,event_delta in cases:
             with self.subTest(case=label),tempfile.TemporaryDirectory() as temp,ExitStack() as stack:
-                env,event,_=context();env.update(env_delta);event.update(event_delta)
+                env,event,_=context(control=c.read_json(HERE/c.CLAIM_CONTROL_FILE));env.update(env_delta);event.update(event_delta)
                 path=Path(temp)/'event.json';path.write_bytes(c.canonical(event))
                 env['GITHUB_EVENT_PATH']=str(path)
                 traps=[]
@@ -369,7 +374,7 @@ class HostTests(unittest.TestCase):
             if kind=='truncated': history['total_count']=101
             if kind=='wrong_job': next(v for k,v in api.rows.items() if '/jobs?' in k)['jobs'][0]['labels']=['self-hosted']
             if kind=='wrong_run': api.rows['/repos/'+h.REPOSITORY+'/actions/runs/123']['head_sha']='d'*40
-            if kind=='result_exists': api.rows['/repos/'+h.REPOSITORY+'/git/ref/heads/'+h.EVIDENCE_REF]={}
+            if kind=='result_exists': api.rows['/repos/'+h.REPOSITORY+'/git/ref/heads/'+c.LEGACY_V1_SCOPE['result_branch']]={}
             if kind in ('attempt2','sealed_r2_run','sealed_r2_source'):
                 history['workflow_runs']=copy.deepcopy(history['workflow_runs'])
                 key,value={'attempt2':('run_attempt',2),'sealed_r2_run':('id',38286042984),

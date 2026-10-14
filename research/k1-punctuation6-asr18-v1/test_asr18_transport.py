@@ -30,14 +30,14 @@ def tree_response(rows):
         *[{"path": name, "mode": "040000", "type": "tree", "sha": value} for name, value in sorted(directories.items())]]}
 
 
-def setup(purpose="asr18"):
+def setup(purpose="asr18", *, current=False):
     source = [{"path": ".github/workflows/k1-punctuation6-asr18-v1.yml", "type": "blob", "mode": "100644", "sha": t.git_sha(b"disabled")},
               {"path": "README.md", "type": "blob", "mode": "100644", "sha": t.git_sha(b"public fixture repository") }]
     release = {"schema": "k1-asr18-publisher-bound-release-v1", "purpose": purpose,
         "source_sha": "a" * 40, "source_tree": tree_response(source)["sha"],
         "source_closure_sha256": "b" * 64, "prior_claim_history_sha256": "c" * 64,
         "commit_timestamp": "2026-10-12T00:00:00Z"}
-    policy = t.policy(purpose)
+    policy = t.policy(purpose) if current else p.publisher_policy(release)
     env = {"GITHUB_REPOSITORY": t.REPOSITORY, "GITHUB_EVENT_NAME": "push", "GITHUB_RUN_ATTEMPT": "1",
         "GITHUB_RUN_ID": "123", "GITHUB_SHA": release["source_sha"], "GITHUB_JOB": policy["job_key"],
         "GITHUB_REF": "refs/heads/" + policy["source_branch"],
@@ -744,7 +744,7 @@ class SourceTimestampTests(unittest.TestCase):
         cls.git('commit','--no-verify','-m','Invented offline timestamp fixture')
         cls.head = cls.git('rev-parse','HEAD')
         cls.tree = cls.git('rev-parse','HEAD^{tree}')
-        cls.env, cls.event, _, _ = setup()
+        cls.env, cls.event, _, _ = setup(current=True)
         cls.env.update(GITHUB_ACTIONS='true', GITHUB_SHA=cls.head, GITHUB_WORKFLOW_SHA=cls.head,
             KWS_SOURCE_FREEZE_SHA256=t.sha((cls.source/'execution-freeze.json').read_bytes()))
         cls.event.update(after=cls.head)
@@ -1027,7 +1027,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
 
     All-notrun uses all 120 current source bodies and actual input metadata.
     Native semantic cases reuse the existing zero-model host fixture and replace
-    the exact six synthetic control bodies listed below, to bind its invented inputs.
+    the exact five synthetic control bodies listed below, to bind its invented inputs.
     No actual ASR identity/result, model, download or remote claim is created.
     """
     LICENSE='source/research/qwen6_asr/FUNASR_MODEL_LICENSE'
@@ -1036,7 +1036,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
     # Historical executed snapshots remain immutable; this is a synthetic fixture.
     # Current checked-in freeze is compared byte-for-byte with the full builder.
     # Historical frozen SHA52aa… belongs only to the preserved original snapshot.
-    SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json','prepare-prerequisite.json','claim-admission-control.json','publication-release.json'))
+    SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json','prepare-prerequisite.json','claim-admission-control.json'))
 
     def setUp(self):
         import hosted_run
@@ -1061,7 +1061,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
                 'prepare-prerequisite.json':files['source/'+self.host.NEW+'prepare-prerequisite.json'],
                 'input-freeze.json':files['input-freeze.json'],
                 'tts-source-authority.json':t.canonical(inp['actual_screening_receipt']['tts_authority'])}
-            self.assertEqual(set(substitutions),self.SYNTHETIC_CONTROLS-{'claim-admission-control.json','publication-release.json'})
+            self.assertEqual(set(substitutions),self.SYNTHETIC_CONTROLS-{'claim-admission-control.json'})
             for leaf,body in substitutions.items():
                 name=self.host.NEW+leaf;source['source/'+name]=body
                 for role in ('host_code','setup_code','inference_code'):
@@ -1117,7 +1117,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
         self.assertEqual({'bytes':len(files[self.LICENSE]),'sha256':t.sha(files[self.LICENSE])},self.LICENSE_ID)
         files[self.LICENSE].decode('utf-8')
         differences={name for name in self.roster if files['source/'+name]!=c.read_bytes(ROOT/name)}
-        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else {self.host.NEW+leaf for leaf in ('execution-release.json','prepare-prerequisite.json','claim-admission-control.json','publication-release.json')})
+        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else {self.host.NEW+leaf for leaf in ('execution-release.json','prepare-prerequisite.json','claim-admission-control.json')})
 
     def materialize(self, root, files):
         for name,body in files.items():

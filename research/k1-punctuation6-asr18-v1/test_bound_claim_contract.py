@@ -263,15 +263,15 @@ class BoundClaimContractTests(unittest.TestCase):
         owner = copy.deepcopy(f['owner']); owner['nonce_sha256'] = c.digest(b'other nonce')
         self.assertNotEqual(c.owner_commit(owner)[1], sha)
 
-    def test_checked_in_controls_are_closed_with_null_future_authority(self):
+    def test_checked_in_current_controls_authorized_but_actual_workflow_id_unbound(self):
         here = Path(c.__file__).parent
         control_raw = (here / c.CLAIM_CONTROL_FILE).read_bytes(); control = c.decode_json(control_raw)
         release = c.read_json(here / 'execution-release.json')
-        self.assertTrue(all(control[key] is False for key in c.CLAIM_APPROVALS))
-        self.assertTrue(all(control[key] is None for key in c.CLAIM_SELECTORS))
+        self.assertTrue(all(control[key] is True for key in c.CLAIM_APPROVALS))
+        self.assertEqual(c.require_current_scope(control),c.current_scope())
         self.assertIsNone(control['workflow_id'])
         self.assertEqual(release['claim_admission_control_sha256'], c.digest(control_raw))
-        with self.assertRaises(ValueError): c.require_claim_admission(release, control_raw)
+        self.assertEqual(c.require_claim_admission(release, control_raw),control)
         with self.assertRaises(ValueError): c.require_execution_release(release)
 
     def test_campaign_experiment_and_derived_refs_cannot_drift(self):
@@ -384,7 +384,11 @@ class BoundClaimContractTests(unittest.TestCase):
             self.assertIsNone(row['actual_consumed_attempts'])
             self.assertEqual(row['reusable_slots'], 0)
         release = c.read_json(Path(c.__file__).parent / 'execution-release.json')
-        self.assertEqual(release['prior_public_claim_history_sha256'], c.digest(c.canonical(prior)))
+        actual_control=c.read_json(Path(c.__file__).parent / c.CLAIM_CONTROL_FILE)
+        actual_prior=c.bound_prior_history_identity(actual_control)
+        self.assertEqual(actual_prior['sealed_prior_campaigns'],prior['sealed_prior_campaigns'])
+        self.assertIsNone(actual_prior['prior_runs'])
+        self.assertEqual(release['prior_public_claim_history_sha256'], c.digest(c.canonical(actual_prior)))
 
     def test_bound_prior_unknown_or_r3_budget_cannot_be_rewritten_even_rehashed(self):
         f = fixture(); prior = c.bound_prior_history_identity(f['control'])
