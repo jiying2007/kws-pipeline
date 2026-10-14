@@ -202,3 +202,5 @@ They are historical observations, not instructions to rerun an experiment.
 ### Data and model effect iteration (2026-10-14)
 
 [Iteration v2](effect-data-model-v2/README.md) links recovered-data audits, independently bounded TTS resource probes, blind ASR screening and matched research model execution. Source readiness and numeric smoke are not acoustic improvement or deployment qualification.
+
+[Bound remaining TTS continuation](tts-quality-remaining-v1/README.md) restores verified probe artifacts and generates only the remaining cells.

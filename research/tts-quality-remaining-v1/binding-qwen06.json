@@ -1,0 +1,28 @@
+{
+  "schema": "tts-remaining-binding-v1",
+  "state": "reviewed_real_probe",
+  "engine": "qwen06",
+  "repository": "jiying2007/kws-pipeline",
+  "probe_run_id": 38554125374,
+  "probe_run_attempt": 1,
+  "probe_source_sha": "89936529b86ec48f335accefc96b155025b684c9",
+  "workflow_path": ".github/workflows/tts-quality-probe-20261014-v1.yml",
+  "probe_run_status": "completed",
+  "probe_run_conclusion": "success",
+  "probe_job_id": 115818916334,
+  "probe_job_name": "probe (qwen06)",
+  "probe_job_status": "completed",
+  "probe_job_conclusion": "success",
+  "artifact_id": 11887374758,
+  "artifact_name": "tts-quality-probe-qwen06",
+  "artifact_archive_sha256": "a12fbdb0b4eb798fbfc03ffa0279b203cbc39882e7958588fe4128605ce9b123",
+  "source_manifest_sha256": "29de4e7035a92c09fe5adfbb9b7c2251a6fdad86d9dc1a98a8bc91e27126c2a4",
+  "files": {
+    "qwen06-receipt.json": "3881577c6cea9979e82e3b05f7cef05e414d02511cc81a793a8448c34372af64",
+    "tqp-qwen06-00.claim": "2a5a8d2b33dd2f4bcfafc2b61f3f1fa1a07ed60b1f3f2b4c4e458b86d5e0d3ca",
+    "tqp-qwen06-00.raw-float.wav": "c02f1ee81d7f9ea1947e400beb2fd258368655e3da783a073ed1fc7f6a185966",
+    "host-receipt.json": "9b8ab594ad6453774cb5f6028994f40aabee560aeb0bd85aff18a44bc3ccbbd5",
+    "worker-status.json": "56ae32fbe6175eac32ed6bd6c0f596474a4710b2e235cf611bbd40154bd63b4b",
+    "container-tts.json": "30df782d9833913197dd86cc2e78fd4e6c43c13e6f115b966e06310b582dc4e2"
+  }
+}

@@ -421,6 +421,13 @@ jobs:
           python3 -I -S -B -OO research/tts-quality-pilot-v1/test_pilot.py
       - name: Verify tracked worktree after New effect data and TTS probe offline contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "New effect data and TTS probe offline contracts"'
+      - name: Bound remaining TTS continuation contracts
+        run: |
+          python3 -I -S -B research/tts-quality-remaining-v1/run_tests.py
+          python3 -I -S -B -O research/tts-quality-remaining-v1/run_tests.py
+          python3 -I -S -B -OO research/tts-quality-remaining-v1/run_tests.py
+      - name: Verify tracked worktree after remaining TTS contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Remaining TTS contracts"'
       - name: Python test inventory
         run: python3 tools/test_inventory.py --official-workflows
       - name: Verify tracked worktree after Python test inventory
