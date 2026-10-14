@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 51528,
-      "sha256": "f535cc8c9ec5f1655f0a2bc33de7173505c1b76d76f331c9f90f2904cfc98c1c",
-      "git_blob_sha1": "499b4b04946ac29740cf7938db54d165d30ea54d"
+      "bytes": 53075,
+      "sha256": "01f03e881a8845a52c11828c39802f0d3930fff89241c360b74f7236bdcbcca4",
+      "git_blob_sha1": "2b59b9b03e3bd89149d1edc6fd3306298c8323e1"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15400,9 +15400,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "bytes": 28189,
-      "sha256": "4c4f80d261c0fb71a8890ac45bb3f7f4385b0eb8dae848b333ff7daa10412a9b",
-      "git_blob_sha1": "cc8ad60322b17f1c8aeb88855ca4f2d432dc8491"
+      "bytes": 33980,
+      "sha256": "fa115c2b3eb75bfb45f39ef65eb0f68de66a78f6afd6ac56f5377a15ed604049",
+      "git_blob_sha1": "a0ecb6806f320140ca598e883e5f03fe90f48e77"
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
@@ -15637,7 +15637,8 @@
     ".github/workflows/k1-evidence-transfer-qualification-v1.yml",
     ".github/workflows/k1-atomic-claim-qualification-v1.yml",
     ".github/workflows/k1-punctuation6-asr18-r4.yml",
-    ".github/workflows/k1-punctuation6-asr18-r5.yml"
+    ".github/workflows/k1-punctuation6-asr18-r5.yml",
+    ".github/workflows/tts-quality-probe-20261014-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -27868,6 +27869,804 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-14",
+      "operation_id": "kws-effect-iteration-v2",
+      "public_main_base_commit": "b768b2a0d0dd467b7d863da93c272948b7204b9b",
+      "public_main_base_tree": "65f2e11710284d7446e3c56d1dc3c458b27144e0",
+      "workflow_source_changed": true,
+      "scope": "New data identity/split audit, independently bounded Qwen preset TTS resource probes, blind ASR research screening, and research RNN/causal TCN train/streaming comparison with numeric smoke. Old r5 execution remains sealed; no previous model output or approval evidence is rewritten.",
+      "rationale": "User approved comprehensive data/model optimization on 2026-10-14. Preserve historical source/evidence and shipping behavior while registering one exact independently scoped resource probe workflow; refresh current-source validators for changed CI and offline research contracts. Model quality and deployment qualification require actual separate evaluation evidence.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "bytes": 51528,
+            "git_blob_sha1": "499b4b04946ac29740cf7938db54d165d30ea54d",
+            "mode": "100644",
+            "path": ".github/workflows/ci.yml",
+            "sha256": "f535cc8c9ec5f1655f0a2bc33de7173505c1b76d76f331c9f90f2904cfc98c1c"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 53075,
+            "sha256": "01f03e881a8845a52c11828c39802f0d3930fff89241c360b74f7236bdcbcca4",
+            "git_blob_sha1": "2b59b9b03e3bd89149d1edc6fd3306298c8323e1"
+          }
+        },
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "bytes": 28189,
+            "git_blob_sha1": "cc8ad60322b17f1c8aeb88855ca4f2d432dc8491",
+            "mode": "100644",
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "sha256": "4c4f80d261c0fb71a8890ac45bb3f7f4385b0eb8dae848b333ff7daa10412a9b"
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 33980,
+            "sha256": "fa115c2b3eb75bfb45f39ef65eb0f68de66a78f6afd6ac56f5377a15ed604049",
+            "git_blob_sha1": "a0ecb6806f320140ca598e883e5f03fe90f48e77"
+          }
+        },
+        {
+          "path": ".github/workflows/tts-quality-probe-20261014-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/tts-quality-probe-20261014-v1.yml",
+            "mode": "100644",
+            "bytes": 1198,
+            "sha256": "f516406eab52aacaf8e0ca2ec31705829bffc17a261c64b50e4522ba68e32106",
+            "git_blob_sha1": "054c47e166d6743ae724ce02a7f88afdd88b674b"
+          }
+        },
+        {
+          "path": "research/README.md",
+          "before": {
+            "bytes": 17955,
+            "git_blob_sha1": "a973a143a57ee5f4703aa044eec37f5504fe5866",
+            "mode": "100644",
+            "path": "research/README.md",
+            "sha256": "82cc965fef3a150ffcd0f7e73d7488887589c0ae4647cae29bde1faa4dd38593"
+          },
+          "after": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 18276,
+            "sha256": "5c8f1943476bb23546e33403bf5bc73dd4705312774190ead2fd3a655e4ce201",
+            "git_blob_sha1": "9eadebd693f6244c1cd77a15bab73ecddb8722aa"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "bytes": 35147,
+            "git_blob_sha1": "b7a1406aaa250fc80ac42ab5ff5c21cc956b1617",
+            "mode": "100644",
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "sha256": "b8f08d520132bd7ea5913849f29fc1de2f015906ea8da2c623681fe0d5c74c9f"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 38480,
+            "sha256": "261bb498adf812e6ffb3f5a661f607705947976ab266dab10bbe1c9ce7fda586",
+            "git_blob_sha1": "2f5553ac3a165e30e0dcde092f05efc66d721e4a"
+          }
+        },
+        {
+          "path": "research/effect-data-inventory-v2/README.md",
+          "before": null,
+          "after": {
+            "path": "research/effect-data-inventory-v2/README.md",
+            "mode": "100644",
+            "bytes": 8186,
+            "sha256": "23650e63d5ff13907d1c6bea976fecd065c23c4d393b17059b54e983d76ec151",
+            "git_blob_sha1": "3a069b3781f4465de377cf007b4edb6c946fdafb"
+          }
+        },
+        {
+          "path": "research/effect-data-inventory-v2/development.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/effect-data-inventory-v2/development.jsonl",
+            "mode": "100644",
+            "bytes": 386647,
+            "sha256": "bc4ca47ef47645bb2cd80dc969d2bf637dfd4c852d49df33c14211904c3aea74",
+            "git_blob_sha1": "fa974132813f9ee1de698dcc8e74f198295c3ca2"
+          }
+        },
+        {
+          "path": "research/effect-data-inventory-v2/quarantine.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/effect-data-inventory-v2/quarantine.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/effect-data-inventory-v2/report.json",
+          "before": null,
+          "after": {
+            "path": "research/effect-data-inventory-v2/report.json",
+            "mode": "100644",
+            "bytes": 456459,
+            "sha256": "7cd0e01fb0d248dccde31d3fc2d60caa1d1edf6af6ac2004339440d1c0fb33f1",
+            "git_blob_sha1": "045456444213f37fb2524ff0a9fab80e6ef7c782"
+          }
+        },
+        {
+          "path": "research/effect-data-inventory-v2/sealed_acceptance.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/effect-data-inventory-v2/sealed_acceptance.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/effect-data-inventory-v2/train.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/effect-data-inventory-v2/train.jsonl",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/effect-data-model-v2/README.md",
+          "before": null,
+          "after": {
+            "path": "research/effect-data-model-v2/README.md",
+            "mode": "100644",
+            "bytes": 2866,
+            "sha256": "cdb71c31b52b8b7857b43a8809542362b38d55142bc2b969c42736529022ffc0",
+            "git_blob_sha1": "f08eff709644e9238d40029af12d0690e42031b0"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "bytes": 40879,
+            "git_blob_sha1": "3d6e02221b313c5e8853b1e2893635be66f48884",
+            "mode": "100644",
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "sha256": "5bf540b198c24cdb16a9e2689a959b548542e9b4393c2d5917e0d7177c7609b5"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "6106839c991cb1df9318006115f870788b100f8399ceff75e97e44f86d05a1f6",
+            "git_blob_sha1": "38781b824f5eb6b77935d9c6d641ed0121361d27"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": {
+            "bytes": 40427,
+            "git_blob_sha1": "87cd31114f057cf77beb6e41f54a0252c193a1cc",
+            "mode": "100644",
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "sha256": "93597d487cca8b4043dbca3bff2d349084ecbf1bcc92e031a6a0b94a37920b1f"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40427,
+            "sha256": "8a8890e43f731aff21e899e1199fc2e915259ae0e811844d0bbab7a2490492b5",
+            "git_blob_sha1": "31dc4e398261b29f3bcc0a3c29a2491d2fb9c3c7"
+          }
+        },
+        {
+          "path": "research/model_comparison/README.md",
+          "before": null,
+          "after": {
+            "path": "research/model_comparison/README.md",
+            "mode": "100644",
+            "bytes": 16446,
+            "sha256": "81a41f3089a7e8212afca0e246f5703cf568b35f8d3fd7d69ec8e41eebc474c3",
+            "git_blob_sha1": "6b90a0a2bf8fac83be3f70f4f60bdf0fe7814865"
+          }
+        },
+        {
+          "path": "research/model_comparison/compare.py",
+          "before": null,
+          "after": {
+            "path": "research/model_comparison/compare.py",
+            "mode": "100644",
+            "bytes": 8591,
+            "sha256": "e4c54acca3608c0308a7d4d0a428537eb78fbaf47e0f5e8b3f4eb57298214c7d",
+            "git_blob_sha1": "288bc03ecf0318bee7086b2c583dcef548bf2fe5"
+          }
+        },
+        {
+          "path": "research/model_comparison/keywords.example.json",
+          "before": null,
+          "after": {
+            "path": "research/model_comparison/keywords.example.json",
+            "mode": "100644",
+            "bytes": 207,
+            "sha256": "ba92352bf8680c944702eb470c3bf781f9efb1cf4aa870cbd555c042b16e6d5c",
+            "git_blob_sha1": "9629f8529d271beb17639b708733c2b6463bbc43"
+          }
+        },
+        {
+          "path": "research/model_comparison/pilot.example.json",
+          "before": null,
+          "after": {
+            "path": "research/model_comparison/pilot.example.json",
+            "mode": "100644",
+            "bytes": 1024,
+            "sha256": "1dddbc51a8174efb888131e8a4be5d1dffec1fb7b02e40684212003a9380624c",
+            "git_blob_sha1": "f06d386a278018a289f3d70ecd1c6ae938770a64"
+          }
+        },
+        {
+          "path": "research/model_comparison/rnn-negative-policy-pair.json",
+          "before": null,
+          "after": {
+            "path": "research/model_comparison/rnn-negative-policy-pair.json",
+            "mode": "100644",
+            "bytes": 601,
+            "sha256": "e90054ea827f1f5054a0025af43ababea19af52c079b21b1d479ec16e7b97fb4",
+            "git_blob_sha1": "9007a08b0c2b64e1c731ee08c52b13cea99ececc"
+          }
+        },
+        {
+          "path": "research/model_comparison/runner.py",
+          "before": null,
+          "after": {
+            "path": "research/model_comparison/runner.py",
+            "mode": "100644",
+            "bytes": 19580,
+            "sha256": "35ffd8d78f619f5914847cbf9d27a53c9ddee7f2a1e04abeec20b7ea4c304efa",
+            "git_blob_sha1": "987e6932182fc435cd75045c173cbafbc5c7ed33"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/README.md",
+            "mode": "100644",
+            "bytes": 7373,
+            "sha256": "6ae6d76fac4370fd0549db6a2d3f3ef551961e60aea95554f2c19313f73b398d",
+            "git_blob_sha1": "00c7d427798a673ad236e3c6c8c28d609bec46a8"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/blind_utils.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/blind_utils.py",
+            "mode": "100644",
+            "bytes": 915,
+            "sha256": "c656e40e6f767cc1841cb7812dd102b617bc7a83947716c1bc6e1c0f3fb63fa3",
+            "git_blob_sha1": "f0f8dec5e4dc5c2f25c7bdb0c5fff1031b3b810f"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/boundary.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/boundary.py",
+            "mode": "100644",
+            "bytes": 21634,
+            "sha256": "f0cd7e35c9cbba39290fdc1a9d398f0a7095903d2ee2fed6362016cbc3527dc5",
+            "git_blob_sha1": "9f5320ec6b79330cc60ddc4da597618035df9aea"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/campaign.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/campaign.py",
+            "mode": "100644",
+            "bytes": 600,
+            "sha256": "dcf6082e99ca61ee3c3dae38fbb584457b720ed017b0854abdb3b03609a72b92",
+            "git_blob_sha1": "c1f8229031bdbb02e8257945c7e7467d655976e4"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/derive.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/derive.py",
+            "mode": "100644",
+            "bytes": 4484,
+            "sha256": "d3e7d3ed1209e70fb9056dc2a1d59fb91a1ea1618a1871cb939fa02d3a6827c6",
+            "git_blob_sha1": "eda07872936ddf9bd72682936c0fd4636eccd19f"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/expected-plan.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/expected-plan.json",
+            "mode": "100644",
+            "bytes": 6541,
+            "sha256": "b639367f3d678ca5666220a651b1d9189ec24cb318fb064a9091fae0e0a24c5a",
+            "git_blob_sha1": "e6d3a84ee61d0a973d4c95d06cefe7dfec317a28"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/export_public.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/export_public.py",
+            "mode": "100644",
+            "bytes": 2764,
+            "sha256": "85f46f4f8dc87c57c75a94dead8a3dea8a43d8046d98e04ffb39019b97c30630",
+            "git_blob_sha1": "38315daae959f135acdc556fe6ecc784e2eb153b"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/host.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/host.py",
+            "mode": "100644",
+            "bytes": 5166,
+            "sha256": "f3537271532785609d8e142ec53f1178501ff3610764801ddfc05f5cd5918f85",
+            "git_blob_sha1": "9c7836c5926f2fbe1eeef759c6b5824f6b85032c"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/screen.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/screen.py",
+            "mode": "100644",
+            "bytes": 8463,
+            "sha256": "336d637716201f4eba9ba4804d2dd6fa8b49146c3706480ba6776f9bdbe1863f",
+            "git_blob_sha1": "305ad545015629dfd45c5d7b696aa499b454a9b9"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/source-lock.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/source-lock.json",
+            "mode": "100644",
+            "bytes": 4274,
+            "sha256": "157aa800207aeac3bf7019e49edd98074640de544d288dbfb2084ffcc3425093",
+            "git_blob_sha1": "0f0344cdb44fd39140c6bfb33c5e6a6049b33b07"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/terminal.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/terminal.py",
+            "mode": "100644",
+            "bytes": 2076,
+            "sha256": "e84e4bfd2b48f6ec5c23808a7be1633fdaaaeb8532411cad347427b3c2862e41",
+            "git_blob_sha1": "9b458241d0ce3afda33e40e3e5d4ba5fad751ebd"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/test_derive.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/test_derive.py",
+            "mode": "100644",
+            "bytes": 3815,
+            "sha256": "0264ab667198cbd006969f11e3e782e94b3e0ea079d4b5f4bc7b316681ea2506",
+            "git_blob_sha1": "8ea524af5883888380e7e4988ca9c82a20bf5c21"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/test_export.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/test_export.py",
+            "mode": "100644",
+            "bytes": 1468,
+            "sha256": "3338b7b53784882b9f960989a26655fb94ff23d6c79fc2a1b2d3f6357d53dc60",
+            "git_blob_sha1": "1e4f5e084b640f779c6079be23aec3284f7b9c16"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/test_host.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/test_host.py",
+            "mode": "100644",
+            "bytes": 1379,
+            "sha256": "d779a762e5504ca59ab9bab29ddb235b63a9cb4e81e0f48a70960e01698b06bb",
+            "git_blob_sha1": "9dadb7b25bb7e3e516f77421ceca425d0a205caf"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/test_screen.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/test_screen.py",
+            "mode": "100644",
+            "bytes": 3699,
+            "sha256": "bd524b625a90d650816a632dfffde833d9b8aaf14049bb190914d421b4d42ba6",
+            "git_blob_sha1": "a872554e2d6f6df2120211850625ca0d418713c3"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/test_suite.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/test_suite.py",
+            "mode": "100644",
+            "bytes": 1457,
+            "sha256": "0ac1402c9ec98dc19893d01a1172b49fcdc3987f5703af2f39946cc9295c35ad",
+            "git_blob_sha1": "c033acf5ae36eb2de718e597616016f5f3c2fb92"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/test_terminal.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/test_terminal.py",
+            "mode": "100644",
+            "bytes": 3073,
+            "sha256": "5fd688af98ab08387097e5151de19316f621b97ebfbc0308fc6bd3fa90556ce1",
+            "git_blob_sha1": "192be4eb9aca26f2c885dcca14cf6921ae99363d"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/whisper_worker.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-pilot-screening-v1/whisper_worker.py",
+            "mode": "100644",
+            "bytes": 2618,
+            "sha256": "76619a7f245bfb4d5470e82bd4445c00cd74dc6987548e77f5dbae5927a3efe9",
+            "git_blob_sha1": "a1c93016127984cc9c4f3ac88151e7c5a3ecf59e"
+          }
+        },
+        {
+          "path": "research/tts-quality-pilot-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/tts-quality-pilot-v1/README.md",
+            "mode": "100644",
+            "bytes": 8004,
+            "sha256": "10f8abab01132ac1a73fac8f99d23151bc0abbeaa09c7d31fd52a0a61dc93bd4",
+            "git_blob_sha1": "c977ce311c5023c53fef48747f1c788b27007768"
+          }
+        },
+        {
+          "path": "research/tts-quality-pilot-v1/cosy3-metadata.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-quality-pilot-v1/cosy3-metadata.json",
+            "mode": "100644",
+            "bytes": 4917,
+            "sha256": "f81a14762d24b02afecf58d62c1a04cc4c8c0cbf75b0a938c133e7ddc4e251d6",
+            "git_blob_sha1": "7ab7eb136bc8aebaadd751a4ce5570b5d2a14b58"
+          }
+        },
+        {
+          "path": "research/tts-quality-pilot-v1/pilot.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-quality-pilot-v1/pilot.py",
+            "mode": "100644",
+            "bytes": 7900,
+            "sha256": "b3f885b119854f2241f002b2ec44dd6fe4b57f82da20a1f54020adc7f06de6f5",
+            "git_blob_sha1": "7141e15e50cfdac1faf018df62ff0512c6e53af0"
+          }
+        },
+        {
+          "path": "research/tts-quality-pilot-v1/plan.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-quality-pilot-v1/plan.json",
+            "mode": "100644",
+            "bytes": 6541,
+            "sha256": "b639367f3d678ca5666220a651b1d9189ec24cb318fb064a9091fae0e0a24c5a",
+            "git_blob_sha1": "e6d3a84ee61d0a973d4c95d06cefe7dfec317a28"
+          }
+        },
+        {
+          "path": "research/tts-quality-pilot-v1/qwen06-model-lock.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-quality-pilot-v1/qwen06-model-lock.json",
+            "mode": "100644",
+            "bytes": 5271,
+            "sha256": "9da27e3dea80033174141613458b03901460d0523ca2be7323e12071bad2ac90",
+            "git_blob_sha1": "3df9e1d89083957b8810b8dee1d9e941844bb1fb"
+          }
+        },
+        {
+          "path": "research/tts-quality-pilot-v1/qwen17-metadata.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-quality-pilot-v1/qwen17-metadata.json",
+            "mode": "100644",
+            "bytes": 2635,
+            "sha256": "e8118e8656cc78527c7dc31147356dbae3f20e31095e16080d7f3f84f09111a1",
+            "git_blob_sha1": "051d6a6f0e6493a7f2a036e6b6b2c7e864054a74"
+          }
+        },
+        {
+          "path": "research/tts-quality-pilot-v1/qwen17-model-lock.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-quality-pilot-v1/qwen17-model-lock.json",
+            "mode": "100644",
+            "bytes": 5272,
+            "sha256": "24267f7e4a63f3f4f2a13bf6c87459ae21be61c56bc5b55504381569fdd9f3f3",
+            "git_blob_sha1": "36401fc9e1be245dc169568adcb30db2d8af842c"
+          }
+        },
+        {
+          "path": "research/tts-quality-pilot-v1/run_probe.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-quality-pilot-v1/run_probe.py",
+            "mode": "100644",
+            "bytes": 4313,
+            "sha256": "b3fd7f03e4a7eb0f72f8347145c4451068f139ea71a6117ad3cd06e0cac28ab1",
+            "git_blob_sha1": "453c3dff08a69bff71add16feaf30936f807516f"
+          }
+        },
+        {
+          "path": "research/tts-quality-pilot-v1/runtime_scope.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-quality-pilot-v1/runtime_scope.py",
+            "mode": "100644",
+            "bytes": 3014,
+            "sha256": "c08bd46d34bea011a63d32867386b26637d5a02753769654e08e4c32c31cb927",
+            "git_blob_sha1": "cf846d79589f53bd7c732580217ad486706894b2"
+          }
+        },
+        {
+          "path": "research/tts-quality-pilot-v1/setup_adapter.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-quality-pilot-v1/setup_adapter.py",
+            "mode": "100644",
+            "bytes": 1646,
+            "sha256": "889b2b2ee33e940dff00a51a090f1ec5fad83c8343f6aa21ac4392602e22faf6",
+            "git_blob_sha1": "3d2134a4da37b9fbdb04c3eaef19647da99e4072"
+          }
+        },
+        {
+          "path": "research/tts-quality-pilot-v1/test_pilot.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-quality-pilot-v1/test_pilot.py",
+            "mode": "100644",
+            "bytes": 4304,
+            "sha256": "02ddca33d2873eb422bcb470b9d98a17b31eca23fde37d60599e6411c225a83c",
+            "git_blob_sha1": "cea56858b4b1aa8b90680ec2e45b7af0daa5ab3d"
+          }
+        },
+        {
+          "path": "research/tts-quality-pilot-v1/worker.py",
+          "before": null,
+          "after": {
+            "path": "research/tts-quality-pilot-v1/worker.py",
+            "mode": "100644",
+            "bytes": 1913,
+            "sha256": "a0764ec0c93ad4a2d88971e8d9ce81ac8c5adc480ed312b82b788cb6e3205594",
+            "git_blob_sha1": "4db708fb7e9fde5f072c18c947ec6cb4617ed39f"
+          }
+        },
+        {
+          "path": "research/tts-quality-pilot-v1/workflow.yml",
+          "before": null,
+          "after": {
+            "path": "research/tts-quality-pilot-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 1198,
+            "sha256": "f516406eab52aacaf8e0ca2ec31705829bffc17a261c64b50e4522ba68e32106",
+            "git_blob_sha1": "054c47e166d6743ae724ce02a7f88afdd88b674b"
+          }
+        },
+        {
+          "path": "tests/test_candidate_encoder_numeric_ci.py",
+          "before": {
+            "bytes": 6586,
+            "git_blob_sha1": "0de5f92cfad2c212da787a7d4ff334f6473847d5",
+            "mode": "100644",
+            "path": "tests/test_candidate_encoder_numeric_ci.py",
+            "sha256": "0d102158cdc3f640918d2210f2c119c73812afec9c39a9498c2b39dc0653633a"
+          },
+          "after": {
+            "path": "tests/test_candidate_encoder_numeric_ci.py",
+            "mode": "100644",
+            "bytes": 11257,
+            "sha256": "d1f8c321dcaf40e0b9b529218a9113b241a9bbde3ea049ca7b31f389fab92b5c",
+            "git_blob_sha1": "71f42e9a50d3a2dbdafd11a5b8bb36ed11c0a389"
+          }
+        },
+        {
+          "path": "tests/test_effect_dataset_split.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_effect_dataset_split.py",
+            "mode": "100644",
+            "bytes": 8601,
+            "sha256": "bdc2840dab0d0d86adab99f34a5e9ab688cbd90c5a373b03edb5625b991406df",
+            "git_blob_sha1": "1b93608b0291c03e351694caac38d696f08e3c28"
+          }
+        },
+        {
+          "path": "tests/test_historical_base_metadata.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_historical_base_metadata.py",
+            "mode": "100644",
+            "bytes": 4314,
+            "sha256": "a90fba40326b0a59253e2e717bda3bb2abc5806730b59c1b74bfe3f93c0105be",
+            "git_blob_sha1": "cda6c218fc9c67765e96819592749cc93fc043d1"
+          }
+        },
+        {
+          "path": "tests/test_model_comparison.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_model_comparison.py",
+            "mode": "100644",
+            "bytes": 9797,
+            "sha256": "4e83f14fab085d900291d23231ef7251852c5f0ee0c4442fd5537b6791e7d6d0",
+            "git_blob_sha1": "d23c2cd3220c879c046ee9dcf632d5d7ed267476"
+          }
+        },
+        {
+          "path": "tests/test_model_comparison_numeric.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_model_comparison_numeric.py",
+            "mode": "100644",
+            "bytes": 11535,
+            "sha256": "759a1f2150c8642b38fc2947247ff7499fc4ec2f5ecae4e159f9af86961050ab",
+            "git_blob_sha1": "a1e56b1b676e89570c9cf61ba197fb63b75a951f"
+          }
+        },
+        {
+          "path": "tests/test_model_comparison_split_bridge.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_model_comparison_split_bridge.py",
+            "mode": "100644",
+            "bytes": 4642,
+            "sha256": "bc5914b859086263cdc377047094ad26b47d9b83c7ff5ab7851a476ad13d5794",
+            "git_blob_sha1": "fae3692e99b0d20dbb21716943cb29b5ebe42b1b"
+          }
+        },
+        {
+          "path": "tests/test_test_inventory.py",
+          "before": {
+            "bytes": 4193,
+            "git_blob_sha1": "1f0c67bf6d6426f2868d18309a01177758acb3fc",
+            "mode": "100644",
+            "path": "tests/test_test_inventory.py",
+            "sha256": "ad8ddfe18a90ebb7798bd7b634aca059db55517416948e4bfc65de71b050c006"
+          },
+          "after": {
+            "path": "tests/test_test_inventory.py",
+            "mode": "100644",
+            "bytes": 7852,
+            "sha256": "24bcbea3589cc2dda0c80d4d417e5a6117eb7ac47f2743da857fdb5cf6ed8d7b",
+            "git_blob_sha1": "439eed68645410c0251634aa91dc8d956b7624ea"
+          }
+        },
+        {
+          "path": "tools/README.md",
+          "before": {
+            "bytes": 10245,
+            "git_blob_sha1": "2233823ac352800338603ab11c537de7bae56ba2",
+            "mode": "100644",
+            "path": "tools/README.md",
+            "sha256": "2daebd15b033110cf273594b8a07e2f3d72e041a79626b2d575e39a9ac049ebe"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 10598,
+            "sha256": "5c8b65967a9f81290ff2b3f2c120b2ed4565edfd4d222589a58556994c947ef1",
+            "git_blob_sha1": "8ac320cd8e2834a3a9e9125655d4df9c6d9d938d"
+          }
+        },
+        {
+          "path": "tools/audit_historical_base_metadata.py",
+          "before": null,
+          "after": {
+            "path": "tools/audit_historical_base_metadata.py",
+            "mode": "100644",
+            "bytes": 6984,
+            "sha256": "3fe05fab1429d41589330181c799bf5bf2a7ac85a8a0ff64dd735f89533225d3",
+            "git_blob_sha1": "50dba4c2c5edb90e44675c37780a5b0a1cceb374"
+          }
+        },
+        {
+          "path": "tools/inventory_effect_data.py",
+          "before": null,
+          "after": {
+            "path": "tools/inventory_effect_data.py",
+            "mode": "100644",
+            "bytes": 11119,
+            "sha256": "e374ac36d6f423a15df35f18bd6ac6583cb7fda3310d9187750cd3a595fe344f",
+            "git_blob_sha1": "7889b1060836572e91af0e0af83854991b76ded6"
+          }
+        },
+        {
+          "path": "tools/test_execution_contracts.json",
+          "before": {
+            "bytes": 3196,
+            "git_blob_sha1": "090121540fb15ef92c6bf26181cc08a48b61798c",
+            "mode": "100644",
+            "path": "tools/test_execution_contracts.json",
+            "sha256": "829b15869e9ffacd8145ed1c9a732e9ab5f9dd14139494fe8a8c939fec3710a8"
+          },
+          "after": {
+            "path": "tools/test_execution_contracts.json",
+            "mode": "100644",
+            "bytes": 3196,
+            "sha256": "5e193342d91c5454ade8aae47c23433e2b7966e5d3ec2c1b60985b72e604553f",
+            "git_blob_sha1": "78c9541b51b968872c05af3bd4f0ffbd54c4fea6"
+          }
+        },
+        {
+          "path": "tools/test_inventory.py",
+          "before": {
+            "bytes": 9737,
+            "git_blob_sha1": "4029c0d7c2f38f5cf68ccef4919ec45f936d9380",
+            "mode": "100644",
+            "path": "tools/test_inventory.py",
+            "sha256": "8a88b3f9cca74a9cd2ac0130d32c168f8511935fdfdab17f66724656b22a350b"
+          },
+          "after": {
+            "path": "tools/test_inventory.py",
+            "mode": "100644",
+            "bytes": 10405,
+            "sha256": "62240acc80354a3a2e38cdff67aebf62e2868edc648d74f0acb6c1a213a342e1",
+            "git_blob_sha1": "1629bfec6e18d2ffad54fdc32db462125b398889"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "bytes": 14209,
+            "git_blob_sha1": "eeb170732cd67b85ad4b07a1d1edd1c0c342ce4c",
+            "mode": "100644",
+            "path": "tools/verify_research_sources.py",
+            "sha256": "39ecf6c9932799145c18565ca0c2e21bcd9bfa6ed831e7c50065a8160028dcef"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 14280,
+            "sha256": "7ac728c067e57eb011f0bd24c95053ccef598210f59f6d36f552326a080c242a",
+            "git_blob_sha1": "07eb8ff86f4199e802c959db6a75d9f0ff68aad9"
+          }
+        },
+        {
+          "path": "training/effect_dataset_split.py",
+          "before": null,
+          "after": {
+            "path": "training/effect_dataset_split.py",
+            "mode": "100644",
+            "bytes": 10925,
+            "sha256": "cf587df67a725e4338f8ff9ff586b158a5d61b8ea3060544c51434e69873ff4d",
+            "git_blob_sha1": "e63fb0dcf0f69fc2279c46f5f7cf2454d86aa911"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -27926,6 +28725,13 @@
       "bytes": 4534,
       "sha256": "36b03d910cbf5ff480f5f346d372672d59d0cfd5f596b1560ec9dc83ed248618",
       "git_blob_sha1": "2f5ce5606df850b5b067c157023de54163765070"
+    },
+    {
+      "path": ".github/workflows/tts-quality-probe-20261014-v1.yml",
+      "mode": "100644",
+      "bytes": 1198,
+      "sha256": "f516406eab52aacaf8e0ca2ec31705829bffc17a261c64b50e4522ba68e32106",
+      "git_blob_sha1": "054c47e166d6743ae724ce02a7f88afdd88b674b"
     }
   ],
   "current_source_revision": {

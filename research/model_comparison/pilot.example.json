@@ -1,0 +1,45 @@
+{
+  "development_only": true,
+  "synthetic_diagnostic_only": true,
+  "tokens": "/absolute/path/to/repo/keywords/tokens.example.txt",
+  "manifests": {
+    "train": "/absolute/path/to/train.jsonl",
+    "calibration": "/absolute/path/to/calibration.jsonl",
+    "selection": "/absolute/path/to/selection.jsonl"
+  },
+  "epochs": 2,
+  "seed": 20261014,
+  "max_training_seconds": 600,
+  "learning_rate": 0.001,
+  "specs": {
+    "control": {
+      "schema": "candidate-encoder-source-spec-v1",
+      "architecture": "rnn64_control",
+      "feature_dim": 32,
+      "hidden_dim": 64,
+      "vocab_size": 5,
+      "kernels": [],
+      "dilations": []
+    },
+    "treatment": {
+      "schema": "candidate-encoder-source-spec-v1",
+      "architecture": "causal_ds_tcn_ctc",
+      "feature_dim": 32,
+      "hidden_dim": 32,
+      "vocab_size": 5,
+      "kernels": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "dilations": [
+        1,
+        2,
+        4,
+        8
+      ]
+    }
+  },
+  "protected_evidence_used": false
+}

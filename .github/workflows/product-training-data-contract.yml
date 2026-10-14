@@ -32,6 +32,36 @@ on:
       - "training/ctc_label_prior_contract.py"
       - "training/test_ctc_primary.py"
       - "training/model.py"
+      - "research/model_comparison/README.md"
+      - "research/model_comparison/compare.py"
+      - "research/model_comparison/keywords.example.json"
+      - "research/model_comparison/pilot.example.json"
+      - "research/model_comparison/rnn-negative-policy-pair.json"
+      - "research/model_comparison/runner.py"
+      - "tests/test_model_comparison_numeric.py"
+      - "tests/test_model_comparison.py"
+      - "research/tts-pilot-screening-v1/README.md"
+      - "research/tts-pilot-screening-v1/blind_utils.py"
+      - "research/tts-pilot-screening-v1/boundary.py"
+      - "research/tts-pilot-screening-v1/campaign.py"
+      - "research/tts-pilot-screening-v1/derive.py"
+      - "research/tts-pilot-screening-v1/expected-plan.json"
+      - "research/tts-pilot-screening-v1/export_public.py"
+      - "research/tts-pilot-screening-v1/host.py"
+      - "research/tts-pilot-screening-v1/screen.py"
+      - "research/tts-pilot-screening-v1/source-lock.json"
+      - "research/tts-pilot-screening-v1/terminal.py"
+      - "research/tts-pilot-screening-v1/test_derive.py"
+      - "research/tts-pilot-screening-v1/test_export.py"
+      - "research/tts-pilot-screening-v1/test_host.py"
+      - "research/tts-pilot-screening-v1/test_screen.py"
+      - "research/tts-pilot-screening-v1/test_suite.py"
+      - "research/tts-pilot-screening-v1/test_terminal.py"
+      - "research/tts-pilot-screening-v1/whisper_worker.py"
+      - "tests/test_model_comparison_split_bridge.py"
+      - "training/effect_dataset_split.py"
+      - "tools/audit_historical_base_metadata.py"
+      - "tests/test_historical_base_metadata.py"
       - "research/candidate_encoders/**"
       - "tests/test_candidate_encoder_numeric.py"
       - "tests/test_candidate_encoder_numeric_ci.py"
@@ -40,6 +70,19 @@ on:
       - "tools/check_workflow_path_filters.py"
       - "training/sitecustomize.py"
       - "training/frontend.py"
+      - "training/frontend_spec.py"
+      - "training/audit_dataset.py"
+      - "tools/speech_label_admission.py"
+      - "tools/speech_asr_consensus.py"
+      - "tools/asr_source_resolver.py"
+      - "tools/model_provenance.py"
+      - "tools/qualification_common.py"
+      - "training/training_admission.py"
+      - "tools/corpus_identity.py"
+      - "tools/kws_vocab.py"
+      - "keywords/tokens.example.txt"
+      - "eval/score_events.py"
+      - "eval/context_policy.py"
       - "training/feature_cached_trainer.py"
       - "tests/test_feature_cache_contract.py"
       - "training/iterate_domain.py"
@@ -93,6 +136,36 @@ on:
       - "training/ctc_label_prior_contract.py"
       - "training/test_ctc_primary.py"
       - "training/model.py"
+      - "research/model_comparison/README.md"
+      - "research/model_comparison/compare.py"
+      - "research/model_comparison/keywords.example.json"
+      - "research/model_comparison/pilot.example.json"
+      - "research/model_comparison/rnn-negative-policy-pair.json"
+      - "research/model_comparison/runner.py"
+      - "tests/test_model_comparison_numeric.py"
+      - "tests/test_model_comparison.py"
+      - "research/tts-pilot-screening-v1/README.md"
+      - "research/tts-pilot-screening-v1/blind_utils.py"
+      - "research/tts-pilot-screening-v1/boundary.py"
+      - "research/tts-pilot-screening-v1/campaign.py"
+      - "research/tts-pilot-screening-v1/derive.py"
+      - "research/tts-pilot-screening-v1/expected-plan.json"
+      - "research/tts-pilot-screening-v1/export_public.py"
+      - "research/tts-pilot-screening-v1/host.py"
+      - "research/tts-pilot-screening-v1/screen.py"
+      - "research/tts-pilot-screening-v1/source-lock.json"
+      - "research/tts-pilot-screening-v1/terminal.py"
+      - "research/tts-pilot-screening-v1/test_derive.py"
+      - "research/tts-pilot-screening-v1/test_export.py"
+      - "research/tts-pilot-screening-v1/test_host.py"
+      - "research/tts-pilot-screening-v1/test_screen.py"
+      - "research/tts-pilot-screening-v1/test_suite.py"
+      - "research/tts-pilot-screening-v1/test_terminal.py"
+      - "research/tts-pilot-screening-v1/whisper_worker.py"
+      - "tests/test_model_comparison_split_bridge.py"
+      - "training/effect_dataset_split.py"
+      - "tools/audit_historical_base_metadata.py"
+      - "tests/test_historical_base_metadata.py"
       - "research/candidate_encoders/**"
       - "tests/test_candidate_encoder_numeric.py"
       - "tests/test_candidate_encoder_numeric_ci.py"
@@ -101,6 +174,19 @@ on:
       - "tools/check_workflow_path_filters.py"
       - "training/sitecustomize.py"
       - "training/frontend.py"
+      - "training/frontend_spec.py"
+      - "training/audit_dataset.py"
+      - "tools/speech_label_admission.py"
+      - "tools/speech_asr_consensus.py"
+      - "tools/asr_source_resolver.py"
+      - "tools/model_provenance.py"
+      - "tools/qualification_common.py"
+      - "training/training_admission.py"
+      - "tools/corpus_identity.py"
+      - "tools/kws_vocab.py"
+      - "keywords/tokens.example.txt"
+      - "eval/score_events.py"
+      - "eval/context_policy.py"
       - "training/feature_cached_trainer.py"
       - "tests/test_feature_cache_contract.py"
       - "training/iterate_domain.py"
@@ -312,7 +398,7 @@ jobs:
       - name: Install pinned CPU objective runtime
         run: |
           python3 -m venv .venv-objective
-          .venv-objective/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv-objective/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2 scipy==1.17.1
           .venv-objective/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
       - name: Decoder-aligned objective math contract
@@ -327,6 +413,23 @@ jobs:
         run: |
           .venv-objective/bin/python -B tests/test_candidate_encoder_numeric.py \
             --report build/candidate-encoder-numeric.json
+      - name: ASR native audio derivation numeric contracts
+        timeout-minutes: 3
+        run: |
+          .venv-objective/bin/python -B research/tts-pilot-screening-v1/test_suite.py --require-numeric
+      - name: Research model train and streaming numeric smoke
+        timeout-minutes: 3
+        run: |
+          timeout 120s .venv-objective/bin/python -B tests/test_model_comparison_numeric.py \
+            --repo . --receipt build/model-comparison-numeric-receipt.json
+      - name: Retain research model numeric smoke receipt
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: model-comparison-numeric-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/model-comparison-numeric-receipt.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Retain candidate numeric contract receipt
         if: ${{ always() && needs.select-scope.outputs.candidate_required == 'true' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -367,6 +470,20 @@ jobs:
           gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir .generated/release
           (cd .generated/release && sha256sum -c SPEECH_LIKE_BASE_SHA256SUMS)
           tar -xzf ".generated/release/$archive" -C .generated/product-speech-like-base
+      - name: Audit recovered train and calibration metadata only
+        run: |
+          python3 -B tools/audit_historical_base_metadata.py \
+            --corpus-root .generated/product-speech-like-base/corpus \
+            --output .generated/historical-base-selected-metadata.json
+      - name: Retain historical metadata audit
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: historical-base-selected-metadata-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .generated/historical-base-selected-metadata.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
       - name: Materialize exact effective product training config
         run: |
           set -euo pipefail
@@ -429,7 +546,7 @@ jobs:
       - name: Install pinned CPU reproducibility runtime
         run: |
           python3 -m venv .venv-repro
-          .venv-repro/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv-repro/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2 scipy==1.17.1
           .venv-repro/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
       - name: Train unobserved parity reference

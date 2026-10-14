@@ -157,3 +157,8 @@ make collected measurements auditable and do not substitute for those measuremen
 
 - [`checked_unittest.py`](checked_unittest.py) — Enforce reviewed test IDs, counts, modes and outcomes; no automatic contract rewriting.
 - [`far_regression_receipt.py`](far_regression_receipt.py) — Recompute saved continuous-FAR evidence and bind the latest exact-deployment run before shipping approval; no model execution.
+
+### Data/model effect iteration
+
+- [inventory_effect_data.py](inventory_effect_data.py): hash-verified recovered audio inventory and development-only split planning; does not run models.
+- [audit_historical_base_metadata.py](audit_historical_base_metadata.py): read-only historical train/calibration lineage audit; never promotes diagnostic-only data.

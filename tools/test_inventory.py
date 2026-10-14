@@ -85,6 +85,17 @@ def python_commands(block):
         marker = re.search(r"<<-?\s*['\"]?([A-Za-z_][A-Za-z0-9_]*)", line)
         if marker:
             heredoc = marker[1]
+        if words[0] == 'timeout':
+            # Accept only the literal GNU timeout DURATION PYTHON ... form.
+            # No timeout options, nested wrappers or shell control syntax.
+            # Checking decimal digits avoids float overflow/underflow when
+            # deciding whether a syntactically valid duration is nonzero.
+            if (len(words) < 3 or
+                    not re.fullmatch(r'(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)[smhd]?', words[1]) or
+                    not any(digit in '123456789' for digit in words[1]) or
+                    any(re.search(r'[;&|<>()`]', word) for word in words)):
+                continue
+            words = words[2:]
         if re.fullmatch(r'(?:[^\s]+/)?python(?:3(?:\.\d+)?)?', words[0]):
             yield words
 

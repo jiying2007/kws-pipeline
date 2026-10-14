@@ -85,6 +85,86 @@ class CandidateNumericCIContracts(unittest.TestCase):
         self.assertLess(job.index("      - name: Decoder-aligned objective math contract"),
                         job.index("      - name: Candidate encoder random-feature numeric contracts"))
 
+    def test_research_smoke_dependency_paths_remain_triggered(self):
+        # Read code, never import Torch or execute the research runner. Follow
+        # top-level local imports from every source bound into its checkpoints.
+        import fnmatch
+        from types import SimpleNamespace
+        runner = ROOT / "research/model_comparison/runner.py"
+        tree = ast.parse(runner.read_text())
+        bound = next(node.value for node in tree.body if isinstance(node, ast.Assign)
+                     and any(isinstance(t, ast.Name) and t.id == "SOURCE_PATHS"
+                             for t in node.targets))
+        required = set(ast.literal_eval(bound)) | {
+            "research/model_comparison/runner.py", "research/model_comparison/compare.py",
+            "research/model_comparison/pilot.example.json",
+            "research/model_comparison/keywords.example.json",
+            "tests/test_model_comparison_numeric.py", "tools/kws_vocab.py",
+            "keywords/tokens.example.txt", "eval/score_events.py", "eval/context_policy.py",
+        }
+        pending, visited = list(required), set()
+        def imports(nodes):
+            for node in nodes:
+                if isinstance(node, (ast.Import, ast.ImportFrom)):
+                    yield node
+                elif isinstance(node, (ast.If, ast.Try, ast.With)):
+                    for field in ("body", "orelse", "finalbody"):
+                        yield from imports(getattr(node, field, []))
+                    for handler in getattr(node, "handlers", []):
+                        yield from imports(handler.body)
+        while pending:
+            relative = pending.pop()
+            if relative in visited or not relative.endswith(".py"):
+                continue
+            visited.add(relative)
+            source = ROOT / relative
+            self.assertTrue(source.is_file(), relative)
+            for node in imports(ast.parse(source.read_text()).body):
+                modules = ([node.module] if isinstance(node, ast.ImportFrom)
+                           else [alias.name for alias in node.names])
+                for module in modules:
+                    if not module:
+                        continue
+                    suffix = Path(*module.split(".")).with_suffix(".py")
+                    if isinstance(node, ast.ImportFrom) and node.level:
+                        bases = [source.parents[node.level - 1]]
+                    else:
+                        bases = [source.parent, ROOT / "training", ROOT / "tools",
+                                 ROOT / "eval", ROOT]
+                    resolved = next((base / suffix for base in bases
+                                     if (base / suffix).is_file()), None)
+                    if resolved is not None:
+                        dependency = resolved.relative_to(ROOT).as_posix()
+                        required.add(dependency)
+                        pending.append(dependency)
+        # Inspect each trigger separately: a union can hide a PR-only/push-only omission.
+        for event in ("push", "pull_request"):
+            lines, active = [], False
+            for line in self.workflow.splitlines():
+                if line == "  " + event + ":":
+                    active = True
+                elif active and line.strip() and len(line) - len(line.lstrip()) <= 2:
+                    break
+                if active:
+                    lines.append(line)
+            section = "\n".join(lines)
+            filters = {value for _, value in exact_path_filters(
+                SimpleNamespace(read_text=lambda **kwargs: section))}
+            self.assertTrue(filters, event)
+            for path in sorted(required):
+                with self.subTest(event=event, dependency=path):
+                    self.assertTrue(any(fnmatch.fnmatchcase(path, pattern) for pattern in filters), path)
+                    self.assertTrue(any(changes.scopes([path])), path)
+        job = self.workflow.split("  objective-math:\n", 1)[1].split("  live-base-binding:\n", 1)[0]
+        step = job.split("      - name: Research model train and streaming numeric smoke\n", 1)[1].split("      - name:", 1)[0]
+        self.assertNotIn("if:", step)
+        self.assertNotIn("continue-on-error", step)
+        self.assertIn("timeout 120s .venv-objective/bin/python -B tests/test_model_comparison_numeric.py", step)
+        self.assertIn("timeout-minutes: 3", step)
+        artifact = job.split("      - name: Retain research model numeric smoke receipt\n", 1)[1].split("      - name:", 1)[0]
+        self.assertIn("path: build/model-comparison-numeric-receipt.json", artifact)
+        self.assertNotIn("path: build/\n", artifact)
+
     def test_source_has_no_optimizer_checkpoint_audio_or_download_calls(self):
         tree = ast.parse(self.numeric)
         compile(tree, "candidate numeric contract", "exec")
