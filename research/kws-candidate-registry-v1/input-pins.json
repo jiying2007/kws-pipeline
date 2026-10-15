@@ -1,0 +1,9 @@
+{
+  "research/consolidation/fit-history-recovery-2026-10-15.json": "6e0bf6141ddec49297ba00ed9a368fc66f323c06672d6906b5ab4fc482a041f7",
+  "research/kw1-preset-supplement-observation-v1/observation.json": "95c67c26d04bfdbba41df11540c084ab99ad736e0b8147383d93808be40a919e",
+  "research/kw1-preset-supplement-v1/blind_pcm.py": "ab6164bb89c9b3b0e707375330b2e9c13b772a0fda1c252dfb2dda05f3539b64",
+  "research/kw1-preset-supplement-v1/worker.py": "979e1709e24ff21e805abfd481994d4073c3220f217f20d6782d1307a77097b3",
+  "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/thirteen-candidate-evidence.json": "9cb52b6f4a890a858f5fc96af89825ba63c5035fcaaefb0349a7806f3843745d",
+  "research/tts-pilot-screening-v1/evidence/tts-input-20261014/artifact-inventory.json": "cf20e6771eb0e0647dc890ab341a87367cbb77afb89c39b85377e8ace3c5ba4a",
+  "research/tts-pilot-screening-v1/screen.py": "982582c0e4c7f957276520977ebfa3bad0cbb5753e16d50bbadef0835682523e"
+}

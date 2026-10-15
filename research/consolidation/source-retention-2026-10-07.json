@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 55431,
-      "sha256": "2f33634158bd855b61f3961b018fada08c2e7a3fe175f6b03a47a9a172227a0c",
-      "git_blob_sha1": "ec0756dbbbc6d8c432b6b5a5ebdb7b75c5b1777c"
+      "bytes": 55934,
+      "sha256": "638c63ae090385651ce81c12354b311b66de6a48a2d1e7f0f823f1147e66a1b0",
+      "git_blob_sha1": "5fe20f1d520c9ff7ed876a43f834db2725e6528d"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -32743,6 +32743,244 @@
             "bytes": 40879,
             "sha256": "b0bd16cf5146840519dd05797c780a539bc23c615031a0f879b7e82b823e76ef",
             "git_blob_sha1": "6fc3bd2d14832c8c495fa1add8f2e7c2cff65e7b"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "operation_id": "kws-role-candidate-bounded-fit-20261015-v1",
+      "public_main_base_commit": "2ed6fa1e394b161b39b542b4d32e045322a49d46",
+      "public_main_base_tree": "3a35cbdabb9aea73f8eed3acd8c4093184876d15",
+      "workflow_source_changed": true,
+      "scope": "Public source and evidence metadata for role eligibility, actual-PCM candidate lineage, independently bounded fit diagnostic and offline CI. Preserve original 718 files/provenance, KW183 source pins, all historical results and closed 16+48 campaign budgets. No model invocation or workflow dispatch during integration.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 55431,
+            "sha256": "2f33634158bd855b61f3961b018fada08c2e7a3fe175f6b03a47a9a172227a0c",
+            "git_blob_sha1": "ec0756dbbbc6d8c432b6b5a5ebdb7b75c5b1777c"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 55934,
+            "sha256": "638c63ae090385651ce81c12354b311b66de6a48a2d1e7f0f823f1147e66a1b0",
+            "git_blob_sha1": "5fe20f1d520c9ff7ed876a43f834db2725e6528d"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "b0bd16cf5146840519dd05797c780a539bc23c615031a0f879b7e82b823e76ef",
+            "git_blob_sha1": "6fc3bd2d14832c8c495fa1add8f2e7c2cff65e7b"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "344ae8e82aba76d4264a4246e30ea0063b20b35cc7bf7693ba1e41d829432e7e",
+            "git_blob_sha1": "d0b3c89cef3e3d5f11a6d026c3b77398814f7845"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "11db24fbb69955706021ceddf678ac3cd764d9d1d3416f91022fa43f24389fce",
+            "git_blob_sha1": "b73fa3671fe12493bb36fb1ff89efeb10d9f7e3b"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "7c0e7fd7dcd97eded59ebeecc729771bcf8f23dcf6de6090583d4f561f04b83d",
+            "git_blob_sha1": "177ff1a5a0e75c5346826b147831e0e1caba5141"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/README.md",
+            "mode": "100644",
+            "bytes": 8032,
+            "sha256": "622ef8fef6d2c7aa7209b350be18b6fb0a05d82dd4aff5b879f2c469d015f1e4",
+            "git_blob_sha1": "fcccfd41f429abce94ed0e072740645e6341bffc"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/contract.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/contract.py",
+            "mode": "100644",
+            "bytes": 3334,
+            "sha256": "3b3eb65f177d617b1f837a4917d1589ba2d990e809a70f1aa571bac6b602fb62",
+            "git_blob_sha1": "01e88c30e6c74459f9a9f66aa1d4574cfb97896d"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/numeric_preflight.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/numeric_preflight.py",
+            "mode": "100644",
+            "bytes": 2270,
+            "sha256": "ff08e42a75957e1c3f794bc5d17a6f1ec0cc9c21c18d3c51d10e91acf9ef50b0",
+            "git_blob_sha1": "806295c5775c91acec5a0b2f0e6f4999f59879f1"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/plan.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/plan.json",
+            "mode": "100644",
+            "bytes": 3065,
+            "sha256": "c030462b1ac458b364248d5efbccb06957c74e42a4818f4903594b4eb9f2e933",
+            "git_blob_sha1": "19592c427226ee0c0f8b5b909599e31b86d687b0"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/requirements.research.lock",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/requirements.research.lock",
+            "mode": "100644",
+            "bytes": 960,
+            "sha256": "7aa51b6eebd2e2db290338345c30b8c7a8e197531746ee77efb7ef8678124dee",
+            "git_blob_sha1": "9b4fcd9e6a3ae71bc322893dfa6d604a5abedf7e"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/run_diagnostic.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/run_diagnostic.py",
+            "mode": "100644",
+            "bytes": 17181,
+            "sha256": "60277e27a74fc3e78854f6ff779eb6719c5a46b27dd4cf13375279b930019c78",
+            "git_blob_sha1": "54072a85112516fecc130ec056fd6c53b03a5168"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/runtime-candidate.lock.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/runtime-candidate.lock.json",
+            "mode": "100644",
+            "bytes": 14859,
+            "sha256": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
+            "git_blob_sha1": "5a632337c2dfffcab4a179c0a94d9da719ff46d1"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/test_contract.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 3109,
+            "sha256": "23eb3366d93af77b304c5ba7dc8b8a227f4edad65852d89e00ed6ed1f2475a84",
+            "git_blob_sha1": "32483a58c2895badad9241418e23db1da95c0e75"
+          }
+        },
+        {
+          "path": "research/kws-candidate-registry-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-candidate-registry-v1/README.md",
+            "mode": "100644",
+            "bytes": 4902,
+            "sha256": "e5cce1ba2565c80785293bd1ab01eb77d2fe580b63645718de82cbe3f68ecb99",
+            "git_blob_sha1": "c5f605d7b6de617e72c1651fb1ce8d4176f70103"
+          }
+        },
+        {
+          "path": "research/kws-candidate-registry-v1/build_registry.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-candidate-registry-v1/build_registry.py",
+            "mode": "100644",
+            "bytes": 16602,
+            "sha256": "cbd011218059e562ca3633eecd0a834bdb12022993653fc3234033c24b57f722",
+            "git_blob_sha1": "6aef79726309c8bc0d53d2f41cfd9e156eb7e3e6"
+          }
+        },
+        {
+          "path": "research/kws-candidate-registry-v1/candidates.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-candidate-registry-v1/candidates.json",
+            "mode": "100644",
+            "bytes": 73379,
+            "sha256": "28033edbbc1e444eae27c33af2e060d1654c4b7a072e65401b055fc27fc3b1b0",
+            "git_blob_sha1": "39de70b07971fd3d8f04646dce3b7c3d9b78e449"
+          }
+        },
+        {
+          "path": "research/kws-candidate-registry-v1/input-pins.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-candidate-registry-v1/input-pins.json",
+            "mode": "100644",
+            "bytes": 948,
+            "sha256": "64c77a270c7f13d8252d10282191aaeb207f425c10fb89a2f01e390fa994e37c",
+            "git_blob_sha1": "6eb586384abb4cd56ae0c7e687d112c348f1db59"
+          }
+        },
+        {
+          "path": "research/kws-candidate-registry-v1/test_registry.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-candidate-registry-v1/test_registry.py",
+            "mode": "100644",
+            "bytes": 4997,
+            "sha256": "e7fbd94d6a16df727460f0f6efb38364ce9648d18f0f4b8436bd99c43edf52b2",
+            "git_blob_sha1": "fd623b1131498d44877fd029602127297e1336b0"
+          }
+        },
+        {
+          "path": "tests/test_effect_dataset_split.py",
+          "before": {
+            "path": "tests/test_effect_dataset_split.py",
+            "mode": "100644",
+            "bytes": 8601,
+            "sha256": "bdc2840dab0d0d86adab99f34a5e9ab688cbd90c5a373b03edb5625b991406df",
+            "git_blob_sha1": "1b93608b0291c03e351694caac38d696f08e3c28"
+          },
+          "after": {
+            "path": "tests/test_effect_dataset_split.py",
+            "mode": "100644",
+            "bytes": 17809,
+            "sha256": "81cf961201fa7dd7ecf994e95f8bc2d5490e924b8023bcb0ffefc72c810dea24",
+            "git_blob_sha1": "8e44faa241f3c7929c73b2ffdb1f961dd19e1714"
+          }
+        },
+        {
+          "path": "training/effect_dataset_split.py",
+          "before": {
+            "path": "training/effect_dataset_split.py",
+            "mode": "100644",
+            "bytes": 10925,
+            "sha256": "cf587df67a725e4338f8ff9ff586b158a5d61b8ea3060544c51434e69873ff4d",
+            "git_blob_sha1": "e63fb0dcf0f69fc2279c46f5f7cf2454d86aa911"
+          },
+          "after": {
+            "path": "training/effect_dataset_split.py",
+            "mode": "100644",
+            "bytes": 20979,
+            "sha256": "8ae93663eb159639bcdf80d07f7115a054e9f5f11f5c611be15fc82546b46809",
+            "git_blob_sha1": "2b12eb7bc94aa8400cb66e8ecfda89bd136d9c29"
           }
         }
       ]
