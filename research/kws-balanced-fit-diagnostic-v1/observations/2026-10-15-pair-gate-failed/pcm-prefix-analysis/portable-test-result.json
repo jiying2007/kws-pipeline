@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "modes": [
+    {
+      "mode": [
+        "normal"
+      ],
+      "result": {
+        "checks": [
+          "exact_frozen_bytes",
+          "existing_output_not_overwritten",
+          "stdout_strict_numeric_objects",
+          "wrong_size_rejected",
+          "wrong_hash_rejected"
+        ],
+        "new_model_calls": 0,
+        "new_optimizer_steps": 0,
+        "status": "PASS"
+      }
+    },
+    {
+      "mode": [
+        "-O"
+      ],
+      "result": {
+        "checks": [
+          "exact_frozen_bytes",
+          "existing_output_not_overwritten",
+          "stdout_strict_numeric_objects",
+          "wrong_size_rejected",
+          "wrong_hash_rejected"
+        ],
+        "new_model_calls": 0,
+        "new_optimizer_steps": 0,
+        "status": "PASS"
+      }
+    },
+    {
+      "mode": [
+        "-OO"
+      ],
+      "result": {
+        "checks": [
+          "exact_frozen_bytes",
+          "existing_output_not_overwritten",
+          "stdout_strict_numeric_objects",
+          "wrong_size_rejected",
+          "wrong_hash_rejected"
+        ],
+        "new_model_calls": 0,
+        "new_optimizer_steps": 0,
+        "status": "PASS"
+      }
+    }
+  ]
+}

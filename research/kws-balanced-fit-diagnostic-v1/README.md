@@ -1,4 +1,10 @@
-# Bounded class-balanced memorization diagnostic (reviewed, execution enabled)
+# Bounded class-balanced memorization diagnostic (closed; execution disabled)
+
+The single reviewed campaign has been consumed and ended with `pair_gate_failed`: 300/300 successful pair updates, final KW1 match and KW2 mismatch; A/B never ran. No retry or unused-budget reuse is authorized. See [closure](closure.json) and [archived observations](observations/2026-10-15-pair-gate-failed/README.md). [PCM prefix analysis](observations/2026-10-15-pair-gate-failed/pcm-prefix-analysis/README.md) shows the final KW1 string match is emitted during its exact-zero prefix, not evidence of syllable recognition at the actual acoustic positions. Only `execution_enabled` changed in the plan; all scientific controls remain fixed. This is the consumed historical configuration for source `e69cc0230c1983567423da47aa1dfe76c5a96150`, not a configuration for restarting with a subsequently repaired reader; its source-verifier pin preserves the execution-time identity.
+
+## Original preregistration and preparation record
+
+The following text preserves the facts and instructions at source publication before execution. Historical references to enabled status, zero optimizer calls and launch prerequisites describe that earlier checkpoint, not current permission to execute.
 
 This is an exposed, machine-label research experiment, not product training,
 independent evaluation, FRR/FAR measurement, human-gold evidence or shipping

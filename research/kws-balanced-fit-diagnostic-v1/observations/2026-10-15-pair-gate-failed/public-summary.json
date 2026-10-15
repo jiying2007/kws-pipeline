@@ -1,0 +1,33 @@
+{
+  "schema": "kws-fit-public-outcome-v1",
+  "status": "pair_gate_failed",
+  "exit_code": 0,
+  "optimizer_calls_reserved": 300,
+  "successful_optimizer_steps": 300,
+  "checkpoints": [
+    0,
+    50,
+    100,
+    200,
+    300
+  ],
+  "final_class_complete_rates": {
+    "KW1": 1.0,
+    "KW2": 0.0
+  },
+  "ab_executed": false,
+  "new_tts_calls": 0,
+  "new_asr_calls": 0,
+  "model_state_exported": false,
+  "whole_process_wall_seconds": 34.395591882999724,
+  "child_max_rss_kib": 1193012,
+  "resource_scope": "Whole launched process including runtime/source verification; Linux RUSAGE_CHILDREN max RSS. Not model-only, cgroup or SSC305 measurements.",
+  "step_observation_timing": "step-XXXX finite_loss and finite_grad_norm are measured before that optimizer update; pair-XXXX samples are measured after that update. Same-numbered records must not be forced to have equal losses.",
+  "interpretation": "Reported NLL decreases, but only one of two training pair items matches after 300 updates. The final KW1 string match completes within the first 105 ms, inside its exact-zero 200 ms prefix; it is not evidence of recognition at actual acoustic positions. KW2 first 105 ms RMS is 5.069523467741744e-05, very low energy rather than exact silence. The saved greedy path supports early low-energy emission/alignment failure, not a conclusion about all CTC probability mass. Energy thresholds are descriptive, not validated VAD. This does not establish that the architecture cannot converge or that class weighting is ineffective; A/B never ran.",
+  "production_qualified": false,
+  "reusable_weights_exported": false,
+  "shipping_qualified": false,
+  "training_admitted": false,
+  "independent_evaluation": false,
+  "human_gold": false
+}

@@ -6,6 +6,13 @@ sys.path.insert(0,str(Path(__file__).resolve().parent))
 from contract import Budget, atomic_json, collapse, weights, select_pair
 
 class ContractTests(unittest.TestCase):
+    def test_archived_observation_metadata_and_statistics(self):
+        from verify_archived_observation import verify, numeric_types
+        self.assertEqual(verify()["result_files"], 608)
+        for bad in ({"ctc_nll": True}, {"blank_mean_probability": False}, {"per_class_complete_rate": {"KW1": True, "KW2": 0.0}}, {"update": True}, {"target_tokens": [True]}, {"ctc_nll": float("nan")}, {"finite_grad_norm": float("inf")}):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                numeric_types(bad)
+
     def test_ctc_blanks_separate_repeats(self):
         self.assertEqual(collapse([3,3,0,3,4,4,0]),[3,3,4])
         self.assertEqual(collapse([0,0]),[])
