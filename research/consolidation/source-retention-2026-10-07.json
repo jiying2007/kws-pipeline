@@ -33873,6 +33873,205 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-15",
+      "operation_id": "kws-anchor-horizon-consumed-closure-20261015-v1",
+      "public_main_base_commit": "7ab25606c66b829668bb0b796b3debc0d93abd1a",
+      "public_main_base_tree": "ee60e2d5c37bda9b0061b2fd54cda28c9b9edadc",
+      "workflow_source_changed": false,
+      "scope": "Close fully consumed 600-update/608-forward horizon campaign and archive original public scalar/log-probability evidence. Evidence PASS and scientific PASS at sole primary R600, limited to two exposed training samples. No retries, budget reuse or new models. Existing contract test checks archive/receipt/token statistics without workflow changes; no process authenticity or independent model/CTC recomputation claim.",
+      "files": [
+        {
+          "path": "research/kws-anchor-horizon-v1/README.md",
+          "before": {
+            "path": "research/kws-anchor-horizon-v1/README.md",
+            "mode": "100644",
+            "bytes": 2956,
+            "sha256": "0a3ff955ea71f53b6b4edc7007a2785de88949d2acf57e9d5457462255034150",
+            "git_blob_sha1": "4c83969dd0c7fdd9925cb2376244e6d4230d3aa7"
+          },
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/README.md",
+            "mode": "100644",
+            "bytes": 4009,
+            "sha256": "3c8a99379a52211afe34426db53cf9b3f16c392d00186f2710255ead1074e388",
+            "git_blob_sha1": "218798e487408436774b3cc296aa050980f9e840"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/closure.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/closure.json",
+            "mode": "100644",
+            "bytes": 1176,
+            "sha256": "f05de96459302444361737af10f19a9d7a71512b93e4ea137f02a3052f4658d2",
+            "git_blob_sha1": "c686c6668069ed9ee15ee5ecd7a87b13e609ad02"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/README.md",
+            "mode": "100644",
+            "bytes": 2823,
+            "sha256": "9c36dcab64ea1e282e1531fb09145bb1c566af89c5bcf83b4b9e14cb780d9074",
+            "git_blob_sha1": "e46af9220a04f3a92c52c89eee85a2bd9bdc6c5e"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/acceptance-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/acceptance-summary.json",
+            "mode": "100644",
+            "bytes": 5561,
+            "sha256": "e56126e3c85cf8f9cf61daf9b311c5fd023ae347b7450e4f8b81a62418aecd6f",
+            "git_blob_sha1": "a02c5fec7f4926a6dcc47b6f991e3eaa3bcf28c2"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/archive-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/archive-manifest.json",
+            "mode": "100644",
+            "bytes": 839,
+            "sha256": "a97cd50824b7aa505dc367addb0ba53fc57ec75730eadafaa80a557982881a51",
+            "git_blob_sha1": "0d1b844e79130484ac7ba12f5376922d899ed49b"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/enabled-plan.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/enabled-plan.json",
+            "mode": "100644",
+            "bytes": 3271,
+            "sha256": "849941b279401840f30edb792007c6d0dbd664d4cca6e8aeacc0081d082d9af0",
+            "git_blob_sha1": "433731d0dc5351efc6cf227d9f36276219773fb0"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/executed-source-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/executed-source-manifest.json",
+            "mode": "100644",
+            "bytes": 1133,
+            "sha256": "a75eb7657ffc55d3bc0a00b5c620c3aff2330f543c6e9352f31693ab166e9c17",
+            "git_blob_sha1": "5e8176dc9642f43a723e0e34d911e7ede425abf4"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/learning-curve.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/learning-curve.json",
+            "mode": "100644",
+            "bytes": 15587,
+            "sha256": "3255db04d96c08ef102696fd633289dfe692593f8497a7f35ea3f963a0ba8635",
+            "git_blob_sha1": "4ffd12041d8061dbfea55ea6a1fe4a6dfbdce57b"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/public-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/public-summary.json",
+            "mode": "100644",
+            "bytes": 2484,
+            "sha256": "f181daa515878ab3ebf64913c12c9e7e8522c84002a39695a6d311884614ed3c",
+            "git_blob_sha1": "b8f2851583767d482141fabc38f0b722fc7e6041"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/raw-horizon-result.zip",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/raw-horizon-result.zip",
+            "mode": "100644",
+            "bytes": 704458,
+            "sha256": "96beb0239ce4c332073ee9344ae8cb69257964d6b7de9be236e79ea9b8fc6ddf",
+            "git_blob_sha1": "7520cb96f2a124c8e7ba8d054b61a9a7cc6fc44b"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/result-hash-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/observations/2026-10-15-completed-scientific-pass/result-hash-manifest.json",
+            "mode": "100644",
+            "bytes": 226753,
+            "sha256": "0520b614650efe9ea79f1c3fb69ceaefb6b07ac229168721cf98f9e10034c53a",
+            "git_blob_sha1": "a2df5d19a3e1b7baed98be7b6c494d3fa2d016c4"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/plan.json",
+          "before": {
+            "path": "research/kws-anchor-horizon-v1/plan.json",
+            "mode": "100644",
+            "bytes": 3271,
+            "sha256": "849941b279401840f30edb792007c6d0dbd664d4cca6e8aeacc0081d082d9af0",
+            "git_blob_sha1": "433731d0dc5351efc6cf227d9f36276219773fb0"
+          },
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/plan.json",
+            "mode": "100644",
+            "bytes": 3272,
+            "sha256": "5a16fdd9707ca9e9b9e6f01889a133ea21ad14f102852cd9e45e0bba7cde051b",
+            "git_blob_sha1": "b317107f2081ada6d48cbd27d099816acdd0e456"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/source-manifest.json",
+          "before": {
+            "path": "research/kws-anchor-horizon-v1/source-manifest.json",
+            "mode": "100644",
+            "bytes": 1133,
+            "sha256": "a75eb7657ffc55d3bc0a00b5c620c3aff2330f543c6e9352f31693ab166e9c17",
+            "git_blob_sha1": "5e8176dc9642f43a723e0e34d911e7ede425abf4"
+          },
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/source-manifest.json",
+            "mode": "100644",
+            "bytes": 1773,
+            "sha256": "bfc9e04c2d9cfd925da2db13c32d006687c6d870e49131f4f572aa5b21f662e7",
+            "git_blob_sha1": "70a8f61b49d93898c3c079e8f6f2a0dd656d1d2d"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/test_contract.py",
+          "before": {
+            "path": "research/kws-anchor-horizon-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 5294,
+            "sha256": "1a97a70834c3d8448c23fc5d881ce066dcf82f376460c16d1f54813d395f1229",
+            "git_blob_sha1": "7c298894f2715efb24df65f5125ed45b96c5c1ff"
+          },
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 7220,
+            "sha256": "f9e499e98c3749cdfea8cdd8e43836786daf7a229e08a34352b36822950f371b",
+            "git_blob_sha1": "3d08535d6d9980f3710c37ca1a8f9e4bbf9ea631"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/verify_archived_result.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/verify_archived_result.py",
+            "mode": "100644",
+            "bytes": 14163,
+            "sha256": "89dc15fa0670844227717e3a717e5512c42bb56f09eee320a6a9e2b2adf0c713",
+            "git_blob_sha1": "0ef296447019c99be5ecf126ffbd7df66a62a0a4"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

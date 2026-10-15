@@ -1,0 +1,58 @@
+{
+  "schema": "anchor-horizon-public-outcome-v1",
+  "scientific_scope": "two exposed machine-labeled training samples only",
+  "public_verification_scope": "archive integrity, receipt and saved-token statistics only; not process authenticity or independent model/CTC recomputation",
+  "limitations": [
+    "No human-gold or independent-evaluation claim.",
+    "No true recall, false-activation-rate or generalization claim.",
+    "No production, shipping or reusable-weights qualification.",
+    "R600 is the sole primary endpoint; R400/R500 are descriptive only.",
+    "No process/runtime authenticity or independent model/CTC recomputation claim from the public archive verifier."
+  ],
+  "execution_status": "completed",
+  "evidence_validation": "PASS",
+  "scientific_validation": "PASS",
+  "optimizer_calls_reserved": 600,
+  "successful_optimizer_steps": 600,
+  "model_forward_calls_reserved": 608,
+  "model_forward_calls_returned": 608,
+  "observations": 8,
+  "primary_endpoint_step": 600,
+  "human_gold": false,
+  "independent_evaluation": false,
+  "production_qualified": false,
+  "reusable_weights_exported": false,
+  "shipping_qualified": false,
+  "training_admitted": false,
+  "historical_first300_exact_match": true,
+  "descriptive_pair_success_checkpoints": [
+    400,
+    500,
+    600
+  ],
+  "treatment_prefix_success": true,
+  "treatment_fit_success": true,
+  "treatment_joint_success": true,
+  "final_decodes": {
+    "KW1": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "KW2": [
+      3,
+      4,
+      3,
+      4
+    ]
+  },
+  "final_prefix_nonblank_frames": {
+    "KW1": 0,
+    "KW2": 0
+  },
+  "new_tts_calls": 0,
+  "new_asr_calls": 0,
+  "step_observation_timing": "Step loss/components/gradient are PRE-update; same-numbered R checkpoint observations are POST-update. Do not force their losses equal.",
+  "interpretation": "Both exposed training samples meet the predeclared full-target greedy-decode and fixed-prefix-blank joint endpoint at R600. R400 and R500 also meet this criterion, descriptively only; R600 remains the sole primary endpoint. The first 300 updates and five complete historical T observations match exactly. Scientific PASS is limited to these two exposed machine-labeled training samples, with no true recall, false-activation rate, generalization, independent-evaluation, production or shipping claim. Public archive verification is not process authenticity or independent model/CTC recomputation. No rerun or further budget is authorized."
+}

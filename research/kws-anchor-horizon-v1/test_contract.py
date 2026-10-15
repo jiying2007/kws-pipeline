@@ -11,6 +11,30 @@ spec=importlib.util.spec_from_file_location('anchor_run',HERE/'run_horizon.py')
 r=importlib.util.module_from_spec(spec);spec.loader.exec_module(r)
 c=r._contract
 class Tests(unittest.TestCase):
+    def test_public_archived_result(self):
+        spec=importlib.util.spec_from_file_location("horizon_archive",HERE/"verify_archived_result.py")
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        report=module.verify()
+        self.assertEqual((report["result_files"],report["observations"]),(2428,8))
+        self.assertEqual((report["optimizer_calls"],report["model_forward_calls"]),(600,608))
+        self.assertEqual(report["primary_endpoint_step"],600)
+        for bad in (True,False,float("nan"),float("inf")):
+            with self.assertRaises(ValueError):module.number(bad)
+        for bad in ('{"x":1,"x":2}','{"x":NaN}','{"x":Infinity}'):
+            with self.assertRaises(ValueError):module.strict_json(bad)
+        self.assertFalse(module.exact(True,1))
+        summary=json.loads((HERE/"observations/2026-10-15-completed-scientific-pass/public-summary.json").read_text())
+        for key,value in [('scientific_scope','generalization or production qualified'),('public_verification_scope','independent model reconstruction'),('limitations',[]),('training_admitted',0),('optimizer_calls_reserved',600.0),('primary_endpoint_step',600.0),('treatment_joint_success',1)]:
+            altered=copy.deepcopy(summary);altered[key]=value
+            with self.subTest(key=key):
+                with self.assertRaises(ValueError):module.verify_public_summary(altered)
+        closure=json.loads((HERE/"closure.json").read_text())
+        for key,value in [('remaining_budget',False),('remaining_model_forward_budget',1),('remaining_model_forward_budget',False),('remaining_model_forward_budget',0.0),('execution_status','running')]:
+            altered=copy.deepcopy(closure);altered[key]=value
+            with self.subTest(key=key,value=value):
+                with self.assertRaises(ValueError):module.verify_consumed(altered)
+        self.assertNotIn('torch',sys.modules)
+
     def setUp(self):self.plan=json.loads((HERE/'plan.json').read_text())
     def test_disabled(self):
         c.validate_plan(self.plan,False)
