@@ -1,0 +1,16 @@
+{
+  "schema": "prefix-anchor-public-archive-v1",
+  "files": {
+    "README.md": "117e82b96d3fe144a16b3e78c31994594f4929a79138fe40de53470219e1d3cf",
+    "acceptance-summary.json": "a30017e9640cef44fb882b3f096f46f601d6fa257e9daca259f1fb0555d1b70c",
+    "enabled-plan.json": "eb3b88b57308943716078c5bdb588439d3984c28ec8f242fec99df0c9fb0dd83",
+    "executed-source-manifest.json": "c71be964b7d044612fa5d09310a34ceeab6b16281849ef90c773cda2f68e8d09",
+    "learning-curve.json": "dbbc69a4fb892144e84a28c20714acaed3e810ba2ed188374779c2609a25c0fa",
+    "public-summary.json": "2588e9612c8920a707625066c454d38af50a546fd6857e3ec98e0c949a66969c",
+    "raw-anchor-result.zip": "3f66773b29fd1889ae31c7df8418cb50a33f440d8e000c3ea759777c6218671a",
+    "result-hash-manifest.json": "21ad25ced1706f3dc93c2be08d7238a28bb09b6ab0a4d5ad809914a6a97bfede",
+    "saved-probability-analysis/README.md": "42c61ff67a5295705b00236f7232104e35703cd52ac038b65ed97462572bee38",
+    "saved-probability-analysis/analysis.py": "010576c137b9d12c235d3d8466b9d60bb1ae5e38737396c5fa88ebedc31af193",
+    "saved-probability-analysis/summary.json": "cda99eff5438c5f65e659dab56d77fdeec1d4d13ed278b2a4e1592846478be15"
+  }
+}

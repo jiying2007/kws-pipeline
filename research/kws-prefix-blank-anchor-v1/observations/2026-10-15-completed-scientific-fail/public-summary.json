@@ -1,0 +1,44 @@
+{
+  "schema": "prefix-anchor-public-outcome-v1",
+  "execution_status": "completed",
+  "evidence_validation": "PASS",
+  "scientific_validation": "FAIL",
+  "optimizer_calls_reserved": 600,
+  "successful_optimizer_steps": 600,
+  "control_exact_match": true,
+  "observations": 10,
+  "primary_endpoint": "T update 300 only",
+  "treatment_prefix_success": true,
+  "treatment_fit_success": false,
+  "treatment_joint_success": false,
+  "final_decodes": {
+    "KW1": [
+      2,
+      3,
+      4
+    ],
+    "KW2": [
+      3,
+      4,
+      3,
+      4
+    ]
+  },
+  "final_prefix_nonblank_frames": {
+    "KW1": 0,
+    "KW2": 0
+  },
+  "new_tts_calls": 0,
+  "new_asr_calls": 0,
+  "whole_process_wall_seconds": 68.5279458469995,
+  "child_max_rss_kib": 1194076,
+  "resource_scope": "Whole launched process including source/runtime verification; Linux RUSAGE_CHILDREN maximum RSS, not model-only, cgroup, embedded-device or SSC305 metrics.",
+  "step_observation_timing": "step loss/components/gradient are PRE-update; same-numbered C/T checkpoint observations are POST-update. Do not force their losses equal.",
+  "interpretation": "The fixed prefix anchor removed early nonblank argmax emissions in both exposed samples, but KW1 still omits token 1 (ni). The primary joint endpoint failed. Post-hoc saved-probability analysis finds ni never wins argmax; its maximum posterior is about 0.289098 at frame 47. Missing-ni sequence probability is only about 2.20% higher than the full target among these two scored sequences, not a global decoding result or evidence that beam search would fix it. This is not an engineering execution error and does not authorize a rerun or extra budget; no recall, generalization or production conclusion follows.",
+  "human_gold": false,
+  "independent_evaluation": false,
+  "production_qualified": false,
+  "reusable_weights_exported": false,
+  "shipping_qualified": false,
+  "training_admitted": false
+}

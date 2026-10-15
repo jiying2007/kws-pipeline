@@ -1,3 +1,11 @@
+# Fixed-prefix blank anchor research v1 (consumed; execution disabled)
+
+The unique 600-update campaign completed with evidence PASS and scientific FAIL: control exactly reproduced, both treatment prefixes became blank, but KW1 omitted ni and the full-pair joint endpoint failed. See [closure](closure.json) and [original observations](observations/2026-10-15-completed-scientific-fail/README.md). The budget is fully consumed; no retry or restart is authorized. Current plan changes only execution_enabled back to false.
+
+## Historical reviewed source and preregistration
+
+The following record describes the enabled execution source c9c85ab0471c71ea9dc6fc105c7d59e87e845c36 before its unique run; it does not describe current execution permission.
+
 # Fixed-prefix blank anchor research v1
 
 Reviewed source is ENABLED for the separately approved single 600-update campaign.
