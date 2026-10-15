@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 56626,
-      "sha256": "cc17da586d42320f8ccd6a0a1bb5bb2b520977b316be69cc464cfd29785940eb",
-      "git_blob_sha1": "67bb0b954aa2d591f9b5f36dfee93224fef37cfd"
+      "bytes": 57046,
+      "sha256": "6a867e19835bfdc2698f4df56f197f83cc01279cd5fb949eaa18f113988afcf4",
+      "git_blob_sha1": "92544b6c9de0674f09098303a9505f5f0ecbf69f"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -34069,6 +34069,177 @@
             "bytes": 14163,
             "sha256": "89dc15fa0670844227717e3a717e5512c42bb56f09eee320a6a9e2b2adf0c713",
             "git_blob_sha1": "0ef296447019c99be5ecf126ffbd7df66a62a0a4"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "operation_id": "kws-grouped-balance-source-20261015-v1",
+      "public_main_base_commit": "7f6b7669ac858136ee8cbc158da7a6e9f781c469",
+      "public_main_base_tree": "26317fac99e8f9d278de549814c2d94d528e198a",
+      "workflow_source_changed": true,
+      "scope": "New independently reviewed fixed 1200-update grouped-balance research source with stdlib-only CI tests and static pins verification. Only execution_enabled changes in the author-reviewed plan; scientific controls and historical budgets unchanged. No model, optimizer, ASR or TTS execution during integration. Existing CI identity and posterior manifest binding refreshed.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 56626,
+            "sha256": "cc17da586d42320f8ccd6a0a1bb5bb2b520977b316be69cc464cfd29785940eb",
+            "git_blob_sha1": "67bb0b954aa2d591f9b5f36dfee93224fef37cfd"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 57046,
+            "sha256": "6a867e19835bfdc2698f4df56f197f83cc01279cd5fb949eaa18f113988afcf4",
+            "git_blob_sha1": "92544b6c9de0674f09098303a9505f5f0ecbf69f"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "0e02793277867cedb64b542403b0f9ede8e6d66f9fc089fe8e7202c68e333f67",
+            "git_blob_sha1": "74f3e393e1692f865cc87669ba4ec30ecbc2aad3"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "e224e29621577dfcee3c099318661a85c63d1793e16b0bcf0eaacda925da55bc",
+            "git_blob_sha1": "0d92a183857a99a4a3716e3c69c55cbe77b501e4"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "b3ee0fe5f9a0ba1f669d1ffd62dcdc6d724d3a9e18f30d46965bd1a5423b1a26",
+            "git_blob_sha1": "0ef917bd720899d631c129093327691b085914ba"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "ca83d7d9e4e66094523bc9ff2ba6a99da3bd6a99bde7793ee58fb0abe5d2c027",
+            "git_blob_sha1": "5c46d07154f2b5fbfae383e9b798b79270508162"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/README.md",
+            "mode": "100644",
+            "bytes": 5804,
+            "sha256": "5238048c0fcbe440b3b66b27d72a41edac390dbf56b1c6c6e3489b3efe8db2d0",
+            "git_blob_sha1": "20bfb380cc676295043455e93a9276885266459c"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/cohort-prefix-freeze.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/cohort-prefix-freeze.json",
+            "mode": "100644",
+            "bytes": 53823,
+            "sha256": "fe23e633925573e2b02ac8530e066214879a11cbccc2e4ef5875aa2c38006e87",
+            "git_blob_sha1": "ebd41589f8a5143118d59f5359c6e4741b6b982d"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/contract.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/contract.py",
+            "mode": "100644",
+            "bytes": 10725,
+            "sha256": "6dca1cad9dba10f50e439f775b6d04d90f246544cbd5a634e30490589490bc74",
+            "git_blob_sha1": "880cdb3d6bb2c959b212d9dbb8f631dd6972dbeb"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/numeric_preflight.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/numeric_preflight.py",
+            "mode": "100644",
+            "bytes": 834,
+            "sha256": "654b26668d9723d12e25a7b447df901cc2d5fae063bba27c53bd30c91efefefb",
+            "git_blob_sha1": "4a73664ec23ffd7f847bdede698af5dcb91ebf47"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/plan.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/plan.json",
+            "mode": "100644",
+            "bytes": 4395,
+            "sha256": "38cc02c58eb25b6da7af0e5592e5738d22beffed05beffa643643cd9cb902242",
+            "git_blob_sha1": "8c04f88e63f6e1ebf5d4d32f1a7f1dc1a6093d25"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/requirements.research.lock",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/requirements.research.lock",
+            "mode": "100644",
+            "bytes": 960,
+            "sha256": "7aa51b6eebd2e2db290338345c30b8c7a8e197531746ee77efb7ef8678124dee",
+            "git_blob_sha1": "9b4fcd9e6a3ae71bc322893dfa6d604a5abedf7e"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/run_grouped_balance.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/run_grouped_balance.py",
+            "mode": "100644",
+            "bytes": 18530,
+            "sha256": "f57e0fae61b314769cb1d3f3365b77f9ccb9400071be425b3ce7d04e66d53b6e",
+            "git_blob_sha1": "77c329d8c02545f25c0a753ffba4d031107d53dd"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/runtime-candidate.lock.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/runtime-candidate.lock.json",
+            "mode": "100644",
+            "bytes": 14859,
+            "sha256": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
+            "git_blob_sha1": "5a632337c2dfffcab4a179c0a94d9da719ff46d1"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/source-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/source-manifest.json",
+            "mode": "100644",
+            "bytes": 938,
+            "sha256": "745d7cce4d2863a7956315cff7a5a9b33ab36d4fd0f424091b6bb88f9c984f75",
+            "git_blob_sha1": "5ebcd6976cf1a0bf092c23d5a3e42c8fcd1e2fb3"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/test_contract.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 7234,
+            "sha256": "d30eeda3fdc4fd3f29c69fdec84510a0c530431ba843f9a97b3cc651a6d655d8",
+            "git_blob_sha1": "18d885ba52741b42a1f31931f41c797ad6ab660a"
           }
         }
       ]
