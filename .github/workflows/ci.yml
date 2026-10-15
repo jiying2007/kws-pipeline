@@ -425,6 +425,10 @@ jobs:
           python3 -I -S -B -O research/kws-balanced-fit-diagnostic-v1/test_contract.py
           python3 -I -S -B -OO research/kws-candidate-registry-v1/test_registry.py
           python3 -I -S -B -OO research/kws-balanced-fit-diagnostic-v1/test_contract.py
+          python3 -I -S -B research/kws-prefix-blank-anchor-v1/test_contract.py
+          python3 -I -S -B -O research/kws-prefix-blank-anchor-v1/test_contract.py
+          python3 -I -S -B -OO research/kws-prefix-blank-anchor-v1/test_contract.py
+          python3 -B tools/test_inventory.py --root research/kws-prefix-blank-anchor-v1 --official-workflows
       - name: Verify tracked worktree after New effect data and TTS probe offline contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "New effect data and TTS probe offline contracts"'
       - name: Disabled ASR stage3 activation contracts
