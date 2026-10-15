@@ -1,0 +1,18 @@
+{
+  "schema": "kws-fit-public-archive-v1",
+  "files": {
+    "README.md": "3ebbc41685cdb7529dcba1df4c9ebf283042b93b7cc22ecb3d9549f08fcebf3c",
+    "acceptance-summary.json": "61882dd710440d2d0566d7aa82a9bb5426240b4ccee3789a9b20abe2055748e4",
+    "enabled-plan.json": "c030462b1ac458b364248d5efbccb06957c74e42a4818f4903594b4eb9f2e933",
+    "learning-curve.json": "7fd7ea63403677daf14266e9f98ca8eaec084986f5c499cf4914777e70189707",
+    "pcm-prefix-analysis/README.md": "fc6677c6c1e6c81d6b0382c1882009ea177bea85341dd31eabfca8a9372aff2a",
+    "pcm-prefix-analysis/analyze_pcm_portable.py": "08d0463de3b78992a70fd33765607e6ce4caf5614a460d585e72518d6b216185",
+    "pcm-prefix-analysis/pcm-energy.json": "6cf75569e14fef2ec63ab557c750fcc1c1482b5325e8a52ab970cbb229934220",
+    "pcm-prefix-analysis/portable-test-result.json": "139c4ad353a4aaddfd67896a0a5eace8f3609ba766e01d15298caf019f02461a",
+    "pcm-prefix-analysis/summary.json": "c165bcd51a8ee2b9dabd975ca396858a2b27b3d5e331caff82c423bb2436dbba",
+    "pcm-prefix-analysis/test_portable.py": "78354a9332a6d311ffc56d8a50ff43204576b2ab0a9276923986b7d194678992",
+    "public-summary.json": "18d1724133127b9d79b0638b45d53f845cfaed87725e204d0599a1cb4fcc0097",
+    "raw-fit-result.zip": "bd139ed8766e5f37b7e181a776cbe45870cbe64dcd42065e2eaff32d9ee567b2",
+    "result-hash-manifest.json": "e914b45924bc6d45a6fd13150decb0f915a9b32c0a2c8f94390bfbab322a1ced"
+  }
+}

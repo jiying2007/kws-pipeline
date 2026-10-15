@@ -37,11 +37,7 @@ def decode(raw):
  return json.loads(raw,object_pairs_hook=unique,parse_constant=invalid)
 
 def archive(path, expected):
- path=Path(path).absolute()
- require(not any(p.is_symlink() for p in (path,*path.parents)) and path.resolve()==path,'unaliased ZIP path')
- before=path.stat();require(stat.S_ISREG(before.st_mode) and before.st_nlink==1 and before.st_size <= 64*1024**2,'bounded regular ZIP')
- with path.open('rb') as f: raw=f.read(64*1024**2+1)
- after=path.stat();require(before==after and len(raw)==before.st_size,'ZIP changed during bounded read')
+ raw=read_bounded(path,64*1024**2)
  require(sha(raw)==expected,'ZIP SHA256 mismatch')
  z=zipfile.ZipFile(io.BytesIO(raw)); infos=z.infolist()
  require(0<len(infos)<=512,'ZIP member count')
@@ -56,12 +52,25 @@ def archive(path, expected):
 
 INPUT_PINS_SHA256='64c77a270c7f13d8252d10282191aaeb207f425c10fb89a2f01e390fa994e37c'
 
-def read_bounded(path, maximum=8*1024**2):
- path=Path(path).absolute()
+def stable_stat(s):
+ # Reading can update atime. Identity, integrity and link changes must not pass.
+ return (s.st_dev,s.st_ino,s.st_mode,s.st_nlink,s.st_size,s.st_mtime_ns,s.st_ctime_ns)
+
+def unaliased(path):
  require(not any(p.is_symlink() for p in (path,*path.parents)) and path.resolve()==path,'unaliased input path')
- before=path.stat();require(stat.S_ISREG(before.st_mode) and before.st_nlink==1 and before.st_size<=maximum,'bounded regular input')
- with path.open('rb') as f:raw=f.read(maximum+1)
- require(path.stat()==before and len(raw)==before.st_size,'input changed during read')
+
+def read_bounded(path, maximum=8*1024**2):
+ path=Path(path).absolute();unaliased(path)
+ before=path.stat(follow_symlinks=False)
+ require(stat.S_ISREG(before.st_mode) and before.st_nlink==1 and before.st_size<=maximum,'bounded regular input')
+ # Bind both checks and the bounded read to the same descriptor, then check
+ # that the leaf path still names it and no parent became a symlink.
+ with os.fdopen(os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK),'rb') as f:
+  require(stable_stat(os.fstat(f.fileno()))==stable_stat(before),'input changed before read')
+  raw=f.read(maximum+1)
+  require(stable_stat(os.fstat(f.fileno()))==stable_stat(before),'input changed during read')
+  unaliased(path)
+  require(stable_stat(path.stat(follow_symlinks=False))==stable_stat(before) and len(raw)==before.st_size,'input changed during read')
  return raw
 
 def verified_sources(repo, pin_path=None):

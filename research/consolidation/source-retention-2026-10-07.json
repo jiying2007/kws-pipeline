@@ -32984,6 +32984,277 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-15",
+      "operation_id": "kws-balanced-fit-consumed-closure-20261015-v1",
+      "public_main_base_commit": "e69cc0230c1983567423da47aa1dfe76c5a96150",
+      "public_main_base_tree": "19653f4437f04fbdc602519f71ea1e49c87f70dd",
+      "workflow_source_changed": false,
+      "scope": "Close consumed single campaign and archive public scalar/token evidence. Existing contract test checks archive metadata/statistics only. Read-only PCM prefix analysis documents early low-energy greedy emissions without model calls or validated VAD claims. Current candidate reader repairs false atime rejection while preserving identity/alias/mutation guards; cold-read and mutation tests added, with candidate output unchanged. Historical consumed plan keeps its original source-verifier pin and is not a restart configuration. No workflow change, new experiment, model run, weight export, new TTS/ASR, production admission or budget reuse.",
+      "files": [
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/README.md",
+          "before": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/README.md",
+            "mode": "100644",
+            "bytes": 8032,
+            "sha256": "622ef8fef6d2c7aa7209b350be18b6fb0a05d82dd4aff5b879f2c469d015f1e4",
+            "git_blob_sha1": "fcccfd41f429abce94ed0e072740645e6341bffc"
+          },
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/README.md",
+            "mode": "100644",
+            "bytes": 9216,
+            "sha256": "42f0f3153f547414f7cc32494cf077f7fea2392ce01ad9348e291d3a3b4f3d4d",
+            "git_blob_sha1": "68512ac91c1d1e8efdd5731a88dbf388d56ae716"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/closure.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/closure.json",
+            "mode": "100644",
+            "bytes": 1011,
+            "sha256": "2086a829ff6f6176e9f1a59aeff93cd8542389ff7dcd955ccbe9430b5b0629d4",
+            "git_blob_sha1": "f14c73071f7c5bffdc5b98b9331482a92cd1d761"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/README.md",
+            "mode": "100644",
+            "bytes": 2932,
+            "sha256": "3ebbc41685cdb7529dcba1df4c9ebf283042b93b7cc22ecb3d9549f08fcebf3c",
+            "git_blob_sha1": "e0bb68985b715269e707b07651a0bf952b1307c5"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/acceptance-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/acceptance-summary.json",
+            "mode": "100644",
+            "bytes": 3022,
+            "sha256": "61882dd710440d2d0566d7aa82a9bb5426240b4ccee3789a9b20abe2055748e4",
+            "git_blob_sha1": "402ac37f25b6d09df069a5af8e990a3ba30a504b"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/archive-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/archive-manifest.json",
+            "mode": "100644",
+            "bytes": 1399,
+            "sha256": "4b9b5b5ae6954247466817f0f95632d5a5140394418989c2fc1752d7da90530e",
+            "git_blob_sha1": "7878cd391a6e1e04c93cc699326bb9d5a5431787"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/enabled-plan.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/enabled-plan.json",
+            "mode": "100644",
+            "bytes": 3065,
+            "sha256": "c030462b1ac458b364248d5efbccb06957c74e42a4818f4903594b4eb9f2e933",
+            "git_blob_sha1": "19592c427226ee0c0f8b5b909599e31b86d687b0"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/learning-curve.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/learning-curve.json",
+            "mode": "100644",
+            "bytes": 5124,
+            "sha256": "7fd7ea63403677daf14266e9f98ca8eaec084986f5c499cf4914777e70189707",
+            "git_blob_sha1": "065be46064b7d363333505fff826ce91687ae36f"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/pcm-prefix-analysis/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/pcm-prefix-analysis/README.md",
+            "mode": "100644",
+            "bytes": 4117,
+            "sha256": "fc6677c6c1e6c81d6b0382c1882009ea177bea85341dd31eabfca8a9372aff2a",
+            "git_blob_sha1": "37504ff872deebcc19aa09b98381109408e64246"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/pcm-prefix-analysis/analyze_pcm_portable.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/pcm-prefix-analysis/analyze_pcm_portable.py",
+            "mode": "100644",
+            "bytes": 5651,
+            "sha256": "08d0463de3b78992a70fd33765607e6ce4caf5614a460d585e72518d6b216185",
+            "git_blob_sha1": "ade34e91478a1580915a91f926895d2bedc7e5d0"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/pcm-prefix-analysis/pcm-energy.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/pcm-prefix-analysis/pcm-energy.json",
+            "mode": "100644",
+            "bytes": 60488,
+            "sha256": "6cf75569e14fef2ec63ab557c750fcc1c1482b5325e8a52ab970cbb229934220",
+            "git_blob_sha1": "33146a7c18a43984b2681209131ee5ecef1c31c0"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/pcm-prefix-analysis/portable-test-result.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/pcm-prefix-analysis/portable-test-result.json",
+            "mode": "100644",
+            "bytes": 1191,
+            "sha256": "139c4ad353a4aaddfd67896a0a5eace8f3609ba766e01d15298caf019f02461a",
+            "git_blob_sha1": "47d279f70e605ba49e2730b1149a995d768d88b6"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/pcm-prefix-analysis/summary.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/pcm-prefix-analysis/summary.json",
+            "mode": "100644",
+            "bytes": 3391,
+            "sha256": "c165bcd51a8ee2b9dabd975ca396858a2b27b3d5e331caff82c423bb2436dbba",
+            "git_blob_sha1": "ef3c1b1dfb04de54ebc8025e982e10030e3f5bd6"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/pcm-prefix-analysis/test_portable.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/pcm-prefix-analysis/test_portable.py",
+            "mode": "100644",
+            "bytes": 2149,
+            "sha256": "78354a9332a6d311ffc56d8a50ff43204576b2ab0a9276923986b7d194678992",
+            "git_blob_sha1": "3f43b375347d1959dc8f7a0eec29d100821c5bef"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/public-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/public-summary.json",
+            "mode": "100644",
+            "bytes": 1733,
+            "sha256": "18d1724133127b9d79b0638b45d53f845cfaed87725e204d0599a1cb4fcc0097",
+            "git_blob_sha1": "f1b68802d707e9f1e2556031a577dd1b93a6ae2f"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/raw-fit-result.zip",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/raw-fit-result.zip",
+            "mode": "100644",
+            "bytes": 125202,
+            "sha256": "bd139ed8766e5f37b7e181a776cbe45870cbe64dcd42065e2eaff32d9ee567b2",
+            "git_blob_sha1": "bfc5793d461030b76e132ec5e16ebce758c994bb"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/result-hash-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/observations/2026-10-15-pair-gate-failed/result-hash-manifest.json",
+            "mode": "100644",
+            "bytes": 55054,
+            "sha256": "e914b45924bc6d45a6fd13150decb0f915a9b32c0a2c8f94390bfbab322a1ced",
+            "git_blob_sha1": "aefef0c7453ae52f3ec4fb413a184efe13f951d8"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/plan.json",
+          "before": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/plan.json",
+            "mode": "100644",
+            "bytes": 3065,
+            "sha256": "c030462b1ac458b364248d5efbccb06957c74e42a4818f4903594b4eb9f2e933",
+            "git_blob_sha1": "19592c427226ee0c0f8b5b909599e31b86d687b0"
+          },
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/plan.json",
+            "mode": "100644",
+            "bytes": 3066,
+            "sha256": "63828b770e512da3dc548a5c2b718981bcc7791d6847e19405873570b1e67b5a",
+            "git_blob_sha1": "7c84c80b328efc1ab73f5db36dfb83ce6079a7b7"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/test_contract.py",
+          "before": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 3109,
+            "sha256": "23eb3366d93af77b304c5ba7dc8b8a227f4edad65852d89e00ed6ed1f2475a84",
+            "git_blob_sha1": "32483a58c2895badad9241418e23db1da95c0e75"
+          },
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 3646,
+            "sha256": "2c2fa7db93cf71aaaf1f2e699b446622e85c2d263b7dc3fc98d87960f3c1e00d",
+            "git_blob_sha1": "ec38c2660dae6270f1342dd307c100cc85d19121"
+          }
+        },
+        {
+          "path": "research/kws-balanced-fit-diagnostic-v1/verify_archived_observation.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-balanced-fit-diagnostic-v1/verify_archived_observation.py",
+            "mode": "100644",
+            "bytes": 9438,
+            "sha256": "c125c9a75293c9113c6094f59a2913fc37e5219fe77c437f9c2660135a6b8cb1",
+            "git_blob_sha1": "bded826dfd6d5419006659120159a2887365840f"
+          }
+        },
+        {
+          "path": "research/kws-candidate-registry-v1/build_registry.py",
+          "before": {
+            "path": "research/kws-candidate-registry-v1/build_registry.py",
+            "mode": "100644",
+            "bytes": 16602,
+            "sha256": "cbd011218059e562ca3633eecd0a834bdb12022993653fc3234033c24b57f722",
+            "git_blob_sha1": "6aef79726309c8bc0d53d2f41cfd9e156eb7e3e6"
+          },
+          "after": {
+            "path": "research/kws-candidate-registry-v1/build_registry.py",
+            "mode": "100644",
+            "bytes": 16910,
+            "sha256": "9d37fb852cdd5048a4d5c88f9e21efe2b3c1e18f25244babb2d811675ea9fbae",
+            "git_blob_sha1": "cb397fbe366df7266a37dcb904873d69f96eba15"
+          }
+        },
+        {
+          "path": "research/kws-candidate-registry-v1/test_registry.py",
+          "before": {
+            "path": "research/kws-candidate-registry-v1/test_registry.py",
+            "mode": "100644",
+            "bytes": 4997,
+            "sha256": "e7fbd94d6a16df727460f0f6efb38364ce9648d18f0f4b8436bd99c43edf52b2",
+            "git_blob_sha1": "fd623b1131498d44877fd029602127297e1336b0"
+          },
+          "after": {
+            "path": "research/kws-candidate-registry-v1/test_registry.py",
+            "mode": "100644",
+            "bytes": 9174,
+            "sha256": "6c4fe38aec8f22345bbaf12c1f475063f6f88ed0a3e1a99e4edad3ea9cc11576",
+            "git_blob_sha1": "122567f4e48b20ed40f0efc9c0ddfce281f6264f"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
