@@ -1,0 +1,13 @@
+{
+  "schema": "anchor-horizon-public-archive-v1",
+  "files": {
+    "README.md": "9c36dcab64ea1e282e1531fb09145bb1c566af89c5bcf83b4b9e14cb780d9074",
+    "acceptance-summary.json": "e56126e3c85cf8f9cf61daf9b311c5fd023ae347b7450e4f8b81a62418aecd6f",
+    "enabled-plan.json": "849941b279401840f30edb792007c6d0dbd664d4cca6e8aeacc0081d082d9af0",
+    "executed-source-manifest.json": "a75eb7657ffc55d3bc0a00b5c620c3aff2330f543c6e9352f31693ab166e9c17",
+    "learning-curve.json": "3255db04d96c08ef102696fd633289dfe692593f8497a7f35ea3f963a0ba8635",
+    "public-summary.json": "f181daa515878ab3ebf64913c12c9e7e8522c84002a39695a6d311884614ed3c",
+    "raw-horizon-result.zip": "96beb0239ce4c332073ee9344ae8cb69257964d6b7de9be236e79ea9b8fc6ddf",
+    "result-hash-manifest.json": "0520b614650efe9ea79f1c3fb69ceaefb6b07ac229168721cf98f9e10034c53a"
+  }
+}

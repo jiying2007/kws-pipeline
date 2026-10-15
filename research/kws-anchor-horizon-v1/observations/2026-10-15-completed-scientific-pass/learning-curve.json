@@ -1,0 +1,606 @@
+[
+  {
+    "stage": "R",
+    "update": 0,
+    "anchor_nll": 39.40983581542969,
+    "anchor_nll_per_input_frame": 0.5550681352615356,
+    "blank_argmax_fraction": 0.0,
+    "blank_mean_probability": 0.17038540542125702,
+    "complete_match": false,
+    "ctc_nll": 89.30253601074219,
+    "ctc_nll_by_target": {
+      "KW1": 89.30253601074219,
+      "KW2": 93.28766632080078,
+      "empty": 125.86837005615234
+    },
+    "ctc_nll_per_input_frame": 1.257782220840454,
+    "decode_tokens": [
+      1,
+      4,
+      1,
+      2,
+      4,
+      2,
+      1,
+      4,
+      2,
+      4,
+      2,
+      1
+    ],
+    "first_nonblank_frame": 0,
+    "input_frames": 71,
+    "prefix_blank_probability_max": 0.18319600820541382,
+    "prefix_blank_probability_min": 0.17384479939937592,
+    "prefix_frames": 23,
+    "prefix_nonblank_argmax_frames": 23,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+    "target_class": "KW1",
+    "target_length": 4,
+    "target_tokens": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 0,
+    "anchor_nll": 17.160110473632812,
+    "anchor_nll_per_input_frame": 0.20674832165241241,
+    "blank_argmax_fraction": 0.0,
+    "blank_mean_probability": 0.1720818430185318,
+    "complete_match": false,
+    "ctc_nll": 110.6518325805664,
+    "ctc_nll_by_target": {
+      "KW1": 106.81257629394531,
+      "KW2": 110.6518325805664,
+      "empty": 146.20968627929688
+    },
+    "ctc_nll_per_input_frame": 1.333154559135437,
+    "decode_tokens": [
+      1,
+      2,
+      1,
+      2,
+      1,
+      4,
+      2,
+      4,
+      2,
+      4,
+      2,
+      1,
+      4,
+      2,
+      4,
+      2,
+      4,
+      2,
+      1
+    ],
+    "first_nonblank_frame": 0,
+    "input_frames": 83,
+    "prefix_blank_probability_max": 0.18319521844387054,
+    "prefix_blank_probability_min": 0.1738465279340744,
+    "prefix_frames": 10,
+    "prefix_nonblank_argmax_frames": 10,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+    "target_class": "KW2",
+    "target_length": 4,
+    "target_tokens": [
+      3,
+      4,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 50,
+    "anchor_nll": 1.6706622838974,
+    "anchor_nll_per_input_frame": 0.02353045530617237,
+    "blank_argmax_fraction": 0.8169014084507042,
+    "blank_mean_probability": 0.7879858016967773,
+    "complete_match": false,
+    "ctc_nll": 5.632511615753174,
+    "ctc_nll_by_target": {
+      "KW1": 5.632511615753174,
+      "KW2": 5.108307838439941,
+      "empty": 66.34532165527344
+    },
+    "ctc_nll_per_input_frame": 0.07933115214109421,
+    "decode_tokens": [
+      4
+    ],
+    "first_nonblank_frame": 51,
+    "input_frames": 71,
+    "prefix_blank_probability_max": 0.9824826717376709,
+    "prefix_blank_probability_min": 0.3648475408554077,
+    "prefix_frames": 23,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+    "target_class": "KW1",
+    "target_length": 4,
+    "target_tokens": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 50,
+    "anchor_nll": 1.4155586957931519,
+    "anchor_nll_per_input_frame": 0.017054924741387367,
+    "blank_argmax_fraction": 0.5662650602409639,
+    "blank_mean_probability": 0.5455151200294495,
+    "complete_match": false,
+    "ctc_nll": 4.4001946449279785,
+    "ctc_nll_by_target": {
+      "KW1": 51.500640869140625,
+      "KW2": 4.4001946449279785,
+      "empty": 189.44985961914062
+    },
+    "ctc_nll_per_input_frame": 0.05301439389586449,
+    "decode_tokens": [
+      4,
+      4
+    ],
+    "first_nonblank_frame": 26,
+    "input_frames": 83,
+    "prefix_blank_probability_max": 0.9824880957603455,
+    "prefix_blank_probability_min": 0.3647964298725128,
+    "prefix_frames": 10,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+    "target_class": "KW2",
+    "target_length": 4,
+    "target_tokens": [
+      3,
+      4,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 100,
+    "anchor_nll": 1.1167856454849243,
+    "anchor_nll_per_input_frame": 0.015729375183582306,
+    "blank_argmax_fraction": 0.8309859154929577,
+    "blank_mean_probability": 0.8034512400627136,
+    "complete_match": false,
+    "ctc_nll": 4.380551338195801,
+    "ctc_nll_by_target": {
+      "KW1": 4.380551338195801,
+      "KW2": 4.408920764923096,
+      "empty": 73.21200561523438
+    },
+    "ctc_nll_per_input_frame": 0.061697907745838165,
+    "decode_tokens": [
+      4
+    ],
+    "first_nonblank_frame": 52,
+    "input_frames": 71,
+    "prefix_blank_probability_max": 0.9921231865882874,
+    "prefix_blank_probability_min": 0.4358358383178711,
+    "prefix_frames": 23,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+    "target_class": "KW1",
+    "target_length": 4,
+    "target_tokens": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 100,
+    "anchor_nll": 1.014264464378357,
+    "anchor_nll_per_input_frame": 0.012220053933560848,
+    "blank_argmax_fraction": 0.5662650602409639,
+    "blank_mean_probability": 0.5430507659912109,
+    "complete_match": false,
+    "ctc_nll": 2.517348289489746,
+    "ctc_nll_by_target": {
+      "KW1": 62.76847839355469,
+      "KW2": 2.517348289489746,
+      "empty": 236.1878662109375
+    },
+    "ctc_nll_per_input_frame": 0.030329497531056404,
+    "decode_tokens": [
+      4,
+      3,
+      4
+    ],
+    "first_nonblank_frame": 26,
+    "input_frames": 83,
+    "prefix_blank_probability_max": 0.9921223521232605,
+    "prefix_blank_probability_min": 0.43574708700180054,
+    "prefix_frames": 10,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+    "target_class": "KW2",
+    "target_length": 4,
+    "target_tokens": [
+      3,
+      4,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 200,
+    "anchor_nll": 0.5148564577102661,
+    "anchor_nll_per_input_frame": 0.007251499220728874,
+    "blank_argmax_fraction": 0.7746478873239436,
+    "blank_mean_probability": 0.7685531973838806,
+    "complete_match": false,
+    "ctc_nll": 2.5576083660125732,
+    "ctc_nll_by_target": {
+      "KW1": 2.5576083660125732,
+      "KW2": 5.68327522277832,
+      "empty": 123.09246063232422
+    },
+    "ctc_nll_per_input_frame": 0.03602265194058418,
+    "decode_tokens": [
+      2,
+      3,
+      4
+    ],
+    "first_nonblank_frame": 48,
+    "input_frames": 71,
+    "prefix_blank_probability_max": 0.9985951781272888,
+    "prefix_blank_probability_min": 0.6253239512443542,
+    "prefix_frames": 23,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+    "target_class": "KW1",
+    "target_length": 4,
+    "target_tokens": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 200,
+    "anchor_nll": 0.4968027174472809,
+    "anchor_nll_per_input_frame": 0.005985574796795845,
+    "blank_argmax_fraction": 0.5421686746987951,
+    "blank_mean_probability": 0.5349857211112976,
+    "complete_match": true,
+    "ctc_nll": 0.8529013991355896,
+    "ctc_nll_by_target": {
+      "KW1": 83.47440338134766,
+      "KW2": 0.8529013991355896,
+      "empty": 323.656494140625
+    },
+    "ctc_nll_per_input_frame": 0.01027592085301876,
+    "decode_tokens": [
+      3,
+      4,
+      3,
+      4
+    ],
+    "first_nonblank_frame": 25,
+    "input_frames": 83,
+    "prefix_blank_probability_max": 0.9985941052436829,
+    "prefix_blank_probability_min": 0.6251941919326782,
+    "prefix_frames": 10,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+    "target_class": "KW2",
+    "target_length": 4,
+    "target_tokens": [
+      3,
+      4,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 300,
+    "anchor_nll": 0.29964396357536316,
+    "anchor_nll_per_input_frame": 0.0042203376069664955,
+    "blank_argmax_fraction": 0.7605633802816901,
+    "blank_mean_probability": 0.7586498260498047,
+    "complete_match": false,
+    "ctc_nll": 1.4231284856796265,
+    "ctc_nll_by_target": {
+      "KW1": 1.4231284856796265,
+      "KW2": 8.672117233276367,
+      "empty": 140.5233917236328
+    },
+    "ctc_nll_per_input_frame": 0.02004406228661537,
+    "decode_tokens": [
+      2,
+      3,
+      4
+    ],
+    "first_nonblank_frame": 47,
+    "input_frames": 71,
+    "prefix_blank_probability_max": 0.9989588260650635,
+    "prefix_blank_probability_min": 0.7624430656433105,
+    "prefix_frames": 23,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+    "target_class": "KW1",
+    "target_length": 4,
+    "target_tokens": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 300,
+    "anchor_nll": 0.28625184297561646,
+    "anchor_nll_per_input_frame": 0.003448817413300276,
+    "blank_argmax_fraction": 0.5421686746987951,
+    "blank_mean_probability": 0.5378544926643372,
+    "complete_match": true,
+    "ctc_nll": 0.46365225315093994,
+    "ctc_nll_by_target": {
+      "KW1": 95.02450561523438,
+      "KW2": 0.46365225315093994,
+      "empty": 341.63702392578125
+    },
+    "ctc_nll_per_input_frame": 0.005586171522736549,
+    "decode_tokens": [
+      3,
+      4,
+      3,
+      4
+    ],
+    "first_nonblank_frame": 25,
+    "input_frames": 83,
+    "prefix_blank_probability_max": 0.9989563226699829,
+    "prefix_blank_probability_min": 0.7623307108879089,
+    "prefix_frames": 10,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+    "target_class": "KW2",
+    "target_length": 4,
+    "target_tokens": [
+      3,
+      4,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 400,
+    "anchor_nll": 0.11265861243009567,
+    "anchor_nll_per_input_frame": 0.0015867410693317652,
+    "blank_argmax_fraction": 0.7605633802816901,
+    "blank_mean_probability": 0.7598341107368469,
+    "complete_match": true,
+    "ctc_nll": 0.5282451510429382,
+    "ctc_nll_by_target": {
+      "KW1": 0.5282451510429382,
+      "KW2": 12.984195709228516,
+      "empty": 153.44607543945312
+    },
+    "ctc_nll_per_input_frame": 0.007440072484314442,
+    "decode_tokens": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "first_nonblank_frame": 47,
+    "input_frames": 71,
+    "prefix_blank_probability_max": 0.9997488856315613,
+    "prefix_blank_probability_min": 0.8993814587593079,
+    "prefix_frames": 23,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+    "target_class": "KW1",
+    "target_length": 4,
+    "target_tokens": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 400,
+    "anchor_nll": 0.10947418212890625,
+    "anchor_nll_per_input_frame": 0.0013189660385251045,
+    "blank_argmax_fraction": 0.5421686746987951,
+    "blank_mean_probability": 0.542412281036377,
+    "complete_match": true,
+    "ctc_nll": 0.20640456676483154,
+    "ctc_nll_by_target": {
+      "KW1": 102.1641845703125,
+      "KW2": 0.20640456676483154,
+      "empty": 361.7307434082031
+    },
+    "ctc_nll_per_input_frame": 0.002486801939085126,
+    "decode_tokens": [
+      3,
+      4,
+      3,
+      4
+    ],
+    "first_nonblank_frame": 25,
+    "input_frames": 83,
+    "prefix_blank_probability_max": 0.9997479319572449,
+    "prefix_blank_probability_min": 0.8993093371391296,
+    "prefix_frames": 10,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+    "target_class": "KW2",
+    "target_length": 4,
+    "target_tokens": [
+      3,
+      4,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 500,
+    "anchor_nll": 0.05522677302360535,
+    "anchor_nll_per_input_frame": 0.0007778418948873878,
+    "blank_argmax_fraction": 0.7464788732394366,
+    "blank_mean_probability": 0.7534602880477905,
+    "complete_match": true,
+    "ctc_nll": 0.22739920020103455,
+    "ctc_nll_by_target": {
+      "KW1": 0.22739920020103455,
+      "KW2": 17.099706649780273,
+      "empty": 166.2180633544922
+    },
+    "ctc_nll_per_input_frame": 0.0032028055284172297,
+    "decode_tokens": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "first_nonblank_frame": 46,
+    "input_frames": 71,
+    "prefix_blank_probability_max": 0.9998981952667236,
+    "prefix_blank_probability_min": 0.9487136006355286,
+    "prefix_frames": 23,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+    "target_class": "KW1",
+    "target_length": 4,
+    "target_tokens": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 500,
+    "anchor_nll": 0.05394918844103813,
+    "anchor_nll_per_input_frame": 0.0006499902228824794,
+    "blank_argmax_fraction": 0.5421686746987951,
+    "blank_mean_probability": 0.5427313446998596,
+    "complete_match": true,
+    "ctc_nll": 0.10863731801509857,
+    "ctc_nll_by_target": {
+      "KW1": 112.06755065917969,
+      "KW2": 0.10863731801509857,
+      "empty": 382.0784606933594
+    },
+    "ctc_nll_per_input_frame": 0.0013088833075016737,
+    "decode_tokens": [
+      3,
+      4,
+      3,
+      4
+    ],
+    "first_nonblank_frame": 25,
+    "input_frames": 83,
+    "prefix_blank_probability_max": 0.9998977184295654,
+    "prefix_blank_probability_min": 0.9486702084541321,
+    "prefix_frames": 10,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+    "target_class": "KW2",
+    "target_length": 4,
+    "target_tokens": [
+      3,
+      4,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 600,
+    "anchor_nll": 0.032782454043626785,
+    "anchor_nll_per_input_frame": 0.00046172470320016146,
+    "blank_argmax_fraction": 0.7464788732394366,
+    "blank_mean_probability": 0.7522276639938354,
+    "complete_match": true,
+    "ctc_nll": 0.12178276479244232,
+    "ctc_nll_by_target": {
+      "KW1": 0.12178276479244232,
+      "KW2": 19.41691780090332,
+      "empty": 172.79759216308594
+    },
+    "ctc_nll_per_input_frame": 0.0017152501968666911,
+    "decode_tokens": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "first_nonblank_frame": 46,
+    "input_frames": 71,
+    "prefix_blank_probability_max": 0.9999539852142334,
+    "prefix_blank_probability_min": 0.968880295753479,
+    "prefix_frames": 23,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+    "target_class": "KW1",
+    "target_length": 4,
+    "target_tokens": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "stage": "R",
+    "update": 600,
+    "anchor_nll": 0.032213613390922546,
+    "anchor_nll_per_input_frame": 0.0003881158190779388,
+    "blank_argmax_fraction": 0.5421686746987951,
+    "blank_mean_probability": 0.5430000424385071,
+    "complete_match": true,
+    "ctc_nll": 0.0673416331410408,
+    "ctc_nll_by_target": {
+      "KW1": 119.56282043457031,
+      "KW2": 0.0673416331410408,
+      "empty": 394.7425231933594
+    },
+    "ctc_nll_per_input_frame": 0.0008113450021483004,
+    "decode_tokens": [
+      3,
+      4,
+      3,
+      4
+    ],
+    "first_nonblank_frame": 25,
+    "input_frames": 83,
+    "prefix_blank_probability_max": 0.9999538660049438,
+    "prefix_blank_probability_min": 0.9688519835472107,
+    "prefix_frames": 10,
+    "prefix_nonblank_argmax_frames": 0,
+    "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+    "target_class": "KW2",
+    "target_length": 4,
+    "target_tokens": [
+      3,
+      4,
+      3,
+      4
+    ]
+  }
+]

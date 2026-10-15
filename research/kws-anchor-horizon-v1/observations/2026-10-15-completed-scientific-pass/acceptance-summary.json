@@ -1,0 +1,245 @@
+{
+  "evidence_validation": "PASS",
+  "execution_status": "completed",
+  "externally_supplied_source_commit": "7ab25606c66b829668bb0b796b3debc0d93abd1a",
+  "historical_exact_match": true,
+  "human_gold": false,
+  "independent_evaluation": false,
+  "limitations": [
+    "Independent float64 CTC agreement is tolerance-based (about 1e-3 absolute), not bitwise equivalence.",
+    "First 300 historical T step receipts and all five complete observations are exact comparisons.",
+    "Only eight checkpoint forwards have complete log probabilities; step loss components verify arithmetic, not independent model forwards.",
+    "Initial state, runtime and forward receipts bind declarations and source; they do not independently reconstruct weights or attest actual hardware execution.",
+    "Scientific endpoint is only R step 600, never the best intermediate checkpoint.",
+    "Even scientific PASS concerns two exposed training samples only; no recall, false-activation, generalization, or product-release claim."
+  ],
+  "model_forward_calls_reserved": 608,
+  "model_forward_calls_returned": 608,
+  "observations_verified": 8,
+  "optimizer_calls_reserved": 600,
+  "primary_endpoint_step": 600,
+  "production_qualified": false,
+  "reusable_weights_exported": false,
+  "schema": "horizon-independent-verification-v1",
+  "scientific_validation": "PASS",
+  "shipping_qualified": false,
+  "statistics": {
+    "R-0000.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          1,
+          4,
+          1,
+          2,
+          4,
+          2,
+          1,
+          4,
+          2,
+          4,
+          2,
+          1
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 23
+      },
+      "KW2": {
+        "complete_match": false,
+        "decode_tokens": [
+          1,
+          2,
+          1,
+          2,
+          1,
+          4,
+          2,
+          4,
+          2,
+          4,
+          2,
+          1,
+          4,
+          2,
+          4,
+          2,
+          4,
+          2,
+          1
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 10
+      }
+    },
+    "R-0050.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 0
+      },
+      "KW2": {
+        "complete_match": false,
+        "decode_tokens": [
+          4,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 0
+      }
+    },
+    "R-0100.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 0
+      },
+      "KW2": {
+        "complete_match": false,
+        "decode_tokens": [
+          4,
+          3,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 0
+      }
+    },
+    "R-0200.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          2,
+          3,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 0
+      },
+      "KW2": {
+        "complete_match": true,
+        "decode_tokens": [
+          3,
+          4,
+          3,
+          4
+        ],
+        "joint_success": true,
+        "prefix_nonblank_argmax_frames": 0
+      }
+    },
+    "R-0300.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          2,
+          3,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 0
+      },
+      "KW2": {
+        "complete_match": true,
+        "decode_tokens": [
+          3,
+          4,
+          3,
+          4
+        ],
+        "joint_success": true,
+        "prefix_nonblank_argmax_frames": 0
+      }
+    },
+    "R-0400.json": {
+      "KW1": {
+        "complete_match": true,
+        "decode_tokens": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "joint_success": true,
+        "prefix_nonblank_argmax_frames": 0
+      },
+      "KW2": {
+        "complete_match": true,
+        "decode_tokens": [
+          3,
+          4,
+          3,
+          4
+        ],
+        "joint_success": true,
+        "prefix_nonblank_argmax_frames": 0
+      }
+    },
+    "R-0500.json": {
+      "KW1": {
+        "complete_match": true,
+        "decode_tokens": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "joint_success": true,
+        "prefix_nonblank_argmax_frames": 0
+      },
+      "KW2": {
+        "complete_match": true,
+        "decode_tokens": [
+          3,
+          4,
+          3,
+          4
+        ],
+        "joint_success": true,
+        "prefix_nonblank_argmax_frames": 0
+      }
+    },
+    "R-0600.json": {
+      "KW1": {
+        "complete_match": true,
+        "decode_tokens": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "joint_success": true,
+        "prefix_nonblank_argmax_frames": 0
+      },
+      "KW2": {
+        "complete_match": true,
+        "decode_tokens": [
+          3,
+          4,
+          3,
+          4
+        ],
+        "joint_success": true,
+        "prefix_nonblank_argmax_frames": 0
+      }
+    }
+  },
+  "successful_step_receipts": 600,
+  "tolerances": {
+    "ctc_nll": {
+      "absolute": 0.001,
+      "relative": 1e-05
+    },
+    "derived": {
+      "absolute": 1e-06,
+      "relative": 2e-06
+    },
+    "logsumexp_absolute": 2e-06
+  },
+  "training_admitted": false
+}

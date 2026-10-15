@@ -1,0 +1,17 @@
+{
+  "schema": "horizon-source-manifest-v1",
+  "files": {
+    "README.md": "0a3ff955ea71f53b6b4edc7007a2785de88949d2acf57e9d5457462255034150",
+    "contract.py": "3367c06efd1f3f6b782992dc8c194b806b88f677d055c98bb1b03219341a5127",
+    "historical-baseline.json": "15b6b13536852aa3602b0421ad9b962342b4ed4cee6338fc66d7466e050369db",
+    "numeric_preflight.py": "66abc16d5585c370bed38918b9863cf8b851187d11e40e08c58a2c52ce244048",
+    "plan.json": "849941b279401840f30edb792007c6d0dbd664d4cca6e8aeacc0081d082d9af0",
+    "prefix-energy-summary.json": "c165bcd51a8ee2b9dabd975ca396858a2b27b3d5e331caff82c423bb2436dbba",
+    "prefix-energy-windows.json": "6cf75569e14fef2ec63ab557c750fcc1c1482b5325e8a52ab970cbb229934220",
+    "requirements.research.lock": "7aa51b6eebd2e2db290338345c30b8c7a8e197531746ee77efb7ef8678124dee",
+    "run_horizon.py": "0412e70c4db6d190260f2a62f553bc1c5c9de46aebf6b0c24b8a7bb196697124",
+    "runtime-candidate.lock.json": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
+    "test_contract.py": "1a97a70834c3d8448c23fc5d881ce066dcf82f376460c16d1f54813d395f1229"
+  },
+  "self_reference": false
+}

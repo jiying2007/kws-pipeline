@@ -1,3 +1,11 @@
+# Fixed 600-step horizon diagnostic (consumed; execution disabled)
+
+The unique campaign completed with evidence PASS and scientific PASS: all 600 updates and 608 forwards completed; the first 300 updates exactly reproduced historical T; both full targets and blank prefixes passed at the sole primary endpoint R600. R400/R500 are descriptive only. See [closure](closure.json) and [original observations](observations/2026-10-15-completed-scientific-pass/README.md). The budget is fully consumed; no retry or restart is authorized. The current plan changes only execution_enabled back to false. Scientific PASS is limited to these two exposed machine-labeled training samples, without true recall, false-activation-rate, generalization, independent-evaluation or shipping claims.
+
+## Historical reviewed source and preregistration
+
+The following record describes enabled source 7ab25606c66b829668bb0b796b3debc0d93abd1a before its unique run. Its historical not-yet-executed and execution-enabled statements do not describe current execution permission.
+
 # Fixed 600-step horizon diagnostic (reviewed source enabled; not yet executed)
 
 Independent campaign `kws-anchor-horizon-20261015-v1`. This is a new bounded diagnostic chosen within the user's optimization request, not a user-authored explicit 600-step instruction and not reopening either closed campaign. Only training horizon changes. Original two exposed machine-labelled PCM samples, targets, seed, initialization, Adam, full 71/83 frames, original CTC plus lambda=1 prefix blank anchor graph, prefix lengths 23/10, raw greedy decoder remain fixed. No augmentation, VAD, cropped audio, ASR/TTS, exports, production changes or independent-evaluation claim.
