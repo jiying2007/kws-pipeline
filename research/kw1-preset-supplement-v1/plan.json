@@ -1,0 +1,426 @@
+{
+  "schema": "kw1-preset-supplement-plan-v1",
+  "campaign_id": "kw1-preset-supplement-20261014-v1",
+  "status": "PREPARED_NOT_EXECUTED",
+  "execution_enabled": false,
+  "slots": [
+    {
+      "slot_id": "kw1s-00",
+      "engine": "qwen06",
+      "speaker": "Uncle_Fu",
+      "group_id": "Uncle_Fu",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101401,
+      "instruction": "",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-01",
+      "engine": "qwen06",
+      "speaker": "Uncle_Fu",
+      "group_id": "Uncle_Fu",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101402,
+      "instruction": "",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-02",
+      "engine": "qwen06",
+      "speaker": "Eric",
+      "group_id": "Eric",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101401,
+      "instruction": "",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-03",
+      "engine": "qwen06",
+      "speaker": "Eric",
+      "group_id": "Eric",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101402,
+      "instruction": "",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-04",
+      "engine": "qwen17",
+      "speaker": "Uncle_Fu",
+      "group_id": "Uncle_Fu",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101401,
+      "instruction": "",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-05",
+      "engine": "qwen17",
+      "speaker": "Uncle_Fu",
+      "group_id": "Uncle_Fu",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101402,
+      "instruction": "",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-06",
+      "engine": "qwen17",
+      "speaker": "Uncle_Fu",
+      "group_id": "Uncle_Fu",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101401,
+      "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-07",
+      "engine": "qwen17",
+      "speaker": "Uncle_Fu",
+      "group_id": "Uncle_Fu",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101402,
+      "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-08",
+      "engine": "qwen17",
+      "speaker": "Eric",
+      "group_id": "Eric",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101401,
+      "instruction": "",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-09",
+      "engine": "qwen17",
+      "speaker": "Eric",
+      "group_id": "Eric",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101402,
+      "instruction": "",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-10",
+      "engine": "qwen17",
+      "speaker": "Eric",
+      "group_id": "Eric",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101401,
+      "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-11",
+      "engine": "qwen17",
+      "speaker": "Eric",
+      "group_id": "Eric",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101402,
+      "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-12",
+      "engine": "qwen17",
+      "speaker": "Dylan",
+      "group_id": "Dylan",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101401,
+      "instruction": "",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-13",
+      "engine": "qwen17",
+      "speaker": "Dylan",
+      "group_id": "Dylan",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101402,
+      "instruction": "",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-14",
+      "engine": "qwen17",
+      "speaker": "Dylan",
+      "group_id": "Dylan",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101401,
+      "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    },
+    {
+      "slot_id": "kw1s-15",
+      "engine": "qwen17",
+      "speaker": "Dylan",
+      "group_id": "Dylan",
+      "target_text": "你好小窝",
+      "language": "Chinese",
+      "seed": 2026101402,
+      "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+      "generation_parameters": {
+        "do_sample": true,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 0.9,
+        "repetition_penalty": 1.05,
+        "subtalker_dosample": true,
+        "subtalker_top_k": 50,
+        "subtalker_top_p": 1.0,
+        "subtalker_temperature": 0.9,
+        "max_new_tokens": 120,
+        "non_streaming_mode": true
+      }
+    }
+  ],
+  "models": {
+    "qwen06": {
+      "model_id": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+      "tts_model_size": "0b6"
+    },
+    "qwen17": {
+      "model_id": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+      "tts_model_size": "1b7"
+    }
+  },
+  "preset_ids": {
+    "Uncle_Fu": 3010,
+    "Eric": 2875,
+    "Dylan": 2878
+  },
+  "runtime": {
+    "device": "cpu",
+    "dtype": "float32",
+    "attention": "eager",
+    "evaluation": true,
+    "inference_mode": true,
+    "threads": 4,
+    "interop_threads": 1,
+    "qwen_tts_version": "0.1.1"
+  },
+  "native_audio": {
+    "sample_rate_hz": 24000,
+    "channels": 1,
+    "subtype": "FLOAT",
+    "max_seconds": 12
+  },
+  "budget": {
+    "tts_calls": 16,
+    "asr_calls": 48,
+    "max_attempts_per_slot": 1,
+    "retries": 0,
+    "money_usd": 0,
+    "load_seconds": 1200,
+    "setup_seconds": 1200,
+    "call_seconds": 300,
+    "global_seconds": 18000
+  },
+  "admission": {
+    "human_gold": false,
+    "training_admitted": false,
+    "calibration_gold": false,
+    "selection_gold": false
+  }
+}

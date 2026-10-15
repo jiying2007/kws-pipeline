@@ -1,0 +1,63 @@
+# Reconstructed revision: config remains disabled until fresh independent review.
+name: KW1 preset supplement once v1
+on:
+  push:
+    branches: [research/kw1-preset-supplement-20261014-v1]
+permissions:
+  contents: read
+concurrency:
+  group: kw1-preset-supplement-20261014-v1
+  cancel-in-progress: false
+jobs:
+  supplement:
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/kw1-preset-supplement-20261014-v1' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_number == 1 && github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Offline contract tests
+        run: |
+          set -euo pipefail
+          for optimization in '' -O -OO; do
+            python3 -I -S -B $optimization research/kw1-preset-supplement-v1/test_suite.py
+          done
+      - name: First workflow lifetime admission, without API credentials
+        id: admission
+        run: |
+          set -euo pipefail
+          python3 -I -S -B research/kw1-preset-supplement-v1/launcher.py --admit --work "$RUNNER_TEMP/kw1-once"
+          echo 'ready=true' >> "$GITHUB_OUTPUT"
+      - name: Install hash-locked numeric-only host runtime
+        if: ${{ steps.admission.outputs.ready == 'true' }}
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/kw1-numeric"
+          "$RUNNER_TEMP/kw1-numeric/bin/python" -m pip install --disable-pip-version-check --no-deps --only-binary=:all: --require-hashes -r research/tts-pilot-screening-v1/numeric-requirements.txt
+          "$RUNNER_TEMP/kw1-numeric/bin/python" -I -B research/kw1-preset-supplement-v1/test_suite.py --require-numeric
+      - name: Serial 16 native TTS and 48 blind recognition slots
+        if: ${{ success() && steps.admission.outputs.ready == 'true' }}
+        timeout-minutes: 305
+        run: |
+          set -euo pipefail
+          timeout --signal=INT --kill-after=120s 302m "$RUNNER_TEMP/kw1-numeric/bin/python" -I -B research/kw1-preset-supplement-v1/launcher.py --work "$RUNNER_TEMP/kw1-once" --public "$RUNNER_TEMP/kw1-public"
+      - name: Finalize failure-preserving public evidence without models
+        id: public
+        if: ${{ always() && steps.admission.outputs.ready == 'true' }}
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          python3 -I -S -B research/kw1-preset-supplement-v1/launcher.py --finalize --work "$RUNNER_TEMP/kw1-once" --public "$RUNNER_TEMP/kw1-public"
+          echo 'ready=true' >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: ${{ always() && steps.public.outputs.ready == 'true' }}
+        with:
+          name: kw1-preset-supplement-20261014-v1-public
+          path: ${{ runner.temp }}/kw1-public/
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 14

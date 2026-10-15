@@ -1,0 +1,255 @@
+{
+  "status": "pass",
+  "inputs": {
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/xiaowo-model.pt": "d005bfe74188c0e24e9e665c10251fd6feea5c879ebcbe96cb8c85f6a85ea14b",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/xiaowo-model.kwm": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+    "/workspace/scratch/6c2ef8b5a46e/kws-asr-registration-p4-20261014/candidate/models/registry/model-749187ec1d66/xiaowo-keywords.kwk": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/float-c-parity-observation-v1/requirements.lock": "e84012b0b04961ead855069f0f4810e8b3a5e000932eec0a1a113e491362573c",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/float-c-parity-observation-v1/wheels.json": "c8ad69b5f725329a38d573955b75b18c8f43ac4c0758f6227a528137f4817e8c",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/float-c-parity-observation-v1/compare.py": "eb02abebb18aa50bd6c390908a3ce2d6b43b2e6048592bf9a54e251a691c1518",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/historical-parity-source-review/frontend.py": "91f7334c108adf0f6ccd5993a97299b32e210adef048c6b7fbd89b336c1f890e",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/historical-parity-source-review/frontend_spec.py": "3a0219e9f6c1ac629de1d6f437efa9b747c6edda0a05bd38eb6d5fcbbb2345a3",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/historical-parity-source-review/model.py": "e829bb3b393205b333fc82aaadc54927465680d50482253b4a372535f96b6b8e",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/inputs.json": "4e952e2125865957e33eb65bc83c9b3ffa9964b63f87b3db64dfbc3300b814ac",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen06-03.wav": "b0ca9ef504520d0cedc8eb78bb9004fc3fff96063d873e7b769e9d9c66db9dbd",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/run/tqp-qwen06-03.kwtr": "5719e4dddf201028599e01579271c02af510bae4826b125fbb2cfc82171d52a5",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen06-05.wav": "83fd70f99b3c98168aac162e59f95722fa7d97b8b4f696baff43e27c467efd4e",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/run/tqp-qwen06-05.kwtr": "2e84a1d46d073ed85b07e6bcd8f045d661cf39e8243eb969c5c483ac1091d183",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen06-06.wav": "ec8211229fdc775925b8623f772e502f7978a05cb65132aeedbde81267fa1e89",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/run/tqp-qwen06-06.kwtr": "17e3d109efaef4c53b26f96455c4de79f6e394081aa3ab8769cbd2519bf8f77d",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen06-10.wav": "d8f378ae3e1ec5d1e16b62adc6ded396eab5b148fc5b3da60243b22d68040d2a",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/run/tqp-qwen06-10.kwtr": "2e8cd80cc79e7ab4a225f9cf4ba58f1f7ef146dbf11a3f98b3f68daafbe10766",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen06-11.wav": "855bfbca9dd3b1688d29e5182cf3cab275d72963c8a97b0643bc6dbd3261590e",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/run/tqp-qwen06-11.kwtr": "8c3807175ab89f80434ac43bd5a721a45d0bfc56237fcb00de0e297df16d1db8",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen06-14.wav": "8898ce4f311ca788e004b56b6d7496578591566ec118cdfe53a9e640ef211dfd",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/run/tqp-qwen06-14.kwtr": "b56383a42762a244d4128c57d1464d5e0003f65cc3656b94790f0612da737ab2",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen06-15.wav": "c4e5f1035c4d902c51b2cd7beff477631f3eab5a83143c9eededbef780c5a46c",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/run/tqp-qwen06-15.kwtr": "dcf0ca6b7f5925620c42f9e0c09c423581b6803bd8af88ce9dc9079a27cf2aeb",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen17-01.wav": "f2ffc39fc50157a6f0acbe6a9cb67052130849253a5d01db80c8412a0e6d9133",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/run/tqp-qwen17-01.kwtr": "78354dc5d1c0f1efbe600c8ce26d79291259cdafae1626dd185a232c44a9ada6",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen17-02.wav": "a8b6ed61f36ba0d46e50648e341bceb26c13519cd5db8d4fd63849124ec87a3c",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/run/tqp-qwen17-02.kwtr": "6b00186da6a21473d49e69783720b36085f539fde71b11dd6444acc319271ab3",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen17-03.wav": "67c1c9cd4f797c88a442a0c8e73dce05e60d9394214079eda8431de55edbba9e",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/run/tqp-qwen17-03.kwtr": "9ff9c3d6d938cfb59fc8772985d7484ee724d6bad85f5f5e4c11d195c934d730",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen17-06.wav": "2af1e4cb8f18d5f4512303f2d9c8413231e27397a7f774d2d9fbb19b0072c679",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/run/tqp-qwen17-06.kwtr": "e0a1d5c4c6a3a3c6d19e0b96ed324d3c9ad274df54b8af0b6a5f2e60c8bfc591",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen17-14.wav": "62f3d6aac59eaab087e7f93d44631ed94bec7bb4738235bc74491cef7953dd4e",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/run/tqp-qwen17-14.kwtr": "c19f76bbce36060d296b1c7b6993ae38407d5124e06089f39831007cb6354fc1",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/machine-positive-control-v1/run-p4-11b93abe/audio/tqp-qwen17-15.wav": "2fdcfe09a177e69e39ad337f9e3dbe5dfb0da4d57d9a02c04e1359e4a1f7f6ce",
+    "/workspace/scratch/6c2ef8b5a46e/kws-alimeeting-eval-prep-20261014/positive-trace-observation-v1/run/tqp-qwen17-15.kwtr": "2f1dbbaf00900b1fc21a31c8287cc9cc425abacd5d25b9239965bf708ec6c5c5"
+  },
+  "checkpoint_loading": "torch.load(map_location=cpu,weights_only=True), no added safe globals",
+  "no_new_c_dump": true,
+  "no_tts_asr_training_or_tuning": true,
+  "calls": [
+    {
+      "sample_id": "tqp-qwen06-03",
+      "attempt": 1,
+      "elapsed_s": 0.0064440690039191395,
+      "status": "success"
+    },
+    {
+      "sample_id": "tqp-qwen06-05",
+      "attempt": 1,
+      "elapsed_s": 0.003931819002900738,
+      "status": "success"
+    },
+    {
+      "sample_id": "tqp-qwen06-06",
+      "attempt": 1,
+      "elapsed_s": 0.00399800200102618,
+      "status": "success"
+    },
+    {
+      "sample_id": "tqp-qwen06-10",
+      "attempt": 1,
+      "elapsed_s": 0.008906622999347746,
+      "status": "success"
+    },
+    {
+      "sample_id": "tqp-qwen06-11",
+      "attempt": 1,
+      "elapsed_s": 0.009102089999942109,
+      "status": "success"
+    },
+    {
+      "sample_id": "tqp-qwen06-14",
+      "attempt": 1,
+      "elapsed_s": 0.005853153001226019,
+      "status": "success"
+    },
+    {
+      "sample_id": "tqp-qwen06-15",
+      "attempt": 1,
+      "elapsed_s": 0.0044748619984602556,
+      "status": "success"
+    },
+    {
+      "sample_id": "tqp-qwen17-01",
+      "attempt": 1,
+      "elapsed_s": 0.0034597029953147285,
+      "status": "success"
+    },
+    {
+      "sample_id": "tqp-qwen17-02",
+      "attempt": 1,
+      "elapsed_s": 0.004123277001781389,
+      "status": "success"
+    },
+    {
+      "sample_id": "tqp-qwen17-03",
+      "attempt": 1,
+      "elapsed_s": 0.0032161319977603853,
+      "status": "success"
+    },
+    {
+      "sample_id": "tqp-qwen17-06",
+      "attempt": 1,
+      "elapsed_s": 0.004357434001576621,
+      "status": "success"
+    },
+    {
+      "sample_id": "tqp-qwen17-14",
+      "attempt": 1,
+      "elapsed_s": 0.004608180999639444,
+      "status": "success"
+    },
+    {
+      "sample_id": "tqp-qwen17-15",
+      "attempt": 1,
+      "elapsed_s": 0.0033063360024243593,
+      "status": "success"
+    }
+  ],
+  "environment": {
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "torch": "2.13.0+cpu",
+    "numpy": "2.3.2",
+    "threads": 2,
+    "interop_threads": 1,
+    "mkldnn": false,
+    "torch_config": "PyTorch built with:\n  - GCC 13.3\n  - C++ Version: 202002\n  - Intel(R) oneAPI Math Kernel Library Version 2024.2-Product Build 20240605 for Intel(R) 64 architecture applications\n  - Intel(R) MKL-DNN v3.12.0 (Git Hash 80afa71049cd69a3df32adcccb623b12cd7baa22)\n  - OpenMP 201511 (a.k.a. OpenMP 4.5)\n  - LAPACK is enabled (usually provided by MKL)\n  - NNPACK is enabled\n  - CPU capability usage: AVX2\n  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, COMMIT_SHA=cf30153c4c131c8164ee7798e5022d810682e2cb, CUDA_FLAGS= -DLIBCUDACXX_ENABLE_SIMPLIFIED_COMPLEX_OPERATIONS -Xfatbin -compress-all  -Wno-deprecated-gpu-targets --expt-extended-lambda -DCUB_WRAPPED_NAMESPACE=at_cuda_detail -DDISABLE_CUSPARSE_DEPRECATED -DCUDA_HAS_FP16=1 -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -DC10_NODEPRECATED, CXX_COMPILER=/opt/rh/gcc-toolset-13/root/usr/bin/c++, CXX_FLAGS= -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -DNDEBUG -DUSE_KINETO -DUSE_FBGEMM -DUSE_PYTORCH_QNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -O2 -fPIC -DC10_NODEPRECATED -Wall -Wextra -Werror=return-type -Werror=non-virtual-dtor -Werror=range-loop-construct -Werror=bool-operation -Wnarrowing -Wno-missing-field-initializers -Wno-unknown-pragmas -Wno-unused-parameter -Wno-strict-overflow -Wno-strict-aliasing -Wno-stringop-overflow -Wsuggest-override -Wno-psabi -Wno-error=old-style-cast -faligned-new -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-dangling-reference -Wno-error=dangling-reference -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, TORCH_VERSION=2.13.0, USE_CUDA=0, USE_CUDNN=OFF, USE_CUSPARSELT=OFF, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_GLOO=ON, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=OFF, USE_NNPACK=ON, USE_OPENMP=ON, USE_ROCM=OFF, USE_ROCM_KERNEL_ASSERT=OFF, USE_XCCL=OFF, USE_XPU=OFF, \n",
+    "python_sha256": "fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7",
+    "cpu_env": {
+      "OMP_NUM_THREADS": "2",
+      "MKL_NUM_THREADS": "2",
+      "MKL_CBWR": "AVX2",
+      "ATEN_CPU_CAPABILITY": "avx2",
+      "OPENBLAS_NUM_THREADS": "2"
+    }
+  },
+  "inputs_unchanged": true,
+  "float_forward_calls": 13,
+  "process_ru_maxrss_kib": 346044,
+  "outputs": {
+    "tqp-qwen17-02.claim.json": {
+      "bytes": 90,
+      "sha256": "0897ed2728df594cf0212bc8452d6a239469c8cb9c6148f00d7f145054a8241a"
+    },
+    "tqp-qwen17-06.claim.json": {
+      "bytes": 90,
+      "sha256": "2806834f3150c9a26739232696e45188daaaaec12efefca3475c58c575a00c8c"
+    },
+    "tqp-qwen17-06.float-logits.f32": {
+      "bytes": 1660,
+      "sha256": "c0b5d761ad46a385cd464d0c8df450d577ede97813c7ec7f7d47c4053d4236b1"
+    },
+    "tqp-qwen17-03.claim.json": {
+      "bytes": 90,
+      "sha256": "a9635b45247692c1181bc0534acbd0d6aa656f13d154696a366563440d1d6950"
+    },
+    "tqp-qwen06-06.claim.json": {
+      "bytes": 90,
+      "sha256": "62b94f917b1ca602ace3ca4f9d32fee4028b4b6c3935907a33cdadb4c537042b"
+    },
+    "tqp-qwen06-06.float-logits.f32": {
+      "bytes": 1660,
+      "sha256": "aaba9d3a5c1d1ee9aef62cff5413d718e68cb3f7ddccccf75a7f2eb6ffadc811"
+    },
+    "tqp-qwen06-03.float-logits.f32": {
+      "bytes": 2540,
+      "sha256": "0e9add974c8ad5fbd081155a1d5d204fcfe425993703ea5fde00278b2420a6fe"
+    },
+    "tqp-qwen06-15.claim.json": {
+      "bytes": 90,
+      "sha256": "d1e557979baf151c86baba2e3369b7f79e0d2780b2b20798a616b1e86e217955"
+    },
+    "tqp-qwen06-11.claim.json": {
+      "bytes": 90,
+      "sha256": "ae5c5c704c3a8d51a6e42b675a2d181b073ad398792c9e4d8591005bc47a5e1d"
+    },
+    "tqp-qwen06-10.claim.json": {
+      "bytes": 90,
+      "sha256": "0930a6c9b8a96c1a8ece19eada0c1350c3ca6c40a9e92cf617d26254276fb224"
+    },
+    "tqp-qwen06-14.float-logits.f32": {
+      "bytes": 2220,
+      "sha256": "209888129653734aee7881e62725968f624a189333cf9bfca75399cda38c8bba"
+    },
+    "analysis.json": {
+      "bytes": 9988,
+      "sha256": "2decb08174c0ce012c765da445572a302860cc71398078bfe1a950a23284c5e0"
+    },
+    "tqp-qwen06-05.claim.json": {
+      "bytes": 90,
+      "sha256": "b0cc85afc81e88f1eb4302fd4e020f348f7cc2f2938a479d0d4ceb7b832b55e8"
+    },
+    "tqp-qwen17-01.float-logits.f32": {
+      "bytes": 1340,
+      "sha256": "86d37eac91d16da11be1363ff84f073623ec7ee9fa322fc58fff9dc45b4285fd"
+    },
+    "tqp-qwen06-10.float-logits.f32": {
+      "bytes": 3820,
+      "sha256": "39f760934ec04b26719c800fed686b6e2a9fe06d980830323d2afb9a6f337ac1"
+    },
+    "tqp-qwen17-01.claim.json": {
+      "bytes": 90,
+      "sha256": "601cc026360ccd3e8c1f15ab082a2f3b171508666fc2feaeadf98402aa276f63"
+    },
+    "tqp-qwen06-05.float-logits.f32": {
+      "bytes": 1420,
+      "sha256": "f3867540a72171b988fad9349098cb03b2e23d4bc4e23467828c0fafbd7d34cf"
+    },
+    "tqp-qwen17-14.claim.json": {
+      "bytes": 90,
+      "sha256": "b45abe44736f8dd211a087d132185b94424e5bffdda9f3cf17c90fb01e4f1e6b"
+    },
+    "tqp-qwen17-03.float-logits.f32": {
+      "bytes": 1180,
+      "sha256": "3a32a661269c99bf446f6b2b1bedd3f911811a9b99af96edcbedfc50a86e3641"
+    },
+    "tqp-qwen06-11.float-logits.f32": {
+      "bytes": 5100,
+      "sha256": "07372dc76ff7b16bcd2bacbe889a6b78c30aa71cd0a8fe2a04c8ac8805f59efe"
+    },
+    "tqp-qwen17-14.float-logits.f32": {
+      "bytes": 1660,
+      "sha256": "5fa9a889d50e612af964ab0f9bfc98b6496dd9e77eb148cbef3a2b7c9d9abf49"
+    },
+    "tqp-qwen06-03.claim.json": {
+      "bytes": 90,
+      "sha256": "f32ab84b6bf33ccd0e571838938e40defa71eebb19fc3aad8212a86e97640618"
+    },
+    "tqp-qwen17-15.claim.json": {
+      "bytes": 90,
+      "sha256": "bfdb32d15e5f5ab4c7f939d1d7ebfb5cf39997dd69d0a0bf85fe9c069c6d5018"
+    },
+    "tqp-qwen17-15.float-logits.f32": {
+      "bytes": 1260,
+      "sha256": "c9116054a3bd85f439c8483da38a8f77e4114092583b2cdd7ee3e4b8f5cdaaf1"
+    },
+    "tqp-qwen17-02.float-logits.f32": {
+      "bytes": 1740,
+      "sha256": "9258e2dfbf1218aeb0126c6ec7d4a8221fda1c918f26fd4f7d08d70d8ffc9de6"
+    },
+    "tqp-qwen06-14.claim.json": {
+      "bytes": 90,
+      "sha256": "7a064aedb138f98a205b9299c7acea244c3e11347ca94349badfcbe10bb9bdd9"
+    },
+    "tqp-qwen06-15.float-logits.f32": {
+      "bytes": 1900,
+      "sha256": "4263d76aa90cdbfe3b887739f147b2e8255b68ea650df5896e3e07778f4f5123"
+    }
+  }
+}

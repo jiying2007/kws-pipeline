@@ -20,7 +20,7 @@ class ReceiptTests(unittest.TestCase):
             self.assertLessEqual(len(body),300000,name)
             self.assertEqual(len(body),row['bytes'],name)
             self.assertEqual(hashlib.sha256(body).hexdigest(),row['sha256'],name)
-            self.assertTrue(Path(name).suffix in ('.py','.json','.jsonl','.md','.sh','.log','.txt','.h','.exitcode') or Path(name).name=='SHA256SUMS',name)
+            self.assertTrue(Path(name).suffix in ('.py','.json','.jsonl','.md','.sh','.log','.txt','.h','.exitcode') or Path(name).name=='SHA256SUMS' or name=='float-c-parity-observation-v1/requirements.lock',name)
             self.assertFalse(body.startswith(b'\x7fELF'),name)
     def test_actual_asr_archive_metadata_and_machine_label_boundary(self):
         evidence=HERE.parent/'tts-pilot-screening-v1/evidence/asr-run-38573117922'
@@ -58,6 +58,17 @@ class ReceiptTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             changed=Path(temp)/'package';shutil.copytree(original,changed)
             (changed/'diagnosis-summary.json').write_text('{}')
+            result=subprocess.run([*command,str(changed)],capture_output=True,text=True,timeout=15)
+            self.assertNotEqual(result.returncode,0)
+    def test_recovered_float_archive_verifier_and_tamper_rejection(self):
+        original=HERE/'float-c-parity-observation-v1'
+        flags=['-I','-S','-B']+(['-'+'O'*sys.flags.optimize] if sys.flags.optimize else [])
+        command=[sys.executable,*flags,str(original/'verify_package.py')]
+        result=subprocess.run(command,capture_output=True,text=True,timeout=15)
+        self.assertEqual(result.returncode,0,result.stderr)
+        with tempfile.TemporaryDirectory() as temp:
+            changed=Path(temp)/'package';shutil.copytree(original,changed)
+            (changed/'run/receipt.json').write_text('{}')
             result=subprocess.run([*command,str(changed)],capture_output=True,text=True,timeout=15)
             self.assertNotEqual(result.returncode,0)
     def test_real_archive_identity_is_observed_not_publisher_claim(self):

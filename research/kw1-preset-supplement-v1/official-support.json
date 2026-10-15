@@ -1,0 +1,42 @@
+{
+  "basis": "Recovered prepared README plus verified retained immutable model locks; no fresh network or model acquisition",
+  "instruction_supported_only": "qwen17",
+  "models": {
+    "qwen06": {
+      "config": {
+        "observed_repo_revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+        "path": "config.json",
+        "sha256": "81aca2b6fac304944d8acf345272d8a9a727d5fc2e2e66b222ab4729340c7455",
+        "size_bytes": 4908,
+        "source_url": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice/resolve/85e237c12c027371202489a0ec509ded67b5e4b5/config.json"
+      },
+      "lock_path": "research/tts-quality-pilot-v1/qwen06-model-lock.json",
+      "lock_sha256": "9da27e3dea80033174141613458b03901460d0523ca2be7323e12071bad2ac90",
+      "model_id": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "revision": "85e237c12c027371202489a0ec509ded67b5e4b5"
+    },
+    "qwen17": {
+      "config": {
+        "observed_repo_revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+        "path": "config.json",
+        "sha256": "17a07f527a1c25ea30b4e023a184482a23d3e279d697b1dc81b1bde498d29cf9",
+        "size_bytes": 4908,
+        "source_url": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice/resolve/0c0e3051f131929182e2c023b9537f8b1c68adfe/config.json"
+      },
+      "lock_path": "research/tts-quality-pilot-v1/qwen17-model-lock.json",
+      "lock_sha256": "24267f7e4a63f3f4f2a13bf6c87459ae21be61c56bc5b55504381569fdd9f3f3",
+      "model_id": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe"
+    }
+  },
+  "official_source_commit": "6cafe5582caea83df269c36b1ce62d953a9cc66b",
+  "preset_ids": {
+    "Dylan": 2878,
+    "Eric": 2875,
+    "Uncle_Fu": 3010
+  },
+  "pronunciation_effectiveness": "unknown",
+  "qwen_tts_version": "0.1.1",
+  "real_person_cloning": false,
+  "schema": "kw1-reconstructed-official-support-v1"
+}

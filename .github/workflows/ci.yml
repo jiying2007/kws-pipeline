@@ -17,7 +17,7 @@ jobs:
     outputs:
       research_required: ${{ steps.research_changes.outputs.required }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: Initialize execution report directory
         run: printf 'KWS_TEST_REPORT_DIR=%s/checked-unittest\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
@@ -435,6 +435,17 @@ jobs:
           python3 -I -S -B -OO research/alimeeting-continuous-intake-v1/test_suite.py
       - name: Verify tracked worktree after continuous audio intake contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Continuous audio intake contracts"'
+      - name: KW1 supplement and recovered float evidence offline contracts
+        timeout-minutes: 15
+        run: |
+          python3 -I -S -B research/kw1-preset-supplement-v1/test_suite.py
+          python3 -I -S -B research/alimeeting-continuous-intake-v1/float-c-parity-observation-v1/verify_package.py
+          python3 -I -S -B -O research/kw1-preset-supplement-v1/test_suite.py
+          python3 -I -S -B -O research/alimeeting-continuous-intake-v1/float-c-parity-observation-v1/verify_package.py
+          python3 -I -S -B -OO research/kw1-preset-supplement-v1/test_suite.py
+          python3 -I -S -B -OO research/alimeeting-continuous-intake-v1/float-c-parity-observation-v1/verify_package.py
+      - name: Verify tracked worktree after KW1 supplement offline contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "KW1 supplement offline contracts"'
       - name: Bound remaining TTS continuation contracts
         run: |
           python3 -I -S -B research/tts-quality-remaining-v1/run_tests.py

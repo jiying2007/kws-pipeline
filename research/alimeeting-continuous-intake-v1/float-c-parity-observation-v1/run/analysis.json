@@ -1,0 +1,433 @@
+[
+  {
+    "sample_id": "tqp-qwen06-03",
+    "target_text": "小窝小窝",
+    "frames": 127,
+    "top1_counts": {
+      "float": [
+        127,
+        0,
+        0,
+        0,
+        0
+      ],
+      "c": [
+        127,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "top1_agreement_frames": 127,
+    "float_greedy": [],
+    "c_greedy": [],
+    "logit_max_abs_difference": 0.4679349660873413,
+    "logit_rmse": 0.08605519654515402,
+    "float_xiao3_max_exact_softmax": 0.0011135806770249566,
+    "float_xiao3_min_top_gap": 6.799002468585968,
+    "float_logits_sha256": "0e9add974c8ad5fbd081155a1d5d204fcfe425993703ea5fde00278b2420a6fe",
+    "features_sha256": "cb06fffd2f3bd3c1d1c2156f9ea3c7314852fb22f31ed0ff8b556618238c4566"
+  },
+  {
+    "sample_id": "tqp-qwen06-05",
+    "target_text": "你好小窝",
+    "frames": 71,
+    "top1_counts": {
+      "float": [
+        49,
+        16,
+        6,
+        0,
+        0
+      ],
+      "c": [
+        51,
+        15,
+        5,
+        0,
+        0
+      ]
+    },
+    "top1_agreement_frames": 69,
+    "float_greedy": [
+      1,
+      2,
+      1
+    ],
+    "c_greedy": [
+      1,
+      2,
+      1
+    ],
+    "logit_max_abs_difference": 2.197591483592987,
+    "logit_rmse": 0.3469147239609641,
+    "float_xiao3_max_exact_softmax": 0.012743043990343716,
+    "float_xiao3_min_top_gap": 3.8302886486053467,
+    "float_logits_sha256": "f3867540a72171b988fad9349098cb03b2e23d4bc4e23467828c0fafbd7d34cf",
+    "features_sha256": "8842e9e52980ad9dca59e17d0614d80ea509b31d02f6e7395e5206b42e9905a8"
+  },
+  {
+    "sample_id": "tqp-qwen06-06",
+    "target_text": "小窝小窝",
+    "frames": 83,
+    "top1_counts": {
+      "float": [
+        81,
+        2,
+        0,
+        0,
+        0
+      ],
+      "c": [
+        81,
+        2,
+        0,
+        0,
+        0
+      ]
+    },
+    "top1_agreement_frames": 83,
+    "float_greedy": [
+      1
+    ],
+    "c_greedy": [
+      1
+    ],
+    "logit_max_abs_difference": 0.4463925361633301,
+    "logit_rmse": 0.0952610184152362,
+    "float_xiao3_max_exact_softmax": 0.027038830695825813,
+    "float_xiao3_min_top_gap": 3.1788835525512695,
+    "float_logits_sha256": "aaba9d3a5c1d1ee9aef62cff5413d718e68cb3f7ddccccf75a7f2eb6ffadc811",
+    "features_sha256": "17fcdc69521fe3491fcad3af8bcb61d139e517a4dc6198251133379489e878a6"
+  },
+  {
+    "sample_id": "tqp-qwen06-10",
+    "target_text": "小窝小窝",
+    "frames": 191,
+    "top1_counts": {
+      "float": [
+        191,
+        0,
+        0,
+        0,
+        0
+      ],
+      "c": [
+        191,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "top1_agreement_frames": 191,
+    "float_greedy": [],
+    "c_greedy": [],
+    "logit_max_abs_difference": 0.7359349727630615,
+    "logit_rmse": 0.1380620476301948,
+    "float_xiao3_max_exact_softmax": 0.0022570409577119042,
+    "float_xiao3_min_top_gap": 6.090180456638336,
+    "float_logits_sha256": "39f760934ec04b26719c800fed686b6e2a9fe06d980830323d2afb9a6f337ac1",
+    "features_sha256": "2538388a16d65bcfef78bb49444df51d9ca2b5ba5adaffb126c75b8b209c7e1e"
+  },
+  {
+    "sample_id": "tqp-qwen06-11",
+    "target_text": "小窝小窝",
+    "frames": 255,
+    "top1_counts": {
+      "float": [
+        255,
+        0,
+        0,
+        0,
+        0
+      ],
+      "c": [
+        255,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "top1_agreement_frames": 255,
+    "float_greedy": [],
+    "c_greedy": [],
+    "logit_max_abs_difference": 0.7694253921508789,
+    "logit_rmse": 0.14729139051478943,
+    "float_xiao3_max_exact_softmax": 0.008597634662148666,
+    "float_xiao3_min_top_gap": 4.732298851013184,
+    "float_logits_sha256": "07372dc76ff7b16bcd2bacbe889a6b78c30aa71cd0a8fe2a04c8ac8805f59efe",
+    "features_sha256": "c1cec6c40430b9e424139c37c0fb714b47788c5d7a5838f27f5304d4cf9f2ade"
+  },
+  {
+    "sample_id": "tqp-qwen06-14",
+    "target_text": "小窝小窝",
+    "frames": 111,
+    "top1_counts": {
+      "float": [
+        111,
+        0,
+        0,
+        0,
+        0
+      ],
+      "c": [
+        111,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "top1_agreement_frames": 111,
+    "float_greedy": [],
+    "c_greedy": [],
+    "logit_max_abs_difference": 0.1938495635986328,
+    "logit_rmse": 0.06706694939992765,
+    "float_xiao3_max_exact_softmax": 0.0011654372479869516,
+    "float_xiao3_min_top_gap": 6.753173768520355,
+    "float_logits_sha256": "209888129653734aee7881e62725968f624a189333cf9bfca75399cda38c8bba",
+    "features_sha256": "c14b88c6a4a2f209289441c1f15196cae67ba6693c25a484f6f4ad332f2d0c5f"
+  },
+  {
+    "sample_id": "tqp-qwen06-15",
+    "target_text": "小窝小窝",
+    "frames": 95,
+    "top1_counts": {
+      "float": [
+        95,
+        0,
+        0,
+        0,
+        0
+      ],
+      "c": [
+        95,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "top1_agreement_frames": 95,
+    "float_greedy": [],
+    "c_greedy": [],
+    "logit_max_abs_difference": 0.1654672622680664,
+    "logit_rmse": 0.05897056555120693,
+    "float_xiao3_max_exact_softmax": 0.0010086732475622505,
+    "float_xiao3_min_top_gap": 6.896526038646698,
+    "float_logits_sha256": "4263d76aa90cdbfe3b887739f147b2e8255b68ea650df5896e3e07778f4f5123",
+    "features_sha256": "a60875faea24ed7d1282a64feb20442200f29ee916d5fc572b87344e8786ab36"
+  },
+  {
+    "sample_id": "tqp-qwen17-01",
+    "target_text": "你好小窝",
+    "frames": 67,
+    "top1_counts": {
+      "float": [
+        50,
+        3,
+        14,
+        0,
+        0
+      ],
+      "c": [
+        50,
+        3,
+        14,
+        0,
+        0
+      ]
+    },
+    "top1_agreement_frames": 67,
+    "float_greedy": [
+      1,
+      2,
+      1
+    ],
+    "c_greedy": [
+      1,
+      2,
+      1
+    ],
+    "logit_max_abs_difference": 0.605501651763916,
+    "logit_rmse": 0.1209209351007083,
+    "float_xiao3_max_exact_softmax": 0.018609777818625346,
+    "float_xiao3_min_top_gap": 3.9105887413024902,
+    "float_logits_sha256": "86d37eac91d16da11be1363ff84f073623ec7ee9fa322fc58fff9dc45b4285fd",
+    "features_sha256": "b90dadf1d754451c5a3f2c8f8e313054c842b00d72196e8a58d51c28457b04eb"
+  },
+  {
+    "sample_id": "tqp-qwen17-02",
+    "target_text": "小窝小窝",
+    "frames": 87,
+    "top1_counts": {
+      "float": [
+        81,
+        0,
+        1,
+        0,
+        5
+      ],
+      "c": [
+        81,
+        0,
+        1,
+        0,
+        5
+      ]
+    },
+    "top1_agreement_frames": 87,
+    "float_greedy": [
+      4,
+      2
+    ],
+    "c_greedy": [
+      4,
+      2
+    ],
+    "logit_max_abs_difference": 0.3560190200805664,
+    "logit_rmse": 0.07165455114228417,
+    "float_xiao3_max_exact_softmax": 0.030448889106103525,
+    "float_xiao3_min_top_gap": 3.3919129371643066,
+    "float_logits_sha256": "9258e2dfbf1218aeb0126c6ec7d4a8221fda1c918f26fd4f7d08d70d8ffc9de6",
+    "features_sha256": "7de320b47875ea6ccee2f238cc5ecdd21c368916289f2a4c2cadf0a5ee698664"
+  },
+  {
+    "sample_id": "tqp-qwen17-03",
+    "target_text": "小窝小窝",
+    "frames": 59,
+    "top1_counts": {
+      "float": [
+        56,
+        0,
+        3,
+        0,
+        0
+      ],
+      "c": [
+        57,
+        0,
+        2,
+        0,
+        0
+      ]
+    },
+    "top1_agreement_frames": 58,
+    "float_greedy": [
+      2,
+      2
+    ],
+    "c_greedy": [
+      2
+    ],
+    "logit_max_abs_difference": 0.4383964538574219,
+    "logit_rmse": 0.09428899382400648,
+    "float_xiao3_max_exact_softmax": 0.06333804841384408,
+    "float_xiao3_min_top_gap": 2.488513946533203,
+    "float_logits_sha256": "3a32a661269c99bf446f6b2b1bedd3f911811a9b99af96edcbedfc50a86e3641",
+    "features_sha256": "e67161fa1e1d6d93eee421c22672cbe1ac31c212c5df102c75b7c596b367da4c"
+  },
+  {
+    "sample_id": "tqp-qwen17-06",
+    "target_text": "小窝小窝",
+    "frames": 83,
+    "top1_counts": {
+      "float": [
+        74,
+        9,
+        0,
+        0,
+        0
+      ],
+      "c": [
+        74,
+        9,
+        0,
+        0,
+        0
+      ]
+    },
+    "top1_agreement_frames": 83,
+    "float_greedy": [
+      1,
+      1
+    ],
+    "c_greedy": [
+      1,
+      1
+    ],
+    "logit_max_abs_difference": 0.26311206817626953,
+    "logit_rmse": 0.07646597217840627,
+    "float_xiao3_max_exact_softmax": 0.022325452102510343,
+    "float_xiao3_min_top_gap": 3.7626426219940186,
+    "float_logits_sha256": "c0b5d761ad46a385cd464d0c8df450d577ede97813c7ec7f7d47c4053d4236b1",
+    "features_sha256": "c5e9ca6958989e78cd2354fdcfdf4c2856cef686fdb35769b8debf08c16d225a"
+  },
+  {
+    "sample_id": "tqp-qwen17-14",
+    "target_text": "小窝小窝",
+    "frames": 83,
+    "top1_counts": {
+      "float": [
+        81,
+        2,
+        0,
+        0,
+        0
+      ],
+      "c": [
+        81,
+        2,
+        0,
+        0,
+        0
+      ]
+    },
+    "top1_agreement_frames": 83,
+    "float_greedy": [
+      1
+    ],
+    "c_greedy": [
+      1
+    ],
+    "logit_max_abs_difference": 0.21303558349609375,
+    "logit_rmse": 0.06198445702360976,
+    "float_xiao3_max_exact_softmax": 0.0009383440784882284,
+    "float_xiao3_min_top_gap": 6.9703803062438965,
+    "float_logits_sha256": "5fa9a889d50e612af964ab0f9bfc98b6496dd9e77eb148cbef3a2b7c9d9abf49",
+    "features_sha256": "a0dd6f2cda2b6e71b268253751f9506feb9cee9fcbf61f2aff9e052c661bff9d"
+  },
+  {
+    "sample_id": "tqp-qwen17-15",
+    "target_text": "小窝小窝",
+    "frames": 63,
+    "top1_counts": {
+      "float": [
+        63,
+        0,
+        0,
+        0,
+        0
+      ],
+      "c": [
+        63,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "top1_agreement_frames": 63,
+    "float_greedy": [],
+    "c_greedy": [],
+    "logit_max_abs_difference": 0.2031545639038086,
+    "logit_rmse": 0.05768566457471166,
+    "float_xiao3_max_exact_softmax": 0.0021942135658306024,
+    "float_xiao3_min_top_gap": 6.106027901172638,
+    "float_logits_sha256": "c9116054a3bd85f439c8483da38a8f77e4114092583b2cdd7ee3e4b8f5cdaaf1",
+    "features_sha256": "7378447f37a8e76a0e8d78ef2189bedd6652c72cadaced2a560bf8945ad7e598"
+  }
+]
