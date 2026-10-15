@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 55934,
-      "sha256": "638c63ae090385651ce81c12354b311b66de6a48a2d1e7f0f823f1147e66a1b0",
-      "git_blob_sha1": "5fe20f1d520c9ff7ed876a43f834db2725e6528d"
+      "bytes": 56290,
+      "sha256": "d6e9c71301d8f6554b342ecab4fbce0d87c556395a5080fe3e646539bfb45cdd",
+      "git_blob_sha1": "17e200a5f59cf98d533c0c5c9f5360fca1d6c33b"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -33252,6 +33252,199 @@
             "bytes": 9174,
             "sha256": "6c4fe38aec8f22345bbaf12c1f475063f6f88ed0a3e1a99e4edad3ea9cc11576",
             "git_blob_sha1": "122567f4e48b20ed40f0efc9c0ddfce281f6264f"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "operation_id": "kws-prefix-blank-anchor-source-20261015-v1",
+      "public_main_base_commit": "d75342a4099e28807553610f20b0383adb3eab38",
+      "public_main_base_tree": "09469b175654edf470f9127b69c725e25e2aabc7",
+      "workflow_source_changed": true,
+      "scope": "Reviewed independent fixed 600-update C/T prefix-blank-anchor source and stdlib CI integration. Only the new plan execution_enabled flag changes from its disabled review. No model or optimizer execution during integration; old consumed campaign, scientific controls, source pins, results and budgets preserved. Current CI identities and posterior dependency pin refreshed.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 55934,
+            "sha256": "638c63ae090385651ce81c12354b311b66de6a48a2d1e7f0f823f1147e66a1b0",
+            "git_blob_sha1": "5fe20f1d520c9ff7ed876a43f834db2725e6528d"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 56290,
+            "sha256": "d6e9c71301d8f6554b342ecab4fbce0d87c556395a5080fe3e646539bfb45cdd",
+            "git_blob_sha1": "17e200a5f59cf98d533c0c5c9f5360fca1d6c33b"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "344ae8e82aba76d4264a4246e30ea0063b20b35cc7bf7693ba1e41d829432e7e",
+            "git_blob_sha1": "d0b3c89cef3e3d5f11a6d026c3b77398814f7845"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "13a2fca116bc1be84fe3d4b14d039cb55baab49cbe97cba1243d898335818e93",
+            "git_blob_sha1": "1c8e8cf016c85d379b9c3ca74c576275f1aa3e50"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "7c0e7fd7dcd97eded59ebeecc729771bcf8f23dcf6de6090583d4f561f04b83d",
+            "git_blob_sha1": "177ff1a5a0e75c5346826b147831e0e1caba5141"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "161728caf5a1f06484be92bf192a8e8f37f75cb8e67bf703f6211c0e821ca1c4",
+            "git_blob_sha1": "f460153779fdda2455bb1736df92f09a1c031200"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/README.md",
+            "mode": "100644",
+            "bytes": 4515,
+            "sha256": "ef8af332f61e9e9b87c50c0b9a409bd731e528053d7bea3de5744f1546259cb1",
+            "git_blob_sha1": "16d7d31fb1676cd95f8fa4e10ccc788d75154e74"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/contract.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/contract.py",
+            "mode": "100644",
+            "bytes": 7903,
+            "sha256": "c8be7726cbcba02d9c825a9e5562ef41160b0fb4e0490e46b66d0c0125615377",
+            "git_blob_sha1": "b87fc5f0f8d31072a9a413c1a9a118afc2bdc718"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/control-baseline.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/control-baseline.json",
+            "mode": "100644",
+            "bytes": 83035,
+            "sha256": "7454a7d86521a52454f80e5bc15e250b4be35a5fcc986d9fc4b92ce0446a3f41",
+            "git_blob_sha1": "9e6d8cc96a0c3d76ee66684c5cdd8ff9f4ceb441"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/numeric_preflight.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/numeric_preflight.py",
+            "mode": "100644",
+            "bytes": 926,
+            "sha256": "3ddf32bd10a28b2f2de2b14ae53ef1b358dae1cb43d4a774ef581f09acfad0d4",
+            "git_blob_sha1": "39b779b184de2228e6cff2ea606f7fb313eb96e2"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/plan.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/plan.json",
+            "mode": "100644",
+            "bytes": 3395,
+            "sha256": "eb3b88b57308943716078c5bdb588439d3984c28ec8f242fec99df0c9fb0dd83",
+            "git_blob_sha1": "901df212a986b231ed60e06b2e6100022621ee30"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/prefix-energy-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/prefix-energy-summary.json",
+            "mode": "100644",
+            "bytes": 3391,
+            "sha256": "c165bcd51a8ee2b9dabd975ca396858a2b27b3d5e331caff82c423bb2436dbba",
+            "git_blob_sha1": "ef3c1b1dfb04de54ebc8025e982e10030e3f5bd6"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/prefix-energy-windows.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/prefix-energy-windows.json",
+            "mode": "100644",
+            "bytes": 60488,
+            "sha256": "6cf75569e14fef2ec63ab557c750fcc1c1482b5325e8a52ab970cbb229934220",
+            "git_blob_sha1": "33146a7c18a43984b2681209131ee5ecef1c31c0"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/requirements.research.lock",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/requirements.research.lock",
+            "mode": "100644",
+            "bytes": 960,
+            "sha256": "7aa51b6eebd2e2db290338345c30b8c7a8e197531746ee77efb7ef8678124dee",
+            "git_blob_sha1": "9b4fcd9e6a3ae71bc322893dfa6d604a5abedf7e"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/run_anchor.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/run_anchor.py",
+            "mode": "100644",
+            "bytes": 22234,
+            "sha256": "c1e86e3cfebae4b22ba53bf90d529d83fdbb4ba7741f58be21026231c8a8c356",
+            "git_blob_sha1": "e4bc5b4230857fc65300fda18d1041f787780dc5"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/runtime-candidate.lock.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/runtime-candidate.lock.json",
+            "mode": "100644",
+            "bytes": 14859,
+            "sha256": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
+            "git_blob_sha1": "5a632337c2dfffcab4a179c0a94d9da719ff46d1"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/source-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/source-manifest.json",
+            "mode": "100644",
+            "bytes": 1297,
+            "sha256": "c71be964b7d044612fa5d09310a34ceeab6b16281849ef90c773cda2f68e8d09",
+            "git_blob_sha1": "daed6633fbf23fffd0a146e91a97b78db0c23f50"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/test_contract.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 4627,
+            "sha256": "63ad3e68a2724127da96418d223b316707b5dbd488e2ca18b6a2df52703b2e1c",
+            "git_blob_sha1": "edebd6420063a497062a6c8ba1f9f05eefe83378"
           }
         }
       ]

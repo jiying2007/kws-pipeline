@@ -1,0 +1,3452 @@
+{
+  "initial_weight_sha256": "0eafd98dd20f8c799d1c4d733a47314018ecfdd942c2769fed49cf8ae4fc7b2d",
+  "observations": {
+    "0": [
+      {
+        "blank_argmax_fraction": 0.0,
+        "blank_mean_probability": 0.17038540542125702,
+        "complete_match": false,
+        "ctc_nll": 89.30253601074219,
+        "ctc_nll_per_input_frame": 1.257782220840454,
+        "decode_tokens": [
+          1,
+          4,
+          1,
+          2,
+          4,
+          2,
+          1,
+          4,
+          2,
+          4,
+          2,
+          1
+        ],
+        "input_frames": 71,
+        "raw_argmax_tokens": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          4,
+          4,
+          4,
+          1,
+          1,
+          1,
+          2,
+          2,
+          4,
+          4,
+          4,
+          2,
+          2,
+          1,
+          4,
+          4,
+          4,
+          2,
+          2,
+          2,
+          2,
+          2,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+        "target_class": "KW1",
+        "target_length": 4,
+        "target_tokens": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "blank_argmax_fraction": 0.0,
+        "blank_mean_probability": 0.1720818430185318,
+        "complete_match": false,
+        "ctc_nll": 110.6518325805664,
+        "ctc_nll_per_input_frame": 1.333154559135437,
+        "decode_tokens": [
+          1,
+          2,
+          1,
+          2,
+          1,
+          4,
+          2,
+          4,
+          2,
+          4,
+          2,
+          1,
+          4,
+          2,
+          4,
+          2,
+          4,
+          2,
+          1
+        ],
+        "input_frames": 83,
+        "raw_argmax_tokens": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
+          2,
+          1,
+          1,
+          2,
+          2,
+          1,
+          1,
+          4,
+          2,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          2,
+          2,
+          2,
+          2,
+          2,
+          4,
+          4,
+          4,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          1,
+          4,
+          2,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+        "target_class": "KW2",
+        "target_length": 4,
+        "target_tokens": [
+          3,
+          4,
+          3,
+          4
+        ]
+      }
+    ],
+    "100": [
+      {
+        "blank_argmax_fraction": 0.0,
+        "blank_mean_probability": 0.009003067389130592,
+        "complete_match": false,
+        "ctc_nll": 4.252179145812988,
+        "ctc_nll_per_input_frame": 0.05988984555006027,
+        "decode_tokens": [
+          1,
+          3,
+          4
+        ],
+        "input_frames": 71,
+        "raw_argmax_tokens": [
+          1,
+          3,
+          3,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+        "target_class": "KW1",
+        "target_length": 4,
+        "target_tokens": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "blank_argmax_fraction": 0.0,
+        "blank_mean_probability": 0.007713904604315758,
+        "complete_match": false,
+        "ctc_nll": 3.542172431945801,
+        "ctc_nll_per_input_frame": 0.04267677664756775,
+        "decode_tokens": [
+          1,
+          3,
+          4
+        ],
+        "input_frames": 83,
+        "raw_argmax_tokens": [
+          1,
+          3,
+          3,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+        "target_class": "KW2",
+        "target_length": 4,
+        "target_tokens": [
+          3,
+          4,
+          3,
+          4
+        ]
+      }
+    ],
+    "200": [
+      {
+        "blank_argmax_fraction": 0.0,
+        "blank_mean_probability": 0.004706056322902441,
+        "complete_match": false,
+        "ctc_nll": 2.983893871307373,
+        "ctc_nll_per_input_frame": 0.04202667251229286,
+        "decode_tokens": [
+          1,
+          3,
+          4
+        ],
+        "input_frames": 71,
+        "raw_argmax_tokens": [
+          1,
+          3,
+          3,
+          3,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+        "target_class": "KW1",
+        "target_length": 4,
+        "target_tokens": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "blank_argmax_fraction": 0.0,
+        "blank_mean_probability": 0.004033014178276062,
+        "complete_match": false,
+        "ctc_nll": 2.9539499282836914,
+        "ctc_nll_per_input_frame": 0.035589758306741714,
+        "decode_tokens": [
+          1,
+          3,
+          4
+        ],
+        "input_frames": 83,
+        "raw_argmax_tokens": [
+          1,
+          3,
+          3,
+          3,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+        "target_class": "KW2",
+        "target_length": 4,
+        "target_tokens": [
+          3,
+          4,
+          3,
+          4
+        ]
+      }
+    ],
+    "300": [
+      {
+        "blank_argmax_fraction": 0.0,
+        "blank_mean_probability": 0.0027433764189481735,
+        "complete_match": true,
+        "ctc_nll": 2.276442527770996,
+        "ctc_nll_per_input_frame": 0.03206257149577141,
+        "decode_tokens": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "input_frames": 71,
+        "raw_argmax_tokens": [
+          1,
+          2,
+          3,
+          3,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+        "target_class": "KW1",
+        "target_length": 4,
+        "target_tokens": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "blank_argmax_fraction": 0.0,
+        "blank_mean_probability": 0.0023525983560830355,
+        "complete_match": false,
+        "ctc_nll": 2.9763879776000977,
+        "ctc_nll_per_input_frame": 0.0358600951731205,
+        "decode_tokens": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "input_frames": 83,
+        "raw_argmax_tokens": [
+          1,
+          2,
+          3,
+          3,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+        "target_class": "KW2",
+        "target_length": 4,
+        "target_tokens": [
+          3,
+          4,
+          3,
+          4
+        ]
+      }
+    ],
+    "50": [
+      {
+        "blank_argmax_fraction": 0.0,
+        "blank_mean_probability": 0.0058907619677484035,
+        "complete_match": false,
+        "ctc_nll": 6.153971195220947,
+        "ctc_nll_per_input_frame": 0.08667565137147903,
+        "decode_tokens": [
+          4
+        ],
+        "input_frames": 71,
+        "raw_argmax_tokens": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+        "target_class": "KW1",
+        "target_length": 4,
+        "target_tokens": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "blank_argmax_fraction": 0.0,
+        "blank_mean_probability": 0.0050942315720021725,
+        "complete_match": false,
+        "ctc_nll": 3.3394157886505127,
+        "ctc_nll_per_input_frame": 0.040233924984931946,
+        "decode_tokens": [
+          4
+        ],
+        "input_frames": 83,
+        "raw_argmax_tokens": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+        "target_class": "KW2",
+        "target_length": 4,
+        "target_tokens": [
+          3,
+          4,
+          3,
+          4
+        ]
+      }
+    ]
+  },
+  "schema": "prefix-anchor-frozen-control-v1",
+  "source_public_archive_sha256": "bd139ed8766e5f37b7e181a776cbe45870cbe64dcd42065e2eaff32d9ee567b2",
+  "steps": {
+    "1": {
+      "finite_grad_norm": 0.7011874914169312,
+      "finite_loss": 1.2954683303833008,
+      "stage": "pair",
+      "update": 1,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "10": {
+      "finite_grad_norm": 1.1356697082519531,
+      "finite_loss": 0.2951408326625824,
+      "stage": "pair",
+      "update": 10,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "100": {
+      "finite_grad_norm": 0.021310731768608093,
+      "finite_loss": 0.0514969639480114,
+      "stage": "pair",
+      "update": 100,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "101": {
+      "finite_grad_norm": 0.02118285372853279,
+      "finite_loss": 0.05128331109881401,
+      "stage": "pair",
+      "update": 101,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "102": {
+      "finite_grad_norm": 0.021123051643371582,
+      "finite_loss": 0.051067981868982315,
+      "stage": "pair",
+      "update": 102,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "103": {
+      "finite_grad_norm": 0.02112009935081005,
+      "finite_loss": 0.050850749015808105,
+      "stage": "pair",
+      "update": 103,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "104": {
+      "finite_grad_norm": 0.021149752661585808,
+      "finite_loss": 0.05063134431838989,
+      "stage": "pair",
+      "update": 104,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "105": {
+      "finite_grad_norm": 0.021180851384997368,
+      "finite_loss": 0.050409480929374695,
+      "stage": "pair",
+      "update": 105,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "106": {
+      "finite_grad_norm": 0.021184327080845833,
+      "finite_loss": 0.050184883177280426,
+      "stage": "pair",
+      "update": 106,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "107": {
+      "finite_grad_norm": 0.02114083804190159,
+      "finite_loss": 0.04995754361152649,
+      "stage": "pair",
+      "update": 107,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "108": {
+      "finite_grad_norm": 0.021044770255684853,
+      "finite_loss": 0.049727585166692734,
+      "stage": "pair",
+      "update": 108,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "109": {
+      "finite_grad_norm": 0.020903950557112694,
+      "finite_loss": 0.04949532449245453,
+      "stage": "pair",
+      "update": 109,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "11": {
+      "finite_grad_norm": 0.8035593628883362,
+      "finite_loss": 0.20184575021266937,
+      "stage": "pair",
+      "update": 11,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "110": {
+      "finite_grad_norm": 0.020735053345561028,
+      "finite_loss": 0.04926121234893799,
+      "stage": "pair",
+      "update": 110,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "111": {
+      "finite_grad_norm": 0.02055715024471283,
+      "finite_loss": 0.0490257665514946,
+      "stage": "pair",
+      "update": 111,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "112": {
+      "finite_grad_norm": 0.020385710522532463,
+      "finite_loss": 0.04878947511315346,
+      "stage": "pair",
+      "update": 112,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "113": {
+      "finite_grad_norm": 0.020228737965226173,
+      "finite_loss": 0.04855266958475113,
+      "stage": "pair",
+      "update": 113,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "114": {
+      "finite_grad_norm": 0.020086150616407394,
+      "finite_loss": 0.04831569641828537,
+      "stage": "pair",
+      "update": 114,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "115": {
+      "finite_grad_norm": 0.019951308146119118,
+      "finite_loss": 0.048078835010528564,
+      "stage": "pair",
+      "update": 115,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "116": {
+      "finite_grad_norm": 0.01981382444500923,
+      "finite_loss": 0.047842226922512054,
+      "stage": "pair",
+      "update": 116,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "117": {
+      "finite_grad_norm": 0.019663091748952866,
+      "finite_loss": 0.047606196254491806,
+      "stage": "pair",
+      "update": 117,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "118": {
+      "finite_grad_norm": 0.01949027180671692,
+      "finite_loss": 0.047370873391628265,
+      "stage": "pair",
+      "update": 118,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "119": {
+      "finite_grad_norm": 0.019290225580334663,
+      "finite_loss": 0.04713660106062889,
+      "stage": "pair",
+      "update": 119,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "12": {
+      "finite_grad_norm": 0.5087659358978271,
+      "finite_loss": 0.14361324906349182,
+      "stage": "pair",
+      "update": 12,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "120": {
+      "finite_grad_norm": 0.019061967730522156,
+      "finite_loss": 0.04690378159284592,
+      "stage": "pair",
+      "update": 120,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "121": {
+      "finite_grad_norm": 0.018807794898748398,
+      "finite_loss": 0.04667271301150322,
+      "stage": "pair",
+      "update": 121,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "122": {
+      "finite_grad_norm": 0.018532846122980118,
+      "finite_loss": 0.04644384980201721,
+      "stage": "pair",
+      "update": 122,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "123": {
+      "finite_grad_norm": 0.018243253231048584,
+      "finite_loss": 0.046217676252126694,
+      "stage": "pair",
+      "update": 123,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "124": {
+      "finite_grad_norm": 0.01794487237930298,
+      "finite_loss": 0.04599452018737793,
+      "stage": "pair",
+      "update": 124,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "125": {
+      "finite_grad_norm": 0.017642011865973473,
+      "finite_loss": 0.04577479511499405,
+      "stage": "pair",
+      "update": 125,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "126": {
+      "finite_grad_norm": 0.017336731776595116,
+      "finite_loss": 0.04555876553058624,
+      "stage": "pair",
+      "update": 126,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "127": {
+      "finite_grad_norm": 0.01702898181974888,
+      "finite_loss": 0.045346781611442566,
+      "stage": "pair",
+      "update": 127,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "128": {
+      "finite_grad_norm": 0.016717081889510155,
+      "finite_loss": 0.04513902962207794,
+      "stage": "pair",
+      "update": 128,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "129": {
+      "finite_grad_norm": 0.01639888435602188,
+      "finite_loss": 0.04493577033281326,
+      "stage": "pair",
+      "update": 129,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "13": {
+      "finite_grad_norm": 0.31898030638694763,
+      "finite_loss": 0.1120072677731514,
+      "stage": "pair",
+      "update": 13,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "130": {
+      "finite_grad_norm": 0.016072671860456467,
+      "finite_loss": 0.04473717510700226,
+      "stage": "pair",
+      "update": 130,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "131": {
+      "finite_grad_norm": 0.01573808118700981,
+      "finite_loss": 0.044543467462062836,
+      "stage": "pair",
+      "update": 131,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "132": {
+      "finite_grad_norm": 0.015396240167319775,
+      "finite_loss": 0.04435482621192932,
+      "stage": "pair",
+      "update": 132,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "133": {
+      "finite_grad_norm": 0.015049604699015617,
+      "finite_loss": 0.04417145252227783,
+      "stage": "pair",
+      "update": 133,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "134": {
+      "finite_grad_norm": 0.014701368287205696,
+      "finite_loss": 0.043993495404720306,
+      "stage": "pair",
+      "update": 134,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "135": {
+      "finite_grad_norm": 0.014354884624481201,
+      "finite_loss": 0.043821170926094055,
+      "stage": "pair",
+      "update": 135,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "136": {
+      "finite_grad_norm": 0.014012997038662434,
+      "finite_loss": 0.043654561042785645,
+      "stage": "pair",
+      "update": 136,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "137": {
+      "finite_grad_norm": 0.013677923940122128,
+      "finite_loss": 0.04349387809634209,
+      "stage": "pair",
+      "update": 137,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "138": {
+      "finite_grad_norm": 0.013350906781852245,
+      "finite_loss": 0.043339069932699203,
+      "stage": "pair",
+      "update": 138,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "139": {
+      "finite_grad_norm": 0.01303274929523468,
+      "finite_loss": 0.04319024085998535,
+      "stage": "pair",
+      "update": 139,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "14": {
+      "finite_grad_norm": 0.20634612441062927,
+      "finite_loss": 0.0955391377210617,
+      "stage": "pair",
+      "update": 14,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "140": {
+      "finite_grad_norm": 0.012723912484943867,
+      "finite_loss": 0.04304739087820053,
+      "stage": "pair",
+      "update": 140,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "141": {
+      "finite_grad_norm": 0.012424862012267113,
+      "finite_loss": 0.042910438030958176,
+      "stage": "pair",
+      "update": 141,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "142": {
+      "finite_grad_norm": 0.012136323377490044,
+      "finite_loss": 0.0427793487906456,
+      "stage": "pair",
+      "update": 142,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "143": {
+      "finite_grad_norm": 0.011859244666993618,
+      "finite_loss": 0.04265391826629639,
+      "stage": "pair",
+      "update": 143,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "144": {
+      "finite_grad_norm": 0.011594823561608791,
+      "finite_loss": 0.04253401607275009,
+      "stage": "pair",
+      "update": 144,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "145": {
+      "finite_grad_norm": 0.01134435459971428,
+      "finite_loss": 0.04241941124200821,
+      "stage": "pair",
+      "update": 145,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "146": {
+      "finite_grad_norm": 0.011108829639852047,
+      "finite_loss": 0.04230973869562149,
+      "stage": "pair",
+      "update": 146,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "147": {
+      "finite_grad_norm": 0.010889234021306038,
+      "finite_loss": 0.04220476746559143,
+      "stage": "pair",
+      "update": 147,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "148": {
+      "finite_grad_norm": 0.01068588625639677,
+      "finite_loss": 0.042104169726371765,
+      "stage": "pair",
+      "update": 148,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "149": {
+      "finite_grad_norm": 0.010498777031898499,
+      "finite_loss": 0.04200759530067444,
+      "stage": "pair",
+      "update": 149,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "15": {
+      "finite_grad_norm": 0.1394224762916565,
+      "finite_loss": 0.08700212091207504,
+      "stage": "pair",
+      "update": 15,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "150": {
+      "finite_grad_norm": 0.010327396914362907,
+      "finite_loss": 0.041914716362953186,
+      "stage": "pair",
+      "update": 150,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "151": {
+      "finite_grad_norm": 0.010170960798859596,
+      "finite_loss": 0.041825227439403534,
+      "stage": "pair",
+      "update": 151,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "152": {
+      "finite_grad_norm": 0.01002839021384716,
+      "finite_loss": 0.041738882660865784,
+      "stage": "pair",
+      "update": 152,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "153": {
+      "finite_grad_norm": 0.009898391552269459,
+      "finite_loss": 0.04165530949831009,
+      "stage": "pair",
+      "update": 153,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "154": {
+      "finite_grad_norm": 0.009779801592230797,
+      "finite_loss": 0.041574299335479736,
+      "stage": "pair",
+      "update": 154,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "155": {
+      "finite_grad_norm": 0.009671375155448914,
+      "finite_loss": 0.041495610028505325,
+      "stage": "pair",
+      "update": 155,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "156": {
+      "finite_grad_norm": 0.009572030045092106,
+      "finite_loss": 0.041419025510549545,
+      "stage": "pair",
+      "update": 156,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "157": {
+      "finite_grad_norm": 0.00948078092187643,
+      "finite_loss": 0.041344352066516876,
+      "stage": "pair",
+      "update": 157,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "158": {
+      "finite_grad_norm": 0.00939673837274313,
+      "finite_loss": 0.04127137362957001,
+      "stage": "pair",
+      "update": 158,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "159": {
+      "finite_grad_norm": 0.009319191798567772,
+      "finite_loss": 0.04119998961687088,
+      "stage": "pair",
+      "update": 159,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "16": {
+      "finite_grad_norm": 0.10036568343639374,
+      "finite_loss": 0.08266474306583405,
+      "stage": "pair",
+      "update": 16,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "160": {
+      "finite_grad_norm": 0.00924741942435503,
+      "finite_loss": 0.04112999141216278,
+      "stage": "pair",
+      "update": 160,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "161": {
+      "finite_grad_norm": 0.00918085128068924,
+      "finite_loss": 0.041061319410800934,
+      "stage": "pair",
+      "update": 161,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "162": {
+      "finite_grad_norm": 0.009118879213929176,
+      "finite_loss": 0.040993787348270416,
+      "stage": "pair",
+      "update": 162,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "163": {
+      "finite_grad_norm": 0.009061013348400593,
+      "finite_loss": 0.040927350521087646,
+      "stage": "pair",
+      "update": 163,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "164": {
+      "finite_grad_norm": 0.009006788954138756,
+      "finite_loss": 0.04086190089583397,
+      "stage": "pair",
+      "update": 164,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "165": {
+      "finite_grad_norm": 0.00895572081208229,
+      "finite_loss": 0.04079734906554222,
+      "stage": "pair",
+      "update": 165,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "166": {
+      "finite_grad_norm": 0.008907422423362732,
+      "finite_loss": 0.04073365032672882,
+      "stage": "pair",
+      "update": 166,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "167": {
+      "finite_grad_norm": 0.008861510083079338,
+      "finite_loss": 0.0406707301735878,
+      "stage": "pair",
+      "update": 167,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "168": {
+      "finite_grad_norm": 0.008817664347589016,
+      "finite_loss": 0.040608495473861694,
+      "stage": "pair",
+      "update": 168,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "169": {
+      "finite_grad_norm": 0.008775622583925724,
+      "finite_loss": 0.040546949952840805,
+      "stage": "pair",
+      "update": 169,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "17": {
+      "finite_grad_norm": 0.0797065943479538,
+      "finite_loss": 0.08062221109867096,
+      "stage": "pair",
+      "update": 17,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "170": {
+      "finite_grad_norm": 0.008735105395317078,
+      "finite_loss": 0.04048603028059006,
+      "stage": "pair",
+      "update": 170,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "171": {
+      "finite_grad_norm": 0.008695987984538078,
+      "finite_loss": 0.04042571783065796,
+      "stage": "pair",
+      "update": 171,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "172": {
+      "finite_grad_norm": 0.008658049628138542,
+      "finite_loss": 0.04036597162485123,
+      "stage": "pair",
+      "update": 172,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "173": {
+      "finite_grad_norm": 0.00862116925418377,
+      "finite_loss": 0.04030672460794449,
+      "stage": "pair",
+      "update": 173,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "174": {
+      "finite_grad_norm": 0.008585271425545216,
+      "finite_loss": 0.04024800658226013,
+      "stage": "pair",
+      "update": 174,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "175": {
+      "finite_grad_norm": 0.008550288155674934,
+      "finite_loss": 0.040189772844314575,
+      "stage": "pair",
+      "update": 175,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "176": {
+      "finite_grad_norm": 0.008516156114637852,
+      "finite_loss": 0.04013199359178543,
+      "stage": "pair",
+      "update": 176,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "177": {
+      "finite_grad_norm": 0.008482840843498707,
+      "finite_loss": 0.040074680000543594,
+      "stage": "pair",
+      "update": 177,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "178": {
+      "finite_grad_norm": 0.00845031812787056,
+      "finite_loss": 0.04001781344413757,
+      "stage": "pair",
+      "update": 178,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "179": {
+      "finite_grad_norm": 0.008418552577495575,
+      "finite_loss": 0.0399613231420517,
+      "stage": "pair",
+      "update": 179,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "18": {
+      "finite_grad_norm": 0.07133971154689789,
+      "finite_loss": 0.07986348867416382,
+      "stage": "pair",
+      "update": 18,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "180": {
+      "finite_grad_norm": 0.008387613110244274,
+      "finite_loss": 0.03990531712770462,
+      "stage": "pair",
+      "update": 180,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "181": {
+      "finite_grad_norm": 0.008357401937246323,
+      "finite_loss": 0.03984963893890381,
+      "stage": "pair",
+      "update": 181,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "182": {
+      "finite_grad_norm": 0.008327975869178772,
+      "finite_loss": 0.039794422686100006,
+      "stage": "pair",
+      "update": 182,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "183": {
+      "finite_grad_norm": 0.008299295790493488,
+      "finite_loss": 0.03973957523703575,
+      "stage": "pair",
+      "update": 183,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "184": {
+      "finite_grad_norm": 0.008271359838545322,
+      "finite_loss": 0.03968508541584015,
+      "stage": "pair",
+      "update": 184,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "185": {
+      "finite_grad_norm": 0.00824417918920517,
+      "finite_loss": 0.039630986750125885,
+      "stage": "pair",
+      "update": 185,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "186": {
+      "finite_grad_norm": 0.008217775262892246,
+      "finite_loss": 0.03957723081111908,
+      "stage": "pair",
+      "update": 186,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "187": {
+      "finite_grad_norm": 0.00819211546331644,
+      "finite_loss": 0.039523810148239136,
+      "stage": "pair",
+      "update": 187,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "188": {
+      "finite_grad_norm": 0.00816720724105835,
+      "finite_loss": 0.039470773190259933,
+      "stage": "pair",
+      "update": 188,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "189": {
+      "finite_grad_norm": 0.008143058978021145,
+      "finite_loss": 0.039418041706085205,
+      "stage": "pair",
+      "update": 189,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "19": {
+      "finite_grad_norm": 0.0702560693025589,
+      "finite_loss": 0.0798238143324852,
+      "stage": "pair",
+      "update": 19,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "190": {
+      "finite_grad_norm": 0.008119629696011543,
+      "finite_loss": 0.039365656673908234,
+      "stage": "pair",
+      "update": 190,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "191": {
+      "finite_grad_norm": 0.008096971549093723,
+      "finite_loss": 0.039313577115535736,
+      "stage": "pair",
+      "update": 191,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "192": {
+      "finite_grad_norm": 0.008075053803622723,
+      "finite_loss": 0.039261795580387115,
+      "stage": "pair",
+      "update": 192,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "193": {
+      "finite_grad_norm": 0.008053836412727833,
+      "finite_loss": 0.039210278540849686,
+      "stage": "pair",
+      "update": 193,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "194": {
+      "finite_grad_norm": 0.008033392019569874,
+      "finite_loss": 0.03915911912918091,
+      "stage": "pair",
+      "update": 194,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "195": {
+      "finite_grad_norm": 0.008013653568923473,
+      "finite_loss": 0.039108216762542725,
+      "stage": "pair",
+      "update": 195,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "196": {
+      "finite_grad_norm": 0.007994666695594788,
+      "finite_loss": 0.03905758261680603,
+      "stage": "pair",
+      "update": 196,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "197": {
+      "finite_grad_norm": 0.007976382039487362,
+      "finite_loss": 0.039007216691970825,
+      "stage": "pair",
+      "update": 197,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "198": {
+      "finite_grad_norm": 0.007958799600601196,
+      "finite_loss": 0.038957104086875916,
+      "stage": "pair",
+      "update": 198,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "199": {
+      "finite_grad_norm": 0.007941934280097485,
+      "finite_loss": 0.038907237350940704,
+      "stage": "pair",
+      "update": 199,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "2": {
+      "finite_grad_norm": 1.0913861989974976,
+      "finite_loss": 1.2059369087219238,
+      "stage": "pair",
+      "update": 2,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "20": {
+      "finite_grad_norm": 0.07269711792469025,
+      "finite_loss": 0.0801711231470108,
+      "stage": "pair",
+      "update": 20,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "200": {
+      "finite_grad_norm": 0.007925741374492645,
+      "finite_loss": 0.0388575941324234,
+      "stage": "pair",
+      "update": 200,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "201": {
+      "finite_grad_norm": 0.007910236716270447,
+      "finite_loss": 0.03880821540951729,
+      "stage": "pair",
+      "update": 201,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "202": {
+      "finite_grad_norm": 0.007895426824688911,
+      "finite_loss": 0.03875904530286789,
+      "stage": "pair",
+      "update": 202,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "203": {
+      "finite_grad_norm": 0.007881243713200092,
+      "finite_loss": 0.03871006891131401,
+      "stage": "pair",
+      "update": 203,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "204": {
+      "finite_grad_norm": 0.007867696695029736,
+      "finite_loss": 0.038661278784275055,
+      "stage": "pair",
+      "update": 204,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "205": {
+      "finite_grad_norm": 0.007854798808693886,
+      "finite_loss": 0.038612715899944305,
+      "stage": "pair",
+      "update": 205,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "206": {
+      "finite_grad_norm": 0.007842528633773327,
+      "finite_loss": 0.038564324378967285,
+      "stage": "pair",
+      "update": 206,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "207": {
+      "finite_grad_norm": 0.007830844260752201,
+      "finite_loss": 0.03851611912250519,
+      "stage": "pair",
+      "update": 207,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "208": {
+      "finite_grad_norm": 0.007819737307727337,
+      "finite_loss": 0.038468047976493835,
+      "stage": "pair",
+      "update": 208,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "209": {
+      "finite_grad_norm": 0.007809220347553492,
+      "finite_loss": 0.038420140743255615,
+      "stage": "pair",
+      "update": 209,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "21": {
+      "finite_grad_norm": 0.07645191997289658,
+      "finite_loss": 0.08070147037506104,
+      "stage": "pair",
+      "update": 21,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "210": {
+      "finite_grad_norm": 0.0077992454171180725,
+      "finite_loss": 0.03837238997220993,
+      "stage": "pair",
+      "update": 210,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "211": {
+      "finite_grad_norm": 0.007789830211549997,
+      "finite_loss": 0.038324784487485886,
+      "stage": "pair",
+      "update": 211,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "212": {
+      "finite_grad_norm": 0.007780935615301132,
+      "finite_loss": 0.03827733173966408,
+      "stage": "pair",
+      "update": 212,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "213": {
+      "finite_grad_norm": 0.007772533688694239,
+      "finite_loss": 0.038229942321777344,
+      "stage": "pair",
+      "update": 213,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "214": {
+      "finite_grad_norm": 0.007764647714793682,
+      "finite_loss": 0.03818269073963165,
+      "stage": "pair",
+      "update": 214,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "215": {
+      "finite_grad_norm": 0.007757232058793306,
+      "finite_loss": 0.03813556209206581,
+      "stage": "pair",
+      "update": 215,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "216": {
+      "finite_grad_norm": 0.007750301621854305,
+      "finite_loss": 0.03808853402733803,
+      "stage": "pair",
+      "update": 216,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "217": {
+      "finite_grad_norm": 0.007743793539702892,
+      "finite_loss": 0.03804156929254532,
+      "stage": "pair",
+      "update": 217,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "218": {
+      "finite_grad_norm": 0.007737744599580765,
+      "finite_loss": 0.03799472749233246,
+      "stage": "pair",
+      "update": 218,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "219": {
+      "finite_grad_norm": 0.007732116151601076,
+      "finite_loss": 0.03794795274734497,
+      "stage": "pair",
+      "update": 219,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "22": {
+      "finite_grad_norm": 0.0804353803396225,
+      "finite_loss": 0.08128567039966583,
+      "stage": "pair",
+      "update": 22,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "220": {
+      "finite_grad_norm": 0.007726878393441439,
+      "finite_loss": 0.037901196628808975,
+      "stage": "pair",
+      "update": 220,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "221": {
+      "finite_grad_norm": 0.007722069974988699,
+      "finite_loss": 0.037854570895433426,
+      "stage": "pair",
+      "update": 221,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "222": {
+      "finite_grad_norm": 0.007717600092291832,
+      "finite_loss": 0.03780795633792877,
+      "stage": "pair",
+      "update": 222,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "223": {
+      "finite_grad_norm": 0.007713526487350464,
+      "finite_loss": 0.037761397659778595,
+      "stage": "pair",
+      "update": 223,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "224": {
+      "finite_grad_norm": 0.007709817495197058,
+      "finite_loss": 0.03771490231156349,
+      "stage": "pair",
+      "update": 224,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "225": {
+      "finite_grad_norm": 0.007706465665251017,
+      "finite_loss": 0.03766844794154167,
+      "stage": "pair",
+      "update": 225,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "226": {
+      "finite_grad_norm": 0.007703427691012621,
+      "finite_loss": 0.037621982395648956,
+      "stage": "pair",
+      "update": 226,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "227": {
+      "finite_grad_norm": 0.007700729183852673,
+      "finite_loss": 0.037575557827949524,
+      "stage": "pair",
+      "update": 227,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "228": {
+      "finite_grad_norm": 0.007698347792029381,
+      "finite_loss": 0.03752915933728218,
+      "stage": "pair",
+      "update": 228,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "229": {
+      "finite_grad_norm": 0.007696296088397503,
+      "finite_loss": 0.037482813000679016,
+      "stage": "pair",
+      "update": 229,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "23": {
+      "finite_grad_norm": 0.08416948467493057,
+      "finite_loss": 0.08184044063091278,
+      "stage": "pair",
+      "update": 23,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "230": {
+      "finite_grad_norm": 0.007694493979215622,
+      "finite_loss": 0.037436384707689285,
+      "stage": "pair",
+      "update": 230,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "231": {
+      "finite_grad_norm": 0.007693024817854166,
+      "finite_loss": 0.03739004582166672,
+      "stage": "pair",
+      "update": 231,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "232": {
+      "finite_grad_norm": 0.0076918285340070724,
+      "finite_loss": 0.03734366595745087,
+      "stage": "pair",
+      "update": 232,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "233": {
+      "finite_grad_norm": 0.007690885104238987,
+      "finite_loss": 0.03729728236794472,
+      "stage": "pair",
+      "update": 233,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "234": {
+      "finite_grad_norm": 0.007690193597227335,
+      "finite_loss": 0.03725084662437439,
+      "stage": "pair",
+      "update": 234,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "235": {
+      "finite_grad_norm": 0.007689800579100847,
+      "finite_loss": 0.03720445930957794,
+      "stage": "pair",
+      "update": 235,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "236": {
+      "finite_grad_norm": 0.007689618039876223,
+      "finite_loss": 0.037157997488975525,
+      "stage": "pair",
+      "update": 236,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "237": {
+      "finite_grad_norm": 0.007689691614359617,
+      "finite_loss": 0.037111543118953705,
+      "stage": "pair",
+      "update": 237,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "238": {
+      "finite_grad_norm": 0.00768999895080924,
+      "finite_loss": 0.0370650440454483,
+      "stage": "pair",
+      "update": 238,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "239": {
+      "finite_grad_norm": 0.007690547965466976,
+      "finite_loss": 0.037018533796072006,
+      "stage": "pair",
+      "update": 239,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "24": {
+      "finite_grad_norm": 0.08746551722288132,
+      "finite_loss": 0.08231248706579208,
+      "stage": "pair",
+      "update": 24,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "240": {
+      "finite_grad_norm": 0.00769128929823637,
+      "finite_loss": 0.03697193041443825,
+      "stage": "pair",
+      "update": 240,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "241": {
+      "finite_grad_norm": 0.007692263461649418,
+      "finite_loss": 0.03692534565925598,
+      "stage": "pair",
+      "update": 241,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "242": {
+      "finite_grad_norm": 0.007693445309996605,
+      "finite_loss": 0.03687867522239685,
+      "stage": "pair",
+      "update": 242,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "243": {
+      "finite_grad_norm": 0.007694806903600693,
+      "finite_loss": 0.03683193027973175,
+      "stage": "pair",
+      "update": 243,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "244": {
+      "finite_grad_norm": 0.007696414832025766,
+      "finite_loss": 0.03678523749113083,
+      "stage": "pair",
+      "update": 244,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "245": {
+      "finite_grad_norm": 0.007698167581111193,
+      "finite_loss": 0.036738403141498566,
+      "stage": "pair",
+      "update": 245,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "246": {
+      "finite_grad_norm": 0.007700112648308277,
+      "finite_loss": 0.03669150918722153,
+      "stage": "pair",
+      "update": 246,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "247": {
+      "finite_grad_norm": 0.007702243514358997,
+      "finite_loss": 0.0366445817053318,
+      "stage": "pair",
+      "update": 247,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "248": {
+      "finite_grad_norm": 0.0077045210637152195,
+      "finite_loss": 0.03659753501415253,
+      "stage": "pair",
+      "update": 248,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "249": {
+      "finite_grad_norm": 0.007706980686634779,
+      "finite_loss": 0.03655044734477997,
+      "stage": "pair",
+      "update": 249,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "25": {
+      "finite_grad_norm": 0.09026531130075455,
+      "finite_loss": 0.08266836404800415,
+      "stage": "pair",
+      "update": 25,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "250": {
+      "finite_grad_norm": 0.00770961819216609,
+      "finite_loss": 0.036503322422504425,
+      "stage": "pair",
+      "update": 250,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "251": {
+      "finite_grad_norm": 0.007712372113019228,
+      "finite_loss": 0.036456070840358734,
+      "stage": "pair",
+      "update": 251,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "252": {
+      "finite_grad_norm": 0.007715300191193819,
+      "finite_loss": 0.03640875220298767,
+      "stage": "pair",
+      "update": 252,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "253": {
+      "finite_grad_norm": 0.007718379143625498,
+      "finite_loss": 0.036361366510391235,
+      "stage": "pair",
+      "update": 253,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "254": {
+      "finite_grad_norm": 0.00772158382460475,
+      "finite_loss": 0.036313895136117935,
+      "stage": "pair",
+      "update": 254,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "255": {
+      "finite_grad_norm": 0.007724946830421686,
+      "finite_loss": 0.03626636415719986,
+      "stage": "pair",
+      "update": 255,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "256": {
+      "finite_grad_norm": 0.007728409953415394,
+      "finite_loss": 0.03621869161725044,
+      "stage": "pair",
+      "update": 256,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "257": {
+      "finite_grad_norm": 0.00773201510310173,
+      "finite_loss": 0.03617095202207565,
+      "stage": "pair",
+      "update": 257,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "258": {
+      "finite_grad_norm": 0.0077357483096420765,
+      "finite_loss": 0.036123134195804596,
+      "stage": "pair",
+      "update": 258,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "259": {
+      "finite_grad_norm": 0.007739594206213951,
+      "finite_loss": 0.03607521951198578,
+      "stage": "pair",
+      "update": 259,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "26": {
+      "finite_grad_norm": 0.09257091581821442,
+      "finite_loss": 0.08288899064064026,
+      "stage": "pair",
+      "update": 26,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "260": {
+      "finite_grad_norm": 0.007743568159639835,
+      "finite_loss": 0.036027222871780396,
+      "stage": "pair",
+      "update": 260,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "261": {
+      "finite_grad_norm": 0.0077476296573877335,
+      "finite_loss": 0.035979099571704865,
+      "stage": "pair",
+      "update": 261,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "262": {
+      "finite_grad_norm": 0.007751826662570238,
+      "finite_loss": 0.035930924117565155,
+      "stage": "pair",
+      "update": 262,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "263": {
+      "finite_grad_norm": 0.00775611586868763,
+      "finite_loss": 0.035882625728845596,
+      "stage": "pair",
+      "update": 263,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "264": {
+      "finite_grad_norm": 0.007760506123304367,
+      "finite_loss": 0.03583421930670738,
+      "stage": "pair",
+      "update": 264,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "265": {
+      "finite_grad_norm": 0.007764983456581831,
+      "finite_loss": 0.03578567132353783,
+      "stage": "pair",
+      "update": 265,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "266": {
+      "finite_grad_norm": 0.0077695888467133045,
+      "finite_loss": 0.035737089812755585,
+      "stage": "pair",
+      "update": 266,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "267": {
+      "finite_grad_norm": 0.007774268742650747,
+      "finite_loss": 0.0356883704662323,
+      "stage": "pair",
+      "update": 267,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "268": {
+      "finite_grad_norm": 0.00777905248105526,
+      "finite_loss": 0.035639554262161255,
+      "stage": "pair",
+      "update": 268,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "269": {
+      "finite_grad_norm": 0.007783928886055946,
+      "finite_loss": 0.035590626299381256,
+      "stage": "pair",
+      "update": 269,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "27": {
+      "finite_grad_norm": 0.09440386295318604,
+      "finite_loss": 0.0829644650220871,
+      "stage": "pair",
+      "update": 27,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "270": {
+      "finite_grad_norm": 0.007788911461830139,
+      "finite_loss": 0.035541605204343796,
+      "stage": "pair",
+      "update": 270,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "271": {
+      "finite_grad_norm": 0.0077939871698617935,
+      "finite_loss": 0.03549247980117798,
+      "stage": "pair",
+      "update": 271,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "272": {
+      "finite_grad_norm": 0.007799152284860611,
+      "finite_loss": 0.03544322028756142,
+      "stage": "pair",
+      "update": 272,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "273": {
+      "finite_grad_norm": 0.007804395630955696,
+      "finite_loss": 0.0353938564658165,
+      "stage": "pair",
+      "update": 273,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "274": {
+      "finite_grad_norm": 0.007809760514646769,
+      "finite_loss": 0.03534439206123352,
+      "stage": "pair",
+      "update": 274,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "275": {
+      "finite_grad_norm": 0.007815220393240452,
+      "finite_loss": 0.035294823348522186,
+      "stage": "pair",
+      "update": 275,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "276": {
+      "finite_grad_norm": 0.007820742204785347,
+      "finite_loss": 0.03524509072303772,
+      "stage": "pair",
+      "update": 276,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "277": {
+      "finite_grad_norm": 0.007826403714716434,
+      "finite_loss": 0.035195305943489075,
+      "stage": "pair",
+      "update": 277,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "278": {
+      "finite_grad_norm": 0.00783216767013073,
+      "finite_loss": 0.035145387053489685,
+      "stage": "pair",
+      "update": 278,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "279": {
+      "finite_grad_norm": 0.007838021032512188,
+      "finite_loss": 0.03509533032774925,
+      "stage": "pair",
+      "update": 279,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "28": {
+      "finite_grad_norm": 0.09579623490571976,
+      "finite_loss": 0.08289233595132828,
+      "stage": "pair",
+      "update": 28,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "280": {
+      "finite_grad_norm": 0.00784396380186081,
+      "finite_loss": 0.03504512086510658,
+      "stage": "pair",
+      "update": 280,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "281": {
+      "finite_grad_norm": 0.007850059308111668,
+      "finite_loss": 0.034994859248399734,
+      "stage": "pair",
+      "update": 281,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "282": {
+      "finite_grad_norm": 0.00785624235868454,
+      "finite_loss": 0.03494443744421005,
+      "stage": "pair",
+      "update": 282,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "283": {
+      "finite_grad_norm": 0.007862566038966179,
+      "finite_loss": 0.034893911331892014,
+      "stage": "pair",
+      "update": 283,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "284": {
+      "finite_grad_norm": 0.007869016379117966,
+      "finite_loss": 0.034843266010284424,
+      "stage": "pair",
+      "update": 284,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "285": {
+      "finite_grad_norm": 0.007875598035752773,
+      "finite_loss": 0.03479251265525818,
+      "stage": "pair",
+      "update": 285,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "286": {
+      "finite_grad_norm": 0.007882303558290005,
+      "finite_loss": 0.03474158048629761,
+      "stage": "pair",
+      "update": 286,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "287": {
+      "finite_grad_norm": 0.007889163680374622,
+      "finite_loss": 0.03469054400920868,
+      "stage": "pair",
+      "update": 287,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "288": {
+      "finite_grad_norm": 0.00789616722613573,
+      "finite_loss": 0.034639373421669006,
+      "stage": "pair",
+      "update": 288,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "289": {
+      "finite_grad_norm": 0.007903357036411762,
+      "finite_loss": 0.034588128328323364,
+      "stage": "pair",
+      "update": 289,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "29": {
+      "finite_grad_norm": 0.0967797115445137,
+      "finite_loss": 0.08267512172460556,
+      "stage": "pair",
+      "update": 29,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "290": {
+      "finite_grad_norm": 0.007910678163170815,
+      "finite_loss": 0.03453667089343071,
+      "stage": "pair",
+      "update": 290,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "291": {
+      "finite_grad_norm": 0.007918199524283409,
+      "finite_loss": 0.03448512405157089,
+      "stage": "pair",
+      "update": 291,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "292": {
+      "finite_grad_norm": 0.007925896905362606,
+      "finite_loss": 0.034433431923389435,
+      "stage": "pair",
+      "update": 292,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "293": {
+      "finite_grad_norm": 0.007933774963021278,
+      "finite_loss": 0.03438158333301544,
+      "stage": "pair",
+      "update": 293,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "294": {
+      "finite_grad_norm": 0.007941839285194874,
+      "finite_loss": 0.03432954102754593,
+      "stage": "pair",
+      "update": 294,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "295": {
+      "finite_grad_norm": 0.007950149476528168,
+      "finite_loss": 0.03427744284272194,
+      "stage": "pair",
+      "update": 295,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "296": {
+      "finite_grad_norm": 0.00795863475650549,
+      "finite_loss": 0.034225139766931534,
+      "stage": "pair",
+      "update": 296,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "297": {
+      "finite_grad_norm": 0.007967370562255383,
+      "finite_loss": 0.03417268022894859,
+      "stage": "pair",
+      "update": 297,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "298": {
+      "finite_grad_norm": 0.0079763513058424,
+      "finite_loss": 0.034120094031095505,
+      "stage": "pair",
+      "update": 298,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "299": {
+      "finite_grad_norm": 0.007985584437847137,
+      "finite_loss": 0.034067340195178986,
+      "stage": "pair",
+      "update": 299,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "3": {
+      "finite_grad_norm": 1.178604245185852,
+      "finite_loss": 1.1025607585906982,
+      "stage": "pair",
+      "update": 3,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "30": {
+      "finite_grad_norm": 0.0973830595612526,
+      "finite_loss": 0.08231884241104126,
+      "stage": "pair",
+      "update": 30,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "300": {
+      "finite_grad_norm": 0.007995065301656723,
+      "finite_loss": 0.03401440382003784,
+      "stage": "pair",
+      "update": 300,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "31": {
+      "finite_grad_norm": 0.09763024002313614,
+      "finite_loss": 0.08183204382658005,
+      "stage": "pair",
+      "update": 31,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "32": {
+      "finite_grad_norm": 0.09754139184951782,
+      "finite_loss": 0.0812252089381218,
+      "stage": "pair",
+      "update": 32,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "33": {
+      "finite_grad_norm": 0.09713324904441833,
+      "finite_loss": 0.08051010966300964,
+      "stage": "pair",
+      "update": 33,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "34": {
+      "finite_grad_norm": 0.09641607850790024,
+      "finite_loss": 0.07969898730516434,
+      "stage": "pair",
+      "update": 34,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "35": {
+      "finite_grad_norm": 0.09539972245693207,
+      "finite_loss": 0.07880504429340363,
+      "stage": "pair",
+      "update": 35,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "36": {
+      "finite_grad_norm": 0.0940907895565033,
+      "finite_loss": 0.077841617166996,
+      "stage": "pair",
+      "update": 36,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "37": {
+      "finite_grad_norm": 0.09249390661716461,
+      "finite_loss": 0.07682221382856369,
+      "stage": "pair",
+      "update": 37,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "38": {
+      "finite_grad_norm": 0.09061019867658615,
+      "finite_loss": 0.07576007395982742,
+      "stage": "pair",
+      "update": 38,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "39": {
+      "finite_grad_norm": 0.08844346553087234,
+      "finite_loss": 0.07466861605644226,
+      "stage": "pair",
+      "update": 39,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "4": {
+      "finite_grad_norm": 1.1955655813217163,
+      "finite_loss": 0.995344340801239,
+      "stage": "pair",
+      "update": 4,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "40": {
+      "finite_grad_norm": 0.0859961062669754,
+      "finite_loss": 0.073560930788517,
+      "stage": "pair",
+      "update": 40,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "41": {
+      "finite_grad_norm": 0.08327353745698929,
+      "finite_loss": 0.07244983315467834,
+      "stage": "pair",
+      "update": 41,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "42": {
+      "finite_grad_norm": 0.08028288185596466,
+      "finite_loss": 0.0713476687669754,
+      "stage": "pair",
+      "update": 42,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "43": {
+      "finite_grad_norm": 0.07703671604394913,
+      "finite_loss": 0.07026617228984833,
+      "stage": "pair",
+      "update": 43,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "44": {
+      "finite_grad_norm": 0.07355495542287827,
+      "finite_loss": 0.0692165270447731,
+      "stage": "pair",
+      "update": 44,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "45": {
+      "finite_grad_norm": 0.06986686587333679,
+      "finite_loss": 0.06820898503065109,
+      "stage": "pair",
+      "update": 45,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "46": {
+      "finite_grad_norm": 0.06601312011480331,
+      "finite_loss": 0.06725265085697174,
+      "stage": "pair",
+      "update": 46,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "47": {
+      "finite_grad_norm": 0.06205182150006294,
+      "finite_loss": 0.06635540723800659,
+      "stage": "pair",
+      "update": 47,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "48": {
+      "finite_grad_norm": 0.05805964767932892,
+      "finite_loss": 0.06552356481552124,
+      "stage": "pair",
+      "update": 48,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "49": {
+      "finite_grad_norm": 0.05413564294576645,
+      "finite_loss": 0.06476154178380966,
+      "stage": "pair",
+      "update": 49,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "5": {
+      "finite_grad_norm": 1.1978378295898438,
+      "finite_loss": 0.8867526054382324,
+      "stage": "pair",
+      "update": 5,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "50": {
+      "finite_grad_norm": 0.05040378496050835,
+      "finite_loss": 0.0640719085931778,
+      "stage": "pair",
+      "update": 50,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "51": {
+      "finite_grad_norm": 0.04700708016753197,
+      "finite_loss": 0.06345479190349579,
+      "stage": "pair",
+      "update": 51,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "52": {
+      "finite_grad_norm": 0.044099725782871246,
+      "finite_loss": 0.0629081130027771,
+      "stage": "pair",
+      "update": 52,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "53": {
+      "finite_grad_norm": 0.041823387145996094,
+      "finite_loss": 0.062427446246147156,
+      "stage": "pair",
+      "update": 53,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "54": {
+      "finite_grad_norm": 0.04027584567666054,
+      "finite_loss": 0.062006451189517975,
+      "stage": "pair",
+      "update": 54,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "55": {
+      "finite_grad_norm": 0.03947506099939346,
+      "finite_loss": 0.06163667514920235,
+      "stage": "pair",
+      "update": 55,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "56": {
+      "finite_grad_norm": 0.03934548795223236,
+      "finite_loss": 0.06130865588784218,
+      "stage": "pair",
+      "update": 56,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "57": {
+      "finite_grad_norm": 0.03972854092717171,
+      "finite_loss": 0.06101208180189133,
+      "stage": "pair",
+      "update": 57,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "58": {
+      "finite_grad_norm": 0.0404215008020401,
+      "finite_loss": 0.06073710694909096,
+      "stage": "pair",
+      "update": 58,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "59": {
+      "finite_grad_norm": 0.04121529683470726,
+      "finite_loss": 0.06047423183917999,
+      "stage": "pair",
+      "update": 59,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "6": {
+      "finite_grad_norm": 1.2163901329040527,
+      "finite_loss": 0.777895987033844,
+      "stage": "pair",
+      "update": 6,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "60": {
+      "finite_grad_norm": 0.041929226368665695,
+      "finite_loss": 0.060215868055820465,
+      "stage": "pair",
+      "update": 60,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "61": {
+      "finite_grad_norm": 0.04242517426609993,
+      "finite_loss": 0.05995599180459976,
+      "stage": "pair",
+      "update": 61,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "62": {
+      "finite_grad_norm": 0.042613714933395386,
+      "finite_loss": 0.05969095230102539,
+      "stage": "pair",
+      "update": 62,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "63": {
+      "finite_grad_norm": 0.042449239641427994,
+      "finite_loss": 0.059419043362140656,
+      "stage": "pair",
+      "update": 63,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "64": {
+      "finite_grad_norm": 0.04192641004920006,
+      "finite_loss": 0.05914073437452316,
+      "stage": "pair",
+      "update": 64,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "65": {
+      "finite_grad_norm": 0.04107002541422844,
+      "finite_loss": 0.05885776877403259,
+      "stage": "pair",
+      "update": 65,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "66": {
+      "finite_grad_norm": 0.03993011638522148,
+      "finite_loss": 0.05857313424348831,
+      "stage": "pair",
+      "update": 66,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "67": {
+      "finite_grad_norm": 0.03857523202896118,
+      "finite_loss": 0.05829031765460968,
+      "stage": "pair",
+      "update": 67,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "68": {
+      "finite_grad_norm": 0.03708672523498535,
+      "finite_loss": 0.05801267921924591,
+      "stage": "pair",
+      "update": 68,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "69": {
+      "finite_grad_norm": 0.03555471822619438,
+      "finite_loss": 0.05774332955479622,
+      "stage": "pair",
+      "update": 69,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "7": {
+      "finite_grad_norm": 1.2902138233184814,
+      "finite_loss": 0.6657108068466187,
+      "stage": "pair",
+      "update": 7,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "70": {
+      "finite_grad_norm": 0.034070566296577454,
+      "finite_loss": 0.05748448520898819,
+      "stage": "pair",
+      "update": 70,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "71": {
+      "finite_grad_norm": 0.032717928290367126,
+      "finite_loss": 0.05723743885755539,
+      "stage": "pair",
+      "update": 71,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "72": {
+      "finite_grad_norm": 0.03155933693051338,
+      "finite_loss": 0.057002175599336624,
+      "stage": "pair",
+      "update": 72,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "73": {
+      "finite_grad_norm": 0.030624235048890114,
+      "finite_loss": 0.05677799880504608,
+      "stage": "pair",
+      "update": 73,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "74": {
+      "finite_grad_norm": 0.02989843115210533,
+      "finite_loss": 0.056562941521406174,
+      "stage": "pair",
+      "update": 74,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "75": {
+      "finite_grad_norm": 0.029325099661946297,
+      "finite_loss": 0.056354865431785583,
+      "stage": "pair",
+      "update": 75,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "76": {
+      "finite_grad_norm": 0.028816841542720795,
+      "finite_loss": 0.05615115910768509,
+      "stage": "pair",
+      "update": 76,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "77": {
+      "finite_grad_norm": 0.028278518468141556,
+      "finite_loss": 0.05594981461763382,
+      "stage": "pair",
+      "update": 77,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "78": {
+      "finite_grad_norm": 0.027632659301161766,
+      "finite_loss": 0.05574929341673851,
+      "stage": "pair",
+      "update": 78,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "79": {
+      "finite_grad_norm": 0.02684115618467331,
+      "finite_loss": 0.05554886534810066,
+      "stage": "pair",
+      "update": 79,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "8": {
+      "finite_grad_norm": 1.3807679414749146,
+      "finite_loss": 0.5440047979354858,
+      "stage": "pair",
+      "update": 8,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "80": {
+      "finite_grad_norm": 0.025915194302797318,
+      "finite_loss": 0.05534881353378296,
+      "stage": "pair",
+      "update": 80,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "81": {
+      "finite_grad_norm": 0.024911999702453613,
+      "finite_loss": 0.055149853229522705,
+      "stage": "pair",
+      "update": 81,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "82": {
+      "finite_grad_norm": 0.02392021007835865,
+      "finite_loss": 0.05495307222008705,
+      "stage": "pair",
+      "update": 82,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "83": {
+      "finite_grad_norm": 0.023036090657114983,
+      "finite_loss": 0.05475948750972748,
+      "stage": "pair",
+      "update": 83,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "84": {
+      "finite_grad_norm": 0.022339945659041405,
+      "finite_loss": 0.05456963926553726,
+      "stage": "pair",
+      "update": 84,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "85": {
+      "finite_grad_norm": 0.02187742106616497,
+      "finite_loss": 0.05438367277383804,
+      "stage": "pair",
+      "update": 85,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "86": {
+      "finite_grad_norm": 0.021651925519108772,
+      "finite_loss": 0.054201118648052216,
+      "stage": "pair",
+      "update": 86,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "87": {
+      "finite_grad_norm": 0.02162984199821949,
+      "finite_loss": 0.054021019488573074,
+      "stage": "pair",
+      "update": 87,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "88": {
+      "finite_grad_norm": 0.021754294633865356,
+      "finite_loss": 0.05384226515889168,
+      "stage": "pair",
+      "update": 88,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "89": {
+      "finite_grad_norm": 0.021960433572530746,
+      "finite_loss": 0.053663477301597595,
+      "stage": "pair",
+      "update": 89,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "9": {
+      "finite_grad_norm": 1.3481512069702148,
+      "finite_loss": 0.4153749942779541,
+      "stage": "pair",
+      "update": 9,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "90": {
+      "finite_grad_norm": 0.022187456488609314,
+      "finite_loss": 0.05348328500986099,
+      "stage": "pair",
+      "update": 90,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "91": {
+      "finite_grad_norm": 0.022386671975255013,
+      "finite_loss": 0.053300656378269196,
+      "stage": "pair",
+      "update": 91,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "92": {
+      "finite_grad_norm": 0.02252303808927536,
+      "finite_loss": 0.05311467498540878,
+      "stage": "pair",
+      "update": 92,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "93": {
+      "finite_grad_norm": 0.022576218470931053,
+      "finite_loss": 0.05292486026883125,
+      "stage": "pair",
+      "update": 93,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "94": {
+      "finite_grad_norm": 0.022539347410202026,
+      "finite_loss": 0.05273100733757019,
+      "stage": "pair",
+      "update": 94,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "95": {
+      "finite_grad_norm": 0.022417185828089714,
+      "finite_loss": 0.052533023059368134,
+      "stage": "pair",
+      "update": 95,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "96": {
+      "finite_grad_norm": 0.022225821390748024,
+      "finite_loss": 0.05233140289783478,
+      "stage": "pair",
+      "update": 96,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "97": {
+      "finite_grad_norm": 0.02198926731944084,
+      "finite_loss": 0.052126504480838776,
+      "stage": "pair",
+      "update": 97,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "98": {
+      "finite_grad_norm": 0.021737264469265938,
+      "finite_loss": 0.051918789744377136,
+      "stage": "pair",
+      "update": 98,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    },
+    "99": {
+      "finite_grad_norm": 0.021501770243048668,
+      "finite_loss": 0.05170883610844612,
+      "stage": "pair",
+      "update": 99,
+      "updated_weights_finite": true,
+      "weights_changed": true
+    }
+  }
+}

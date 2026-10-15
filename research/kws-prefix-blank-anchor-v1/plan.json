@@ -1,0 +1,117 @@
+{
+  "schema": "kws-prefix-blank-anchor-plan-v1",
+  "purpose": "exposed-machine-only-prefix-blank-causal-diagnostic",
+  "production_qualified": false,
+  "execution_enabled": true,
+  "seed": 20261015,
+  "model": {
+    "feature_dim": 32,
+    "hidden_dim": 48,
+    "vocab_size": 5
+  },
+  "targets_by_text": {
+    "你好小窝": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "小窝小窝": [
+      3,
+      4,
+      3,
+      4
+    ]
+  },
+  "optimizer": {
+    "name": "Adam",
+    "lr": 0.003,
+    "weight_decay": 0.0,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "gradient_clip": 5.0
+  },
+  "ctc": {
+    "blank": 0,
+    "reduction": "none",
+    "zero_infinity": false,
+    "normalization": "per-sample-input-frame-count"
+  },
+  "max_optimizer_calls": 600,
+  "retries": 0,
+  "new_tts_calls": 0,
+  "new_asr_calls": 0,
+  "warm_start": false,
+  "augmentation": false,
+  "vad": false,
+  "export_weights": false,
+  "pair_record_ids": [
+    "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+    "tts-quality-remaining-20261014-v1:tqp-qwen06-06"
+  ],
+  "registry_sha256": "28033edbbc1e444eae27c33af2e060d1654c4b7a072e65401b055fc27fc3b1b0",
+  "source_verifier_sha256": "9d37fb852cdd5048a4d5c88f9e21efe2b3c1e18f25244babb2d811675ea9fbae",
+  "runtime_lock_sha256": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
+  "code_sha256": {
+    "training/model.py": "768800e25537367da770ef44178249208956d7c3c33f1eb7d60b1b9c98fe59c5",
+    "training/frontend.py": "d8ae687303d5c9c6bfdf6539c94f4ae463d910a4837ed77633d7656ff02a582e",
+    "training/frontend_spec.py": "fbd17236e1449101bed6df8f105baad476edb0b005e6e45cb83ebc7971d166e6"
+  },
+  "campaign_id": "kws-prefix-blank-anchor-20261015-v1",
+  "campaign_claim_path": "research-budget/kws-prefix-blank-anchor-20261015-v1.claim.json",
+  "input_pins_sha256": "64c77a270c7f13d8252d10282191aaeb207f425c10fb89a2f01e390fa994e37c",
+  "frontend": {
+    "frontend": "logmel",
+    "feature_dim": 32,
+    "frame_len": 400,
+    "hop": 320
+  },
+  "stages": [
+    {
+      "name": "C",
+      "updates": 300,
+      "checkpoints": [
+        0,
+        50,
+        100,
+        200,
+        300
+      ],
+      "blank_lambda": 0
+    },
+    {
+      "name": "T",
+      "updates": 300,
+      "checkpoints": [
+        0,
+        50,
+        100,
+        200,
+        300
+      ],
+      "blank_lambda": 1
+    }
+  ],
+  "prefix_frames": {
+    "KW1": 23,
+    "KW2": 10
+  },
+  "observation_timing": "post-step; step 0 before any optimizer call",
+  "loss_timing": "pre-step",
+  "max_model_forward_calls": 610,
+  "control_comparison": "exact frozen public observables at 0/50/100/200/300; mismatch stops entire campaign",
+  "energy_sha256": {
+    "prefix-energy-summary.json": "c165bcd51a8ee2b9dabd975ca396858a2b27b3d5e331caff82c423bb2436dbba",
+    "prefix-energy-windows.json": "6cf75569e14fef2ec63ab557c750fcc1c1482b5325e8a52ab970cbb229934220"
+  },
+  "control_baseline_sha256": "7454a7d86521a52454f80e5bc15e250b4be35a5fcc986d9fc4b92ce0446a3f41",
+  "diagnostic_code_sha256": {
+    "run_anchor.py": "c1e86e3cfebae4b22ba53bf90d529d83fdbb4ba7741f58be21026231c8a8c356",
+    "contract.py": "c8be7726cbcba02d9c825a9e5562ef41160b0fb4e0490e46b66d0c0125615377",
+    "numeric_preflight.py": "3ddf32bd10a28b2f2de2b14ae53ef1b358dae1cb43d4a774ef581f09acfad0d4",
+    "requirements.research.lock": "7aa51b6eebd2e2db290338345c30b8c7a8e197531746ee77efb7ef8678124dee"
+  }
+}
