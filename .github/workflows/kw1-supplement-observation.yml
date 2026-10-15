@@ -1,0 +1,30 @@
+name: KW1 supplement observation
+on:
+  pull_request:
+    paths:
+      - 'research/kw1-preset-supplement-observation-v1/**'
+      - '.github/workflows/kw1-supplement-observation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'research/kw1-preset-supplement-observation-v1/**'
+      - '.github/workflows/kw1-supplement-observation.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Offline text verification and tamper tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=research/kw1-preset-supplement-observation-v1
+          for optimization in '' '-O' '-OO'; do
+            python3 -I -S -B $optimization "$root/verify_observation.py"
+            python3 -I -S -B $optimization "$root/test_verify_observation.py"
+          done

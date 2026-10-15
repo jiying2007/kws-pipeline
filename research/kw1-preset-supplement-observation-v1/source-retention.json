@@ -1,0 +1,44 @@
+{
+  "schema": "kw1-observation-source-retention-v1",
+  "scope": "Public code and evidence metadata only; no persistent public full ZIP is asserted.",
+  "sources": {
+    "run": "https://github.com/jiying2007/kws-pipeline/actions/runs/38664865348",
+    "source": "https://github.com/jiying2007/kws-pipeline/tree/1ef2b7e9b9d236c13f33b1bdee78d8ae754dc8fa",
+    "artifact_metadata": "https://api.github.com/repos/jiying2007/kws-pipeline/actions/artifacts/11942325284"
+  },
+  "files": {
+    "README.md": {
+      "bytes": 6291,
+      "sha256": "db0461700da51112a3ad3530f1ca0c25f6fec548c26d3e70c0db9bc1a2eb07ed"
+    },
+    "ledger.json": {
+      "bytes": 7297,
+      "sha256": "4f210056be3e5d928cd6dabaae1f0966c3cc579043d1f7008def9ee25ecde31f"
+    },
+    "manifest.json": {
+      "bytes": 44068,
+      "sha256": "32aa7a8cff84bbb06d57d3e4c05acfab8885435861eadbd1614a81a71a14416e"
+    },
+    "observation.json": {
+      "bytes": 126850,
+      "sha256": "95c67c26d04bfdbba41df11540c084ab99ad736e0b8147383d93808be40a919e"
+    },
+    "report.json": {
+      "bytes": 62615,
+      "sha256": "97f0e461d345a22fed6896b6f8d498f941101c21deccfa72f58957337054b263"
+    },
+    "test_verify_observation.py": {
+      "bytes": 3302,
+      "sha256": "aebf7089568b35d49f6b42b598d1b09fea731a0a7eab26eabc6ec88c7fb8ad92"
+    },
+    "verify_observation.py": {
+      "bytes": 6903,
+      "sha256": "9d52b911734314e30eb052aa17ebba3531e7b69c9fc1c633dd26aa23e0753910"
+    }
+  },
+  "workflow": {
+    "path": ".github/workflows/kw1-supplement-observation.yml",
+    "bytes": 964,
+    "sha256": "3882b9b5498c3479086c354eb393142339c1466ce468a25ad5efd19ec1dd0731"
+  }
+}
