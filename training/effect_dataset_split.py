@@ -118,6 +118,10 @@ def plan(rows, seed='effect-split-v1'):
             namespace = ('pcm' if field in PCM_FIELDS else 'audio-file' if field in AUDIO_ID_FIELDS
                          else 'source' if field in SOURCE_ID_FIELDS else field)
             identities.append((namespace, value))
+        # Preset voices are conservative leakage links, never real speaker IDs.
+        # Do not namespace by engine: two engines may share the same preset.
+        if known(row.get('preset_voice_id')):
+            identities.append(('preset-voice', row['preset_voice_id'].strip()))
         # Path linkage also protects derivatives when source PCM is unavailable.
         identities += [('path:' + row.get('audio_root_id', ''), row[field])
                        for field in ('path', 'source_path') if known(row.get(field))]
@@ -169,6 +173,171 @@ def plan(rows, seed='effect-split-v1'):
                                         ('development', 'sealed_acceptance'))},
             'training_admitted': False, 'product_qualification_allowed': False,
             'note': 'A planned sealed partition is not qualification evidence. Existing admission, live-byte audit and independent evaluation are still required.'}
+
+
+
+# This is an explicit, offline eligibility audit, not a new admission authority.
+EVALUATION_ROLES = ('calibration', 'selection', 'sealed_test')
+ROLE_ALIASES = {**SPLIT_ALIASES, 'calibration': 'calibration',
+                'selection': 'selection', 'test': 'sealed_test',
+                'qualification': 'sealed_test', 'sealed_acceptance': 'sealed_test',
+                'sealed_test': 'sealed_test', 'screening': 'screening',
+                'target_informed_selection': 'target_informed_selection'}
+
+
+def check_role_eligibility(rows, required_roles=EVALUATION_ROLES):
+    """Audit explicit roles without allocating or rewriting any input partition.
+
+    New evaluation candidates require evaluation_role, history_complete=True,
+    exposure_history=[] (or recorded prior uses), history_evidence_id, and
+    source_kind='real'. Synthetic preset voices cannot establish real speakers.
+    Exposure events are objects with a known ``role``; extra evidence is retained.
+    Existing split aliases remain binding. A broad development history never
+    proves independent calibration/selection. Supply the complete support set,
+    including training/exposed ancestors, together: absent records cannot be
+    audited. No boolean here certifies live bytes, gold labels or admission.
+    """
+    import copy
+    sys.path.insert(0, str(ROOT / 'tools'))
+    from speech_asr_consensus import has_machine_consensus
+
+    def machine_candidate(value):
+        if isinstance(value, list):
+            return any(machine_candidate(item) for item in value)
+        if not isinstance(value, dict):
+            return False
+        return (has_machine_consensus(value) or
+                any(value.get(key) is True for key in
+                    ('machine_train_only_candidate', 'three_model_training_candidate')) or
+                value.get('label_origin') in ('machine-consensus', 'machine_consensus') or
+                value.get('label_source') == 'three_asr_machine_consensus' or
+                value.get('tier') in ('machine_three_asr_training_candidate', 'machine_high_confidence_candidate') or
+                any(machine_candidate(item) for item in value.values()))
+
+    def metadata_blockers(value):
+        # JSON booleans must not be silently confused with integers or strings.
+        # Validate nested provenance too; an outer tag cannot clear old evidence.
+        boolean_fields = ('development_only', 'previously_used_for_tuning',
+                          'previously_used_for_training', 'previously_exposed',
+                          'test_results_seen', 'history_complete',
+                          'machine_train_only_candidate', 'three_model_training_candidate',
+                          'asr_or_target_seen_before_listening', 'human_gold')
+        label_values = {
+            'label_origin': ('human-review', 'human_review', 'human',
+                             'machine-consensus', 'machine_consensus'),
+            'label_source': ('human-review', 'human_review', 'independent-human-review',
+                             'three_asr_machine_consensus', 'machine-three-asr-consensus-v1'),
+            'tier': ('human_review_recorded',),
+            'quality_tier': ('human_review_recorded',),
+        }
+        reasons = set()
+        if isinstance(value, list):
+            for item in value:
+                reasons.update(metadata_blockers(item))
+        elif isinstance(value, dict):
+            for key, item in value.items():
+                if key in boolean_fields and type(item) is not bool:
+                    reasons.add('invalid_boolean_metadata:' + key)
+                if key in ('previously_used_for_training', 'previously_used_for_tuning',
+                           'development_only', 'previously_exposed', 'test_results_seen') and item is True:
+                    reasons.add('retained_exposure_flag:' + key)
+                if key == 'history_complete' and item is False:
+                    reasons.add('retained_incomplete_history')
+                if key in label_values and item not in label_values[key]:
+                    reasons.add('unknown_or_unsupported_label_metadata:' + key)
+                reasons.update(metadata_blockers(item))
+        return reasons
+
+    rows = copy.deepcopy(list(rows))
+    required_roles = tuple(required_roles)
+    if not required_roles or len(set(required_roles)) != len(required_roles) or any(
+            role not in EVALUATION_ROLES for role in required_roles):
+        raise ValueError('required_roles must be distinct explicit evaluation roles')
+    # Reuse all existing identity validation and transitive lineage grouping.
+    # Historical conflicts continue to raise rather than being silently repaired.
+    grouping = plan(rows)
+    by_id = {row['record_id']: row for row in rows}
+    groups = defaultdict(list)
+    for planned in grouping['rows']:
+        groups[planned['group_id']].append(by_id[planned['record_id']])
+    results, support = [], []
+    for group_id, members in sorted(groups.items()):
+        history, assigned, blockers = set(), set(), set()
+        for row in members:
+            blockers.update(metadata_blockers(row))
+            row_history = set()
+            for field in ('split', 'planned_split', 'previous_split'):
+                if row.get(field) is not None:
+                    value = row[field].strip().lower()
+                    row_history.add(ROLE_ALIASES[value])
+            if row.get('development_only') is True or row.get('previously_used_for_tuning') is True:
+                row_history.add('development')
+            if row.get('previously_used_for_training') is True:
+                row_history.add('train')
+            events = row.get('exposure_history')
+            if row.get('history_complete') is not True or not isinstance(events, list):
+                blockers.add('missing_complete_exposure_history')
+                events = []
+            for event in events:
+                role = event.get('role') if isinstance(event, dict) else None
+                if not isinstance(role, str) or role.strip().lower() not in ROLE_ALIASES:
+                    blockers.add('unknown_exposure_role')
+                else:
+                    row_history.add(ROLE_ALIASES[role.strip().lower()])
+            role = row.get('evaluation_role')
+            if role is not None and role not in EVALUATION_ROLES:
+                blockers.add('unknown_evaluation_role')
+            elif role is not None:
+                assigned.add(role)
+            else:
+                # Only exact retained roles can supply an assignment; development
+                # cannot be guessed into calibration or selection.
+                exact_roles = row_history & set(EVALUATION_ROLES)
+                assigned.update(exact_roles)
+                if not exact_roles:
+                    blockers.add('missing_explicit_role')
+            if row.get('source_kind') not in ('real', 'synthetic'):
+                blockers.add('unknown_source_kind')
+            elif row.get('source_kind') == 'synthetic':
+                blockers.add('synthetic_voice_not_independent_real_speaker')
+            if not known(row.get('history_evidence_id')):
+                blockers.add('missing_exposure_history_evidence')
+            if not all(known(row.get(field)) for field in REQUIRED):
+                blockers.add('missing_source_speaker_or_session_lineage')
+            if row.get('audio_status') != 'verified_pcm16' or not known(row.get('pcm_sha256')):
+                blockers.add('missing_verified_pcm_identity')
+            if quality_tier(row) != 'human_review_recorded' or machine_candidate(row) or row.get('label_origin') == 'machine_consensus':
+                blockers.add('not_independently_human_reviewed')
+            if row.get('previously_exposed') is True or row.get('test_results_seen') is True:
+                blockers.add('previously_exposed')
+            history.update(row_history)
+            support.append({'record_id': row['record_id'], 'group_id': group_id,
+                            'historical_roles': sorted(row_history),
+                            'exposure_history': copy.deepcopy(row.get('exposure_history')),
+                            'history_complete': row.get('history_complete') is True})
+        for row in members:
+            role_blockers = {}
+            for role in required_roles:
+                reasons = set(blockers)
+                if assigned != {role}:
+                    reasons.add('missing_or_conflicting_explicit_role')
+                if history - {role}:
+                    reasons.add('incompatible_historical_support')
+                if role == 'sealed_test' and history:
+                    reasons.add('sealed_test_already_exposed')
+                role_blockers[role] = sorted(reasons)
+            results.append({'record_id': row['record_id'], 'group_id': group_id,
+                            'role_eligibility': {role: not reasons for role, reasons in role_blockers.items()},
+                            'role_blockers': role_blockers,
+                            'fresh_heldout': not history and any(not r for r in role_blockers.values()),
+                            'input': row,
+                            'human_gold': False, 'training_admitted': False,
+                            'product_qualification_allowed': False})
+    return {'schema': 'effect-role-eligibility-v1', 'required_roles': list(required_roles),
+            'rows': sorted(results, key=lambda row: row['record_id']),
+            'historical_support': sorted(support, key=lambda row: row['record_id']),
+            'training_admitted': False, 'product_qualification_allowed': False,
+            'note': 'Eligibility is conditional on supplied support metadata; not live-byte verification, gold certification, or admission.'}
 
 
 def write_outputs(report, output):

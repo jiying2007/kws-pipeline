@@ -13,7 +13,7 @@ import zipfile
 sys.dont_write_bytecode = True
 HERE = Path(__file__).resolve().parent
 SOURCE = HERE.parents[1]
-MANIFEST_SHA = '11db24fbb69955706021ceddf678ac3cd764d9d1d3416f91022fa43f24389fce'
+MANIFEST_SHA = '7c0e7fd7dcd97eded59ebeecc729771bcf8f23dcf6de6090583d4f561f04b83d'
 ASR_REL = 'research/k1-punctuation6-asr18-v1/'
 MAX_LOG = 8 * 1024 ** 2
 SAFE_FAILURE = '{"schema":"k1-asr18-offline-acceptance-failure-v1","status":"blocked_or_unconfirmed","native_success_established":false,"consumed_attempts":null,"retry_authorized":false}'
