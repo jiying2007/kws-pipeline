@@ -1,0 +1,54 @@
+{
+  "schema": "float-c-parity-small-package-v1",
+  "files": [
+    {
+      "path": "summary.json",
+      "bytes": 1078,
+      "sha256": "ea2ce01d45be44aa45a252ad57ef9260419b867dec1c23d2f971bb2e388a71bb"
+    },
+    {
+      "path": "compare.py",
+      "bytes": 5927,
+      "sha256": "eb02abebb18aa50bd6c390908a3ce2d6b43b2e6048592bf9a54e251a691c1518"
+    },
+    {
+      "path": "requirements.lock",
+      "bytes": 1052,
+      "sha256": "e84012b0b04961ead855069f0f4810e8b3a5e000932eec0a1a113e491362573c"
+    },
+    {
+      "path": "wheels.json",
+      "bytes": 2416,
+      "sha256": "c8ad69b5f725329a38d573955b75b18c8f43ac4c0758f6227a528137f4817e8c"
+    },
+    {
+      "path": "run/receipt.json",
+      "bytes": 15691,
+      "sha256": "fe146425c2e3b05ec5f536b42c522716288e12ba9a7dd861fa85787c8f83da20"
+    },
+    {
+      "path": "run/analysis.json",
+      "bytes": 9988,
+      "sha256": "2decb08174c0ce012c765da445572a302860cc71398078bfe1a950a23284c5e0"
+    },
+    {
+      "path": "verify_package.py",
+      "bytes": 1320,
+      "sha256": "d6ac81f932aa71b9dd4cbd4bd39bf88b71c25ce045fd2dcd89bd3c27755f5a51"
+    },
+    {
+      "path": "independent-float-parity-audit.json",
+      "bytes": 9336,
+      "sha256": "a7adeacffbca248ccb98c865b37750e94b5433eb0e6c56039c38cce2f444de98"
+    }
+  ],
+  "excluded": [
+    "checkpoint",
+    "weights",
+    "audio",
+    "raw logits",
+    "wheel bodies",
+    "venv"
+  ],
+  "independent_review": "pass"
+}

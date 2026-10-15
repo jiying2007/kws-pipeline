@@ -1,0 +1,21 @@
+{
+  "schema": "kws-fit-history-recovery-status-v1",
+  "checked_at_utc": "2026-10-15T00:09:17Z",
+  "repository": "jiying2007/kws-pipeline",
+  "public_summary": {
+    "url": "https://github.com/jiying2007/kws-pipeline/pull/579#issuecomment-6172242976",
+    "created_at": "2026-10-14T15:43:39Z",
+    "body": "后续独立开发拟合观测（尚未作为源码/结果包合入）：固定13条已暴露机器三ASR正例，非human gold、非fresh heldout。20epoch实验两臂各260更新：RNN与C1完整序列均0/13，whole/chunk校验通过；实际结果独立审计SHA256 76f6a6acfcd4c8dfd405a67267d5ecb63d9ae14c13626822e9a72520cd96e308。另一个从头固定200epoch学习曲线：RNN完成2600更新，epoch20/50/100/200完整匹配0/0/11/11，但后两点13条全部输出多数类[3,4,3,4]，KW1持续0/2，不能视作质量达标。C1到1300更新时epoch100观察抛AssertionError；仅epoch20/50完成，各0/13；epoch200未执行，实验INCOMPLETE。异常具体样本/误差未留存，依据冻结源码唯一显式assert_close仅可推断whole/chunk检查失败，不补造数据。学习曲线实际审计SHA256 40176b2d2aebcb615e69b85f65a1a7de56c98e1a6d224c4967aa823d92f3b860。两次实验无重试、无阈值变更或产品权重发布。已独立验证46文件源/结果/未来诊断helper归档overlay，canonical SHA256 92cfc3abc6fe090cf5f4170f11495ccaf11641035d6ecb971f190b22229e3788，仍待正式提交。本评论保存已验证结果摘要，不代表该未提交包或下一轮16TTS+48ASR已远端落地。"
+  },
+  "original_overlay": {
+    "files": 46,
+    "bytes": 363196,
+    "canonical_sha256": "92cfc3abc6fe090cf5f4170f11495ccaf11641035d6ecb971f190b22229e3788",
+    "status": "NOT_RECOVERED"
+  },
+  "evidence_scope": "Public historical summary is retrievable. Original uncommitted source/result overlay is not available in the current recovery workspace. Prior local checks are not rerun or inherited.",
+  "new_training_calls": 0,
+  "raw_receipts_reconstructed": false,
+  "quality_admission": false,
+  "followup": "Preserve this gap. Do not regenerate results or infer missing failure sample, error or final checkpoint."
+}

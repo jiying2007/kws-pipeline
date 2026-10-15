@@ -1,0 +1,33 @@
+{
+  "status": "observed",
+  "frames": 1375,
+  "top1_agreement_frames": 1372,
+  "top1_agreement_fraction": 0.9978181818181818,
+  "float_top1_counts": [
+    1314,
+    32,
+    24,
+    0,
+    5
+  ],
+  "c_top1_counts": [
+    1317,
+    31,
+    22,
+    0,
+    5
+  ],
+  "maximum_absolute_logit_difference": 2.197591483592987,
+  "global_logit_rmse": 0.12991112835966848,
+  "float_xiao3_max_exact_softmax": 0.06333804841384408,
+  "float_xiao3_min_top_gap": 2.488513946533203,
+  "conclusion": "Floating checkpoint also lacks xiao3 support on all fixed 13 inputs. Quantized C is not the sole cause of lost xiao3 support. Numeric equality is not established; nonzero logit differences remain.",
+  "limits": [
+    "13 machine-labeled development samples; no human quality claim.",
+    "No standalone C-feature dump was performed, so differences conflate quantization, C activation/accumulation and frontend floating arithmetic.",
+    "No threshold/weight change, training, padding, new C dump, TTS or ASR."
+  ],
+  "float_forward_calls": 13,
+  "new_c_acoustic_calls": 0,
+  "gpu_used": false
+}

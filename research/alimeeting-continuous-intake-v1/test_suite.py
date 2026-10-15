@@ -9,7 +9,7 @@ def main():
     loader=unittest.TestLoader()
     names=('test_alimeeting_eval','test_diagnostic_runner','test_compare_overlap','test_run_control','test_ab_data_admission','test_receipts')
     suite=unittest.TestSuite(loader.loadTestsFromName(name) for name in names)
-    if loader.errors or suite.countTestCases()!=83:
+    if loader.errors or suite.countTestCases()!=84:
         raise RuntimeError('Explicit offline suites failed discovery or returned unexpected test count')
     result=unittest.TextTestRunner(verbosity=2).run(suite)
     if result.skipped or result.testsRun!=suite.countTestCases():

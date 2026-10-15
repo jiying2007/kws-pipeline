@@ -1,0 +1,229 @@
+{
+  "all_input_and_output_hashes_match": true,
+  "analysis_sha256": "2decb08174c0ce012c765da445572a302860cc71398078bfe1a950a23284c5e0",
+  "c_top1_counts": [
+    1317,
+    31,
+    22,
+    0,
+    5
+  ],
+  "checkpoint_sha256_matches_provenance": "d005bfe74188c0e24e9e665c10251fd6feea5c879ebcbe96cb8c85f6a85ea14b",
+  "clips": [
+    {
+      "c_xiao3_top1": 0,
+      "float_logits_sha256": "0e9add974c8ad5fbd081155a1d5d204fcfe425993703ea5fde00278b2420a6fe",
+      "float_xiao3_top1": 0,
+      "frames": 127,
+      "logit_max_abs_difference": 0.4679349660873413,
+      "logit_rmse": 0.08605519654515402,
+      "sample_id": "tqp-qwen06-03",
+      "top1_agreement_frames": 127
+    },
+    {
+      "c_xiao3_top1": 0,
+      "float_logits_sha256": "f3867540a72171b988fad9349098cb03b2e23d4bc4e23467828c0fafbd7d34cf",
+      "float_xiao3_top1": 0,
+      "frames": 71,
+      "logit_max_abs_difference": 2.197591483592987,
+      "logit_rmse": 0.3469147239609641,
+      "sample_id": "tqp-qwen06-05",
+      "top1_agreement_frames": 69
+    },
+    {
+      "c_xiao3_top1": 0,
+      "float_logits_sha256": "aaba9d3a5c1d1ee9aef62cff5413d718e68cb3f7ddccccf75a7f2eb6ffadc811",
+      "float_xiao3_top1": 0,
+      "frames": 83,
+      "logit_max_abs_difference": 0.4463925361633301,
+      "logit_rmse": 0.0952610184152362,
+      "sample_id": "tqp-qwen06-06",
+      "top1_agreement_frames": 83
+    },
+    {
+      "c_xiao3_top1": 0,
+      "float_logits_sha256": "39f760934ec04b26719c800fed686b6e2a9fe06d980830323d2afb9a6f337ac1",
+      "float_xiao3_top1": 0,
+      "frames": 191,
+      "logit_max_abs_difference": 0.7359349727630615,
+      "logit_rmse": 0.1380620476301948,
+      "sample_id": "tqp-qwen06-10",
+      "top1_agreement_frames": 191
+    },
+    {
+      "c_xiao3_top1": 0,
+      "float_logits_sha256": "07372dc76ff7b16bcd2bacbe889a6b78c30aa71cd0a8fe2a04c8ac8805f59efe",
+      "float_xiao3_top1": 0,
+      "frames": 255,
+      "logit_max_abs_difference": 0.7694253921508789,
+      "logit_rmse": 0.14729139051478943,
+      "sample_id": "tqp-qwen06-11",
+      "top1_agreement_frames": 255
+    },
+    {
+      "c_xiao3_top1": 0,
+      "float_logits_sha256": "209888129653734aee7881e62725968f624a189333cf9bfca75399cda38c8bba",
+      "float_xiao3_top1": 0,
+      "frames": 111,
+      "logit_max_abs_difference": 0.1938495635986328,
+      "logit_rmse": 0.06706694939992765,
+      "sample_id": "tqp-qwen06-14",
+      "top1_agreement_frames": 111
+    },
+    {
+      "c_xiao3_top1": 0,
+      "float_logits_sha256": "4263d76aa90cdbfe3b887739f147b2e8255b68ea650df5896e3e07778f4f5123",
+      "float_xiao3_top1": 0,
+      "frames": 95,
+      "logit_max_abs_difference": 0.1654672622680664,
+      "logit_rmse": 0.05897056555120693,
+      "sample_id": "tqp-qwen06-15",
+      "top1_agreement_frames": 95
+    },
+    {
+      "c_xiao3_top1": 0,
+      "float_logits_sha256": "86d37eac91d16da11be1363ff84f073623ec7ee9fa322fc58fff9dc45b4285fd",
+      "float_xiao3_top1": 0,
+      "frames": 67,
+      "logit_max_abs_difference": 0.605501651763916,
+      "logit_rmse": 0.1209209351007083,
+      "sample_id": "tqp-qwen17-01",
+      "top1_agreement_frames": 67
+    },
+    {
+      "c_xiao3_top1": 0,
+      "float_logits_sha256": "9258e2dfbf1218aeb0126c6ec7d4a8221fda1c918f26fd4f7d08d70d8ffc9de6",
+      "float_xiao3_top1": 0,
+      "frames": 87,
+      "logit_max_abs_difference": 0.3560190200805664,
+      "logit_rmse": 0.07165455114228417,
+      "sample_id": "tqp-qwen17-02",
+      "top1_agreement_frames": 87
+    },
+    {
+      "c_xiao3_top1": 0,
+      "float_logits_sha256": "3a32a661269c99bf446f6b2b1bedd3f911811a9b99af96edcbedfc50a86e3641",
+      "float_xiao3_top1": 0,
+      "frames": 59,
+      "logit_max_abs_difference": 0.4383964538574219,
+      "logit_rmse": 0.09428899382400648,
+      "sample_id": "tqp-qwen17-03",
+      "top1_agreement_frames": 58
+    },
+    {
+      "c_xiao3_top1": 0,
+      "float_logits_sha256": "c0b5d761ad46a385cd464d0c8df450d577ede97813c7ec7f7d47c4053d4236b1",
+      "float_xiao3_top1": 0,
+      "frames": 83,
+      "logit_max_abs_difference": 0.26311206817626953,
+      "logit_rmse": 0.07646597217840627,
+      "sample_id": "tqp-qwen17-06",
+      "top1_agreement_frames": 83
+    },
+    {
+      "c_xiao3_top1": 0,
+      "float_logits_sha256": "5fa9a889d50e612af964ab0f9bfc98b6496dd9e77eb148cbef3a2b7c9d9abf49",
+      "float_xiao3_top1": 0,
+      "frames": 83,
+      "logit_max_abs_difference": 0.21303558349609375,
+      "logit_rmse": 0.06198445702360976,
+      "sample_id": "tqp-qwen17-14",
+      "top1_agreement_frames": 83
+    },
+    {
+      "c_xiao3_top1": 0,
+      "float_logits_sha256": "c9116054a3bd85f439c8483da38a8f77e4114092583b2cdd7ee3e4b8f5cdaaf1",
+      "float_xiao3_top1": 0,
+      "frames": 63,
+      "logit_max_abs_difference": 0.2031545639038086,
+      "logit_rmse": 0.05768566457471166,
+      "sample_id": "tqp-qwen17-15",
+      "top1_agreement_frames": 63
+    }
+  ],
+  "compare_script_sha256": "eb02abebb18aa50bd6c390908a3ce2d6b43b2e6048592bf9a54e251a691c1518",
+  "existing_C_traces_unchanged_during_review": 13,
+  "float_top1_counts": [
+    1314,
+    32,
+    24,
+    0,
+    5
+  ],
+  "float_xiao3_max_exact_softmax": 0.06333804841384408,
+  "float_xiao3_min_top_gap": 2.488513946533203,
+  "floating_checkpoint_deserializations_by_auditor": 0,
+  "frames": 1375,
+  "frozen_c_model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+  "frozen_keyword_pack_sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+  "global_logit_rmse_independent_direct_accumulation": 0.12991112835966845,
+  "historical_source_sha256_matches_provenance": {
+    "frontend.py": "91f7334c108adf0f6ccd5993a97299b32e210adef048c6b7fbd89b336c1f890e",
+    "frontend_spec.py": "3a0219e9f6c1ac629de1d6f437efa9b747c6edda0a05bd38eb6d5fcbbb2345a3",
+    "model.py": "e829bb3b393205b333fc82aaadc54927465680d50482253b4a372535f96b6b8e"
+  },
+  "input_allowlist_count": 36,
+  "install_report_sha256": "522788427b092bf1f60fa7df94872a5d24607e438d3edcfa886738987ef31106",
+  "interpretation": "Both retained float and quantized C outputs lack token3/xiao3 top-1 support on these exact 13 machine-labelled development samples. The float minimum root gap also exceeds the frozen 0.5 root-start margin. Quantized C behavior alone cannot explain this shared failure. Numeric equivalence is not established. Differences cannot be uniquely attributed to quantization, C arithmetic, or frontend arithmetic from these artifacts.",
+  "limitations": [
+    "The auditor recomputed metrics from saved outputs without re-running the forward pass.",
+    "Feature SHA values are retained claims: raw feature tensors were not retained, so they were not independently numerically reproduced.",
+    "Checkpoint tensor contract is assessed from the hash-bound script and successful receipt; the auditor did not deserialize the checkpoint.",
+    "No heldout or qualification data or metrics were accessed. No human FRR/FAR/generalization inference is supported."
+  ],
+  "logit_values_compared": 6875,
+  "maximum_absolute_logit_difference": 2.197591483592987,
+  "model_calls_by_auditor": 0,
+  "new_C_calls_by_auditor": 0,
+  "new_c_acoustic_calls_in_reviewed_script": 0,
+  "no_added_safe_globals_static_check": true,
+  "no_short_input_padding_branch_taken": true,
+  "original_alimeeting_summary_sha256_unchanged": "e34600b0cc8816e3e23dda888782c8eabb831fb9bea658518bb41a12f51f1c06",
+  "original_c_observation_receipt_sha256_unchanged": "64241cc3dd05aadc4322071df8593c099f51195a07d88eef2aa057c0e7c4e1c9",
+  "original_control_summary_sha256_unchanged": "4510f8f8d2b5008da89c274d8cb074fae646788855753a161e098c6cca32647a",
+  "original_files_modified": false,
+  "receipt_sha256": "fe146425c2e3b05ec5f536b42c522716288e12ba9a7dd861fa85787c8f83da20",
+  "reported_float_forward_calls_and_claims_verified": 13,
+  "requirements_lock_sha256": "e84012b0b04961ead855069f0f4810e8b3a5e000932eec0a1a113e491362573c",
+  "reviewed_at_utc": "2026-10-14T14:30:40.261556+00:00",
+  "run_files_unchanged_during_review": 28,
+  "run_output_count": 27,
+  "same_selected_clips": 13,
+  "schema": "float-c-parity-independent-audit-v1",
+  "scope": "Read-only stdlib audit of retained numerical artifacts, exact whitelisted inputs, provenance, dependency artifacts and execution script; no torch import, checkpoint deserialization, feature computation, model execution, or decoder replay.",
+  "selected_target_denominators": {
+    "你好小窝": 2,
+    "小窝小窝": 11
+  },
+  "status": "pass",
+  "summary_rmse_reduction_roundoff_difference": 2.7755575615628914e-17,
+  "summary_sha256": "ea2ce01d45be44aa45a252ad57ef9260419b867dec1c23d2f971bb2e388a71bb",
+  "top1_agreement_fraction": 0.9978181818181818,
+  "top1_agreement_frames": 1372,
+  "top1_mismatches": [
+    {
+      "c_top1": 0,
+      "end_sample": 17680,
+      "float_top1": 2,
+      "frame_one_based": 55,
+      "sample_id": "tqp-qwen06-05"
+    },
+    {
+      "c_top1": 0,
+      "end_sample": 22160,
+      "float_top1": 1,
+      "frame_one_based": 69,
+      "sample_id": "tqp-qwen06-05"
+    },
+    {
+      "c_top1": 0,
+      "end_sample": 5200,
+      "float_top1": 2,
+      "frame_one_based": 16,
+      "sample_id": "tqp-qwen17-03"
+    }
+  ],
+  "weights_only_cpu_load_static_check": true,
+  "wheel_lock_install_hashes_agree": 11,
+  "wheels_manifest_sha256": "c8ad69b5f725329a38d573955b75b18c8f43ac4c0758f6227a528137f4817e8c"
+}
