@@ -1,0 +1,116 @@
+{
+  "schema": "kws-pair-pcm-energy-description-v1",
+  "method": {
+    "sample_rate": 16000,
+    "scale": 32768,
+    "window_samples": 400,
+    "hop_samples": 320,
+    "no_tail_padding": true,
+    "absolute_rms_threshold": 0.0001,
+    "relative_threshold_fraction_of_own_max_window_rms": 0.01,
+    "thresholds_fixed_before_reading_pcm": true,
+    "crossing_comparison": ">=",
+    "prefix_lengths_samples": [
+      1680,
+      3200
+    ]
+  },
+  "limitations": [
+    "Energy only; no transcription or speech-onset ground truth.",
+    "Window crossing time is a window interval, not an exact onset.",
+    "This is not a model, training, ASR or TTS call."
+  ],
+  "new_model_calls": 0,
+  "new_optimizer_steps": 0,
+  "samples": [
+    {
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+      "pcm_sha256": "295333f506ec101e4544ec46dbe4d3a4af240345418f17ba8b165dc30b707b0c",
+      "pcm_hash_verified": true,
+      "wav_hash_verified": true,
+      "whole": {
+        "samples": 23040,
+        "rms": 0.05559346031253026,
+        "peak": 0.30914306640625,
+        "exact_zero_fraction": 0.396875,
+        "integer_min": -9832,
+        "integer_max": 10130
+      },
+      "prefix_105ms": {
+        "samples": 1680,
+        "rms": 0.0,
+        "peak": 0.0,
+        "exact_zero_fraction": 1.0,
+        "integer_min": 0,
+        "integer_max": 0
+      },
+      "prefix_200ms": {
+        "samples": 3200,
+        "rms": 0.0,
+        "peak": 0.0,
+        "exact_zero_fraction": 1.0,
+        "integer_min": 0,
+        "integer_max": 0
+      },
+      "max_window_rms": 0.13496236344949114,
+      "relative_rms_threshold": 0.0013496236344949114,
+      "first_absolute_crossing": {
+        "index": 23,
+        "start_ms": 460.0,
+        "end_ms": 485.0,
+        "rms": 0.0087670032185689
+      },
+      "first_relative_crossing": {
+        "index": 23,
+        "start_ms": 460.0,
+        "end_ms": 485.0,
+        "rms": 0.0087670032185689
+      }
+    },
+    {
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+      "pcm_sha256": "34f326c5a8a3ee20a094806f35b5f2cb46a6c20f71cc4ea9bf7a4f72d2ebf9c9",
+      "pcm_hash_verified": true,
+      "wav_hash_verified": true,
+      "whole": {
+        "samples": 26880,
+        "rms": 0.07933634005333828,
+        "peak": 0.436187744140625,
+        "exact_zero_fraction": 0.14118303571428573,
+        "integer_min": -14139,
+        "integer_max": 14293
+      },
+      "prefix_105ms": {
+        "samples": 1680,
+        "rms": 5.069523467741744e-05,
+        "peak": 0.000152587890625,
+        "exact_zero_fraction": 0.2571428571428571,
+        "integer_min": -5,
+        "integer_max": 5
+      },
+      "prefix_200ms": {
+        "samples": 3200,
+        "rms": 4.6445407883375316e-05,
+        "peak": 0.00030517578125,
+        "exact_zero_fraction": 0.385,
+        "integer_min": -10,
+        "integer_max": 5
+      },
+      "max_window_rms": 0.1931900721013711,
+      "relative_rms_threshold": 0.001931900721013711,
+      "first_absolute_crossing": {
+        "index": 10,
+        "start_ms": 200.0,
+        "end_ms": 225.0,
+        "rms": 0.0011085171572925822
+      },
+      "first_relative_crossing": {
+        "index": 11,
+        "start_ms": 220.0,
+        "end_ms": 245.0,
+        "rms": 0.004229232625983287
+      }
+    }
+  ],
+  "full_window_report_sha256": "6cf75569e14fef2ec63ab557c750fcc1c1482b5325e8a52ab970cbb229934220"
+}

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 56290,
-      "sha256": "d6e9c71301d8f6554b342ecab4fbce0d87c556395a5080fe3e646539bfb45cdd",
-      "git_blob_sha1": "17e200a5f59cf98d533c0c5c9f5360fca1d6c33b"
+      "bytes": 56626,
+      "sha256": "cc17da586d42320f8ccd6a0a1bb5bb2b520977b316be69cc464cfd29785940eb",
+      "git_blob_sha1": "67bb0b954aa2d591f9b5f36dfee93224fef37cfd"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -33677,6 +33677,199 @@
             "bytes": 8356,
             "sha256": "2d627d6cb286e1b4da81439f54deae6883bb272ffa1811dd9ad93ccc026af936",
             "git_blob_sha1": "3bd0e042a1d986f0725fa212a25972467f5067fa"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "operation_id": "kws-anchor-horizon-source-20261015-v1",
+      "public_main_base_commit": "e19486353bf8392d47ede246567c23a1ea7e4c1a",
+      "public_main_base_tree": "ba5370a4267037c4071a5159f2bb7b6136c2ab3f",
+      "workflow_source_changed": true,
+      "scope": "New independent single-arm fixed-horizon research source and stdlib CI integration. Only execution_enabled changes from its independently reviewed disabled plan; scientific controls unchanged. No model/optimizer execution during integration. All prior campaigns remain consumed and closed. Current CI identity and posterior manifest binding refreshed.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 56290,
+            "sha256": "d6e9c71301d8f6554b342ecab4fbce0d87c556395a5080fe3e646539bfb45cdd",
+            "git_blob_sha1": "17e200a5f59cf98d533c0c5c9f5360fca1d6c33b"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 56626,
+            "sha256": "cc17da586d42320f8ccd6a0a1bb5bb2b520977b316be69cc464cfd29785940eb",
+            "git_blob_sha1": "67bb0b954aa2d591f9b5f36dfee93224fef37cfd"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "13a2fca116bc1be84fe3d4b14d039cb55baab49cbe97cba1243d898335818e93",
+            "git_blob_sha1": "1c8e8cf016c85d379b9c3ca74c576275f1aa3e50"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "0e02793277867cedb64b542403b0f9ede8e6d66f9fc089fe8e7202c68e333f67",
+            "git_blob_sha1": "74f3e393e1692f865cc87669ba4ec30ecbc2aad3"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "161728caf5a1f06484be92bf192a8e8f37f75cb8e67bf703f6211c0e821ca1c4",
+            "git_blob_sha1": "f460153779fdda2455bb1736df92f09a1c031200"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "b3ee0fe5f9a0ba1f669d1ffd62dcdc6d724d3a9e18f30d46965bd1a5423b1a26",
+            "git_blob_sha1": "0ef917bd720899d631c129093327691b085914ba"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/README.md",
+            "mode": "100644",
+            "bytes": 2956,
+            "sha256": "0a3ff955ea71f53b6b4edc7007a2785de88949d2acf57e9d5457462255034150",
+            "git_blob_sha1": "4c83969dd0c7fdd9925cb2376244e6d4230d3aa7"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/contract.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/contract.py",
+            "mode": "100644",
+            "bytes": 9126,
+            "sha256": "3367c06efd1f3f6b782992dc8c194b806b88f677d055c98bb1b03219341a5127",
+            "git_blob_sha1": "2c7e47c75cfe2b0df2713262dd15f749c2ef3e25"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/historical-baseline.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/historical-baseline.json",
+            "mode": "100644",
+            "bytes": 325656,
+            "sha256": "15b6b13536852aa3602b0421ad9b962342b4ed4cee6338fc66d7466e050369db",
+            "git_blob_sha1": "ad243043b36aa7186e57790370240e7dec333a33"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/numeric_preflight.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/numeric_preflight.py",
+            "mode": "100644",
+            "bytes": 930,
+            "sha256": "66abc16d5585c370bed38918b9863cf8b851187d11e40e08c58a2c52ce244048",
+            "git_blob_sha1": "3778c583c67ef964e27682589328348ac29b6971"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/plan.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/plan.json",
+            "mode": "100644",
+            "bytes": 3271,
+            "sha256": "849941b279401840f30edb792007c6d0dbd664d4cca6e8aeacc0081d082d9af0",
+            "git_blob_sha1": "433731d0dc5351efc6cf227d9f36276219773fb0"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/prefix-energy-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/prefix-energy-summary.json",
+            "mode": "100644",
+            "bytes": 3391,
+            "sha256": "c165bcd51a8ee2b9dabd975ca396858a2b27b3d5e331caff82c423bb2436dbba",
+            "git_blob_sha1": "ef3c1b1dfb04de54ebc8025e982e10030e3f5bd6"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/prefix-energy-windows.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/prefix-energy-windows.json",
+            "mode": "100644",
+            "bytes": 60488,
+            "sha256": "6cf75569e14fef2ec63ab557c750fcc1c1482b5325e8a52ab970cbb229934220",
+            "git_blob_sha1": "33146a7c18a43984b2681209131ee5ecef1c31c0"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/requirements.research.lock",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/requirements.research.lock",
+            "mode": "100644",
+            "bytes": 960,
+            "sha256": "7aa51b6eebd2e2db290338345c30b8c7a8e197531746ee77efb7ef8678124dee",
+            "git_blob_sha1": "9b4fcd9e6a3ae71bc322893dfa6d604a5abedf7e"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/run_horizon.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/run_horizon.py",
+            "mode": "100644",
+            "bytes": 22829,
+            "sha256": "0412e70c4db6d190260f2a62f553bc1c5c9de46aebf6b0c24b8a7bb196697124",
+            "git_blob_sha1": "99f0a76fb52bde809cbc091dd21da20406736aaa"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/runtime-candidate.lock.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/runtime-candidate.lock.json",
+            "mode": "100644",
+            "bytes": 14859,
+            "sha256": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
+            "git_blob_sha1": "5a632337c2dfffcab4a179c0a94d9da719ff46d1"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/source-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/source-manifest.json",
+            "mode": "100644",
+            "bytes": 1133,
+            "sha256": "a75eb7657ffc55d3bc0a00b5c620c3aff2330f543c6e9352f31693ab166e9c17",
+            "git_blob_sha1": "5e8176dc9642f43a723e0e34d911e7ede425abf4"
+          }
+        },
+        {
+          "path": "research/kws-anchor-horizon-v1/test_contract.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-anchor-horizon-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 5294,
+            "sha256": "1a97a70834c3d8448c23fc5d881ce066dcf82f376460c16d1f54813d395f1229",
+            "git_blob_sha1": "7c298894f2715efb24df65f5125ed45b96c5c1ff"
           }
         }
       ]
