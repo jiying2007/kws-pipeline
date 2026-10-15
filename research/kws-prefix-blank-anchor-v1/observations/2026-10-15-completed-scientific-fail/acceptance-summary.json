@@ -1,0 +1,304 @@
+{
+  "control_exact_match": true,
+  "evidence_validation": "PASS",
+  "execution_status": "completed",
+  "externally_supplied_source_commit": "c9c85ab0471c71ea9dc6fc105c7d59e87e845c36",
+  "human_gold": false,
+  "independent_evaluation": false,
+  "limitations": [
+    "Independent float64 CTC agreement is tolerance-based (about 1e-3 absolute), not bitwise equivalence.",
+    "Control historical observations and all 300 losses/gradient norms are exact comparisons.",
+    "Only ten checkpoint forwards have complete log probabilities; step loss components verify arithmetic, not independent model forwards.",
+    "Initial state and runtime receipts bind declarations and source; they do not independently reconstruct model weights or prove installed runtime execution.",
+    "Scientific endpoint is only T step 300, never the best intermediate checkpoint.",
+    "Even scientific PASS concerns two exposed training samples only; no recall, false-activation, generalization, or product-release claim."
+  ],
+  "observations_verified": 10,
+  "optimizer_calls_reserved": 600,
+  "primary_endpoint_step": 300,
+  "production_qualified": false,
+  "reusable_weights_exported": false,
+  "schema": "prefix-anchor-independent-verification-v1",
+  "scientific_validation": "FAIL",
+  "shipping_qualified": false,
+  "statistics": {
+    "C-0000.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          1,
+          4,
+          1,
+          2,
+          4,
+          2,
+          1,
+          4,
+          2,
+          4,
+          2,
+          1
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 23
+      },
+      "KW2": {
+        "complete_match": false,
+        "decode_tokens": [
+          1,
+          2,
+          1,
+          2,
+          1,
+          4,
+          2,
+          4,
+          2,
+          4,
+          2,
+          1,
+          4,
+          2,
+          4,
+          2,
+          4,
+          2,
+          1
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 10
+      }
+    },
+    "C-0050.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 23
+      },
+      "KW2": {
+        "complete_match": false,
+        "decode_tokens": [
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 10
+      }
+    },
+    "C-0100.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          1,
+          3,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 23
+      },
+      "KW2": {
+        "complete_match": false,
+        "decode_tokens": [
+          1,
+          3,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 10
+      }
+    },
+    "C-0200.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          1,
+          3,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 23
+      },
+      "KW2": {
+        "complete_match": false,
+        "decode_tokens": [
+          1,
+          3,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 10
+      }
+    },
+    "C-0300.json": {
+      "KW1": {
+        "complete_match": true,
+        "decode_tokens": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 23
+      },
+      "KW2": {
+        "complete_match": false,
+        "decode_tokens": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 10
+      }
+    },
+    "T-0000.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          1,
+          4,
+          1,
+          2,
+          4,
+          2,
+          1,
+          4,
+          2,
+          4,
+          2,
+          1
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 23
+      },
+      "KW2": {
+        "complete_match": false,
+        "decode_tokens": [
+          1,
+          2,
+          1,
+          2,
+          1,
+          4,
+          2,
+          4,
+          2,
+          4,
+          2,
+          1,
+          4,
+          2,
+          4,
+          2,
+          4,
+          2,
+          1
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 10
+      }
+    },
+    "T-0050.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 0
+      },
+      "KW2": {
+        "complete_match": false,
+        "decode_tokens": [
+          4,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 0
+      }
+    },
+    "T-0100.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 0
+      },
+      "KW2": {
+        "complete_match": false,
+        "decode_tokens": [
+          4,
+          3,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 0
+      }
+    },
+    "T-0200.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          2,
+          3,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 0
+      },
+      "KW2": {
+        "complete_match": true,
+        "decode_tokens": [
+          3,
+          4,
+          3,
+          4
+        ],
+        "joint_success": true,
+        "prefix_nonblank_argmax_frames": 0
+      }
+    },
+    "T-0300.json": {
+      "KW1": {
+        "complete_match": false,
+        "decode_tokens": [
+          2,
+          3,
+          4
+        ],
+        "joint_success": false,
+        "prefix_nonblank_argmax_frames": 0
+      },
+      "KW2": {
+        "complete_match": true,
+        "decode_tokens": [
+          3,
+          4,
+          3,
+          4
+        ],
+        "joint_success": true,
+        "prefix_nonblank_argmax_frames": 0
+      }
+    }
+  },
+  "successful_step_receipts": 600,
+  "tolerances": {
+    "ctc_nll": {
+      "absolute": 0.001,
+      "relative": 1e-05
+    },
+    "derived": {
+      "absolute": 1e-06,
+      "relative": 2e-06
+    },
+    "logsumexp_absolute": 2e-06
+  },
+  "training_admitted": false
+}

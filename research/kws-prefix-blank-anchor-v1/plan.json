@@ -2,7 +2,7 @@
   "schema": "kws-prefix-blank-anchor-plan-v1",
   "purpose": "exposed-machine-only-prefix-blank-causal-diagnostic",
   "production_qualified": false,
-  "execution_enabled": true,
+  "execution_enabled": false,
   "seed": 20261015,
   "model": {
     "feature_dim": 32,

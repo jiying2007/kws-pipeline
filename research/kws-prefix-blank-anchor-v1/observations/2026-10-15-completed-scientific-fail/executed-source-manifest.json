@@ -1,0 +1,25 @@
+{
+  "schema": "prefix-anchor-source-freeze-v1",
+  "execution_enabled": true,
+  "model_calls": 0,
+  "optimizer_calls": 0,
+  "tests": {
+    "normal": 10,
+    "optimized": 10,
+    "double_optimized": 10,
+    "static_preflight": "passed"
+  },
+  "files": {
+    "README.md": "ef8af332f61e9e9b87c50c0b9a409bd731e528053d7bea3de5744f1546259cb1",
+    "contract.py": "c8be7726cbcba02d9c825a9e5562ef41160b0fb4e0490e46b66d0c0125615377",
+    "control-baseline.json": "7454a7d86521a52454f80e5bc15e250b4be35a5fcc986d9fc4b92ce0446a3f41",
+    "numeric_preflight.py": "3ddf32bd10a28b2f2de2b14ae53ef1b358dae1cb43d4a774ef581f09acfad0d4",
+    "plan.json": "eb3b88b57308943716078c5bdb588439d3984c28ec8f242fec99df0c9fb0dd83",
+    "prefix-energy-summary.json": "c165bcd51a8ee2b9dabd975ca396858a2b27b3d5e331caff82c423bb2436dbba",
+    "prefix-energy-windows.json": "6cf75569e14fef2ec63ab557c750fcc1c1482b5325e8a52ab970cbb229934220",
+    "requirements.research.lock": "7aa51b6eebd2e2db290338345c30b8c7a8e197531746ee77efb7ef8678124dee",
+    "run_anchor.py": "c1e86e3cfebae4b22ba53bf90d529d83fdbb4ba7741f58be21026231c8a8c356",
+    "runtime-candidate.lock.json": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
+    "test_contract.py": "63ad3e68a2724127da96418d223b316707b5dbd488e2ca18b6a2df52703b2e1c"
+  }
+}

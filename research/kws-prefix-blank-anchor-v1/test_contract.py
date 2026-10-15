@@ -11,6 +11,14 @@ spec=importlib.util.spec_from_file_location('anchor_run',HERE/'run_anchor.py')
 r=importlib.util.module_from_spec(spec);spec.loader.exec_module(r)
 c=r._contract
 class Tests(unittest.TestCase):
+    def test_public_archived_result(self):
+        import importlib.util
+        spec=importlib.util.spec_from_file_location("anchor_archive",HERE/"verify_archived_result.py")
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        self.assertEqual(module.verify()["result_files"],1215)
+        for bad in (True,False,float("nan"),float("inf")):
+            with self.assertRaises(ValueError):module.number(bad)
+
     def setUp(self):self.plan=json.loads((HERE/'plan.json').read_text())
     def test_disabled(self):
         c.validate_plan(self.plan,False)

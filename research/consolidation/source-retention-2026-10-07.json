@@ -33448,6 +33448,238 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-15",
+      "operation_id": "kws-prefix-anchor-consumed-closure-20261015-v1",
+      "public_main_base_commit": "c9c85ab0471c71ea9dc6fc105c7d59e87e845c36",
+      "public_main_base_tree": "61150374c6e009e029eb471269229eb236de2988",
+      "workflow_source_changed": false,
+      "scope": "Close fully consumed 600-update independent C/T campaign and archive original public scalar/log-probability evidence. Evidence PASS, scientific FAIL; no retries, budget reuse or new models. Existing contract test covers metadata/token statistics without changing workflow source.",
+      "files": [
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/README.md",
+          "before": {
+            "path": "research/kws-prefix-blank-anchor-v1/README.md",
+            "mode": "100644",
+            "bytes": 4515,
+            "sha256": "ef8af332f61e9e9b87c50c0b9a409bd731e528053d7bea3de5744f1546259cb1",
+            "git_blob_sha1": "16d7d31fb1676cd95f8fa4e10ccc788d75154e74"
+          },
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/README.md",
+            "mode": "100644",
+            "bytes": 5264,
+            "sha256": "0740dea8e7c1367d3b7942c50b9c0944c0cd1da5ad7b1d82d4aa9c2892382817",
+            "git_blob_sha1": "d708f5cb7bd7f98124f81a9cee9614d652fcd504"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/closure.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/closure.json",
+            "mode": "100644",
+            "bytes": 977,
+            "sha256": "53b388dd3c3bc7eb0243f9faebfe3ee94fe2a4a7c2530b0cd3d4db8a0f7efb19",
+            "git_blob_sha1": "c1a54a87452a37b09adb93c731b1205a9d25940e"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/README.md",
+            "mode": "100644",
+            "bytes": 2837,
+            "sha256": "117e82b96d3fe144a16b3e78c31994594f4929a79138fe40de53470219e1d3cf",
+            "git_blob_sha1": "5c24a2995a7df54e9471c9caecba50a371bec336"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/acceptance-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/acceptance-summary.json",
+            "mode": "100644",
+            "bytes": 6605,
+            "sha256": "a30017e9640cef44fb882b3f096f46f601d6fa257e9daca259f1fb0555d1b70c",
+            "git_blob_sha1": "17f5fb95a39cb25664a4d8cfbce7625b82cc0a07"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/archive-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/archive-manifest.json",
+            "mode": "100644",
+            "bytes": 1178,
+            "sha256": "8fc7bc041e0019136e9fc34375c7adc096b0d78124c0e6d651d0008a677656b4",
+            "git_blob_sha1": "52545539a5825c6ae42e75c68881e6d787f03d6c"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/enabled-plan.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/enabled-plan.json",
+            "mode": "100644",
+            "bytes": 3395,
+            "sha256": "eb3b88b57308943716078c5bdb588439d3984c28ec8f242fec99df0c9fb0dd83",
+            "git_blob_sha1": "901df212a986b231ed60e06b2e6100022621ee30"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/executed-source-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/executed-source-manifest.json",
+            "mode": "100644",
+            "bytes": 1297,
+            "sha256": "c71be964b7d044612fa5d09310a34ceeab6b16281849ef90c773cda2f68e8d09",
+            "git_blob_sha1": "daed6633fbf23fffd0a146e91a97b78db0c23f50"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/learning-curve.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/learning-curve.json",
+            "mode": "100644",
+            "bytes": 19402,
+            "sha256": "dbbc69a4fb892144e84a28c20714acaed3e810ba2ed188374779c2609a25c0fa",
+            "git_blob_sha1": "21c05e6142fd176ef688386a2016de766252baa5"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/public-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/public-summary.json",
+            "mode": "100644",
+            "bytes": 1921,
+            "sha256": "2588e9612c8920a707625066c454d38af50a546fd6857e3ec98e0c949a66969c",
+            "git_blob_sha1": "36dda8f51138fc06a2117f04834aaf41ead0a25c"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/raw-anchor-result.zip",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/raw-anchor-result.zip",
+            "mode": "100644",
+            "bytes": 468700,
+            "sha256": "3f66773b29fd1889ae31c7df8418cb50a33f440d8e000c3ea759777c6218671a",
+            "git_blob_sha1": "e547a380e4c5ccb1b5f5edca6d934f49c8a60555"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/result-hash-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/result-hash-manifest.json",
+            "mode": "100644",
+            "bytes": 109679,
+            "sha256": "21ad25ced1706f3dc93c2be08d7238a28bb09b6ab0a4d5ad809914a6a97bfede",
+            "git_blob_sha1": "593360dbbdfe8a149803db38501fa053fec9232c"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/saved-probability-analysis/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/saved-probability-analysis/README.md",
+            "mode": "100644",
+            "bytes": 4177,
+            "sha256": "42c61ff67a5295705b00236f7232104e35703cd52ac038b65ed97462572bee38",
+            "git_blob_sha1": "05e106ccc04681425b765e61a1cea8bbea8c6777"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/saved-probability-analysis/analysis.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/saved-probability-analysis/analysis.py",
+            "mode": "100644",
+            "bytes": 4303,
+            "sha256": "010576c137b9d12c235d3d8466b9d60bb1ae5e38737396c5fa88ebedc31af193",
+            "git_blob_sha1": "9d519b23c9c003a8091be60b28ec606584a929a2"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/saved-probability-analysis/summary.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/observations/2026-10-15-completed-scientific-fail/saved-probability-analysis/summary.json",
+            "mode": "100644",
+            "bytes": 54666,
+            "sha256": "cda99eff5438c5f65e659dab56d77fdeec1d4d13ed278b2a4e1592846478be15",
+            "git_blob_sha1": "98eb8526372034dcf5c2776994a6a584ef4fe38f"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/plan.json",
+          "before": {
+            "path": "research/kws-prefix-blank-anchor-v1/plan.json",
+            "mode": "100644",
+            "bytes": 3395,
+            "sha256": "eb3b88b57308943716078c5bdb588439d3984c28ec8f242fec99df0c9fb0dd83",
+            "git_blob_sha1": "901df212a986b231ed60e06b2e6100022621ee30"
+          },
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/plan.json",
+            "mode": "100644",
+            "bytes": 3396,
+            "sha256": "ba5aad0da2d9bdb821aa8c6842657c8e9b36186a95b866421773e37401b0cd51",
+            "git_blob_sha1": "27ba8d9f0bedcd4116c73c3ea1c2d36a69132719"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/source-manifest.json",
+          "before": {
+            "path": "research/kws-prefix-blank-anchor-v1/source-manifest.json",
+            "mode": "100644",
+            "bytes": 1297,
+            "sha256": "c71be964b7d044612fa5d09310a34ceeab6b16281849ef90c773cda2f68e8d09",
+            "git_blob_sha1": "daed6633fbf23fffd0a146e91a97b78db0c23f50"
+          },
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/source-manifest.json",
+            "mode": "100644",
+            "bytes": 1650,
+            "sha256": "87767f4badba859a612b2d99ceff3ddb88c35f281fa9860f512f33f812e3e589",
+            "git_blob_sha1": "8c5928e7c161f121a162e77319c72ec3fcf091c6"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/test_contract.py",
+          "before": {
+            "path": "research/kws-prefix-blank-anchor-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 4627,
+            "sha256": "63ad3e68a2724127da96418d223b316707b5dbd488e2ca18b6a2df52703b2e1c",
+            "git_blob_sha1": "edebd6420063a497062a6c8ba1f9f05eefe83378"
+          },
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 5077,
+            "sha256": "c6486b6158b27efce89e84ee5fc3efdcbb6d6ca6cf116b56d444f5d21b6506b6",
+            "git_blob_sha1": "06aefd2476f4eff160ff88b5ad8b69488dfb0a3e"
+          }
+        },
+        {
+          "path": "research/kws-prefix-blank-anchor-v1/verify_archived_result.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-prefix-blank-anchor-v1/verify_archived_result.py",
+            "mode": "100644",
+            "bytes": 8356,
+            "sha256": "2d627d6cb286e1b4da81439f54deae6883bb272ffa1811dd9ad93ccc026af936",
+            "git_blob_sha1": "3bd0e042a1d986f0725fa212a25972467f5067fa"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
