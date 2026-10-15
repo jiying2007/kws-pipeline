@@ -1,0 +1,3390 @@
+{
+  "schema": "kw1-supplement-observation-v1",
+  "source": {
+    "repository": "jiying2007/kws-pipeline",
+    "commit": "1ef2b7e9b9d236c13f33b1bdee78d8ae754dc8fa",
+    "url": "https://github.com/jiying2007/kws-pipeline/tree/1ef2b7e9b9d236c13f33b1bdee78d8ae754dc8fa",
+    "config_sha256": "110494b07d3fb84c7b2537889e364ea9349b8f45e92774c3a033b398b6bbe916",
+    "files_sha256": {
+      ".github/workflows/kw1-preset-supplement-20261014-v1.yml": "d31048e6c4a01517befa831778d0216620d1ec162916d49476bf0e7396253f39",
+      "research/kw1-preset-supplement-v1/IMPLEMENTATION.md": "85debe587a6495d08dbf9bdde5b9fdbf032d25cabd2a6f9406371caee9cc805e",
+      "research/kw1-preset-supplement-v1/README.md": "8d1c4b9eda0e81aba4a6f61eebef319c8251ab06c3fb2ff911d3eb8997534c40",
+      "research/kw1-preset-supplement-v1/RECONSTRUCTION.md": "8873cb95d4e73970e6d1fcc6bbe491c95fc1a9810529c0318c40a5ba14ce5d97",
+      "research/kw1-preset-supplement-v1/admission.py": "b93ebaf2688a930b9f136c978dd8f6d791fc86a298a22685696ae0a14612d069",
+      "research/kw1-preset-supplement-v1/blind_asr_worker.py": "2a532b992035dc3841a27c3a58cf8e5aa5f9ce54880faa76111fe36029a38b60",
+      "research/kw1-preset-supplement-v1/blind_pcm.py": "ab6164bb89c9b3b0e707375330b2e9c13b772a0fda1c252dfb2dda05f3539b64",
+      "research/kw1-preset-supplement-v1/campaign.py": "421d7b777b433f02cb5efc8c9223ad7b2ec58a0ad3be0c86f92a404c3216422f",
+      "research/kw1-preset-supplement-v1/derive_native.py": "32ac7e04118eba1ca84c74d7e80362145303c2538f42e864a24f889fe10faa71",
+      "research/kw1-preset-supplement-v1/docker_backend.py": "af3f9d6078303fa7cc10dd5ea3492dd9d6fd90da6666eed30c1febc1d2fe708c",
+      "research/kw1-preset-supplement-v1/execution_common.py": "2f7f3a8456fbb647bf5255ebe287edbe74806fdb77713809466a12a1f44f65dd",
+      "research/kw1-preset-supplement-v1/export_public.py": "5c9925a71a1251870f49abe97c16ca66c76120ad998b08dd6cb4a67ebcd25914",
+      "research/kw1-preset-supplement-v1/freeze_sources.py": "31538b492a8a57c1f29342abe453d360e2dc512de1d494849dbd94d27416a722",
+      "research/kw1-preset-supplement-v1/launcher.py": "95137496c9c4f4db1fcf1b9ad78d6cc36d7b20b5f573f4403dc92e8a2dddf7a9",
+      "research/kw1-preset-supplement-v1/official-support.json": "0cd30e6da059c2def11a1db00cb87e828b9ec60c67cd860f08038def7c93304a",
+      "research/kw1-preset-supplement-v1/plan.json": "228ecc8a31e563f1372b0958f96c2b02dfbb2a0de41030de57c13b3f4e251702",
+      "research/kw1-preset-supplement-v1/plan_contract.py": "4bc4a532c2262d76ca2054a534f107e85194d0252faffab3d5464c8b813c45ca",
+      "research/kw1-preset-supplement-v1/public_evidence.py": "db2cbf0b20d01bd3a218374a1016a47fd531bb6d99238dcb3f90bfa37898ddf3",
+      "research/kw1-preset-supplement-v1/source-bindings.json": "da0ae927255992b8634fd606359ada7f5bb05d6f42113fa129e66c7da77b5a24",
+      "research/kw1-preset-supplement-v1/test_archive_faults.py": "8a5aba3c2a926aa3bc5e25d8c81d04ac3d66352f40f7df6045e6681c3f204d11",
+      "research/kw1-preset-supplement-v1/test_atomic_export.py": "a1da35cf65f7b5b1cb2518931a5e5468c5832a1603b7a1be29025cb5f2c402f7",
+      "research/kw1-preset-supplement-v1/test_blind_asr.py": "3dc1728a1b2d577e24a9670535173c1f6fababb34670dbf8844b7130961fbd8d",
+      "research/kw1-preset-supplement-v1/test_contract.py": "b786683a7a6c6b455f2d66578fe7c72de2ee03d52413942312a992e528e1b1a0",
+      "research/kw1-preset-supplement-v1/test_derive_numeric.py": "ff4ad0f35fc64ae21cbc469a8b025c8c7cf8f27e3bec113ef58099330ff29d2c",
+      "research/kw1-preset-supplement-v1/test_docker_backend.py": "6b99a35161fe58d973d33e3879e01ddab9594d82a3b2cc86046c19d23d9be3ff",
+      "research/kw1-preset-supplement-v1/test_execution.py": "05f615df8494de25727fd50a02e267a78abe3b9168d25cb81002649ca81c4cc0",
+      "research/kw1-preset-supplement-v1/test_suite.py": "ae771c15d0d7994bcc7414afc1a1e872f47327655c9d3c8aaea08c0e727353e1",
+      "research/kw1-preset-supplement-v1/test_worker.py": "d318951b7a4bc2e23d3ce8fb178bc7a988b82dbce33650a88b9d78120e4f662a",
+      "research/kw1-preset-supplement-v1/verify_public.py": "2531a00902db6d43ddae5160ef094401caa673457c558b6b2da4b9adbc6083b8",
+      "research/kw1-preset-supplement-v1/worker.py": "979e1709e24ff21e805abfd481994d4073c3220f217f20d6782d1307a77097b3",
+      "research/kw1-preset-supplement-v1/workflow.yml": "d31048e6c4a01517befa831778d0216620d1ec162916d49476bf0e7396253f39",
+      "research/qwen6_asr/FUNASR_MODEL_LICENSE": "7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8",
+      "research/qwen6_asr/NOTICE.md": "a01fd4891fd878f2bbb4de93e13dbef67dd10b127974240046304803c96685a7",
+      "research/qwen6_asr/core/asr6_contract.py": "d1c3368133e06a3de9758b23f136c3a37a74a63057f317ece863470ad0304b10",
+      "research/qwen6_asr/core/asr_stage/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "research/qwen6_asr/core/asr_stage/adapters.py": "85512f20280cfa0aeb06b50699664e360db39bbf5b58034d3a2ede5cde8ff6ca",
+      "research/qwen6_asr/core/asr_stage/architecture.py": "d3f0d67bcf724c34763ac4666a1570b02dfd979182e6183403ef91e0897d58ab",
+      "research/qwen6_asr/core/asr_stage/assets.py": "91a8c7e75f37872fc1b07cabc2afd1790901bf44a3fda1e48fb5abc2b129ff6e",
+      "research/qwen6_asr/core/asr_stage/decoding.py": "fd401bd85e4ca3d871e5a9354753d3599facbb32b9df22e34f05e5476e74b503",
+      "research/qwen6_asr/core/asr_stage/execution.py": "149befff56ef9da603d8b27174ca1a1d4eae638cc86f356cc5a1b8412ac06c9f",
+      "research/qwen6_asr/core/asr_stage/runtime_support.py": "f3a6ee85e30dc5a1bc2351a76843c44bc988aed83745773e543e1b69cf4a6d90",
+      "research/qwen6_asr/core/pcm/pcm_binding.py": "1f8cb1e8fba2c99dfd969b7f33a12011243aa68f0a6e1eb0dbf45d90fc9b1684",
+      "research/qwen6_asr/core/runtime_version_gate.py": "c6d2e35c69f3ba34e3a7f92bd9b486eb00476f76ed5c8687319f4382b23bd512",
+      "research/qwen6_asr/core/sense_binding.py": "1a2fd8474d347591939b3ce9ab7411aa9a8f9ce0ffa732d93a95402b677503d2",
+      "research/qwen6_asr/core/vendor/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "research/qwen6_asr/core/vendor/checkpoint_guard/__init__.py": "ca1bfd88d26591efeb70bb58155294be4ebc2af7a6e45cc5f09f3e90dc5c541e",
+      "research/qwen6_asr/core/vendor/checkpoint_guard/checkpoint_contract.py": "80cd48b0ce8beb2f7473372a3d904ba42af316c7df4a3c44f8a8b54dd50896c4",
+      "research/qwen6_asr/core/vendor/checkpoint_guard/exact_apply.py": "10bc8634053a602b1669a007865c9d18955577b8aab4b7e7f14dfdcc6ce9e22b",
+      "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py": "b21139d3d63467b910f13b4bc2045d08a737799f9d4bc4dae96972f2a9cd1dad",
+      "research/qwen6_asr/import_preflight.py": "30cfe60347ccc6074d98a21406fccee3e3be5c54822aa8d874aae3655693ae1c",
+      "research/qwen6_asr/model-locks.json": "8b0813aba3c2447c7dc30b47e856e4ce9a619a98d32ed6dfa9f44dc6646714e4",
+      "research/qwen6_asr/runtime-lock.json": "2d496a76bd0e044a6812bfc9afdd8965474bf135bd21f3a24f71695638d1183f",
+      "research/qwen6_asr/sense_parser.py": "878278e46ae9af349a93e37dddffa83e916f447ef82fb6dd61fa8948bb8261d7",
+      "research/qwen6_asr/setup_diagnostics.py": "1b98e253d7054d0bfcd5ec128cb3a331bb05de48776330e84ea348694b3a1bf2",
+      "research/qwen6_asr/setup_locked.py": "d7c580b59b0bd249bc62c9093b9de5f8842170510cf11e7e61c29057e6287af4",
+      "research/qwen6_asr/wheel_identity.py": "623ee07a0d8f85ba1d7218a56fcd0e270df8c6e2c3e353dd52b3184ca915d8d5",
+      "research/qwen6_tts/generate_six.py": "25530b89fa3f58f44ceb8d3c2a8f26f3b37651c7173f62414dc96142919ea03e",
+      "research/qwen6_tts/import_preflight.py": "30cfe60347ccc6074d98a21406fccee3e3be5c54822aa8d874aae3655693ae1c",
+      "research/qwen6_tts/model-locks.json": "c206556a633b7d04c334494fc5a82934a19d572c125982c689f18f8b2d472110",
+      "research/qwen6_tts/runtime-lock.json": "6a707c2fa2c2ae8f842176a7f9c8301186d51fddef167c413160c7f2816613de",
+      "research/qwen6_tts/runtime_gate.py": "f4333b694bb1bc261e4bdeea6d586dc9f76b1afce6ce0af9dfcdb74d57d12815",
+      "research/qwen6_tts/setup_diagnostics.py": "7c583ba0ed6f0e90f72ab3b5c107e3666a32d25359ce13ffc284d545f7d1dd5f",
+      "research/qwen6_tts/setup_locked.py": "aac8d8e66504444f2965aa8d95dcfef9e8c6fa63d74f2eade15ca1290bc6b4b3",
+      "research/qwen6_tts/wheel_identity.py": "623ee07a0d8f85ba1d7218a56fcd0e270df8c6e2c3e353dd52b3184ca915d8d5",
+      "research/source-screen32-v1/asr_worker.py": "b5cef29fe4e2c67f9121d93f83eb351f3e7a8ca14136ad684669832a77164f17",
+      "research/source-screen32-v1/container-lock.json": "71a687d9580c2310dcc73768daffa6f881c41aa96310be144cf4dfccbefb5ba1",
+      "research/source-screen32-v1/runtime_scope.py": "c08bd46d34bea011a63d32867386b26637d5a02753769654e08e4c32c31cb927",
+      "research/source-screen32-v1/sense_adapter.py": "307a3a5985ae616e777f0b71ffc37ac31cd4b78bd12b4d7cbd69f816813057c1",
+      "research/source-screen32-v1/setup_adapter.py": "b7f6c3493ad0da909c7e6856d27f3247f5e1716ce6c981cb396a03687aa7e547",
+      "research/source-screen32-whisper-v1/adapter.py": "d142605a62ff990633194b43992b698673780b065e5f3599d7e27eccc74d693b",
+      "research/source-screen32-whisper-v1/common.py": "21cc72171d071cc9ac0113307af751315b69ce70fbf522a1b2586a7617900861",
+      "research/source-screen32-whisper-v1/runtime-lock.json": "881443c6e66acb99223137bd8342788468f814d0a1c3e73ba33a27da3ad1fe6d",
+      "research/source-screen32-whisper-v1/setup_runtime.py": "526d4c5b282c61644ee8357fb045e371288b5143b6a4ec9981ce867a758704c4",
+      "research/source-screen32-whisper-v1/source-lock.json": "0635fb8759fb56439f59db6956612f78cc8903c239f81f3eb7f9b0c47eb99649",
+      "research/tts-pilot-screening-v1/boundary.py": "f0cd7e35c9cbba39290fdc1a9d398f0a7095903d2ee2fed6362016cbc3527dc5",
+      "research/tts-pilot-screening-v1/numeric-requirements.txt": "1ab7ea707a86bce28b54f6f41cf14d9523e292c4bca98ef40904fecdc90752df",
+      "research/tts-pilot-screening-v1/screen.py": "982582c0e4c7f957276520977ebfa3bad0cbb5753e16d50bbadef0835682523e",
+      "research/tts-pilot-screening-v1/source-lock.json": "157aa800207aeac3bf7019e49edd98074640de544d288dbfb2084ffcc3425093",
+      "research/tts-quality-pilot-v1/qwen06-model-lock.json": "9da27e3dea80033174141613458b03901460d0523ca2be7323e12071bad2ac90",
+      "research/tts-quality-pilot-v1/qwen17-model-lock.json": "24267f7e4a63f3f4f2a13bf6c87459ae21be61c56bc5b55504381569fdd9f3f3",
+      "research/tts-quality-pilot-v1/runtime_scope.py": "c08bd46d34bea011a63d32867386b26637d5a02753769654e08e4c32c31cb927",
+      "research/tts-quality-pilot-v1/setup_adapter.py": "889b2b2ee33e940dff00a51a090f1ec5fad83c8343f6aa21ac4392602e22faf6",
+      "tools/asr_native_contracts.py": "752f192fb125fb31291a8246845c3015dc97348fc27822c389e14b52da3ef674"
+    }
+  },
+  "run": {
+    "id": 38664865348,
+    "head_sha": "1ef2b7e9b9d236c13f33b1bdee78d8ae754dc8fa",
+    "head_branch": "research/kw1-preset-supplement-20261014-v1",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "run_attempt": 1,
+    "created_at": "2026-10-15T01:17:46Z",
+    "updated_at": "2026-10-15T01:35:45Z",
+    "html_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38664865348"
+  },
+  "artifact": {
+    "id": 11942325284,
+    "name": "kw1-preset-supplement-20261014-v1-public",
+    "bytes": 2424250,
+    "sha256": "e9cb187fbc0c0233f95e95efa7ca064359d7b00e3e6205041c7da06b3dedc5fe",
+    "created_at": "2026-10-15T01:35:43Z",
+    "expires_at": "2026-10-29T01:35:42Z",
+    "retention_days": 14,
+    "metadata_url": "https://api.github.com/repos/jiying2007/kws-pipeline/actions/artifacts/11942325284",
+    "persistent_public_zip_url": null,
+    "availability_note": "GitHub Actions artifact expires; authenticated access may be required. An out-of-band backup does not establish a permanent public download."
+  },
+  "results": {
+    "status": "completed",
+    "calls": {
+      "asr": 48,
+      "tts": 16
+    },
+    "call_ledger": [
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-00",
+        "stage": "qwen06",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-01",
+        "stage": "qwen06",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-02",
+        "stage": "qwen06",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-03",
+        "stage": "qwen06",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-04",
+        "stage": "qwen17",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-05",
+        "stage": "qwen17",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-06",
+        "stage": "qwen17",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-07",
+        "stage": "qwen17",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-08",
+        "stage": "qwen17",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-09",
+        "stage": "qwen17",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-10",
+        "stage": "qwen17",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-11",
+        "stage": "qwen17",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-12",
+        "stage": "qwen17",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-13",
+        "stage": "qwen17",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-14",
+        "stage": "qwen17",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "tts",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-15",
+        "stage": "qwen17",
+        "status": "completed"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-00",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-01",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-02",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-03",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-04",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-05",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-06",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-07",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-08",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-09",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-10",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-11",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-12",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-13",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-14",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-15",
+        "stage": "qwen_asr",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-00",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-01",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-02",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-03",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-04",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-05",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-06",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-07",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-08",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-09",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-10",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-11",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-12",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-13",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-14",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-15",
+        "stage": "sensevoice",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-00",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-01",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-02",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-03",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-04",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-05",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-06",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-07",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-08",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-09",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-10",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-11",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-12",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-13",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-14",
+        "stage": "whisper_small",
+        "status": "success"
+      },
+      {
+        "attempts": 1,
+        "kind": "asr",
+        "reserved_no_retry": true,
+        "slot_id": "kw1s-15",
+        "stage": "whisper_small",
+        "status": "success"
+      }
+    ],
+    "slots": [
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen06",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Uncle_Fu",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 48640,
+            "channels": 1,
+            "file": "2aa52777333d78e1cd2a9dea3576de7fc25d1cda6363616a3fbbebf460530254.pcm",
+            "frames": 24320,
+            "opaque_id": "2aa52777333d78e1cd2a9dea3576de7fc25d1cda6363616a3fbbebf460530254",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "2aa52777333d78e1cd2a9dea3576de7fc25d1cda6363616a3fbbebf460530254"
+          },
+          "native_sha256": "5fea389c809d94670adb25051c79f63785494173dc16a0952466121ca1e1acd7",
+          "native_values_sha256": "cf111aff31a685d84b188c62c67dbfd0cbdd2f39a8139613c8a27cc7343a6613",
+          "slot_id": "kw1s-00"
+        },
+        "instruction": "",
+        "label_tier": "review",
+        "machine_train_only_candidate": false,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 36480,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "cf111aff31a685d84b188c62c67dbfd0cbdd2f39a8139613c8a27cc7343a6613",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 1.52,
+          "peak": 0.3329424560070038,
+          "quality_flags": [],
+          "rms": 0.054482236743037,
+          "technically_valid": true
+        },
+        "native_sha256": "5fea389c809d94670adb25051c79f63785494173dc16a0952466121ca1e1acd7",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 20,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "2aa52777333d78e1cd2a9dea3576de7fc25d1cda6363616a3fbbebf460530254",
+            "pcm_sha256": "2aa52777333d78e1cd2a9dea3576de7fc25d1cda6363616a3fbbebf460530254",
+            "quality_flags": [],
+            "raw_text": "你好，小窝。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "8ae83a6707d9a1a4bf033d7f394faf11f5296ef100d8e2be214a4791f27f4625"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "2aa52777333d78e1cd2a9dea3576de7fc25d1cda6363616a3fbbebf460530254",
+            "pcm_sha256": "2aa52777333d78e1cd2a9dea3576de7fc25d1cda6363616a3fbbebf460530254",
+            "quality_flags": [],
+            "raw_text": "你好小屋",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "8ae83a6707d9a1a4bf033d7f394faf11f5296ef100d8e2be214a4791f27f4625"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "2aa52777333d78e1cd2a9dea3576de7fc25d1cda6363616a3fbbebf460530254",
+            "pcm_sha256": "2aa52777333d78e1cd2a9dea3576de7fc25d1cda6363616a3fbbebf460530254",
+            "quality_flags": [],
+            "raw_text": "你好小屋",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "8ae83a6707d9a1a4bf033d7f394faf11f5296ef100d8e2be214a4791f27f4625"
+          }
+        ],
+        "seed": 2026101401,
+        "selection_gold": false,
+        "slot_id": "kw1s-00",
+        "speaker": "Uncle_Fu",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": false,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen06",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Uncle_Fu",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 61440,
+            "channels": 1,
+            "file": "8a52580a25dced9c1bd95bd56bf623c79bd5bd7d5ff4e644cb0618185783337d.pcm",
+            "frames": 30720,
+            "opaque_id": "8a52580a25dced9c1bd95bd56bf623c79bd5bd7d5ff4e644cb0618185783337d",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "8a52580a25dced9c1bd95bd56bf623c79bd5bd7d5ff4e644cb0618185783337d"
+          },
+          "native_sha256": "7bbc792cdae3e8c7c9eba88b8320fde40157f22951994d06358ad39415f65563",
+          "native_values_sha256": "c3eca13ee59c27bece69654e54224d37c85ed4682c03a49331ff02c475013ad1",
+          "slot_id": "kw1s-01"
+        },
+        "instruction": "",
+        "label_tier": "review",
+        "machine_train_only_candidate": false,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 46080,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "c3eca13ee59c27bece69654e54224d37c85ed4682c03a49331ff02c475013ad1",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 1.92,
+          "peak": 0.1372479945421219,
+          "quality_flags": [],
+          "rms": 0.020278410117270888,
+          "technically_valid": true
+        },
+        "native_sha256": "7bbc792cdae3e8c7c9eba88b8320fde40157f22951994d06358ad39415f65563",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 25,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "8a52580a25dced9c1bd95bd56bf623c79bd5bd7d5ff4e644cb0618185783337d",
+            "pcm_sha256": "8a52580a25dced9c1bd95bd56bf623c79bd5bd7d5ff4e644cb0618185783337d",
+            "quality_flags": [],
+            "raw_text": "你好，小沃。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "cc22c265de271d883434d64d26ed1d12b7093f3abc6c90265bbae11f25d1b0ab"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "8a52580a25dced9c1bd95bd56bf623c79bd5bd7d5ff4e644cb0618185783337d",
+            "pcm_sha256": "8a52580a25dced9c1bd95bd56bf623c79bd5bd7d5ff4e644cb0618185783337d",
+            "quality_flags": [],
+            "raw_text": "你好小吴",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "cc22c265de271d883434d64d26ed1d12b7093f3abc6c90265bbae11f25d1b0ab"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "8a52580a25dced9c1bd95bd56bf623c79bd5bd7d5ff4e644cb0618185783337d",
+            "pcm_sha256": "8a52580a25dced9c1bd95bd56bf623c79bd5bd7d5ff4e644cb0618185783337d",
+            "quality_flags": [],
+            "raw_text": "你好 小沃",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "cc22c265de271d883434d64d26ed1d12b7093f3abc6c90265bbae11f25d1b0ab"
+          }
+        ],
+        "seed": 2026101402,
+        "selection_gold": false,
+        "slot_id": "kw1s-01",
+        "speaker": "Uncle_Fu",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": false,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen06",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Eric",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 38400,
+            "channels": 1,
+            "file": "5115475c67158dc4c38e6d1322300a83c0334e61dcbadb48bde4ff04b9e50cab.pcm",
+            "frames": 19200,
+            "opaque_id": "5115475c67158dc4c38e6d1322300a83c0334e61dcbadb48bde4ff04b9e50cab",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "5115475c67158dc4c38e6d1322300a83c0334e61dcbadb48bde4ff04b9e50cab"
+          },
+          "native_sha256": "4c558b054ca20548f43bd554b7af6d2cc5752d976990da716287ea84531bf679",
+          "native_values_sha256": "37f5f35d77b5f454ca065a90ded2471eb062895ccf630af01699a26186da35d2",
+          "slot_id": "kw1s-02"
+        },
+        "instruction": "",
+        "label_tier": "review",
+        "machine_train_only_candidate": false,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 28800,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "37f5f35d77b5f454ca065a90ded2471eb062895ccf630af01699a26186da35d2",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 1.2,
+          "peak": 0.5647428035736084,
+          "quality_flags": [],
+          "rms": 0.10075983145921849,
+          "technically_valid": true
+        },
+        "native_sha256": "4c558b054ca20548f43bd554b7af6d2cc5752d976990da716287ea84531bf679",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 16,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "5115475c67158dc4c38e6d1322300a83c0334e61dcbadb48bde4ff04b9e50cab",
+            "pcm_sha256": "5115475c67158dc4c38e6d1322300a83c0334e61dcbadb48bde4ff04b9e50cab",
+            "quality_flags": [],
+            "raw_text": "你好，小我。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "f42e20b17e7d8843afe6e8ab02705a8d8f10b66fa7772ec1cf27e601bddb8910"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "5115475c67158dc4c38e6d1322300a83c0334e61dcbadb48bde4ff04b9e50cab",
+            "pcm_sha256": "5115475c67158dc4c38e6d1322300a83c0334e61dcbadb48bde4ff04b9e50cab",
+            "quality_flags": [],
+            "raw_text": "你好小我",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "f42e20b17e7d8843afe6e8ab02705a8d8f10b66fa7772ec1cf27e601bddb8910"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "5115475c67158dc4c38e6d1322300a83c0334e61dcbadb48bde4ff04b9e50cab",
+            "pcm_sha256": "5115475c67158dc4c38e6d1322300a83c0334e61dcbadb48bde4ff04b9e50cab",
+            "quality_flags": [],
+            "raw_text": "你好 小我",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "f42e20b17e7d8843afe6e8ab02705a8d8f10b66fa7772ec1cf27e601bddb8910"
+          }
+        ],
+        "seed": 2026101401,
+        "selection_gold": false,
+        "slot_id": "kw1s-02",
+        "speaker": "Eric",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": true,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen06",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Eric",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 48640,
+            "channels": 1,
+            "file": "aacde086996af988e904ecf854ebce4e155b7a79076b95e68579230f3721a508.pcm",
+            "frames": 24320,
+            "opaque_id": "aacde086996af988e904ecf854ebce4e155b7a79076b95e68579230f3721a508",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "aacde086996af988e904ecf854ebce4e155b7a79076b95e68579230f3721a508"
+          },
+          "native_sha256": "8bf1f860ba956bf91da7921213cecfab7419d713673a03436a49be3d80773361",
+          "native_values_sha256": "da2d4b3ece322d4539b49eaf6816185955fb235446b0f3e6eb84ecc03658ff23",
+          "slot_id": "kw1s-03"
+        },
+        "instruction": "",
+        "label_tier": "review",
+        "machine_train_only_candidate": false,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 36480,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "da2d4b3ece322d4539b49eaf6816185955fb235446b0f3e6eb84ecc03658ff23",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 1.52,
+          "peak": 0.33411353826522827,
+          "quality_flags": [],
+          "rms": 0.04607658474745767,
+          "technically_valid": true
+        },
+        "native_sha256": "8bf1f860ba956bf91da7921213cecfab7419d713673a03436a49be3d80773361",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 20,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "aacde086996af988e904ecf854ebce4e155b7a79076b95e68579230f3721a508",
+            "pcm_sha256": "aacde086996af988e904ecf854ebce4e155b7a79076b95e68579230f3721a508",
+            "quality_flags": [],
+            "raw_text": "你好，小我。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "96aa3045583e75b4e7e66e3c12710d5f0491aa710a69f92709f1d48a3440d091"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "aacde086996af988e904ecf854ebce4e155b7a79076b95e68579230f3721a508",
+            "pcm_sha256": "aacde086996af988e904ecf854ebce4e155b7a79076b95e68579230f3721a508",
+            "quality_flags": [],
+            "raw_text": "你好小我",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "96aa3045583e75b4e7e66e3c12710d5f0491aa710a69f92709f1d48a3440d091"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "aacde086996af988e904ecf854ebce4e155b7a79076b95e68579230f3721a508",
+            "pcm_sha256": "aacde086996af988e904ecf854ebce4e155b7a79076b95e68579230f3721a508",
+            "quality_flags": [],
+            "raw_text": "你好,小我",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "96aa3045583e75b4e7e66e3c12710d5f0491aa710a69f92709f1d48a3440d091"
+          }
+        ],
+        "seed": 2026101402,
+        "selection_gold": false,
+        "slot_id": "kw1s-03",
+        "speaker": "Eric",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": true,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen17",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Uncle_Fu",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 30720,
+            "channels": 1,
+            "file": "946125a7b6d146e9c0cb4286af60f609a8a3b059119f3015ef411589f76812cd.pcm",
+            "frames": 15360,
+            "opaque_id": "946125a7b6d146e9c0cb4286af60f609a8a3b059119f3015ef411589f76812cd",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "946125a7b6d146e9c0cb4286af60f609a8a3b059119f3015ef411589f76812cd"
+          },
+          "native_sha256": "d56dd1449d526fee38b357ab17fcc3fe135d8e94abf543b6b2c89a9ab28f4861",
+          "native_values_sha256": "c56254799f74d55fd57b4b9c92da2fbd9cda89bdffbae3b15ae909d736f8abc1",
+          "slot_id": "kw1s-04"
+        },
+        "instruction": "",
+        "label_tier": "review",
+        "machine_train_only_candidate": false,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 23040,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "c56254799f74d55fd57b4b9c92da2fbd9cda89bdffbae3b15ae909d736f8abc1",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 0.96,
+          "peak": 0.42019766569137573,
+          "quality_flags": [],
+          "rms": 0.09074148035940868,
+          "technically_valid": true
+        },
+        "native_sha256": "d56dd1449d526fee38b357ab17fcc3fe135d8e94abf543b6b2c89a9ab28f4861",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 13,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "946125a7b6d146e9c0cb4286af60f609a8a3b059119f3015ef411589f76812cd",
+            "pcm_sha256": "946125a7b6d146e9c0cb4286af60f609a8a3b059119f3015ef411589f76812cd",
+            "quality_flags": [],
+            "raw_text": "你好，小吴。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "39020d5feffe1ba7beeb6b7512176c887a680f13f503825cfba70a22be09ded1"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "946125a7b6d146e9c0cb4286af60f609a8a3b059119f3015ef411589f76812cd",
+            "pcm_sha256": "946125a7b6d146e9c0cb4286af60f609a8a3b059119f3015ef411589f76812cd",
+            "quality_flags": [],
+            "raw_text": "你好小窝",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "39020d5feffe1ba7beeb6b7512176c887a680f13f503825cfba70a22be09ded1"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "946125a7b6d146e9c0cb4286af60f609a8a3b059119f3015ef411589f76812cd",
+            "pcm_sha256": "946125a7b6d146e9c0cb4286af60f609a8a3b059119f3015ef411589f76812cd",
+            "quality_flags": [],
+            "raw_text": "你好小臥",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "39020d5feffe1ba7beeb6b7512176c887a680f13f503825cfba70a22be09ded1"
+          }
+        ],
+        "seed": 2026101401,
+        "selection_gold": false,
+        "slot_id": "kw1s-04",
+        "speaker": "Uncle_Fu",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": false,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen17",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Uncle_Fu",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 48640,
+            "channels": 1,
+            "file": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25.pcm",
+            "frames": 24320,
+            "opaque_id": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25"
+          },
+          "native_sha256": "565222664890aa5f5447c6ef98620acba6fafa8a3aa67b78d083afaae86b9782",
+          "native_values_sha256": "2ed27dabdfc91cc63d57ae51c5672c7560bd7fa531ef8f19c68df02b6bc49d26",
+          "slot_id": "kw1s-05"
+        },
+        "instruction": "",
+        "label_tier": "three-model-consensus",
+        "machine_train_only_candidate": true,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 36480,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "2ed27dabdfc91cc63d57ae51c5672c7560bd7fa531ef8f19c68df02b6bc49d26",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 1.52,
+          "peak": 0.5368494987487793,
+          "quality_flags": [],
+          "rms": 0.1180833625037124,
+          "technically_valid": true
+        },
+        "native_sha256": "565222664890aa5f5447c6ef98620acba6fafa8a3aa67b78d083afaae86b9782",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 20,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25",
+            "pcm_sha256": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25",
+            "quality_flags": [],
+            "raw_text": "你好，小窝。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "f89035146609af08ae910cb01943b741967777e95795d09e255f8bfe981d1b80"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25",
+            "pcm_sha256": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25",
+            "quality_flags": [],
+            "raw_text": "你好小窝",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "f89035146609af08ae910cb01943b741967777e95795d09e255f8bfe981d1b80"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25",
+            "pcm_sha256": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25",
+            "quality_flags": [],
+            "raw_text": "你好小窝",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "f89035146609af08ae910cb01943b741967777e95795d09e255f8bfe981d1b80"
+          }
+        ],
+        "seed": 2026101402,
+        "selection_gold": false,
+        "slot_id": "kw1s-05",
+        "speaker": "Uncle_Fu",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": true,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen17",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Uncle_Fu",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 53760,
+            "channels": 1,
+            "file": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e.pcm",
+            "frames": 26880,
+            "opaque_id": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e"
+          },
+          "native_sha256": "419c64112cc7832f446915b03b52aadd7eb035d5d5468508572205a8bdbd738e",
+          "native_values_sha256": "72c74eceb009367a48b51f44a7b87c0d9a01ef26d38c7a7d5283557434eabe77",
+          "slot_id": "kw1s-06"
+        },
+        "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+        "label_tier": "three-model-consensus",
+        "machine_train_only_candidate": true,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 40320,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "72c74eceb009367a48b51f44a7b87c0d9a01ef26d38c7a7d5283557434eabe77",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 1.68,
+          "peak": 0.5673384070396423,
+          "quality_flags": [],
+          "rms": 0.12686119899745887,
+          "technically_valid": true
+        },
+        "native_sha256": "419c64112cc7832f446915b03b52aadd7eb035d5d5468508572205a8bdbd738e",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 22,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e",
+            "pcm_sha256": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e",
+            "quality_flags": [],
+            "raw_text": "你好，小窝。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "3b9ca7407af1256e132ec3d551c7270820116edf80c87f0aaad6cea0c611d46b"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e",
+            "pcm_sha256": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e",
+            "quality_flags": [],
+            "raw_text": "你好小窝",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "3b9ca7407af1256e132ec3d551c7270820116edf80c87f0aaad6cea0c611d46b"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e",
+            "pcm_sha256": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e",
+            "quality_flags": [],
+            "raw_text": "你好小窝",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "3b9ca7407af1256e132ec3d551c7270820116edf80c87f0aaad6cea0c611d46b"
+          }
+        ],
+        "seed": 2026101401,
+        "selection_gold": false,
+        "slot_id": "kw1s-06",
+        "speaker": "Uncle_Fu",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": true,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen17",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Uncle_Fu",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 53760,
+            "channels": 1,
+            "file": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648.pcm",
+            "frames": 26880,
+            "opaque_id": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648"
+          },
+          "native_sha256": "149f12ff5c2bba75383f5f66b281697c2b0d501f89a7ba5e08b90b5dfe19fb3b",
+          "native_values_sha256": "c49619b4a05e3e932b36b36def05e8b2175d2ea20356228ff000e4492f34c1d0",
+          "slot_id": "kw1s-07"
+        },
+        "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+        "label_tier": "three-model-consensus",
+        "machine_train_only_candidate": true,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 40320,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "c49619b4a05e3e932b36b36def05e8b2175d2ea20356228ff000e4492f34c1d0",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 1.68,
+          "peak": 0.5003421902656555,
+          "quality_flags": [],
+          "rms": 0.06947673274593043,
+          "technically_valid": true
+        },
+        "native_sha256": "149f12ff5c2bba75383f5f66b281697c2b0d501f89a7ba5e08b90b5dfe19fb3b",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 22,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648",
+            "pcm_sha256": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648",
+            "quality_flags": [],
+            "raw_text": "你好，小窝。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "578d488af08d4f691cd962bb11ae419bfb0e6005c2bbae14005f2fd6551ced32"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648",
+            "pcm_sha256": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648",
+            "quality_flags": [],
+            "raw_text": "你好小窝",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "578d488af08d4f691cd962bb11ae419bfb0e6005c2bbae14005f2fd6551ced32"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648",
+            "pcm_sha256": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648",
+            "quality_flags": [],
+            "raw_text": "你好小窝",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "578d488af08d4f691cd962bb11ae419bfb0e6005c2bbae14005f2fd6551ced32"
+          }
+        ],
+        "seed": 2026101402,
+        "selection_gold": false,
+        "slot_id": "kw1s-07",
+        "speaker": "Uncle_Fu",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": true,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen17",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Eric",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 30720,
+            "channels": 1,
+            "file": "fc546dd1e3a3481f2cd9d54444f68324aa08564b956bb201f4dbcd4840150c98.pcm",
+            "frames": 15360,
+            "opaque_id": "fc546dd1e3a3481f2cd9d54444f68324aa08564b956bb201f4dbcd4840150c98",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "fc546dd1e3a3481f2cd9d54444f68324aa08564b956bb201f4dbcd4840150c98"
+          },
+          "native_sha256": "a50d8bf0d1fc10b420a75310ef9182e7d8cd96d4ca55064419d1aedea0d9ef13",
+          "native_values_sha256": "00f796477f5dd8b0584a32fb3598d95a4c44f8a2d5668e314312a9966c89bacd",
+          "slot_id": "kw1s-08"
+        },
+        "instruction": "",
+        "label_tier": "review",
+        "machine_train_only_candidate": false,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 23040,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "00f796477f5dd8b0584a32fb3598d95a4c44f8a2d5668e314312a9966c89bacd",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 0.96,
+          "peak": 0.5514236092567444,
+          "quality_flags": [],
+          "rms": 0.12991214382167107,
+          "technically_valid": true
+        },
+        "native_sha256": "a50d8bf0d1fc10b420a75310ef9182e7d8cd96d4ca55064419d1aedea0d9ef13",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 13,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "fc546dd1e3a3481f2cd9d54444f68324aa08564b956bb201f4dbcd4840150c98",
+            "pcm_sha256": "fc546dd1e3a3481f2cd9d54444f68324aa08564b956bb201f4dbcd4840150c98",
+            "quality_flags": [],
+            "raw_text": "你好，小薇。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "ea27b5c487c44bd798e305f8a5e19b33be421864bfc438250f78b847c54d1ce7"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "fc546dd1e3a3481f2cd9d54444f68324aa08564b956bb201f4dbcd4840150c98",
+            "pcm_sha256": "fc546dd1e3a3481f2cd9d54444f68324aa08564b956bb201f4dbcd4840150c98",
+            "quality_flags": [],
+            "raw_text": "你好小窝",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "ea27b5c487c44bd798e305f8a5e19b33be421864bfc438250f78b847c54d1ce7"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "fc546dd1e3a3481f2cd9d54444f68324aa08564b956bb201f4dbcd4840150c98",
+            "pcm_sha256": "fc546dd1e3a3481f2cd9d54444f68324aa08564b956bb201f4dbcd4840150c98",
+            "quality_flags": [],
+            "raw_text": "你好小娃",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "ea27b5c487c44bd798e305f8a5e19b33be421864bfc438250f78b847c54d1ce7"
+          }
+        ],
+        "seed": 2026101401,
+        "selection_gold": false,
+        "slot_id": "kw1s-08",
+        "speaker": "Eric",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": false,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen17",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Eric",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 35840,
+            "channels": 1,
+            "file": "64a29edfdd36cc125bacf15abae6ceb9d39e74fa892d610dcac7ac9cfe1ea435.pcm",
+            "frames": 17920,
+            "opaque_id": "64a29edfdd36cc125bacf15abae6ceb9d39e74fa892d610dcac7ac9cfe1ea435",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "64a29edfdd36cc125bacf15abae6ceb9d39e74fa892d610dcac7ac9cfe1ea435"
+          },
+          "native_sha256": "5bd9f584cea6ddc66eb79ddf9a1aebd59ccb2e6d627bad9ed2d234e8b7dc6b3a",
+          "native_values_sha256": "123ea041596e213622a67866f09ad8fa993161fd721db91e2cf33dd96ab4629d",
+          "slot_id": "kw1s-09"
+        },
+        "instruction": "",
+        "label_tier": "review",
+        "machine_train_only_candidate": false,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 26880,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "123ea041596e213622a67866f09ad8fa993161fd721db91e2cf33dd96ab4629d",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 1.12,
+          "peak": 0.6538565158843994,
+          "quality_flags": [],
+          "rms": 0.11037137707673757,
+          "technically_valid": true
+        },
+        "native_sha256": "5bd9f584cea6ddc66eb79ddf9a1aebd59ccb2e6d627bad9ed2d234e8b7dc6b3a",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 15,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "64a29edfdd36cc125bacf15abae6ceb9d39e74fa892d610dcac7ac9cfe1ea435",
+            "pcm_sha256": "64a29edfdd36cc125bacf15abae6ceb9d39e74fa892d610dcac7ac9cfe1ea435",
+            "quality_flags": [],
+            "raw_text": "你好，小我。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "d7a306770ee9cdf93149e212924ce27ffe2239010d04c3a523d41ae9400acde9"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "64a29edfdd36cc125bacf15abae6ceb9d39e74fa892d610dcac7ac9cfe1ea435",
+            "pcm_sha256": "64a29edfdd36cc125bacf15abae6ceb9d39e74fa892d610dcac7ac9cfe1ea435",
+            "quality_flags": [],
+            "raw_text": "你好小我",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "d7a306770ee9cdf93149e212924ce27ffe2239010d04c3a523d41ae9400acde9"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "64a29edfdd36cc125bacf15abae6ceb9d39e74fa892d610dcac7ac9cfe1ea435",
+            "pcm_sha256": "64a29edfdd36cc125bacf15abae6ceb9d39e74fa892d610dcac7ac9cfe1ea435",
+            "quality_flags": [],
+            "raw_text": "你好小我",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "d7a306770ee9cdf93149e212924ce27ffe2239010d04c3a523d41ae9400acde9"
+          }
+        ],
+        "seed": 2026101402,
+        "selection_gold": false,
+        "slot_id": "kw1s-09",
+        "speaker": "Eric",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": true,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen17",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Eric",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 30720,
+            "channels": 1,
+            "file": "fe05cc5308c3ea158db722151d1b3402f8f77a2842cf318c40ab8fe99644271f.pcm",
+            "frames": 15360,
+            "opaque_id": "fe05cc5308c3ea158db722151d1b3402f8f77a2842cf318c40ab8fe99644271f",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "fe05cc5308c3ea158db722151d1b3402f8f77a2842cf318c40ab8fe99644271f"
+          },
+          "native_sha256": "5f6653cfe6eb6359413919d21c79d87ee601123082077659b97033e5d37d79aa",
+          "native_values_sha256": "c9ed41430243666ec7e9d7625874e208d6aecad35c40bb0e0c9ca362655a40cb",
+          "slot_id": "kw1s-10"
+        },
+        "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+        "label_tier": "review",
+        "machine_train_only_candidate": false,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 23040,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "c9ed41430243666ec7e9d7625874e208d6aecad35c40bb0e0c9ca362655a40cb",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 0.96,
+          "peak": 0.3436775207519531,
+          "quality_flags": [],
+          "rms": 0.08196971574816639,
+          "technically_valid": true
+        },
+        "native_sha256": "5f6653cfe6eb6359413919d21c79d87ee601123082077659b97033e5d37d79aa",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 13,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "fe05cc5308c3ea158db722151d1b3402f8f77a2842cf318c40ab8fe99644271f",
+            "pcm_sha256": "fe05cc5308c3ea158db722151d1b3402f8f77a2842cf318c40ab8fe99644271f",
+            "quality_flags": [],
+            "raw_text": "你好，小窝。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "d5b750a071c82eb1321571d7f41179daa230486caa135c1d133c6b08f12737c1"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "fe05cc5308c3ea158db722151d1b3402f8f77a2842cf318c40ab8fe99644271f",
+            "pcm_sha256": "fe05cc5308c3ea158db722151d1b3402f8f77a2842cf318c40ab8fe99644271f",
+            "quality_flags": [],
+            "raw_text": "你好小舞",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "d5b750a071c82eb1321571d7f41179daa230486caa135c1d133c6b08f12737c1"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "fe05cc5308c3ea158db722151d1b3402f8f77a2842cf318c40ab8fe99644271f",
+            "pcm_sha256": "fe05cc5308c3ea158db722151d1b3402f8f77a2842cf318c40ab8fe99644271f",
+            "quality_flags": [],
+            "raw_text": "你好小屋",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "d5b750a071c82eb1321571d7f41179daa230486caa135c1d133c6b08f12737c1"
+          }
+        ],
+        "seed": 2026101401,
+        "selection_gold": false,
+        "slot_id": "kw1s-10",
+        "speaker": "Eric",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": false,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen17",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Eric",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 33280,
+            "channels": 1,
+            "file": "4c7a6ede36a584b47f61a6ff7282cdc5718346bf0f225f8cde4dc9934d1cb2cd.pcm",
+            "frames": 16640,
+            "opaque_id": "4c7a6ede36a584b47f61a6ff7282cdc5718346bf0f225f8cde4dc9934d1cb2cd",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "4c7a6ede36a584b47f61a6ff7282cdc5718346bf0f225f8cde4dc9934d1cb2cd"
+          },
+          "native_sha256": "c58c0134291369d4d0e1df2bcb0ce8e3bf46982ce61fe151e6555c351ff8cfb7",
+          "native_values_sha256": "2f90a8f29987d5fd502b679f68e6938972a178ecef41c12d29b169db7b0fe93f",
+          "slot_id": "kw1s-11"
+        },
+        "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+        "label_tier": "review",
+        "machine_train_only_candidate": false,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 24960,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "2f90a8f29987d5fd502b679f68e6938972a178ecef41c12d29b169db7b0fe93f",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 1.04,
+          "peak": 0.5294660329818726,
+          "quality_flags": [],
+          "rms": 0.127809588176398,
+          "technically_valid": true
+        },
+        "native_sha256": "c58c0134291369d4d0e1df2bcb0ce8e3bf46982ce61fe151e6555c351ff8cfb7",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 14,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "4c7a6ede36a584b47f61a6ff7282cdc5718346bf0f225f8cde4dc9934d1cb2cd",
+            "pcm_sha256": "4c7a6ede36a584b47f61a6ff7282cdc5718346bf0f225f8cde4dc9934d1cb2cd",
+            "quality_flags": [],
+            "raw_text": "你好，小窝。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "081d72183d049fbc1097be728700b2caada1350596ec4318a37d737935c018b0"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "4c7a6ede36a584b47f61a6ff7282cdc5718346bf0f225f8cde4dc9934d1cb2cd",
+            "pcm_sha256": "4c7a6ede36a584b47f61a6ff7282cdc5718346bf0f225f8cde4dc9934d1cb2cd",
+            "quality_flags": [],
+            "raw_text": "你好小舞",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "081d72183d049fbc1097be728700b2caada1350596ec4318a37d737935c018b0"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "4c7a6ede36a584b47f61a6ff7282cdc5718346bf0f225f8cde4dc9934d1cb2cd",
+            "pcm_sha256": "4c7a6ede36a584b47f61a6ff7282cdc5718346bf0f225f8cde4dc9934d1cb2cd",
+            "quality_flags": [],
+            "raw_text": "你好小我哦",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "081d72183d049fbc1097be728700b2caada1350596ec4318a37d737935c018b0"
+          }
+        ],
+        "seed": 2026101402,
+        "selection_gold": false,
+        "slot_id": "kw1s-11",
+        "speaker": "Eric",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": false,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen17",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Dylan",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 28160,
+            "channels": 1,
+            "file": "59fe44fd519d5976e577387eec888501427d493f593fccee976ef7a19e456ec3.pcm",
+            "frames": 14080,
+            "opaque_id": "59fe44fd519d5976e577387eec888501427d493f593fccee976ef7a19e456ec3",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "59fe44fd519d5976e577387eec888501427d493f593fccee976ef7a19e456ec3"
+          },
+          "native_sha256": "b0f63f736b811a633e42201b868754c8bb948e1c1dde3d00643bddbe2e4fb146",
+          "native_values_sha256": "58ae168d1772dfe5cc49c69e4f290265943815645e9456f03f0523d1a2a367bd",
+          "slot_id": "kw1s-12"
+        },
+        "instruction": "",
+        "label_tier": "review",
+        "machine_train_only_candidate": false,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 21120,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "58ae168d1772dfe5cc49c69e4f290265943815645e9456f03f0523d1a2a367bd",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 0.88,
+          "peak": 0.36424845457077026,
+          "quality_flags": [],
+          "rms": 0.05612936821894587,
+          "technically_valid": true
+        },
+        "native_sha256": "b0f63f736b811a633e42201b868754c8bb948e1c1dde3d00643bddbe2e4fb146",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 12,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "59fe44fd519d5976e577387eec888501427d493f593fccee976ef7a19e456ec3",
+            "pcm_sha256": "59fe44fd519d5976e577387eec888501427d493f593fccee976ef7a19e456ec3",
+            "quality_flags": [],
+            "raw_text": "你好，小吴。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "80756e98f296c2ddb22cd5e02d9d9f3768412188103bb376c3679dd907d46069"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "59fe44fd519d5976e577387eec888501427d493f593fccee976ef7a19e456ec3",
+            "pcm_sha256": "59fe44fd519d5976e577387eec888501427d493f593fccee976ef7a19e456ec3",
+            "quality_flags": [],
+            "raw_text": "你好小屋",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "80756e98f296c2ddb22cd5e02d9d9f3768412188103bb376c3679dd907d46069"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "59fe44fd519d5976e577387eec888501427d493f593fccee976ef7a19e456ec3",
+            "pcm_sha256": "59fe44fd519d5976e577387eec888501427d493f593fccee976ef7a19e456ec3",
+            "quality_flags": [],
+            "raw_text": "你好小屋",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "80756e98f296c2ddb22cd5e02d9d9f3768412188103bb376c3679dd907d46069"
+          }
+        ],
+        "seed": 2026101401,
+        "selection_gold": false,
+        "slot_id": "kw1s-12",
+        "speaker": "Dylan",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": false,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen17",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Dylan",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 38400,
+            "channels": 1,
+            "file": "f67379e42e4b9543fa9f2f35a020045f260d50f548fa20d2570d2b0004a48619.pcm",
+            "frames": 19200,
+            "opaque_id": "f67379e42e4b9543fa9f2f35a020045f260d50f548fa20d2570d2b0004a48619",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "f67379e42e4b9543fa9f2f35a020045f260d50f548fa20d2570d2b0004a48619"
+          },
+          "native_sha256": "e16dcd1a0c9a974e373ae05deb0019df60f4e988662bd274d2edc4d0346db18d",
+          "native_values_sha256": "d69d92728ab2253f7e833450c3b430a59eef63160925e7fc71ee874092c809ea",
+          "slot_id": "kw1s-13"
+        },
+        "instruction": "",
+        "label_tier": "review",
+        "machine_train_only_candidate": false,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 28800,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "d69d92728ab2253f7e833450c3b430a59eef63160925e7fc71ee874092c809ea",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 1.2,
+          "peak": 0.46391019225120544,
+          "quality_flags": [],
+          "rms": 0.07050913297082859,
+          "technically_valid": true
+        },
+        "native_sha256": "e16dcd1a0c9a974e373ae05deb0019df60f4e988662bd274d2edc4d0346db18d",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 16,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "f67379e42e4b9543fa9f2f35a020045f260d50f548fa20d2570d2b0004a48619",
+            "pcm_sha256": "f67379e42e4b9543fa9f2f35a020045f260d50f548fa20d2570d2b0004a48619",
+            "quality_flags": [],
+            "raw_text": "你好，小吴。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "3eafb42bb4880c8c7e236897bcb21711a3d17d6092b9626a2eccf627859024ab"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "f67379e42e4b9543fa9f2f35a020045f260d50f548fa20d2570d2b0004a48619",
+            "pcm_sha256": "f67379e42e4b9543fa9f2f35a020045f260d50f548fa20d2570d2b0004a48619",
+            "quality_flags": [],
+            "raw_text": "你好小屋",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "3eafb42bb4880c8c7e236897bcb21711a3d17d6092b9626a2eccf627859024ab"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "f67379e42e4b9543fa9f2f35a020045f260d50f548fa20d2570d2b0004a48619",
+            "pcm_sha256": "f67379e42e4b9543fa9f2f35a020045f260d50f548fa20d2570d2b0004a48619",
+            "quality_flags": [],
+            "raw_text": "你好小屋",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "3eafb42bb4880c8c7e236897bcb21711a3d17d6092b9626a2eccf627859024ab"
+          }
+        ],
+        "seed": 2026101402,
+        "selection_gold": false,
+        "slot_id": "kw1s-13",
+        "speaker": "Dylan",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": false,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen17",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Dylan",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 28160,
+            "channels": 1,
+            "file": "7ded59cfa3e42017bb50f5ca1a12c6c6299651a525a51dd372089b7d94331286.pcm",
+            "frames": 14080,
+            "opaque_id": "7ded59cfa3e42017bb50f5ca1a12c6c6299651a525a51dd372089b7d94331286",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "7ded59cfa3e42017bb50f5ca1a12c6c6299651a525a51dd372089b7d94331286"
+          },
+          "native_sha256": "acc37286f4a806c0516d0e7494dee3ac30db168e2c3f99f4445bca826deefdbf",
+          "native_values_sha256": "1cd07c5a08325f483825ce218d3eb47ea524e0dbd893a03fb76cf42487274b54",
+          "slot_id": "kw1s-14"
+        },
+        "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+        "label_tier": "review",
+        "machine_train_only_candidate": false,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 21120,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "1cd07c5a08325f483825ce218d3eb47ea524e0dbd893a03fb76cf42487274b54",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 0.88,
+          "peak": 0.5834072828292847,
+          "quality_flags": [],
+          "rms": 0.09471388907724297,
+          "technically_valid": true
+        },
+        "native_sha256": "acc37286f4a806c0516d0e7494dee3ac30db168e2c3f99f4445bca826deefdbf",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 12,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "7ded59cfa3e42017bb50f5ca1a12c6c6299651a525a51dd372089b7d94331286",
+            "pcm_sha256": "7ded59cfa3e42017bb50f5ca1a12c6c6299651a525a51dd372089b7d94331286",
+            "quality_flags": [],
+            "raw_text": "你好，小窝。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "e68a9a22c1a673a4450438d5c45058a2564abfc6b35b3b7843465faf8fe7b78c"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "7ded59cfa3e42017bb50f5ca1a12c6c6299651a525a51dd372089b7d94331286",
+            "pcm_sha256": "7ded59cfa3e42017bb50f5ca1a12c6c6299651a525a51dd372089b7d94331286",
+            "quality_flags": [],
+            "raw_text": "你好小窝",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "e68a9a22c1a673a4450438d5c45058a2564abfc6b35b3b7843465faf8fe7b78c"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "7ded59cfa3e42017bb50f5ca1a12c6c6299651a525a51dd372089b7d94331286",
+            "pcm_sha256": "7ded59cfa3e42017bb50f5ca1a12c6c6299651a525a51dd372089b7d94331286",
+            "quality_flags": [],
+            "raw_text": "你好 小屋",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "e68a9a22c1a673a4450438d5c45058a2564abfc6b35b3b7843465faf8fe7b78c"
+          }
+        ],
+        "seed": 2026101401,
+        "selection_gold": false,
+        "slot_id": "kw1s-14",
+        "speaker": "Dylan",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": false,
+        "training_admitted": false
+      },
+      {
+        "audio_quality_pass": true,
+        "calibration_gold": false,
+        "derived_audio_ready": true,
+        "engine": "qwen17",
+        "generation_parameters": {
+          "do_sample": true,
+          "max_new_tokens": 120,
+          "non_streaming_mode": true,
+          "repetition_penalty": 1.05,
+          "subtalker_dosample": true,
+          "subtalker_temperature": 0.9,
+          "subtalker_top_k": 50,
+          "subtalker_top_p": 1.0,
+          "temperature": 0.9,
+          "top_k": 50,
+          "top_p": 1.0
+        },
+        "group_id": "Dylan",
+        "human_gold": false,
+        "identity": {
+          "derivation": {
+            "down": 3,
+            "gain_normalization": false,
+            "method": "scipy.signal.resample_poly",
+            "numpy_version": "2.3.2",
+            "padtype": "constant",
+            "quantization": "floor_float64_times_32768_to_int16",
+            "scipy_version": "1.17.1",
+            "trimming": false,
+            "up": 2,
+            "window": [
+              "kaiser",
+              5.0
+            ]
+          },
+          "derived": {
+            "bytes": 30720,
+            "channels": 1,
+            "file": "ead69b8bd3cd28a2d0f3754ef28c6d25e0eab4d437f71ce41e648b3fba7519a3.pcm",
+            "frames": 15360,
+            "opaque_id": "ead69b8bd3cd28a2d0f3754ef28c6d25e0eab4d437f71ce41e648b3fba7519a3",
+            "sample_format": "s16le",
+            "sample_rate_hz": 16000,
+            "sha256": "ead69b8bd3cd28a2d0f3754ef28c6d25e0eab4d437f71ce41e648b3fba7519a3"
+          },
+          "native_sha256": "503714504db70374ffd3bf2120d703fd60874f6158000222d30f2a8a50ec86e6",
+          "native_values_sha256": "d4fe0ca8ec56a8780d41e05c64144ebf434a35d8416a2718fcac71eb32a6f7ef",
+          "slot_id": "kw1s-15"
+        },
+        "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+        "label_tier": "review",
+        "machine_train_only_candidate": false,
+        "native_attempts": 1,
+        "native_metadata": {
+          "channels": 1,
+          "frames": 23040,
+          "sample_rate_hz": 24000,
+          "source_values_sha256": "d4fe0ca8ec56a8780d41e05c64144ebf434a35d8416a2718fcac71eb32a6f7ef",
+          "subtype": "FLOAT"
+        },
+        "native_metrics": {
+          "clipped_fraction": 0.0,
+          "duration_seconds": 0.96,
+          "peak": 0.46881577372550964,
+          "quality_flags": [],
+          "rms": 0.07764531138127358,
+          "technically_valid": true
+        },
+        "native_sha256": "503714504db70374ffd3bf2120d703fd60874f6158000222d30f2a8a50ec86e6",
+        "native_status": "completed",
+        "native_termination": {
+          "ended_with_eos": true,
+          "eos": 2150,
+          "hit_token_cap_without_eos": false,
+          "iterations": 13,
+          "last_token_ids": [
+            2150
+          ]
+        },
+        "recognitions": [
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "ead69b8bd3cd28a2d0f3754ef28c6d25e0eab4d437f71ce41e648b3fba7519a3",
+            "pcm_sha256": "ead69b8bd3cd28a2d0f3754ef28c6d25e0eab4d437f71ce41e648b3fba7519a3",
+            "quality_flags": [],
+            "raw_text": "你好，小窝。",
+            "recognizer": "qwen_asr",
+            "status": "success",
+            "wav_sha256": "0da95b092b0cddee40daea1e9a2d8ef7a19ed3592f7d2c94f47b59aa01ca6600"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "ead69b8bd3cd28a2d0f3754ef28c6d25e0eab4d437f71ce41e648b3fba7519a3",
+            "pcm_sha256": "ead69b8bd3cd28a2d0f3754ef28c6d25e0eab4d437f71ce41e648b3fba7519a3",
+            "quality_flags": [],
+            "raw_text": "你好小窝",
+            "recognizer": "sensevoice",
+            "status": "success",
+            "wav_sha256": "0da95b092b0cddee40daea1e9a2d8ef7a19ed3592f7d2c94f47b59aa01ca6600"
+          },
+          {
+            "attempts": 1,
+            "completeness": "complete",
+            "error_type": null,
+            "opaque_id": "ead69b8bd3cd28a2d0f3754ef28c6d25e0eab4d437f71ce41e648b3fba7519a3",
+            "pcm_sha256": "ead69b8bd3cd28a2d0f3754ef28c6d25e0eab4d437f71ce41e648b3fba7519a3",
+            "quality_flags": [],
+            "raw_text": "你好小屋",
+            "recognizer": "whisper_small",
+            "status": "success",
+            "wav_sha256": "0da95b092b0cddee40daea1e9a2d8ef7a19ed3592f7d2c94f47b59aa01ca6600"
+          }
+        ],
+        "seed": 2026101402,
+        "selection_gold": false,
+        "slot_id": "kw1s-15",
+        "speaker": "Dylan",
+        "target_text": "你好小窝",
+        "text_three_model_consistent": false,
+        "training_admitted": false
+      }
+    ],
+    "candidate_ids": [
+      "kw1s-05",
+      "kw1s-06",
+      "kw1s-07"
+    ],
+    "candidate_rate": 0.1875,
+    "text_three_model_consistent": 6,
+    "by_engine": [
+      {
+        "engine": "qwen06",
+        "total": 4,
+        "candidates": 0,
+        "candidate_ids": [],
+        "three_model_consistent": 2
+      },
+      {
+        "engine": "qwen17",
+        "total": 12,
+        "candidates": 3,
+        "candidate_ids": [
+          "kw1s-05",
+          "kw1s-06",
+          "kw1s-07"
+        ],
+        "three_model_consistent": 4
+      }
+    ],
+    "by_voice": [
+      {
+        "speaker": "Dylan",
+        "total": 4,
+        "candidates": 0,
+        "candidate_ids": [],
+        "three_model_consistent": 0
+      },
+      {
+        "speaker": "Eric",
+        "total": 6,
+        "candidates": 0,
+        "candidate_ids": [],
+        "three_model_consistent": 3
+      },
+      {
+        "speaker": "Uncle_Fu",
+        "total": 6,
+        "candidates": 3,
+        "candidate_ids": [
+          "kw1s-05",
+          "kw1s-06",
+          "kw1s-07"
+        ],
+        "three_model_consistent": 3
+      }
+    ],
+    "by_instruction": [
+      {
+        "instruction": "",
+        "total": 10,
+        "candidates": 1,
+        "candidate_ids": [
+          "kw1s-05"
+        ],
+        "three_model_consistent": 4
+      },
+      {
+        "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+        "total": 6,
+        "candidates": 2,
+        "candidate_ids": [
+          "kw1s-06",
+          "kw1s-07"
+        ],
+        "three_model_consistent": 2
+      }
+    ],
+    "by_engine_voice_instruction": [
+      {
+        "engine": "qwen06",
+        "speaker": "Eric",
+        "instruction": "",
+        "total": 2,
+        "candidates": 0,
+        "candidate_ids": [],
+        "three_model_consistent": 2
+      },
+      {
+        "engine": "qwen06",
+        "speaker": "Uncle_Fu",
+        "instruction": "",
+        "total": 2,
+        "candidates": 0,
+        "candidate_ids": [],
+        "three_model_consistent": 0
+      },
+      {
+        "engine": "qwen17",
+        "speaker": "Dylan",
+        "instruction": "",
+        "total": 2,
+        "candidates": 0,
+        "candidate_ids": [],
+        "three_model_consistent": 0
+      },
+      {
+        "engine": "qwen17",
+        "speaker": "Dylan",
+        "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+        "total": 2,
+        "candidates": 0,
+        "candidate_ids": [],
+        "three_model_consistent": 0
+      },
+      {
+        "engine": "qwen17",
+        "speaker": "Eric",
+        "instruction": "",
+        "total": 2,
+        "candidates": 0,
+        "candidate_ids": [],
+        "three_model_consistent": 1
+      },
+      {
+        "engine": "qwen17",
+        "speaker": "Eric",
+        "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+        "total": 2,
+        "candidates": 0,
+        "candidate_ids": [],
+        "three_model_consistent": 0
+      },
+      {
+        "engine": "qwen17",
+        "speaker": "Uncle_Fu",
+        "instruction": "",
+        "total": 2,
+        "candidates": 1,
+        "candidate_ids": [
+          "kw1s-05"
+        ],
+        "three_model_consistent": 1
+      },
+      {
+        "engine": "qwen17",
+        "speaker": "Uncle_Fu",
+        "instruction": "请用标准普通话清晰自然地朗读提供的文字，最后一个字读第一声；不要改字、增字或漏字。",
+        "total": 2,
+        "candidates": 2,
+        "candidate_ids": [
+          "kw1s-06",
+          "kw1s-07"
+        ],
+        "three_model_consistent": 2
+      }
+    ],
+    "group_coverage": {
+      "admission_status": "BLOCKED_NO_CALIBRATION_SELECTION_GOLD",
+      "calibration_gold": false,
+      "common_group_count": 3,
+      "common_groups": [
+        "Serena",
+        "Uncle_Fu",
+        "Vivian"
+      ],
+      "group_independence_proven": false,
+      "human_gold": false,
+      "kw1_groups": [
+        "Serena",
+        "Uncle_Fu",
+        "Vivian"
+      ],
+      "kw2_groups": [
+        "Dylan",
+        "Serena",
+        "Uncle_Fu",
+        "Vivian"
+      ],
+      "roles_assigned": false,
+      "selection_gold": false,
+      "three_role_coverage_necessary_condition": true,
+      "training_admitted": false
+    },
+    "resources": {
+      "all_unverified_budget_slots_reserved": true,
+      "container_evidence": {
+        "body": {
+          "api_tokens_passed": false,
+          "max_attempts_per_stage": 1,
+          "max_wall_seconds": 18000,
+          "raw_setup_exported": false,
+          "runtime_cleanups": [
+            {
+              "logical_regular_bytes": 4426099208,
+              "runtime": "runtime-qwen06",
+              "scope": "only this campaign owned runtime; claims/results/source code retained",
+              "status": "removed_after_container_cleanup"
+            },
+            {
+              "logical_regular_bytes": 6447929767,
+              "runtime": "runtime-qwen17",
+              "scope": "only this campaign owned runtime; claims/results/source code retained",
+              "status": "removed_after_container_cleanup"
+            },
+            {
+              "logical_regular_bytes": 5118596415,
+              "runtime": "runtime-primary",
+              "scope": "only this campaign owned runtime; claims/results/source code retained",
+              "status": "removed_after_container_cleanup"
+            },
+            {
+              "logical_regular_bytes": 1799454608,
+              "runtime": "runtime-whisper",
+              "scope": "only this campaign owned runtime; claims/results/source code retained",
+              "status": "removed_after_container_cleanup"
+            }
+          ],
+          "schema": "kw1-container-summary-v1",
+          "stages": [
+            {
+              "attempt": 1,
+              "container_configuration_verified": false,
+              "host": {
+                "available_disk_bytes": 91040161792,
+                "available_memory_bytes": 15709900800
+              },
+              "limits": {
+                "global_wall_seconds": 18000,
+                "host_available_disk_min_bytes": 26843545600,
+                "host_available_memory_min_bytes": 15032385536,
+                "stage_wall_seconds": 180
+              },
+              "memory_observation": {
+                "cgroup_memory_peak_bytes": null,
+                "process_peak_rss_kib": null,
+                "scope": "host supervisor does not sample worker RSS or cgroup peak; configured limits are not measurements",
+                "status": "unknown"
+              },
+              "stage": "image",
+              "status": "complete",
+              "wall_seconds": 3.0602109679999785
+            },
+            {
+              "attempt": 1,
+              "container_configuration_verified": true,
+              "exit_code": 0,
+              "host": {
+                "available_disk_bytes": 90898878464,
+                "available_memory_bytes": 15653105664
+              },
+              "limits": {
+                "cpus": 4,
+                "global_wall_seconds": 18000,
+                "host_available_disk_min_bytes": 26843545600,
+                "host_available_memory_min_bytes": 15032385536,
+                "memory_bytes": 12884901888,
+                "memory_swap_bytes": 12884901888,
+                "network": "bridge",
+                "nonroot": true,
+                "pids": 256,
+                "readonly_code": true,
+                "readonly_root": true,
+                "readonly_runtime": false,
+                "stage_wall_seconds": 1200
+              },
+              "memory_observation": {
+                "cgroup_memory_peak_bytes": null,
+                "process_peak_rss_kib": null,
+                "scope": "host supervisor does not sample worker RSS or cgroup peak; configured limits are not measurements",
+                "status": "unknown"
+              },
+              "oom_killed": false,
+              "stage": "setup_qwen06",
+              "status": "complete",
+              "wall_seconds": 87.19976243400001
+            },
+            {
+              "attempt": 1,
+              "container_configuration_verified": true,
+              "exit_code": 0,
+              "host": {
+                "available_disk_bytes": 86389903360,
+                "available_memory_bytes": 15684870144
+              },
+              "limits": {
+                "call_wall_seconds": 300,
+                "cpus": 4,
+                "global_wall_seconds": 18000,
+                "host_available_disk_min_bytes": 26843545600,
+                "host_available_memory_min_bytes": 15032385536,
+                "load_wall_seconds": 1200,
+                "memory_bytes": 12884901888,
+                "memory_swap_bytes": 12884901888,
+                "network": "none",
+                "nonroot": true,
+                "pids": 256,
+                "readonly_code": true,
+                "readonly_root": true,
+                "readonly_runtime": true,
+                "stage_wall_seconds": 4800
+              },
+              "memory_observation": {
+                "cgroup_memory_peak_bytes": null,
+                "process_peak_rss_kib": null,
+                "scope": "host supervisor does not sample worker RSS or cgroup peak; configured limits are not measurements",
+                "status": "unknown"
+              },
+              "oom_killed": false,
+              "stage": "tts_qwen06",
+              "status": "complete",
+              "wall_seconds": 64.54453735599998
+            },
+            {
+              "attempt": 1,
+              "container_configuration_verified": true,
+              "exit_code": 0,
+              "host": {
+                "available_disk_bytes": 90897580032,
+                "available_memory_bytes": 15595728896
+              },
+              "limits": {
+                "cpus": 4,
+                "global_wall_seconds": 18000,
+                "host_available_disk_min_bytes": 26843545600,
+                "host_available_memory_min_bytes": 15032385536,
+                "memory_bytes": 12884901888,
+                "memory_swap_bytes": 12884901888,
+                "network": "bridge",
+                "nonroot": true,
+                "pids": 256,
+                "readonly_code": true,
+                "readonly_root": true,
+                "readonly_runtime": false,
+                "stage_wall_seconds": 1200
+              },
+              "memory_observation": {
+                "cgroup_memory_peak_bytes": null,
+                "process_peak_rss_kib": null,
+                "scope": "host supervisor does not sample worker RSS or cgroup peak; configured limits are not measurements",
+                "status": "unknown"
+              },
+              "oom_killed": false,
+              "stage": "setup_qwen17",
+              "status": "complete",
+              "wall_seconds": 107.73705134100004
+            },
+            {
+              "attempt": 1,
+              "container_configuration_verified": true,
+              "exit_code": 0,
+              "host": {
+                "available_disk_bytes": 84366987264,
+                "available_memory_bytes": 15681736704
+              },
+              "limits": {
+                "call_wall_seconds": 300,
+                "cpus": 4,
+                "global_wall_seconds": 18000,
+                "host_available_disk_min_bytes": 26843545600,
+                "host_available_memory_min_bytes": 15032385536,
+                "load_wall_seconds": 1200,
+                "memory_bytes": 12884901888,
+                "memory_swap_bytes": 12884901888,
+                "network": "none",
+                "nonroot": true,
+                "pids": 256,
+                "readonly_code": true,
+                "readonly_root": true,
+                "readonly_runtime": true,
+                "stage_wall_seconds": 4800
+              },
+              "memory_observation": {
+                "cgroup_memory_peak_bytes": null,
+                "process_peak_rss_kib": null,
+                "scope": "host supervisor does not sample worker RSS or cgroup peak; configured limits are not measurements",
+                "status": "unknown"
+              },
+              "oom_killed": false,
+              "stage": "tts_qwen17",
+              "status": "complete",
+              "wall_seconds": 165.599539402
+            },
+            {
+              "attempt": 1,
+              "container_configuration_verified": true,
+              "exit_code": 0,
+              "host": {
+                "available_disk_bytes": 90894876672,
+                "available_memory_bytes": 15564787712
+              },
+              "limits": {
+                "cpus": 4,
+                "global_wall_seconds": 18000,
+                "host_available_disk_min_bytes": 26843545600,
+                "host_available_memory_min_bytes": 15032385536,
+                "memory_bytes": 12884901888,
+                "memory_swap_bytes": 12884901888,
+                "network": "bridge",
+                "nonroot": true,
+                "pids": 256,
+                "readonly_code": true,
+                "readonly_root": true,
+                "readonly_runtime": false,
+                "stage_wall_seconds": 1200
+              },
+              "memory_observation": {
+                "cgroup_memory_peak_bytes": null,
+                "process_peak_rss_kib": null,
+                "scope": "host supervisor does not sample worker RSS or cgroup peak; configured limits are not measurements",
+                "status": "unknown"
+              },
+              "oom_killed": false,
+              "stage": "setup_primary",
+              "status": "complete",
+              "wall_seconds": 152.9455833899999
+            },
+            {
+              "attempt": 1,
+              "container_configuration_verified": true,
+              "exit_code": 0,
+              "host": {
+                "available_disk_bytes": 85675933696,
+                "available_memory_bytes": 15628070912
+              },
+              "limits": {
+                "call_wall_seconds": 300,
+                "cpus": 4,
+                "global_wall_seconds": 18000,
+                "host_available_disk_min_bytes": 26843545600,
+                "host_available_memory_min_bytes": 15032385536,
+                "load_wall_seconds": 1200,
+                "memory_bytes": 12884901888,
+                "memory_swap_bytes": 12884901888,
+                "network": "none",
+                "nonroot": true,
+                "pids": 256,
+                "readonly_code": true,
+                "readonly_root": true,
+                "readonly_runtime": true,
+                "stage_wall_seconds": 4800
+              },
+              "memory_observation": {
+                "cgroup_memory_peak_bytes": null,
+                "process_peak_rss_kib": null,
+                "scope": "host supervisor does not sample worker RSS or cgroup peak; configured limits are not measurements",
+                "status": "unknown"
+              },
+              "oom_killed": false,
+              "stage": "qwen_asr",
+              "status": "complete",
+              "wall_seconds": 233.31055597500006
+            },
+            {
+              "attempt": 1,
+              "container_configuration_verified": true,
+              "exit_code": 0,
+              "host": {
+                "available_disk_bytes": 85676953600,
+                "available_memory_bytes": 15629811712
+              },
+              "limits": {
+                "call_wall_seconds": 300,
+                "cpus": 4,
+                "global_wall_seconds": 18000,
+                "host_available_disk_min_bytes": 26843545600,
+                "host_available_memory_min_bytes": 15032385536,
+                "load_wall_seconds": 1200,
+                "memory_bytes": 12884901888,
+                "memory_swap_bytes": 12884901888,
+                "network": "none",
+                "nonroot": true,
+                "pids": 256,
+                "readonly_code": true,
+                "readonly_root": true,
+                "readonly_runtime": true,
+                "stage_wall_seconds": 4800
+              },
+              "memory_observation": {
+                "cgroup_memory_peak_bytes": null,
+                "process_peak_rss_kib": null,
+                "scope": "host supervisor does not sample worker RSS or cgroup peak; configured limits are not measurements",
+                "status": "unknown"
+              },
+              "oom_killed": false,
+              "stage": "sensevoice",
+              "status": "complete",
+              "wall_seconds": 59.50162299099998
+            },
+            {
+              "attempt": 1,
+              "container_configuration_verified": true,
+              "exit_code": 0,
+              "host": {
+                "available_disk_bytes": 90893393920,
+                "available_memory_bytes": 15543480320
+              },
+              "limits": {
+                "cpus": 4,
+                "global_wall_seconds": 18000,
+                "host_available_disk_min_bytes": 26843545600,
+                "host_available_memory_min_bytes": 15032385536,
+                "memory_bytes": 12884901888,
+                "memory_swap_bytes": 12884901888,
+                "network": "bridge",
+                "nonroot": true,
+                "pids": 256,
+                "readonly_code": true,
+                "readonly_root": true,
+                "readonly_runtime": false,
+                "stage_wall_seconds": 1200
+              },
+              "memory_observation": {
+                "cgroup_memory_peak_bytes": null,
+                "process_peak_rss_kib": null,
+                "scope": "host supervisor does not sample worker RSS or cgroup peak; configured limits are not measurements",
+                "status": "unknown"
+              },
+              "oom_killed": false,
+              "stage": "setup_whisper",
+              "status": "complete",
+              "wall_seconds": 32.125420933999976
+            },
+            {
+              "attempt": 1,
+              "container_configuration_verified": true,
+              "exit_code": 0,
+              "host": {
+                "available_disk_bytes": 89041068032,
+                "available_memory_bytes": 15624306688
+              },
+              "limits": {
+                "call_wall_seconds": 300,
+                "cpus": 4,
+                "global_wall_seconds": 18000,
+                "host_available_disk_min_bytes": 26843545600,
+                "host_available_memory_min_bytes": 15032385536,
+                "load_wall_seconds": 1200,
+                "memory_bytes": 12884901888,
+                "memory_swap_bytes": 12884901888,
+                "network": "none",
+                "nonroot": true,
+                "pids": 256,
+                "readonly_code": true,
+                "readonly_root": true,
+                "readonly_runtime": true,
+                "stage_wall_seconds": 4800
+              },
+              "memory_observation": {
+                "cgroup_memory_peak_bytes": null,
+                "process_peak_rss_kib": null,
+                "scope": "host supervisor does not sample worker RSS or cgroup peak; configured limits are not measurements",
+                "status": "unknown"
+              },
+              "oom_killed": false,
+              "stage": "whisper_small",
+              "status": "complete",
+              "wall_seconds": 69.61806519000015
+            }
+          ],
+          "status": "complete"
+        },
+        "receipts": [],
+        "verified": true
+      },
+      "counts_are_lower_bounds": false,
+      "model_calls_made": 0,
+      "schema": "kw1-recovery-only-v1",
+      "unverified_stages": []
+    },
+    "training_admitted": false,
+    "shipping": false,
+    "admission_status": "BLOCKED_NO_CALIBRATION_SELECTION_GOLD"
+  },
+  "independent_acceptance": {
+    "scope": "Recorded prior independent verification, not recomputed by the text-only checker. Offline verification cannot authenticate official metadata origin.",
+    "verification": {
+      "admission_sha256": "595fe74fd823ba4647d2d0eb1ef5b107ddb6792145065cb51be1546845d91ef2",
+      "bytes": 2840736,
+      "files": 235,
+      "identity_authenticated": true,
+      "ledger_slots": 64,
+      "model_execution_performed_by_verifier": false,
+      "report_status": "completed",
+      "schema": "kw1-public-verification-v1",
+      "source_sha": "1ef2b7e9b9d236c13f33b1bdee78d8ae754dc8fa",
+      "verification_scope": "structure_and_supplied_admission_identity",
+      "verified": true
+    },
+    "numeric": {
+      "numpy": "2.3.2",
+      "rows": [
+        {
+          "byte_exact": true,
+          "native_frames": 36480,
+          "pcm_frames": 24320,
+          "pcm_sha256": "2aa52777333d78e1cd2a9dea3576de7fc25d1cda6363616a3fbbebf460530254",
+          "slot_id": "kw1s-00"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 46080,
+          "pcm_frames": 30720,
+          "pcm_sha256": "8a52580a25dced9c1bd95bd56bf623c79bd5bd7d5ff4e644cb0618185783337d",
+          "slot_id": "kw1s-01"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 28800,
+          "pcm_frames": 19200,
+          "pcm_sha256": "5115475c67158dc4c38e6d1322300a83c0334e61dcbadb48bde4ff04b9e50cab",
+          "slot_id": "kw1s-02"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 36480,
+          "pcm_frames": 24320,
+          "pcm_sha256": "aacde086996af988e904ecf854ebce4e155b7a79076b95e68579230f3721a508",
+          "slot_id": "kw1s-03"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 23040,
+          "pcm_frames": 15360,
+          "pcm_sha256": "946125a7b6d146e9c0cb4286af60f609a8a3b059119f3015ef411589f76812cd",
+          "slot_id": "kw1s-04"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 36480,
+          "pcm_frames": 24320,
+          "pcm_sha256": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25",
+          "slot_id": "kw1s-05"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 40320,
+          "pcm_frames": 26880,
+          "pcm_sha256": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e",
+          "slot_id": "kw1s-06"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 40320,
+          "pcm_frames": 26880,
+          "pcm_sha256": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648",
+          "slot_id": "kw1s-07"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 23040,
+          "pcm_frames": 15360,
+          "pcm_sha256": "fc546dd1e3a3481f2cd9d54444f68324aa08564b956bb201f4dbcd4840150c98",
+          "slot_id": "kw1s-08"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 26880,
+          "pcm_frames": 17920,
+          "pcm_sha256": "64a29edfdd36cc125bacf15abae6ceb9d39e74fa892d610dcac7ac9cfe1ea435",
+          "slot_id": "kw1s-09"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 23040,
+          "pcm_frames": 15360,
+          "pcm_sha256": "fe05cc5308c3ea158db722151d1b3402f8f77a2842cf318c40ab8fe99644271f",
+          "slot_id": "kw1s-10"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 24960,
+          "pcm_frames": 16640,
+          "pcm_sha256": "4c7a6ede36a584b47f61a6ff7282cdc5718346bf0f225f8cde4dc9934d1cb2cd",
+          "slot_id": "kw1s-11"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 21120,
+          "pcm_frames": 14080,
+          "pcm_sha256": "59fe44fd519d5976e577387eec888501427d493f593fccee976ef7a19e456ec3",
+          "slot_id": "kw1s-12"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 28800,
+          "pcm_frames": 19200,
+          "pcm_sha256": "f67379e42e4b9543fa9f2f35a020045f260d50f548fa20d2570d2b0004a48619",
+          "slot_id": "kw1s-13"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 21120,
+          "pcm_frames": 14080,
+          "pcm_sha256": "7ded59cfa3e42017bb50f5ca1a12c6c6299651a525a51dd372089b7d94331286",
+          "slot_id": "kw1s-14"
+        },
+        {
+          "byte_exact": true,
+          "native_frames": 23040,
+          "pcm_frames": 15360,
+          "pcm_sha256": "ead69b8bd3cd28a2d0f3754ef28c6d25e0eab4d437f71ce41e648b3fba7519a3",
+          "slot_id": "kw1s-15"
+        }
+      ],
+      "scipy": "1.17.1",
+      "status": "VERIFIED",
+      "verified_count": 16
+    },
+    "model_calls": 0,
+    "trust_basis": "Caller-authenticated official metadata snapshots and artifact download; offline verifier cannot authenticate their origin",
+    "workflow_history": {
+      "derived_lifetime_history": {
+        "sole_run_id": 38664865348,
+        "total_count": 1
+      },
+      "derived_workflow": {
+        "id": 384974588,
+        "path": ".github/workflows/kw1-preset-supplement-20261014-v1.yml",
+        "state": "active"
+      },
+      "inference": "Exact pinned admission code fetched official workflow/history and required active registered workflow and lifetime total_count=1 with this sole run; successful official admission step implies these checks passed",
+      "mode": "derived-admission",
+      "original_lifetime_history_observed": false,
+      "original_workflow_observed": false,
+      "scope": "at successful admission step only",
+      "step_completed_at": "2026-10-15T01:18:44Z"
+    },
+    "original_event_observed": false
+  },
+  "limitations": [
+    "Machine candidates are not human gold.",
+    "Three common voice groups are a necessary condition only. Group independence and calibration/selection roles remain unproven.",
+    "Training admission and shipping remain false.",
+    "This unbalanced 16-slot sample does not establish model superiority or causal instruction benefit.",
+    "Text-only checks do not recompute audio. Full audio verification requires original ZIP and pinned numeric dependencies."
+  ]
+}

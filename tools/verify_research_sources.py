@@ -191,7 +191,8 @@ def verify(root, manifest):
                 '.github/workflows/tts-quality-probe-20261014-v1.yml',
                 '.github/workflows/tts-quality-remaining-20261014-v1.yml',
                 '.github/workflows/tts-pilot-asr-20261014-v1.yml',
-                '.github/workflows/kw1-preset-supplement-20261014-v1.yml']
+                '.github/workflows/kw1-preset-supplement-20261014-v1.yml',
+                '.github/workflows/kw1-supplement-observation.yml']
     if additions != approved:
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed additions
