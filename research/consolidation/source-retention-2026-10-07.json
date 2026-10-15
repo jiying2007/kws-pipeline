@@ -15316,9 +15316,9 @@
     {
       "path": ".github/workflows/github-hosted-resource-probe.yml",
       "mode": "100644",
-      "bytes": 13154,
-      "sha256": "b6bb538d9ff51240ff54602e3b4ad9c81d0dffbd126e7fa1c6088f5f872b6a14",
-      "git_blob_sha1": "0f6778fa9f8a55c5bd8c9e219cdaf05a36c7a5b2"
+      "bytes": 14299,
+      "sha256": "666249d17d51a660fe0cd247bd6013323202d329cd2f3566fe1e95c89d948bdd",
+      "git_blob_sha1": "22e4e7d1562a704f8a565917ccbf4e619c149b3a"
     },
     {
       "path": ".github/workflows/k1-fixed-slot-math.yml",
@@ -32609,6 +32609,51 @@
             "bytes": 14497,
             "sha256": "0440329eb0879b7161de6a40aca15ed0b22ccb8d32407d1a74833818e257479b",
             "git_blob_sha1": "dbf1e2264cabf6f467068055c3fc353cae157bc0"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "operation_id": "kw1-resource-observation-before-unique-attempt",
+      "public_main_base_commit": "d957ad7606a5acc1e26cb031df3133cdb9937dcd",
+      "reviewed_candidate_parent": "2078da8baa9d4ae7f8420b955346746887c72f76",
+      "workflow_source_changed": true,
+      "scope": "Reuse existing zero-model no-checkout hosted resource probe for KW1 source changes; v2 additionally measures runner-temp free/total bytes and whether it shares the root filesystem, without publishing paths. No model/installation/network calls and no campaign-history consumption.",
+      "rationale": "25GiB per-stage free reserve must coexist with resident runtime. Official standard specifications alone do not establish current free storage. Fresh observation reduces uncertainty but does not reserve the future runner or replace unchanged runtime gates.",
+      "files": [
+        {
+          "path": ".github/workflows/github-hosted-resource-probe.yml",
+          "before": {
+            "path": ".github/workflows/github-hosted-resource-probe.yml",
+            "mode": "100644",
+            "bytes": 13154,
+            "sha256": "b6bb538d9ff51240ff54602e3b4ad9c81d0dffbd126e7fa1c6088f5f872b6a14",
+            "git_blob_sha1": "0f6778fa9f8a55c5bd8c9e219cdaf05a36c7a5b2"
+          },
+          "after": {
+            "path": ".github/workflows/github-hosted-resource-probe.yml",
+            "mode": "100644",
+            "bytes": 14299,
+            "sha256": "666249d17d51a660fe0cd247bd6013323202d329cd2f3566fe1e95c89d948bdd",
+            "git_blob_sha1": "22e4e7d1562a704f8a565917ccbf4e619c149b3a"
+          }
+        },
+        {
+          "path": "tests/test_github_hosted_resource_probe.py",
+          "before": {
+            "path": "tests/test_github_hosted_resource_probe.py",
+            "mode": "100644",
+            "bytes": 18383,
+            "sha256": "4dc4e20e371fda851106eceb3e27557c06d7a89917f31817d537f487608c8203",
+            "git_blob_sha1": "b32ed82bc35bdfb93990b3688eedd59ecd6082a3"
+          },
+          "after": {
+            "path": "tests/test_github_hosted_resource_probe.py",
+            "mode": "100644",
+            "bytes": 21128,
+            "sha256": "cbe8d539958b49224fb7886adf00db61762ea116fbdb7f349444f04face27ddb",
+            "git_blob_sha1": "b58602dcad30c654f1ccfa792531ae0e980e54fb"
           }
         }
       ]

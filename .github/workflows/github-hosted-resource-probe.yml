@@ -11,6 +11,8 @@ on:
       - 'tests/test_github_hosted_resource_probe.py'
       # Source-screen planning requires a fresh observation, not model execution.
       - 'research/source-screen32-v1/**'
+      # Recheck capacity before the independent one-shot KW1 campaign.
+      - 'research/kw1-preset-supplement-v1/**'
 
 permissions: {}
 
@@ -46,7 +48,7 @@ jobs:
           import sys
 
           UNKNOWN = "unknown"
-          SCHEMA = "kws.github-hosted-resource-probe.v1"
+          SCHEMA = "kws.github-hosted-resource-probe.v2"
           MAX_OUTPUT_BYTES = 32 * 1024
           MAX_READ_BYTES = 65536
           MAX_TEXT_CHARS = 128
@@ -198,6 +200,27 @@ jobs:
               return result
 
 
+          def temporary_filesystem():
+              # Observe only the runner-provided work volume; never emit its path.
+              path = os.environ.get("RUNNER_TEMP", "")
+              result = {"available_bytes": UNKNOWN, "total_bytes": UNKNOWN,
+                        "same_device_as_root": UNKNOWN}
+              if (not isinstance(path, str) or not path.startswith("/") or
+                      "\x00" in path or ".." in pathlib.PurePosixPath(path).parts):
+                  return result
+              try:
+                  usage = shutil.disk_usage(path)
+                  result["available_bytes"] = integer(usage.free)
+                  result["total_bytes"] = integer(usage.total)
+              except Exception:
+                  return result
+              try:
+                  result["same_device_as_root"] = os.stat(path).st_dev == os.stat("/").st_dev
+              except Exception:
+                  pass
+              return result
+
+
           def collect():
               # Only these named environment values are read; summary destination is never emitted.
               head = os.environ.get("KWS_PROBE_HEAD_SHA", "")
@@ -240,6 +263,7 @@ jobs:
                       "v1_cpu_period_us": decimal(read_fixed(READ_PATHS[5]).strip()),
                   },
                   "root_filesystem_available_bytes": integer(observe(lambda: shutil.disk_usage("/").free)),
+                  "runner_temp_filesystem": temporary_filesystem(),
                   "runtime": {
                       "python": text_value(observe(platform.python_version)),
                       "glibc": text_value(observe(lambda: os.confstr("CS_GNU_LIBC_VERSION"))),

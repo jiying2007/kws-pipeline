@@ -29,7 +29,7 @@ exec(compile(INLINE, "<hosted-resource-probe>", "exec"), PROBE.__dict__)
 
 ENV_KEYS = {
     "KWS_PROBE_HEAD_SHA", "GITHUB_SHA", "GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT",
-    "GITHUB_EVENT_NAME", "ImageOS", "ImageVersion", "GITHUB_STEP_SUMMARY",
+    "GITHUB_EVENT_NAME", "ImageOS", "ImageVersion", "GITHUB_STEP_SUMMARY", "RUNNER_TEMP",
 }
 READ_PATHS = (
     "/proc/meminfo", "/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/cpu.max",
@@ -40,7 +40,7 @@ READ_PATHS = (
 FIELD_KEYS = {
     "schema", "evidence_class", "identity", "runner_image", "cpu", "memory",
     "cgroup", "root_filesystem_available_bytes", "runtime",
-    "distribution_metadata_scope", "installed_distributions", "interpretation",
+    "distribution_metadata_scope", "installed_distributions", "interpretation", "runner_temp_filesystem",
 }
 
 
@@ -77,6 +77,7 @@ class ProbeTests(unittest.TestCase):
         stack.enter_context(mock.patch.object(PROBE.os, "cpu_count", return_value=4))
         stack.enter_context(mock.patch.object(PROBE.os, "sched_getaffinity", return_value={0, 1} if affinity is None else affinity))
         stack.enter_context(mock.patch.object(PROBE.shutil, "disk_usage", return_value=types.SimpleNamespace(free=123456)))
+        stack.enter_context(mock.patch.object(PROBE, "temporary_filesystem", return_value={"available_bytes": "unknown", "total_bytes": "unknown", "same_device_as_root": "unknown"}))
         stack.enter_context(mock.patch.object(PROBE, "metadata_version", side_effect=PROBE.importlib.metadata.PackageNotFoundError))
         return environment
 
@@ -92,7 +93,7 @@ class ProbeTests(unittest.TestCase):
         self.assertEqual(
             [line.strip() for line in header.splitlines() if line.strip().startswith("- '")],
             ["- '.github/workflows/github-hosted-resource-probe.yml'", "- 'tests/test_github_hosted_resource_probe.py'",
-             "- 'research/source-screen32-v1/**'"],
+             "- 'research/source-screen32-v1/**'", "- 'research/kw1-preset-supplement-v1/**'"],
         )
         for forbidden in ("push:", "schedule:", "pull_request_target:", "uses:", "secrets.", "inputs.", "self-hosted", "matrix:"):
             self.assertNotIn(forbidden, header)
@@ -125,6 +126,38 @@ class ProbeTests(unittest.TestCase):
             with mock.patch("builtins.open", side_effect=AssertionError("unexpected file read")):
                 self.assertEqual(PROBE.read_fixed(path), "unknown")
 
+    def test_temporary_filesystem_measures_only_allowlisted_volume_without_paths(self):
+        environment=GuardedEnvironment({"RUNNER_TEMP":"/runner/work/_temp"})
+        with mock.patch.object(PROBE.os,"environ",environment), \
+             mock.patch.object(PROBE.shutil,"disk_usage",return_value=types.SimpleNamespace(free=50,total=100)) as usage, \
+             mock.patch.object(PROBE.os,"stat",side_effect=[types.SimpleNamespace(st_dev=3),types.SimpleNamespace(st_dev=3)]) as stats:
+            result=PROBE.temporary_filesystem()
+        self.assertEqual(result,{"available_bytes":50,"total_bytes":100,"same_device_as_root":True})
+        usage.assert_called_once_with("/runner/work/_temp")
+        self.assertEqual(stats.call_args_list,[mock.call("/runner/work/_temp"),mock.call("/")])
+        self.assertEqual(environment.reads,{"RUNNER_TEMP"})
+        self.assertNotIn("/runner",json.dumps(result))
+
+    def test_temporary_filesystem_invalid_paths_do_not_touch_filesystem(self):
+        for value in ("", "relative", "/runner/../private", "/runner/\x00private", None):
+            with self.subTest(value=value), mock.patch.object(PROBE.os,"environ",GuardedEnvironment({"RUNNER_TEMP":value})), \
+                 mock.patch.object(PROBE.shutil,"disk_usage",side_effect=AssertionError("unexpected usage")), \
+                 mock.patch.object(PROBE.os,"stat",side_effect=AssertionError("unexpected stat")):
+                result=PROBE.temporary_filesystem()
+            self.assertEqual(set(result.values()),{"unknown"})
+
+    def test_temporary_filesystem_unknown_is_not_capacity_success(self):
+        with mock.patch.object(PROBE.os,"environ",GuardedEnvironment({"RUNNER_TEMP":"/private"})), \
+             mock.patch.object(PROBE.shutil,"disk_usage",side_effect=OSError("private failure")):
+            result=PROBE.temporary_filesystem()
+        self.assertEqual(set(result.values()),{"unknown"})
+        self.assertNotIn("private",json.dumps(result))
+        with mock.patch.object(PROBE.os,"environ",GuardedEnvironment({"RUNNER_TEMP":"/private"})), \
+             mock.patch.object(PROBE.shutil,"disk_usage",return_value=types.SimpleNamespace(free=True,total=-1)), \
+             mock.patch.object(PROBE.os,"stat",side_effect=[types.SimpleNamespace(st_dev=3),types.SimpleNamespace(st_dev=4)]):
+            result=PROBE.temporary_filesystem()
+        self.assertEqual(result,{"available_bytes":"unknown","total_bytes":"unknown","same_device_as_root":False})
+
     def test_record_field_whitelist_and_identity(self):
         self.fixture(env={"KWS_PROBE_HEAD_SHA": "a" * 40, "GITHUB_SHA": "b" * 40,
                           "GITHUB_RUN_ID": "987654321", "GITHUB_RUN_ATTEMPT": "1",
@@ -132,7 +165,7 @@ class ProbeTests(unittest.TestCase):
                           "ImageVersion": "20261001.1.0"})
         record = PROBE.collect()
         self.assertEqual(set(record), FIELD_KEYS)
-        self.assertEqual(record["schema"], "kws.github-hosted-resource-probe.v1")
+        self.assertEqual(record["schema"], "kws.github-hosted-resource-probe.v2")
         self.assertEqual(set(record["identity"]), {"run_id", "run_attempt", "event", "head_sha", "workflow_sha"})
         self.assertEqual(record["identity"]["head_sha"], "a" * 40)
         self.assertEqual(record["identity"]["workflow_sha"], "b" * 40)
