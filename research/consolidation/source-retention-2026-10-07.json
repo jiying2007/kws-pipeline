@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 57451,
-      "sha256": "2634ee6ef34d93016f5822f8feb8dbe89391aa37e061b52bd5de0c0f5055e065",
-      "git_blob_sha1": "e91bdf6b450f6b01a8e4bb180fe9d5fb8cff8b08"
+      "bytes": 57790,
+      "sha256": "b57725e9703efee681c6e67f546f3f8ee8ac683bdf68f8384bace83214fe4d31",
+      "git_blob_sha1": "6ea42dff4da29188025cbb0a7a3239978268ca3a"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -37020,6 +37020,68 @@
             "bytes": 11297,
             "sha256": "3ccd853a6def2acda36242207b9fb1a9718adb170e4e36df14dd756f2f22bd48",
             "git_blob_sha1": "68ec5de52d9bc6ce492c42b46a439c2afcdf66bc"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-16",
+      "operation_id": "kws-single-pass-wav-trace-hosted-contract-20261016",
+      "public_main_base_commit": "a7015ff61947b423ed0162b692a39f7590255941",
+      "public_main_base_tree": "927ad4c6fb7a55a43c109987ddf98ec400e69d35",
+      "workflow_source_changed": true,
+      "scope": "Add one explicit artificial-model/PCM single-pass WAV trace contract invocation per hosted compiler and its tracked-worktree guard. Do not register the Python subprocess test with CTest or claim ARM trace coverage. Existing workflow permissions, triggers, jobs and mandatory gates remain unchanged.",
+      "rationale": "Make the new test visible to the existing executable inventory without duplicate CTest execution or direct ARM-binary launches. Refresh only current CI and its existing offline-validator dependency pins. No research training, real-data inference, consumed budget, data admission or shipping authorization is changed.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 57451,
+            "sha256": "2634ee6ef34d93016f5822f8feb8dbe89391aa37e061b52bd5de0c0f5055e065",
+            "git_blob_sha1": "e91bdf6b450f6b01a8e4bb180fe9d5fb8cff8b08"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 57790,
+            "sha256": "b57725e9703efee681c6e67f546f3f8ee8ac683bdf68f8384bace83214fe4d31",
+            "git_blob_sha1": "6ea42dff4da29188025cbb0a7a3239978268ca3a"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "59e61d5d004c2bbdff5162274ddd83036a72086df8449ba9c6350a3f94e2cd86",
+            "git_blob_sha1": "f890aa0400e9a7c4e39e1e3a28cefe84705ec28d"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "62a09d83e05572d81afdfecca72e940fde1b17f5300300cc7bb2a008068969c1",
+            "git_blob_sha1": "29afb9421d9b07ee72dfe8fee8f93f157d743582"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "e3a74dd6fe1b14450b5c30ffb1a3e630ced16dd7ba519dfbda9526cac8c48e84",
+            "git_blob_sha1": "5af0fad9a2bc4d95513399352a6fa6683d2b56ec"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "d7360754fc3d04d20ecf529734938e365079d894b7fc543ba43448c89c898c5f",
+            "git_blob_sha1": "89e24c22755bc93ea938a5bec1e556ecf3136a89"
           }
         }
       ]

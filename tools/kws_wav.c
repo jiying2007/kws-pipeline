@@ -1,4 +1,7 @@
 #include "kws_pipeline/kws.h"
+#include "kws_debug.h"
+#include "kws_trace_io.h"
+#include "sha256.h"
 #include "tool_io.h"
 
 #include <inttypes.h>
@@ -10,6 +13,26 @@
 #include "kws_timeline.h"
 
 #define BLOCK_SAMPLES 160u
+
+/* KWTRACE1 stores acoustic frames, not discontinuity/reset events. Reject an
+ * unsupported timeline before inference; preserve the legacy no-trace path. */
+static int trace_span_supported(const kws_timeline_span_t *span) {
+  const uint32_t reset_flags = KWS_FRAME_DISCONTINUITY | KWS_FRAME_XRUN |
+      KWS_FRAME_CODEC_REOPEN | KWS_FRAME_CLOCK_RESET;
+  return (span->metadata.flags & reset_flags) == 0u &&
+         span->metadata.lost_samples == 0u;
+}
+
+static int trace_timeline_supported(FILE *timeline) {
+  kws_timeline_span_t span;
+  int status;
+  while ((status = timeline_read(timeline, &span)) == 1) {
+    if (!trace_span_supported(&span)) return 0;
+  }
+  if (status != 0) return 0;
+  rewind(timeline);
+  return timeline_header(timeline);
+}
 
 int main(int argc, char **argv) {
   uint8_t *model_blob = NULL;
@@ -32,11 +55,19 @@ int main(int argc, char **argv) {
   uint64_t epoch = 0u;
   size_t block_samples = BLOCK_SAMPLES;
   const char *stats_path = NULL;
+  const char *trace_path = NULL;
+  kws_trace_writer_t trace_writer = {0};
+  uint64_t trace_frames = 0u;
+  int trace_open = 0;
+  int trace_created = 0;
+  FILE *reserved_stats = NULL;
+  int stats_created = 0;
   int exit_code = 1;
 
   if (argc < 5 || (argc - 5) % 2 != 0) {
     fprintf(stderr, "usage: %s model.kwm keywords.kwk audio.wav recording-id "
-            "[--stats-json path] [--metadata-tsv path] [--block-samples 1..320]\n", argv[0]);
+            "[--stats-json path] [--metadata-tsv path] [--block-samples 1..320] "
+            "[--trace-out new-path.kwtr]\n", argv[0]);
     return 2;
   }
   for (int i = 5; i < argc; i += 2) {
@@ -44,6 +75,8 @@ int main(int argc, char **argv) {
       stats_path = argv[i + 1];
     } else if (strcmp(argv[i], "--metadata-tsv") == 0 && metadata_path == NULL) {
       metadata_path = argv[i + 1];
+    } else if (strcmp(argv[i], "--trace-out") == 0 && trace_path == NULL) {
+      trace_path = argv[i + 1];
     } else if (strcmp(argv[i], "--block-samples") == 0) {
       uint64_t value;
       if (!timeline_uint(argv[i + 1], &value) || value == 0u ||
@@ -53,6 +86,11 @@ int main(int argc, char **argv) {
       fprintf(stderr, "unknown or duplicate option: %s\n", argv[i]);
       return 2;
     }
+  }
+  if (trace_path != NULL && stats_path != NULL &&
+      strcmp(trace_path, stats_path) == 0) {
+    fprintf(stderr, "trace and stats must use separate new destinations\n");
+    return 2;
   }
   if (kws_tool_read_file(argv[1], &model_blob, &model_bytes) == 0 ||
       kws_tool_read_file(argv[2], &pack_blob, &pack_bytes) == 0) {
@@ -94,6 +132,38 @@ int main(int argc, char **argv) {
       fprintf(stderr, "invalid AFE timeline (coverage/sequence/time/config): %s\n", metadata_path);
       goto cleanup;
     }
+    if (trace_path != NULL && !trace_timeline_supported(timeline)) {
+      fprintf(stderr, "KWTRACE1 cannot record AFE discontinuities/resets/loss\n");
+      goto cleanup;
+    }
+  }
+  if (trace_path != NULL) {
+    kws_trace_header_t header = {0};
+    /* Reserve both outputs exclusively before PCM execution. This also stops
+     * aliased/symlinked stats paths from overwriting the new trace or inputs. */
+    if (stats_path != NULL) {
+      reserved_stats = fopen(stats_path, "wbx");
+      if (reserved_stats == NULL) {
+        fprintf(stderr, "trace capture requires a new stats destination\n");
+        goto cleanup;
+      }
+      stats_created = 1;
+    }
+    header.schema_version = KWS_TRACE_FORMAT_VERSION;
+    header.vocab_size = model.vocab_size;
+    header.frontend_kind = model.frontend_kind;
+    header.sample_rate_hz = model.sample_rate_hz;
+    header.frame_length_samples = model.frame_length_samples;
+    header.frame_hop_samples = model.frame_hop_samples;
+    header.vocab_fingerprint = model.vocab_fingerprint;
+    /* Bind the exact blob loaded by this engine, not a second file read. */
+    kws_sha256_memory_hex(model_blob, model_bytes, header.model_sha256);
+    if (!kws_trace_writer_open_new(&trace_writer, trace_path, &header)) {
+      fprintf(stderr, "cannot create new acoustic trace: %s\n", trace_path);
+      goto cleanup;
+    }
+    trace_open = 1;
+    trace_created = 1;
   }
   remaining = wav_bytes;
   while (remaining != 0u) {
@@ -106,6 +176,7 @@ int main(int argc, char **argv) {
     if (timeline != NULL) {
       if (output_samples == span.start + span.count) {
         if (timeline_read(timeline, &span) != 1) goto cleanup;
+        if (trace_path != NULL && !trace_span_supported(&span)) goto cleanup;
         if ((span.metadata.flags & KWS_FRAME_CLOCK_RESET) != 0u) epoch++;
       }
       if ((uint64_t)want_samples > span.start + span.count - output_samples)
@@ -129,6 +200,25 @@ int main(int argc, char **argv) {
         fprintf(stderr, "KWS runtime error\n");
         goto cleanup;
       }
+    }
+    if (trace_path != NULL) {
+      float logits[KWS_MAX_VOCAB_SIZE];
+      uint64_t frame_number = 0u;
+      uint64_t end_sample = 0u;
+      uint16_t vocab_size = 0u;
+      int speech_active = 0;
+      int copied = kws_engine_debug_copy_last_frame(
+          engine, &frame_number, &end_sample, &speech_active, logits,
+          KWS_MAX_VOCAB_SIZE, &vocab_size);
+      /* Caller chunks are at most one model hop, so no frame may be skipped. */
+      if (copied < 0 || (copied != 0 && frame_number != trace_frames &&
+          (frame_number != trace_frames + 1u ||
+           !kws_trace_writer_append(&trace_writer, end_sample, speech_active,
+                                    logits, vocab_size)))) {
+        fprintf(stderr, "cannot append complete acoustic trace\n");
+        goto cleanup;
+      }
+      if (copied != 0) trace_frames = frame_number;
     }
     output_samples += got_samples;
     if (detected != 0) {
@@ -162,7 +252,8 @@ int main(int argc, char **argv) {
       fprintf(stderr, "cannot read KWS runtime stats\n");
       goto cleanup;
     }
-    stats_file = fopen(stats_path, "wb");
+    stats_file = reserved_stats != NULL ? reserved_stats : fopen(stats_path, "wb");
+    reserved_stats = NULL;
     if (stats_file == NULL) {
       fprintf(stderr, "cannot open stats output: %s\n", stats_path);
       goto cleanup;
@@ -202,6 +293,20 @@ int main(int argc, char **argv) {
       }
     }
   }
+  if (trace_path != NULL) {
+    uint64_t samples = (uint64_t)wav_bytes / 2u;
+    uint64_t expected_frames = samples < model.frame_length_samples ? 0u :
+        1u + (samples - model.frame_length_samples) / model.frame_hop_samples;
+    if (trace_frames != expected_frames) {
+      fprintf(stderr, "acoustic trace frame coverage mismatch\n");
+      goto cleanup;
+    }
+    trace_open = 0;
+    if (!kws_trace_writer_close(&trace_writer)) {
+      fprintf(stderr, "cannot finalize acoustic trace\n");
+      goto cleanup;
+    }
+  }
   if (fflush(stdout) != 0 || ferror(stdout) != 0) {
     fprintf(stderr, "cannot write stdout\n");
     goto cleanup;
@@ -209,6 +314,12 @@ int main(int argc, char **argv) {
   exit_code = 0;
 
 cleanup:
+  if (trace_open != 0) (void)kws_trace_writer_close(&trace_writer);
+  if (reserved_stats != NULL) (void)fclose(reserved_stats);
+  if (exit_code != 0) {
+    if (trace_created != 0) (void)remove(trace_path);
+    if (stats_created != 0) (void)remove(stats_path);
+  }
   if (timeline != NULL) fclose(timeline);
   if (wav != NULL) {
     fclose(wav);

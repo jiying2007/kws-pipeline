@@ -37,6 +37,10 @@ typedef struct kws_trace_reader {
 int kws_trace_writer_open(kws_trace_writer_t *writer,
                           const char *path,
                           const kws_trace_header_t *header);
+/* Hosted opt-in capture: fail without truncating an existing destination. */
+int kws_trace_writer_open_new(kws_trace_writer_t *writer,
+                              const char *path,
+                              const kws_trace_header_t *header);
 int kws_trace_writer_append(kws_trace_writer_t *writer,
                             uint64_t end_sample,
                             int speech_active,

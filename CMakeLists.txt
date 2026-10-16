@@ -150,7 +150,8 @@ if(KWS_BUILD_TOOLS)
   target_compile_features(kws_tool_io PUBLIC c_std_11)
 
   add_executable(kws_wav tools/kws_wav.c)
-  target_link_libraries(kws_wav PRIVATE KwsPipeline::core kws_tool_io)
+  target_include_directories(kws_wav PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  target_link_libraries(kws_wav PRIVATE KwsPipeline::core kws_tool_io kws_trace_io)
 
   add_executable(kws_raw_stream tools/kws_raw_stream.c)
   target_link_libraries(kws_raw_stream PRIVATE KwsPipeline::core kws_tool_io)
