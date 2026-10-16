@@ -15400,9 +15400,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "bytes": 90536,
-      "sha256": "d47c6d1ab40c7af566c4ea8d85c7051ed9bec92a9f9437c33a727663a76bd312",
-      "git_blob_sha1": "b9fe76f112419654e93c9882d077dac0dec5ac54"
+      "bytes": 91807,
+      "sha256": "e609ccdcf23669875c82f588427b6f3af4a745d4b1d59bbbe2eebf55eade07ff",
+      "git_blob_sha1": "4e6068e743350b062ef806fae0a36ebf96266988"
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
@@ -37391,6 +37391,173 @@
             "bytes": 90536,
             "sha256": "d47c6d1ab40c7af566c4ea8d85c7051ed9bec92a9f9437c33a727663a76bd312",
             "git_blob_sha1": "b9fe76f112419654e93c9882d077dac0dec5ac54"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-16",
+      "operation_id": "direct-fit-checkpoint-registry-software-fixture-20261016",
+      "from_commit": "b8e1107664dc2d628cde095aad6b8d40ffd3d3fc",
+      "from_tree": "dcc8dcf160edea4d623f2f8902a474f8f93dbc96",
+      "workflow_source_changed": true,
+      "scope": "Add a bounded same-backbone CTC/direct-head exposed fitting runner, PR594 atomic initial/final checkpoints, actual reloaded traces, shared scorer adapter and separate same-PCM registry development consumer. Extend the existing candidate scope and objective-math software fixtures; retain JSON-only CI receipts.",
+      "rationale": "Public source/CI metadata only. The previous direct prototype, frozen C1/CTC backbones and old research budgets are unchanged. No real-audio training, TTS/ASR, source-rights fabrication, source-root promotion, private audio/weight upload or product qualification is performed. Current registry eligibility is only three KW1 examples; historical ASR ID joins stay excluded and training_admitted remains false. Product exporter rejects nonproduct/direct checkpoints explicitly.",
+      "files": [
+        {
+          "path": "research/direct_fit/__init__.py",
+          "before": null,
+          "after": {
+            "path": "research/direct_fit/__init__.py",
+            "mode": "100644",
+            "bytes": 75,
+            "sha256": "a3d2ceba1f005dd2c22a6b289ecd511e75e6a27e7a285d466a1fa44f05b6c18e",
+            "git_blob_sha1": "61f2415838bf43f69421aa1750a2702b1a89fcc4"
+          }
+        },
+        {
+          "path": "research/direct_fit/data.py",
+          "before": null,
+          "after": {
+            "path": "research/direct_fit/data.py",
+            "mode": "100644",
+            "bytes": 10239,
+            "sha256": "b8b00ef12f83e2310cc6a5d03834b5ba1d3cb0396c43caedff915a69b8d77850",
+            "git_blob_sha1": "efe147e3e167e220da0369b7bdac5cec71275da5"
+          }
+        },
+        {
+          "path": "research/direct_fit/runner.py",
+          "before": null,
+          "after": {
+            "path": "research/direct_fit/runner.py",
+            "mode": "100644",
+            "bytes": 22793,
+            "sha256": "278ce8db142d349ac830837e207ce0d3885a2842370a5476bed727c0e7d8a972",
+            "git_blob_sha1": "7b27e8f457ae3cc0217c7467a7c4cba1c66a12ad"
+          }
+        },
+        {
+          "path": "research/direct_fit/compare.py",
+          "before": null,
+          "after": {
+            "path": "research/direct_fit/compare.py",
+            "mode": "100644",
+            "bytes": 3357,
+            "sha256": "fe5a40bd81f399612b7d0a9bd4c1b1c8269f08029a39864ffe292a37658ebf8d",
+            "git_blob_sha1": "4571f440c20c6d2d872c6ae3caa5c5ed434342bd"
+          }
+        },
+        {
+          "path": "research/direct_fit/registry_data.py",
+          "before": null,
+          "after": {
+            "path": "research/direct_fit/registry_data.py",
+            "mode": "100644",
+            "bytes": 10956,
+            "sha256": "5f39f708ddfb18b0e5aa6603dc2cf82ed45ce1db7abbef1fe407f67d9ceacb2d",
+            "git_blob_sha1": "31f643ab92482b18075b0dca6c765e38b6134539"
+          }
+        },
+        {
+          "path": "research/direct_fit/README.md",
+          "before": null,
+          "after": {
+            "path": "research/direct_fit/README.md",
+            "mode": "100644",
+            "bytes": 10682,
+            "sha256": "80cd9e04edacbc3865eaa34b3b6e34db07e92c5427daf2fa9c27d7773e4e34c6",
+            "git_blob_sha1": "ce1b51fc7272872b63a4ce452c3d0537e4debde3"
+          }
+        },
+        {
+          "path": "research/direct_fit/registry-inputs.example.json",
+          "before": null,
+          "after": {
+            "path": "research/direct_fit/registry-inputs.example.json",
+            "mode": "100644",
+            "bytes": 1923,
+            "sha256": "d69b9cd56cc21412294b9b8abb1cc4b144f335296355d1613126b5b67edf8d33",
+            "git_blob_sha1": "b8678df6163c5d08e23f52e11d25226408409c10"
+          }
+        },
+        {
+          "path": "tests/test_direct_fit_numeric.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_direct_fit_numeric.py",
+            "mode": "100644",
+            "bytes": 28130,
+            "sha256": "2fa183c32c163c5ad7adbfb0584f9ba20cc87b8bb7379c4161a71da1463c0076",
+            "git_blob_sha1": "4b3bab344029b72d22ddaede04013d4796846c11"
+          }
+        },
+        {
+          "path": "training/export_model.py",
+          "before": {
+            "path": "training/export_model.py",
+            "mode": "100644",
+            "bytes": 33856,
+            "sha256": "dfecf0b503fb050dca6859c602056d3bff814109e1ce6c89680f8797b9437876",
+            "git_blob_sha1": "e347eafb4fe22ee255be7b5f94016532c3115dff"
+          },
+          "after": {
+            "path": "training/export_model.py",
+            "mode": "100644",
+            "bytes": 34079,
+            "sha256": "31250040502ad6ffe82ecd824d56b83cdf8240c2dfe5cca5ba918d301410d1b1",
+            "git_blob_sha1": "342fe9e3e48936d6ad41ec45d2dba1350f20693b"
+          }
+        },
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 90536,
+            "sha256": "d47c6d1ab40c7af566c4ea8d85c7051ed9bec92a9f9437c33a727663a76bd312",
+            "git_blob_sha1": "b9fe76f112419654e93c9882d077dac0dec5ac54"
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 91807,
+            "sha256": "e609ccdcf23669875c82f588427b6f3af4a745d4b1d59bbbe2eebf55eade07ff",
+            "git_blob_sha1": "4e6068e743350b062ef806fae0a36ebf96266988"
+          }
+        },
+        {
+          "path": "tools/candidate_numeric_ci_changes.py",
+          "before": {
+            "path": "tools/candidate_numeric_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3682,
+            "sha256": "ce945bc3df61da032067999103325a9ae9194baa7dc1f07e04208512a8a2e566",
+            "git_blob_sha1": "e7152dc7dc976f9efc0cf86dd4b58cebcd177935"
+          },
+          "after": {
+            "path": "tools/candidate_numeric_ci_changes.py",
+            "mode": "100644",
+            "bytes": 4593,
+            "sha256": "9cbbc5c5c60365aa061b1d323849219767fae38dcc9d5995ea9c459efdae09da",
+            "git_blob_sha1": "3b7affcf31b74e66901ce2973f2012850dcf0eae"
+          }
+        },
+        {
+          "path": "tests/test_candidate_encoder_numeric_ci.py",
+          "before": {
+            "path": "tests/test_candidate_encoder_numeric_ci.py",
+            "mode": "100644",
+            "bytes": 15292,
+            "sha256": "96bf5a20c4a6515af87e83b59b9c43524c9605b83f3d660723ad53f94161ff21",
+            "git_blob_sha1": "d1776158c2f06e432a1faa47de33713a4707d5e0"
+          },
+          "after": {
+            "path": "tests/test_candidate_encoder_numeric_ci.py",
+            "mode": "100644",
+            "bytes": 17405,
+            "sha256": "fefde734c60aa744cba3f1d157d9663758aa2d09baacdee26b4d5201bf7f6057",
+            "git_blob_sha1": "a65c5b6070d8998efd84128afbb73a452395e76b"
           }
         }
       ]

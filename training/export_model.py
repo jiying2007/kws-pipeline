@@ -605,6 +605,9 @@ def main() -> None:
     args = parser.parse_args()
 
     checkpoint, source_checkpoint_sha256 = load_checkpoint_snapshot(args.checkpoint)
+    if (checkpoint.get("product_export_compatible") is False
+            or checkpoint.get("model_family") == "direct-kws"):
+        raise ValueError("research/direct-class checkpoints cannot use the product CTC exporter")
     state_dict = checkpoint["state_dict"]
     feature_dim = int(checkpoint["feature_dim"])
     hidden_dim = int(checkpoint["hidden_dim"])

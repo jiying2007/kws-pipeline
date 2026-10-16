@@ -20,15 +20,26 @@ WORKFLOW = ".github/workflows/product-training-data-contract.yml"
 CANDIDATE_EXACT = frozenset({
     "tests/test_candidate_encoder_numeric.py",
     "tests/test_direct_kws_numeric.py",
+    "tests/test_direct_fit_numeric.py",
+    "research/kws-candidate-registry-v1/candidates.json",
+    "research/kws-candidate-registry-v1/build_registry.py",
+    "research/kws-candidate-registry-v1/input-pins.json",
     "tests/test_candidate_encoder_numeric_ci.py",
     "tools/candidate_numeric_ci_changes.py",
 })
-CANDIDATE_PREFIXES = ("research/candidate_encoders/", "research/direct_kws/")
+CANDIDATE_PREFIXES = ("research/candidate_encoders/", "research/direct_kws/", "research/direct_fit/")
 CANDIDATE_GLOBS = frozenset(prefix + "**" for prefix in CANDIDATE_PREFIXES)
 # Shared source/control edits require both the old gates and the new contracts.
 CANDIDATE_SHARED = frozenset({WORKFLOW, "training/model.py", "training/sitecustomize.py",
                               "tools/research_ci_changes.py", "tools/check_workflow_path_filters.py",
-                              "eval/score_events.py", "eval/context_policy.py"})
+                              "eval/score_events.py", "eval/context_policy.py",
+                              "training/frontend.py", "training/frontend_spec.py", "training/train_ctc.py",
+                              "training/training_admission.py", "training/training_state.py",
+                              "training/export_model.py", "training/audit_dataset.py",
+                              "tools/corpus_identity.py", "tools/kws_vocab.py", "tools/speech_label_admission.py",
+                              "tools/speech_asr_consensus.py", "tools/asr_source_resolver.py",
+                              "tools/asr_native_contracts.py", "research/model_comparison/runner.py",
+                              "research/model_comparison/compare.py"})
 SUPPORTED_PUSH_REFS = frozenset({"refs/heads/main", "refs/heads/fix/product-training-speech-like-v1"})
 
 
