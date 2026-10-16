@@ -1,0 +1,81 @@
+{
+  "schema": "whole-source-ctc-direct-diagnostic-v1",
+  "development_only": true,
+  "input_mode": "registry-exposed-fit",
+  "manifests": [],
+  "tokens": "keywords/tokens.example.txt",
+  "evidence_dir": null,
+  "label_reuse_purpose": "same-pcm-registry-exposed-positive-fit-v1",
+  "coverage_mode": "incomplete-coverage-fit-only",
+  "direct_spec": {
+    "schema": "research-direct-kws-spec-v1",
+    "architecture": "causal_ds_tcn_direct",
+    "feature_dim": 32,
+    "classes": [
+      "background",
+      "你好小窝",
+      "小窝小窝"
+    ],
+    "hidden_dim": 8,
+    "kernels": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "dilations": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32
+    ],
+    "objective": "terminal-window-cross-entropy"
+  },
+  "window_frames": 101,
+  "seed": 20261016,
+  "epochs": 1,
+  "max_paired_steps": 3,
+  "max_seconds": 30,
+  "learning_rate": 0.001,
+  "chunk_frames": 32,
+  "direct_event": {
+    "thresholds": [
+      0.5,
+      0.5
+    ],
+    "min_consecutive_frames": 2,
+    "cooldown_frames": 50
+  },
+  "ctc_event": {
+    "thresholds": [
+      0.5,
+      0.5
+    ],
+    "max_frames": 150,
+    "cooldown_frames": 50
+  },
+  "registry_inputs": {
+    "artifacts": "/local/artifacts",
+    "rights_bindings": [
+      {
+        "record_id": "kw1-preset-supplement-20261014-v1:kw1s-05",
+        "path": "/local/rights/kw1s-05.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "record_id": "kw1-preset-supplement-20261014-v1:kw1s-06",
+        "path": "/local/rights/kw1s-06.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "record_id": "kw1-preset-supplement-20261014-v1:kw1s-07",
+        "path": "/local/rights/kw1s-07.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    ]
+  }
+}

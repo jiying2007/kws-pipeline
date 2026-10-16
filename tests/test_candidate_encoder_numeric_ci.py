@@ -41,6 +41,32 @@ class CandidateNumericCIContracts(unittest.TestCase):
         for path in (*changes.CANDIDATE_GLOBS, "tests/test_direct_kws_numeric.py"):
             self.assertEqual(filters.count(path), 2)
 
+    def test_direct_fit_scopes_and_bounded_fixture(self):
+        for path in ("research/direct_fit/runner.py", "research/direct_fit/registry_data.py",
+                     "tests/test_direct_fit_numeric.py", "research/kws-candidate-registry-v1/candidates.json",
+                     "research/kws-candidate-registry-v1/build_registry.py", "research/kws-candidate-registry-v1/input-pins.json"):
+            self.assertEqual(changes.scopes([path]), (False, True))
+        for path in ("training/export_model.py", "training/training_state.py", "training/training_admission.py",
+                     "training/frontend.py", "tools/asr_source_resolver.py"):
+            self.assertEqual(changes.scopes([path]), (True, True))
+        self.assertEqual(changes.scopes(["research/direct_fit-lookalike/x.py"]), (False, False))
+        filters = [path for _, path in exact_path_filters(ROOT / changes.WORKFLOW)]
+        for path in ("research/direct_fit/**", "tests/test_direct_fit_numeric.py",
+                     "research/kws-candidate-registry-v1/candidates.json",
+                     "research/kws-candidate-registry-v1/build_registry.py", "research/kws-candidate-registry-v1/input-pins.json"):
+            self.assertEqual(filters.count(path), 2)
+        job = self.workflow.split("  objective-math:\n", 1)[1].split("  live-base-binding:\n", 1)[0]
+        step = job.split("      - name: Direct fit checkpoint and registry software fixtures\n", 1)[1].split("      - name:", 1)[0]
+        self.assertIn("timeout-minutes: 5", step)
+        self.assertIn("needs.select-scope.outputs.candidate_required == 'true'", step)
+        self.assertIn(".venv-objective/bin/python -B tests/test_direct_fit_numeric.py", step)
+        self.assertIn("--report build/direct-fit-fixture.json", step)
+        self.assertNotIn("continue-on-error", step)
+        artifact = job.split("      - name: Retain direct fit software fixture receipt\n", 1)[1]
+        self.assertIn("path: build/direct-fit-fixture.json", artifact)
+        self.assertIn("if-no-files-found: error", artifact)
+        self.assertNotIn("path: build/\n", artifact)
+
     def test_direct_fixture_step_and_receipt_are_bounded(self):
         job = self.workflow.split("  objective-math:\n", 1)[1].split("  live-base-binding:\n", 1)[0]
         step = job.split("      - name: Direct KWS three-class software fixture contracts\n", 1)[1].split("      - name:", 1)[0]
