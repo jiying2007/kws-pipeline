@@ -19,19 +19,22 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ".github/workflows/product-training-data-contract.yml"
 CANDIDATE_EXACT = frozenset({
     "tests/test_candidate_encoder_numeric.py",
+    "tests/test_direct_kws_numeric.py",
     "tests/test_candidate_encoder_numeric_ci.py",
     "tools/candidate_numeric_ci_changes.py",
 })
-CANDIDATE_GLOB = "research/candidate_encoders/**"
+CANDIDATE_PREFIXES = ("research/candidate_encoders/", "research/direct_kws/")
+CANDIDATE_GLOBS = frozenset(prefix + "**" for prefix in CANDIDATE_PREFIXES)
 # Shared source/control edits require both the old gates and the new contracts.
 CANDIDATE_SHARED = frozenset({WORKFLOW, "training/model.py", "training/sitecustomize.py",
-                              "tools/research_ci_changes.py", "tools/check_workflow_path_filters.py"})
+                              "tools/research_ci_changes.py", "tools/check_workflow_path_filters.py",
+                              "eval/score_events.py", "eval/context_policy.py"})
 SUPPORTED_PUSH_REFS = frozenset({"refs/heads/main", "refs/heads/fix/product-training-speech-like-v1"})
 
 
 def scopes(paths, workflow=ROOT / WORKFLOW):
     filters = {path for _, path in exact_path_filters(workflow)}
-    added = CANDIDATE_EXACT | {CANDIDATE_GLOB}
+    added = CANDIDATE_EXACT | CANDIDATE_GLOBS
     if not added <= filters or not CANDIDATE_SHARED <= filters:
         raise ValueError("candidate workflow filters are incomplete")
     existing = filters - added
@@ -42,7 +45,7 @@ def scopes(paths, workflow=ROOT / WORKFLOW):
     # gates; ordinary candidate implementation/test/doc changes are bounded.
     existing_required = bool(changed & (existing | {"tools/candidate_numeric_ci_changes.py"}))
     candidate_required = bool(changed & (CANDIDATE_EXACT | CANDIDATE_SHARED)) or any(
-        path.startswith("research/candidate_encoders/") for path in changed)
+        path.startswith(CANDIDATE_PREFIXES) for path in changed)
     return existing_required, candidate_required
 
 
