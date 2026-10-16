@@ -1,0 +1,1 @@
+{"schema":"grouped-balance-independent-tolerances-v1","ctc_nll":{"absolute":0.001,"relative":0.00001},"derived":{"absolute":0.000001,"relative":0.000002},"logsumexp_absolute":0.000002,"frozen_before_model_execution":true,"posthoc_relaxation_allowed":false}

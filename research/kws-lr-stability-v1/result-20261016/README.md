@@ -1,0 +1,11 @@
+# Fixed LR-stability numerical archive
+
+This local publication candidate contains all 3037 numerical result JSON files and the original independent acceptance summary/hash manifest, losslessly zipped and split into ordered chunks of at most 1 MiB. Concatenate parts in parts-manifest.json order and verify the reconstructed ZIP SHA256 before extraction. No audio, weight checkpoint, private process log or internal review report is included.
+
+The fixed primary endpoint remains step 600, raw greedy KW1 4/4 and KW2 0/8; prefix constraints pass, the fit criterion fails. The complete 600-update/608-forward budget is consumed and cannot be resumed or reused. The posthoc directory contains separately reviewed saved-logit analysis; its beam alternatives do not change the endpoint, select a model, or establish generalization, human-gold quality, false activation performance or production readiness.
+
+executed-plan.json and executed-source-manifest.json preserve the exact enabled execution source identities. executed-source-references.json identifies all 28 source files by immutable public commit, blob and SHA256; use those exact bytes rather than the active disabled plan. Historical A evidence is retained in research/kws-grouped-balance-v1/result-20261016 at commit f86ffb57234c1083c03d25c4ae89bfdbac2f733c. Its result manifest SHA256 is 4260c936d8249c59f2d5b270d40274b5f2b29bb45d930dd31c338b240d666b25.
+
+The reproducibility directory preserves the final trusted freeze, exact launcher source and verifier dependencies. These are historical evidence, not permission to run training. The frozen verifier uses its original sibling layout and absolute-path-bound outer launch receipts. Private outer process logs and receipts are intentionally excluded, so this public archive alone cannot rerun the original full outer-process verifier or attest the original host. The original acceptance summary is preserved as recorded evidence. Numerical payload bytes, per-step receipts, source references, historical comparisons and saved-logit analysis remain available for independent read-only checks. Do not fabricate missing outer receipts or weaken frozen checks to claim a full replay.
+
+No model or optimizer execution is needed to concatenate, hash, inspect or analyze saved evidence. Publication remains subject to the owner's exact-scope approval.

@@ -1,0 +1,131 @@
+import copy,math,json,unittest,tempfile
+from pathlib import Path
+import verify_result as a
+import fixtures
+v=a.v
+class EvidenceTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):cls.base=fixtures.fixture()
+    def reject(self,fn,args=None):
+        x=copy.deepcopy(args or self.base);fn(x)
+        with self.assertRaises(v.Invalid):a.verify_objects(*x)
+    def test_complete_negative(self):
+        r=a.verify_objects(*self.base);self.assertEqual((r['successful_step_receipts'],r['model_forward_calls_returned'],r['observations_verified']),(600,608,8));self.assertEqual(r['scientific_validation'],'DESCRIPTIVE_ONLY');self.assertTrue(r['historical_visible_trajectory_through500_matched']);self.assertFalse(r['statistics']['A-0600']['fit_success'])
+    def test_complete_positive(self):self.assertTrue(a.verify_objects(*fixtures.fixture(True))['statistics']['A-0600']['fit_success'])
+    def test_fixed_endpoint_control_comparison(self):
+        x=fixtures.fixture(True);old=fixtures.fixture(False);x[3]['A-0600.json']=old[3]['A-0600.json']
+        r=a.verify_objects(*x);self.assertFalse(r['historical_A600_endpoint']['fit_success']);self.assertEqual(r['fixed_600_new_minus_historical_A']['macro_complete_rate'],1.)
+        self.assertEqual(r['fixed_600_new_minus_historical_A']['per_class_complete_rate'],{'KW1':1.,'KW2':1.})
+    def test_mutations(self):
+        changes={
+        'extra_budget':lambda x:x[0].update({'call-0601.json':{}}),
+        'probe':lambda x:x[0].update({'probe-A-0600.json':{}}),
+        'missing_return_still_optimizer':lambda x:x[0].pop('forward-return-0508.json'),
+        'missing_payload':lambda x:x[0].pop('payload-0508.json'),
+        'missing_checkpoint':lambda x:x[0].pop('A-0500.json'),
+        'lr_switch_early':lambda x:x[0]['step-0500.json'].update(learning_rate=.0003),
+        'lr_switch_late':lambda x:x[0]['step-0501.json'].update(learning_rate=.003),
+        'historical_label':lambda x:x[0]['step-0501.json'].update(historical_replay_matched=True),
+        'missing_transition':lambda x:x[0].pop('learning-rate-transition.json'),
+        'recreated_optimizer':lambda x:x[0]['learning-rate-transition.json'].update(optimizer_recreated=True),
+        'transition_wrong_update':lambda x:x[0]['learning-rate-transition.json'].update(update=500),
+        'old_gradient_changed':lambda x:x[0]['step-0400.json'].update(finite_grad_norm=1.01),
+        'old_lp_changed':lambda x:x[3]['payload-0001.json']['samples'][0]['log_probs'][0].__setitem__(0,-.1),
+        'late_lp_nonfinite':lambda x:x[0]['payload-0608.json']['samples'][0]['log_probs'][0].__setitem__(0,float('nan')),
+        'wrong_weight':lambda x:x[0]['payload-0608.json']['samples'][0].update(loss_weight=.125),
+        'plan_hash':lambda x:x[0]['binding.json'].update(plan_sha256='f'*64),
+        'history_manifest_hash':lambda x:x[0]['binding.json'].update(historical_manifest_sha256='f'*64),
+        'init':lambda x:x[0]['A-initialization.json'].update(seed=1),
+        'best_checkpoint':lambda x:x[0]['terminal.json'].update(primary_endpoint_step=500),
+        'false_endpoint':lambda x:x[0]['terminal.json']['train_endpoints']['A'].update(fit_success=True),
+        'bool_lr':lambda x:x[0]['step-0600.json'].update(learning_rate=True),
+        'payload_digest':lambda x:x[0]['step-0600.json'].update(payload_sha256='f'*64),
+        }
+        for label,fn in changes.items():
+            with self.subTest(label=label):self.reject(fn)
+    def test_partial_failures(self):
+        for returned,payload,call,phase in [(False,False,False,'forward'),(True,False,False,'forward'),(True,True,False,'backward'),(True,True,True,'optimizer_step')]:
+            x=fixtures.partial(self.base,2,returned,payload,call,False,phase);r=a.verify_objects(*x);self.assertEqual(r['execution_status'],'failed_partial');self.assertEqual(r['scientific_validation'],'NOT_EVALUATED')
+    def test_post_comparison_IO_failures(self):
+        for index,phase in [(1,'evaluation'),(2,'optimizer_reservation')]:
+            x=fixtures.partial(self.base,index,True,True,False,False,phase);x[0]['failure.json']['error_type']='OSError'
+            with self.subTest(phase=phase):
+                r=a.verify_objects(*x);self.assertEqual(r['execution_status'],'failed_partial');self.assertEqual(r['successful_step_receipts'],0)
+                self.assertEqual(r['scientific_validation'],'NOT_EVALUATED')
+            x[0]['failure.json']['context']['unrecognized']=True
+            with self.assertRaises(v.Invalid):a.verify_objects(*x)
+    def test_historical_payload_failure(self):
+        x=fixtures.partial(self.base,2,True,True,False,False,'historical_payload_comparison');x[0]['failure.json']['context'].update(historical_file='payload-0002.json',update=1);x[3]['payload-0002.json']['samples'][0]['ctc_nll']+=1
+        r=a.verify_objects(*x);self.assertEqual(r['successful_step_receipts'],0);self.assertFalse(r['historical_visible_trajectory_through500_matched'])
+        self.reject(lambda z:z[0]['failure.json']['context'].update(historical_file='payload-0001.json'),x)
+    def test_historical_observation_mismatch_forbids_receipt(self):
+        x=fixtures.partial(self.base,1,True,True,False,False,'historical_payload_comparison');x[0]['failure.json']['context'].update(historical_file='payload-0001.json',update=0);x[3]['payload-0001.json']['samples'][0]['ctc_nll']+=1
+        self.assertEqual(a.verify_objects(*x)['execution_status'],'failed_partial')
+        x[0]['A-0000.json']=x[0]['payload-0001.json']
+        with self.assertRaisesRegex(v.Invalid,'continued_after_historical_payload_mismatch'):a.verify_objects(*x)
+    def test_historical_gradient_failure(self):
+        x=fixtures.partial(self.base,2,True,True,False,False,'historical_gradient_comparison');fields={'finite_grad_norm','finite_loss','ctc_loss','anchor_loss','blank_lambda'};expected={k:x[3]['step-0001.json'][k] for k in fields};observed={**expected,'finite_grad_norm':expected['finite_grad_norm']+.1}
+        x[0]['failure.json']['context'].update(historical_file='step-0001.json',update=1,observed=observed,expected=expected)
+        self.assertEqual(a.verify_objects(*x)['execution_status'],'failed_partial')
+        self.reject(lambda z:z[0]['failure.json']['context'].update(observed=expected),x)
+    def test_transition_requires_completed_500(self):
+        x=fixtures.partial(self.base,506,True,True,True,True,'optimizer_step');x[0]['learning-rate-transition.json']=self.base[0]['learning-rate-transition.json']
+        with self.assertRaises(v.Invalid):a.verify_objects(*x)
+    def test_checkpoint_cannot_be_skipped_on_failure(self):
+        x=fixtures.partial(self.base,51,True,True,True,True,'forward');x[0]['failure.json']['update']=51
+        with self.assertRaises(v.Invalid):a.verify_objects(*x)
+        x[0]['failure.json']['update']=50;x[0]['failure.json']['context']['kind']='observation';self.assertEqual(a.verify_objects(*x)['execution_status'],'failed_partial')
+    def test_timeout(self):
+        x=list(self.base);x[6]=dict(exit_code=-9,wall_timeout=True);self.assertEqual(a.verify_objects(*x)['scientific_validation'],'NOT_EVALUATED')
+    def test_late_nll_consistent_arithmetic_still_rejected_by_DP(self):
+        x=copy.deepcopy(self.base);p=x[0]['payload-0607.json'];r=p['samples'][0];r['ctc_nll']+=1;r['ctc_nll_by_target'][r['target_class']]+=1;r['ctc_nll_per_input_frame']=r['ctc_nll']/r['input_frames'];r['total_loss_per_input_frame']=(r['ctc_nll']+r['anchor_nll'])/r['input_frames'];r['weighted_total_loss']=r['total_loss_per_input_frame']*r['loss_weight'];p['ctc_loss']+=1/r['input_frames']*r['loss_weight'];p['finite_loss']=p['ctc_loss']+p['anchor_loss'];s=x[0]['step-0600.json'];s.update(ctc_loss=p['ctc_loss'],finite_loss=p['finite_loss'],payload_sha256=v.sha(v.encoded(p)))
+        with self.assertRaisesRegex(v.Invalid,'ctc_KW1'):a.verify_objects(*x)
+class FrozenCoreTests(unittest.TestCase):
+    def test_core_identity(self):self.assertEqual(v.sha(v.safe_read(a.BASE)),a.BASE_SHA)
+    def test_unchanged_tolerance(self):self.assertEqual(v.sha(v.safe_read(a.BASE.with_name('tolerances.json'))),'b701856f6bae2c93aa377cece1549a4afcab03921940dbc49ece6b3ddc01cf9b')
+    def test_failure_safe_json(self):
+        for raw in (b'{"x":1,"x":2}',b'{"x":NaN}',b'{"x":1e999}'):
+            with self.assertRaises(v.Invalid):v.strict_json(raw)
+    def test_dp_and_tolerance(self):
+        self.assertEqual(v.ctc_nll([[math.log(.2)]*5]*2,[1,1]),math.inf)
+        with self.assertRaises(v.Invalid):v.close(1.01,1.,'fixed_tolerance',True)
+
+import outer_fixtures
+class OuterTests(unittest.TestCase):
+    def test_outer_and_mutations(self):
+        with tempfile.TemporaryDirectory() as d:
+            base=Path(d);repo=base/'lr-stability-integrated';repo.mkdir();launcher=base/'launch_reviewed_lr_stability.py';launcher.write_bytes(b'# synthetic only\n')
+            freeze=dict(plan_sha256='a'*64,runner_sha256='b'*64,launcher_sha256=v.sha(launcher.read_bytes()),reviewed_source_commit='c'*40,reviewed_source_pins={'source':'d'*64})
+            path=outer_fixtures.outer(base,repo,freeze);a.verify_outer(path,freeze['reviewed_source_commit'],repo,freeze)
+            ip=path.with_name('launch-intent.json');raw=ip.read_bytes();obj=v.strict_json(raw)
+            for key,value in [('max_optimizer_updates',601),('max_model_forward_calls',609),('max_probe_forwards',1),('retry',True),('command_sha256','e'*64),('plan_sha256','f'*64),('runner_sha256','f'*64),('previous_campaign_budget_reused',True),('runner_evidence_directory_limit_bytes',2**30),('reviewed_source_pins',{})]:
+                ip.write_bytes(v.encoded({**obj,key:value}))
+                with self.subTest(key=key),self.assertRaises(v.Invalid):a.verify_outer(path,freeze['reviewed_source_commit'],repo,freeze)
+            ip.write_bytes(raw);path.with_name('stderr.log').write_bytes(b'changed')
+            with self.assertRaises(v.Invalid):a.verify_outer(path,freeze['reviewed_source_commit'],repo,freeze)
+class SourceTests(unittest.TestCase):
+    def test_source_closure_and_plan(self):
+        import shutil
+        root=Path(__file__).absolute().parent.parent;old=root/'grouped-balance-integrated';overlay=root/'lr-stability-overlay';prefix='research/kws-lr-stability-v1';shared='research/kws-grouped-balance-v1';reg='research/kws-candidate-registry-v1'
+        plan=v.strict_json(v.safe_read(overlay/prefix/'plan.json'));plan['execution_enabled']=True
+        pins=v.strict_json(v.safe_read(old/reg/'input-pins.json'))
+        with tempfile.TemporaryDirectory() as d:
+            repo=Path(d)/'lr-stability-integrated';repo.mkdir()
+            names=set(pins)|set(plan['code_sha256'])|{reg+'/'+n for n in ('candidates.json','input-pins.json','build_registry.py')}|{shared+'/'+n for n in plan['shared_source_sha256']}
+            for name in names:
+                target=repo/name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(old/name,target)
+            module=repo/prefix;module.mkdir(parents=True)
+            for name in set(plan['diagnostic_code_sha256'])|{'historical-input-pins.json'}:shutil.copyfile(overlay/prefix/name,module/name)
+            public=repo/shared/'result-20261016';public.mkdir()
+            for name in ('archive-manifest.json','result-hash-manifest.json'):shutil.copyfile(root/'grouped-balance-closure-overlay'/shared/'result-20261016'/name,public/name)
+            pp=module/'plan.json';pp.write_bytes(v.encoded(plan));freeze={'plan_sha256':v.sha(pp.read_bytes())};loaded,train=a.load_sources(repo,freeze);self.assertEqual(len(train),12)
+            for key,value in [('learning_rate_schedule',[]),('max_optimizer_calls',601),('warm_start',True),('probe_record_ids',['unknown']),('initial_weight_sha256','a'*64),('execution_enabled',False),('seed',True)]:
+                pp.write_bytes(v.encoded({**plan,key:value}));bad={'plan_sha256':v.sha(pp.read_bytes())}
+                with self.subTest(key=key),self.assertRaises(v.Invalid):a.load_sources(repo,bad)
+            pp.write_bytes(v.encoded(plan));(module/'run_lr_stability.py').write_bytes(b'changed')
+            with self.assertRaises(v.Invalid):a.load_sources(repo,freeze)
+    def test_actual_history_hashes(self):
+        history=a.load_history(Path(__file__).absolute().parent.parent)
+        self.assertIn('A-0600.json',history);self.assertIn('step-0500.json',history);self.assertIn('A-0500.json',history);self.assertEqual(len([n for n in history if n.startswith('payload-')]),507)
+
+if __name__=='__main__':unittest.main()
