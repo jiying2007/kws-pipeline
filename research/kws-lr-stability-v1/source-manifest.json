@@ -1,0 +1,20 @@
+{
+  "schema": "lr-stability-source-manifest-v1",
+  "files": {
+    "README.md": "323527091dbc2397b45f10d879cec743f56beaf8a181b021e896ed1e468f4235",
+    "contract.py": "28ae51a0cd7caa9eb29a04faa44aea687e94b1a1889c8c455cb3d41bc173c8a0",
+    "historical-input-pins.json": "849d7b768b61d7c8238ffea3f5bd69328b6cfba70d7eb25088338b20b33929cd",
+    "numeric_preflight.py": "eb11cd8c298c9106e38f688cf0e6764a03d52f00cdf0e48bd802494a67d399e1",
+    "plan.json": "b053e74a1322e938dbd82b4526fe63edf3a428904861d070d36cea1e121b4068",
+    "run_lr_stability.py": "0a3a0e919f5707b30f13c5bc73f5babc3d0c66b8f1e77e430a4c49043b0ab835",
+    "test_contract.py": "d1ec64333e1222e72cf66113710fe5d5db963bc5635feb6c5c9c4dd5e0c36abe"
+  },
+  "shared_source_sha256": {
+    "contract.py": "6dca1cad9dba10f50e439f775b6d04d90f246544cbd5a634e30490589490bc74",
+    "run_grouped_balance.py": "f57e0fae61b314769cb1d3f3365b77f9ccb9400071be425b3ce7d04e66d53b6e",
+    "cohort-prefix-freeze.json": "fe23e633925573e2b02ac8530e066214879a11cbccc2e4ef5875aa2c38006e87",
+    "runtime-candidate.lock.json": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
+    "requirements.research.lock": "7aa51b6eebd2e2db290338345c30b8c7a8e197531746ee77efb7ef8678124dee"
+  },
+  "self_reference": false
+}

@@ -1,0 +1,150 @@
+{
+  "schema": "kws-lr-stability-plan-v1",
+  "purpose": "posthoc-proposed-fixed-lr-stability-diagnostic",
+  "production_qualified": false,
+  "execution_enabled": true,
+  "seed": 20261015,
+  "model": {
+    "feature_dim": 32,
+    "hidden_dim": 48,
+    "vocab_size": 5
+  },
+  "targets_by_text": {
+    "你好小窝": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "小窝小窝": [
+      3,
+      4,
+      3,
+      4
+    ]
+  },
+  "optimizer": {
+    "name": "Adam",
+    "lr": 0.003,
+    "weight_decay": 0.0,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "gradient_clip": 5.0
+  },
+  "ctc": {
+    "blank": 0,
+    "reduction": "none",
+    "zero_infinity": false,
+    "normalization": "per-sample-input-frame-count"
+  },
+  "max_optimizer_calls": 600,
+  "retries": 0,
+  "new_tts_calls": 0,
+  "new_asr_calls": 0,
+  "warm_start": false,
+  "augmentation": false,
+  "vad": false,
+  "export_weights": false,
+  "registry_sha256": "28033edbbc1e444eae27c33af2e060d1654c4b7a072e65401b055fc27fc3b1b0",
+  "source_verifier_sha256": "9d37fb852cdd5048a4d5c88f9e21efe2b3c1e18f25244babb2d811675ea9fbae",
+  "runtime_lock_sha256": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
+  "code_sha256": {
+    "training/model.py": "768800e25537367da770ef44178249208956d7c3c33f1eb7d60b1b9c98fe59c5",
+    "training/frontend.py": "d8ae687303d5c9c6bfdf6539c94f4ae463d910a4837ed77633d7656ff02a582e",
+    "training/frontend_spec.py": "fbd17236e1449101bed6df8f105baad476edb0b005e6e45cb83ebc7971d166e6"
+  },
+  "campaign_id": "kws-lr-stability-20261016-v1",
+  "campaign_claim_path": "research-budget/kws-lr-stability-20261016-v1.claim.json",
+  "input_pins_sha256": "64c77a270c7f13d8252d10282191aaeb207f425c10fb89a2f01e390fa994e37c",
+  "frontend": {
+    "frontend": "logmel",
+    "feature_dim": 32,
+    "frame_len": 400,
+    "hop": 320
+  },
+  "stages": [
+    {
+      "name": "A",
+      "updates": 600,
+      "checkpoints": [
+        0,
+        50,
+        100,
+        200,
+        300,
+        400,
+        500,
+        600
+      ],
+      "blank_lambda": 1
+    }
+  ],
+  "observation_timing": "post-step; step 0 before any optimizer call",
+  "loss_timing": "pre-step",
+  "max_model_forward_calls": 608,
+  "cohort_sha256": "fe23e633925573e2b02ac8530e066214879a11cbccc2e4ef5875aa2c38006e87",
+  "prefix_rule": {
+    "window_samples": 400,
+    "hop_samples": 320,
+    "threshold": 0.0001,
+    "rule": "maximal initial run of complete unwindowed PCM RMS strictly below threshold; zero allowed"
+  },
+  "train_weights": {
+    "A": {
+      "KW1": 0.08333333333333333,
+      "KW2": 0.08333333333333333
+    }
+  },
+  "early_stop": false,
+  "extension": false,
+  "resume": false,
+  "probe_selection": false,
+  "train_record_ids": [
+    "kw1-preset-supplement-20261014-v1:kw1s-05",
+    "kw1-preset-supplement-20261014-v1:kw1s-06",
+    "kw1-preset-supplement-20261014-v1:kw1s-07",
+    "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+    "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+    "tts-quality-remaining-20261014-v1:tqp-qwen06-10",
+    "tts-quality-remaining-20261014-v1:tqp-qwen06-11",
+    "tts-quality-remaining-20261014-v1:tqp-qwen06-14",
+    "tts-quality-remaining-20261014-v1:tqp-qwen06-15",
+    "tts-quality-remaining-20261014-v1:tqp-qwen17-06",
+    "tts-quality-remaining-20261014-v1:tqp-qwen17-14",
+    "tts-quality-remaining-20261014-v1:tqp-qwen17-15"
+  ],
+  "probe_record_ids": [],
+  "max_probe_forwards": 0,
+  "historical_input_pins_sha256": "849d7b768b61d7c8238ffea3f5bd69328b6cfba70d7eb25088338b20b33929cd",
+  "historical_manifest_sha256": "4260c936d8249c59f2d5b270d40274b5f2b29bb45d930dd31c338b240d666b25",
+  "initial_weight_sha256": "0eafd98dd20f8c799d1c4d733a47314018ecfdd942c2769fed49cf8ae4fc7b2d",
+  "historical_replay_through_step": 500,
+  "learning_rate_schedule": [
+    {
+      "first_update": 1,
+      "last_update": 500,
+      "lr": 0.003
+    },
+    {
+      "first_update": 501,
+      "last_update": 600,
+      "lr": 0.0003
+    }
+  ],
+  "shared_source_sha256": {
+    "contract.py": "6dca1cad9dba10f50e439f775b6d04d90f246544cbd5a634e30490589490bc74",
+    "run_grouped_balance.py": "f57e0fae61b314769cb1d3f3365b77f9ccb9400071be425b3ce7d04e66d53b6e",
+    "cohort-prefix-freeze.json": "fe23e633925573e2b02ac8530e066214879a11cbccc2e4ef5875aa2c38006e87",
+    "runtime-candidate.lock.json": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
+    "requirements.research.lock": "7aa51b6eebd2e2db290338345c30b8c7a8e197531746ee77efb7ef8678124dee"
+  },
+  "shared_module": "research/kws-grouped-balance-v1",
+  "diagnostic_code_sha256": {
+    "run_lr_stability.py": "0a3a0e919f5707b30f13c5bc73f5babc3d0c66b8f1e77e430a4c49043b0ab835",
+    "contract.py": "28ae51a0cd7caa9eb29a04faa44aea687e94b1a1889c8c455cb3d41bc173c8a0",
+    "numeric_preflight.py": "eb11cd8c298c9106e38f688cf0e6764a03d52f00cdf0e48bd802494a67d399e1"
+  }
+}
