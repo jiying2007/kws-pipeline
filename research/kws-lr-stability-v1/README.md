@@ -1,3 +1,17 @@
+# Completed LR-stability diagnostic: budget consumed
+
+This campaign completed once on 2026-10-16. The 600 optimizer updates and 608 full-batch forwards (600 training plus eight observations) are fully consumed. The plan is now disabled. Retry, resume, extension and reuse of this budget are forbidden; any new numerical experiment requires a separately reviewed plan and budget.
+
+Independent saved-evidence verification passed for all 608 payloads and 600 successful step receipts. The saved visible trajectory through step 500 matched the historical A trajectory exactly. This does not independently establish equality of unsaved internal parameter or Adam states.
+
+At the fixed step-600 endpoint, KW1 complete match was 4/4 and KW2 was 0/8, with macro complete rate 0.5 and prefix constraints passing. The fit criterion still failed. Historical fixed A600 had KW1 1/4, KW2 0/8 and macro 0.125. These are descriptive results on 12 already exposed machine-labelled training records with one seed and no probe. They establish neither generalization, independent evaluation, human gold, recall, false-activation performance nor production readiness. No reusable weights were exported.
+
+closure.json records the consumed budget and source/result identities. The result-20261016 archive candidate retains complete raw numerical evidence, original acceptance outputs, frozen source references and saved-logit posthoc analysis. Its README describes reconstruction and the omitted private outer-process evidence. Preparing this candidate does not itself publish it or authorize publication.
+
+## Historical reviewed source and preregistration
+
+The original preregistration below is preserved verbatim. Its enabling or launch language describes historical preparation and grants no new execution permission.
+
 # Fixed late-learning-rate stability diagnostic
 
 Execution is gated by plan.json and the separately reviewed parent launcher. Only the parent executor may freeze reviewed merged source pins, enable the exact plan and launch the new campaign once. The previous grouped-balance budget is exhausted and cannot be reused. Creating this source package used no model forward, optimizer, TTS or ASR calls.

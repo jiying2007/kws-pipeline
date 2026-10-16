@@ -1,0 +1,232 @@
+{
+  "schema": "lr-stability-public-executed-source-references-v1",
+  "source_commit": "efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d",
+  "source_tree": "6034bcd387c5c29ab07d035977f67122428315a7",
+  "files": [
+    {
+      "path": "research/consolidation/fit-history-recovery-2026-10-15.json",
+      "mode": "100644",
+      "bytes": 2161,
+      "sha256": "6e0bf6141ddec49297ba00ed9a368fc66f323c06672d6906b5ab4fc482a041f7",
+      "git_blob_sha1": "d819b6c7017369f1cc90c85a2f126abd08279203",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/consolidation/fit-history-recovery-2026-10-15.json"
+    },
+    {
+      "path": "research/kw1-preset-supplement-observation-v1/observation.json",
+      "mode": "100644",
+      "bytes": 126850,
+      "sha256": "95c67c26d04bfdbba41df11540c084ab99ad736e0b8147383d93808be40a919e",
+      "git_blob_sha1": "4eede9e0dd8b466abc822bb9e02ff216a58a2f75",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kw1-preset-supplement-observation-v1/observation.json"
+    },
+    {
+      "path": "research/kw1-preset-supplement-v1/blind_pcm.py",
+      "mode": "100644",
+      "bytes": 11345,
+      "sha256": "ab6164bb89c9b3b0e707375330b2e9c13b772a0fda1c252dfb2dda05f3539b64",
+      "git_blob_sha1": "fbd824ae52a37f6a21f7f88da946d0aa8c0c3417",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kw1-preset-supplement-v1/blind_pcm.py"
+    },
+    {
+      "path": "research/kw1-preset-supplement-v1/worker.py",
+      "mode": "100644",
+      "bytes": 36688,
+      "sha256": "979e1709e24ff21e805abfd481994d4073c3220f217f20d6782d1307a77097b3",
+      "git_blob_sha1": "a8b8f64d07add0bf6891f53f4b9743eade2c1066",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kw1-preset-supplement-v1/worker.py"
+    },
+    {
+      "path": "research/kws-candidate-registry-v1/build_registry.py",
+      "mode": "100644",
+      "bytes": 16910,
+      "sha256": "9d37fb852cdd5048a4d5c88f9e21efe2b3c1e18f25244babb2d811675ea9fbae",
+      "git_blob_sha1": "cb397fbe366df7266a37dcb904873d69f96eba15",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-candidate-registry-v1/build_registry.py"
+    },
+    {
+      "path": "research/kws-candidate-registry-v1/candidates.json",
+      "mode": "100644",
+      "bytes": 73379,
+      "sha256": "28033edbbc1e444eae27c33af2e060d1654c4b7a072e65401b055fc27fc3b1b0",
+      "git_blob_sha1": "39de70b07971fd3d8f04646dce3b7c3d9b78e449",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-candidate-registry-v1/candidates.json"
+    },
+    {
+      "path": "research/kws-candidate-registry-v1/input-pins.json",
+      "mode": "100644",
+      "bytes": 948,
+      "sha256": "64c77a270c7f13d8252d10282191aaeb207f425c10fb89a2f01e390fa994e37c",
+      "git_blob_sha1": "6eb586384abb4cd56ae0c7e687d112c348f1db59",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-candidate-registry-v1/input-pins.json"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/cohort-prefix-freeze.json",
+      "mode": "100644",
+      "bytes": 53823,
+      "sha256": "fe23e633925573e2b02ac8530e066214879a11cbccc2e4ef5875aa2c38006e87",
+      "git_blob_sha1": "ebd41589f8a5143118d59f5359c6e4741b6b982d",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-grouped-balance-v1/cohort-prefix-freeze.json"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/contract.py",
+      "mode": "100644",
+      "bytes": 10725,
+      "sha256": "6dca1cad9dba10f50e439f775b6d04d90f246544cbd5a634e30490589490bc74",
+      "git_blob_sha1": "880cdb3d6bb2c959b212d9dbb8f631dd6972dbeb",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-grouped-balance-v1/contract.py"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/requirements.research.lock",
+      "mode": "100644",
+      "bytes": 960,
+      "sha256": "7aa51b6eebd2e2db290338345c30b8c7a8e197531746ee77efb7ef8678124dee",
+      "git_blob_sha1": "9b4fcd9e6a3ae71bc322893dfa6d604a5abedf7e",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-grouped-balance-v1/requirements.research.lock"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/result-20261016/archive-manifest.json",
+      "mode": "100644",
+      "bytes": 16212,
+      "sha256": "cb854f2e697313f1895e730b3a5586155d4a93b1d1e9b64d4c546e3ce8708997",
+      "git_blob_sha1": "b54600e942492fbeebd942aebb3ca8acbef0fbb2",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-grouped-balance-v1/result-20261016/archive-manifest.json"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/result-20261016/result-hash-manifest.json",
+      "mode": "100644",
+      "bytes": 566737,
+      "sha256": "4260c936d8249c59f2d5b270d40274b5f2b29bb45d930dd31c338b240d666b25",
+      "git_blob_sha1": "f9a8e6402b0596d46937b6b59446bd30731b3d38",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-grouped-balance-v1/result-20261016/result-hash-manifest.json"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/run_grouped_balance.py",
+      "mode": "100644",
+      "bytes": 18530,
+      "sha256": "f57e0fae61b314769cb1d3f3365b77f9ccb9400071be425b3ce7d04e66d53b6e",
+      "git_blob_sha1": "77c329d8c02545f25c0a753ffba4d031107d53dd",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-grouped-balance-v1/run_grouped_balance.py"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/runtime-candidate.lock.json",
+      "mode": "100644",
+      "bytes": 14859,
+      "sha256": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
+      "git_blob_sha1": "5a632337c2dfffcab4a179c0a94d9da719ff46d1",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-grouped-balance-v1/runtime-candidate.lock.json"
+    },
+    {
+      "path": "research/kws-lr-stability-v1/README.md",
+      "mode": "100644",
+      "bytes": 6188,
+      "sha256": "323527091dbc2397b45f10d879cec743f56beaf8a181b021e896ed1e468f4235",
+      "git_blob_sha1": "3fbfb5acbe08f810304938245f42ec56ba2bdd09",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-lr-stability-v1/README.md"
+    },
+    {
+      "path": "research/kws-lr-stability-v1/contract.py",
+      "mode": "100644",
+      "bytes": 11046,
+      "sha256": "28ae51a0cd7caa9eb29a04faa44aea687e94b1a1889c8c455cb3d41bc173c8a0",
+      "git_blob_sha1": "f1630cb4719a6f5667ac8b990b46a863cd9a5906",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-lr-stability-v1/contract.py"
+    },
+    {
+      "path": "research/kws-lr-stability-v1/historical-input-pins.json",
+      "mode": "100644",
+      "bytes": 93355,
+      "sha256": "849d7b768b61d7c8238ffea3f5bd69328b6cfba70d7eb25088338b20b33929cd",
+      "git_blob_sha1": "a5d9123d4a72ec69efbf2f5b42e5ef85142dcce1",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-lr-stability-v1/historical-input-pins.json"
+    },
+    {
+      "path": "research/kws-lr-stability-v1/numeric_preflight.py",
+      "mode": "100644",
+      "bytes": 817,
+      "sha256": "eb11cd8c298c9106e38f688cf0e6764a03d52f00cdf0e48bd802494a67d399e1",
+      "git_blob_sha1": "e55372f14b385dae9a56f7bc118c812a632a4ea4",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-lr-stability-v1/numeric_preflight.py"
+    },
+    {
+      "path": "research/kws-lr-stability-v1/plan.json",
+      "mode": "100644",
+      "bytes": 4844,
+      "sha256": "b053e74a1322e938dbd82b4526fe63edf3a428904861d070d36cea1e121b4068",
+      "git_blob_sha1": "50e2d90703e72e5b63dc748b9a21376abc369669",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-lr-stability-v1/plan.json"
+    },
+    {
+      "path": "research/kws-lr-stability-v1/run_lr_stability.py",
+      "mode": "100644",
+      "bytes": 18079,
+      "sha256": "0a3a0e919f5707b30f13c5bc73f5babc3d0c66b8f1e77e430a4c49043b0ab835",
+      "git_blob_sha1": "2f7bb49c6828c8103cede17b4c73fb01e40a49bd",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-lr-stability-v1/run_lr_stability.py"
+    },
+    {
+      "path": "research/kws-lr-stability-v1/source-manifest.json",
+      "mode": "100644",
+      "bytes": 1259,
+      "sha256": "0e1fba4c5d9129b87e364cbfe95c388f9e07ed0fbb9376c77da4343c390252ec",
+      "git_blob_sha1": "522970fc37abe7633c1ee928397de097720f4abb",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-lr-stability-v1/source-manifest.json"
+    },
+    {
+      "path": "research/kws-lr-stability-v1/test_contract.py",
+      "mode": "100644",
+      "bytes": 9585,
+      "sha256": "d1ec64333e1222e72cf66113710fe5d5db963bc5635feb6c5c9c4dd5e0c36abe",
+      "git_blob_sha1": "67240215de70858eac49e3ffea2060f32396f942",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/kws-lr-stability-v1/test_contract.py"
+    },
+    {
+      "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/thirteen-candidate-evidence.json",
+      "mode": "100644",
+      "bytes": 12354,
+      "sha256": "9cb52b6f4a890a858f5fc96af89825ba63c5035fcaaefb0349a7806f3843745d",
+      "git_blob_sha1": "bf75d321134dd8d8a260b8a52b1d34649dd38b7b",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/tts-pilot-screening-v1/evidence/asr-run-38573117922/thirteen-candidate-evidence.json"
+    },
+    {
+      "path": "research/tts-pilot-screening-v1/evidence/tts-input-20261014/artifact-inventory.json",
+      "mode": "100644",
+      "bytes": 18185,
+      "sha256": "cf20e6771eb0e0647dc890ab341a87367cbb77afb89c39b85377e8ace3c5ba4a",
+      "git_blob_sha1": "9d993421e91eb068fd9310cf114021bcb737760f",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/tts-pilot-screening-v1/evidence/tts-input-20261014/artifact-inventory.json"
+    },
+    {
+      "path": "research/tts-pilot-screening-v1/screen.py",
+      "mode": "100644",
+      "bytes": 11339,
+      "sha256": "982582c0e4c7f957276520977ebfa3bad0cbb5753e16d50bbadef0835682523e",
+      "git_blob_sha1": "81f1bdc2ddcb4e3b757e77a15b6a25b5be81fbe8",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/research/tts-pilot-screening-v1/screen.py"
+    },
+    {
+      "path": "training/frontend.py",
+      "mode": "100644",
+      "bytes": 3384,
+      "sha256": "d8ae687303d5c9c6bfdf6539c94f4ae463d910a4837ed77633d7656ff02a582e",
+      "git_blob_sha1": "7d9b3ad6ec5fd0b9be7ee522396928ba88de96f2",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/training/frontend.py"
+    },
+    {
+      "path": "training/frontend_spec.py",
+      "mode": "100644",
+      "bytes": 5561,
+      "sha256": "fbd17236e1449101bed6df8f105baad476edb0b005e6e45cb83ebc7971d166e6",
+      "git_blob_sha1": "f14a06eb6785c86e649b0902c24a38881cd0e457",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/training/frontend_spec.py"
+    },
+    {
+      "path": "training/model.py",
+      "mode": "100644",
+      "bytes": 2336,
+      "sha256": "768800e25537367da770ef44178249208956d7c3c33f1eb7d60b1b9c98fe59c5",
+      "git_blob_sha1": "f531fbfedf0ac33025744a0ba9188ccc67e892af",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d/training/model.py"
+    }
+  ],
+  "note": "Exact public source references avoid copying the unchanged 28-file closure. Use the executed plan, not the now-disabled active plan."
+}

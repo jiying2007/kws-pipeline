@@ -136,4 +136,73 @@ class Tests(unittest.TestCase):
     with self.assertRaises(ValueError):c.atomic_json(Path(d)/'payload.json',{'x':1})
     c.atomic_json(Path(d)/'failure.json',{'failed':True})
    finally:c._shared._WRITTEN_BYTES.pop(key,None)
+class ArchiveTests(unittest.TestCase):
+ @classmethod
+ def setUpClass(cls):
+  spec=importlib.util.spec_from_file_location('lr_archive',HERE/'verify_archived_result.py');cls.a=importlib.util.module_from_spec(spec);spec.loader.exec_module(cls.a)
+ def test_saved_archive_integrity(self):self.assertEqual(self.a.verify()['archive_integrity'],'PASS');self.assertNotIn('torch',sys.modules)
+ def test_consumed_budget_and_bool_corruptions(self):
+  c=self.a.load(HERE,'closure.json')
+  for key,val in [('remaining_budget',1),('remaining_model_forward_budget',1),('execution_enabled',True),('consumed',1),('retry_authorized',True),('successful_optimizer_steps',599),('model_forward_calls_returned',607)]:
+   q=copy.deepcopy(c);q[key]=val
+   with self.assertRaises(ValueError):self.a.consumed(q)
+ def test_archive_part_corruptions(self):
+  root=HERE/'result-20261016';m=self.a.load(root,'parts-manifest.json')
+  for change in [lambda x:x['parts'][0].update(sha256='0'*64),lambda x:x['parts'][0].update(path='../escape'),lambda x:x.update(archive_sha256='0'*64),lambda x:x['parts'].pop(),lambda x:x['parts'][0].update(bytes=True)]:
+   q=copy.deepcopy(m);change(q)
+   with self.assertRaises(ValueError):self.a.reconstruct(root,q)
+ def test_strict_json_and_roster(self):
+  import io,zipfile
+  for raw in [b'{"x":1,"x":2}',b'{"x":NaN}']:
+   with self.assertRaises(ValueError):self.a.decode(raw)
+  stream=io.BytesIO()
+  with zipfile.ZipFile(stream,'w') as z:z.writestr('../escape','x')
+  with zipfile.ZipFile(stream) as z:
+   with self.assertRaises(ValueError):self.a.roster(z,{})
+ def test_manifest_or_plan_corruption(self):
+  from unittest.mock import patch
+  original=self.a.read
+  for target in ['plan.json','executed-plan.json','archive-manifest.json','executed-source-references.json']:
+   def altered(root,name):
+    raw=original(root,name)
+    if name!=target:return raw
+    obj=json.loads(raw)
+    if target=='plan.json':obj['execution_enabled']=True
+    elif target=='executed-plan.json':obj['seed']=123
+    elif target=='executed-source-references.json':obj['files'][0]['sha256']='0'*64
+    else:obj['files']['acceptance-summary.json']='0'*64
+    return json.dumps(obj).encode()
+   with patch.object(self.a,'read',altered):
+    with self.assertRaises(ValueError):self.a.verify()
+
+ def test_payload_hash_corruption(self):
+  with self.assertRaises(ValueError):self.a.payload_hash(b'changed payload','0'*64)
+  self.a.payload_hash(b'original payload',self.a.sha(b'original payload'))
+
+ def test_semantic_bindings_after_manifest_refresh(self):
+  from unittest.mock import patch
+  a=self.a;root=HERE;result=HERE/'result-20261016';original=a.read
+  cases=[('reproducibility/trusted-freeze.json','reviewed_source_commit','0'*40,'freeze commit'),('acceptance-summary.json','externally_supplied_source_commit','0'*40,'acceptance source commit'),('reproducibility/grouped-balance-result-verification/verify_result.py',None,None,'shared verifier pin'),('reproducibility/grouped-balance-result-verification/tolerances.json',None,None,'tolerances pin'),('reproducibility/trusted-freeze.json','tolerances_sha256','0'*64,'tolerances pin'),('result-hash-manifest.json','shared_verifier_sha256','0'*64,'manifest shared verifier'),('result-hash-manifest.json','verifier_sha256','0'*64,'manifest verifier'),('acceptance-summary.json','shared_verifier_sha256','0'*64,'acceptance shared verifier')]
+  for target,key,value,label in cases:
+   with self.subTest(target=target,key=key):
+    changes={};raw=original(result,target)
+    if key is None:changed=raw+b'\n'
+    else:obj=json.loads(raw);obj[key]=value;changed=json.dumps(obj).encode()
+    changes[result/target]=changed
+    freeze_path=result/'reproducibility/trusted-freeze.json';hash_path=result/'result-hash-manifest.json'
+    if freeze_path in changes:
+     hm=json.loads(original(result,'result-hash-manifest.json'));hm['trusted_freeze_sha256']=a.sha(changes[freeze_path]);changes[hash_path]=json.dumps(hm).encode()
+    if hash_path in changes:
+     closure=json.loads(original(root,'closure.json'));closure['result_manifest_sha256']=a.sha(changes[hash_path]);changes[root/'closure.json']=json.dumps(closure).encode()
+     manifest=json.loads(original(root,'source-manifest.json'));manifest['files']['closure.json']=a.sha(changes[root/'closure.json']);changes[root/'source-manifest.json']=json.dumps(manifest).encode()
+    manifest=json.loads(original(result,'archive-manifest.json'))
+    for path,data in changes.items():
+     if path.is_relative_to(result):manifest['files'][path.relative_to(result).as_posix()]=a.sha(data)
+    changes[result/'archive-manifest.json']=json.dumps(manifest).encode()
+    def altered(base,name):
+     path=base/name
+     return changes[path] if path in changes else original(base,name)
+    with patch.object(a,'read',altered):
+     with self.assertRaisesRegex(ValueError,label):a.verify()
+
 if __name__=='__main__':unittest.main()

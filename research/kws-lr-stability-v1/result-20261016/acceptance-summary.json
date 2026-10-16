@@ -1,0 +1,130 @@
+{
+  "evidence_validation": "PASS",
+  "execution_status": "completed",
+  "externally_supplied_source_commit": "efde83f5c2ff1eab1a82d7c6de68bce5a9daae5d",
+  "fixed_600_new_minus_historical_A": {
+    "macro_complete_rate": 0.375,
+    "per_class_complete_rate": {
+      "KW1": 0.75,
+      "KW2": 0.0
+    }
+  },
+  "historical_A600_endpoint": {
+    "fit_success": false,
+    "macro_complete_rate": 0.125,
+    "per_class_complete_rate": {
+      "KW1": 0.25,
+      "KW2": 0.0
+    },
+    "prefix_success": true
+  },
+  "historical_manifest_sha256": "4260c936d8249c59f2d5b270d40274b5f2b29bb45d930dd31c338b240d666b25",
+  "historical_source_commit": "f86ffb57234c1083c03d25c4ae89bfdbac2f733c",
+  "historical_visible_trajectory_through500_matched": true,
+  "human_gold": false,
+  "independent_evaluation": false,
+  "limitations": [
+    "First500 equality concerns the saved visible numerical trajectory, not independent proof of unsaved Adam or parameter states.",
+    "Only the predeclared step600 endpoint is evaluated; no best-checkpoint selection.",
+    "This posthoc-proposed diagnostic uses 12 exposed machine-labelled training samples and no probe; it establishes neither generalization, recall, FA/h nor production readiness.",
+    "All LPs receive independent float64 CTC checks under unchanged pre-execution tolerances; reviewed source and receipts are not hardware attestation."
+  ],
+  "model_forward_calls_reserved": 608,
+  "model_forward_calls_returned": 608,
+  "observations_verified": 8,
+  "optimizer_calls_reserved": 600,
+  "payloads_verified": 608,
+  "production_qualified": false,
+  "reusable_weights_exported": false,
+  "schema": "lr-stability-independent-verification-v1",
+  "scientific_validation": "DESCRIPTIVE_ONLY",
+  "shared_verifier_sha256": "cf974939751107b8e6e6c15d34bff1e5830e173a1a45cb3c34d1642681d36bcc",
+  "shipping_qualified": false,
+  "statistics": {
+    "A-0000": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": false
+    },
+    "A-0050": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": false
+    },
+    "A-0100": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "A-0200": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "A-0300": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "A-0400": {
+      "fit_success": false,
+      "macro_complete_rate": 0.375,
+      "per_class_complete_rate": {
+        "KW1": 0.75,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "A-0500": {
+      "fit_success": false,
+      "macro_complete_rate": 0.5,
+      "per_class_complete_rate": {
+        "KW1": 1.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "A-0600": {
+      "fit_success": false,
+      "macro_complete_rate": 0.5,
+      "per_class_complete_rate": {
+        "KW1": 1.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    }
+  },
+  "successful_step_receipts": 600,
+  "tolerances": {
+    "ctc_nll": {
+      "absolute": 0.001,
+      "relative": 1e-05
+    },
+    "derived": {
+      "absolute": 1e-06,
+      "relative": 2e-06
+    },
+    "logsumexp_absolute": 2e-06
+  },
+  "training_admitted": false
+}

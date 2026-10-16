@@ -1,13 +1,15 @@
 {
   "schema": "lr-stability-source-manifest-v1",
   "files": {
-    "README.md": "323527091dbc2397b45f10d879cec743f56beaf8a181b021e896ed1e468f4235",
+    "README.md": "a5eecfe8b0cc2e080abe3e974a1d5724aeeaa81120e8b9aa659c275e245c4c1e",
     "contract.py": "28ae51a0cd7caa9eb29a04faa44aea687e94b1a1889c8c455cb3d41bc173c8a0",
     "historical-input-pins.json": "849d7b768b61d7c8238ffea3f5bd69328b6cfba70d7eb25088338b20b33929cd",
     "numeric_preflight.py": "eb11cd8c298c9106e38f688cf0e6764a03d52f00cdf0e48bd802494a67d399e1",
-    "plan.json": "b053e74a1322e938dbd82b4526fe63edf3a428904861d070d36cea1e121b4068",
+    "plan.json": "174d1b3391b5a5ec72cf8f1acf518be280cbf33355990357f8ad12036af6cd3e",
     "run_lr_stability.py": "0a3a0e919f5707b30f13c5bc73f5babc3d0c66b8f1e77e430a4c49043b0ab835",
-    "test_contract.py": "d1ec64333e1222e72cf66113710fe5d5db963bc5635feb6c5c9c4dd5e0c36abe"
+    "test_contract.py": "488d27a0ebb91830964165d79567a932fc4673cf6cb0369ccae3127b77b8c32b",
+    "closure.json": "095891b3416c1b18abb28de155e6d9df448620294152491f8859a80441d8adc7",
+    "verify_archived_result.py": "cca23ae62e3118b0f63fc0f4df36a21fcf325fedcffd3c2e3c7112afe8bc1e0c"
   },
   "shared_source_sha256": {
     "contract.py": "6dca1cad9dba10f50e439f775b6d04d90f246544cbd5a634e30490589490bc74",
