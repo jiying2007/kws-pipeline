@@ -36660,6 +36660,369 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-16",
+      "operation_id": "kws-lr-saved-diagnostics-archive-20261016-v1",
+      "public_main_base_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "public_main_base_tree": "b95dc31f8b4c8e54d5c2d15f2c642d3e2c2c302c",
+      "workflow_source_changed": false,
+      "scope": "Archive completed saved-prefix audit and single-pass controlled C-decoder diagnostic, with fixed public source references and offline integrity/synthetic semantic checks. Preserve old numerical evidence and consumed budgets. New report and native-output numerical bodies are separate from public source metadata; local preparation grants neither publication nor repeated execution.",
+      "files": [
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/README.md",
+            "mode": "100644",
+            "bytes": 2876,
+            "sha256": "aa1fe9db2ba543b0602a653802a347396b45e0c2e553646cfb9fb7938d84119d",
+            "git_blob_sha1": "c93616d69913b400c94aeb305f14bf813d3bf0ea"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/archive-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/archive-manifest.json",
+            "mode": "100644",
+            "bytes": 24602,
+            "sha256": "15d97f6ba331e4d5a9a1a6388009c484eaf5cb18998fcaca79e71f514ca4b4ce",
+            "git_blob_sha1": "744d455ea72fa9bb8575bfb2ae966fd098dd5e0e"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/DEFINITIONS.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/DEFINITIONS.md",
+            "mode": "100644",
+            "bytes": 4442,
+            "sha256": "a91108db098bb04121893def8519862399b7daf65a5c3466ace118fc531de638",
+            "git_blob_sha1": "95436e85b5876c5cd69f4267cdda731bc31b8274"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/NEXT-VALIDATION-PLAN.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/NEXT-VALIDATION-PLAN.md",
+            "mode": "100644",
+            "bytes": 7388,
+            "sha256": "6e3589597dba76853e32db620a48eb68e3aca8a05d3f9f68b05622f090e63531",
+            "git_blob_sha1": "d567d52fa6c6c0eb755df9ed9f0c15b780fb54f4"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/README.md",
+            "mode": "100644",
+            "bytes": 6980,
+            "sha256": "233616d6b297c3c3af9a5069aa22f11dcd30a0f78a9daecf0c128c0390871fc7",
+            "git_blob_sha1": "f01cbd28dee1b4b2654374e77db2a4245a10feb4"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/analysis-plan.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/analysis-plan.json",
+            "mode": "100644",
+            "bytes": 4626,
+            "sha256": "0d36ca92c05b7e369ef8f3da8a7c1f729616e1646c4d3015ef6123a96b90a9c3",
+            "git_blob_sha1": "b4323d7e530d235dd86c90c530d1b13282ee96bc"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/build-1/generated/kws_parameter_limits.h",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/build-1/generated/kws_parameter_limits.h",
+            "mode": "100644",
+            "bytes": 9560,
+            "sha256": "bd81e6d357487a400b759d49e97ef1aca88ee9e38f83d13c7d8bd075941a32cb",
+            "git_blob_sha1": "68868cc738a4a59ee9d4b76a810256c63e09751c"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/controlled_replay.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/controlled_replay.py",
+            "mode": "100644",
+            "bytes": 18455,
+            "sha256": "913d7f2f71735be210602c14788cb20adf2535634aaee3373f46d7b626519cc7",
+            "git_blob_sha1": "900c99f395d27c03ca9a326ca368841e2fcb6aad"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/execution-claim.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/execution-claim.json",
+            "mode": "100644",
+            "bytes": 340,
+            "sha256": "9c0e434a36b15aad767a9d40345c3c72eed2513549a1ebc447531a153e10deb0",
+            "git_blob_sha1": "8c421b4faf2d0e8cc8f7544f9b337d0ea39da011"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/execution-complete.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/execution-complete.json",
+            "mode": "100644",
+            "bytes": 322,
+            "sha256": "4849632ce2792552f7eab5ec3b03076280a169db2a41842c09f4422f8650f5e9",
+            "git_blob_sha1": "d45281aed4d3306df26242bb6c8e77523df7a55e"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/native-output.jsonl",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/native-output.jsonl",
+            "mode": "100644",
+            "bytes": 372400,
+            "sha256": "6f3a3a1aa96307a94d6f4457bdabfe58c806895838f93470c5605d2d93ff7e01",
+            "git_blob_sha1": "4c5ca4c2a02d0848674b5f10d1c946ec9c2ab082"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/native-stderr.txt",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/native-stderr.txt",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/preexecution-freeze.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/preexecution-freeze.json",
+            "mode": "100644",
+            "bytes": 2582,
+            "sha256": "c2502e7d4f2c39b126d6918822bec184a69e8dbf3b65f822fadafbb75f7e1781",
+            "git_blob_sha1": "a3b0a58ab464e205a88577787d4edd833f540d9f"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/refractory_mirror.h",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/refractory_mirror.h",
+            "mode": "100644",
+            "bytes": 787,
+            "sha256": "140607a3f4daa1ba77a7f0ce695531125a671f0f75c6f51592b01e7500c9e3d8",
+            "git_blob_sha1": "dda2d2a6d14b874326e26e21e98328c67012aa46"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/replay_harness.c",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/replay_harness.c",
+            "mode": "100644",
+            "bytes": 7850,
+            "sha256": "31d5506ccf089d44a3b95bebddcfc04fecd9c0651f5984f5e8c06914f60d47e4",
+            "git_blob_sha1": "4e16cfe06367710adc17b4080a715cb3d9e37214"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/report.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/report.json",
+            "mode": "100644",
+            "bytes": 10098,
+            "sha256": "485300ae598867e8353c4834e8925abee9b773f23fd0b397e5b1e2db9011c4bd",
+            "git_blob_sha1": "2b258b6138353d1a82f0ff20ca361ba635638ddd"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/source-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/source-manifest.json",
+            "mode": "100644",
+            "bytes": 2968,
+            "sha256": "45ce555b5984fc6e04d215f85b672b621acd810914c580084376783d7ca72ca9",
+            "git_blob_sha1": "2b5a3b5c946a1f15d7fecc5d0322fb4542dde5db"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/verify_delivered_evidence.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-decoder-replay-20261016/verify_delivered_evidence.py",
+            "mode": "100644",
+            "bytes": 6986,
+            "sha256": "f972ff77ebcadfd82c248a7b5a643dbad68b54d5de08232e319a6fe3c77e92f7",
+            "git_blob_sha1": "d9730db0002d3d5af5930d88241a36f0bd760a66"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/DEFINITIONS.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/DEFINITIONS.md",
+            "mode": "100644",
+            "bytes": 4425,
+            "sha256": "b92b4e93d4474ed2bacb7be043b0a7e73f655c90a49218bbd6f8a1cf47e2fa99",
+            "git_blob_sha1": "065c51d37c5b854d31cb2df50478ef34a4503a41"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/NEXT-REPLAY-FEASIBILITY.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/NEXT-REPLAY-FEASIBILITY.md",
+            "mode": "100644",
+            "bytes": 7454,
+            "sha256": "1ea9a27d59a1e9789c88ebc4068c0c0a3dad9be531ad5cf2b6878fa57589714f",
+            "git_blob_sha1": "7c4ffd41ba3e53eb8df0d6a51445115566b37f27"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/README.md",
+            "mode": "100644",
+            "bytes": 7770,
+            "sha256": "5d0f2e5bf5ac01435afb276cf834b4c95584d56cc3b01812f5e5e67459beef23",
+            "git_blob_sha1": "140d272b996ca7b867e41062eeede512aa138598"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/analysis-plan.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/analysis-plan.json",
+            "mode": "100644",
+            "bytes": 2713,
+            "sha256": "cc947af40d436b1969fb78ae6c2c1c9f5953b4405f57b39949fb52a52ad273e8",
+            "git_blob_sha1": "24909773dfa28dd7a5fd011080948e4065c4aa5d"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/analyze.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/analyze.py",
+            "mode": "100644",
+            "bytes": 15827,
+            "sha256": "582192a2d3392eff941c5d28cad6f210bd1fe89e0f36ec84912816f9d3d1707c",
+            "git_blob_sha1": "5bd5221c6a21cec7ad48306d14692797e162aa16"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/feasibility-source-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/feasibility-source-manifest.json",
+            "mode": "100644",
+            "bytes": 1756,
+            "sha256": "094a8bfce4e31434cbaef97d0d481cc242d8f6b1bc342741d411b297a68feb36",
+            "git_blob_sha1": "48f2495b79fc1543e6591ce9a90336d778bbea95"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/report.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/report.json",
+            "mode": "100644",
+            "bytes": 801320,
+            "sha256": "0f24ac1214d1f1a564bc1b6dfc2d238bcda8b7fb7850f654111a437fd15bc147",
+            "git_blob_sha1": "5b46fe269ce425fe554969684221a1c1d09736df"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/source-addendum.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/source-addendum.json",
+            "mode": "100644",
+            "bytes": 1387,
+            "sha256": "15a81ea405ebfeacbb238148c3f53da18944ac78cc4bc15064d6bdc24319b290",
+            "git_blob_sha1": "aeb5b3dfea2e028e792debb31f7282fcd6b1fc5b"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/source-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/source-manifest.json",
+            "mode": "100644",
+            "bytes": 3313,
+            "sha256": "09ceca0bfff68dc56746bbd0a1f1d25dbccc7d3bc18baa5787b79c8818acfb5e",
+            "git_blob_sha1": "2031e774db90b46685e3f012463c98ada688aa3d"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/verify_source_addendum.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/saved-diagnostics-20261016/lr-stability-trigger-audit-20261016/verify_source_addendum.py",
+            "mode": "100644",
+            "bytes": 2544,
+            "sha256": "d6f8e6f4996453956f9a23d3c6626635b4da58af73479318a393219428e87f1f",
+            "git_blob_sha1": "09dbbcc620e529310faf414dff1a4f0547d871dd"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/source-manifest.json",
+          "before": {
+            "path": "research/kws-lr-stability-v1/source-manifest.json",
+            "mode": "100644",
+            "bytes": 1448,
+            "sha256": "e79e1e06263021895c13dfd10026f16283247119dbec2a7570904eead51d6bea",
+            "git_blob_sha1": "5583015ac2812513aa038927c315002110fbcf9c"
+          },
+          "after": {
+            "path": "research/kws-lr-stability-v1/source-manifest.json",
+            "mode": "100644",
+            "bytes": 1675,
+            "sha256": "c27285452219581789bab4d4aa805f358c7122e7f734966b8e23730480470953",
+            "git_blob_sha1": "c1ced29d373fbe17d2b354fda7570a6531d2cd8d"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/test_contract.py",
+          "before": {
+            "path": "research/kws-lr-stability-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 14439,
+            "sha256": "488d27a0ebb91830964165d79567a932fc4673cf6cb0369ccae3127b77b8c32b",
+            "git_blob_sha1": "09df9568d855f1bf36a145c982136fd39ffcd7bd"
+          },
+          "after": {
+            "path": "research/kws-lr-stability-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 19568,
+            "sha256": "8e3854d39c738b11199940a272bc432330f16f9c0d1593123a4b9bc727aa7dfd",
+            "git_blob_sha1": "4ae3ae3a45195e6a1b8d64165a4c910d2687e868"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/verify_saved_diagnostics.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/verify_saved_diagnostics.py",
+            "mode": "100644",
+            "bytes": 11297,
+            "sha256": "3ccd853a6def2acda36242207b9fb1a9718adb170e4e36df14dd756f2f22bd48",
+            "git_blob_sha1": "68ec5de52d9bc6ce492c42b46a439c2afcdf66bc"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

@@ -1,0 +1,51 @@
+{
+  "repository": "jiying2007/kws-pipeline",
+  "commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+  "files": {
+    "src/decoder.c": {
+      "git_blob_sha1": "96464ce66976003d13257b6131286546a7b9fe5f",
+      "sha256": "8eb2631073482414916c36afeb6fc0578ca137b9f9ab995dd9d579f9c32d8f2a",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/decoder.c"
+    },
+    "src/decoder.h": {
+      "git_blob_sha1": "49dc4703a32e089ef488d7389e49e11cbd6b840b",
+      "sha256": "3357a957cd2b07108bdb7fa7657b8c807db347950eeeda94f490a0505604c76b",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/decoder.h"
+    },
+    "include/kws_pipeline/kws.h": {
+      "git_blob_sha1": "28b1f8a0a3d93855e1835288b2cc56f63e1e2a04",
+      "sha256": "3405855e97cde28cf2842bb9c607e931347395790fe3ed268617e662af676496",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/include/kws_pipeline/kws.h"
+    },
+    "configs/parameter-contract.json": {
+      "git_blob_sha1": "bcb53fa1ca1a8240acd9d751f137a955f4531835",
+      "sha256": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/configs/parameter-contract.json"
+    },
+    "configs/shipping.xiaowo.json": {
+      "git_blob_sha1": "55bb340cdcbb55a1467ae6955ee38f8684b5facf",
+      "sha256": "4f39810a362096f2345c8e2e3326c3899e0d30b0b5e0632a6f2622a1364d5b21",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/configs/shipping.xiaowo.json"
+    },
+    "tests/test_decoder.c": {
+      "git_blob_sha1": "ef1b88d3de6728616cbe2c697e1c5e20cb29788c",
+      "sha256": "6fb5947c527933adc9b92ac80629392f26b454bdcc6e7c7157e2a31264f3561c",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tests/test_decoder.c"
+    },
+    "src/kws.c": {
+      "git_blob_sha1": "7227def7216014d76737c99ff568e9bba12922b7",
+      "sha256": "cb7fbffd0ff8617b78ad4d7afd5557c1c13fec06250acfdc10713c463d54f171",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/kws.c"
+    },
+    "keywords/tokens.example.txt": {
+      "git_blob_sha1": "90ae2b7e38d2c4f3923df577e65596458b775616",
+      "sha256": "af113e57eb6375b3c364b3845c6698ea460e29f718c8303657777183d6eda8c7",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/keywords/tokens.example.txt"
+    },
+    "tools/gen_parameter_limits.py": {
+      "git_blob_sha1": "3b9e31b5cc9fa14d602e32e2f25591f27f03a689",
+      "sha256": "a7fc02bcd26962f0c1a91b221651f7329465ea760076b775577d5918e02fbcb8",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tools/gen_parameter_limits.py"
+    }
+  }
+}

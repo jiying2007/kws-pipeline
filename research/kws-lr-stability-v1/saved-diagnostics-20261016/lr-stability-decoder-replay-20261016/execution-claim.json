@@ -1,0 +1,9 @@
+{
+  "schema": "controlled-native-replay-exclusive-claim-v1",
+  "started_utc": "2026-10-16T09:11:32.729657+00:00",
+  "preexecution_freeze_sha256": "c2502e7d4f2c39b126d6918822bec184a69e8dbf3b65f822fadafbb75f7e1781",
+  "native_saved_data_passes_reserved": 1,
+  "frames_reserved": 1276,
+  "no_retry": true,
+  "new_model_forwards_reserved": 0
+}

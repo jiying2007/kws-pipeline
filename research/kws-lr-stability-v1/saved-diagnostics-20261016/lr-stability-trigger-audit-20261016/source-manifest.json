@@ -1,0 +1,56 @@
+{
+  "repository": "jiying2007/kws-pipeline",
+  "commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+  "files": {
+    "src/decoder.c": {
+      "git_blob_sha1": "96464ce66976003d13257b6131286546a7b9fe5f",
+      "sha256": "8eb2631073482414916c36afeb6fc0578ca137b9f9ab995dd9d579f9c32d8f2a",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/decoder.c"
+    },
+    "src/decoder.h": {
+      "git_blob_sha1": "49dc4703a32e089ef488d7389e49e11cbd6b840b",
+      "sha256": "3357a957cd2b07108bdb7fa7657b8c807db347950eeeda94f490a0505604c76b",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/decoder.h"
+    },
+    "src/kws.c": {
+      "git_blob_sha1": "7227def7216014d76737c99ff568e9bba12922b7",
+      "sha256": "cb7fbffd0ff8617b78ad4d7afd5557c1c13fec06250acfdc10713c463d54f171",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/kws.c"
+    },
+    "include/kws_pipeline/kws.h": {
+      "git_blob_sha1": "28b1f8a0a3d93855e1835288b2cc56f63e1e2a04",
+      "sha256": "3405855e97cde28cf2842bb9c607e931347395790fe3ed268617e662af676496",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/include/kws_pipeline/kws.h"
+    },
+    "configs/shipping.xiaowo.json": {
+      "git_blob_sha1": "55bb340cdcbb55a1467ae6955ee38f8684b5facf",
+      "sha256": "4f39810a362096f2345c8e2e3326c3899e0d30b0b5e0632a6f2622a1364d5b21",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/configs/shipping.xiaowo.json"
+    },
+    "keywords/zh_cn_example.tsv": {
+      "git_blob_sha1": "7b62097776dda9296d9cadb7d2aa158a68b404fe",
+      "sha256": "1d17ed101c950bbc55327dd56c7e0a03faa6ab1a6ef36cf73ede55d7d9b88db5",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/keywords/zh_cn_example.tsv"
+    },
+    "configs/parameter-contract.json": {
+      "git_blob_sha1": "bcb53fa1ca1a8240acd9d751f137a955f4531835",
+      "sha256": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/configs/parameter-contract.json"
+    },
+    "tests/test_decoder.c": {
+      "git_blob_sha1": "ef1b88d3de6728616cbe2c697e1c5e20cb29788c",
+      "sha256": "6fb5947c527933adc9b92ac80629392f26b454bdcc6e7c7157e2a31264f3561c",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tests/test_decoder.c"
+    },
+    "tests/test_decoder_policy_replay.py": {
+      "git_blob_sha1": "5c26237984bb72fe376763c57fd7b9717c018f06",
+      "sha256": "190e422c115c653d28387984e68ed5eef10f7a4aaf41a43bdc240fc03091cd1f",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tests/test_decoder_policy_replay.py"
+    },
+    "tests/test_ctc_vad_alignment.py": {
+      "git_blob_sha1": "13c2a923ae794c6da3d1db8dcca567de2f705f67",
+      "sha256": "27236b1b2f6664fc2181d220e89958c7d50ad0876310d10a29e7c960945ab17b",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tests/test_ctc_vad_alignment.py"
+    }
+  }
+}

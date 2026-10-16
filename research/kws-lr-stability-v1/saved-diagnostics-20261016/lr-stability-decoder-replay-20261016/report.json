@@ -1,0 +1,324 @@
+{
+  "schema": "controlled-native-decoder-replay-result-v1",
+  "status": "COMPLETED_SYNTHETIC_GATE_UNCALIBRATED_TRAINING_ONLY",
+  "plan_sha256": "0d36ca92c05b7e369ef8f3da8a7c1f729616e1646c4d3015ef6123a96b90a9c3",
+  "preexecution_freeze_sha256": "c2502e7d4f2c39b126d6918822bec184a69e8dbf3b65f822fadafbb75f7e1781",
+  "native_output_sha256": "6f3a3a1aa96307a94d6f4457bdabfe58c806895838f93470c5605d2d93ff7e01",
+  "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+  "sample_count": 12,
+  "frame_count": 1276,
+  "saved_data_native_passes": 1,
+  "speech_gate": "synthetic-constant-one",
+  "threshold": 0.55,
+  "threshold_calibrated_for_research_model": false,
+  "production_engine_executed": false,
+  "suppression_mirror_refractory_ms": 1200,
+  "new_model_forwards": 0,
+  "new_optimizer_updates": 0,
+  "new_TTS_ASR_calls": 0,
+  "audio_or_weight_reads": 0,
+  "LP_transport_bitwise_verified": true,
+  "suppression_recurrence_independently_verified": true,
+  "totals": {
+    "native_decoder_hits": 12,
+    "mirror_accepted": 12,
+    "mirror_suppressed": 0
+  },
+  "per_class": {
+    "KW1": {
+      "sample_count": 4,
+      "native_decoder_hits": 4,
+      "mirror_accepted": 4,
+      "mirror_suppressed": 0,
+      "samples_with_intended_native_hit": 4,
+      "samples_with_intended_mirror_output": 4,
+      "samples_with_multiple_mirror_outputs": 0,
+      "other_full_keyword_native_hits": 0
+    },
+    "KW2": {
+      "sample_count": 8,
+      "native_decoder_hits": 8,
+      "mirror_accepted": 8,
+      "mirror_suppressed": 0,
+      "samples_with_intended_native_hit": 8,
+      "samples_with_intended_mirror_output": 8,
+      "samples_with_multiple_mirror_outputs": 0,
+      "other_full_keyword_native_hits": 0
+    }
+  },
+  "samples": [
+    {
+      "record_id": "kw1-preset-supplement-20261014-v1:kw1s-05",
+      "target_class": "KW1",
+      "input_frames": 75,
+      "LP_float32_bytes_sha256": "a59df21987a125d4033c631f34e4630d5f037611df2785ec920e9350407b4b80",
+      "counts": {
+        "native_decoder_hits": 1,
+        "mirror_accepted": 1,
+        "mirror_suppressed": 0
+      },
+      "events": [
+        {
+          "frame": 10,
+          "end_sample": 3600,
+          "nominal_clip_coordinate_ms": 225.0,
+          "keyword_id": 1,
+          "confidence": 0.724726558,
+          "intended_keyword": true,
+          "mirror_outcome": "accepted"
+        }
+      ]
+    },
+    {
+      "record_id": "kw1-preset-supplement-20261014-v1:kw1s-06",
+      "target_class": "KW1",
+      "input_frames": 83,
+      "LP_float32_bytes_sha256": "e65373578b72cd0431448b08be3840d3089891ccbef7be173f6161f66bc8bc3e",
+      "counts": {
+        "native_decoder_hits": 1,
+        "mirror_accepted": 1,
+        "mirror_suppressed": 0
+      },
+      "events": [
+        {
+          "frame": 11,
+          "end_sample": 3920,
+          "nominal_clip_coordinate_ms": 245.0,
+          "keyword_id": 1,
+          "confidence": 0.700420499,
+          "intended_keyword": true,
+          "mirror_outcome": "accepted"
+        }
+      ]
+    },
+    {
+      "record_id": "kw1-preset-supplement-20261014-v1:kw1s-07",
+      "target_class": "KW1",
+      "input_frames": 83,
+      "LP_float32_bytes_sha256": "cc742d1c33cfdd62ee331deb282d782b48dd8c3ca37d150d442cf024f091dea2",
+      "counts": {
+        "native_decoder_hits": 1,
+        "mirror_accepted": 1,
+        "mirror_suppressed": 0
+      },
+      "events": [
+        {
+          "frame": 10,
+          "end_sample": 3600,
+          "nominal_clip_coordinate_ms": 225.0,
+          "keyword_id": 1,
+          "confidence": 0.668741822,
+          "intended_keyword": true,
+          "mirror_outcome": "accepted"
+        }
+      ]
+    },
+    {
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+      "target_class": "KW1",
+      "input_frames": 71,
+      "LP_float32_bytes_sha256": "3edb841ef83be51001226b3211359a6b0038a6bc6f0f14de4d426b15e4c8ddaf",
+      "counts": {
+        "native_decoder_hits": 1,
+        "mirror_accepted": 1,
+        "mirror_suppressed": 0
+      },
+      "events": [
+        {
+          "frame": 29,
+          "end_sample": 9680,
+          "nominal_clip_coordinate_ms": 605.0,
+          "keyword_id": 1,
+          "confidence": 0.719014406,
+          "intended_keyword": true,
+          "mirror_outcome": "accepted"
+        }
+      ]
+    },
+    {
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+      "target_class": "KW2",
+      "input_frames": 83,
+      "LP_float32_bytes_sha256": "9b1a17da0c30d96d98e7d6b6a372b1d8dd5002c065c28bbb6800e0bdd70ba2d7",
+      "counts": {
+        "native_decoder_hits": 1,
+        "mirror_accepted": 1,
+        "mirror_suppressed": 0
+      },
+      "events": [
+        {
+          "frame": 23,
+          "end_sample": 7760,
+          "nominal_clip_coordinate_ms": 485.0,
+          "keyword_id": 2,
+          "confidence": 0.550574958,
+          "intended_keyword": true,
+          "mirror_outcome": "accepted"
+        }
+      ]
+    },
+    {
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-10",
+      "target_class": "KW2",
+      "input_frames": 191,
+      "LP_float32_bytes_sha256": "6cf91bfd3c56c3447be4d80424e0efcae61e61bd71a0bc758db551c2bddb20aa",
+      "counts": {
+        "native_decoder_hits": 1,
+        "mirror_accepted": 1,
+        "mirror_suppressed": 0
+      },
+      "events": [
+        {
+          "frame": 64,
+          "end_sample": 20880,
+          "nominal_clip_coordinate_ms": 1305.0,
+          "keyword_id": 2,
+          "confidence": 0.566899061,
+          "intended_keyword": true,
+          "mirror_outcome": "accepted"
+        }
+      ]
+    },
+    {
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-11",
+      "target_class": "KW2",
+      "input_frames": 255,
+      "LP_float32_bytes_sha256": "f995876a699129ef8fa3bf14f2d41cd5e77cb62897a3f40edca22598fa850a9e",
+      "counts": {
+        "native_decoder_hits": 1,
+        "mirror_accepted": 1,
+        "mirror_suppressed": 0
+      },
+      "events": [
+        {
+          "frame": 96,
+          "end_sample": 31120,
+          "nominal_clip_coordinate_ms": 1945.0,
+          "keyword_id": 2,
+          "confidence": 0.582096457,
+          "intended_keyword": true,
+          "mirror_outcome": "accepted"
+        }
+      ]
+    },
+    {
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-14",
+      "target_class": "KW2",
+      "input_frames": 111,
+      "LP_float32_bytes_sha256": "d82adf776306e0abf099f9c4e82e10e4eae401c0bae2ccb6f538c5dcb183246d",
+      "counts": {
+        "native_decoder_hits": 1,
+        "mirror_accepted": 1,
+        "mirror_suppressed": 0
+      },
+      "events": [
+        {
+          "frame": 33,
+          "end_sample": 10960,
+          "nominal_clip_coordinate_ms": 685.0,
+          "keyword_id": 2,
+          "confidence": 0.577875495,
+          "intended_keyword": true,
+          "mirror_outcome": "accepted"
+        }
+      ]
+    },
+    {
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-15",
+      "target_class": "KW2",
+      "input_frames": 95,
+      "LP_float32_bytes_sha256": "0ef96e062083594a5ee48071f6e4163dd54db2d65609c8d5482498af8146e2d8",
+      "counts": {
+        "native_decoder_hits": 1,
+        "mirror_accepted": 1,
+        "mirror_suppressed": 0
+      },
+      "events": [
+        {
+          "frame": 37,
+          "end_sample": 12240,
+          "nominal_clip_coordinate_ms": 765.0,
+          "keyword_id": 2,
+          "confidence": 0.59507376,
+          "intended_keyword": true,
+          "mirror_outcome": "accepted"
+        }
+      ]
+    },
+    {
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen17-06",
+      "target_class": "KW2",
+      "input_frames": 83,
+      "LP_float32_bytes_sha256": "ae5c35d73d97213b3a89c7a80a6e9b6083755915b38c96ead2c40549509c3138",
+      "counts": {
+        "native_decoder_hits": 1,
+        "mirror_accepted": 1,
+        "mirror_suppressed": 0
+      },
+      "events": [
+        {
+          "frame": 18,
+          "end_sample": 6160,
+          "nominal_clip_coordinate_ms": 385.0,
+          "keyword_id": 2,
+          "confidence": 0.588204861,
+          "intended_keyword": true,
+          "mirror_outcome": "accepted"
+        }
+      ]
+    },
+    {
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen17-14",
+      "target_class": "KW2",
+      "input_frames": 83,
+      "LP_float32_bytes_sha256": "ee0e4d4758184213c9c497b09f2942e4c01da98ecde9770dc192dc451de25ee9",
+      "counts": {
+        "native_decoder_hits": 1,
+        "mirror_accepted": 1,
+        "mirror_suppressed": 0
+      },
+      "events": [
+        {
+          "frame": 12,
+          "end_sample": 4240,
+          "nominal_clip_coordinate_ms": 265.0,
+          "keyword_id": 2,
+          "confidence": 0.570233583,
+          "intended_keyword": true,
+          "mirror_outcome": "accepted"
+        }
+      ]
+    },
+    {
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen17-15",
+      "target_class": "KW2",
+      "input_frames": 63,
+      "LP_float32_bytes_sha256": "e4bb7d589a9dd34fc202eb3161b631614b5fa8229190d2346720ad6475ee31d1",
+      "counts": {
+        "native_decoder_hits": 1,
+        "mirror_accepted": 1,
+        "mirror_suppressed": 0
+      },
+      "events": [
+        {
+          "frame": 13,
+          "end_sample": 4560,
+          "nominal_clip_coordinate_ms": 285.0,
+          "keyword_id": 2,
+          "confidence": 0.575049222,
+          "intended_keyword": true,
+          "mirror_outcome": "accepted"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Exposed machine-labelled training positives only; no independent model evaluation.",
+    "Constant-one speech gate is synthetic and not a performance upper bound.",
+    "Fixed example threshold is uncalibrated for this research model.",
+    "Native decoder hits and suppression-mirror outputs are separate quantities.",
+    "Nominal clip coordinates are not human word-end latency or device time.",
+    "No real false-activation, duplicate-wake, recall, FA/h or production claims.",
+    "Original raw logits and matched model artifact are unavailable; no bitexact original-logit claim."
+  ]
+}
