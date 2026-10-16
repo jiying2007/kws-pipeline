@@ -1,3 +1,11 @@
+# Grouped A/B diagnostic (consumed; execution disabled)
+
+The unique 1200-update/1218-forward campaign completed: evidence PASS; scientific validation DESCRIPTIVE_ONLY. Both fixed step-600 training endpoints complete 1/12 targets (KW1 1/4; KW2 0/8), with blank prefixes passing. Exposed Vivian probe: A 0/4, B 1/4. No checkpoint selection, generalization or production claim. Budget fully consumed; no retry or restart. See [closure](closure.json) and [original evidence](result-20261016/README.md). Current plan changes only execution_enabled to false.
+
+## Historical reviewed source and preregistration
+
+The following text records the original enabled source before execution; its not-yet-executed and enabled statements do not grant current execution permission.
+
 # Fixed grouped-balance diagnostic v1
 
 This independently reviewed source package is **enabled for one new 1200-update campaign, not yet executed**. Integration changes only execution_enabled from false to true in the plan; the disabled review plan SHA-256 is 93504d23a6be34c4e0927dcab478cca0fa389bdb784b1aa543882ead31361661. Only the parent executor may launch once after verifying the exact protected-main source identity and a separately frozen single-run launcher. No model, optimizer, ASR or TTS was run to prepare this package. Synthetic tests never import Torch.

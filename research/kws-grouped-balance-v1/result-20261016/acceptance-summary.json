@@ -1,0 +1,218 @@
+{
+  "evidence_validation": "PASS",
+  "execution_status": "completed",
+  "externally_supplied_source_commit": "942b3c1495fa4e4007ca01604ca8a65ed2cd5bcf",
+  "fixed_endpoint_B_minus_A": {
+    "probe": {
+      "macro_complete_rate": 0.16666666666666666,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.3333333333333333
+      }
+    },
+    "train": {
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      }
+    }
+  },
+  "human_gold": false,
+  "independent_evaluation": false,
+  "limitations": [
+    "All saved training and observation log probabilities have independent float64 CTC checks under pre-frozen tolerances; no model or optimizer reexecution.",
+    "A and B use the same source-defined initialization, seed, optimizer and update budget; receipts bind declarations, not independent hardware attestation.",
+    "Only fixed step 600 endpoints are compared; probe never selects a checkpoint or model.",
+    "The four Vivian probe items are exposed, machine-labelled, non-test diagnostic samples. Even 4/4 is not generalization, recall, FA/h, human-gold evaluation or production qualification.",
+    "Preset groups are conservative identity proxies, not proof of independent speakers."
+  ],
+  "model_forward_calls_reserved": 1218,
+  "model_forward_calls_returned": 1218,
+  "observations_verified": 18,
+  "optimizer_calls_reserved": 1200,
+  "payloads_verified": 1218,
+  "primary_endpoint_step": 600,
+  "production_qualified": false,
+  "reusable_weights_exported": false,
+  "schema": "grouped-balance-independent-verification-v1",
+  "scientific_validation": "DESCRIPTIVE_ONLY",
+  "shipping_qualified": false,
+  "statistics": {
+    "A-0000": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": false
+    },
+    "A-0050": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": false
+    },
+    "A-0100": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "A-0200": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "A-0300": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "A-0400": {
+      "fit_success": false,
+      "macro_complete_rate": 0.375,
+      "per_class_complete_rate": {
+        "KW1": 0.75,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "A-0500": {
+      "fit_success": false,
+      "macro_complete_rate": 0.5,
+      "per_class_complete_rate": {
+        "KW1": 1.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "A-0600": {
+      "fit_success": false,
+      "macro_complete_rate": 0.125,
+      "per_class_complete_rate": {
+        "KW1": 0.25,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "B-0000": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": false
+    },
+    "B-0050": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": false
+    },
+    "B-0100": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "B-0200": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "B-0300": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "B-0400": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "B-0500": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "B-0600": {
+      "fit_success": false,
+      "macro_complete_rate": 0.125,
+      "per_class_complete_rate": {
+        "KW1": 0.25,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "probe-A-0600": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true
+    },
+    "probe-B-0600": {
+      "fit_success": false,
+      "macro_complete_rate": 0.16666666666666666,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.3333333333333333
+      },
+      "prefix_success": true
+    }
+  },
+  "successful_step_receipts": 1200,
+  "tolerances": {
+    "ctc_nll": {
+      "absolute": 0.001,
+      "relative": 1e-05
+    },
+    "derived": {
+      "absolute": 1e-06,
+      "relative": 2e-06
+    },
+    "logsumexp_absolute": 2e-06
+  },
+  "training_admitted": false
+}

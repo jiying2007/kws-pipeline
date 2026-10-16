@@ -1,0 +1,20 @@
+--- restored/test_verify_result.py
++++ relocated/test_verify_result.py
+@@ -114,7 +114,7 @@
+ class SourceTests(unittest.TestCase):
+     def test_actual_cohort(self):
+         root=Path(__file__).absolute().parent.parent;module=root/'grouped-balance-overlay/research/kws-grouped-balance-v1'
+-        cohort=v.strict_json(v.safe_read(module/'cohort-prefix-freeze.json'));registry=v.strict_json(v.safe_read(root/'horizon-integrated/research/kws-candidate-registry-v1/candidates.json'));plan=v.strict_json(v.safe_read(module/'plan.json'))
++        cohort=v.strict_json(v.safe_read(module/'cohort-prefix-freeze.json'));registry=v.strict_json(v.safe_read(root/'grouped-balance-integrated/research/kws-candidate-registry-v1/candidates.json'));plan=v.strict_json(v.safe_read(module/'plan.json'))
+         train,probe=v.check_cohort(cohort,plan,registry);self.assertEqual((len(train),len(probe)),(12,4))
+         for key,value in [('preset_voice_id','qwen-preset:vivian'),('pcm_sha256','f'*64),('target_class','KW2'),('input_frames',2),('prefix_frames',2),('role','probe')]:
+             c=copy.deepcopy(cohort);c['samples'][0][key]=value
+@@ -151,7 +151,7 @@
+ class SourceClosureTests(unittest.TestCase):
+     def test_source_closure_and_plan_pin(self):
+         import shutil
+-        root=Path(__file__).absolute().parent.parent;source=root/'horizon-integrated';overlay=root/'grouped-balance-overlay';prefix='research/kws-grouped-balance-v1'
++        root=Path(__file__).absolute().parent.parent;source=root/'grouped-balance-integrated';overlay=root/'grouped-balance-overlay';prefix='research/kws-grouped-balance-v1'
+         plan=v.strict_json(v.safe_read(overlay/prefix/'plan.json'));plan['execution_enabled']=True
+         registry_prefix='research/kws-candidate-registry-v1';inputs=v.strict_json(v.safe_read(source/registry_prefix/'input-pins.json'))
+         with tempfile.TemporaryDirectory() as d:

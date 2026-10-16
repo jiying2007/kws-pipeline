@@ -1,0 +1,438 @@
+{
+  "schema": "grouped-balance-learning-curve-v1",
+  "timing": "post-step observations; intermediate checkpoints descriptive only",
+  "observations": {
+    "A-0000": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": false,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 0,
+      "total": 12,
+      "finite_loss": 1.5123649835586548,
+      "ctc_loss": 1.3512673377990723,
+      "anchor_loss": 0.1610976606607437
+    },
+    "A-0050": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": false,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 0,
+      "total": 12,
+      "finite_loss": 0.28021240234375,
+      "ctc_loss": 0.13241232931613922,
+      "anchor_loss": 0.14780007302761078
+    },
+    "A-0100": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 0,
+      "total": 12,
+      "finite_loss": 0.07618406414985657,
+      "ctc_loss": 0.057838015258312225,
+      "anchor_loss": 0.018346045166254044
+    },
+    "A-0200": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 0,
+      "total": 12,
+      "finite_loss": 0.05232813581824303,
+      "ctc_loss": 0.04150477424263954,
+      "anchor_loss": 0.010823361575603485
+    },
+    "A-0300": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 0,
+      "total": 12,
+      "finite_loss": 0.0338553823530674,
+      "ctc_loss": 0.028650520369410515,
+      "anchor_loss": 0.005204863380640745
+    },
+    "A-0400": {
+      "fit_success": false,
+      "macro_complete_rate": 0.375,
+      "per_class_complete_rate": {
+        "KW1": 0.75,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 3,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 3,
+      "total": 12,
+      "finite_loss": 0.02046968787908554,
+      "ctc_loss": 0.017939835786819458,
+      "anchor_loss": 0.0025298530235886574
+    },
+    "A-0500": {
+      "fit_success": false,
+      "macro_complete_rate": 0.5,
+      "per_class_complete_rate": {
+        "KW1": 1.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 4,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 4,
+      "total": 12,
+      "finite_loss": 0.011151648126542568,
+      "ctc_loss": 0.009963608346879482,
+      "anchor_loss": 0.0011880400124937296
+    },
+    "A-0600": {
+      "fit_success": false,
+      "macro_complete_rate": 0.125,
+      "per_class_complete_rate": {
+        "KW1": 0.25,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 1,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 1,
+      "total": 12,
+      "finite_loss": 0.12206942588090897,
+      "ctc_loss": 0.12100213766098022,
+      "anchor_loss": 0.001067291828803718
+    },
+    "B-0000": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": false,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 0,
+      "total": 12,
+      "finite_loss": 1.499464750289917,
+      "ctc_loss": 1.3318605422973633,
+      "anchor_loss": 0.1676042228937149
+    },
+    "B-0050": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": false,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 0,
+      "total": 12,
+      "finite_loss": 0.27904409170150757,
+      "ctc_loss": 0.1409161239862442,
+      "anchor_loss": 0.13812796771526337
+    },
+    "B-0100": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 0,
+      "total": 12,
+      "finite_loss": 0.08428952097892761,
+      "ctc_loss": 0.06465300917625427,
+      "anchor_loss": 0.01963651366531849
+    },
+    "B-0200": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 0,
+      "total": 12,
+      "finite_loss": 0.061453238129615784,
+      "ctc_loss": 0.047263119369745255,
+      "anchor_loss": 0.01419011875987053
+    },
+    "B-0300": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 0,
+      "total": 12,
+      "finite_loss": 0.044173263013362885,
+      "ctc_loss": 0.036207523196935654,
+      "anchor_loss": 0.007965738885104656
+    },
+    "B-0400": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 0,
+      "total": 12,
+      "finite_loss": 0.03530324995517731,
+      "ctc_loss": 0.029957139864563942,
+      "anchor_loss": 0.005346110090613365
+    },
+    "B-0500": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 0,
+      "total": 12,
+      "finite_loss": 0.02886543795466423,
+      "ctc_loss": 0.024568453431129456,
+      "anchor_loss": 0.0042969835922122
+    },
+    "B-0600": {
+      "fit_success": false,
+      "macro_complete_rate": 0.125,
+      "per_class_complete_rate": {
+        "KW1": 0.25,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 1,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 1,
+      "total": 12,
+      "finite_loss": 0.019959986209869385,
+      "ctc_loss": 0.017204681411385536,
+      "anchor_loss": 0.002755305264145136
+    },
+    "probe-A-0600": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 1
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 3
+        }
+      },
+      "complete": 0,
+      "total": 4,
+      "finite_loss": 0.09034252166748047,
+      "ctc_loss": 0.08930712193250656,
+      "anchor_loss": 0.0010353962425142527
+    },
+    "probe-B-0600": {
+      "fit_success": false,
+      "macro_complete_rate": 0.16666666666666666,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.3333333333333333
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 1
+        },
+        "KW2": {
+          "complete": 1,
+          "total": 3
+        }
+      },
+      "complete": 1,
+      "total": 4,
+      "finite_loss": 0.03567495942115784,
+      "ctc_loss": 0.03243321552872658,
+      "anchor_loss": 0.0032417455222457647
+    }
+  }
+}

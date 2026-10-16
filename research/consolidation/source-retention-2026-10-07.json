@@ -34243,6 +34243,1580 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-16",
+      "operation_id": "kws-grouped-balance-consumed-closure-20261016-v1",
+      "public_main_base_commit": "942b3c1495fa4e4007ca01604ca8a65ed2cd5bcf",
+      "public_main_base_tree": "60d8d4a4d28a80c576abeead37c4e8d64a510c07",
+      "workflow_source_changed": false,
+      "scope": "Close fully consumed 1200-update/1218-forward grouped A/B campaign. Preserve original public evidence; split raw ZIP losslessly. Evidence PASS, scientific DESCRIPTIVE_ONLY; no fit/generalization/production claim. Existing contract CI adds stdlib archive/receipt/token verification without workflow changes. No model, optimizer, ASR, TTS or budget reuse.",
+      "files": [
+        {
+          "path": "research/kws-grouped-balance-v1/README.md",
+          "before": {
+            "path": "research/kws-grouped-balance-v1/README.md",
+            "mode": "100644",
+            "bytes": 5804,
+            "sha256": "5238048c0fcbe440b3b66b27d72a41edac390dbf56b1c6c6e3489b3efe8db2d0",
+            "git_blob_sha1": "20bfb380cc676295043455e93a9276885266459c"
+          },
+          "after": {
+            "path": "research/kws-grouped-balance-v1/README.md",
+            "mode": "100644",
+            "bytes": 6570,
+            "sha256": "d7b99dd342d32ce4834849cd6342e1f4a5f3be1977ff059dd313198c0fbe5b4b",
+            "git_blob_sha1": "f7ba1d4cbdb4bcba485f4c031bb8f6c1d5394be2"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/closure.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/closure.json",
+            "mode": "100644",
+            "bytes": 1195,
+            "sha256": "f20cfc1db2eb002f970eb524886a99a040a9e0830915581b404c09289ded818f",
+            "git_blob_sha1": "2c8694049a04a6fc18604a942670dd5168e1b2fa"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/plan.json",
+          "before": {
+            "path": "research/kws-grouped-balance-v1/plan.json",
+            "mode": "100644",
+            "bytes": 4395,
+            "sha256": "38cc02c58eb25b6da7af0e5592e5738d22beffed05beffa643643cd9cb902242",
+            "git_blob_sha1": "8c04f88e63f6e1ebf5d4d32f1a7f1dc1a6093d25"
+          },
+          "after": {
+            "path": "research/kws-grouped-balance-v1/plan.json",
+            "mode": "100644",
+            "bytes": 4396,
+            "sha256": "93504d23a6be34c4e0927dcab478cca0fa389bdb784b1aa543882ead31361661",
+            "git_blob_sha1": "0937dc0393cf353e59968b008e7f84dc02ba03e5"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/README.md",
+            "mode": "100644",
+            "bytes": 1098,
+            "sha256": "34a64e816edfd8edcc93ba5a9d4ab63baad86f553d31a0173a74ac62a4404436",
+            "git_blob_sha1": "d2cfc3cff6bd9cdc49edf19ec1e33a095dd120ae"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/acceptance-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/acceptance-summary.json",
+            "mode": "100644",
+            "bytes": 5582,
+            "sha256": "1fb430cb1a0d22e2f30899b1563126f54e98b0f6604fa4e9e0c2ba19b5b5fa8b",
+            "git_blob_sha1": "8e710b5f794da7bca4b001c01ffb40089ba517e3"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/archive-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/archive-manifest.json",
+            "mode": "100644",
+            "bytes": 16212,
+            "sha256": "cb854f2e697313f1895e730b3a5586155d4a93b1d1e9b64d4c546e3ce8708997",
+            "git_blob_sha1": "b54600e942492fbeebd942aebb3ca8acbef0fbb2"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/enabled-plan.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/enabled-plan.json",
+            "mode": "100644",
+            "bytes": 4395,
+            "sha256": "38cc02c58eb25b6da7af0e5592e5738d22beffed05beffa643643cd9cb902242",
+            "git_blob_sha1": "8c04f88e63f6e1ebf5d4d32f1a7f1dc1a6093d25"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/executed-source-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/executed-source-manifest.json",
+            "mode": "100644",
+            "bytes": 938,
+            "sha256": "745d7cce4d2863a7956315cff7a5a9b33ab36d4fd0f424091b6bb88f9c984f75",
+            "git_blob_sha1": "5ebcd6976cf1a0bf092c23d5a3e42c8fcd1e2fb3"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/learning-curve.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/learning-curve.json",
+            "mode": "100644",
+            "bytes": 10018,
+            "sha256": "f49939d4a73da24746a6d2129c2e61ad168dd7ab1b455906e72c991584ff0e2b",
+            "git_blob_sha1": "866bf684d2304c85288c8f59cee0871c57da91ce"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/parts-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/parts-manifest.json",
+            "mode": "100644",
+            "bytes": 10919,
+            "sha256": "a5788c48d6c60113abf9809aeea65f0e67bfb342fdccc6c3ed926d6d010df00b",
+            "git_blob_sha1": "f32090b207869aa2419ff6da975cb55fb591044b"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/posthoc/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/posthoc/README.md",
+            "mode": "100644",
+            "bytes": 8874,
+            "sha256": "ff268f55f962d59a3b48a3659fb5e42692e6db8aac917667b39d0f77d72d523c",
+            "git_blob_sha1": "c36c1717342d8e150e89ed79fd54697f61c556a6"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/posthoc/analyze.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/posthoc/analyze.py",
+            "mode": "100644",
+            "bytes": 5974,
+            "sha256": "68bdaa782e01da65ead08652543f4cc5ad0ad8406ea3e4994c9006e970dc53e6",
+            "git_blob_sha1": "8de3b23e395a313fc25c41c53423dc4b3e68a9ee"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/posthoc/report.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/posthoc/report.json",
+            "mode": "100644",
+            "bytes": 281731,
+            "sha256": "af74129c109300e527be022172869644ddc1f06339cf101e86a02d1a2e84874d",
+            "git_blob_sha1": "5456547e0df43871581bc234436f4b1b692e685f"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/public-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/public-summary.json",
+            "mode": "100644",
+            "bytes": 5120,
+            "sha256": "a9ccb391634d22d420051b560fde127e4ff324869af4c7320a0039ba50d52328",
+            "git_blob_sha1": "50bacae301d76e4aa4a8bf51dc41ee7d192ec4d7"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part000",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part000",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "e7fee4ece7240bcd0a4e6b6214122a1d89f93483e8b295dfc6a8627745198243",
+            "git_blob_sha1": "fb89389e7af861ec1398db6c9b50ff803ab267c8"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part001",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part001",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "9aea6ed4902b041f0696c17222db30882df22737ecc8d4d0ef97ead096d06755",
+            "git_blob_sha1": "1d22c3cc809842217a3482bd05a6b0705508373a"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part002",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part002",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "19871d306a1b2d2489b0ced758147c80c33072c424d0f2497eccfaf557ea7380",
+            "git_blob_sha1": "c82c5dbd26a24afb3167987ca7561189eea57ddb"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part003",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part003",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "6b479b5cac88cbf75109318a0520546348420d47412ef55da58e84cb85f67a48",
+            "git_blob_sha1": "caabb0f05f247ded45a0407fadd62910b5a519b5"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part004",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part004",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "c3cf30799e44180678bca33969ccdee1cd7982177d5a845d8f56b40dd1925f1e",
+            "git_blob_sha1": "2395af2a1ade55f06f9a7df21eb36b7da868b8f1"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part005",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part005",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "3b65a433bc3993ea36ba59c96a4d300de2b3b7d2b721b6d436a4561830142056",
+            "git_blob_sha1": "e6ccba0c7438f2bfa8d0a23bac81f9e03f666ea0"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part006",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part006",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "3610b7b903b9cb19717dc0db8b1b96879d7a71fb80c97957ba03d89fa021a3d8",
+            "git_blob_sha1": "5f8b9038d88020bb5433282dcb9f5377d20850b4"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part007",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part007",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "8dd01a4cb9afa7a6f48fcb57f63f3b9bbab3c7043c8ebec6af8380d5f13d15ce",
+            "git_blob_sha1": "9d43a18b15e43290d955a61189ca990effeb8a51"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part008",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part008",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "5f0e774ea2580cfcfbf129dc856b9bed189e75b91440f559326d73de1ddf0cf2",
+            "git_blob_sha1": "c0901bb0e603944ee165234ad3cc08e927e44736"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part009",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part009",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "96fc0ed47b89b273a2769b221b6ade23225b1c2f6cefa6590cf8fb65bb4fec2b",
+            "git_blob_sha1": "e9d30928356096d0a3a1ec9a14875bd7029970f8"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part010",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part010",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "32e872ca06c50e78b94bdb36338889cad89fe5a13a2b10357268608a78151aa3",
+            "git_blob_sha1": "e28ca92a74b7f3e036fe11ce403181143a088707"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part011",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part011",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "6b7b4f44a60b4b4c354778c3c49baad3a9ae6f9336cc886784fc803ec7665fa7",
+            "git_blob_sha1": "59b62be390e1046c02c10d0beac6d8d016c973c2"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part012",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part012",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "3f8648c51060b300edbe33fcd425c063d6b393263d7312a75c1d169f9d72c71f",
+            "git_blob_sha1": "70f9dc2933d6cc44bfef232feb6f31221b0bf2b4"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part013",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part013",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "a9b0365de8b3517c87591a114d689b67e374e6645f1d7b1ff606a66359e2126e",
+            "git_blob_sha1": "133a1ed377246fa6c762075861c86d2bb0b37b04"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part014",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part014",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "1ba25f53453fe7e41ae621b6d72d465d011075332cb7722ad4694629b5b26a74",
+            "git_blob_sha1": "b1e3c518393d1f8584c7cb12a9786147de16f192"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part015",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part015",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "b0ed339f16cc9a93c047fab614bb44e8a3c3718411f5b828988b9ecfa22ac782",
+            "git_blob_sha1": "a6c2bf52b8aa2e178a757f0e3fce471cf6c42bd5"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part016",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part016",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "7a2f1c33372293fe2b92866168da557f591c7a478e5f9825ed75181dc775dabe",
+            "git_blob_sha1": "266148d1c2b29d6e1f9807342a2ef081b1f79d2c"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part017",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part017",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "4f0ac989675aa672cea516c5b71048fb1d5460b7006212c8132a5477df047d9b",
+            "git_blob_sha1": "366a5e0e2f39f1f920f5c61dc1b663dba6f96d0f"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part018",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part018",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "c02ff5e751dcbb2045b3199a4467a46753e131b54fac70cee5924686fb847d81",
+            "git_blob_sha1": "175bdb417ef315c31b97eee2b71022332623480a"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part019",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part019",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "6fd1d406c6a702f33e9f59fa2f40e45eef5fdca473e335a514864c068482473f",
+            "git_blob_sha1": "020e4dae06ebb5dd22a5332c5870c1c0f6c442b6"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part020",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part020",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "37fd4fad91576273f9b904b9b5cbdbb4dca524f54a85b1c5b0f9dacbc622a947",
+            "git_blob_sha1": "a8205370c67fbb6d4ef12787c5b3dfd19bd8644d"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part021",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part021",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "5a415b19741a5afde078589dc529de28ce871e7104088fada914ce20713bb542",
+            "git_blob_sha1": "32eb813b60c129188c9a6a307a1b33ddcffd11cd"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part022",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part022",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "dd805e74c38a6f6ab1e6b3234c0f1d795ae989c53a69c3cade1cadfc68105210",
+            "git_blob_sha1": "591b90c2b812c14fd44eb8600fca707bff5079c9"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part023",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part023",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "0cd8f869bb1d3a61ebb1a635dc8bb18c7a42633d4c26090b027e7592440deb4d",
+            "git_blob_sha1": "5ec358819af2fbf229957df2213f073405b57c4d"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part024",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part024",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "c18a62dcd2ad4c8c3c89a97713bc9c3e2655ad6aafaa6001ce03b9d06705f631",
+            "git_blob_sha1": "1943dbdbac03c7bb272067671c56bf963701a524"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part025",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part025",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "8db3cc0497193e1159bd460da69345aee2a03afe140f6c99615fa3baba97649e",
+            "git_blob_sha1": "eef14e60fba766f32d61224d6a0a1903f75a6986"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part026",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part026",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "d93871669e97045427a640a1cebc5998faaca54933d3f4bf3c8c4c169df2310b",
+            "git_blob_sha1": "d0ad8d1191754abecab25bf96d91a953e1c44eb4"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part027",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part027",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "c4b46bad42f91640cc6df34587467d3828c945775382324955b5b2508768ae2b",
+            "git_blob_sha1": "eb2260c9d342ed24c789486d44b14259a4d8be95"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part028",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part028",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "7cdae1c42be29dcb10af1093e69f6a9bb51047b18f073581a4417c2cd109e175",
+            "git_blob_sha1": "ccfd215159a0dcb04ce21c93bd4273824a63afee"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part029",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part029",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "60bf73144547752016c254c3270ae5f9c809e501c0e40c2f4bb9ace6a4a0a7f6",
+            "git_blob_sha1": "7b1974fdf7f594c2db829712f77920e2e73b60e8"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part030",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part030",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "0c2ecfc314f5c717915a4324182e74687d75dc4142a28fed15a3d0f824f2fbd5",
+            "git_blob_sha1": "0cfb2512bc45b4ed2a8f233ef059a8597d73c0fb"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part031",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part031",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "b1416a70b1ccd772b5c03316dbbf29aff231867148f57ed2a4ccdaf8b5c98e6b",
+            "git_blob_sha1": "f6c8c9013e7be21a6346e2406af55c442f8ed8d7"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part032",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part032",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "445f0acf652f9f034f2f8d96da2e2c43dcc4dbaf4402a8df74d336278de17233",
+            "git_blob_sha1": "cc337af1177983be39854fcd0fbd92624ba8ba4f"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part033",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part033",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "1fda04611599af7b073a2ed8e01c4709fef71b20b8e808c6d42326597308986c",
+            "git_blob_sha1": "c06057bf1e9cfb6041ed940122c397b131caf389"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part034",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part034",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "438b0a6a6415bb09d6a9c861f3504fa1be64ddc06c6d5fa8f90e03c7076f2e12",
+            "git_blob_sha1": "fe1087aa3eeb128cdd2b6f6d1c4b266d0ef65bbb"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part035",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part035",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "f812eef97ee97c85659ee864cc6d631eadaf047f704b4a9a10b1541ce0ce05c2",
+            "git_blob_sha1": "cd9f1b4fb16b33b4d2fbb1d583f1b289b1f85269"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part036",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part036",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "83855a1f66ded975ebed04b069fc621fa720193e8ac07efad62aca33419cc412",
+            "git_blob_sha1": "5bae890d5c5f44257794979339218b68e42cae0f"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part037",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part037",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "b92af43d78d703ea8eabb4fc1887d18bb93f7f1b4fcc2342696948f3d11925fd",
+            "git_blob_sha1": "343d1f2872f06b1377f3b6255b478e8f027bc64e"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part038",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part038",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "b5314666665a3228509ef00e00bf6a501318baa862d8d3b61396f5c1aecfe50c",
+            "git_blob_sha1": "1631868c8dc3828334d2d8777c2dd57c4de1a8fa"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part039",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part039",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "614073a5ae1f729a945e940eaa5af6d35231e2702e4904635c2ae6ec31dbd645",
+            "git_blob_sha1": "cd6b4639e99223ed3b804a2a856fe00d0a0fbfef"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part040",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part040",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "92f10deaca037066ca517d4bbb7da2efb78598ad2b6eefc97d9290be62d0d38e",
+            "git_blob_sha1": "ba9ca1c87b6e01a1399c6ac9ae5b4222ab01333e"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part041",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part041",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "459a3edbb2acd12c9795c8d39f597ff47279d2f5f00a1c5c4108d2a335c8c0bf",
+            "git_blob_sha1": "d21e3b9492ad3b4fa2012cb7f9762e790f3be3a3"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part042",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part042",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "4d76010a0c5dedca368d4fe12787289f02efec8f79f1196097fdfbb2318e54fd",
+            "git_blob_sha1": "271baa534592f526fc5ee896d57f6b9416a3aaa7"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part043",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part043",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "d5111332abe8e511a04dcf5700991fd12fedd32ca8bf68272a8e2273fc017ad9",
+            "git_blob_sha1": "29ca67c0de86718a0407bec3a6c8ae0c61563006"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part044",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part044",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "23801c9fd91eafac95d4747f55b3f030b62d93661ba0c8b43f1fa6065e2376bc",
+            "git_blob_sha1": "a296c295261ffb9c06d0db5230586dff4113917d"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part045",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part045",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "c0b24e5589f8c9381e0aa8e5046e25471c4cefebf7bccd32262d91260ec04ade",
+            "git_blob_sha1": "5084706f8f549165c9b5c6dc69551f00e4c0952d"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part046",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part046",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "381f15b2a6460d840f55d297c561331df99b191d537a4a11bdb8b78380ba5103",
+            "git_blob_sha1": "1c1b2e1e35fb55bb1d134476a40ab51fa6346c4b"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part047",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part047",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "63e33997381341a4c0c9ac8280677ec93b9aa50f5508ff0214d044fbf2b31aff",
+            "git_blob_sha1": "d23f18d1622c16c3a06c4d3170f3e4f9510d680f"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part048",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part048",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "27cf80bdef74e1f81ba2dea551f0600b34acebd3ddf565bd4e1b077aba779331",
+            "git_blob_sha1": "82d46bbabe6118120e965b59b12b3e497238134f"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part049",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part049",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "1935f21fa477452f4d502a8ba280131e31745aa36a4c56cd7ea57499b9d6213f",
+            "git_blob_sha1": "63e133787acd183df153ea26b3e158f60da189f6"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part050",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part050",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "78513caae6470721e85c7a5bfb6d790b25a3f7533ba370cac96380a0f0d7603d",
+            "git_blob_sha1": "220ae057dbc2bad27bf396a3b803ebe9b32e58cb"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part051",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part051",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "75f687be9160b29ac7c2b76c7ccea118f06cc2c3e8808aad51025062dac942c3",
+            "git_blob_sha1": "b24d47844646dcfc542d27dd9afbde5bf9203f7f"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part052",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part052",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "3e32343c396bd71176cce1c0a1eaa661367b62a71c7c1cab5fb5f11ab47aa64b",
+            "git_blob_sha1": "15022948e18c6e7c19535107156d3e8e24b1872e"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part053",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part053",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "c12fcf1e169f41497aa1a51cf2c1e900ef56ce650dfe9520740556d762c2f563",
+            "git_blob_sha1": "7f2a5fa353d24c26ff4d22aab8ec17d9628d39f4"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part054",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part054",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "1a74d92168c5438f2b384cb26a8aaa1c246c3ac7550083c0c4cdfe539b6e5331",
+            "git_blob_sha1": "9c1b9450aa96ba7f5ee343c48916509e46820766"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part055",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part055",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "f8b36f18b292a082e4e7c0f14f4aa54fa32d070ba24cb664b42158554e4b9f6e",
+            "git_blob_sha1": "d6bf91df6d73590bfd1b31b8d3073043f31399dd"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part056",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part056",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "0d13b0eb7109e96466e02744553a9d5a56829e3791bcdcdef6c51f9cbbaac89e",
+            "git_blob_sha1": "2c4814683c64c233051c72ccab850b24064c1458"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part057",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part057",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "78053699feaa9231e129fb91082d2cc5d5385f2745bf30365aaee598e0453b11",
+            "git_blob_sha1": "675667a9951650d934c61c2f55d0a2a1c91a1ebe"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part058",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part058",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "943c4ab4aa4a19642207ef6aff7451d74a3475181d1cde26adb23f7cfc7df724",
+            "git_blob_sha1": "6efd1f85213de04fbb38f735e86c0123d5db9881"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part059",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part059",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "832740ae03723947aeb99b5ff6f541752e80297dd70034e6d6738338242224fb",
+            "git_blob_sha1": "d241bc09041b71bd730ba7222b004fd85937e91c"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part060",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part060",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "e6f147f171114ade9f2f29da2665bd58a829e6c14d556355fe6da4e89a749356",
+            "git_blob_sha1": "19044ca8ffb5f5ed41852dededbae76b0b868ca5"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part061",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part061",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "919ffbb9d78b5f25062622eb2d1fd5ac8474f2215b804cb50cb33867cac5516a",
+            "git_blob_sha1": "99a9e9e9a1a404582bc7a9d8444d48e194e36c18"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part062",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part062",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "7dfeaad62eb0548fa52426b40da822e05a6e5ca91c4178ac3b3d7c852ff15bdd",
+            "git_blob_sha1": "71ab1b8401743c0ddcd4833946be7896d1a0c99f"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part063",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part063",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "efa3cf2e8018da4ed228c131c6f0656d9c21b71fb54e5ae9282f07e41c158e87",
+            "git_blob_sha1": "f9e56cb351be542846ea7a320dd03b09936d27d7"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part064",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part064",
+            "mode": "100644",
+            "bytes": 1048576,
+            "sha256": "2a5ebb6ad2ea738cbe3ef07806a74c058401a42c98fd8fd71f763025d61e354a",
+            "git_blob_sha1": "2578df937e0335509babe29abb86983755a086c1"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part065",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/raw-result.zip.part065",
+            "mode": "100644",
+            "bytes": 535058,
+            "sha256": "ac5765da2a7ef873b5b14ee9844ee94c056300f09437ada9d2ef9d7c6dc64c8f",
+            "git_blob_sha1": "94018e9dc9cdf99fcab20546ee5a074cf9bc8448"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/README.md",
+            "mode": "100644",
+            "bytes": 2531,
+            "sha256": "bbfaf2ba3555926197506b0db932c9ddb497a1e43dd84466cdb7803e8d583f33",
+            "git_blob_sha1": "e0c73e5de80fad5515db542c037728d8b1352211"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-campaign-ledger/research-budget/kws-grouped-balance-20261015-v1.claim.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-campaign-ledger/research-budget/kws-grouped-balance-20261015-v1.claim.json",
+            "mode": "100644",
+            "bytes": 423,
+            "sha256": "112011e111358a018335abfe7d2cc8809b7f2827288bd59db831011eb405dfd0",
+            "git_blob_sha1": "94169cf11dfca7511b2a856bc3a5c2e889b706c0"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-execution-evidence/launch-intent.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-execution-evidence/launch-intent.json",
+            "mode": "100644",
+            "bytes": 4219,
+            "sha256": "9746c465a6e96c09a0c2410c14f47223afb382436f884f62cb7fd60866321261",
+            "git_blob_sha1": "4d0de9017986ce67da5dd43685cb98b95b1f5603"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-execution-evidence/process-result.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-execution-evidence/process-result.json",
+            "mode": "100644",
+            "bytes": 758,
+            "sha256": "22b4630dde95f105a7371d5fba69d9e71b9d526c4e5cd293deb2995281231ee6",
+            "git_blob_sha1": "6c98bc9c67b641845a85b50d246521d80308d7b3"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-execution-evidence/process-start.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-execution-evidence/process-start.json",
+            "mode": "100644",
+            "bytes": 103,
+            "sha256": "a74084599123028ae02a21b31ea06e91195232b899c366b8b48ce5df41e3dd8e",
+            "git_blob_sha1": "e3f381e0406340cceb73ab922cb5641f9f09067d"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-execution-evidence/stderr.log",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-execution-evidence/stderr.log",
+            "mode": "100644",
+            "bytes": 876,
+            "sha256": "f429530f15beebf751b1cf75862ee92965e8ec6284c5445c655135e2c18de79e",
+            "git_blob_sha1": "cf08636e8b167b3fb15d336c1009ad6a5efa42b4"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-execution-evidence/stdout.log",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-execution-evidence/stdout.log",
+            "mode": "100644",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/consolidation/fit-history-recovery-2026-10-15.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/consolidation/fit-history-recovery-2026-10-15.json",
+            "mode": "100644",
+            "bytes": 2161,
+            "sha256": "6e0bf6141ddec49297ba00ed9a368fc66f323c06672d6906b5ab4fc482a041f7",
+            "git_blob_sha1": "d819b6c7017369f1cc90c85a2f126abd08279203"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kw1-preset-supplement-observation-v1/observation.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kw1-preset-supplement-observation-v1/observation.json",
+            "mode": "100644",
+            "bytes": 126850,
+            "sha256": "95c67c26d04bfdbba41df11540c084ab99ad736e0b8147383d93808be40a919e",
+            "git_blob_sha1": "4eede9e0dd8b466abc822bb9e02ff216a58a2f75"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kw1-preset-supplement-v1/blind_pcm.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kw1-preset-supplement-v1/blind_pcm.py",
+            "mode": "100644",
+            "bytes": 11345,
+            "sha256": "ab6164bb89c9b3b0e707375330b2e9c13b772a0fda1c252dfb2dda05f3539b64",
+            "git_blob_sha1": "fbd824ae52a37f6a21f7f88da946d0aa8c0c3417"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kw1-preset-supplement-v1/worker.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kw1-preset-supplement-v1/worker.py",
+            "mode": "100644",
+            "bytes": 36688,
+            "sha256": "979e1709e24ff21e805abfd481994d4073c3220f217f20d6782d1307a77097b3",
+            "git_blob_sha1": "a8b8f64d07add0bf6891f53f4b9743eade2c1066"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-candidate-registry-v1/build_registry.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-candidate-registry-v1/build_registry.py",
+            "mode": "100644",
+            "bytes": 16910,
+            "sha256": "9d37fb852cdd5048a4d5c88f9e21efe2b3c1e18f25244babb2d811675ea9fbae",
+            "git_blob_sha1": "cb397fbe366df7266a37dcb904873d69f96eba15"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-candidate-registry-v1/candidates.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-candidate-registry-v1/candidates.json",
+            "mode": "100644",
+            "bytes": 73379,
+            "sha256": "28033edbbc1e444eae27c33af2e060d1654c4b7a072e65401b055fc27fc3b1b0",
+            "git_blob_sha1": "39de70b07971fd3d8f04646dce3b7c3d9b78e449"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-candidate-registry-v1/input-pins.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-candidate-registry-v1/input-pins.json",
+            "mode": "100644",
+            "bytes": 948,
+            "sha256": "64c77a270c7f13d8252d10282191aaeb207f425c10fb89a2f01e390fa994e37c",
+            "git_blob_sha1": "6eb586384abb4cd56ae0c7e687d112c348f1db59"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/README.md",
+            "mode": "100644",
+            "bytes": 5804,
+            "sha256": "5238048c0fcbe440b3b66b27d72a41edac390dbf56b1c6c6e3489b3efe8db2d0",
+            "git_blob_sha1": "20bfb380cc676295043455e93a9276885266459c"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/cohort-prefix-freeze.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/cohort-prefix-freeze.json",
+            "mode": "100644",
+            "bytes": 53823,
+            "sha256": "fe23e633925573e2b02ac8530e066214879a11cbccc2e4ef5875aa2c38006e87",
+            "git_blob_sha1": "ebd41589f8a5143118d59f5359c6e4741b6b982d"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/contract.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/contract.py",
+            "mode": "100644",
+            "bytes": 10725,
+            "sha256": "6dca1cad9dba10f50e439f775b6d04d90f246544cbd5a634e30490589490bc74",
+            "git_blob_sha1": "880cdb3d6bb2c959b212d9dbb8f631dd6972dbeb"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/numeric_preflight.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/numeric_preflight.py",
+            "mode": "100644",
+            "bytes": 834,
+            "sha256": "654b26668d9723d12e25a7b447df901cc2d5fae063bba27c53bd30c91efefefb",
+            "git_blob_sha1": "4a73664ec23ffd7f847bdede698af5dcb91ebf47"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/plan.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/plan.json",
+            "mode": "100644",
+            "bytes": 4395,
+            "sha256": "38cc02c58eb25b6da7af0e5592e5738d22beffed05beffa643643cd9cb902242",
+            "git_blob_sha1": "8c04f88e63f6e1ebf5d4d32f1a7f1dc1a6093d25"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/requirements.research.lock",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/requirements.research.lock",
+            "mode": "100644",
+            "bytes": 960,
+            "sha256": "7aa51b6eebd2e2db290338345c30b8c7a8e197531746ee77efb7ef8678124dee",
+            "git_blob_sha1": "9b4fcd9e6a3ae71bc322893dfa6d604a5abedf7e"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/run_grouped_balance.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/run_grouped_balance.py",
+            "mode": "100644",
+            "bytes": 18530,
+            "sha256": "f57e0fae61b314769cb1d3f3365b77f9ccb9400071be425b3ce7d04e66d53b6e",
+            "git_blob_sha1": "77c329d8c02545f25c0a753ffba4d031107d53dd"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/runtime-candidate.lock.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/runtime-candidate.lock.json",
+            "mode": "100644",
+            "bytes": 14859,
+            "sha256": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
+            "git_blob_sha1": "5a632337c2dfffcab4a179c0a94d9da719ff46d1"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/source-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/source-manifest.json",
+            "mode": "100644",
+            "bytes": 938,
+            "sha256": "745d7cce4d2863a7956315cff7a5a9b33ab36d4fd0f424091b6bb88f9c984f75",
+            "git_blob_sha1": "5ebcd6976cf1a0bf092c23d5a3e42c8fcd1e2fb3"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/test_contract.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/kws-grouped-balance-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 7234,
+            "sha256": "d30eeda3fdc4fd3f29c69fdec84510a0c530431ba843f9a97b3cc651a6d655d8",
+            "git_blob_sha1": "18d885ba52741b42a1f31931f41c797ad6ab660a"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/tts-pilot-screening-v1/evidence/asr-run-38573117922/thirteen-candidate-evidence.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/tts-pilot-screening-v1/evidence/asr-run-38573117922/thirteen-candidate-evidence.json",
+            "mode": "100644",
+            "bytes": 12354,
+            "sha256": "9cb52b6f4a890a858f5fc96af89825ba63c5035fcaaefb0349a7806f3843745d",
+            "git_blob_sha1": "bf75d321134dd8d8a260b8a52b1d34649dd38b7b"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/tts-pilot-screening-v1/evidence/tts-input-20261014/artifact-inventory.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/tts-pilot-screening-v1/evidence/tts-input-20261014/artifact-inventory.json",
+            "mode": "100644",
+            "bytes": 18185,
+            "sha256": "cf20e6771eb0e0647dc890ab341a87367cbb77afb89c39b85377e8ace3c5ba4a",
+            "git_blob_sha1": "9d993421e91eb068fd9310cf114021bcb737760f"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/tts-pilot-screening-v1/screen.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/research/tts-pilot-screening-v1/screen.py",
+            "mode": "100644",
+            "bytes": 11339,
+            "sha256": "982582c0e4c7f957276520977ebfa3bad0cbb5753e16d50bbadef0835682523e",
+            "git_blob_sha1": "81f1bdc2ddcb4e3b757e77a15b6a25b5be81fbe8"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/training/frontend.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/training/frontend.py",
+            "mode": "100644",
+            "bytes": 3384,
+            "sha256": "d8ae687303d5c9c6bfdf6539c94f4ae463d910a4837ed77633d7656ff02a582e",
+            "git_blob_sha1": "7d9b3ad6ec5fd0b9be7ee522396928ba88de96f2"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/training/frontend_spec.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/training/frontend_spec.py",
+            "mode": "100644",
+            "bytes": 5561,
+            "sha256": "fbd17236e1449101bed6df8f105baad476edb0b005e6e45cb83ebc7971d166e6",
+            "git_blob_sha1": "f14a06eb6785c86e649b0902c24a38881cd0e457"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/training/model.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-integrated/training/model.py",
+            "mode": "100644",
+            "bytes": 2336,
+            "sha256": "768800e25537367da770ef44178249208956d7c3c33f1eb7d60b1b9c98fe59c5",
+            "git_blob_sha1": "f531fbfedf0ac33025744a0ba9188ccc67e892af"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-prelaunch-freeze-20261015.zip",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-prelaunch-freeze-20261015.zip",
+            "mode": "100644",
+            "bytes": 277596,
+            "sha256": "0ab941ee0ce8a8bf03eb6d0153888e53cef83108e0af5210e19cca7847d1b9c9",
+            "git_blob_sha1": "b2e23d622b2f8094494c6ab16a4b265d6c13d7e2"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-prelaunch-reservation.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-prelaunch-reservation.json",
+            "mode": "100644",
+            "bytes": 384,
+            "sha256": "5203a95985d5d9c9a10765e50e7699ca81b4c3c8a92e6963821aa60d9d12d128",
+            "git_blob_sha1": "f82b635773a69c6488ba524732fe18304e215097"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/README.md",
+            "mode": "100644",
+            "bytes": 6024,
+            "sha256": "2031010866fb3c99c0388cae66c37a6333d44f2849d14f91192dcd4836cb1bf7",
+            "git_blob_sha1": "2d9d63ceae77f3395dd27ce4fee51ed7c9452f75"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/fixtures.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/fixtures.py",
+            "mode": "100644",
+            "bytes": 7423,
+            "sha256": "d499d321d5093815a024bdab0843140a596eaf323dbb02163fcb430a834b68f4",
+            "git_blob_sha1": "f567925a0129ba9c8a9ab820d2321a9fc03cccfd"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/outer_fixtures.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/outer_fixtures.py",
+            "mode": "100644",
+            "bytes": 2483,
+            "sha256": "0039fb03cd47f0be61c40b713df0e1fd35c63914ff580b9bfb39a1350fcd30b4",
+            "git_blob_sha1": "0421279575139d8ec0e976507f124d8249e4cc12"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/reconstruction-relocated-test-double-optimized.log",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/reconstruction-relocated-test-double-optimized.log",
+            "mode": "100644",
+            "bytes": 3017,
+            "sha256": "c4f0d9b33be66cc4f167919429d74de363273c8f545e276b4876445fbf44e5d2",
+            "git_blob_sha1": "92b26bd24a4b2dd385ccc07f0ef83d1df89ba6e0"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/reconstruction-relocated-test-normal.log",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/reconstruction-relocated-test-normal.log",
+            "mode": "100644",
+            "bytes": 3017,
+            "sha256": "e1a219d41e9597cc02b1380e5b96ab351ea6b2e71906bbe7aad8a6dcf79c08a3",
+            "git_blob_sha1": "42013f98cd515f535f2492518cf79e4c97df9824"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/reconstruction-relocated-test-optimized.log",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/reconstruction-relocated-test-optimized.log",
+            "mode": "100644",
+            "bytes": 3017,
+            "sha256": "28224c4940b5eae697ec9f2c8e4d4740f9507a55d09a46bc5e655f2d5f48780f",
+            "git_blob_sha1": "4554ab7cb4536a0242d9628d8506e45e9cad9691"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/reconstruction-test-normal.log",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/reconstruction-test-normal.log",
+            "mode": "100644",
+            "bytes": 6651,
+            "sha256": "79894cb6d232c09be096d0d5e6a3d54e398b56dd0bb118a81681d01681fb62aa",
+            "git_blob_sha1": "7a73e437aca85f3be118237ff6d539cec9675abc"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/test-harness-source-relocation.diff",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/test-harness-source-relocation.diff",
+            "mode": "100644",
+            "bytes": 1897,
+            "sha256": "9dde21be9fddddf3e29d07394aa40dd803bacfaab8c978277c46a0ab879c8666",
+            "git_blob_sha1": "5a99db282f4e839b4b44fff7afd7077e6a41b5a0"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/test-harness-source-relocation.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/test-harness-source-relocation.json",
+            "mode": "100644",
+            "bytes": 488,
+            "sha256": "b40a2106db9122566e0d33b16bbe053c482a907ef104f205b4d0555c9eba3a77",
+            "git_blob_sha1": "e2d583d8f25e3ec2738457e81a64e574327e52d3"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/test_verify_result.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/test_verify_result.py",
+            "mode": "100644",
+            "bytes": 15417,
+            "sha256": "e2e1a12811ddba4486052c44ea0a3a8bdd824e97a2cf295931b352e3472234f4",
+            "git_blob_sha1": "37ea1e08955e78692991308583a90a252296bc46"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/tolerances.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/tolerances.json",
+            "mode": "100644",
+            "bytes": 257,
+            "sha256": "b701856f6bae2c93aa377cece1549a4afcab03921940dbc49ece6b3ddc01cf9b",
+            "git_blob_sha1": "1d0772db0d32f9c512fbce21fff3c787bab81fae"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/trusted-freeze.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/trusted-freeze.json",
+            "mode": "100644",
+            "bytes": 3500,
+            "sha256": "cfe151df3004c886b7d4a2adea8baf6a38fee2cc19d1be95cee598ee3b7709f9",
+            "git_blob_sha1": "3caf5df76b44bf4474bb0b790896521958bc5f2b"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/verify_result.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/grouped-balance-result-verification/verify_result.py",
+            "mode": "100644",
+            "bytes": 38557,
+            "sha256": "cf974939751107b8e6e6c15d34bff1e5830e173a1a45cb3c34d1642681d36bcc",
+            "git_blob_sha1": "627ad56e98378be488badf48cb2f82847930c3e4"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/launch_reviewed_grouped_balance.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/launch_reviewed_grouped_balance.py",
+            "mode": "100644",
+            "bytes": 13507,
+            "sha256": "016b51d1c592caec94ed53c39c55a49ef7e4eeeed385d5800b88019ea64f92c7",
+            "git_blob_sha1": "1b713e5dc74ad19250561a09fba14eaf6126d440"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/manifest.json",
+            "mode": "100644",
+            "bytes": 7769,
+            "sha256": "196b019cb59c929328f0752705667ed7b79d9d43d04fa708f88149050ea0dcea",
+            "git_blob_sha1": "6587efc0d31fab1f06919336255ee5505a2211da"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/ci-38824983808.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/ci-38824983808.json",
+            "mode": "100644",
+            "bytes": 12689,
+            "sha256": "23576c09843bbb8cb5bff0b8b1f2d76c371d70b075d171d10d0b65a1f9d1b461",
+            "git_blob_sha1": "a20d42f659e42005b13b93475a4378a7395e77ea"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/cleanup-38824983811.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/cleanup-38824983811.json",
+            "mode": "100644",
+            "bytes": 12520,
+            "sha256": "c2b4d8abc8fddb92fb20b50451ad2005bd17628dd8e372f68d45b11faeaff391",
+            "git_blob_sha1": "25b613ab0bab12d1b90803eea07ded20676ab457"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/contract-tests.log",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/contract-tests.log",
+            "mode": "100644",
+            "bytes": 176,
+            "sha256": "becd1b89c620b238f22a79eb31088216e7b0ed846c58c6c140f5c2068b465cea",
+            "git_blob_sha1": "9d6a2bcc2677b00432fafd5dc3ac89b4ecaef30f"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/input-verification.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/input-verification.json",
+            "mode": "100644",
+            "bytes": 286,
+            "sha256": "bffae96ed05442696cafe81d9fd7b4b0325cca5aa414d0bcc90ce1b2ebc0d08c",
+            "git_blob_sha1": "3745c21fe832d3dbea651a7ee6a1a6d5712d01e7"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/merged-commit.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/merged-commit.json",
+            "mode": "100644",
+            "bytes": 2326,
+            "sha256": "2765f936394331dff02ecac837fbae2adf0ef936d5ecb2d97fcbea4f9d44645a",
+            "git_blob_sha1": "a23903a10ff4992e6177bd40e11286f78d96e23f"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/merged-tree.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/merged-tree.json",
+            "mode": "100644",
+            "bytes": 861542,
+            "sha256": "1f1debabd8d97b9639ab873153e822ceb009e4ef3751bb0df27c2363920f6ae4",
+            "git_blob_sha1": "c9874c5b4881d1944371a834663e866ad356d79d"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/reviewed-source-pins.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/reviewed-source-pins.json",
+            "mode": "100644",
+            "bytes": 2851,
+            "sha256": "b86be997883aeebf3755c800a8b13e2a9771e480b93e8d2c23aac428216c9e02",
+            "git_blob_sha1": "4a05154ef90f0c52655228e011940e04e3d5fe77"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/source-recovery-receipt.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/source-recovery-receipt.json",
+            "mode": "100644",
+            "bytes": 7101,
+            "sha256": "314b587f079823b031c6736a75d9ecb5487b79a3a5ecf83e7df5306f3e454511",
+            "git_blob_sha1": "6871cd42bd58bde129eadfc9bdd93e3fed817c26"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/verifier-tests.log",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/reproducibility/source-recovery-evidence/verifier-tests.log",
+            "mode": "100644",
+            "bytes": 1044,
+            "sha256": "b9d39acaecd44f6a272ca9664cd8c2890d41b693213cd9df5211be1de187c16e",
+            "git_blob_sha1": "779cdeac1c99dcce5215915069601441d9902686"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/result-20261016/result-hash-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/result-20261016/result-hash-manifest.json",
+            "mode": "100644",
+            "bytes": 566737,
+            "sha256": "4260c936d8249c59f2d5b270d40274b5f2b29bb45d930dd31c338b240d666b25",
+            "git_blob_sha1": "f9a8e6402b0596d46937b6b59446bd30731b3d38"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/source-manifest.json",
+          "before": {
+            "path": "research/kws-grouped-balance-v1/source-manifest.json",
+            "mode": "100644",
+            "bytes": 938,
+            "sha256": "745d7cce4d2863a7956315cff7a5a9b33ab36d4fd0f424091b6bb88f9c984f75",
+            "git_blob_sha1": "5ebcd6976cf1a0bf092c23d5a3e42c8fcd1e2fb3"
+          },
+          "after": {
+            "path": "research/kws-grouped-balance-v1/source-manifest.json",
+            "mode": "100644",
+            "bytes": 1563,
+            "sha256": "e757322518bdb7e5d882d2e2bdae36a1f901ac55dd5fcbb966f43379b324111b",
+            "git_blob_sha1": "f3f710765c1de01721451d071f6cbe4010bb44f5"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/test_contract.py",
+          "before": {
+            "path": "research/kws-grouped-balance-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 7234,
+            "sha256": "d30eeda3fdc4fd3f29c69fdec84510a0c530431ba843f9a97b3cc651a6d655d8",
+            "git_blob_sha1": "18d885ba52741b42a1f31931f41c797ad6ab660a"
+          },
+          "after": {
+            "path": "research/kws-grouped-balance-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 8682,
+            "sha256": "f557d2e141ed7328bb73e94920dd67bc0d77e84c2ca23e5fc75b7b4fce060f52",
+            "git_blob_sha1": "38be6746b4d4aa37cf3a68d2e3878c36d7043f27"
+          }
+        },
+        {
+          "path": "research/kws-grouped-balance-v1/verify_archived_result.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-grouped-balance-v1/verify_archived_result.py",
+            "mode": "100644",
+            "bytes": 8537,
+            "sha256": "eb44efbf2f7c62338ca1aecd6d031e6a76dccbb127c28290ad265c0cf81b15b5",
+            "git_blob_sha1": "57cce8cbe3cc006a50dc13865fda02d5da528390"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

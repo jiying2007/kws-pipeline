@@ -1,0 +1,10 @@
+{
+  "campaign_id": "kws-grouped-balance-20261015-v1",
+  "source_commit": "942b3c1495fa4e4007ca01604ca8a65ed2cd5bcf",
+  "max_optimizer_steps": 1200,
+  "max_model_forwards": 1218,
+  "retry": false,
+  "status": "RESERVED_NOT_EXECUTED",
+  "created_at_utc": "2026-10-15T23:52:50.763153+00:00",
+  "trusted_freeze_sha256": "cfe151df3004c886b7d4a2adea8baf6a38fee2cc19d1be95cee598ee3b7709f9"
+}

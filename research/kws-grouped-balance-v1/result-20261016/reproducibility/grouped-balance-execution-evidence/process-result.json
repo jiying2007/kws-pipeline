@@ -1,0 +1,16 @@
+{
+  "actual_optimizer_updates": "VERIFY_CALL_AND_STEP_LEDGER",
+  "child_max_rss_kib": 1192460,
+  "command_sha256": "8372f0a26d872cc8bc0f29837605c49948549ff9b7ea43a864c859ca9967d59b",
+  "exit_code": 0,
+  "launcher_sha256": "016b51d1c592caec94ed53c39c55a49ef7e4eeeed385d5800b88019ea64f92c7",
+  "max_rss_scope": "Linux RUSAGE_CHILDREN, not cgroup or SSC305",
+  "production_qualified": false,
+  "schema": "research-grouped-balance-local-process-result-v1",
+  "stderr_sha256": "f429530f15beebf751b1cf75862ee92965e8ec6284c5445c655135e2c18de79e",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "system_cpu_seconds": 2.723454,
+  "user_cpu_seconds": 51.634189,
+  "wall_seconds": 60.943753223000385,
+  "wall_timeout": false
+}

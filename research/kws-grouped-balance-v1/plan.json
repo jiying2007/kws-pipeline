@@ -2,7 +2,7 @@
   "schema": "kws-grouped-balance-plan-v1",
   "purpose": "exposed-preset-group-disjoint-fixed-horizon-diagnostic",
   "production_qualified": false,
-  "execution_enabled": true,
+  "execution_enabled": false,
   "seed": 20261015,
   "model": {
     "feature_dim": 32,

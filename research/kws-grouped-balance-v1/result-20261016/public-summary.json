@@ -1,0 +1,155 @@
+{
+  "campaign_id": "kws-grouped-balance-20261015-v1",
+  "consumed": true,
+  "execution_enabled": false,
+  "retry_authorized": false,
+  "remaining_budget": 0,
+  "remaining_model_forward_budget": 0,
+  "budget_reusable": false,
+  "source_commit": "942b3c1495fa4e4007ca01604ca8a65ed2cd5bcf",
+  "source_tree": "60d8d4a4d28a80c576abeead37c4e8d64a510c07",
+  "execution_status": "completed",
+  "evidence_validation": "PASS",
+  "scientific_validation": "DESCRIPTIVE_ONLY",
+  "optimizer_calls_reserved": 1200,
+  "successful_optimizer_steps": 1200,
+  "model_forward_calls_reserved": 1218,
+  "model_forward_calls_returned": 1218,
+  "observations": 18,
+  "primary_endpoint_step": 600,
+  "human_gold": false,
+  "independent_evaluation": false,
+  "production_qualified": false,
+  "reusable_weights_exported": false,
+  "shipping_qualified": false,
+  "training_admitted": false,
+  "schema": "grouped-balance-public-outcome-v1",
+  "scientific_scope": "exposed machine-labelled preset-group-disjoint diagnostic only",
+  "public_verification_scope": "archive integrity, receipts and saved-token statistics; not independent model or CTC recomputation or process authenticity",
+  "limitations": [
+    "All saved training and observation log probabilities have independent float64 CTC checks under pre-frozen tolerances; no model or optimizer reexecution.",
+    "A and B use the same source-defined initialization, seed, optimizer and update budget; receipts bind declarations, not independent hardware attestation.",
+    "Only fixed step 600 endpoints are compared; probe never selects a checkpoint or model.",
+    "The four Vivian probe items are exposed, machine-labelled, non-test diagnostic samples. Even 4/4 is not generalization, recall, FA/h, human-gold evaluation or production qualification.",
+    "Preset groups are conservative identity proxies, not proof of independent speakers.",
+    "Public archive checker does not independently recompute CTC or attest process authenticity."
+  ],
+  "fixed_endpoint_B_minus_A": {
+    "probe": {
+      "macro_complete_rate": 0.16666666666666666,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.3333333333333333
+      }
+    },
+    "train": {
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      }
+    }
+  },
+  "endpoints": {
+    "A-0600": {
+      "fit_success": false,
+      "macro_complete_rate": 0.125,
+      "per_class_complete_rate": {
+        "KW1": 0.25,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 1,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 1,
+      "total": 12,
+      "finite_loss": 0.12206942588090897,
+      "ctc_loss": 0.12100213766098022,
+      "anchor_loss": 0.001067291828803718
+    },
+    "B-0600": {
+      "fit_success": false,
+      "macro_complete_rate": 0.125,
+      "per_class_complete_rate": {
+        "KW1": 0.25,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 1,
+          "total": 4
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 8
+        }
+      },
+      "complete": 1,
+      "total": 12,
+      "finite_loss": 0.019959986209869385,
+      "ctc_loss": 0.017204681411385536,
+      "anchor_loss": 0.002755305264145136
+    },
+    "probe-A-0600": {
+      "fit_success": false,
+      "macro_complete_rate": 0.0,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.0
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 1
+        },
+        "KW2": {
+          "complete": 0,
+          "total": 3
+        }
+      },
+      "complete": 0,
+      "total": 4,
+      "finite_loss": 0.09034252166748047,
+      "ctc_loss": 0.08930712193250656,
+      "anchor_loss": 0.0010353962425142527
+    },
+    "probe-B-0600": {
+      "fit_success": false,
+      "macro_complete_rate": 0.16666666666666666,
+      "per_class_complete_rate": {
+        "KW1": 0.0,
+        "KW2": 0.3333333333333333
+      },
+      "prefix_success": true,
+      "per_class_counts": {
+        "KW1": {
+          "complete": 0,
+          "total": 1
+        },
+        "KW2": {
+          "complete": 1,
+          "total": 3
+        }
+      },
+      "complete": 1,
+      "total": 4,
+      "finite_loss": 0.03567495942115784,
+      "ctc_loss": 0.03243321552872658,
+      "anchor_loss": 0.0032417455222457647
+    }
+  },
+  "new_tts_calls": 0,
+  "new_asr_calls": 0,
+  "probe_used_for_selection": false,
+  "interpretation": "At the fixed step-600 endpoint both arms complete 1/12 training targets (KW1 1/4, KW2 0/8); all fixed prefixes pass. Probe A completes 0/4 and B 1/4 (KW2 1/3). This small exposed machine-labelled diagnostic does not establish generalization, recall, false-activation rate, or production readiness. Intermediate A400/A500 improvement is descriptive and does not select a checkpoint. No rerun, extension, resume, or reusable budget is authorized."
+}
