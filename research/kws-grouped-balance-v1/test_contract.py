@@ -11,6 +11,22 @@ spec=importlib.util.spec_from_file_location('grouped_run_under_test',HERE/'run_g
 runner=importlib.util.module_from_spec(spec);spec.loader.exec_module(runner)
 c=runner._contract
 class ContractTests(unittest.TestCase):
+    def test_archived_closure(self):
+        spec=importlib.util.spec_from_file_location('grouped_archive',HERE/'verify_archived_result.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        self.assertEqual(module.verify(),{'result_files':6077,'observations':18,'optimizer_calls':1200,'model_forward_calls':1218,'scientific_validation':'DESCRIPTIVE_ONLY'})
+        self.assertNotIn('torch',sys.modules)
+    def test_closure_rejects_weak_types_and_budget_reuse(self):
+        spec=importlib.util.spec_from_file_location('grouped_archive_negative',HERE/'verify_archived_result.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        closure=json.loads((HERE/'closure.json').read_bytes())
+        for key,value in [('remaining_budget',False),('remaining_budget',0.0),('remaining_model_forward_budget',1),('retry_authorized',True),('execution_enabled',True),('execution_status','running'),('scientific_validation','PASS'),('training_admitted',0),('optimizer_calls_reserved',1200.0)]:
+            altered=copy.deepcopy(closure);altered[key]=value
+            with self.subTest(key=key,value=value):
+                with self.assertRaises(ValueError):module.verify_consumed(altered)
+        for raw in ['{"a":1,"a":2}','{"a":NaN}','{"a":Infinity}']:
+            with self.assertRaises(ValueError):module.strict_json(raw)
+        self.assertFalse(module.exact(True,1))
     def test_disabled_and_type_strict(self):
         p=json.loads((HERE/'plan.json').read_bytes());c.validate_plan(p,False)
         disabled=copy.deepcopy(p);disabled['execution_enabled']=False

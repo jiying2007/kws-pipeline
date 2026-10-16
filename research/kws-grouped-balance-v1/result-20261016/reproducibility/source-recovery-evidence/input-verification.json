@@ -1,0 +1,11 @@
+{
+  "schema": "restored-inputs-readonly-verification-v1",
+  "registry_offline_regeneration": "PASS",
+  "frozen_cohort_and_prefixes": "PASS",
+  "records": 16,
+  "model_calls": 0,
+  "optimizer_calls": 0,
+  "new_tts_calls": 0,
+  "new_asr_calls": 0,
+  "numeric_libraries_imported": false
+}

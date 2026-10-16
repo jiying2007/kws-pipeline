@@ -1,0 +1,5 @@
+/workspace/scratch/6c2ef8b5a46e/kws-next-stage-20261015/fit-venv/lib/python3.12/site-packages/torch/_subclasses/functional_tensor.py:362: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:84.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+/workspace/scratch/6c2ef8b5a46e/kws-next-stage-20261015/grouped-balance-integrated/research/kws-grouped-balance-v1/run_grouped_balance.py:162: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:838.)
+  failure_context={'phase':'loss','nonfinite_log_probs':int((~torch.isfinite(lp)).sum()),'ctc_nll':[float(v) if torch.isfinite(v) else None for v in nll]}

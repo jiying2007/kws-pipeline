@@ -1,0 +1,174 @@
+{
+  "schema": "local-source-recovery-v1",
+  "observed_at_utc": "2026-10-15T23:51:14.283722+00:00",
+  "method": "read-only GitHub connector files at merged commit; local SHA256 and Git blob identity checks",
+  "source_commit": "942b3c1495fa4e4007ca01604ca8a65ed2cd5bcf",
+  "source_tree": "60d8d4a4d28a80c576abeead37c4e8d64a510c07",
+  "file_count": 23,
+  "files": [
+    {
+      "path": "research/consolidation/fit-history-recovery-2026-10-15.json",
+      "size_bytes": 2161,
+      "sha256": "6e0bf6141ddec49297ba00ed9a368fc66f323c06672d6906b5ab4fc482a041f7",
+      "git_blob_sha": "d819b6c7017369f1cc90c85a2f126abd08279203"
+    },
+    {
+      "path": "research/kw1-preset-supplement-observation-v1/observation.json",
+      "size_bytes": 126850,
+      "sha256": "95c67c26d04bfdbba41df11540c084ab99ad736e0b8147383d93808be40a919e",
+      "git_blob_sha": "4eede9e0dd8b466abc822bb9e02ff216a58a2f75"
+    },
+    {
+      "path": "research/kw1-preset-supplement-v1/blind_pcm.py",
+      "size_bytes": 11345,
+      "sha256": "ab6164bb89c9b3b0e707375330b2e9c13b772a0fda1c252dfb2dda05f3539b64",
+      "git_blob_sha": "fbd824ae52a37f6a21f7f88da946d0aa8c0c3417"
+    },
+    {
+      "path": "research/kw1-preset-supplement-v1/worker.py",
+      "size_bytes": 36688,
+      "sha256": "979e1709e24ff21e805abfd481994d4073c3220f217f20d6782d1307a77097b3",
+      "git_blob_sha": "a8b8f64d07add0bf6891f53f4b9743eade2c1066"
+    },
+    {
+      "path": "research/kws-candidate-registry-v1/build_registry.py",
+      "size_bytes": 16910,
+      "sha256": "9d37fb852cdd5048a4d5c88f9e21efe2b3c1e18f25244babb2d811675ea9fbae",
+      "git_blob_sha": "cb397fbe366df7266a37dcb904873d69f96eba15"
+    },
+    {
+      "path": "research/kws-candidate-registry-v1/candidates.json",
+      "size_bytes": 73379,
+      "sha256": "28033edbbc1e444eae27c33af2e060d1654c4b7a072e65401b055fc27fc3b1b0",
+      "git_blob_sha": "39de70b07971fd3d8f04646dce3b7c3d9b78e449"
+    },
+    {
+      "path": "research/kws-candidate-registry-v1/input-pins.json",
+      "size_bytes": 948,
+      "sha256": "64c77a270c7f13d8252d10282191aaeb207f425c10fb89a2f01e390fa994e37c",
+      "git_blob_sha": "6eb586384abb4cd56ae0c7e687d112c348f1db59"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/README.md",
+      "size_bytes": 5804,
+      "sha256": "5238048c0fcbe440b3b66b27d72a41edac390dbf56b1c6c6e3489b3efe8db2d0",
+      "git_blob_sha": "20bfb380cc676295043455e93a9276885266459c"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/cohort-prefix-freeze.json",
+      "size_bytes": 53823,
+      "sha256": "fe23e633925573e2b02ac8530e066214879a11cbccc2e4ef5875aa2c38006e87",
+      "git_blob_sha": "ebd41589f8a5143118d59f5359c6e4741b6b982d"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/contract.py",
+      "size_bytes": 10725,
+      "sha256": "6dca1cad9dba10f50e439f775b6d04d90f246544cbd5a634e30490589490bc74",
+      "git_blob_sha": "880cdb3d6bb2c959b212d9dbb8f631dd6972dbeb"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/numeric_preflight.py",
+      "size_bytes": 834,
+      "sha256": "654b26668d9723d12e25a7b447df901cc2d5fae063bba27c53bd30c91efefefb",
+      "git_blob_sha": "4a73664ec23ffd7f847bdede698af5dcb91ebf47"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/plan.json",
+      "size_bytes": 4395,
+      "sha256": "38cc02c58eb25b6da7af0e5592e5738d22beffed05beffa643643cd9cb902242",
+      "git_blob_sha": "8c04f88e63f6e1ebf5d4d32f1a7f1dc1a6093d25"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/requirements.research.lock",
+      "size_bytes": 960,
+      "sha256": "7aa51b6eebd2e2db290338345c30b8c7a8e197531746ee77efb7ef8678124dee",
+      "git_blob_sha": "9b4fcd9e6a3ae71bc322893dfa6d604a5abedf7e"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/run_grouped_balance.py",
+      "size_bytes": 18530,
+      "sha256": "f57e0fae61b314769cb1d3f3365b77f9ccb9400071be425b3ce7d04e66d53b6e",
+      "git_blob_sha": "77c329d8c02545f25c0a753ffba4d031107d53dd"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/runtime-candidate.lock.json",
+      "size_bytes": 14859,
+      "sha256": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
+      "git_blob_sha": "5a632337c2dfffcab4a179c0a94d9da719ff46d1"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/source-manifest.json",
+      "size_bytes": 938,
+      "sha256": "745d7cce4d2863a7956315cff7a5a9b33ab36d4fd0f424091b6bb88f9c984f75",
+      "git_blob_sha": "5ebcd6976cf1a0bf092c23d5a3e42c8fcd1e2fb3"
+    },
+    {
+      "path": "research/kws-grouped-balance-v1/test_contract.py",
+      "size_bytes": 7234,
+      "sha256": "d30eeda3fdc4fd3f29c69fdec84510a0c530431ba843f9a97b3cc651a6d655d8",
+      "git_blob_sha": "18d885ba52741b42a1f31931f41c797ad6ab660a"
+    },
+    {
+      "path": "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/thirteen-candidate-evidence.json",
+      "size_bytes": 12354,
+      "sha256": "9cb52b6f4a890a858f5fc96af89825ba63c5035fcaaefb0349a7806f3843745d",
+      "git_blob_sha": "bf75d321134dd8d8a260b8a52b1d34649dd38b7b"
+    },
+    {
+      "path": "research/tts-pilot-screening-v1/evidence/tts-input-20261014/artifact-inventory.json",
+      "size_bytes": 18185,
+      "sha256": "cf20e6771eb0e0647dc890ab341a87367cbb77afb89c39b85377e8ace3c5ba4a",
+      "git_blob_sha": "9d993421e91eb068fd9310cf114021bcb737760f"
+    },
+    {
+      "path": "research/tts-pilot-screening-v1/screen.py",
+      "size_bytes": 11339,
+      "sha256": "982582c0e4c7f957276520977ebfa3bad0cbb5753e16d50bbadef0835682523e",
+      "git_blob_sha": "81f1bdc2ddcb4e3b757e77a15b6a25b5be81fbe8"
+    },
+    {
+      "path": "training/frontend.py",
+      "size_bytes": 3384,
+      "sha256": "d8ae687303d5c9c6bfdf6539c94f4ae463d910a4837ed77633d7656ff02a582e",
+      "git_blob_sha": "7d9b3ad6ec5fd0b9be7ee522396928ba88de96f2"
+    },
+    {
+      "path": "training/frontend_spec.py",
+      "size_bytes": 5561,
+      "sha256": "fbd17236e1449101bed6df8f105baad476edb0b005e6e45cb83ebc7971d166e6",
+      "git_blob_sha": "f14a06eb6785c86e649b0902c24a38881cd0e457"
+    },
+    {
+      "path": "training/model.py",
+      "size_bytes": 2336,
+      "sha256": "768800e25537367da770ef44178249208956d7c3c33f1eb7d60b1b9c98fe59c5",
+      "git_blob_sha": "f531fbfedf0ac33025744a0ba9188ccc67e892af"
+    }
+  ],
+  "ci": [
+    {
+      "id": 38824983808,
+      "name": "ci",
+      "head_sha": "942b3c1495fa4e4007ca01604ca8a65ed2cd5bcf",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38824983808"
+    },
+    {
+      "id": 38824983811,
+      "name": "repository-cleanup",
+      "head_sha": "942b3c1495fa4e4007ca01604ca8a65ed2cd5bcf",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38824983811"
+    }
+  ],
+  "launcher_enabled": false,
+  "model_calls": 0,
+  "optimizer_calls": 0,
+  "new_tts_calls": 0,
+  "new_asr_calls": 0,
+  "contract_tests": 14,
+  "contract_test_status": "PASS",
+  "verifier_full_test_status": "BLOCKED_ON_MISSING_OUTER_FIXTURE_BEING_RECONSTRUCTED_SEPARATELY"
+}

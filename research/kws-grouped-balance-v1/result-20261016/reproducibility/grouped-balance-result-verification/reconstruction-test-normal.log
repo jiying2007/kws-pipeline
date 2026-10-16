@@ -1,0 +1,76 @@
+test_closed_plan (test_verify_result.EvidenceTests.test_closed_plan) ... ok
+test_complete_negative (test_verify_result.EvidenceTests.test_complete_negative) ... ok
+test_complete_positive (test_verify_result.EvidenceTests.test_complete_positive) ... ok
+test_continue_after_failure (test_verify_result.EvidenceTests.test_continue_after_failure) ... ok
+test_continue_after_missing_observation (test_verify_result.EvidenceTests.test_continue_after_missing_observation) ... ok
+test_failures_and_incomplete (test_verify_result.EvidenceTests.test_failures_and_incomplete) ... ok
+test_mutations (test_verify_result.EvidenceTests.test_mutations) ... ok
+test_partial_optimizer_without_return_rejected (test_verify_result.EvidenceTests.test_partial_optimizer_without_return_rejected) ... ok
+test_timeout_not_science (test_verify_result.EvidenceTests.test_timeout_not_science) ... ok
+test_cannot_skip_immediate_next_event (test_verify_result.FailureBoundaryTests.test_cannot_skip_immediate_next_event) ... ok
+test_completed_A600_to_B0_reservation_failure (test_verify_result.FailureBoundaryTests.test_completed_A600_to_B0_reservation_failure) ... ok
+test_completed_B600_to_probe_A600_reservation_failure (test_verify_result.FailureBoundaryTests.test_completed_B600_to_probe_A600_reservation_failure) ... ok
+test_unfinished_prior_event_cannot_cross_stage (test_verify_result.FailureBoundaryTests.test_unfinished_prior_event_cannot_cross_stage) ... ok
+test_bad_values (test_verify_result.NumericTests.test_bad_values) ... ok
+test_bool_not_number (test_verify_result.NumericTests.test_bool_not_number) ... ok
+test_bruteforce (test_verify_result.NumericTests.test_bruteforce) ... ok
+test_collapse (test_verify_result.NumericTests.test_collapse) ... ok
+test_dimension (test_verify_result.NumericTests.test_dimension) ... ok
+test_empty (test_verify_result.NumericTests.test_empty) ... ok
+test_first_index_tie (test_verify_result.NumericTests.test_first_index_tie) ... ok
+test_json_reject (test_verify_result.NumericTests.test_json_reject) ... ok
+test_normalization_boundary (test_verify_result.NumericTests.test_normalization_boundary) ... ok
+test_repeat_needs_blank (test_verify_result.NumericTests.test_repeat_needs_blank) ... ok
+test_tolerance_boundary (test_verify_result.NumericTests.test_tolerance_boundary) ... ok
+test_type_exact (test_verify_result.NumericTests.test_type_exact) ... ok
+test_unknown_fields (test_verify_result.NumericTests.test_unknown_fields) ... ok
+test_outer_bindings (test_verify_result.OuterTests.test_outer_bindings) ... ok
+test_source_closure_and_plan_pin (test_verify_result.SourceClosureTests.test_source_closure_and_plan_pin) ... ERROR
+test_actual_cohort (test_verify_result.SourceTests.test_actual_cohort) ... ERROR
+test_alias_and_changed_source (test_verify_result.SourceTests.test_alias_and_changed_source) ... ok
+test_no_report_overwrite (test_verify_result.SourceTests.test_no_report_overwrite) ... ok
+
+======================================================================
+ERROR: test_source_closure_and_plan_pin (test_verify_result.SourceClosureTests.test_source_closure_and_plan_pin)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/6c2ef8b5a46e/kws-next-stage-20261015/grouped-balance-result-verification/test_verify_result.py", line 156, in test_source_closure_and_plan_pin
+    registry_prefix='research/kws-candidate-registry-v1';inputs=v.strict_json(v.safe_read(source/registry_prefix/'input-pins.json'))
+                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6c2ef8b5a46e/kws-next-stage-20261015/grouped-balance-result-verification/verify_result.py", line 63, in safe_read
+    path=Path(path).absolute(); directory=safe_dir(path.parent)
+                                          ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6c2ef8b5a46e/kws-next-stage-20261015/grouped-balance-result-verification/verify_result.py", line 54, in safe_dir
+    require('..' not in path.parts and path.resolve(strict=True)==path,'unsafe_path')
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py", line 1240, in resolve
+    s = self._flavour.realpath(self, strict=strict)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen posixpath>", line 424, in realpath
+  File "<frozen posixpath>", line 468, in _joinrealpath
+FileNotFoundError: [Errno 2] No such file or directory: '/workspace/scratch/6c2ef8b5a46e/kws-next-stage-20261015/horizon-integrated'
+
+======================================================================
+ERROR: test_actual_cohort (test_verify_result.SourceTests.test_actual_cohort)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/6c2ef8b5a46e/kws-next-stage-20261015/grouped-balance-result-verification/test_verify_result.py", line 117, in test_actual_cohort
+    cohort=v.strict_json(v.safe_read(module/'cohort-prefix-freeze.json'));registry=v.strict_json(v.safe_read(root/'horizon-integrated/research/kws-candidate-registry-v1/candidates.json'));plan=v.strict_json(v.safe_read(module/'plan.json'))
+                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6c2ef8b5a46e/kws-next-stage-20261015/grouped-balance-result-verification/verify_result.py", line 63, in safe_read
+    path=Path(path).absolute(); directory=safe_dir(path.parent)
+                                          ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6c2ef8b5a46e/kws-next-stage-20261015/grouped-balance-result-verification/verify_result.py", line 54, in safe_dir
+    require('..' not in path.parts and path.resolve(strict=True)==path,'unsafe_path')
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py", line 1240, in resolve
+    s = self._flavour.realpath(self, strict=strict)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen posixpath>", line 424, in realpath
+  File "<frozen posixpath>", line 468, in _joinrealpath
+FileNotFoundError: [Errno 2] No such file or directory: '/workspace/scratch/6c2ef8b5a46e/kws-next-stage-20261015/horizon-integrated'
+
+----------------------------------------------------------------------
+Ran 31 tests in 17.681s
+
+FAILED (errors=2)

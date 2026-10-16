@@ -1,15 +1,29 @@
 {
   "schema": "grouped-source-manifest-v1",
   "files": {
-    "README.md": "5238048c0fcbe440b3b66b27d72a41edac390dbf56b1c6c6e3489b3efe8db2d0",
+    "README.md": "d7b99dd342d32ce4834849cd6342e1f4a5f3be1977ff059dd313198c0fbe5b4b",
     "cohort-prefix-freeze.json": "fe23e633925573e2b02ac8530e066214879a11cbccc2e4ef5875aa2c38006e87",
     "contract.py": "6dca1cad9dba10f50e439f775b6d04d90f246544cbd5a634e30490589490bc74",
     "numeric_preflight.py": "654b26668d9723d12e25a7b447df901cc2d5fae063bba27c53bd30c91efefefb",
-    "plan.json": "38cc02c58eb25b6da7af0e5592e5738d22beffed05beffa643643cd9cb902242",
+    "plan.json": "93504d23a6be34c4e0927dcab478cca0fa389bdb784b1aa543882ead31361661",
     "requirements.research.lock": "7aa51b6eebd2e2db290338345c30b8c7a8e197531746ee77efb7ef8678124dee",
     "run_grouped_balance.py": "f57e0fae61b314769cb1d3f3365b77f9ccb9400071be425b3ce7d04e66d53b6e",
     "runtime-candidate.lock.json": "b132c2c202e5ff00b6cbd1b2b630fa92dfe9ba46fcf0423dc0633381bbe80984",
-    "test_contract.py": "d30eeda3fdc4fd3f29c69fdec84510a0c530431ba843f9a97b3cc651a6d655d8"
+    "test_contract.py": "f557d2e141ed7328bb73e94920dd67bc0d77e84c2ca23e5fc75b7b4fce060f52",
+    "verify_archived_result.py": "eb44efbf2f7c62338ca1aecd6d031e6a76dccbb127c28290ad265c0cf81b15b5",
+    "closure.json": "f20cfc1db2eb002f970eb524886a99a040a9e0830915581b404c09289ded818f"
   },
-  "self_reference": false
+  "self_reference": false,
+  "execution_enabled": false,
+  "campaign_consumed": true,
+  "scientific_validation": "DESCRIPTIVE_ONLY",
+  "model_calls": 0,
+  "optimizer_calls": 0,
+  "call_count_scope": "Source authoring and stdlib archive validation only; campaign counts are in closure.json.",
+  "tests": {
+    "normal": 16,
+    "optimized": 16,
+    "double_optimized": 16,
+    "scope": "stdlib contracts and public archive validation; no numerical execution"
+  }
 }

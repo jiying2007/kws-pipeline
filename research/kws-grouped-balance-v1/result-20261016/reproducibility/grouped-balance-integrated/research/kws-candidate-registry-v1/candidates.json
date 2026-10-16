@@ -1,0 +1,1892 @@
+{
+  "counts": {
+    "KW1": 5,
+    "KW2": 11,
+    "historical_asr_id_join_only": 13,
+    "live_native_and_pcm_bytes_verified": 16,
+    "same_pcm_three_asr_receipts_verified": 3,
+    "total": 16
+  },
+  "human_gold": false,
+  "input_archives": {
+    "asr-11899008382.zip": "f8bf70a0539d6ca7bd11dfed9229a087c0c7d27b943550f73136cd765f54ef0c",
+    "kw1-supplement-11942325284.zip": "e9cb187fbc0c0233f95e95efa7ca064359d7b00e3e6205041c7da06b3dedc5fe",
+    "qwen06-11895552988.zip": "fbd39b79838dc91202fcf8e6c2af22f6486e5d11a9daf48aab15aabb05a6fba9",
+    "qwen17-11895324049.zip": "2bc9ceb32ea64039c04982d88dc6247a8a43879a0c2b04ccb91ef3bb54a76307"
+  },
+  "new_model_calls": 0,
+  "new_training_calls": 0,
+  "normalization": {
+    "implementation": "research/tts-pilot-screening-v1/screen.py:normalize",
+    "rule": "Unicode NFKC, remove whitespace and Unicode punctuation only; no homophone or target rewriting"
+  },
+  "records": [
+    {
+      "asr": [
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "qwen06",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝，小窝。",
+          "sample_id": "tqp-qwen06-03",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "sensevoice",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen06-03",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "whisper",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen06-03",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "historical_screening_summary_not_production_capture",
+      "conservative_group_id": "qwen-preset:vivian",
+      "derived_pcm": {
+        "bytes": 81920,
+        "channels": 1,
+        "frames": 40960,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "b796cfab4ed5315cfb1ffa7d052453cca7e613bc85c7732bf7c1cdc4e1a557c4"
+      },
+      "derived_wav": {
+        "member": "audio/tqp-qwen06-03.wav",
+        "sha256": "b0ca9ef504520d0cedc8eb78bb9004fc3fff96063d873e7b769e9d9c66db9dbd",
+        "status": "archived_bytes_verified"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Historical ASR rows contain sample_id only; no per-recognizer PCM hash receipt. WAV-to-PCM identity verified now does not retroactively prove decoder input.",
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "asr-11899008382.zip",
+            "asr_run_id": 38573117922,
+            "campaign_id": "tts-quality-remaining-20261014-v1",
+            "native_archive": "qwen06-11895552988.zip",
+            "tts_run_id": 38566438514
+          }
+        },
+        {
+          "role": "development_fit",
+          "scope": "public summary confirms fixed thirteen; original source/result overlay not recovered; no receipts reconstructed",
+          "source": "research/consolidation/fit-history-recovery-2026-10-15.json"
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 245760,
+        "channels": 1,
+        "frames": 61440,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "d503feee640488991bc8d54ba2752bf3327f59c72bd7ed242da55919c2b725d6",
+        "wav_sha256": "7c95c69d319876d17247190aee45fe7a772f5df15783e2168cfb18e270b22948"
+      },
+      "preset_voice_id": "qwen-preset:vivian",
+      "preset_voice_name": "Vivian",
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-03",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": false,
+      "seed": 20261015,
+      "slot_id": "tqp-qwen06-03",
+      "source": {
+        "asr_archive": "asr-11899008382.zip",
+        "asr_run_id": 38573117922,
+        "campaign_id": "tts-quality-remaining-20261014-v1",
+        "native_archive": "qwen06-11895552988.zip",
+        "tts_run_id": 38566438514
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW2",
+      "target_text": "小窝小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen06"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "qwen06",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好，小窝。",
+          "sample_id": "tqp-qwen06-05",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "sensevoice",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好小窝",
+          "sample_id": "tqp-qwen06-05",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "whisper",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好小窝。",
+          "sample_id": "tqp-qwen06-05",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "historical_screening_summary_not_production_capture",
+      "conservative_group_id": "qwen-preset:serena",
+      "derived_pcm": {
+        "bytes": 46080,
+        "channels": 1,
+        "frames": 23040,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "295333f506ec101e4544ec46dbe4d3a4af240345418f17ba8b165dc30b707b0c"
+      },
+      "derived_wav": {
+        "member": "audio/tqp-qwen06-05.wav",
+        "sha256": "83fd70f99b3c98168aac162e59f95722fa7d97b8b4f696baff43e27c467efd4e",
+        "status": "archived_bytes_verified"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Historical ASR rows contain sample_id only; no per-recognizer PCM hash receipt. WAV-to-PCM identity verified now does not retroactively prove decoder input.",
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "asr-11899008382.zip",
+            "asr_run_id": 38573117922,
+            "campaign_id": "tts-quality-remaining-20261014-v1",
+            "native_archive": "qwen06-11895552988.zip",
+            "tts_run_id": 38566438514
+          }
+        },
+        {
+          "role": "development_fit",
+          "scope": "public summary confirms fixed thirteen; original source/result overlay not recovered; no receipts reconstructed",
+          "source": "research/consolidation/fit-history-recovery-2026-10-15.json"
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 138240,
+        "channels": 1,
+        "frames": 34560,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "36ded8e59b56785610fafa536cb9624c7e6a2a509737df0f0f38efc912d3ddb7",
+        "wav_sha256": "6b0526ac43a9a1b8ba97180ea19476959062256b8d46ba8abd3f3c4630a40dcc"
+      },
+      "preset_voice_id": "qwen-preset:serena",
+      "preset_voice_name": "Serena",
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-05",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": false,
+      "seed": 20261015,
+      "slot_id": "tqp-qwen06-05",
+      "source": {
+        "asr_archive": "asr-11899008382.zip",
+        "asr_run_id": 38573117922,
+        "campaign_id": "tts-quality-remaining-20261014-v1",
+        "native_archive": "qwen06-11895552988.zip",
+        "tts_run_id": 38566438514
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW1",
+      "target_text": "你好小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen06"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "qwen06",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝，小窝。",
+          "sample_id": "tqp-qwen06-06",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "sensevoice",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen06-06",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "whisper",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝。",
+          "sample_id": "tqp-qwen06-06",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "historical_screening_summary_not_production_capture",
+      "conservative_group_id": "qwen-preset:serena",
+      "derived_pcm": {
+        "bytes": 53760,
+        "channels": 1,
+        "frames": 26880,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "34f326c5a8a3ee20a094806f35b5f2cb46a6c20f71cc4ea9bf7a4f72d2ebf9c9"
+      },
+      "derived_wav": {
+        "member": "audio/tqp-qwen06-06.wav",
+        "sha256": "ec8211229fdc775925b8623f772e502f7978a05cb65132aeedbde81267fa1e89",
+        "status": "archived_bytes_verified"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Historical ASR rows contain sample_id only; no per-recognizer PCM hash receipt. WAV-to-PCM identity verified now does not retroactively prove decoder input.",
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "asr-11899008382.zip",
+            "asr_run_id": 38573117922,
+            "campaign_id": "tts-quality-remaining-20261014-v1",
+            "native_archive": "qwen06-11895552988.zip",
+            "tts_run_id": 38566438514
+          }
+        },
+        {
+          "role": "development_fit",
+          "scope": "public summary confirms fixed thirteen; original source/result overlay not recovered; no receipts reconstructed",
+          "source": "research/consolidation/fit-history-recovery-2026-10-15.json"
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 161280,
+        "channels": 1,
+        "frames": 40320,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "adabbbb9ffbde2a36f13d8037b932f24ae89613d2f045bf34a5587009e2d9c9c",
+        "wav_sha256": "8ec1d11fc5ee36c15877ff9638a732874e87ccd184d0f02b42177090fe8ae411"
+      },
+      "preset_voice_id": "qwen-preset:serena",
+      "preset_voice_name": "Serena",
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-06",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": false,
+      "seed": 20261014,
+      "slot_id": "tqp-qwen06-06",
+      "source": {
+        "asr_archive": "asr-11899008382.zip",
+        "asr_run_id": 38573117922,
+        "campaign_id": "tts-quality-remaining-20261014-v1",
+        "native_archive": "qwen06-11895552988.zip",
+        "tts_run_id": 38566438514
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW2",
+      "target_text": "小窝小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen06"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "qwen06",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝，小窝。",
+          "sample_id": "tqp-qwen06-10",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "sensevoice",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen06-10",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "whisper",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen06-10",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "historical_screening_summary_not_production_capture",
+      "conservative_group_id": "qwen-preset:uncle_fu",
+      "derived_pcm": {
+        "bytes": 122880,
+        "channels": 1,
+        "frames": 61440,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "18eb1960ac36cc82a0434162addea5ee1b8dc3c50ea9e56dbd419c4dd283118d"
+      },
+      "derived_wav": {
+        "member": "audio/tqp-qwen06-10.wav",
+        "sha256": "d8f378ae3e1ec5d1e16b62adc6ded396eab5b148fc5b3da60243b22d68040d2a",
+        "status": "archived_bytes_verified"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Historical ASR rows contain sample_id only; no per-recognizer PCM hash receipt. WAV-to-PCM identity verified now does not retroactively prove decoder input.",
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "asr-11899008382.zip",
+            "asr_run_id": 38573117922,
+            "campaign_id": "tts-quality-remaining-20261014-v1",
+            "native_archive": "qwen06-11895552988.zip",
+            "tts_run_id": 38566438514
+          }
+        },
+        {
+          "role": "development_fit",
+          "scope": "public summary confirms fixed thirteen; original source/result overlay not recovered; no receipts reconstructed",
+          "source": "research/consolidation/fit-history-recovery-2026-10-15.json"
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 368640,
+        "channels": 1,
+        "frames": 92160,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "2dc4f8d6851c7d4e34245ceea6e3ae7bcac3cc1587fb92537ed45b4357a7b5cd",
+        "wav_sha256": "ba7837fa216e4975ae435644ce81e3bcbacb09e849fa25bb5cf0fa596893de5b"
+      },
+      "preset_voice_id": "qwen-preset:uncle_fu",
+      "preset_voice_name": "Uncle_Fu",
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-10",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": false,
+      "seed": 20261014,
+      "slot_id": "tqp-qwen06-10",
+      "source": {
+        "asr_archive": "asr-11899008382.zip",
+        "asr_run_id": 38573117922,
+        "campaign_id": "tts-quality-remaining-20261014-v1",
+        "native_archive": "qwen06-11895552988.zip",
+        "tts_run_id": 38566438514
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW2",
+      "target_text": "小窝小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen06"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "qwen06",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝，小窝。",
+          "sample_id": "tqp-qwen06-11",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "sensevoice",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen06-11",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "whisper",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝 小窝",
+          "sample_id": "tqp-qwen06-11",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "historical_screening_summary_not_production_capture",
+      "conservative_group_id": "qwen-preset:uncle_fu",
+      "derived_pcm": {
+        "bytes": 163840,
+        "channels": 1,
+        "frames": 81920,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "36b5291b5ca56c6f4927298d940461ddc977a7203680256640f4c0783a187817"
+      },
+      "derived_wav": {
+        "member": "audio/tqp-qwen06-11.wav",
+        "sha256": "855bfbca9dd3b1688d29e5182cf3cab275d72963c8a97b0643bc6dbd3261590e",
+        "status": "archived_bytes_verified"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Historical ASR rows contain sample_id only; no per-recognizer PCM hash receipt. WAV-to-PCM identity verified now does not retroactively prove decoder input.",
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "asr-11899008382.zip",
+            "asr_run_id": 38573117922,
+            "campaign_id": "tts-quality-remaining-20261014-v1",
+            "native_archive": "qwen06-11895552988.zip",
+            "tts_run_id": 38566438514
+          }
+        },
+        {
+          "role": "development_fit",
+          "scope": "public summary confirms fixed thirteen; original source/result overlay not recovered; no receipts reconstructed",
+          "source": "research/consolidation/fit-history-recovery-2026-10-15.json"
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 491520,
+        "channels": 1,
+        "frames": 122880,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "d4c13a43d4584735ac1c632670c631b83aa4b9195e6497bfb1ae7c4145879d75",
+        "wav_sha256": "95b8b56ae61426e1ff082abb52aeff0487ff3390cff49066b81126d1d722d018"
+      },
+      "preset_voice_id": "qwen-preset:uncle_fu",
+      "preset_voice_name": "Uncle_Fu",
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-11",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": false,
+      "seed": 20261015,
+      "slot_id": "tqp-qwen06-11",
+      "source": {
+        "asr_archive": "asr-11899008382.zip",
+        "asr_run_id": 38573117922,
+        "campaign_id": "tts-quality-remaining-20261014-v1",
+        "native_archive": "qwen06-11895552988.zip",
+        "tts_run_id": 38566438514
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW2",
+      "target_text": "小窝小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen06"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "qwen06",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝，小窝。",
+          "sample_id": "tqp-qwen06-14",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "sensevoice",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen06-14",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "whisper",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen06-14",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "historical_screening_summary_not_production_capture",
+      "conservative_group_id": "qwen-preset:dylan",
+      "derived_pcm": {
+        "bytes": 71680,
+        "channels": 1,
+        "frames": 35840,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "d82c64c4272e8c68d307639f949c667bfabf49f4e24c926abb226b4cba9e5f42"
+      },
+      "derived_wav": {
+        "member": "audio/tqp-qwen06-14.wav",
+        "sha256": "8898ce4f311ca788e004b56b6d7496578591566ec118cdfe53a9e640ef211dfd",
+        "status": "archived_bytes_verified"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Historical ASR rows contain sample_id only; no per-recognizer PCM hash receipt. WAV-to-PCM identity verified now does not retroactively prove decoder input.",
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "asr-11899008382.zip",
+            "asr_run_id": 38573117922,
+            "campaign_id": "tts-quality-remaining-20261014-v1",
+            "native_archive": "qwen06-11895552988.zip",
+            "tts_run_id": 38566438514
+          }
+        },
+        {
+          "role": "development_fit",
+          "scope": "public summary confirms fixed thirteen; original source/result overlay not recovered; no receipts reconstructed",
+          "source": "research/consolidation/fit-history-recovery-2026-10-15.json"
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 215040,
+        "channels": 1,
+        "frames": 53760,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "df512e76ded0b271db7f6248fca94c0ed0bcf2c59697cc879c7d6fa686816ff1",
+        "wav_sha256": "31c7243b5f884329510e18bfe0a1ad51e606eab53aa21a874c26c3f1ac6dac08"
+      },
+      "preset_voice_id": "qwen-preset:dylan",
+      "preset_voice_name": "Dylan",
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-14",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": false,
+      "seed": 20261014,
+      "slot_id": "tqp-qwen06-14",
+      "source": {
+        "asr_archive": "asr-11899008382.zip",
+        "asr_run_id": 38573117922,
+        "campaign_id": "tts-quality-remaining-20261014-v1",
+        "native_archive": "qwen06-11895552988.zip",
+        "tts_run_id": 38566438514
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW2",
+      "target_text": "小窝小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen06"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "qwen06",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝，小窝。",
+          "sample_id": "tqp-qwen06-15",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "sensevoice",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen06-15",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "whisper",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen06-15",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "historical_screening_summary_not_production_capture",
+      "conservative_group_id": "qwen-preset:dylan",
+      "derived_pcm": {
+        "bytes": 61440,
+        "channels": 1,
+        "frames": 30720,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "deef86b3c3e826d3c4291a401766e58081ece82740eaf34989e5789773e87d37"
+      },
+      "derived_wav": {
+        "member": "audio/tqp-qwen06-15.wav",
+        "sha256": "c4e5f1035c4d902c51b2cd7beff477631f3eab5a83143c9eededbef780c5a46c",
+        "status": "archived_bytes_verified"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Historical ASR rows contain sample_id only; no per-recognizer PCM hash receipt. WAV-to-PCM identity verified now does not retroactively prove decoder input.",
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "asr-11899008382.zip",
+            "asr_run_id": 38573117922,
+            "campaign_id": "tts-quality-remaining-20261014-v1",
+            "native_archive": "qwen06-11895552988.zip",
+            "tts_run_id": 38566438514
+          }
+        },
+        {
+          "role": "development_fit",
+          "scope": "public summary confirms fixed thirteen; original source/result overlay not recovered; no receipts reconstructed",
+          "source": "research/consolidation/fit-history-recovery-2026-10-15.json"
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 184320,
+        "channels": 1,
+        "frames": 46080,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "9eb48aa27a89d3a74d5e912aff4538bb6cb4d209b89ce4da73df77a34e63bcea",
+        "wav_sha256": "eae717740ed4ac5ea03c718dcd9c58274ebe5f3028c19c641f8fa191f90e7489"
+      },
+      "preset_voice_id": "qwen-preset:dylan",
+      "preset_voice_name": "Dylan",
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen06-15",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": false,
+      "seed": 20261015,
+      "slot_id": "tqp-qwen06-15",
+      "source": {
+        "asr_archive": "asr-11899008382.zip",
+        "asr_run_id": 38573117922,
+        "campaign_id": "tts-quality-remaining-20261014-v1",
+        "native_archive": "qwen06-11895552988.zip",
+        "tts_run_id": 38566438514
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW2",
+      "target_text": "小窝小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen06"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "qwen06",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好，小窝。",
+          "sample_id": "tqp-qwen17-01",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "sensevoice",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好小窝",
+          "sample_id": "tqp-qwen17-01",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "whisper",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好,小窝。",
+          "sample_id": "tqp-qwen17-01",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "historical_screening_summary_not_production_capture",
+      "conservative_group_id": "qwen-preset:vivian",
+      "derived_pcm": {
+        "bytes": 43520,
+        "channels": 1,
+        "frames": 21760,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "63a05a7c0b61695b4f94e9c2124d4ecc9012d19c079f14f59bcd5d395d2cc748"
+      },
+      "derived_wav": {
+        "member": "audio/tqp-qwen17-01.wav",
+        "sha256": "f2ffc39fc50157a6f0acbe6a9cb67052130849253a5d01db80c8412a0e6d9133",
+        "status": "archived_bytes_verified"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Historical ASR rows contain sample_id only; no per-recognizer PCM hash receipt. WAV-to-PCM identity verified now does not retroactively prove decoder input.",
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "asr-11899008382.zip",
+            "asr_run_id": 38573117922,
+            "campaign_id": "tts-quality-remaining-20261014-v1",
+            "native_archive": "qwen17-11895324049.zip",
+            "tts_run_id": 38566438514
+          }
+        },
+        {
+          "role": "development_fit",
+          "scope": "public summary confirms fixed thirteen; original source/result overlay not recovered; no receipts reconstructed",
+          "source": "research/consolidation/fit-history-recovery-2026-10-15.json"
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 130560,
+        "channels": 1,
+        "frames": 32640,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "b128dcd852c487f5466830b566c96aced68df9ef644ebc8079ad3e692c87a513",
+        "wav_sha256": "9ddaa46b1bc728c1051f87c4a3e81a06eb4b21da3e230c81f9f9b3e6f2e44e54"
+      },
+      "preset_voice_id": "qwen-preset:vivian",
+      "preset_voice_name": "Vivian",
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen17-01",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": false,
+      "seed": 20261015,
+      "slot_id": "tqp-qwen17-01",
+      "source": {
+        "asr_archive": "asr-11899008382.zip",
+        "asr_run_id": 38573117922,
+        "campaign_id": "tts-quality-remaining-20261014-v1",
+        "native_archive": "qwen17-11895324049.zip",
+        "tts_run_id": 38566438514
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW1",
+      "target_text": "你好小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen17"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "qwen06",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝，小窝。",
+          "sample_id": "tqp-qwen17-02",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "sensevoice",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen17-02",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "whisper",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝 小窝",
+          "sample_id": "tqp-qwen17-02",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "historical_screening_summary_not_production_capture",
+      "conservative_group_id": "qwen-preset:vivian",
+      "derived_pcm": {
+        "bytes": 56320,
+        "channels": 1,
+        "frames": 28160,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "4de6fa45a9d9f89adc62f2b7927edbf931e60ae56f288a7c35b5e8348b33e85f"
+      },
+      "derived_wav": {
+        "member": "audio/tqp-qwen17-02.wav",
+        "sha256": "a8b6ed61f36ba0d46e50648e341bceb26c13519cd5db8d4fd63849124ec87a3c",
+        "status": "archived_bytes_verified"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Historical ASR rows contain sample_id only; no per-recognizer PCM hash receipt. WAV-to-PCM identity verified now does not retroactively prove decoder input.",
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "asr-11899008382.zip",
+            "asr_run_id": 38573117922,
+            "campaign_id": "tts-quality-remaining-20261014-v1",
+            "native_archive": "qwen17-11895324049.zip",
+            "tts_run_id": 38566438514
+          }
+        },
+        {
+          "role": "development_fit",
+          "scope": "public summary confirms fixed thirteen; original source/result overlay not recovered; no receipts reconstructed",
+          "source": "research/consolidation/fit-history-recovery-2026-10-15.json"
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 168960,
+        "channels": 1,
+        "frames": 42240,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "dab3c54e17437a4eafafc4a2488dfff999e41164f7f25e62104c4667c6134265",
+        "wav_sha256": "232c78b9a1098a769581e3470bcb87515a61d1e786ca7ec59a0271604e80b99e"
+      },
+      "preset_voice_id": "qwen-preset:vivian",
+      "preset_voice_name": "Vivian",
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen17-02",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": false,
+      "seed": 20261014,
+      "slot_id": "tqp-qwen17-02",
+      "source": {
+        "asr_archive": "asr-11899008382.zip",
+        "asr_run_id": 38573117922,
+        "campaign_id": "tts-quality-remaining-20261014-v1",
+        "native_archive": "qwen17-11895324049.zip",
+        "tts_run_id": 38566438514
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW2",
+      "target_text": "小窝小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen17"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "qwen06",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝，小窝。",
+          "sample_id": "tqp-qwen17-03",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "sensevoice",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen17-03",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "whisper",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen17-03",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "historical_screening_summary_not_production_capture",
+      "conservative_group_id": "qwen-preset:vivian",
+      "derived_pcm": {
+        "bytes": 38400,
+        "channels": 1,
+        "frames": 19200,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "e888cf627014bd740be46ff1cfb0588b793478fa426ee3b05d03a2451330df03"
+      },
+      "derived_wav": {
+        "member": "audio/tqp-qwen17-03.wav",
+        "sha256": "67c1c9cd4f797c88a442a0c8e73dce05e60d9394214079eda8431de55edbba9e",
+        "status": "archived_bytes_verified"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Historical ASR rows contain sample_id only; no per-recognizer PCM hash receipt. WAV-to-PCM identity verified now does not retroactively prove decoder input.",
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "asr-11899008382.zip",
+            "asr_run_id": 38573117922,
+            "campaign_id": "tts-quality-remaining-20261014-v1",
+            "native_archive": "qwen17-11895324049.zip",
+            "tts_run_id": 38566438514
+          }
+        },
+        {
+          "role": "development_fit",
+          "scope": "public summary confirms fixed thirteen; original source/result overlay not recovered; no receipts reconstructed",
+          "source": "research/consolidation/fit-history-recovery-2026-10-15.json"
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 115200,
+        "channels": 1,
+        "frames": 28800,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "156d663d7f8d7852c40161595b27137d1389902f56269b6bd2518436663f8fb3",
+        "wav_sha256": "c098e367120f088c774474a28b501d3ab9914b3039199c14e80d8b7b8970cb08"
+      },
+      "preset_voice_id": "qwen-preset:vivian",
+      "preset_voice_name": "Vivian",
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen17-03",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": false,
+      "seed": 20261015,
+      "slot_id": "tqp-qwen17-03",
+      "source": {
+        "asr_archive": "asr-11899008382.zip",
+        "asr_run_id": 38573117922,
+        "campaign_id": "tts-quality-remaining-20261014-v1",
+        "native_archive": "qwen17-11895324049.zip",
+        "tts_run_id": 38566438514
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW2",
+      "target_text": "小窝小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen17"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "qwen06",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝，小窝。",
+          "sample_id": "tqp-qwen17-06",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "sensevoice",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen17-06",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "whisper",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝 小窝",
+          "sample_id": "tqp-qwen17-06",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "historical_screening_summary_not_production_capture",
+      "conservative_group_id": "qwen-preset:serena",
+      "derived_pcm": {
+        "bytes": 53760,
+        "channels": 1,
+        "frames": 26880,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "32bc6992b96af29ca25bdc2be3adfa9135a23c4c09a96e4afec73cee62902769"
+      },
+      "derived_wav": {
+        "member": "audio/tqp-qwen17-06.wav",
+        "sha256": "2af1e4cb8f18d5f4512303f2d9c8413231e27397a7f774d2d9fbb19b0072c679",
+        "status": "archived_bytes_verified"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Historical ASR rows contain sample_id only; no per-recognizer PCM hash receipt. WAV-to-PCM identity verified now does not retroactively prove decoder input.",
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "asr-11899008382.zip",
+            "asr_run_id": 38573117922,
+            "campaign_id": "tts-quality-remaining-20261014-v1",
+            "native_archive": "qwen17-11895324049.zip",
+            "tts_run_id": 38566438514
+          }
+        },
+        {
+          "role": "development_fit",
+          "scope": "public summary confirms fixed thirteen; original source/result overlay not recovered; no receipts reconstructed",
+          "source": "research/consolidation/fit-history-recovery-2026-10-15.json"
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 161280,
+        "channels": 1,
+        "frames": 40320,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "6ed93fc43a8d9fd16b592a06f673efe7b6b749c2c1195407c0b74484e8c1adeb",
+        "wav_sha256": "d7827cf04dd1740d211ce8052830d0603f60295a7a93cbf0cbcfe389cf104714"
+      },
+      "preset_voice_id": "qwen-preset:serena",
+      "preset_voice_name": "Serena",
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen17-06",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": false,
+      "seed": 20261014,
+      "slot_id": "tqp-qwen17-06",
+      "source": {
+        "asr_archive": "asr-11899008382.zip",
+        "asr_run_id": 38573117922,
+        "campaign_id": "tts-quality-remaining-20261014-v1",
+        "native_archive": "qwen17-11895324049.zip",
+        "tts_run_id": 38566438514
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW2",
+      "target_text": "小窝小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen17"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "qwen06",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝，小窝。",
+          "sample_id": "tqp-qwen17-14",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "sensevoice",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen17-14",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "whisper",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝 小窝",
+          "sample_id": "tqp-qwen17-14",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "historical_screening_summary_not_production_capture",
+      "conservative_group_id": "qwen-preset:dylan",
+      "derived_pcm": {
+        "bytes": 53760,
+        "channels": 1,
+        "frames": 26880,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "75d3a56fce79312f1ce1d2b450ac9e742a8f1e87c60cc9bd6d0675728d48ee96"
+      },
+      "derived_wav": {
+        "member": "audio/tqp-qwen17-14.wav",
+        "sha256": "62f3d6aac59eaab087e7f93d44631ed94bec7bb4738235bc74491cef7953dd4e",
+        "status": "archived_bytes_verified"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Historical ASR rows contain sample_id only; no per-recognizer PCM hash receipt. WAV-to-PCM identity verified now does not retroactively prove decoder input.",
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "asr-11899008382.zip",
+            "asr_run_id": 38573117922,
+            "campaign_id": "tts-quality-remaining-20261014-v1",
+            "native_archive": "qwen17-11895324049.zip",
+            "tts_run_id": 38566438514
+          }
+        },
+        {
+          "role": "development_fit",
+          "scope": "public summary confirms fixed thirteen; original source/result overlay not recovered; no receipts reconstructed",
+          "source": "research/consolidation/fit-history-recovery-2026-10-15.json"
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 161280,
+        "channels": 1,
+        "frames": 40320,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "a69e349fc2b66131b31b2adea2e4c2497074abda19a2de905b9dc516f6a534e9",
+        "wav_sha256": "a576f4177e50ecfe92c1515ffc4acc301023f45e699442df7d8c91ce608088c2"
+      },
+      "preset_voice_id": "qwen-preset:dylan",
+      "preset_voice_name": "Dylan",
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen17-14",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": false,
+      "seed": 20261014,
+      "slot_id": "tqp-qwen17-14",
+      "source": {
+        "asr_archive": "asr-11899008382.zip",
+        "asr_run_id": 38573117922,
+        "campaign_id": "tts-quality-remaining-20261014-v1",
+        "native_archive": "qwen17-11895324049.zip",
+        "tts_run_id": 38566438514
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW2",
+      "target_text": "小窝小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen17"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "qwen06",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝，小窝。",
+          "sample_id": "tqp-qwen17-15",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "sensevoice",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen17-15",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        },
+        {
+          "binding_status": "historical_id_join_only",
+          "bound_pcm_sha256": null,
+          "family": "whisper",
+          "normalized_text": "小窝小窝",
+          "raw_text": "小窝小窝",
+          "sample_id": "tqp-qwen17-15",
+          "source_member": "results.json",
+          "source_member_sha256": "3b53948ddb3a4160d159fdb64efe75579858e4909a390b0ad1a59eeb5e29ad05"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "historical_screening_summary_not_production_capture",
+      "conservative_group_id": "qwen-preset:dylan",
+      "derived_pcm": {
+        "bytes": 40960,
+        "channels": 1,
+        "frames": 20480,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "efb354bc1ca946fbc932817f7970e24f5583440cfc237e78d912f0a4d9c76404"
+      },
+      "derived_wav": {
+        "member": "audio/tqp-qwen17-15.wav",
+        "sha256": "2fdcfe09a177e69e39ad337f9e3dbe5dfb0da4d57d9a02c04e1359e4a1f7f6ce",
+        "status": "archived_bytes_verified"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Historical ASR rows contain sample_id only; no per-recognizer PCM hash receipt. WAV-to-PCM identity verified now does not retroactively prove decoder input.",
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "asr-11899008382.zip",
+            "asr_run_id": 38573117922,
+            "campaign_id": "tts-quality-remaining-20261014-v1",
+            "native_archive": "qwen17-11895324049.zip",
+            "tts_run_id": 38566438514
+          }
+        },
+        {
+          "role": "development_fit",
+          "scope": "public summary confirms fixed thirteen; original source/result overlay not recovered; no receipts reconstructed",
+          "source": "research/consolidation/fit-history-recovery-2026-10-15.json"
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 122880,
+        "channels": 1,
+        "frames": 30720,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "9031a310decdc4a3f8f42b5352a519039d700654514900b236a8067b467e694d",
+        "wav_sha256": "78e5a33c18cb02ba96775fc11483f00b85faa07709d0b720d1e812d7fd4958e5"
+      },
+      "preset_voice_id": "qwen-preset:dylan",
+      "preset_voice_name": "Dylan",
+      "record_id": "tts-quality-remaining-20261014-v1:tqp-qwen17-15",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": false,
+      "seed": 20261015,
+      "slot_id": "tqp-qwen17-15",
+      "source": {
+        "asr_archive": "asr-11899008382.zip",
+        "asr_run_id": 38573117922,
+        "campaign_id": "tts-quality-remaining-20261014-v1",
+        "native_archive": "qwen17-11895324049.zip",
+        "tts_run_id": 38566438514
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW2",
+      "target_text": "小窝小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen17"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "three_recognizer_pcm_receipts_verified",
+          "bound_pcm_sha256": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25",
+          "family": "qwen_asr",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好，小窝。",
+          "source_member": "evidence/asr/qwen_asr/output/cells/e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25/completed.json",
+          "source_member_sha256": "5b7bf5058730145ab22dd6bb6f1137e6f137a1db9d58f0c79d6b7ab107160a0f"
+        },
+        {
+          "binding_status": "three_recognizer_pcm_receipts_verified",
+          "bound_pcm_sha256": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25",
+          "family": "sensevoice",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好小窝",
+          "source_member": "evidence/asr/sensevoice/output/cells/e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25/completed.json",
+          "source_member_sha256": "daa29623b788d146eaad5e44bcdf8299cc2096ba9bb1f33a46bd553aaa913756"
+        },
+        {
+          "binding_status": "three_recognizer_pcm_receipts_verified",
+          "bound_pcm_sha256": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25",
+          "family": "whisper_small",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好小窝",
+          "source_member": "evidence/asr/whisper_small/output/cells/e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25/completed.json",
+          "source_member_sha256": "4ff9cabdb7db6f9eebe6a8a34e03321d4ab82bc17be25b9d9b60343b1996ee8a"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "kw1_blind_receipts_not_production_retained_asr_schema",
+      "conservative_group_id": "qwen-preset:uncle_fu",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "numpy_version": "2.3.2",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "derived_pcm": {
+        "bytes": 48640,
+        "channels": 1,
+        "frames": 24320,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "e2d16bb9c1252fd365307b102eb9f1e730ed4f18a4f70cc2878f2fc5a071de25"
+      },
+      "derived_wav": {
+        "sha256": "f89035146609af08ae910cb01943b741967777e95795d09e255f8bfe981d1b80",
+        "status": "canonical_header_hash_verified_in_memory_not_archived_WAV"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "kw1-supplement-11942325284.zip",
+            "asr_run_id": 38664865348,
+            "campaign_id": "kw1-preset-supplement-20261014-v1",
+            "native_archive": "kw1-supplement-11942325284.zip",
+            "tts_run_id": 38664865348
+          }
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 145920,
+        "channels": 1,
+        "frames": 36480,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "2ed27dabdfc91cc63d57ae51c5672c7560bd7fa531ef8f19c68df02b6bc49d26",
+        "wav_sha256": "565222664890aa5f5447c6ef98620acba6fafa8a3aa67b78d083afaae86b9782"
+      },
+      "preset_voice_id": "qwen-preset:uncle_fu",
+      "preset_voice_name": "Uncle_Fu",
+      "record_id": "kw1-preset-supplement-20261014-v1:kw1s-05",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": true,
+      "seed": 2026101402,
+      "slot_id": "kw1s-05",
+      "source": {
+        "asr_archive": "kw1-supplement-11942325284.zip",
+        "asr_run_id": 38664865348,
+        "campaign_id": "kw1-preset-supplement-20261014-v1",
+        "native_archive": "kw1-supplement-11942325284.zip",
+        "tts_run_id": 38664865348
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW1",
+      "target_text": "你好小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen17"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "three_recognizer_pcm_receipts_verified",
+          "bound_pcm_sha256": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e",
+          "family": "qwen_asr",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好，小窝。",
+          "source_member": "evidence/asr/qwen_asr/output/cells/5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e/completed.json",
+          "source_member_sha256": "bcb4c84c6ef53ea6eea4bb6966e6026f86f5613d80a5461a5bf8ace69ecf4bdc"
+        },
+        {
+          "binding_status": "three_recognizer_pcm_receipts_verified",
+          "bound_pcm_sha256": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e",
+          "family": "sensevoice",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好小窝",
+          "source_member": "evidence/asr/sensevoice/output/cells/5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e/completed.json",
+          "source_member_sha256": "4909b9a2b1183193eda5526ffe218922cc8c6276519896f82bf26c6b83af814e"
+        },
+        {
+          "binding_status": "three_recognizer_pcm_receipts_verified",
+          "bound_pcm_sha256": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e",
+          "family": "whisper_small",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好小窝",
+          "source_member": "evidence/asr/whisper_small/output/cells/5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e/completed.json",
+          "source_member_sha256": "6837a4e8a206a68551b9483c99a5e8f32214f9e44abc79b04219641775cc57d8"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "kw1_blind_receipts_not_production_retained_asr_schema",
+      "conservative_group_id": "qwen-preset:uncle_fu",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "numpy_version": "2.3.2",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "derived_pcm": {
+        "bytes": 53760,
+        "channels": 1,
+        "frames": 26880,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "5fdb9ff1e195b0e9b5fd36ea8174294470afbecbba3a6b0165dd498b972f280e"
+      },
+      "derived_wav": {
+        "sha256": "3b9ca7407af1256e132ec3d551c7270820116edf80c87f0aaad6cea0c611d46b",
+        "status": "canonical_header_hash_verified_in_memory_not_archived_WAV"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "kw1-supplement-11942325284.zip",
+            "asr_run_id": 38664865348,
+            "campaign_id": "kw1-preset-supplement-20261014-v1",
+            "native_archive": "kw1-supplement-11942325284.zip",
+            "tts_run_id": 38664865348
+          }
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 161280,
+        "channels": 1,
+        "frames": 40320,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "72c74eceb009367a48b51f44a7b87c0d9a01ef26d38c7a7d5283557434eabe77",
+        "wav_sha256": "419c64112cc7832f446915b03b52aadd7eb035d5d5468508572205a8bdbd738e"
+      },
+      "preset_voice_id": "qwen-preset:uncle_fu",
+      "preset_voice_name": "Uncle_Fu",
+      "record_id": "kw1-preset-supplement-20261014-v1:kw1s-06",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": true,
+      "seed": 2026101401,
+      "slot_id": "kw1s-06",
+      "source": {
+        "asr_archive": "kw1-supplement-11942325284.zip",
+        "asr_run_id": 38664865348,
+        "campaign_id": "kw1-preset-supplement-20261014-v1",
+        "native_archive": "kw1-supplement-11942325284.zip",
+        "tts_run_id": 38664865348
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW1",
+      "target_text": "你好小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen17"
+    },
+    {
+      "asr": [
+        {
+          "binding_status": "three_recognizer_pcm_receipts_verified",
+          "bound_pcm_sha256": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648",
+          "family": "qwen_asr",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好，小窝。",
+          "source_member": "evidence/asr/qwen_asr/output/cells/8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648/completed.json",
+          "source_member_sha256": "7707e6719d24f343eee0dbd2e7d59ae406bc4f9439194c27c324dbbc11dffe11"
+        },
+        {
+          "binding_status": "three_recognizer_pcm_receipts_verified",
+          "bound_pcm_sha256": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648",
+          "family": "sensevoice",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好小窝",
+          "source_member": "evidence/asr/sensevoice/output/cells/8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648/completed.json",
+          "source_member_sha256": "61ed4ad562879e7cc61e7c8383e8e68e97d782c5a37d9634a96f95963d661912"
+        },
+        {
+          "binding_status": "three_recognizer_pcm_receipts_verified",
+          "bound_pcm_sha256": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648",
+          "family": "whisper_small",
+          "normalized_text": "你好小窝",
+          "raw_text": "你好小窝",
+          "source_member": "evidence/asr/whisper_small/output/cells/8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648/completed.json",
+          "source_member_sha256": "87918ad8f5b8a66cad3a85c342c1a0cff6747a34192c8b8843ab79eaca18642b"
+        }
+      ],
+      "candidate": true,
+      "capture_scope": "kw1_blind_receipts_not_production_retained_asr_schema",
+      "conservative_group_id": "qwen-preset:uncle_fu",
+      "derivation": {
+        "down": 3,
+        "gain_normalization": false,
+        "method": "scipy.signal.resample_poly",
+        "numpy_version": "2.3.2",
+        "padtype": "constant",
+        "quantization": "floor_float64_times_32768_to_int16",
+        "scipy_version": "1.17.1",
+        "trimming": false,
+        "up": 2,
+        "window": [
+          "kaiser",
+          5.0
+        ]
+      },
+      "derived_pcm": {
+        "bytes": 53760,
+        "channels": 1,
+        "frames": 26880,
+        "sample_format": "s16le",
+        "sample_rate_hz": 16000,
+        "sha256": "8f8e5fd42b82efab89e89e41dd1df23d09e1c3a7b6043b7cb8a89f90efe7c648"
+      },
+      "derived_wav": {
+        "sha256": "578d488af08d4f691cd962bb11ae419bfb0e6005c2bbae14005f2fd6551ced32",
+        "status": "canonical_header_hash_verified_in_memory_not_archived_WAV"
+      },
+      "evaluation_gold": false,
+      "evidence_gaps": [
+        "Native-to-derived resampling not rerun."
+      ],
+      "evidence_tier": "machine_three_asr_training_candidate",
+      "exposure_history": [
+        {
+          "role": "screening",
+          "source": {
+            "asr_archive": "kw1-supplement-11942325284.zip",
+            "asr_run_id": 38664865348,
+            "campaign_id": "kw1-preset-supplement-20261014-v1",
+            "native_archive": "kw1-supplement-11942325284.zip",
+            "tts_run_id": 38664865348
+          }
+        }
+      ],
+      "group_independence_proven": false,
+      "history_complete": false,
+      "human_gold": false,
+      "label_origin": "machine-consensus",
+      "native_audio": {
+        "bytes": 161280,
+        "channels": 1,
+        "frames": 40320,
+        "sample_format": "f32le",
+        "sample_rate_hz": 24000,
+        "values_sha256": "c49619b4a05e3e932b36b36def05e8b2175d2ea20356228ff000e4492f34c1d0",
+        "wav_sha256": "149f12ff5c2bba75383f5f66b281697c2b0d501f89a7ba5e08b90b5dfe19fb3b"
+      },
+      "preset_voice_id": "qwen-preset:uncle_fu",
+      "preset_voice_name": "Uncle_Fu",
+      "record_id": "kw1-preset-supplement-20261014-v1:kw1s-07",
+      "role_blockers": [
+        "machine_consensus_is_not_human_gold",
+        "exposed_screening_candidates",
+        "source_not_admitted_to_training"
+      ],
+      "role_eligibility": {
+        "calibration": false,
+        "sealed_test": false,
+        "selection": false
+      },
+      "same_pcm_asr_binding_verified": true,
+      "seed": 2026101402,
+      "slot_id": "kw1s-07",
+      "source": {
+        "asr_archive": "kw1-supplement-11942325284.zip",
+        "asr_run_id": 38664865348,
+        "campaign_id": "kw1-preset-supplement-20261014-v1",
+        "native_archive": "kw1-supplement-11942325284.zip",
+        "tts_run_id": 38664865348
+      },
+      "source_trust_root_admitted": false,
+      "speaker_id": null,
+      "target_class": "KW1",
+      "target_text": "你好小窝",
+      "training_admitted": false,
+      "tts_engine": "qwen17"
+    }
+  ],
+  "repository_inputs": {
+    "research/consolidation/fit-history-recovery-2026-10-15.json": "6e0bf6141ddec49297ba00ed9a368fc66f323c06672d6906b5ab4fc482a041f7",
+    "research/kw1-preset-supplement-observation-v1/observation.json": "95c67c26d04bfdbba41df11540c084ab99ad736e0b8147383d93808be40a919e",
+    "research/kw1-preset-supplement-v1/blind_pcm.py": "ab6164bb89c9b3b0e707375330b2e9c13b772a0fda1c252dfb2dda05f3539b64",
+    "research/kw1-preset-supplement-v1/worker.py": "979e1709e24ff21e805abfd481994d4073c3220f217f20d6782d1307a77097b3",
+    "research/tts-pilot-screening-v1/evidence/asr-run-38573117922/thirteen-candidate-evidence.json": "9cb52b6f4a890a858f5fc96af89825ba63c5035fcaaefb0349a7806f3843745d",
+    "research/tts-pilot-screening-v1/evidence/tts-input-20261014/artifact-inventory.json": "cf20e6771eb0e0647dc890ab341a87367cbb77afb89c39b85377e8ace3c5ba4a",
+    "research/tts-pilot-screening-v1/screen.py": "982582c0e4c7f957276520977ebfa3bad0cbb5753e16d50bbadef0835682523e"
+  },
+  "schema": "kws-candidate-registry-v1",
+  "source_trust_root_admitted": false,
+  "training_admitted": false
+}
