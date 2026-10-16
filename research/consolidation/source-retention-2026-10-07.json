@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 57046,
-      "sha256": "6a867e19835bfdc2698f4df56f197f83cc01279cd5fb949eaa18f113988afcf4",
-      "git_blob_sha1": "92544b6c9de0674f09098303a9505f5f0ecbf69f"
+      "bytes": 57451,
+      "sha256": "2634ee6ef34d93016f5822f8feb8dbe89391aa37e061b52bd5de0c0f5055e065",
+      "git_blob_sha1": "e91bdf6b450f6b01a8e4bb180fe9d5fb8cff8b08"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -35814,6 +35814,155 @@
             "bytes": 8537,
             "sha256": "eb44efbf2f7c62338ca1aecd6d031e6a76dccbb127c28290ad265c0cf81b15b5",
             "git_blob_sha1": "57cce8cbe3cc006a50dc13865fda02d5da528390"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-16",
+      "operation_id": "kws-lr-stability-source-20261016-v1",
+      "public_main_base_commit": "f86ffb57234c1083c03d25c4ae89bfdbac2f733c",
+      "public_main_base_tree": "5b51c5bd331801114409b9021e022c756949b7d8",
+      "workflow_source_changed": true,
+      "scope": "Fixed 600-update late-learning-rate stability research source; offline synthetic contracts and static pin CI only. Enabled plan candidate pending final review. No model, optimizer, ASR or TTS execution during source integration. Existing historical evidence and consumed campaign remain unchanged. CI and posterior dependency identities refreshed.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 57046,
+            "sha256": "6a867e19835bfdc2698f4df56f197f83cc01279cd5fb949eaa18f113988afcf4",
+            "git_blob_sha1": "92544b6c9de0674f09098303a9505f5f0ecbf69f"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 57451,
+            "sha256": "2634ee6ef34d93016f5822f8feb8dbe89391aa37e061b52bd5de0c0f5055e065",
+            "git_blob_sha1": "e91bdf6b450f6b01a8e4bb180fe9d5fb8cff8b08"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "e224e29621577dfcee3c099318661a85c63d1793e16b0bcf0eaacda925da55bc",
+            "git_blob_sha1": "0d92a183857a99a4a3716e3c69c55cbe77b501e4"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "e3a74dd6fe1b14450b5c30ffb1a3e630ced16dd7ba519dfbda9526cac8c48e84",
+            "git_blob_sha1": "5af0fad9a2bc4d95513399352a6fa6683d2b56ec"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "ca83d7d9e4e66094523bc9ff2ba6a99da3bd6a99bde7793ee58fb0abe5d2c027",
+            "git_blob_sha1": "5c46d07154f2b5fbfae383e9b798b79270508162"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "59e61d5d004c2bbdff5162274ddd83036a72086df8449ba9c6350a3f94e2cd86",
+            "git_blob_sha1": "f890aa0400e9a7c4e39e1e3a28cefe84705ec28d"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/README.md",
+            "mode": "100644",
+            "bytes": 6188,
+            "sha256": "323527091dbc2397b45f10d879cec743f56beaf8a181b021e896ed1e468f4235",
+            "git_blob_sha1": "3fbfb5acbe08f810304938245f42ec56ba2bdd09"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/contract.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/contract.py",
+            "mode": "100644",
+            "bytes": 11046,
+            "sha256": "28ae51a0cd7caa9eb29a04faa44aea687e94b1a1889c8c455cb3d41bc173c8a0",
+            "git_blob_sha1": "f1630cb4719a6f5667ac8b990b46a863cd9a5906"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/historical-input-pins.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/historical-input-pins.json",
+            "mode": "100644",
+            "bytes": 93355,
+            "sha256": "849d7b768b61d7c8238ffea3f5bd69328b6cfba70d7eb25088338b20b33929cd",
+            "git_blob_sha1": "a5d9123d4a72ec69efbf2f5b42e5ef85142dcce1"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/numeric_preflight.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/numeric_preflight.py",
+            "mode": "100644",
+            "bytes": 817,
+            "sha256": "eb11cd8c298c9106e38f688cf0e6764a03d52f00cdf0e48bd802494a67d399e1",
+            "git_blob_sha1": "e55372f14b385dae9a56f7bc118c812a632a4ea4"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/plan.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/plan.json",
+            "mode": "100644",
+            "bytes": 4844,
+            "sha256": "b053e74a1322e938dbd82b4526fe63edf3a428904861d070d36cea1e121b4068",
+            "git_blob_sha1": "50e2d90703e72e5b63dc748b9a21376abc369669"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/run_lr_stability.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/run_lr_stability.py",
+            "mode": "100644",
+            "bytes": 18079,
+            "sha256": "0a3a0e919f5707b30f13c5bc73f5babc3d0c66b8f1e77e430a4c49043b0ab835",
+            "git_blob_sha1": "2f7bb49c6828c8103cede17b4c73fb01e40a49bd"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/source-manifest.json",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/source-manifest.json",
+            "mode": "100644",
+            "bytes": 1259,
+            "sha256": "0e1fba4c5d9129b87e364cbfe95c388f9e07ed0fbb9376c77da4343c390252ec",
+            "git_blob_sha1": "522970fc37abe7633c1ee928397de097720f4abb"
+          }
+        },
+        {
+          "path": "research/kws-lr-stability-v1/test_contract.py",
+          "before": null,
+          "after": {
+            "path": "research/kws-lr-stability-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 9585,
+            "sha256": "d1ec64333e1222e72cf66113710fe5d5db963bc5635feb6c5c9c4dd5e0c36abe",
+            "git_blob_sha1": "67240215de70858eac49e3ffea2060f32396f942"
           }
         }
       ]
