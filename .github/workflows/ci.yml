@@ -628,6 +628,12 @@ jobs:
         run: ctest --test-dir build --output-on-failure
       - name: Verify tracked worktree after Test
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Test"'
+      - name: Single-pass WAV trace artificial contract
+        run: >-
+          python3 -B tests/test_wav_trace.py
+          --wav-runner ./build/kws_wav --replay-runner ./build/kws_decoder_replay
+      - name: Verify tracked worktree after WAV trace contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "WAV trace contract"'
       - name: Clang static analysis
         if: matrix.cc == 'clang'
         run: |

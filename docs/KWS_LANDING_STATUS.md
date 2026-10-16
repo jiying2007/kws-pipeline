@@ -1,5 +1,88 @@
 # KWS product landing status
 
+## 2026-10-16 data/model roadmap checkpoint
+
+Read-only evidence audit at `a7015ff61947b423ed0162b692a39f7590255941`.
+The seven-part data/model roadmap is **not end-to-end complete**. Source and
+archive checks are useful completed work; they do not establish a new deployable
+candidate, independent acoustic gains, or product qualification. The dated
+historical sections below are retained unchanged. Where an older preparation
+README says NOT_RUN, use the later exact result receipt for that specific run.
+
+| Original outcome | Current evidence-backed status | Next outcome needed |
+| --- | --- | --- |
+| Standard/accent/near-pronunciation/uncertain labels and two product policies | **Partial.** Explicit alternative-pronunciation policy and independent listening template exist in [effect_evidence.py](../eval/effect_evidence.py); a completed four-category benchmark and measured conservative/accent-friendly comparison are not established by the inspected evidence. | Freeze the intended event labels and collect their independent references. Playback of a complete target word remains a product-semantic decision. |
+| Source-family/speaker splits; machine labels separate from human references | **Partial.** [Grouped split implementation](../training/effect_dataset_split.py) and the [measured inventory](../research/effect-data-inventory-v2/README.md) preserve lineage and historical use. The 385-file recovery snapshot is all development, with no training or sealed rows and no speaker/session IDs; it is not the complete project corpus. | Recover supported metadata without inventing identities; obtain legitimately independent calibration and selection support. |
+| Qwen0.6/Qwen1.7/CosyVoice useful-yield comparison | **Partial.** [Actual Qwen screening](../research/tts-pilot-screening-v1/evidence/asr-run-38573117922/stratified-analysis.json) records 7/16 and 6/16 three-ASR candidates. The [supplement](../research/kw1-preset-supplement-observation-v1/README.md) added three KW1 candidates. CosyVoice3's four admissible reference voices remain unresolved in the [pilot](../research/tts-quality-pilot-v1/README.md). | Human phonetic/naturalness reference and a properly bounded three-source comparison; machine yield is not a quality ranking. |
+| Hard negatives, independent continuous background, paired AFE | **Partial.** [AliMeeting intake](../research/alimeeting-continuous-intake-v1/RESULT.md) acquired eight complete sessions / 4.205059722 hours. Its frozen-C pass had zero triggers, but negative-admitted duration remains zero. The [same-tuple machine-positive control](../research/alimeeting-continuous-intake-v1/machine-positive-control-v1/README.md) was 0/13. | Complete transcript/boundary and lineage review before negative admission; obtain difficult negative labels and final-AFE paired evidence. |
+| CTC versus direct lightweight KWS A/B; optional second stage | **Core comparison not completed.** The [current paired runner](../research/model_comparison/README.md) has actual artificial-PCM numeric smoke, but compares RNN CTC with reduced causal DS-TCN CTC. It is not a completed DS-TC-ResNet/SVDF direct-KWS comparison. | One matched acoustic comparison with reusable checkpoints, followed by deployment work only for a supported candidate. |
+| FRR at matched FAR, continuous FAR/confidence interval, real far field and SSC305 | **Core measurements not completed.** The [event scorer](../eval/README.md) supports denominators, per-keyword misses and negative-rate upper bounds. Current new-candidate independent matched-FAR, real far-field and target-board results are not established. | Independent positive/negative exposure, calibration-only threshold selection, frozen event evaluation and actual SSC305 measurements. |
+| Multiple seeds, quantization, sealed acceptance | **Not completed for the current candidate.** [LR600 acceptance](../research/kws-lr-stability-v1/result-20261016/acceptance-summary.json) records one seed, 12 exposed machine-labelled training samples, failed raw-greedy fit and no reusable weight export. | A retained candidate, multi-seed confirmation, export/runtime parity, quantization assessment and fresh final acceptance. |
+
+The [latest saved diagnostics](../research/kws-lr-stability-v1/saved-diagnostics-20261016/README.md)
+retain a posthoc 12/12 beam result and a separate 12/12 native-decoder result.
+The latter used a synthetic constant-one speech gate and uncalibrated .55
+threshold; `production_engine_executed=false`. It does not close full-engine
+sensitivity, negative-stream FAR, real VAD, generalization or deployment.
+
+### Minimal data preparation without another model run
+
+### 2026-10-16 12:29 UTC text recovery update
+
+The eight original TextGrid bodies have now been recovered locally from a
+[pinned public nonofficial mirror](https://github.com/quietcricket/meeting-transcription-dataset/tree/e9bd23a5e6220da17aa09fe7629cf940bf45453b/alimeeting-eval).
+All eight SHA256 values and the 711,382-byte total match the prior official-intake
+[audit](../research/alimeeting-continuous-intake-v1/audit/audit.json); the mirror is
+only a transport source, not an official publisher. A text-only rerun of the
+exact prior v5 parser reproduced every retained per-session result: 25 tier
+instances, 6,457 intervals and zero literal flags for the seven screening phrases.
+No audio was read or revalidated and no admission label was changed.
+
+The recovered tiers contain 25 distinct anonymous annotation labels with no
+label repeated across these eight files. This does not independently establish
+25 real people or speaker disjointness from historical training. Combining all
+tiers on each session clock gives 1,711 uncovered annotation gaps totaling
+1,165.345 seconds, including the previously known tails. These are pointers for
+coverage review, not confirmed silence or admitted negative exposure. Detailed
+local recovery/hash/interval receipts are delivered separately; corpus bodies
+and those reports are not included in this repository status-only change.
+
+#### Earlier 2026-10-16 metadata-only checkpoint
+
+The following three paragraphs preserve the earlier same-day inspection before
+text recovery; their missing-body statements are superseded by the update above.
+
+The [existing AliMeeting audit](../research/alimeeting-continuous-intake-v1/audit/audit.json)
+pins the eight original TextGrid members and their hashes; their total retained
+member size is 711,382 bytes. Recover those eight text files from the already
+acquired archive/retention location first; a fresh multi-gigabyte audio download
+is not required for this metadata step. The current read-only review did **not**
+reopen the original transcripts or audio. It inspected the retained audit and
+[v5 text-scan receipt](../research/alimeeting-continuous-intake-v1/textgrid-rescan-v5.json).
+
+The prior scan reports 25 tier instances, 6,457 intervals, and no literal match
+for its seven listed target/near-target phrases. These are prior text-scan
+findings, not newly verified acoustic negatives. All eight TextGrids end before
+their WAV, by 47.384 seconds in total. Sparse per-speaker gaps and those tails
+need an explicit review disposition; a gap is not proved silence. Retain complete
+sessions and unknown labels rather than trimming unreviewed regions away.
+
+Session IDs and original/derived source hashes can be recovered from this audit.
+It retains tier counts but not tier names, so it cannot restore actual speaker
+labels or prove speaker independence across meetings. Near-channel filenames,
+room-looking prefixes, voice presets and synthesis seeds must not manufacture
+speaker/session truth. Even a later original-tier-name recovery would require
+a documented cross-session identity interpretation and training-exposure audit.
+
+Use the existing grouping/admission/scoring paths. Prioritize a small independent
+development benchmark and one checkpoint-preserving acoustic comparison over
+another analysis of the same 12 training LPs. Research software work can proceed
+with appropriately scoped authorized synthetic/public data; human/final-AFE and
+physical-board product qualification remain separate requirements. No existing
+admission labels, protected split, consumed experiment budget or shipping policy
+is changed by this status note.
+
+
 Run the existing source-contract report:
 
 ```bash

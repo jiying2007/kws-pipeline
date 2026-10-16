@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 57451,
-      "sha256": "2634ee6ef34d93016f5822f8feb8dbe89391aa37e061b52bd5de0c0f5055e065",
-      "git_blob_sha1": "e91bdf6b450f6b01a8e4bb180fe9d5fb8cff8b08"
+      "bytes": 57790,
+      "sha256": "b57725e9703efee681c6e67f546f3f8ee8ac683bdf68f8384bace83214fe4d31",
+      "git_blob_sha1": "6ea42dff4da29188025cbb0a7a3239978268ca3a"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -37023,6 +37023,260 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-16",
+      "operation_id": "kws-single-pass-wav-trace-hosted-contract-20261016",
+      "public_main_base_commit": "a7015ff61947b423ed0162b692a39f7590255941",
+      "public_main_base_tree": "927ad4c6fb7a55a43c109987ddf98ec400e69d35",
+      "workflow_source_changed": true,
+      "scope": "Add one explicit artificial-model/PCM single-pass WAV trace contract invocation per hosted compiler and its tracked-worktree guard. Do not register the Python subprocess test with CTest or claim ARM trace coverage. Existing workflow permissions, triggers, jobs and mandatory gates remain unchanged.",
+      "rationale": "Make the new test visible to the existing executable inventory without duplicate CTest execution or direct ARM-binary launches. Refresh only current CI and its existing offline-validator dependency pins. No research training, real-data inference, consumed budget, data admission or shipping authorization is changed.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 57451,
+            "sha256": "2634ee6ef34d93016f5822f8feb8dbe89391aa37e061b52bd5de0c0f5055e065",
+            "git_blob_sha1": "e91bdf6b450f6b01a8e4bb180fe9d5fb8cff8b08"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 57790,
+            "sha256": "b57725e9703efee681c6e67f546f3f8ee8ac683bdf68f8384bace83214fe4d31",
+            "git_blob_sha1": "6ea42dff4da29188025cbb0a7a3239978268ca3a"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "59e61d5d004c2bbdff5162274ddd83036a72086df8449ba9c6350a3f94e2cd86",
+            "git_blob_sha1": "f890aa0400e9a7c4e39e1e3a28cefe84705ec28d"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/validator-dependencies.json",
+            "mode": "100644",
+            "bytes": 40428,
+            "sha256": "62a09d83e05572d81afdfecca72e940fde1b17f5300300cc7bb2a008068969c1",
+            "git_blob_sha1": "29afb9421d9b07ee72dfe8fee8f93f157d743582"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "e3a74dd6fe1b14450b5c30ffb1a3e630ced16dd7ba519dfbda9526cac8c48e84",
+            "git_blob_sha1": "5af0fad9a2bc4d95513399352a6fa6683d2b56ec"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "d7360754fc3d04d20ecf529734938e365079d894b7fc543ba43448c89c898c5f",
+            "git_blob_sha1": "89e24c22755bc93ea938a5bec1e556ecf3136a89"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-16",
+      "operation_id": "kws-trace-historical-source-fixtures-20261016",
+      "public_main_base_commit": "a7015ff61947b423ed0162b692a39f7590255941",
+      "source_parent_commit": "86828f1d880eb06a97ee5dc1d9b13830b700ec75",
+      "source_parent_tree": "2c67f27a08b00589974e869ae9e37219b605cc9c",
+      "workflow_source_changed": false,
+      "scope": "Extend the existing explicit historical staging fixture set from two to four paths by retaining the exact pre-writer trace I/O sources. Current shipping source, CI commands and scientific overlay pins are unchanged. Existing fixture mutation-rejection checks cover all four paths.",
+      "rationale": "Repair the historical source closure exposed by the new exclusive-create writer API without rebasing historical scientific identities, duplicating writer logic, or weakening current-source drift checks. Source/text-only local validation; no training, PCM, acoustic forward, decoder replay or campaign execution.",
+      "files": [
+        {
+          "path": "tests/fixtures/near_pronunciation_v1/README.md",
+          "before": {
+            "path": "tests/fixtures/near_pronunciation_v1/README.md",
+            "mode": "100644",
+            "bytes": 1444,
+            "sha256": "71a3756c35a18e2a9f61ef0768fc96ec4eacb8f8b8d3a303d7ea11befb619837",
+            "git_blob_sha1": "006d01be4b49ecb038031fbddd2efbbc0302e21b"
+          },
+          "after": {
+            "path": "tests/fixtures/near_pronunciation_v1/README.md",
+            "mode": "100644",
+            "bytes": 2084,
+            "sha256": "500881c504cda30ded44e12479328b123a6bd45e18c1c82f71a9aa1b543f65f6",
+            "git_blob_sha1": "59335592993945cd1ba13264aa9a1160f4798f21"
+          }
+        },
+        {
+          "path": "tests/fixtures/near_pronunciation_v1/tools/kws_trace_io.c",
+          "before": null,
+          "after": {
+            "path": "tests/fixtures/near_pronunciation_v1/tools/kws_trace_io.c",
+            "mode": "100644",
+            "bytes": 9820,
+            "sha256": "2f66cf4e8181462dc35e4a5d45a2b3578411b712db1ef22fca048c86232fab96",
+            "git_blob_sha1": "93fe2d49bf32910eb7c55f9b2a912d0d4273ce82"
+          }
+        },
+        {
+          "path": "tests/fixtures/near_pronunciation_v1/tools/kws_trace_io.h",
+          "before": null,
+          "after": {
+            "path": "tests/fixtures/near_pronunciation_v1/tools/kws_trace_io.h",
+            "mode": "100644",
+            "bytes": 1797,
+            "sha256": "b8a28a5257294ebebc44e52bd65f03d8f175ae855e0da4cc8422a363221a1349",
+            "git_blob_sha1": "0c43167dfe5a5b54dc7c0b085acca1cb429ec512"
+          }
+        },
+        {
+          "path": "tests/prepare_frozen_decoder_source.py",
+          "before": {
+            "path": "tests/prepare_frozen_decoder_source.py",
+            "mode": "100644",
+            "bytes": 3432,
+            "sha256": "555216e7f4bd08f1c86118da9812d1451ab13dae6e85bb4b83674aa7d87bf1d2",
+            "git_blob_sha1": "9498bb77d2e2026691e0d2a5edac49f57f234754"
+          },
+          "after": {
+            "path": "tests/prepare_frozen_decoder_source.py",
+            "mode": "100644",
+            "bytes": 3492,
+            "sha256": "2deead05fec2bd1a36fe0fb5bf3efe5073e9988289421ce63d349551539e59e5",
+            "git_blob_sha1": "367f00e453e5db80e1b51160e4a27e6799da4c86"
+          }
+        },
+        {
+          "path": "tests/test_cli_stdout.py",
+          "before": {
+            "path": "tests/test_cli_stdout.py",
+            "mode": "100644",
+            "bytes": 12740,
+            "sha256": "eade1035154abc8b1e6eea4e4d67b9f8016bc64ee501eb671bf613979fe51b4b",
+            "git_blob_sha1": "b470e7ba504075e44103c9b8c96ee222a12f54f2"
+          },
+          "after": {
+            "path": "tests/test_cli_stdout.py",
+            "mode": "100644",
+            "bytes": 12739,
+            "sha256": "c199181c2e7e2306271499ad7b67f05e84f098fb578fbff923eb41b6bc1f7ea9",
+            "git_blob_sha1": "44a8072fd78f8dc446e6a7dd46eb9fb84df515a0"
+          }
+        }
+      ],
+      "retained_fixture_provenance": [
+        {
+          "path": "tests/fixtures/near_pronunciation_v1/tools/kws_trace_io.c",
+          "original_path": "tools/kws_trace_io.c",
+          "source_commit": "a7015ff61947b423ed0162b692a39f7590255941",
+          "source_url": "https://github.com/jiying2007/kws-pipeline/blob/a7015ff61947b423ed0162b692a39f7590255941/tools/kws_trace_io.c",
+          "sha256": "2f66cf4e8181462dc35e4a5d45a2b3578411b712db1ef22fca048c86232fab96",
+          "git_blob_sha1": "93fe2d49bf32910eb7c55f9b2a912d0d4273ce82",
+          "bytes": 9820,
+          "historical_pin_authority": "research/near_pronunciation_v1/decoder_overlay.json:source_sha256"
+        },
+        {
+          "path": "tests/fixtures/near_pronunciation_v1/tools/kws_trace_io.h",
+          "original_path": "tools/kws_trace_io.h",
+          "source_commit": "a7015ff61947b423ed0162b692a39f7590255941",
+          "source_url": "https://github.com/jiying2007/kws-pipeline/blob/a7015ff61947b423ed0162b692a39f7590255941/tools/kws_trace_io.h",
+          "sha256": "b8a28a5257294ebebc44e52bd65f03d8f175ae855e0da4cc8422a363221a1349",
+          "git_blob_sha1": "0c43167dfe5a5b54dc7c0b085acca1cb429ec512",
+          "bytes": 1797,
+          "historical_pin_authority": "research/near_pronunciation_v1/decoder_overlay.json:source_sha256"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-16",
+      "operation_id": "kws-trace-core-eval-readme-retention-20261016",
+      "source_parent_commit": "fbb0428c9e411878524e2a69c158564f8b8cb072",
+      "source_parent_tree": "3badbc51b3c3c84fc8a2c56b8a4d2a12b6701b2a",
+      "workflow_source_changed": false,
+      "scope": "Relocate only the exact historical PR 485 eval README in the 102-file core consolidation map to an explicit maintained-sources archive, retain its original provenance/hashes, and add a strict current-versus-historical regression test. Current eval documentation, shipping source, CI and scientific identities remain unchanged.",
+      "rationale": "The independent core consolidation verifier still consumed the historical README path after current trace documentation evolved. Preserve the historical source body rather than repin it to current content. Validate the full consolidation/source-retention inputs with source-only checks; no training, PCM, model inference or historical campaign execution.",
+      "files": [
+        {
+          "path": "research/consolidation/core-2026-10-07.json",
+          "before": {
+            "path": "research/consolidation/core-2026-10-07.json",
+            "mode": "100644",
+            "bytes": 44143,
+            "sha256": "b23edfd96cc6cbd6edfb10d55ac33c4f769ead8f7f5d445475a6ce30ae58eb20",
+            "git_blob_sha1": "967bc37fdaab5816c7811e4cb1a4262029702091"
+          },
+          "after": {
+            "path": "research/consolidation/core-2026-10-07.json",
+            "mode": "100644",
+            "bytes": 44512,
+            "sha256": "200b539da039753f84c1f54790aec7584e81f9438666ab63914220dbf728ae8a",
+            "git_blob_sha1": "f3c2a8d5654b7fdcbd724130dbd2ef142b49805d"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_research_consolidation.py",
+          "before": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 11543,
+            "sha256": "ae5a87ce8655d91d1df41ece354ef07abce1376397424d3b713be4ac7171ab4d",
+            "git_blob_sha1": "542b578adfec60e97d94e84b7022debe8488e420"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 13174,
+            "sha256": "f7afaae51104c11fec21ee477eb2d75b3e98e6874007f45a0026fb139b00e37b",
+            "git_blob_sha1": "ccc86beb1e6875b1d300ed5b86abf20ea0c1df60"
+          }
+        },
+        {
+          "path": "research/consolidation/maintained-sources/pr-485/eval/README.md",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/maintained-sources/pr-485/eval/README.md",
+            "mode": "100644",
+            "bytes": 15351,
+            "sha256": "8d846414c84cffdce31b2925bd4375cd4fde95ca4cb3e29f5b85f6768d463ab9",
+            "git_blob_sha1": "d5ab869696eb147ee1c04c0f12fb7d5deb6060e2"
+          }
+        }
+      ],
+      "historical_source_relocation": {
+        "before": {
+          "path": "eval/README.md",
+          "mode": "100644",
+          "git_blob_sha1": "d5ab869696eb147ee1c04c0f12fb7d5deb6060e2",
+          "sha256": "8d846414c84cffdce31b2925bd4375cd4fde95ca4cb3e29f5b85f6768d463ab9",
+          "bytes": 15351,
+          "source_pr": 485,
+          "source_commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce"
+        },
+        "after": {
+          "path": "research/consolidation/maintained-sources/pr-485/eval/README.md",
+          "mode": "100644",
+          "git_blob_sha1": "d5ab869696eb147ee1c04c0f12fb7d5deb6060e2",
+          "sha256": "8d846414c84cffdce31b2925bd4375cd4fde95ca4cb3e29f5b85f6768d463ab9",
+          "bytes": 15351,
+          "source_pr": 485,
+          "source_commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+          "source_path": "eval/README.md",
+          "relocation_reason": "Preserve the exact original PR 485 eval README while documenting current single-pass model-bound WAV trace capture. Historical source PR, commit, byte count and hashes remain unchanged; the current eval/README.md is separate maintained documentation."
+        }
+      },
+      "current_documentation": {
+        "path": "eval/README.md",
+        "mode": "100644",
+        "bytes": 18096,
+        "sha256": "194e29f31c861029990def0a5e3c26a4fcad1886ba657f08d5e24820466334fc",
+        "git_blob_sha1": "5ed89dfade1f24263d77dc9c90202b2645e1bb97"
+      }
     }
   ],
   "current_added_active_workflows": [

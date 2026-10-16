@@ -69,6 +69,53 @@ python3 eval/run_corpus.py \
 
 `kws_wav` is a hosted file-I/O wrapper around the same C engine used by the product. Heap and filesystem use in this executable do not enter the real-time library. The provenance sidecar binds the exact runner/model/pack/reference/detection bytes.
 
+### Capture a model-bound trace in the same WAV pass
+
+`kws_wav` can optionally retain the exact raw float32 logits and actual
+`speech_active`/`end_sample` seen by the decoder, without a second acoustic pass:
+
+```sh
+build/kws_wav candidate.kwm candidate.kwk recording.wav recording-id \
+  --trace-out new-recording.kwtr --stats-json new-recording.stats.json \
+  > recording.detections.jsonl
+build/kws_decoder_replay candidate.kwm candidate.kwk new-recording.kwtr recording-id
+```
+
+The existing KWTRACE1 header binds the exact loaded model bytes by SHA256,
+vocabulary fingerprint, frontend identity and frame geometry. The official
+decoder replay retains all its identity checks. No-trace invocation behavior and
+event stdout are unchanged. Trace capture exclusively creates its destination;
+when combined with `--stats-json`, the stats destination must also be new. Check
+the process exit status: an ordinary detected error removes newly created trace
+and stats outputs, while stdout may already contain partial events.
+
+Each recording starts from the ordinary empty engine state. EOF is not padded or
+flushed; a recording shorter than one 400-sample frame yields a valid empty trace.
+Caller chunks remain in the supported 1..320-sample range, and capture checks
+sequential frame numbers and the expected final frame count.
+
+Continuous AFE timelines may provide aligned external VAD. KWTRACE1 cannot encode
+discontinuity, lost-sample, codec-reopen or clock-reset events: trace mode rejects
+any such timeline before PCM processing, including flags on its first span. The
+legacy no-trace timeline path still supports them. Trace timestamps are source
+input-availability coordinates, not human word-end labels or physical-device
+latency measurements. AFE capture-timing fields on live events are not carried by
+KWTRACE1; compare canonical event fields when checking replay equivalence.
+
+KWTRACE1 does not bind the keyword pack, effective config, source WAV, AFE
+metadata, compiler or executable. Preserve these with the run/build provenance;
+do not interpret the trace alone as the complete event-reproduction bundle.
+Do not upload private PCM-derived numerical traces by default.
+
+The hosted-build CI step runs `tests/test_wav_trace.py` once per compiler with
+one handcrafted model,
+three PCM fixtures (0/1/3 complete frames) and two nonempty-trace replays. It checks
+actual energy/external-VAD flags, exact logits and model identity, event equality,
+EOF, no-clobber outputs, and pre-inference rejection of unsupported timelines.
+It runs no training or real corpus and establishes no acoustic-quality result.
+This Python subprocess contract is not registered with CTest and does not
+qualify the ARM cross-build; it requires native hosted runners.
+
 ## Score release metrics
 
 ```bash

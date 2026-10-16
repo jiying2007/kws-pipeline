@@ -146,6 +146,32 @@ class RetentionTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             RETENTION.verify(self.root, manifest)
 
+    def test_original_eval_readme_retained_separately_from_current_trace_docs(self):
+        manifest = json.loads((ROOT / "research/consolidation/core-2026-10-07.json").read_text())
+        archive = next(row for row in manifest["files"] if row.get("source_path") == "eval/README.md")
+        self.assertEqual(archive["path"], "research/consolidation/maintained-sources/pr-485/eval/README.md")
+        self.assertEqual(archive["source_pr"], 485)
+        self.assertEqual(archive["source_commit"], "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce")
+        self.assertEqual(archive["bytes"], 15351)
+        self.assertEqual(archive["sha256"], "8d846414c84cffdce31b2925bd4375cd4fde95ca4cb3e29f5b85f6768d463ab9")
+        self.assertEqual(archive["git_blob_sha1"], "d5ab869696eb147ee1c04c0f12fb7d5deb6060e2")
+        historical = (ROOT / archive["path"]).read_bytes()
+        current = (ROOT / "eval/README.md").read_bytes()
+        self.assertNotEqual(historical, current)
+        self.assertIn(b"--trace-out", current)
+        self.assertNotIn("eval/README.md", {row["path"] for row in manifest["files"]})
+        destination = self.root / archive["path"]
+        destination.parent.mkdir(parents=True)
+        destination.write_bytes(historical)
+        manifest["files"] = [archive]
+        self.assertEqual(RETENTION.verify(self.root, manifest), 1)
+        destination.write_bytes(current)
+        with self.assertRaises(ValueError):
+            RETENTION.verify(self.root, manifest)
+        destination.write_bytes(historical + b"changed")
+        with self.assertRaises(ValueError):
+            RETENTION.verify(self.root, manifest)
+
     def test_changed_source(self):
         (self.root / "source.txt").write_bytes(b"tampered source\n")
         with self.assertRaises(ValueError):

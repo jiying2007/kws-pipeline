@@ -159,24 +159,38 @@ static int read_header(FILE *stream, kws_trace_header_t *header) {
   return ftell(stream) == KWS_TRACE_HEADER_BYTES && header_valid(header);
 }
 
-int kws_trace_writer_open(kws_trace_writer_t *writer,
-                          const char *path,
-                          const kws_trace_header_t *header) {
+static int writer_open_mode(kws_trace_writer_t *writer,
+                             const char *path,
+                             const kws_trace_header_t *header,
+                             int exclusive) {
   if (writer == NULL || path == NULL || !header_valid(header)) {
     return 0;
   }
   memset(writer, 0, sizeof(*writer));
   writer->header = *header;
   writer->header.frame_count = 0u;
-  writer->stream = fopen(path, "wb+");
+  writer->stream = fopen(path, exclusive != 0 ? "wb+x" : "wb+");
   if (writer->stream == NULL || !write_header(writer->stream, &writer->header)) {
     if (writer->stream != NULL) {
       fclose(writer->stream);
+      if (exclusive != 0) (void)remove(path);
     }
     memset(writer, 0, sizeof(*writer));
     return 0;
   }
   return 1;
+}
+
+int kws_trace_writer_open(kws_trace_writer_t *writer,
+                          const char *path,
+                          const kws_trace_header_t *header) {
+  return writer_open_mode(writer, path, header, 0);
+}
+
+int kws_trace_writer_open_new(kws_trace_writer_t *writer,
+                              const char *path,
+                              const kws_trace_header_t *header) {
+  return writer_open_mode(writer, path, header, 1);
 }
 
 int kws_trace_writer_append(kws_trace_writer_t *writer,
