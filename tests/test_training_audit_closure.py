@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import io
 import json
 import pathlib
+import random
 import subprocess
 import textwrap
 import sys
@@ -15,6 +17,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 import torch
+import training_state
 import train_ctc
 import export_model
 import adversarial_refinement
@@ -132,6 +135,131 @@ class StateIdentityTests(unittest.TestCase):
                 state_identity(value)
 
 
+
+class CheckpointPublicationTests(unittest.TestCase):
+    """Artificial tensor/state fixtures only; no forward or optimizer step."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix="kws-checkpoint-publication-")
+        self.addCleanup(self.tmp.cleanup)
+        self.path = pathlib.Path(self.tmp.name) / "checkpoint.pt"
+        self.model = torch.nn.Module()
+        self.parameter = torch.nn.Parameter(torch.tensor([1.0, 2.0]))
+        self.model.register_parameter("weight", self.parameter)
+        self.optimizer = torch.optim.AdamW([self.parameter], lr=0.01)
+        # Deliberately constructed software state, not a training result.
+        self.optimizer.state[self.parameter] = {
+            "step": torch.tensor(3.0),
+            "exp_avg": torch.tensor([0.1, 0.2]),
+            "exp_avg_sq": torch.tensor([0.01, 0.04]),
+        }
+        self.generator = torch.Generator().manual_seed(7)
+        self.payload = {
+            "state_dict": self.model.state_dict(),
+            "float_state_identity": state_identity(self.model.state_dict()),
+            "fixture_only": True,
+            "completion_state": training_state.capture_completion_state(
+                self.model, self.optimizer, self.generator,
+                completed_epochs=1, optimizer_steps=3,
+            ),
+        }
+
+    def test_weights_only_roundtrip_retains_completion_state(self):
+        training_state.atomic_save_checkpoint(self.payload, self.path)
+        loaded, digest = training_state.load_checkpoint_snapshot(self.path)
+        self.assertEqual(digest, hashlib.sha256(self.path.read_bytes()).hexdigest())
+        self.assertEqual(loaded["float_state_identity"], self.payload["float_state_identity"])
+        state = loaded["completion_state"]
+        self.assertIs(state["resume_supported"], False)
+        self.assertEqual((state["completed_epochs"], state["optimizer_steps"]), (1, 3))
+        self.assertEqual(state["optimizer_parameter_names"], [["weight"]])
+        self.assertEqual(state["rng_state"]["python"], random.getstate())
+        self.assertTrue(torch.equal(state["rng_state"]["torch_cpu"], torch.get_rng_state()))
+        self.assertTrue(torch.equal(state["rng_state"]["data_loader"], self.generator.get_state()))
+        self.assertTrue(torch.equal(state["optimizer_state_dict"]["state"][0]["exp_avg"],
+                                    torch.tensor([0.1, 0.2])))
+        self.assertEqual(list(self.path.parent.glob(".*.tmp")), [])
+
+    def test_capture_does_not_alias_optimizer_state_or_advance_rng(self):
+        state = self.payload["completion_state"]
+        self.assertEqual(state["rng_state"]["python"], random.getstate())
+        self.assertTrue(torch.equal(state["rng_state"]["torch_cpu"], torch.get_rng_state()))
+        self.assertTrue(torch.equal(state["rng_state"]["data_loader"], self.generator.get_state()))
+        self.optimizer.state[self.parameter]["exp_avg"].zero_()
+        self.generator.manual_seed(8)
+        self.assertTrue(torch.equal(state["optimizer_state_dict"]["state"][0]["exp_avg"],
+                                    torch.tensor([0.1, 0.2])))
+        self.assertFalse(torch.equal(state["rng_state"]["data_loader"], self.generator.get_state()))
+
+    def test_failed_publication_preserves_old_file_and_removes_temporary(self):
+        stream = io.BytesIO()
+        torch.save(self.payload, stream)
+        old = stream.getvalue()
+        for owner, name in ((training_state.torch, "save"),
+                            (training_state.torch, "load"),
+                            (training_state.os, "fsync"),
+                            (training_state.os, "replace")):
+            for existed in (True, False):
+                with self.subTest(stage=name, existed=existed):
+                    if existed:
+                        self.path.write_bytes(old)
+                    elif self.path.exists():
+                        self.path.unlink()
+                    with mock.patch.object(owner, name, side_effect=OSError("fixture failure")):
+                        with self.assertRaises(OSError):
+                            training_state.atomic_save_checkpoint(self.payload, self.path)
+                    self.assertEqual(self.path.exists(), existed)
+                    if existed:
+                        self.assertEqual(self.path.read_bytes(), old)
+                    self.assertEqual(list(self.path.parent.glob(".*.tmp")), [])
+
+    def test_identity_mismatch_cannot_replace_previous_output(self):
+        self.path.write_bytes(b"previous")
+        bad = dict(self.payload, state_dict={"weight": torch.tensor([9.0, 2.0])})
+        with self.assertRaisesRegex(ValueError, "before save"):
+            training_state.atomic_save_checkpoint(bad, self.path)
+        with mock.patch.object(training_state.torch, "load", return_value=bad):
+            with self.assertRaisesRegex(ValueError, "after save"):
+                training_state.atomic_save_checkpoint(self.payload, self.path)
+        self.assertEqual(self.path.read_bytes(), b"previous")
+        self.assertEqual(list(self.path.parent.glob(".*.tmp")), [])
+
+    def test_successful_serializer_with_bad_payload_cannot_publish(self):
+        training_state.atomic_save_checkpoint(self.payload, self.path)
+        before = self.path.read_bytes()
+        original_save = torch.save
+
+        def save_bad_identity(payload, stream):
+            original_save(dict(payload, float_state_identity={}), stream)
+
+        with mock.patch.object(training_state.torch, "save", side_effect=save_bad_identity), \
+             mock.patch.object(training_state.os, "replace") as replace:
+            with self.assertRaisesRegex(ValueError, "after save"):
+                training_state.atomic_save_checkpoint(self.payload, self.path)
+            replace.assert_not_called()
+        self.assertEqual(self.path.read_bytes(), before)
+        self.assertEqual(list(self.path.parent.glob(".*.tmp")), [])
+
+    def test_snapshot_hash_binds_loaded_bytes_when_path_changes(self):
+        training_state.atomic_save_checkpoint(self.payload, self.path)
+        before = self.path.read_bytes()
+        original_load = torch.load
+
+        def replace_path_then_load(stream, **kwargs):
+            self.path.write_bytes(b"replaced after snapshot read")
+            return original_load(stream, **kwargs)
+
+        with mock.patch.object(training_state.torch, "load", side_effect=replace_path_then_load):
+            loaded, digest = training_state.load_checkpoint_snapshot(self.path)
+        self.assertEqual(digest, hashlib.sha256(before).hexdigest())
+        self.assertEqual(loaded["float_state_identity"], self.payload["float_state_identity"])
+        self.assertNotEqual(digest, hashlib.sha256(self.path.read_bytes()).hexdigest())
+
+    def test_completion_state_does_not_supply_missing_export_provenance(self):
+        with self.assertRaisesRegex(ValueError, "training_manifests"):
+            export_model.training_metadata(self.payload)
+
+
 class RealTrainerReadbackTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -200,6 +328,23 @@ class RealTrainerReadbackTests(unittest.TestCase):
              self.assertRaisesRegex(ValueError, "float state identity mismatch"):
             export_model.main()
         self.assertFalse((self.root / "bad.kwm").exists())
+
+
+
+    def test_completed_state_and_export_source_hash_are_retained(self):
+        payload = torch.load(self.checkpoint, weights_only=True, map_location="cpu")
+        state = payload["completion_state"]
+        self.assertIs(state["resume_supported"], False)
+        self.assertEqual(state["completed_epochs"], len(payload["epoch_history"]))
+        self.assertEqual(state["optimizer_steps"], 1)
+        self.assertEqual(state["optimizer_parameter_names"], [[
+            "in_proj.weight", "in_proj.bias", "rec_proj.weight",
+            "out_proj.weight", "out_proj.bias",
+        ]])
+        provenance = json.loads(pathlib.Path(str(self.model) + ".provenance.json").read_text())
+        self.assertEqual(provenance["checkpoint"]["sha256"],
+                         hashlib.sha256(self.checkpoint.read_bytes()).hexdigest())
+        self.assertNotIn("completion_state", provenance["training"])
 
 
 class WorkflowTests(unittest.TestCase):

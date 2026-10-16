@@ -21,7 +21,7 @@ from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
 from ctc_primary import normalize_label_prior_contract
 from objective_config import auxiliary_loss_weights, verify_auxiliary_loss_readback
-from training_state import state_identity
+from training_state import load_checkpoint_snapshot, state_identity
 from frontend_spec import FRONTEND_IDS
 from suffix_root_loss import SUFFIX_ROOT_BLANK_MARGIN, SUFFIX_ROOT_POLICY
 from objective_contract import (
@@ -604,7 +604,7 @@ def main() -> None:
     parser.add_argument("--provenance", type=pathlib.Path, help="default: OUTPUT.provenance.json")
     args = parser.parse_args()
 
-    checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
+    checkpoint, source_checkpoint_sha256 = load_checkpoint_snapshot(args.checkpoint)
     state_dict = checkpoint["state_dict"]
     feature_dim = int(checkpoint["feature_dim"])
     hidden_dim = int(checkpoint["hidden_dim"])
@@ -708,7 +708,7 @@ def main() -> None:
             "frontend_name": frontend_name,
             "frontend_kind": frontend_kind,
         },
-        "checkpoint": {"name": args.checkpoint.name, "sha256": sha256_file(args.checkpoint)},
+        "checkpoint": {"name": args.checkpoint.name, "sha256": source_checkpoint_sha256},
         "tokens": {
             "name": args.tokens.name,
             "sha256": tokens_sha256,
