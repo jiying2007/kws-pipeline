@@ -88,7 +88,7 @@ def check_historical_source_contracts(temp):
         raise RuntimeError('historical staging accepted an invalid input')
 
     reject(output)
-    # Both retained files are authoritative exact bytes, not a fallback that
+    # All retained files are authoritative exact bytes, not a fallback that
     # silently rebases scientific pins to whichever current source is present.
     for index, name in enumerate(sorted(FROZEN_FILES)):
         path = source / FIXTURES / name
