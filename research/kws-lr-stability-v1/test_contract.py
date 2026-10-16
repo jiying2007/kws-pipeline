@@ -205,4 +205,60 @@ class ArchiveTests(unittest.TestCase):
     with patch.object(a,'read',altered):
      with self.assertRaisesRegex(ValueError,label):a.verify()
 
+class SavedDiagnosticTests(unittest.TestCase):
+ @classmethod
+ def setUpClass(cls):
+  spec=importlib.util.spec_from_file_location('saved_diagnostics_integrity',HERE/'verify_saved_diagnostics.py');cls.a=importlib.util.module_from_spec(spec);spec.loader.exec_module(cls.a)
+ def test_saved_diagnostics_hashes_and_semantics(self):
+  self.assertEqual(self.a.verify()['integrity'],'PASS');self.assertNotIn('torch',sys.modules)
+ def test_synthetic_suppression_boundaries(self):
+  f=self.a.suppression;self.assertEqual(f(False,0,0),(0,0));self.assertEqual(f(True,400,0),(1,19600));self.assertEqual(f(True,19599,19600),(2,19600));self.assertEqual(f(True,19600,19600),(1,38800));self.assertEqual(f(True,400,0),(1,19600))
+  for args in [(1,400,0),(True,True,0),(True,400,-1)]:
+   with self.assertRaises(ValueError):f(*args)
+ def test_synthetic_prefix_math_without_saved_inputs(self):
+  import itertools,math
+  folder=HERE/self.a.DIRECTORY/self.a.PREFIX;spec=importlib.util.spec_from_file_location('saved_prefix_synthetic',folder/'analyze.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+  probs=[[.3,.2,.1,.25,.15],[.4,.1,.2,.2,.1],[.2,.3,.2,.1,.2],[.2,.1,.2,.2,.3]];rows=[[math.log(x) for x in p] for p in probs];state={():[0.,m.NEG]}
+  for length in range(1,5):
+   exact={}
+   for path in itertools.product(range(5),repeat=length):
+    sequence=m.collapse(path);exact[sequence]=exact.get(sequence,0.)+math.prod(probs[t][k] for t,k in enumerate(path))
+   state=m.beam_step(state,rows[length-1],625);self.assertEqual(set(state),set(exact))
+   for sequence,p in exact.items():
+    self.assertLess(abs(m.logadd(*state[sequence])-math.log(p)),1e-12);expanded,forward=m.forward_init(sequence)
+    for row in rows[:length]:forward,score=m.forward_step(expanded,forward,row)
+    self.assertLess(abs(score-math.log(p)),1e-12)
+  self.assertEqual(m.collapse([1,1,0,1]),(1,1));self.assertEqual(m.intervals([False,True,True,False,True]),[[1,2],[4,4]]);self.assertEqual(m.available_ms(0),25);self.assertEqual(m.available_ms(1),45)
+ def test_saved_report_semantic_corruption(self):
+  a=self.a;base=HERE/a.DIRECTORY;p=base/a.PREFIX;d=base/a.DECODER;pr=a.load(p,'report.json');pp=a.load(p,'analysis-plan.json');dr=a.load(d,'report.json');dp=a.load(d,'analysis-plan.json');claim=a.load(d,'execution-claim.json');complete=a.load(d,'execution-complete.json')
+  for key,value in [('runtime_replay',True),('new_model_forwards',1),('status','PRODUCTION_PASS')]:
+   q=copy.deepcopy(pr);q[key]=value
+   with self.assertRaises(ValueError):a.prefix_semantics(q,pp)
+  q=copy.deepcopy(pr);q['samples'][0]['trace'][0]['nominal_available_ms']=0
+  with self.assertRaises(ValueError):a.prefix_semantics(q,pp)
+  for key,value in [('speech_gate','real-VAD'),('threshold_calibrated_for_research_model',True),('saved_data_native_passes',2),('production_engine_executed',True),('new_model_forwards',True)]:
+   q=copy.deepcopy(dr);q[key]=value
+   with self.assertRaises(ValueError):a.decoder_semantics(q,dp,claim,complete)
+  q=copy.deepcopy(dr);q['samples'][0]['events'][0]['mirror_outcome']='suppressed'
+  with self.assertRaises(ValueError):a.decoder_semantics(q,dp,claim,complete)
+  q=copy.deepcopy(complete);q['saved_data_passes_completed']=2
+  with self.assertRaises(ValueError):a.decoder_semantics(dr,dp,claim,q)
+ def test_source_and_result_bindings_after_manifest_refresh(self):
+  from unittest.mock import patch
+  a=self.a;root=HERE/a.DIRECTORY;original=a.read
+  cases=[(a.PREFIX+'/source-addendum.json','actual_observation_writer',{'relative_path':'wrong','sha256':'0'*64},'actual LR writer identity'),(a.DECODER+'/execution-complete.json','report_sha256','0'*64,'completion report binding'),(a.DECODER+'/report.json','native_output_sha256','0'*64,'native numerical body binding'),(a.PREFIX+'/report.json','analyzer_sha256','0'*64,'prefix binding analyzer_sha256')]
+  for target,key,value,label in cases:
+   with self.subTest(target=target):
+    obj=json.loads(original(root,target));obj[key]=value;raw=json.dumps(obj).encode();changes={root/target:raw};m=a.load(root,'archive-manifest.json');m['files'][target]['sha256']=a.sha(raw);m['files'][target]['bytes']=len(raw)
+    if target==a.DECODER+'/report.json':
+     cp=a.load(root/a.DECODER,'execution-complete.json');cp['report_sha256']=a.sha(raw);cr=json.dumps(cp).encode();path=a.DECODER+'/execution-complete.json';changes[root/path]=cr;m['files'][path]['sha256']=a.sha(cr);m['files'][path]['bytes']=len(cr)
+    changes[root/'archive-manifest.json']=json.dumps(m).encode()
+    def altered(base,name):return changes[base/name] if base/name in changes else original(base,name)
+    with patch.object(a,'read',altered):
+     with self.assertRaisesRegex(ValueError,label):a.verify()
+ def test_strict_saved_metadata_and_no_replay_entry(self):
+  for raw in [b'{"x":1,"x":2}',b'{"x":Infinity}']:
+   with self.assertRaises(ValueError):self.a.decode(raw)
+  tree=ast.parse((HERE/'verify_saved_diagnostics.py').read_text());imports=[n for n in ast.walk(tree) if isinstance(n,(ast.Import,ast.ImportFrom))];self.assertFalse(any('subprocess' in ast.unparse(n) or 'torch' in ast.unparse(n) for n in imports))
+
 if __name__=='__main__':unittest.main()

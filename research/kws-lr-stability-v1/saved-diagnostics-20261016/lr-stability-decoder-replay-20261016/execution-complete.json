@@ -1,0 +1,9 @@
+{
+  "schema": "controlled-native-replay-completion-v1",
+  "native_returncode": 0,
+  "saved_data_passes_completed": 1,
+  "frames_completed": 1276,
+  "report_sha256": "485300ae598867e8353c4834e8925abee9b773f23fd0b397e5b1e2db9011c4bd",
+  "original_inputs_unchanged": true,
+  "next_action": "STOP_NO_ADDITIONAL_EXPERIMENTS"
+}

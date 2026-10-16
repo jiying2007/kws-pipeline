@@ -1,0 +1,30 @@
+{
+  "schema": "saved-prefix-source-provenance-addendum-v1",
+  "status": "PASS",
+  "analysis_plan_sha256": "cc947af40d436b1969fb78ae6c2c1c9f5953b4405f57b39949fb52a52ad273e8",
+  "experiment_plan_sha256": "b053e74a1322e938dbd82b4526fe63edf3a428904861d070d36cea1e121b4068",
+  "actual_observation_writer": {
+    "relative_path": "lr-stability-integrated/research/kws-lr-stability-v1/run_lr_stability.py",
+    "sha256": "0a3a0e919f5707b30f13c5bc73f5babc3d0c66b8f1e77e430a4c49043b0ab835"
+  },
+  "correction": "The analysis plan input named observation_writer is the grouped-balance helper, not the actual LR-stability observation writer. Its stored path and hash are accurate; this is a role-label correction. The actual writer is independently bound here through the original pinned experiment plan.",
+  "original_observation_writer_input": {
+    "relative_path": "lr-stability-integrated/research/kws-grouped-balance-v1/run_grouped_balance.py",
+    "sha256": "f57e0fae61b314769cb1d3f3365b77f9ccb9400071be425b3ce7d04e66d53b6e"
+  },
+  "actual_writer_reviewed_lines": {
+    "frontend_call": [
+      94,
+      95
+    ],
+    "LP_and_raw_path": [
+      120,
+      129
+    ]
+  },
+  "analysis_definitions_changed": false,
+  "numeric_report_changed": false,
+  "model_calls": 0,
+  "source_code_executed": false,
+  "verifier_sha256": "d6f8e6f4996453956f9a23d3c6626635b4da58af73479318a393219428e87f1f"
+}

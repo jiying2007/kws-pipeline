@@ -1,0 +1,84 @@
+{
+  "schema": "saved-prefix-audit-plan-v1",
+  "declared_before_trace_analysis_utc": "2026-10-16T08:45:48.102366+00:00",
+  "role": "posthoc-descriptive-training-output-audit",
+  "inputs": {
+    "accepted_manifest": {
+      "relative_path": "lr-stability-result-acceptance/hash-manifest.json",
+      "sha256": "e96f9f8d7fdd9a55126ee8a61bf084024daace069328be39dcdea0d4d8649940"
+    },
+    "observation": {
+      "relative_path": "lr-stability-result/A-0600.json",
+      "sha256": "a1b041e932bbaa0f276b8e7fe28e3078e27481dd6d68be4063172ce69f9586ed"
+    },
+    "plan": {
+      "relative_path": "lr-stability-integrated/research/kws-lr-stability-v1/plan.json",
+      "sha256": "b053e74a1322e938dbd82b4526fe63edf3a428904861d070d36cea1e121b4068"
+    },
+    "cohort": {
+      "relative_path": "lr-stability-integrated/research/kws-grouped-balance-v1/cohort-prefix-freeze.json",
+      "sha256": "fe23e633925573e2b02ac8530e066214879a11cbccc2e4ef5875aa2c38006e87"
+    },
+    "model_source": {
+      "relative_path": "lr-stability-integrated/training/model.py",
+      "sha256": "768800e25537367da770ef44178249208956d7c3c33f1eb7d60b1b9c98fe59c5"
+    },
+    "frontend_source": {
+      "relative_path": "lr-stability-integrated/training/frontend.py",
+      "sha256": "d8ae687303d5c9c6bfdf6539c94f4ae463d910a4837ed77633d7656ff02a582e"
+    },
+    "frontend_spec_source": {
+      "relative_path": "lr-stability-integrated/training/frontend_spec.py",
+      "sha256": "fbd17236e1449101bed6df8f105baad476edb0b005e6e45cb83ebc7971d166e6"
+    },
+    "observation_writer": {
+      "relative_path": "lr-stability-integrated/research/kws-grouped-balance-v1/run_grouped_balance.py",
+      "sha256": "f57e0fae61b314769cb1d3f3365b77f9ccb9400071be425b3ce7d04e66d53b6e"
+    }
+  },
+  "source_manifest_sha256": "09ceca0bfff68dc56746bbd0a1f1d25dbccc7d3bc18baa5787b79c8818acfb5e",
+  "runtime_source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+  "observation_update": 600,
+  "sample_count": 12,
+  "class_counts": {
+    "KW1": 4,
+    "KW2": 8
+  },
+  "targets": {
+    "KW1": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "KW2": [
+      3,
+      4,
+      3,
+      4
+    ],
+    "SHORT": [
+      3,
+      4
+    ]
+  },
+  "blank_token": 0,
+  "beam_width": 32,
+  "top_k": 1,
+  "beam_tie_break": "lexicographic-token-tuple",
+  "greedy_tie_break": "smallest-token-id",
+  "frame_index": "zero-based",
+  "sample_rate_hz": 16000,
+  "frame_length_samples": 400,
+  "hop_samples": 320,
+  "threshold_sweep": null,
+  "runtime_replay": false,
+  "model_forwards": 0,
+  "optimizer_updates": 0,
+  "tts_calls": 0,
+  "asr_calls": 0,
+  "checkpoint_selection": false,
+  "decoder_selection": false,
+  "parameter_selection": false,
+  "new_negative_evaluation": false
+}

@@ -1,0 +1,133 @@
+{
+  "schema": "saved-lp-native-decoder-controlled-plan-v1",
+  "declared_utc": "2026-10-16T09:03:27.025521+00:00",
+  "purpose": "synthetic-all-speech-uncalibrated-exposed-training-LP-decoder-diagnostic",
+  "prior_feasibility_sha256": "1ea9a27d59a1e9789c88ebc4068c0c0a3dad9be531ad5cf2b6878fa57589714f",
+  "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+  "original_inputs": {
+    "accepted_manifest": {
+      "relative_path": "lr-stability-result-acceptance/hash-manifest.json",
+      "sha256": "e96f9f8d7fdd9a55126ee8a61bf084024daace069328be39dcdea0d4d8649940"
+    },
+    "observation": {
+      "relative_path": "lr-stability-result/A-0600.json",
+      "sha256": "a1b041e932bbaa0f276b8e7fe28e3078e27481dd6d68be4063172ce69f9586ed"
+    },
+    "plan": {
+      "relative_path": "lr-stability-integrated/research/kws-lr-stability-v1/plan.json",
+      "sha256": "b053e74a1322e938dbd82b4526fe63edf3a428904861d070d36cea1e121b4068"
+    },
+    "cohort": {
+      "relative_path": "lr-stability-integrated/research/kws-grouped-balance-v1/cohort-prefix-freeze.json",
+      "sha256": "fe23e633925573e2b02ac8530e066214879a11cbccc2e4ef5875aa2c38006e87"
+    },
+    "model_source": {
+      "relative_path": "lr-stability-integrated/training/model.py",
+      "sha256": "768800e25537367da770ef44178249208956d7c3c33f1eb7d60b1b9c98fe59c5"
+    },
+    "frontend_source": {
+      "relative_path": "lr-stability-integrated/training/frontend.py",
+      "sha256": "d8ae687303d5c9c6bfdf6539c94f4ae463d910a4837ed77633d7656ff02a582e"
+    },
+    "frontend_spec_source": {
+      "relative_path": "lr-stability-integrated/training/frontend_spec.py",
+      "sha256": "fbd17236e1449101bed6df8f105baad476edb0b005e6e45cb83ebc7971d166e6"
+    },
+    "observation_writer": {
+      "relative_path": "lr-stability-integrated/research/kws-grouped-balance-v1/run_grouped_balance.py",
+      "sha256": "f57e0fae61b314769cb1d3f3365b77f9ccb9400071be425b3ce7d04e66d53b6e"
+    }
+  },
+  "sample_count": 12,
+  "saved_frames": 1276,
+  "native_saved_data_passes": 1,
+  "vocab": {
+    "<blk>": 0,
+    "ni3": 1,
+    "hao3": 2,
+    "xiao3": 3,
+    "wo1": 4
+  },
+  "keywords": [
+    {
+      "id": 1,
+      "target_class": "KW1",
+      "tokens": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "threshold": 0.55,
+      "prefix_policy": "immediate",
+      "min_trailing_blanks": 0,
+      "priority": 0,
+      "grace_frames": 0
+    },
+    {
+      "id": 2,
+      "target_class": "KW2",
+      "tokens": [
+        3,
+        4,
+        3,
+        4
+      ],
+      "threshold": 0.55,
+      "prefix_policy": "immediate",
+      "min_trailing_blanks": 0,
+      "priority": 0,
+      "grace_frames": 0
+    }
+  ],
+  "speech_active": {
+    "value": 1,
+    "origin": "synthetic-control-constant-not-observed-VAD"
+  },
+  "decoder_state": {
+    "initialization": "fresh-per-clip",
+    "reset_on_hit": "unmodified-native-decoder",
+    "manual_reset_within_clip": false
+  },
+  "runtime_parameters": {
+    "state_retention": 0.94,
+    "token_boost_ineffective": 1.5,
+    "algorithm_constants": "unmodified-pinned-parameter-contract"
+  },
+  "suppression_mirror": {
+    "separate_from_decoder": true,
+    "refractory_ms": 1200,
+    "refractory_samples": 19200,
+    "sample_rate_hz": 16000,
+    "initial_suppress_until_sample": 0,
+    "accepted_condition": "decoder_hit and end_sample >= suppress_until_sample",
+    "accepted_updates_until": "end_sample + 19200",
+    "suppressed_extends_until": false,
+    "reset_per_clip": true
+  },
+  "time_coordinate": {
+    "frame_index": "zero-based",
+    "end_sample": "400+320*k",
+    "scope": "source-clip-nominal-window-coordinate-not-keyword-end-latency"
+  },
+  "LP_transport": "saved float32 log-probability converted to lossless hex C float text; no original-logit bitexact claim",
+  "no_padding": true,
+  "no_concatenation": true,
+  "no_parameter_search": true,
+  "new_model_forwards": 0,
+  "new_optimizer_updates": 0,
+  "new_tts_calls": 0,
+  "new_asr_calls": 0,
+  "audio_reads": 0,
+  "weight_reads": 0,
+  "official_model_bound_replay": false,
+  "remote_publication": false,
+  "stop_after": "one native pass over all 12 clips and1276 frames plus validation, regardless of result",
+  "additional_original_inputs": {
+    "actual_lr_observation_writer": {
+      "relative_path": "lr-stability-integrated/research/kws-lr-stability-v1/run_lr_stability.py",
+      "sha256": "0a3a0e919f5707b30f13c5bc73f5babc3d0c66b8f1e77e430a4c49043b0ab835"
+    }
+  },
+  "inherited_label_note": "original_inputs.observation_writer retains the prior audit label for the grouped helper; the actual LR writer is separately bound in additional_original_inputs."
+}

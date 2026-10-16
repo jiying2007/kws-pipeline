@@ -1,0 +1,453 @@
+{
+  "schema": "lr-saved-diagnostics-archive-v1",
+  "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+  "source_tree": "b95dc31f8b4c8e54d5c2d15f2c642d3e2c2c302c",
+  "execution_authority": "none; completed evidence only",
+  "files": {
+    "lr-stability-trigger-audit-20261016/DEFINITIONS.md": {
+      "bytes": 4425,
+      "sha256": "b92b4e93d4474ed2bacb7be043b0a7e73f655c90a49218bbd6f8a1cf47e2fa99",
+      "data_category": "new-technical-narrative-may-contain-derived-results"
+    },
+    "lr-stability-trigger-audit-20261016/NEXT-REPLAY-FEASIBILITY.md": {
+      "bytes": 7454,
+      "sha256": "1ea9a27d59a1e9789c88ebc4068c0c0a3dad9be531ad5cf2b6878fa57589714f",
+      "data_category": "new-technical-narrative-may-contain-derived-results"
+    },
+    "lr-stability-trigger-audit-20261016/README.md": {
+      "bytes": 7770,
+      "sha256": "5d0f2e5bf5ac01435afb276cf834b4c95584d56cc3b01812f5e5e67459beef23",
+      "data_category": "new-technical-narrative-may-contain-derived-results"
+    },
+    "lr-stability-trigger-audit-20261016/analysis-plan.json": {
+      "bytes": 2713,
+      "sha256": "cc947af40d436b1969fb78ae6c2c1c9f5953b4405f57b39949fb52a52ad273e8",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-trigger-audit-20261016/analyze.py": {
+      "bytes": 15827,
+      "sha256": "582192a2d3392eff941c5d28cad6f210bd1fe89e0f36ec84912816f9d3d1707c",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-trigger-audit-20261016/feasibility-source-manifest.json": {
+      "bytes": 1756,
+      "sha256": "094a8bfce4e31434cbaef97d0d481cc242d8f6b1bc342741d411b297a68feb36",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-trigger-audit-20261016/report.json": {
+      "bytes": 801320,
+      "sha256": "0f24ac1214d1f1a564bc1b6dfc2d238bcda8b7fb7850f654111a437fd15bc147",
+      "data_category": "new-derived-numerical-body"
+    },
+    "lr-stability-trigger-audit-20261016/source-addendum.json": {
+      "bytes": 1387,
+      "sha256": "15a81ea405ebfeacbb238148c3f53da18944ac78cc4bc15064d6bdc24319b290",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-trigger-audit-20261016/source-manifest.json": {
+      "bytes": 3313,
+      "sha256": "09ceca0bfff68dc56746bbd0a1f1d25dbccc7d3bc18baa5787b79c8818acfb5e",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-trigger-audit-20261016/verify_source_addendum.py": {
+      "bytes": 2544,
+      "sha256": "d6f8e6f4996453956f9a23d3c6626635b4da58af73479318a393219428e87f1f",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-decoder-replay-20261016/DEFINITIONS.md": {
+      "bytes": 4442,
+      "sha256": "a91108db098bb04121893def8519862399b7daf65a5c3466ace118fc531de638",
+      "data_category": "new-technical-narrative-may-contain-derived-results"
+    },
+    "lr-stability-decoder-replay-20261016/NEXT-VALIDATION-PLAN.md": {
+      "bytes": 7388,
+      "sha256": "6e3589597dba76853e32db620a48eb68e3aca8a05d3f9f68b05622f090e63531",
+      "data_category": "new-technical-narrative-may-contain-derived-results"
+    },
+    "lr-stability-decoder-replay-20261016/README.md": {
+      "bytes": 6980,
+      "sha256": "233616d6b297c3c3af9a5069aa22f11dcd30a0f78a9daecf0c128c0390871fc7",
+      "data_category": "new-technical-narrative-may-contain-derived-results"
+    },
+    "lr-stability-decoder-replay-20261016/analysis-plan.json": {
+      "bytes": 4626,
+      "sha256": "0d36ca92c05b7e369ef8f3da8a7c1f729616e1646c4d3015ef6123a96b90a9c3",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-decoder-replay-20261016/build-1/generated/kws_parameter_limits.h": {
+      "bytes": 9560,
+      "sha256": "bd81e6d357487a400b759d49e97ef1aca88ee9e38f83d13c7d8bd075941a32cb",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-decoder-replay-20261016/controlled_replay.py": {
+      "bytes": 18455,
+      "sha256": "913d7f2f71735be210602c14788cb20adf2535634aaee3373f46d7b626519cc7",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-decoder-replay-20261016/execution-claim.json": {
+      "bytes": 340,
+      "sha256": "9c0e434a36b15aad767a9d40345c3c72eed2513549a1ebc447531a153e10deb0",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-decoder-replay-20261016/execution-complete.json": {
+      "bytes": 322,
+      "sha256": "4849632ce2792552f7eab5ec3b03076280a169db2a41842c09f4422f8650f5e9",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-decoder-replay-20261016/native-output.jsonl": {
+      "bytes": 372400,
+      "sha256": "6f3a3a1aa96307a94d6f4457bdabfe58c806895838f93470c5605d2d93ff7e01",
+      "data_category": "new-derived-numerical-body"
+    },
+    "lr-stability-decoder-replay-20261016/native-stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-decoder-replay-20261016/preexecution-freeze.json": {
+      "bytes": 2582,
+      "sha256": "c2502e7d4f2c39b126d6918822bec184a69e8dbf3b65f822fadafbb75f7e1781",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-decoder-replay-20261016/refractory_mirror.h": {
+      "bytes": 787,
+      "sha256": "140607a3f4daa1ba77a7f0ce695531125a671f0f75c6f51592b01e7500c9e3d8",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-decoder-replay-20261016/replay_harness.c": {
+      "bytes": 7850,
+      "sha256": "31d5506ccf089d44a3b95bebddcfc04fecd9c0651f5984f5e8c06914f60d47e4",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-decoder-replay-20261016/report.json": {
+      "bytes": 10098,
+      "sha256": "485300ae598867e8353c4834e8925abee9b773f23fd0b397e5b1e2db9011c4bd",
+      "data_category": "new-derived-numerical-body"
+    },
+    "lr-stability-decoder-replay-20261016/source-manifest.json": {
+      "bytes": 2968,
+      "sha256": "45ce555b5984fc6e04d215f85b672b621acd810914c580084376783d7ca72ca9",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "lr-stability-decoder-replay-20261016/verify_delivered_evidence.py": {
+      "bytes": 6986,
+      "sha256": "f972ff77ebcadfd82c248a7b5a643dbad68b54d5de08232e319a6fe3c77e92f7",
+      "data_category": "technical-source-plan-or-provenance"
+    },
+    "README.md": {
+      "bytes": 2876,
+      "sha256": "aa1fe9db2ba543b0602a653802a347396b45e0c2e553646cfb9fb7938d84119d",
+      "data_category": "technical-archive-documentation"
+    }
+  },
+  "source_references": [
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "feasibility-source/keywords/tokens.example.txt",
+      "repository_path": "keywords/tokens.example.txt",
+      "bytes": 35,
+      "sha256": "af113e57eb6375b3c364b3845c6698ea460e29f718c8303657777183d6eda8c7",
+      "git_blob_sha1": "90ae2b7e38d2c4f3923df577e65596458b775616",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/keywords/tokens.example.txt"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "feasibility-source/src/frontend.c",
+      "repository_path": "src/frontend.c",
+      "bytes": 5997,
+      "sha256": "4b15da591837859232a91200b81a70ffc683a79f08bf12b0adb368ae5e680b27",
+      "git_blob_sha1": "da95828946f948f3927a156dc2ffbad64bc76ff9",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/frontend.c"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "feasibility-source/tools/kws_decoder_replay.c",
+      "repository_path": "tools/kws_decoder_replay.c",
+      "bytes": 5844,
+      "sha256": "86ff25540faa33c54b275ca943bdb8bfc7b96893c4542da2c78fd1340bae8483",
+      "git_blob_sha1": "b9e8c3c9714f0001039f50ed993ad99fdb0b9e37",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tools/kws_decoder_replay.c"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "feasibility-source/tools/kws_trace_io.c",
+      "repository_path": "tools/kws_trace_io.c",
+      "bytes": 9820,
+      "sha256": "2f66cf4e8181462dc35e4a5d45a2b3578411b712db1ef22fca048c86232fab96",
+      "git_blob_sha1": "93fe2d49bf32910eb7c55f9b2a912d0d4273ce82",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tools/kws_trace_io.c"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "feasibility-source/tools/kws_trace_io.h",
+      "repository_path": "tools/kws_trace_io.h",
+      "bytes": 1797,
+      "sha256": "b8a28a5257294ebebc44e52bd65f03d8f175ae855e0da4cc8422a363221a1349",
+      "git_blob_sha1": "0c43167dfe5a5b54dc7c0b085acca1cb429ec512",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tools/kws_trace_io.h"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "source-contract/configs/parameter-contract.json",
+      "repository_path": "configs/parameter-contract.json",
+      "bytes": 6794,
+      "sha256": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06",
+      "git_blob_sha1": "bcb53fa1ca1a8240acd9d751f137a955f4531835",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/configs/parameter-contract.json"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "source-contract/configs/shipping.xiaowo.json",
+      "repository_path": "configs/shipping.xiaowo.json",
+      "bytes": 4119,
+      "sha256": "4f39810a362096f2345c8e2e3326c3899e0d30b0b5e0632a6f2622a1364d5b21",
+      "git_blob_sha1": "55bb340cdcbb55a1467ae6955ee38f8684b5facf",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/configs/shipping.xiaowo.json"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "source-contract/include/kws_pipeline/kws.h",
+      "repository_path": "include/kws_pipeline/kws.h",
+      "bytes": 13139,
+      "sha256": "3405855e97cde28cf2842bb9c607e931347395790fe3ed268617e662af676496",
+      "git_blob_sha1": "28b1f8a0a3d93855e1835288b2cc56f63e1e2a04",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/include/kws_pipeline/kws.h"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "source-contract/keywords/zh_cn_example.tsv",
+      "repository_path": "keywords/zh_cn_example.tsv",
+      "bytes": 125,
+      "sha256": "1d17ed101c950bbc55327dd56c7e0a03faa6ab1a6ef36cf73ede55d7d9b88db5",
+      "git_blob_sha1": "7b62097776dda9296d9cadb7d2aa158a68b404fe",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/keywords/zh_cn_example.tsv"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "source-contract/src/decoder.c",
+      "repository_path": "src/decoder.c",
+      "bytes": 22986,
+      "sha256": "8eb2631073482414916c36afeb6fc0578ca137b9f9ab995dd9d579f9c32d8f2a",
+      "git_blob_sha1": "96464ce66976003d13257b6131286546a7b9fe5f",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/decoder.c"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "source-contract/src/decoder.h",
+      "repository_path": "src/decoder.h",
+      "bytes": 3023,
+      "sha256": "3357a957cd2b07108bdb7fa7657b8c807db347950eeeda94f490a0505604c76b",
+      "git_blob_sha1": "49dc4703a32e089ef488d7389e49e11cbd6b840b",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/decoder.h"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "source-contract/src/kws.c",
+      "repository_path": "src/kws.c",
+      "bytes": 24791,
+      "sha256": "cb7fbffd0ff8617b78ad4d7afd5557c1c13fec06250acfdc10713c463d54f171",
+      "git_blob_sha1": "7227def7216014d76737c99ff568e9bba12922b7",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/kws.c"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "source-contract/tests/test_ctc_vad_alignment.py",
+      "repository_path": "tests/test_ctc_vad_alignment.py",
+      "bytes": 4680,
+      "sha256": "27236b1b2f6664fc2181d220e89958c7d50ad0876310d10a29e7c960945ab17b",
+      "git_blob_sha1": "13c2a923ae794c6da3d1db8dcca567de2f705f67",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tests/test_ctc_vad_alignment.py"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "source-contract/tests/test_decoder.c",
+      "repository_path": "tests/test_decoder.c",
+      "bytes": 47375,
+      "sha256": "6fb5947c527933adc9b92ac80629392f26b454bdcc6e7c7157e2a31264f3561c",
+      "git_blob_sha1": "ef1b88d3de6728616cbe2c697e1c5e20cb29788c",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tests/test_decoder.c"
+    },
+    {
+      "archive_directory": "lr-stability-trigger-audit-20261016",
+      "original_snapshot_path": "source-contract/tests/test_decoder_policy_replay.py",
+      "repository_path": "tests/test_decoder_policy_replay.py",
+      "bytes": 15760,
+      "sha256": "190e422c115c653d28387984e68ed5eef10f7a4aaf41a43bdc240fc03091cd1f",
+      "git_blob_sha1": "5c26237984bb72fe376763c57fd7b9717c018f06",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tests/test_decoder_policy_replay.py"
+    },
+    {
+      "archive_directory": "lr-stability-decoder-replay-20261016",
+      "original_snapshot_path": "source/configs/parameter-contract.json",
+      "repository_path": "configs/parameter-contract.json",
+      "bytes": 6794,
+      "sha256": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06",
+      "git_blob_sha1": "bcb53fa1ca1a8240acd9d751f137a955f4531835",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/configs/parameter-contract.json"
+    },
+    {
+      "archive_directory": "lr-stability-decoder-replay-20261016",
+      "original_snapshot_path": "source/configs/shipping.xiaowo.json",
+      "repository_path": "configs/shipping.xiaowo.json",
+      "bytes": 4119,
+      "sha256": "4f39810a362096f2345c8e2e3326c3899e0d30b0b5e0632a6f2622a1364d5b21",
+      "git_blob_sha1": "55bb340cdcbb55a1467ae6955ee38f8684b5facf",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/configs/shipping.xiaowo.json"
+    },
+    {
+      "archive_directory": "lr-stability-decoder-replay-20261016",
+      "original_snapshot_path": "source/include/kws_pipeline/kws.h",
+      "repository_path": "include/kws_pipeline/kws.h",
+      "bytes": 13139,
+      "sha256": "3405855e97cde28cf2842bb9c607e931347395790fe3ed268617e662af676496",
+      "git_blob_sha1": "28b1f8a0a3d93855e1835288b2cc56f63e1e2a04",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/include/kws_pipeline/kws.h"
+    },
+    {
+      "archive_directory": "lr-stability-decoder-replay-20261016",
+      "original_snapshot_path": "source/keywords/tokens.example.txt",
+      "repository_path": "keywords/tokens.example.txt",
+      "bytes": 35,
+      "sha256": "af113e57eb6375b3c364b3845c6698ea460e29f718c8303657777183d6eda8c7",
+      "git_blob_sha1": "90ae2b7e38d2c4f3923df577e65596458b775616",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/keywords/tokens.example.txt"
+    },
+    {
+      "archive_directory": "lr-stability-decoder-replay-20261016",
+      "original_snapshot_path": "source/src/decoder.c",
+      "repository_path": "src/decoder.c",
+      "bytes": 22986,
+      "sha256": "8eb2631073482414916c36afeb6fc0578ca137b9f9ab995dd9d579f9c32d8f2a",
+      "git_blob_sha1": "96464ce66976003d13257b6131286546a7b9fe5f",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/decoder.c"
+    },
+    {
+      "archive_directory": "lr-stability-decoder-replay-20261016",
+      "original_snapshot_path": "source/src/decoder.h",
+      "repository_path": "src/decoder.h",
+      "bytes": 3023,
+      "sha256": "3357a957cd2b07108bdb7fa7657b8c807db347950eeeda94f490a0505604c76b",
+      "git_blob_sha1": "49dc4703a32e089ef488d7389e49e11cbd6b840b",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/decoder.h"
+    },
+    {
+      "archive_directory": "lr-stability-decoder-replay-20261016",
+      "original_snapshot_path": "source/src/kws.c",
+      "repository_path": "src/kws.c",
+      "bytes": 24791,
+      "sha256": "cb7fbffd0ff8617b78ad4d7afd5557c1c13fec06250acfdc10713c463d54f171",
+      "git_blob_sha1": "7227def7216014d76737c99ff568e9bba12922b7",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/kws.c"
+    },
+    {
+      "archive_directory": "lr-stability-decoder-replay-20261016",
+      "original_snapshot_path": "source/tests/test_decoder.c",
+      "repository_path": "tests/test_decoder.c",
+      "bytes": 47375,
+      "sha256": "6fb5947c527933adc9b92ac80629392f26b454bdcc6e7c7157e2a31264f3561c",
+      "git_blob_sha1": "ef1b88d3de6728616cbe2c697e1c5e20cb29788c",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tests/test_decoder.c"
+    },
+    {
+      "archive_directory": "lr-stability-decoder-replay-20261016",
+      "original_snapshot_path": "source/tools/gen_parameter_limits.py",
+      "repository_path": "tools/gen_parameter_limits.py",
+      "bytes": 17960,
+      "sha256": "a7fc02bcd26962f0c1a91b221651f7329465ea760076b775577d5918e02fbcb8",
+      "git_blob_sha1": "3b9e31b5cc9fa14d602e32e2f25591f27f03a689",
+      "source_commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tools/gen_parameter_limits.py"
+    }
+  ],
+  "omitted_frozen_files": {
+    "build-1/build-and-synthetic-tests.json": {
+      "sha256": "7e156c6bca205e32f4542162f5c3bb3a88223da340df824e55538b6c3d63f1ef",
+      "reason": "Original technical build command record contains absolute host workspace paths; kept privately and not redacted."
+    },
+    "source/src/decoder.c": {
+      "sha256": "8eb2631073482414916c36afeb6fc0578ca137b9f9ab995dd9d579f9c32d8f2a",
+      "reason": "Exact public source snapshot represented by immutable reference; materialize to original snapshot path for preserved verifier."
+    },
+    "source/src/decoder.h": {
+      "sha256": "3357a957cd2b07108bdb7fa7657b8c807db347950eeeda94f490a0505604c76b",
+      "reason": "Exact public source snapshot represented by immutable reference; materialize to original snapshot path for preserved verifier."
+    },
+    "source/include/kws_pipeline/kws.h": {
+      "sha256": "3405855e97cde28cf2842bb9c607e931347395790fe3ed268617e662af676496",
+      "reason": "Exact public source snapshot represented by immutable reference; materialize to original snapshot path for preserved verifier."
+    },
+    "source/configs/parameter-contract.json": {
+      "sha256": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06",
+      "reason": "Exact public source snapshot represented by immutable reference; materialize to original snapshot path for preserved verifier."
+    },
+    "source/configs/shipping.xiaowo.json": {
+      "sha256": "4f39810a362096f2345c8e2e3326c3899e0d30b0b5e0632a6f2622a1364d5b21",
+      "reason": "Exact public source snapshot represented by immutable reference; materialize to original snapshot path for preserved verifier."
+    },
+    "source/tests/test_decoder.c": {
+      "sha256": "6fb5947c527933adc9b92ac80629392f26b454bdcc6e7c7157e2a31264f3561c",
+      "reason": "Exact public source snapshot represented by immutable reference; materialize to original snapshot path for preserved verifier."
+    },
+    "source/src/kws.c": {
+      "sha256": "cb7fbffd0ff8617b78ad4d7afd5557c1c13fec06250acfdc10713c463d54f171",
+      "reason": "Exact public source snapshot represented by immutable reference; materialize to original snapshot path for preserved verifier."
+    },
+    "source/keywords/tokens.example.txt": {
+      "sha256": "af113e57eb6375b3c364b3845c6698ea460e29f718c8303657777183d6eda8c7",
+      "reason": "Exact public source snapshot represented by immutable reference; materialize to original snapshot path for preserved verifier."
+    },
+    "source/tools/gen_parameter_limits.py": {
+      "sha256": "a7fc02bcd26962f0c1a91b221651f7329465ea760076b775577d5918e02fbcb8",
+      "reason": "Exact public source snapshot represented by immutable reference; materialize to original snapshot path for preserved verifier."
+    },
+    "build-1/replay_harness": {
+      "sha256": "85c719a5d35a8869cc83437c8236b21c3ddb88f3b70d900679d8b8cea3866971",
+      "reason": "Host executable binary intentionally excluded."
+    },
+    "build-1/saved-lp-input.txt": {
+      "sha256": "3248d09ff67b30e40c9aec97ae60d786594fc978e5facfcd6ec48bb64e5fc822",
+      "reason": "Duplicate LP transport numerical body intentionally excluded; native output and original immutable LP remain bound."
+    },
+    "build-1/test_decoder": {
+      "sha256": "515b65e29dd8dae25ece10e83e37c32b0d8f109449e5cd1e745bcff61febb668",
+      "reason": "Host executable binary intentionally excluded."
+    }
+  },
+  "original_delivery_inventory_sha256": {
+    "lr-stability-trigger-audit-20261016": "adffa8aa302206d0c0f9ea8f6f292dd5dee7d8fe3b0da3cb1bbc90024787c742",
+    "lr-stability-decoder-replay-20261016": "6c9d8dba29ee61bddf66ed4bd75a1cabe55b262815162fc6868bdb05bb5afe2e"
+  },
+  "numerical_body_paths": [
+    "lr-stability-decoder-replay-20261016/native-output.jsonl",
+    "lr-stability-decoder-replay-20261016/report.json",
+    "lr-stability-trigger-audit-20261016/report.json"
+  ],
+  "original_native_saved_passes": 1,
+  "new_native_passes": 0,
+  "new_model_forwards": 0,
+  "new_optimizer_updates": 0,
+  "self_reference": false
+}

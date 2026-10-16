@@ -7,9 +7,11 @@
     "numeric_preflight.py": "eb11cd8c298c9106e38f688cf0e6764a03d52f00cdf0e48bd802494a67d399e1",
     "plan.json": "174d1b3391b5a5ec72cf8f1acf518be280cbf33355990357f8ad12036af6cd3e",
     "run_lr_stability.py": "0a3a0e919f5707b30f13c5bc73f5babc3d0c66b8f1e77e430a4c49043b0ab835",
-    "test_contract.py": "488d27a0ebb91830964165d79567a932fc4673cf6cb0369ccae3127b77b8c32b",
+    "test_contract.py": "8e3854d39c738b11199940a272bc432330f16f9c0d1593123a4b9bc727aa7dfd",
     "closure.json": "095891b3416c1b18abb28de155e6d9df448620294152491f8859a80441d8adc7",
-    "verify_archived_result.py": "cca23ae62e3118b0f63fc0f4df36a21fcf325fedcffd3c2e3c7112afe8bc1e0c"
+    "verify_archived_result.py": "cca23ae62e3118b0f63fc0f4df36a21fcf325fedcffd3c2e3c7112afe8bc1e0c",
+    "verify_saved_diagnostics.py": "3ccd853a6def2acda36242207b9fb1a9718adb170e4e36df14dd756f2f22bd48",
+    "saved-diagnostics-20261016/archive-manifest.json": "15d97f6ba331e4d5a9a1a6388009c484eaf5cb18998fcaca79e71f514ca4b4ce"
   },
   "shared_source_sha256": {
     "contract.py": "6dca1cad9dba10f50e439f775b6d04d90f246544cbd5a634e30490589490bc74",

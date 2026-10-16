@@ -1,0 +1,32 @@
+{
+  "repository": "jiying2007/kws-pipeline",
+  "commit": "e80527ad4b1d4cf299ab986441f3c3e60be32747",
+  "purpose": "static-feasibility-only-no-runtime-replay",
+  "files": {
+    "keywords/tokens.example.txt": {
+      "git_blob_sha1": "90ae2b7e38d2c4f3923df577e65596458b775616",
+      "sha256": "af113e57eb6375b3c364b3845c6698ea460e29f718c8303657777183d6eda8c7",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/keywords/tokens.example.txt"
+    },
+    "tools/kws_decoder_replay.c": {
+      "git_blob_sha1": "b9e8c3c9714f0001039f50ed993ad99fdb0b9e37",
+      "sha256": "86ff25540faa33c54b275ca943bdb8bfc7b96893c4542da2c78fd1340bae8483",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tools/kws_decoder_replay.c"
+    },
+    "tools/kws_trace_io.h": {
+      "git_blob_sha1": "0c43167dfe5a5b54dc7c0b085acca1cb429ec512",
+      "sha256": "b8a28a5257294ebebc44e52bd65f03d8f175ae855e0da4cc8422a363221a1349",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tools/kws_trace_io.h"
+    },
+    "tools/kws_trace_io.c": {
+      "git_blob_sha1": "93fe2d49bf32910eb7c55f9b2a912d0d4273ce82",
+      "sha256": "2f66cf4e8181462dc35e4a5d45a2b3578411b712db1ef22fca048c86232fab96",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/tools/kws_trace_io.c"
+    },
+    "src/frontend.c": {
+      "git_blob_sha1": "da95828946f948f3927a156dc2ffbad64bc76ff9",
+      "sha256": "4b15da591837859232a91200b81a70ffc683a79f08bf12b0adb368ae5e680b27",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/e80527ad4b1d4cf299ab986441f3c3e60be32747/src/frontend.c"
+    }
+  }
+}
