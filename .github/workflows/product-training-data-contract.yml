@@ -366,6 +366,8 @@ on:
       - "tools/audit_historical_base_metadata.py"
       - "tests/test_historical_base_metadata.py"
       - "research/candidate_encoders/**"
+      - "research/direct_kws/**"
+      - "tests/test_direct_kws_numeric.py"
       - "tests/test_candidate_encoder_numeric.py"
       - "tests/test_candidate_encoder_numeric_ci.py"
       - "tools/candidate_numeric_ci_changes.py"
@@ -773,6 +775,8 @@ on:
       - "tools/audit_historical_base_metadata.py"
       - "tests/test_historical_base_metadata.py"
       - "research/candidate_encoders/**"
+      - "research/direct_kws/**"
+      - "tests/test_direct_kws_numeric.py"
       - "tests/test_candidate_encoder_numeric.py"
       - "tests/test_candidate_encoder_numeric_ci.py"
       - "tools/candidate_numeric_ci_changes.py"
@@ -1019,6 +1023,12 @@ jobs:
         run: |
           .venv-objective/bin/python -B tests/test_candidate_encoder_numeric.py \
             --report build/candidate-encoder-numeric.json
+      - name: Direct KWS three-class software fixture contracts
+        if: ${{ needs.select-scope.outputs.candidate_required == 'true' }}
+        timeout-minutes: 5
+        run: |
+          .venv-objective/bin/python -B tests/test_direct_kws_numeric.py \
+            --report build/direct-kws-fixture.json
       - name: ASR audio derivation and explicit third-confirmation contracts
         timeout-minutes: 3
         run: |
@@ -1048,6 +1058,15 @@ jobs:
         with:
           name: candidate-encoder-numeric-${{ github.run_id }}-${{ github.run_attempt }}
           path: build/candidate-encoder-numeric.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Retain direct KWS software fixture receipt
+        if: ${{ always() && needs.select-scope.outputs.candidate_required == 'true' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: direct-kws-fixture-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/direct-kws-fixture.json
           if-no-files-found: error
           retention-days: 14
 

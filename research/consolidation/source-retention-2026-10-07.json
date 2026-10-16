@@ -15400,9 +15400,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "bytes": 89638,
-      "sha256": "139263c349606ce3a08c5d73de85be48cc36c7ef71ca7e2d2e30fea4d2929f6d",
-      "git_blob_sha1": "24e8d8b4cc41fc0d9d1958d4fa101c6d67351d26"
+      "bytes": 90536,
+      "sha256": "d47c6d1ab40c7af566c4ea8d85c7051ed9bec92a9f9437c33a727663a76bd312",
+      "git_blob_sha1": "b9fe76f112419654e93c9882d077dac0dec5ac54"
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
@@ -37277,6 +37277,123 @@
         "sha256": "194e29f31c861029990def0a5e3c26a4fcad1886ba657f08d5e24820466334fc",
         "git_blob_sha1": "5ed89dfade1f24263d77dc9c90202b2645e1bb97"
       }
+    },
+    {
+      "date": "2026-10-16",
+      "operation_id": "direct-kws-three-class-software-fixture-20261016",
+      "from_commit": "751bfabdff0b9d7770fc67aebf96ed838136d43e",
+      "from_tree": "c1dab39a2aa7d3ebfb9e3a598a034ba4b54b225c",
+      "workflow_source_changed": true,
+      "scope": "Add an isolated three-class direct KWS/CE prototype and bounded artificial-tensor tests; reuse the existing objective-math CPU job, two event path filters and candidate scope selector. Record public source paths/hashes and the CI delta only.",
+      "rationale": "The existing five-token CTC encoder source and checkpoint pins remain unchanged. The direct model reuses only its causal backbone modules and has an independent background/two-keyword classification head and continuous event policy. Direct-only changes run the bounded software fixtures; mixed product/workflow/selector edits preserve original gates. No private corpus, pretrained weights, TTS/ASR execution, real-data training, old research budget, C export, target qualification or shipping approval is introduced.",
+      "files": [
+        {
+          "path": "research/direct_kws/__init__.py",
+          "before": null,
+          "after": {
+            "path": "research/direct_kws/__init__.py",
+            "mode": "100644",
+            "bytes": 386,
+            "sha256": "055ae52641d24b5169977adc9d2317fc11ce79f539f7983b5681fb6c33ae1cb7",
+            "git_blob_sha1": "ed7197504ef70740bc0cf65468949530c01f797b"
+          }
+        },
+        {
+          "path": "research/direct_kws/model.py",
+          "before": null,
+          "after": {
+            "path": "research/direct_kws/model.py",
+            "mode": "100644",
+            "bytes": 8330,
+            "sha256": "51a3d29df65d6d289bfe4e9c0238c40e95231fc46c70c0499ed7d2d0dc7740dc",
+            "git_blob_sha1": "be3b7f4b70de939fa24625bfeb5c8a99ccb6275b"
+          }
+        },
+        {
+          "path": "research/direct_kws/events.py",
+          "before": null,
+          "after": {
+            "path": "research/direct_kws/events.py",
+            "mode": "100644",
+            "bytes": 5849,
+            "sha256": "81f8b94cb82e100d9d080fbe5a1ae9fe2bb0af25cf1d26ce2b499434b72d2686",
+            "git_blob_sha1": "b5078d07472f12c9661ae8212cb5a196a1f34f67"
+          }
+        },
+        {
+          "path": "research/direct_kws/README.md",
+          "before": null,
+          "after": {
+            "path": "research/direct_kws/README.md",
+            "mode": "100644",
+            "bytes": 10917,
+            "sha256": "4b7834bf6500b0ff3ec5b31756f17b772ce2cc374e075dc88b8c778fbbf1d2f5",
+            "git_blob_sha1": "ed4cba2aa8be9dc55235bc0f705d4e1eafe01037"
+          }
+        },
+        {
+          "path": "tests/test_direct_kws_numeric.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_direct_kws_numeric.py",
+            "mode": "100644",
+            "bytes": 17434,
+            "sha256": "6ee71709a49d3ed4ab28edf7094430282a1c222977b9514f9be526cf0e1a64d8",
+            "git_blob_sha1": "d98ede3bf74be27f1a11b92f1824bb042d48df23"
+          }
+        },
+        {
+          "path": "tools/candidate_numeric_ci_changes.py",
+          "before": {
+            "path": "tools/candidate_numeric_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3471,
+            "sha256": "e761327584d1f2f73d5d959b81a8c229459369512bbc10b5a1f084cfa1fe45b4",
+            "git_blob_sha1": "0308e7e25b09d52d65c3ab08c25e87b0cac1dc25"
+          },
+          "after": {
+            "path": "tools/candidate_numeric_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3682,
+            "sha256": "ce945bc3df61da032067999103325a9ae9194baa7dc1f07e04208512a8a2e566",
+            "git_blob_sha1": "e7152dc7dc976f9efc0cf86dd4b58cebcd177935"
+          }
+        },
+        {
+          "path": "tests/test_candidate_encoder_numeric_ci.py",
+          "before": {
+            "path": "tests/test_candidate_encoder_numeric_ci.py",
+            "mode": "100644",
+            "bytes": 13409,
+            "sha256": "33b90dd9838fefed138a737ccef433bae7a9cbd74c00e6b1b7c634e14575b52e",
+            "git_blob_sha1": "8166f3c5b60b9e488a908e4fd8e20268ecfab4ea"
+          },
+          "after": {
+            "path": "tests/test_candidate_encoder_numeric_ci.py",
+            "mode": "100644",
+            "bytes": 15292,
+            "sha256": "96bf5a20c4a6515af87e83b59b9c43524c9605b83f3d660723ad53f94161ff21",
+            "git_blob_sha1": "d1776158c2f06e432a1faa47de33713a4707d5e0"
+          }
+        },
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 89638,
+            "sha256": "139263c349606ce3a08c5d73de85be48cc36c7ef71ca7e2d2e30fea4d2929f6d",
+            "git_blob_sha1": "24e8d8b4cc41fc0d9d1958d4fa101c6d67351d26"
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 90536,
+            "sha256": "d47c6d1ab40c7af566c4ea8d85c7051ed9bec92a9f9437c33a727663a76bd312",
+            "git_blob_sha1": "b9fe76f112419654e93c9882d077dac0dec5ac54"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

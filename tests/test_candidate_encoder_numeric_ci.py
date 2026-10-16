@@ -29,9 +29,35 @@ class CandidateNumericCIContracts(unittest.TestCase):
         self.assertEqual(changes.scopes(["README.md"]), (False, False))
         self.assertEqual(changes.scopes(["research/candidate_encoders-lookalike/x.py"]), (False, False))
 
+    def test_direct_only_and_shared_scorer_scopes(self):
+        for path in ("research/direct_kws/model.py", "research/direct_kws/events.py",
+                     "research/direct_kws/README.md", "tests/test_direct_kws_numeric.py"):
+            self.assertEqual(changes.scopes([path]), (False, True))
+            self.assertEqual(changes.scopes([path, "training/train_ctc.py"]), (True, True))
+        self.assertEqual(changes.scopes(["research/direct_kws-lookalike/x.py"]), (False, False))
+        for path in ("eval/score_events.py", "eval/context_policy.py"):
+            self.assertEqual(changes.scopes([path]), (True, True))
+        filters = [path for _, path in exact_path_filters(ROOT / changes.WORKFLOW)]
+        for path in (*changes.CANDIDATE_GLOBS, "tests/test_direct_kws_numeric.py"):
+            self.assertEqual(filters.count(path), 2)
+
+    def test_direct_fixture_step_and_receipt_are_bounded(self):
+        job = self.workflow.split("  objective-math:\n", 1)[1].split("  live-base-binding:\n", 1)[0]
+        step = job.split("      - name: Direct KWS three-class software fixture contracts\n", 1)[1].split("      - name:", 1)[0]
+        self.assertIn("timeout-minutes: 5", step)
+        self.assertIn("needs.select-scope.outputs.candidate_required == 'true'", step)
+        self.assertIn(".venv-objective/bin/python -B tests/test_direct_kws_numeric.py", step)
+        self.assertIn("--report build/direct-kws-fixture.json", step)
+        self.assertNotIn("continue-on-error", step)
+        artifact = job.split("      - name: Retain direct KWS software fixture receipt\n", 1)[1]
+        self.assertIn("always() && needs.select-scope.outputs.candidate_required == 'true'", artifact)
+        self.assertIn("path: build/direct-kws-fixture.json", artifact)
+        self.assertIn("if-no-files-found: error", artifact)
+        self.assertNotIn("path: build/\n", artifact)
+
     def test_every_existing_filter_preserves_original_jobs_in_mixed_changes(self):
         filters = {path for _, path in exact_path_filters(ROOT / changes.WORKFLOW)}
-        original = filters - changes.CANDIDATE_EXACT - {changes.CANDIDATE_GLOB}
+        original = filters - changes.CANDIDATE_EXACT - changes.CANDIDATE_GLOBS
         self.assertGreater(len(original), 40)
         for path in original:
             with self.subTest(path=path):
