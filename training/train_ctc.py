@@ -63,7 +63,7 @@ from objective_contract import (
     SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT,
 )
 from objective_config import auxiliary_loss_weights, verify_auxiliary_loss_readback
-from training_state import state_identity
+from training_state import atomic_save_checkpoint, capture_completion_state, state_identity
 from path_purity import ordered_path_purity_loss
 from sequence_margin import keyword_sequence_margin_loss
 from suffix_root_loss import (
@@ -1254,6 +1254,7 @@ def main() -> None:
     loss_fn = nn.CTCLoss(blank=0, zero_infinity=True, reduction="none")
     model.train()
     epoch_history: list[dict[str, float | int]] = []
+    optimizer_steps = 0
     for epoch in range(args.epochs):
         total = 0.0
         total_ctc = 0.0
@@ -1425,6 +1426,7 @@ def main() -> None:
             loss.backward()
             nn.utils.clip_grad_norm_(trainable, GRAD_CLIP_NORM)
             optimizer.step()
+            optimizer_steps += 1
             total += float(loss.detach())
             total_ctc += float(ctc_loss.detach())
             total_ordered += float(ordered_loss.detach())
@@ -1461,6 +1463,8 @@ def main() -> None:
             flush=True,
         )
 
+    if len(epoch_history) != args.epochs:
+        raise ValueError("completed epoch count differs from requested endpoint")
     manifest_metadata = [
         {"name": path.name, "sha256": sha256_file(path)} for path in args.manifest
     ]
@@ -1473,11 +1477,14 @@ def main() -> None:
         raise ValueError("training admission inputs changed during optimization")
     if args.warm_start and sha256_file(args.warm_start) != warm_start_binding["source_checkpoint_sha256"]:
         raise ValueError("warm-start checkpoint changed during training")
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    torch.save(
+    atomic_save_checkpoint(
         {
             "state_dict": model.state_dict(),
             "float_state_identity": state_identity(model.state_dict()),
+            "completion_state": capture_completion_state(
+                model, optimizer, shuffle_generator,
+                completed_epochs=len(epoch_history), optimizer_steps=optimizer_steps,
+            ),
             "auxiliary_loss_weights": auxiliary_loss_weights(vars(args)),
             "feature_dim": args.feature_dim,
             "hidden_dim": args.hidden_dim,
