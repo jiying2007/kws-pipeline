@@ -21,6 +21,7 @@ CANDIDATE_EXACT = frozenset({
     "tests/test_candidate_encoder_numeric.py",
     "tests/test_direct_kws_numeric.py",
     "tests/test_direct_fit_numeric.py",
+    "tests/test_direct_fit_delivery.py",
     "research/kws-candidate-registry-v1/candidates.json",
     "research/kws-candidate-registry-v1/build_registry.py",
     "research/kws-candidate-registry-v1/input-pins.json",

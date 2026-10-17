@@ -15400,9 +15400,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "bytes": 91807,
-      "sha256": "e609ccdcf23669875c82f588427b6f3af4a745d4b1d59bbbe2eebf55eade07ff",
-      "git_blob_sha1": "4e6068e743350b062ef806fae0a36ebf96266988"
+      "bytes": 92655,
+      "sha256": "a89558f67655b8fb7547fcd933a4a013684fa95d401e00864df517ccec189c30",
+      "git_blob_sha1": "3a52932ff21c6c34c9f6089354a156e954c1399b"
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
@@ -37558,6 +37558,101 @@
             "bytes": 17405,
             "sha256": "fefde734c60aa744cba3f1d157d9663758aa2d09baacdee26b4d5201bf7f6057",
             "git_blob_sha1": "a65c5b6070d8998efd84128afbb73a452395e76b"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-17",
+      "operation_id": "direct-fit-bounded-result-delivery-20261017",
+      "from_commit": "62176f79c11edac7e0417c27ad74f44f7d4152fc",
+      "from_tree": "3d8b08f8183fce49685f34d48429d8918a5a52ba",
+      "workflow_source_changed": true,
+      "scope": "Add a bounded service-independent result handoff wrapper, explicit recovery limits, stdlib artificial failure tests and JSON-only receipt to the existing objective-math job.",
+      "rationale": "Public source and CI metadata only. No private files, weights, audio, credentials, private service bindings, real training, TTS, ASR, model download, old-budget restart, product admission or durability guarantee. Hashes establish byte consistency; complete external upload and readback remain the parent delivery responsibility.",
+      "files": [
+        {
+          "path": "research/direct_fit/result_delivery.py",
+          "before": null,
+          "after": {
+            "path": "research/direct_fit/result_delivery.py",
+            "mode": "100644",
+            "bytes": 14211,
+            "sha256": "6feb8e83c40521d24265f07b698b77041f33324dc291f8ec1bef93237e8fef57",
+            "git_blob_sha1": "051314b5772736bba9bb502584a0d7412e7b23aa"
+          }
+        },
+        {
+          "path": "research/direct_fit/README-delivery.md",
+          "before": null,
+          "after": {
+            "path": "research/direct_fit/README-delivery.md",
+            "mode": "100644",
+            "bytes": 5817,
+            "sha256": "063aa543c1804e3eaa92cff54a0d255b321b1949a2438a2b6e494f3072a41b64",
+            "git_blob_sha1": "4da977f6090851777d83e75c6de23bc26fe1c357"
+          }
+        },
+        {
+          "path": "tests/test_direct_fit_delivery.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_direct_fit_delivery.py",
+            "mode": "100644",
+            "bytes": 9936,
+            "sha256": "5da4abfc1c56e2c44185c6e9513523b1c4cc8efac29a3136aac9fc793b164384",
+            "git_blob_sha1": "474ca2480820817069b6c71da9e171e1e8610e7a"
+          }
+        },
+        {
+          "path": "tools/candidate_numeric_ci_changes.py",
+          "before": {
+            "path": "tools/candidate_numeric_ci_changes.py",
+            "mode": "100644",
+            "bytes": 4593,
+            "sha256": "9cbbc5c5c60365aa061b1d323849219767fae38dcc9d5995ea9c459efdae09da",
+            "git_blob_sha1": "3b7affcf31b74e66901ce2973f2012850dcf0eae"
+          },
+          "after": {
+            "path": "tools/candidate_numeric_ci_changes.py",
+            "mode": "100644",
+            "bytes": 4634,
+            "sha256": "8f6a02862cdbd1cde33a6d52c3be7157556f4c5031314d2d37451b675b0da692",
+            "git_blob_sha1": "3810ee836502f1284a6221e94b65d3f400e68b09"
+          }
+        },
+        {
+          "path": "tests/test_candidate_encoder_numeric_ci.py",
+          "before": {
+            "path": "tests/test_candidate_encoder_numeric_ci.py",
+            "mode": "100644",
+            "bytes": 17405,
+            "sha256": "fefde734c60aa744cba3f1d157d9663758aa2d09baacdee26b4d5201bf7f6057",
+            "git_blob_sha1": "a65c5b6070d8998efd84128afbb73a452395e76b"
+          },
+          "after": {
+            "path": "tests/test_candidate_encoder_numeric_ci.py",
+            "mode": "100644",
+            "bytes": 18822,
+            "sha256": "41d52d19e49ae833f7b3255799062a781ef96ee25f512216c5cdf94a16314778",
+            "git_blob_sha1": "bbd2e1e4520fa4218d61a73123cbb8954845f4af"
+          }
+        },
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 91807,
+            "sha256": "e609ccdcf23669875c82f588427b6f3af4a745d4b1d59bbbe2eebf55eade07ff",
+            "git_blob_sha1": "4e6068e743350b062ef806fae0a36ebf96266988"
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 92655,
+            "sha256": "a89558f67655b8fb7547fcd933a4a013684fa95d401e00864df517ccec189c30",
+            "git_blob_sha1": "3a52932ff21c6c34c9f6089354a156e954c1399b"
           }
         }
       ]

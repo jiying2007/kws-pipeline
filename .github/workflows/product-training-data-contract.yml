@@ -370,6 +370,7 @@ on:
       - "tests/test_direct_kws_numeric.py"
       - "research/direct_fit/**"
       - "tests/test_direct_fit_numeric.py"
+      - "tests/test_direct_fit_delivery.py"
       - "research/kws-candidate-registry-v1/candidates.json"
       - "research/kws-candidate-registry-v1/build_registry.py"
       - "research/kws-candidate-registry-v1/input-pins.json"
@@ -784,6 +785,7 @@ on:
       - "tests/test_direct_kws_numeric.py"
       - "research/direct_fit/**"
       - "tests/test_direct_fit_numeric.py"
+      - "tests/test_direct_fit_delivery.py"
       - "research/kws-candidate-registry-v1/candidates.json"
       - "research/kws-candidate-registry-v1/build_registry.py"
       - "research/kws-candidate-registry-v1/input-pins.json"
@@ -1045,6 +1047,12 @@ jobs:
         run: |
           .venv-objective/bin/python -B tests/test_direct_fit_numeric.py \
             --report build/direct-fit-fixture.json
+      - name: Direct fit bounded delivery software fixtures
+        if: ${{ needs.select-scope.outputs.candidate_required == 'true' }}
+        timeout-minutes: 2
+        run: |
+          python3 -B tests/test_direct_fit_delivery.py \
+            --report build/direct-fit-delivery-fixture.json
       - name: ASR audio derivation and explicit third-confirmation contracts
         timeout-minutes: 3
         run: |
@@ -1092,6 +1100,15 @@ jobs:
         with:
           name: direct-fit-fixture-${{ github.run_id }}-${{ github.run_attempt }}
           path: build/direct-fit-fixture.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Retain direct fit delivery software fixture receipt
+        if: ${{ always() && needs.select-scope.outputs.candidate_required == 'true' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: direct-fit-delivery-fixture-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/direct-fit-delivery-fixture.json
           if-no-files-found: error
           retention-days: 14
 
