@@ -19,6 +19,7 @@ import prepare_observer as obs
 import prepare_freeze_diagnostic as freezer
 import diagnostic_transport as transport
 import diagnostic_publisher as publisher
+from test_control_fixture import historical_source_tree
 
 SECRET='PRIVATE_DIAGNOSTIC_SENTINEL_TOKEN_AUDIO_HISTORY'
 
@@ -30,14 +31,18 @@ def positive_release_fixture():
     return pc.validate_release(release)
 
 @contextmanager
+def historical_diagnostic_source():
+    """Verify the historical closure in a temporary, test-only source projection."""
+    freeze=pc.decode(pc.regular(HERE/'prepare-freeze.json'))
+    names=set(freeze['host_code'])|{pc.REL+'prepare-freeze.json',h.WORKFLOW}
+    with historical_source_tree(h.ROOT,extra=names) as root:
+        yield root,root/pc.REL
+
+
+@contextmanager
 def explicit_disabled_source_copy():
-    """Actual source/control files, with real release validators left intact."""
-    with tempfile.TemporaryDirectory() as temp:
-        root=Path(temp)/'checkout';root.mkdir();fixed=root/pc.REL
-        names=set(freezer.build(h.ROOT)['host_code'])|{pc.REL+'prepare-freeze.json'}
-        for name in names:
-            target=root/name;target.parent.mkdir(parents=True,exist_ok=True)
-            target.write_bytes(h.read_bytes(h.ROOT/name))
+    """Actual historical controls, with real release validators left intact."""
+    with historical_diagnostic_source() as (root,fixed):
         for name,keys in (('prepare-release.json',('enabled','independent_source_review','source_closure_ready')),
                 ('publication-release.json',('enabled','independent_source_review','root_publication_release'))):
             value=h.read_json(fixed/name)
@@ -330,12 +335,11 @@ class HostedTests(unittest.TestCase):
 
     def test_exact_git_source_closure_and_real_authority_without_download(self):
         # Only Git is real. This source-only check cannot import/load a model.
-        freeze=freezer.build(h.ROOT);self.assertEqual(pc.canonical(freeze),(HERE/'prepare-freeze.json').read_bytes())
-        with tempfile.TemporaryDirectory() as temp:
-            root=Path(temp)/'checkout';root.mkdir();fixed=root/pc.REL;fixed.mkdir(parents=True)
-            names=set(freeze['host_code'])|{pc.REL+'prepare-freeze.json',h.WORKFLOW}
-            for name in names:
-                target=root/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(h.read_bytes(h.ROOT/name))
+        with self.assertRaisesRegex(ValueError,'unchanged retained source pin'):
+            freezer.build(h.ROOT)
+        with historical_diagnostic_source() as (root,fixed):
+            freeze=freezer.build(root)
+            self.assertEqual(pc.canonical(freeze),(HERE/'prepare-freeze.json').read_bytes())
             (fixed/'prepare-release.json').write_bytes(pc.canonical(positive_release_fixture()))
             fixture_freeze=freezer.build(root)
             (fixed/'prepare-freeze.json').write_bytes(pc.canonical(fixture_freeze))

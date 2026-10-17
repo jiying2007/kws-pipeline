@@ -2,6 +2,7 @@
 """Offline stdlib-only tests; no package installation/model imports or inference."""
 import ast
 import copy
+from contextlib import contextmanager
 import hashlib
 import importlib.util
 import json
@@ -17,6 +18,54 @@ HERE = Path(__file__).resolve().parent
 spec = importlib.util.spec_from_file_location("bounded_asr_worker", HERE / "asr_worker.py")
 w = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(w)
+
+LIVE_RETAINED = w.RETAINED
+HISTORICAL_RETAINED = (HERE.parents[1] /
+    "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr")
+HISTORICAL_MEMBERS = frozenset(("core/asr_stage/adapters.py",
+                              "core/asr_stage/execution.py", "core/sense_binding.py"))
+
+
+@contextmanager
+def historical_retained_sources():
+    """Test-only original-byte tree; production admission stays live-bound."""
+    with tempfile.TemporaryDirectory(prefix="screen32-historical-source-") as directory:
+        root = Path(directory) / "qwen6_asr"
+        for name, expected in w.RETAINED_PINS.items():
+            source = (HISTORICAL_RETAINED if name in HISTORICAL_MEMBERS else LIVE_RETAINED) / name
+            raw = w.read_regular(source, 1024**2)
+            w.require(w.digest(raw) == expected, "Historical fixture source drift: " + name)
+            target = root / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(raw)
+        # Import the same bytes that were verified, even in aggregated unittest
+        # discovery after tests have already imported the maintained helpers.
+        module_roots = {"asr_stage", "asr6_contract", "pcm", "sense_binding", "sense_parser",
+                        "runtime_version_gate", "vendor", "sense_adapter"}
+        with patch.dict(sys.modules), patch.object(sys, "path", list(sys.path)), patch.object(w, "RETAINED", root):
+            for name in list(sys.modules):
+                if name.split(".")[0] in module_roots:
+                    del sys.modules[name]
+            yield root
+
+
+class HistoricalSourceTests(unittest.TestCase):
+    def test_live_sources_remain_rejected(self):
+        with patch.object(w, "RETAINED", LIVE_RETAINED):
+            with self.assertRaisesRegex(ValueError, "Retained ASR source drift"):
+                w.verify_sources()
+
+    def test_historical_fixture_rejects_changed_or_live_archive_bytes(self):
+        read = w.read_regular
+        for name in HISTORICAL_MEMBERS:
+            archive = HISTORICAL_RETAINED / name
+            for raw in (archive.read_bytes() + b" ", (LIVE_RETAINED / name).read_bytes()):
+                def changed(path, maximum, raw=raw):
+                    return raw if path == archive else read(path, maximum)
+                with self.subTest(name=name), patch.object(w, "read_regular", side_effect=changed):
+                    with self.assertRaisesRegex(ValueError, "Historical fixture source drift"):
+                        with historical_retained_sources():
+                            self.fail("Drifted historical fixture was accepted")
 
 
 def wav(value, frames=8):
@@ -45,8 +94,13 @@ def make_input(root, count):
 class ContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        context = historical_retained_sources()
+        root = context.__enter__()
+        cls.addClassCleanup(context.__exit__, None, None, None)
         w.verify_sources()
         cls.adapters, cls.execution = w.import_helpers()
+        if Path(cls.adapters.__file__).resolve() != root / "core/asr_stage/adapters.py":
+            raise AssertionError("Historical helper import must match verified fixture")
 
     def test_only_stdlib_imports(self):
         self.assertFalse(any(name in sys.modules for name in ("torch", "numpy", "qwen_asr", "funasr", "transformers")))
@@ -143,7 +197,13 @@ class ContractTests(unittest.TestCase):
 class ExecutionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        context = historical_retained_sources()
+        root = context.__enter__()
+        cls.addClassCleanup(context.__exit__, None, None, None)
+        w.verify_sources()
         cls.adapters, cls.execution = w.import_helpers()
+        if Path(cls.adapters.__file__).resolve() != root / "core/asr_stage/adapters.py":
+            raise AssertionError("Historical helper import must match verified fixture")
         import setup_adapter
         cls.setup = setup_adapter
 

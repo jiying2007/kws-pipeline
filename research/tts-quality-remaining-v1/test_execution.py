@@ -9,6 +9,21 @@ import remaining as r
 import admission
 import run_remaining as host
 
+HISTORICAL_SCREEN_TESTS=tuple('research/source-screen32-v1/'+name for name in
+    ('test_asr_worker.py','test_sense_adapter.py'))
+SOURCE_ARCHIVE=Path('research/consolidation/archive/source-revisions/sense-runtime-binding-20261017')
+
+
+def historical_screen_test_bytes(source=SOURCE):
+    """Only immutable public test sources; never authorize a live-source fallback."""
+    pins=r.document(HERE/'source-manifest.json')['files']
+    result={}
+    for name in HISTORICAL_SCREEN_TESTS:
+        raw=r.raw(Path(source)/SOURCE_ARCHIVE/name)
+        r.require(r.digest(raw)==pins[name],'historical screen test source pin: '+name)
+        result[name]=raw
+    return result
+
 class Tests(unittest.TestCase):
     def test_metadata_rejects_sibling_lane(self):
         b=r.document(HERE/'binding-qwen06.json')
@@ -44,6 +59,9 @@ class Tests(unittest.TestCase):
             root=Path(d)/'repo';root.mkdir()
             for name in ('tts-quality-pilot-v1','source-screen32-v1','qwen6_tts','qwen6_asr'):
                 shutil.copytree(SOURCE/'research'/name,root/'research'/name)
+            # The reviewed probe manifest predates maintained screen test edits.
+            # Restore only its digest-verified test bytes inside this disposable copy.
+            for name,body in historical_screen_test_bytes().items():(root/name).write_bytes(body)
             workflow=Path('.github/workflows/tts-quality-probe-20261014-v1.yml')
             (root/workflow.parent).mkdir(parents=True);shutil.copyfile(SOURCE/workflow,root/workflow)
             here=root/'research/tts-quality-remaining-v1';shutil.copytree(HERE,here)
@@ -51,6 +69,8 @@ class Tests(unittest.TestCase):
             (work/'artifact/admission-status.json').write_text(json.dumps(dict(status='admitted',engine='qwen06',archive_sha256=b['artifact_archive_sha256'])))
             inputs=work/'inputs';(inputs/'incoming').mkdir(parents=True);shutil.copyfile(archive,inputs/'probe.zip')
             for n,body in r.archive_members(archive,r.filenames('qwen06','tqp-qwen06-00'),None).items():(inputs/'incoming'/n).write_bytes(body)
+            with self.assertRaisesRegex(ValueError,'source bytes changed'):
+                r.verify(b,'qwen06',inputs/'incoming',SOURCE,inputs/'probe.zip',HERE/'source-manifest.json')
             event=root/'event.json';event.write_text(json.dumps(dict(created=True,deleted=False,after='a'*40,repository=dict(full_name=admission.REPO,private=False))))
             env=dict(GITHUB_REPOSITORY=admission.REPO,GITHUB_REF='refs/heads/research/tts-quality-remaining-20261014-v1',GITHUB_EVENT_NAME='push',GITHUB_RUN_NUMBER='1',GITHUB_RUN_ATTEMPT='1',GITHUB_SHA='a'*40,GITHUB_RUN_ID='123',GITHUB_EVENT_PATH=str(event))
             calls=[]
@@ -66,6 +86,29 @@ class Tests(unittest.TestCase):
             self.assertEqual(r.document(work/'artifact/host-receipt.json')['status'],'stopped_no_retry')
             self.assertEqual(r.document(work/'artifact/remaining-host-resource-status.json')['worker_measurements'],'unknown')
             self.assertEqual(len(r.document(work/'output/qwen06-receipt.json')['outcomes']),1)
+    def test_historical_screen_test_projection_rejects_missing_changed_and_linked_archive(self):
+        expected=historical_screen_test_bytes()
+        self.assertEqual(set(expected),set(HISTORICAL_SCREEN_TESTS))
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory)
+            for name,body in expected.items():
+                archive=root/SOURCE_ARCHIVE/name;archive.parent.mkdir(parents=True,exist_ok=True)
+                archive.write_bytes(body)
+                # Even an exact live copy cannot replace a missing or invalid archive.
+                live=root/name;live.parent.mkdir(parents=True,exist_ok=True);live.write_bytes(body)
+            self.assertEqual(historical_screen_test_bytes(root),expected)
+            for name,body in expected.items():
+                archive=root/SOURCE_ARCHIVE/name
+                for state in ('changed','missing','symlink'):
+                    archive.unlink()
+                    if state=='changed':archive.write_bytes(body+b'\n# changed')
+                    elif state=='symlink':archive.symlink_to(root/name)
+                    with self.subTest(name=name,state=state),self.assertRaises(ValueError):
+                        historical_screen_test_bytes(root)
+                    if archive.exists() or archive.is_symlink():archive.unlink()
+                    archive.write_bytes(body)
+                self.assertEqual((root/name).read_bytes(),body)
+
     def test_metadata_redirect_never_replays_bearer(self):
         import urllib.error
         from unittest.mock import Mock

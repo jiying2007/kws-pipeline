@@ -609,11 +609,52 @@ print(json.dumps({'status':'synthetic guarded acceptance passed', **observed,
     def test_Z_frozen_validator_sources_remain_identical(self):
         manifest = json.loads((f.HERE / "validator-dependencies.json").read_bytes())
         for row in manifest["files"]:
-            raw = (f.SOURCE / row["path"]).read_bytes()
+            raw = a._validator_dependency_bytes(row)
             with self.subTest(path=row["path"]):
                 self.assertEqual(len(raw), row["bytes"])
                 self.assertEqual(hashlib.sha256(raw).hexdigest(), row["sha256"])
                 self.assertEqual(f.t.git_sha(raw), row["git_blob_sha1"])
+
+        self.assertEqual(a.sha((a.HERE / 'validator-dependencies.json').read_bytes()),
+                         '62a09d83e05572d81afdfecca72e940fde1b17f5300300cc7bb2a008068969c1')
+        archived = a.HISTORICAL_NONEXECUTED_DEPENDENCIES
+        self.assertEqual(len(archived), 14)
+        # Direct and transitive imported validators always remain live-byte bound.
+        validator_names = ('evidence_transport.py', 'evidence_publisher.py', 'campaign_contract.py',
+            'transfer_recovery.py', 'failure_observer.py', 'prepare_freeze.py',
+            'prepare_prerequisite.py', 'asr18_metadata.py', 'worker_receipts.py',
+            'cpu_budget.py', 'hosted_run.py', 'input_binding.py')
+        imported = {a.ASR_REL + name for name in validator_names} | {
+            'tools/speech_asr_consensus.py', 'tools/asr_native_contracts.py', 'tools/speech_label_admission.py'}
+        self.assertFalse(archived & imported)
+        self.assertEqual({row['path'] for row in manifest['files']} & archived, archived)
+        original_read = a.regular
+        for row in manifest['files']:
+            if row['path'] not in archived:
+                continue
+            archive_path = a.SOURCE / (a.HISTORICAL_DEPENDENCY_ARCHIVE + row['path'])
+            body = original_read(archive_path, 8 * 1024 ** 2)
+            for replacement in (b'changed archive', (a.SOURCE / row['path']).read_bytes()):
+                if replacement == body:
+                    continue  # Some provenance helpers have not changed in this checkout.
+                def changed(path, cap, *, replacement=replacement):
+                    return replacement if Path(path) == archive_path else original_read(path, cap)
+                with self.subTest(archive=row['path'], mutation='bytes'), mock.patch.object(a, 'regular', side_effect=changed):
+                    with self.assertRaisesRegex(ValueError, 'fixed validator source bytes'):
+                        a._validator_dependency_bytes(row)
+            def missing(path, cap):
+                if Path(path) == archive_path:
+                    raise FileNotFoundError('synthetic missing archived source')
+                return original_read(path, cap)
+            with self.subTest(archive=row['path'], mutation='missing'), mock.patch.object(a, 'regular', side_effect=missing):
+                with self.assertRaises(FileNotFoundError):
+                    a._validator_dependency_bytes(row)
+        # An unarchived real validator must still fail on live-source mutation.
+        live = next(row for row in manifest['files'] if row['path'] == 'tools/speech_asr_consensus.py')
+        with mock.patch.object(a, 'regular', return_value=b'changed live validator') as read:
+            with self.assertRaisesRegex(ValueError, 'fixed validator source bytes'):
+                a._validator_dependency_bytes(live)
+            self.assertEqual(read.call_args.args[0], a.SOURCE / live['path'])
 
 
 if __name__ == "__main__":

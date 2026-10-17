@@ -1045,15 +1045,17 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
         self.host=hosted_run;self.freezer=prepare_freeze;self.host_tests=test_asr18_host
         self.guard=mock.patch('http.client.HTTPSConnection',side_effect=AssertionError('no live network'))
         self.guard.start();self.addCleanup(self.guard.stop)
-        self.roster=self.freezer.declared_rosters(ROOT)['host_code']
+        from test_control_fixture import historical_source_tree
+        self.historical_root=self.enterContext(historical_source_tree(ROOT))
+        self.roster=self.freezer.declared_rosters(self.historical_root)['host_code']
         self.assertEqual(len(self.roster),120)
         self.assertEqual(t.SOURCE_TEXT_EXCEPTIONS,{self.LICENSE:self.LICENSE_ID})
 
     def full_fixture(self, *, synthetic_native=False):
         checked=c.read_bytes(HERE/'execution-freeze.json')
-        self.assertEqual(checked,t.canonical(self.freezer.build(ROOT)))
+        self.assertEqual(checked,t.canonical(self.freezer.build(self.historical_root)))
         freeze=t.decode(checked)
-        source={'source/'+name:c.read_bytes(ROOT/name) for name in freeze['host_code']}
+        source={'source/'+name:c.read_bytes(self.historical_root/name) for name in freeze['host_code']}
         if synthetic_native:
             files,run=self.host_tests.public_fixture()
             inp=t.decode(files['input-freeze.json'])
@@ -1073,7 +1075,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
             release=c.read_json(HERE/'execution-release.json')
             for key in c.RELEASE_APPROVALS:release[key]=True
             from test_control_fixture import synthetic_prerequisite
-            proof=synthetic_prerequisite(release,root=ROOT,freeze=freeze)
+            proof=synthetic_prerequisite(release,root=self.historical_root,freeze=freeze)
             proof_name=self.host.NEW+'prepare-prerequisite.json'
             source['source/'+proof_name]=proof
             for role in ('host_code','setup_code','inference_code'):
@@ -1116,7 +1118,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
             self.roster|{self.host.NEW+'execution-freeze.json'})
         self.assertEqual({'bytes':len(files[self.LICENSE]),'sha256':t.sha(files[self.LICENSE])},self.LICENSE_ID)
         files[self.LICENSE].decode('utf-8')
-        differences={name for name in self.roster if files['source/'+name]!=c.read_bytes(ROOT/name)}
+        differences={name for name in self.roster if files['source/'+name]!=c.read_bytes(self.historical_root/name)}
         self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else {self.host.NEW+leaf for leaf in ('execution-release.json','prepare-prerequisite.json','claim-admission-control.json','publication-release.json')})
 
     def materialize(self, root, files):

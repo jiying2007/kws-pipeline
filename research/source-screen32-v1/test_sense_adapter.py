@@ -289,7 +289,15 @@ class RuntimePathTests(FixtureCase):
 
 class ScientificParityTests(unittest.TestCase):
     def test_binding_ast_has_only_explicit_path_parameter_and_verify_argument_delta(self):
-        before = function_node(RETAINED / "core/sense_binding.py", "bound_sense_transcript")
+        # Original scientific oracle only; do not route live runtime admission.
+        historical = (HERE.parents[1] /
+            "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/core/sense_binding.py")
+        self.assertFalse(historical.is_symlink())
+        raw = historical.read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(),
+                         "1a2fd8474d347591939b3ce9ab7411aa9a8f9ce0ffa732d93a95402b677503d2")
+        before = next(node for node in ast.parse(raw).body
+                      if isinstance(node, ast.FunctionDef) and node.name == "bound_sense_transcript")
         after = function_node(HERE / "sense_adapter.py", "bound_sense_transcript")
         self.assertEqual([arg.arg for arg in after.args.args],
                          [arg.arg for arg in before.args.args] + ["tokenizer_path"])

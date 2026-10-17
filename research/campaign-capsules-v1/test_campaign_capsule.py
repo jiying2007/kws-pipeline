@@ -20,6 +20,7 @@ import prepare_campaign as p
 sys.path.insert(0, str(ROOT / 'research/k1-punctuation6-asr18-v1'))
 import campaign_contract as legacy
 import prepare_prerequisite as prerequisite
+import test_control_fixture as historical
 
 FUTURE = 'k1-punctuation6-asr18-r6'
 POLICY = 'k1-asr18-scientific-v1'
@@ -43,15 +44,39 @@ class CapsuleTests(unittest.TestCase):
 
     def test_original_scientific_digest_is_exactly_equal(self):
         freeze = legacy.read_json(ROOT / 'research/k1-punctuation6-asr18-v1/execution-freeze.json')
-        self.assertEqual(c.scientific_identity(self.policy), prerequisite.scientific_identity(ROOT, freeze))
+        with self.assertRaisesRegex(ValueError, 'verified scientific source byte identity'):
+            prerequisite.scientific_identity(ROOT, freeze)
+        with historical.historical_source_tree(ROOT) as source:
+            self.assertEqual(c.scientific_identity(self.policy), prerequisite.scientific_identity(source, freeze))
         self.assertEqual(len(self.policy['scientific_projection']['source_files']), 47)
         self.assertEqual(c.canonical(self.policy['scientific_projection']['limits']), legacy.canonical(legacy.LIMITS))
 
     def test_scientific_body_verification_uses_real_bytes(self):
-        result = c.verify_scientific_members(self.policy, lambda path: (ROOT / path).read_bytes())
-        self.assertEqual(result, self.row['scientific_sha256'])
+        with self.assertRaisesRegex(ValueError, 'source bytes drift'):
+            c.verify_scientific_members(self.policy, lambda path: (ROOT / path).read_bytes())
+        with historical.historical_source_tree(ROOT) as source:
+            result = c.verify_scientific_members(self.policy, lambda path: (source / path).read_bytes())
+            self.assertEqual(result, self.row['scientific_sha256'])
         with self.assertRaisesRegex(ValueError, 'source bytes drift'):
             c.verify_scientific_members(self.policy, lambda path: b'only an asserted digest')
+        # This test-only projection must fail if an exact historical body is
+        # missing, changed, or replaced with the maintained runtime bytes.
+        read = legacy.read_bytes
+        for name in sorted(historical.HISTORICAL_RETAINED):
+            archive = ROOT / historical.HISTORICAL_ARCHIVE / name
+            for label, replacement in (('missing', None), ('changed', b'changed archive'),
+                                       ('current', (ROOT / name).read_bytes())):
+                def changed_read(path, **kwargs):
+                    if Path(path) == archive:
+                        if replacement is None:
+                            raise FileNotFoundError(path)
+                        return replacement
+                    return read(path, **kwargs)
+                with self.subTest(member=name, replacement=label), \
+                     patch.object(legacy, 'read_bytes', side_effect=changed_read), \
+                     self.assertRaises((ValueError, OSError)):
+                    with historical.historical_source_tree(ROOT):
+                        self.fail('invalid archive supplied a historical source tree')
 
     def test_schema_does_not_duplicate_activation_in_science(self):
         before = c.scientific_identity(self.policy)

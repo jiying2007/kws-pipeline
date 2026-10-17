@@ -6,6 +6,26 @@ HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE));sys.path.insert(0,str(HERE.parent))
 import launcher as m
 
+ARCHIVED_SOURCE_MEMBERS=(
+ 'research/tts-pilot-screening-v1/test_host.py',
+ 'research/tts-pilot-screening-v1/activation-template/test_activation.py',
+)
+SOURCE_ARCHIVE=Path('research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017')
+
+
+def historical_source_bytes(root,pins):
+ """Test-only projection of the exact reviewed public source; no live fallback."""
+ result={}
+ for name,digest in pins.items():
+  relative=SOURCE_ARCHIVE/name if name in ARCHIVED_SOURCE_MEMBERS else Path(name)
+  path=Path(root)/relative
+  m.require(path.is_file() and not any(p.is_symlink() for p in (path,*path.parents)),
+            'regular historical source required: '+name)
+  raw=path.read_bytes()
+  m.require(hashlib.sha256(raw).hexdigest()==digest,'historical source pin: '+name)
+  result[name]=raw
+ return result
+
 class ActivationTests(unittest.TestCase):
  def disabled(self):
   with tempfile.TemporaryDirectory() as t,patch.object(m,'api',side_effect=AssertionError('network forbidden')):
@@ -30,7 +50,34 @@ class ActivationTests(unittest.TestCase):
   self.assertEqual(value['third_policy'],'training_candidate_confirmation')
   self.assertEqual(value['max_asr_slots'],144);self.assertEqual(value['current_qwen_call_cap'],96)
   self.assertNotIn('research/tts-pilot-screening-v1/activation-template/activation.json',value['source_files'])
-  for name,digest in value['source_files'].items():self.assertEqual(hashlib.sha256((root/name).read_bytes()).hexdigest(),digest,name)
+  self.assertEqual(len(value['source_files']),30)
+  source=historical_source_bytes(root,value['source_files'])
+  for name,digest in value['source_files'].items():self.assertEqual(hashlib.sha256(source[name]).hexdigest(),digest,name)
+  # The untouched production launcher must still reject the maintained live tree.
+  with tempfile.TemporaryDirectory() as directory:
+   event=Path(directory)/'event.json';event.write_text('{}');output=Path(directory)/'never-created'
+   with patch.dict(m.os.environ,{'GITHUB_TOKEN':'synthetic-only','GITHUB_EVENT_PATH':str(event)},clear=True), \
+        patch.object(sys,'argv',['launcher.py','--output',str(output)]), \
+        patch.object(m,'api',side_effect=AssertionError('network forbidden')):
+    with self.assertRaisesRegex(ValueError,'reviewed source changed'):m.main()
+   self.assertFalse(output.exists())
+  # Exact live copies never replace missing, changed or linked archived originals.
+  with tempfile.TemporaryDirectory() as directory:
+   fixture=Path(directory);pins={name:value['source_files'][name] for name in ARCHIVED_SOURCE_MEMBERS}
+   for name in ARCHIVED_SOURCE_MEMBERS:
+    archive=fixture/SOURCE_ARCHIVE/name;archive.parent.mkdir(parents=True,exist_ok=True);archive.write_bytes(source[name])
+    live=fixture/name;live.parent.mkdir(parents=True,exist_ok=True);live.write_bytes(source[name])
+   self.assertEqual(historical_source_bytes(fixture,pins),{name:source[name] for name in pins})
+   for name in ARCHIVED_SOURCE_MEMBERS:
+    archive=fixture/SOURCE_ARCHIVE/name
+    for state in ('changed','missing','symlink'):
+     archive.unlink()
+     if state=='changed':archive.write_bytes(source[name]+b'\n# changed')
+     elif state=='symlink':archive.symlink_to(fixture/name)
+     with self.subTest(name=name,state=state),self.assertRaises(ValueError):historical_source_bytes(fixture,pins)
+     if archive.exists() or archive.is_symlink():archive.unlink()
+     archive.write_bytes(source[name])
+    self.assertEqual((fixture/name).read_bytes(),source[name])
   self.assertEqual(len(value['input_artifacts']),4)
   self.assertEqual({r['run_id'] for r in value['input_artifacts']},{38554125374,38566438514})
   audit=json.loads((m.BASE/'evidence/tts-input-20261014/artifact-inventory.json').read_bytes())

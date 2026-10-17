@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 57790,
-      "sha256": "b57725e9703efee681c6e67f546f3f8ee8ac683bdf68f8384bace83214fe4d31",
-      "git_blob_sha1": "6ea42dff4da29188025cbb0a7a3239978268ca3a"
+      "bytes": 58243,
+      "sha256": "81073bd92ec1b9d79acec5ccf0cb767e31d8cffd6d9e9ea838d04eb1ce3156bc",
+      "git_blob_sha1": "6547b6db6ca460441e08b4f6580a676b08ad7564"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -37656,6 +37656,1100 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-17",
+      "operation_id": "sense-runtime-binding-20261017",
+      "from_commit": "62c970794f74d7303f3daff246e7062ffb1c85d5",
+      "from_tree": "484182a622a83cb6fb87a58914406d981e98415b",
+      "workflow_source_changed": true,
+      "scope": "Bind maintained SenseVoice inference to the verified runtime tokenizer path, revalidate the tokenizer before and after one inference, and add stdlib normal/-O/-OO regression checks. Preserve the exact four original qwen6 ASR source bodies in a fixed archive, separately retain frozen historical fixture sources, and route historical offline source review to the exact original bytes.",
+      "rationale": "Public source and CI metadata only. The original 718 retained file identities, all historical provenance, model locks, candidate freezes, scientific budgets and live admission gates remain unchanged. This maintenance runs no models, downloads no weights, produces no new ASR results and grants no historical campaign restart or training admission.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 57790,
+            "sha256": "b57725e9703efee681c6e67f546f3f8ee8ac683bdf68f8384bace83214fe4d31",
+            "git_blob_sha1": "6ea42dff4da29188025cbb0a7a3239978268ca3a"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 58243,
+            "sha256": "81073bd92ec1b9d79acec5ccf0cb767e31d8cffd6d9e9ea838d04eb1ce3156bc",
+            "git_blob_sha1": "6547b6db6ca460441e08b4f6580a676b08ad7564"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/README.md",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/README.md",
+            "mode": "100644",
+            "bytes": 3269,
+            "sha256": "01bea3649257c18ba19b45b6bb883b9d93999165f20123da9afdd234a1fe4429",
+            "git_blob_sha1": "9bde20bad9782da362374bbc858288998530fdb8"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/core/asr_stage/adapters.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/core/asr_stage/adapters.py",
+            "mode": "100644",
+            "bytes": 16560,
+            "sha256": "85512f20280cfa0aeb06b50699664e360db39bbf5b58034d3a2ede5cde8ff6ca",
+            "git_blob_sha1": "f5d3782817543cc9b364aab929eefc14f7cdf2e7"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/core/asr_stage/execution.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/core/asr_stage/execution.py",
+            "mode": "100644",
+            "bytes": 10872,
+            "sha256": "149befff56ef9da603d8b27174ca1a1d4eae638cc86f356cc5a1b8412ac06c9f",
+            "git_blob_sha1": "552a4d5a4396ba974dd43cdaefcb9532bce82c95"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/core/sense_binding.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/core/sense_binding.py",
+            "mode": "100644",
+            "bytes": 5393,
+            "sha256": "1a2fd8474d347591939b3ce9ab7411aa9a8f9ce0ffa732d93a95402b677503d2",
+            "git_blob_sha1": "8642327584265414a75e81c5538b64ecfe006793"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/source-screen32-v1/test_asr_worker.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/source-screen32-v1/test_asr_worker.py",
+            "mode": "100644",
+            "bytes": 19116,
+            "sha256": "06d81069d21f143913ddbef5b0fe25452fe86b5a27a1121a5108797a72b8ef6d",
+            "git_blob_sha1": "79bd297c03ef5e308bc6d6082446d4ab3f026a23"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/source-screen32-v1/test_sense_adapter.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/source-screen32-v1/test_sense_adapter.py",
+            "mode": "100644",
+            "bytes": 28476,
+            "sha256": "44ad481140f60447bd16afb0e1131841f69f22d7c10335d948556052552c2789",
+            "git_blob_sha1": "c555df3c6bf45465025a5d09eec2768b07dc6ffc"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 46441,
+            "sha256": "0a10465b49596e07c8cc3ac2b0d0d2cb0e130b1c92098d94c69fb922c9bd7629",
+            "git_blob_sha1": "a7c53427fdb231e01f178aae2944426e71b7be95"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 57039,
+            "sha256": "3ba1390ea9b9db04c151dbcf87f2375667d05b77c357fd174c335d57916b8319",
+            "git_blob_sha1": "d080fb0ee3f3f42844a8865aba804a7f916755fc"
+          }
+        },
+        {
+          "path": "research/experiment_quality_guards/screen32_human_review.py",
+          "before": {
+            "path": "research/experiment_quality_guards/screen32_human_review.py",
+            "mode": "100644",
+            "bytes": 24182,
+            "sha256": "999420b342b1c388697f74017dd645b18458d54bf523ac00fbfea99cd4e5480d",
+            "git_blob_sha1": "cb9a711c117f2b509ca7f7acc1542d51d5fe381b"
+          },
+          "after": {
+            "path": "research/experiment_quality_guards/screen32_human_review.py",
+            "mode": "100644",
+            "bytes": 25284,
+            "sha256": "cdefe2f2dfe93967385ec2faa82f84d671bcf0c0345e69563da421f6d4ce9964",
+            "git_blob_sha1": "b036eceb9477b0c94bbf33cffbc8e12cb78c529b"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_freeze.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_freeze.py",
+            "mode": "100644",
+            "bytes": 4108,
+            "sha256": "52a7bdb532ad74242573f281509869b2ca16d2fe4c294b7b74f9d8bd2494de01",
+            "git_blob_sha1": "5c56dab27798d03f3262b1d66c33d08a7afd3833"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_freeze.py",
+            "mode": "100644",
+            "bytes": 4793,
+            "sha256": "1c5bd0e78f45289180d3da984c81064f066eb691e855d194bc9d2fbc1252c30b",
+            "git_blob_sha1": "9830f5ae7a169b3ae10a397a433c5289f98c4472"
+          }
+        },
+        {
+          "path": "research/kw1-preset-supplement-v1/test_docker_backend.py",
+          "before": {
+            "path": "research/kw1-preset-supplement-v1/test_docker_backend.py",
+            "mode": "100644",
+            "bytes": 5375,
+            "sha256": "6b99a35161fe58d973d33e3879e01ddab9594d82a3b2cc86046c19d23d9be3ff",
+            "git_blob_sha1": "ead3c7ec7c0105969a0a6baf44e2ee238b43ddd3"
+          },
+          "after": {
+            "path": "research/kw1-preset-supplement-v1/test_docker_backend.py",
+            "mode": "100644",
+            "bytes": 6612,
+            "sha256": "abdcfcff1972d4d756e4d8c0401bb0e5938f2396a1b2d289c73ecb7b767ac0d3",
+            "git_blob_sha1": "a6e2c2dea6bf355acbfd42368d54decab0388953"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/test_contract.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 143803,
+            "sha256": "f5968361854bc32196e277924af421513cebc641bfcd54e836b1663ccd48600e",
+            "git_blob_sha1": "ad9b997c86dd2352f5d8e0a84b207435fcd43f12"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 145083,
+            "sha256": "767b2388709c2581a80b7eb25b68b8ef9ce36ea02c17026246dcd5ed0cb5ffea",
+            "git_blob_sha1": "f829c98538f5f86c3157ec90073bf722cf7d1c89"
+          }
+        },
+        {
+          "path": "research/qwen6_asr/README.md",
+          "before": {
+            "path": "research/qwen6_asr/README.md",
+            "mode": "100644",
+            "bytes": 3269,
+            "sha256": "01bea3649257c18ba19b45b6bb883b9d93999165f20123da9afdd234a1fe4429",
+            "git_blob_sha1": "9bde20bad9782da362374bbc858288998530fdb8"
+          },
+          "after": {
+            "path": "research/qwen6_asr/README.md",
+            "mode": "100644",
+            "bytes": 4788,
+            "sha256": "e9e74a052b42568f2793eb9e8e98121c250d84ff6964111ea4031894d82146ba",
+            "git_blob_sha1": "f9e4236a8b4333d047d9241d5d955c7737e2e30d"
+          }
+        },
+        {
+          "path": "research/qwen6_asr/core/asr_stage/adapters.py",
+          "before": {
+            "path": "research/qwen6_asr/core/asr_stage/adapters.py",
+            "mode": "100644",
+            "bytes": 16560,
+            "sha256": "85512f20280cfa0aeb06b50699664e360db39bbf5b58034d3a2ede5cde8ff6ca",
+            "git_blob_sha1": "f5d3782817543cc9b364aab929eefc14f7cdf2e7"
+          },
+          "after": {
+            "path": "research/qwen6_asr/core/asr_stage/adapters.py",
+            "mode": "100644",
+            "bytes": 17938,
+            "sha256": "35b7c392610e78a4bb13cd1cfca57a94b8a3555f38740fc7c9320f04b2d70d3b",
+            "git_blob_sha1": "b37a39d5758986aa87b2b556c7ba9ed2f1b8e0d0"
+          }
+        },
+        {
+          "path": "research/qwen6_asr/core/asr_stage/execution.py",
+          "before": {
+            "path": "research/qwen6_asr/core/asr_stage/execution.py",
+            "mode": "100644",
+            "bytes": 10872,
+            "sha256": "149befff56ef9da603d8b27174ca1a1d4eae638cc86f356cc5a1b8412ac06c9f",
+            "git_blob_sha1": "552a4d5a4396ba974dd43cdaefcb9532bce82c95"
+          },
+          "after": {
+            "path": "research/qwen6_asr/core/asr_stage/execution.py",
+            "mode": "100644",
+            "bytes": 11253,
+            "sha256": "bc03592d2093e6e8c196f372a46d9587f0741bb57ba2518c47fdd1b70e0e9b5c",
+            "git_blob_sha1": "67aa37089416e18211b49ef177097071740b6685"
+          }
+        },
+        {
+          "path": "research/qwen6_asr/core/sense_binding.py",
+          "before": {
+            "path": "research/qwen6_asr/core/sense_binding.py",
+            "mode": "100644",
+            "bytes": 5393,
+            "sha256": "1a2fd8474d347591939b3ce9ab7411aa9a8f9ce0ffa732d93a95402b677503d2",
+            "git_blob_sha1": "8642327584265414a75e81c5538b64ecfe006793"
+          },
+          "after": {
+            "path": "research/qwen6_asr/core/sense_binding.py",
+            "mode": "100644",
+            "bytes": 5585,
+            "sha256": "372aaa181a1d1365ae736b9d248f5426bcd1dbb60ce01077c1828f01cb2753d6",
+            "git_blob_sha1": "6eda36637e135e79ddd1ea41f7fdf75b8378941b"
+          }
+        },
+        {
+          "path": "research/source-screen32-v1/test_asr_worker.py",
+          "before": {
+            "path": "research/source-screen32-v1/test_asr_worker.py",
+            "mode": "100644",
+            "bytes": 19116,
+            "sha256": "06d81069d21f143913ddbef5b0fe25452fe86b5a27a1121a5108797a72b8ef6d",
+            "git_blob_sha1": "79bd297c03ef5e308bc6d6082446d4ab3f026a23"
+          },
+          "after": {
+            "path": "research/source-screen32-v1/test_asr_worker.py",
+            "mode": "100644",
+            "bytes": 22479,
+            "sha256": "d67b0edc525f207c78268c99375fead4f9f4e387d346979a3acc7e7db7fb8eb2",
+            "git_blob_sha1": "6f5a47dd4b4b5fd782cfea0c9b588eb3ccff9a51"
+          }
+        },
+        {
+          "path": "research/source-screen32-v1/test_sense_adapter.py",
+          "before": {
+            "path": "research/source-screen32-v1/test_sense_adapter.py",
+            "mode": "100644",
+            "bytes": 28476,
+            "sha256": "44ad481140f60447bd16afb0e1131841f69f22d7c10335d948556052552c2789",
+            "git_blob_sha1": "c555df3c6bf45465025a5d09eec2768b07dc6ffc"
+          },
+          "after": {
+            "path": "research/source-screen32-v1/test_sense_adapter.py",
+            "mode": "100644",
+            "bytes": 29038,
+            "sha256": "eb60ca9e7feb563a44bf4e453fe9c3b84ffed8288dc8cec498e203e87a2abbd7",
+            "git_blob_sha1": "a539bbbf9cb78d034a8719fb3e90b39faff47ed5"
+          }
+        },
+        {
+          "path": "tests/test_sense_runtime_binding.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_sense_runtime_binding.py",
+            "mode": "100644",
+            "bytes": 13022,
+            "sha256": "3146981052965a9577f3cdd7710042dbe9e6c6f0cc665395cc91ce959ce62547",
+            "git_blob_sha1": "33a1cd67b5c7abb5d800bc42ad2be5207b113551"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 14565,
+            "sha256": "34a2ebd9f2bb33333ee1deef1d9ef488ee36f4e370b822cd0d1e95046cd876ab",
+            "git_blob_sha1": "bb400429a02c6ed03f1c348de6095ac283e55ef3"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 19182,
+            "sha256": "2fd1f3d33fe23708c69db1652b97b2cd0262b5391dd2f8e370bd90e98cbd7085",
+            "git_blob_sha1": "a7d71f8a0d07b6bec74755cafa8e08653491118c"
+          }
+        }
+      ],
+      "historical_fixture_relocations": [
+        {
+          "original_path": "research/source-screen32-v1/test_asr_worker.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/source-screen32-v1/test_asr_worker.py",
+          "original": {
+            "path": "research/source-screen32-v1/test_asr_worker.py",
+            "mode": "100644",
+            "bytes": 19116,
+            "sha256": "06d81069d21f143913ddbef5b0fe25452fe86b5a27a1121a5108797a72b8ef6d",
+            "git_blob_sha1": "79bd297c03ef5e308bc6d6082446d4ab3f026a23"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/source-screen32-v1/test_asr_worker.py",
+            "mode": "100644",
+            "bytes": 19116,
+            "sha256": "06d81069d21f143913ddbef5b0fe25452fe86b5a27a1121a5108797a72b8ef6d",
+            "git_blob_sha1": "79bd297c03ef5e308bc6d6082446d4ab3f026a23"
+          }
+        },
+        {
+          "original_path": "research/source-screen32-v1/test_sense_adapter.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/source-screen32-v1/test_sense_adapter.py",
+          "original": {
+            "path": "research/source-screen32-v1/test_sense_adapter.py",
+            "mode": "100644",
+            "bytes": 28476,
+            "sha256": "44ad481140f60447bd16afb0e1131841f69f22d7c10335d948556052552c2789",
+            "git_blob_sha1": "c555df3c6bf45465025a5d09eec2768b07dc6ffc"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/source-screen32-v1/test_sense_adapter.py",
+            "mode": "100644",
+            "bytes": 28476,
+            "sha256": "44ad481140f60447bd16afb0e1131841f69f22d7c10335d948556052552c2789",
+            "git_blob_sha1": "c555df3c6bf45465025a5d09eec2768b07dc6ffc"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-17",
+      "operation_id": "sense-runtime-binding-ci-followup-20261017",
+      "from_commit": "b1675d2ee48ed63f6fc07396174d2a0cf2d9ad12",
+      "from_tree": "323bbee222c30bfeeaec14b7f78e3e99e4405f93",
+      "previous_retention_identity": {
+        "path": "research/consolidation/source-retention-2026-10-07.json",
+        "mode": "100644",
+        "bytes": 1845927,
+        "sha256": "bf2b273a2fbed90ba72b0553c0bb8aa99297278a2d772173ed5848078d210d68",
+        "git_blob_sha1": "cf45e860db6b25bbb3af5ae291da663f9554a234"
+      },
+      "workflow_source_changed": true,
+      "scope": "Make the existing eight Qwen12 stdlib contract scripts explicit executable declarations in normal/-O/-OO modes, retain the frozen workflow originals, and repair historical fixture/provenance consumers revealed by public CI. Preserve live validation against maintained sources and retain exact prior source bodies for immutable historical pins.",
+      "rationale": "Public source and CI metadata only. Append this followup to the initial published Sense runtime binding receipt without rewriting it. The original 718 retained source identities, all 834 provenance records, immutable execution freezes, validator-dependency pins, model locks, scientific budgets and live admission gates remain unchanged. No model execution, weight download, new ASR result or historical campaign restart is authorized by this maintenance.",
+      "files": [
+        {
+          "path": ".github/workflows/qwen12-native-admission-v1.yml",
+          "before": {
+            "path": ".github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 5301,
+            "sha256": "4f3dcbb478c27fcb9a22f7b21a758bc7e8b10036c409166ff6e14aa6f4beda1d",
+            "git_blob_sha1": "58f2fbb53659c84df2fc5445ba30f92d36a2af0f"
+          },
+          "after": {
+            "path": ".github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 6513,
+            "sha256": "e73ff340badc870dcd318f7d3a2945bea16b3b6464c923235aea30b13a6cb4e0",
+            "git_blob_sha1": "6627c9f35234efa832bed2ff2193a87c26192bfd"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/.github/workflows/ci.yml",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/.github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 57790,
+            "sha256": "b57725e9703efee681c6e67f546f3f8ee8ac683bdf68f8384bace83214fe4d31",
+            "git_blob_sha1": "6ea42dff4da29188025cbb0a7a3239978268ca3a"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/consolidation/source_tests/test_source_retention.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 46441,
+            "sha256": "0a10465b49596e07c8cc3ac2b0d0d2cb0e130b1c92098d94c69fb922c9bd7629",
+            "git_blob_sha1": "a7c53427fdb231e01f178aae2944426e71b7be95"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/claim_consumer_fixtures.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/claim_consumer_fixtures.py",
+            "mode": "100644",
+            "bytes": 7420,
+            "sha256": "8653afb6b487e5cff4975626ac1a831c937829d317b16e64bf3a6ec236d09bd4",
+            "git_blob_sha1": "c13e0bcad059a49e8d3132d38a4aa464ff2f9671"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_freeze.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_freeze.py",
+            "mode": "100644",
+            "bytes": 4108,
+            "sha256": "52a7bdb532ad74242573f281509869b2ca16d2fe4c294b7b74f9d8bd2494de01",
+            "git_blob_sha1": "5c56dab27798d03f3262b1d66c33d08a7afd3833"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+            "mode": "100644",
+            "bytes": 68392,
+            "sha256": "41910dea8433e764b86939e06deaeb84deb1de4f9dcacfa2cdc9967e3d6daaec",
+            "git_blob_sha1": "d0e01a9ac7954c1cc333aeb89ae30e3a1d39dba2"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_prerequisite.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_prerequisite.py",
+            "mode": "100644",
+            "bytes": 13274,
+            "sha256": "0cf7e79daf66e96e75749f598949e4986f8116efd08e0c43b5da9a8dbe7737d6",
+            "git_blob_sha1": "f0ce827cf551f1750e35b72de9d753f5c326ee9a"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+            "mode": "100644",
+            "bytes": 101709,
+            "sha256": "a5b2564a0104abcec4bfcf8da4053ca6225d4e69c4de67aaffa126b06c71132c",
+            "git_blob_sha1": "270530a68641edd52237ee1169408f6ef1c01a0d"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_claim_consumer_integration.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_claim_consumer_integration.py",
+            "mode": "100644",
+            "bytes": 25220,
+            "sha256": "abb1bdbb1f6515f1e5a4b7d259bfead15256bfb8e6bb001b196b40e94bcbc3ce",
+            "git_blob_sha1": "85e0f578bb4f438ce90993bb54e1281a90c3a7bc"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_control_fixture.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_control_fixture.py",
+            "mode": "100644",
+            "bytes": 4757,
+            "sha256": "c42443a7065eca6b0e4b46d301e04b220d1fb13f178192b00fcea97d3a7fd514",
+            "git_blob_sha1": "401763a34c6049f894d69db082523583cc227345"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+            "mode": "100644",
+            "bytes": 26700,
+            "sha256": "5cfaff940374ecfc66281ced5a253540fe2874848c7afc338374322b2764c4d5",
+            "git_blob_sha1": "e9632709a4e4635048fe78ed8ab4d02791cc6576"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/tools/verify_research_sources.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 14565,
+            "sha256": "34a2ebd9f2bb33333ee1deef1d9ef488ee36f4e370b822cd0d1e95046cd876ab",
+            "git_blob_sha1": "bb400429a02c6ed03f1c348de6095ac283e55ef3"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci-followup-20261017/.github/workflows/qwen12-native-admission-v1.yml",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci-followup-20261017/.github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 5301,
+            "sha256": "4f3dcbb478c27fcb9a22f7b21a758bc7e8b10036c409166ff6e14aa6f4beda1d",
+            "git_blob_sha1": "58f2fbb53659c84df2fc5445ba30f92d36a2af0f"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci-followup-20261017/research/qwen12-native-admission-v1/workflow.yml",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci-followup-20261017/research/qwen12-native-admission-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 5301,
+            "sha256": "4f3dcbb478c27fcb9a22f7b21a758bc7e8b10036c409166ff6e14aa6f4beda1d",
+            "git_blob_sha1": "58f2fbb53659c84df2fc5445ba30f92d36a2af0f"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40879,
+            "sha256": "d7360754fc3d04d20ecf529734938e365079d894b7fc543ba43448c89c898c5f",
+            "git_blob_sha1": "89e24c22755bc93ea938a5bec1e556ecf3136a89"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 42510,
+            "sha256": "d1918e432688c326cd85b9115bc63772e8217427d649b6e2d91515de429f2239",
+            "git_blob_sha1": "f3f0982c12f941b2f7ce9bdd1d851ed4eb7a41b9"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+            "mode": "100644",
+            "bytes": 37857,
+            "sha256": "f7f811fde47a8ad2a478428abeeadca02168c1e4f1af2e3d3c3a9ebde5378001",
+            "git_blob_sha1": "007843a647e234e48f17d2e38058da043b459c96"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40771,
+            "sha256": "4b4d97097a72692f950623f7e8fe98989f4eea5ed6fe0fb448e31d9f66556535",
+            "git_blob_sha1": "1142794fa3e92d8034838146722340d15670ba58"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/claim_consumer_fixtures.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/claim_consumer_fixtures.py",
+            "mode": "100644",
+            "bytes": 7420,
+            "sha256": "8653afb6b487e5cff4975626ac1a831c937829d317b16e64bf3a6ec236d09bd4",
+            "git_blob_sha1": "c13e0bcad059a49e8d3132d38a4aa464ff2f9671"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/claim_consumer_fixtures.py",
+            "mode": "100644",
+            "bytes": 7549,
+            "sha256": "8cfd194636799156c4acdd0b830189199752577c5de0c070bdf34135a2d10b00",
+            "git_blob_sha1": "faef24f23c6d42527f18903c8894a31d8ef59002"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+            "mode": "100644",
+            "bytes": 68392,
+            "sha256": "41910dea8433e764b86939e06deaeb84deb1de4f9dcacfa2cdc9967e3d6daaec",
+            "git_blob_sha1": "d0e01a9ac7954c1cc333aeb89ae30e3a1d39dba2"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+            "mode": "100644",
+            "bytes": 68477,
+            "sha256": "83916f74ef393fe81807242f00e909c6850d81acd41d27a0cd349f82c009a0f1",
+            "git_blob_sha1": "ce242b5dca6663e088d39ab540284f2f14ad9199"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_prerequisite.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_prerequisite.py",
+            "mode": "100644",
+            "bytes": 13274,
+            "sha256": "0cf7e79daf66e96e75749f598949e4986f8116efd08e0c43b5da9a8dbe7737d6",
+            "git_blob_sha1": "f0ce827cf551f1750e35b72de9d753f5c326ee9a"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_prerequisite.py",
+            "mode": "100644",
+            "bytes": 15451,
+            "sha256": "75d4c7d0cecd2cfa217de4109a3078447a55f9b1ed08214bafc483bbdd937263",
+            "git_blob_sha1": "4dbc371de44f0189c5c18718b1e09063ed55fe7f"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+            "mode": "100644",
+            "bytes": 101709,
+            "sha256": "a5b2564a0104abcec4bfcf8da4053ca6225d4e69c4de67aaffa126b06c71132c",
+            "git_blob_sha1": "270530a68641edd52237ee1169408f6ef1c01a0d"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+            "mode": "100644",
+            "bytes": 101930,
+            "sha256": "f657eddbc7b80f1d1baf0f207295346cba0c2e3668742e9d34cda37f9f72f3a3",
+            "git_blob_sha1": "1bf48ff2b698ddb56956ba6e1b0a58053d5cc29d"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_claim_consumer_integration.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_claim_consumer_integration.py",
+            "mode": "100644",
+            "bytes": 25220,
+            "sha256": "abb1bdbb1f6515f1e5a4b7d259bfead15256bfb8e6bb001b196b40e94bcbc3ce",
+            "git_blob_sha1": "85e0f578bb4f438ce90993bb54e1281a90c3a7bc"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_claim_consumer_integration.py",
+            "mode": "100644",
+            "bytes": 26110,
+            "sha256": "012d8135035ccb952c931dcbcdf1c4f3de89859331b36d54476308423eaa0c2c",
+            "git_blob_sha1": "76a59cc940cbf13ce0b879fb59d84a6983eefaac"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_control_fixture.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_control_fixture.py",
+            "mode": "100644",
+            "bytes": 4757,
+            "sha256": "c42443a7065eca6b0e4b46d301e04b220d1fb13f178192b00fcea97d3a7fd514",
+            "git_blob_sha1": "401763a34c6049f894d69db082523583cc227345"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_control_fixture.py",
+            "mode": "100644",
+            "bytes": 6739,
+            "sha256": "f0a0ea8a8f96191f380a4cf15dc175aefb0811adcb3d3ae98e1557dcc7b9a59f",
+            "git_blob_sha1": "11954bbd7a72541baa4d1a994f06d8e62dc24db6"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+            "mode": "100644",
+            "bytes": 26700,
+            "sha256": "5cfaff940374ecfc66281ced5a253540fe2874848c7afc338374322b2764c4d5",
+            "git_blob_sha1": "e9632709a4e4635048fe78ed8ab4d02791cc6576"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+            "mode": "100644",
+            "bytes": 26619,
+            "sha256": "7a0749e0b1e974e250440192c8fc228fe52289b1b5bd5e162ab717ff10312450",
+            "git_blob_sha1": "6b89415eb51c626f32f499bb958a1dfd819f6cd5"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/test_contract.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 145083,
+            "sha256": "767b2388709c2581a80b7eb25b68b8ef9ce36ea02c17026246dcd5ed0cb5ffea",
+            "git_blob_sha1": "f829c98538f5f86c3157ec90073bf722cf7d1c89"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 147429,
+            "sha256": "197cdede95e64cb1cb840a28b55afc769b84e961dd83a6821fa76760ff305ad2",
+            "git_blob_sha1": "3f9c75836bf54a8e00cc777336981096b60fd206"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/workflow.yml",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 5301,
+            "sha256": "4f3dcbb478c27fcb9a22f7b21a758bc7e8b10036c409166ff6e14aa6f4beda1d",
+            "git_blob_sha1": "58f2fbb53659c84df2fc5445ba30f92d36a2af0f"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 6513,
+            "sha256": "e73ff340badc870dcd318f7d3a2945bea16b3b6464c923235aea30b13a6cb4e0",
+            "git_blob_sha1": "6627c9f35234efa832bed2ff2193a87c26192bfd"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/test_host.py",
+          "before": {
+            "path": "research/tts-pilot-screening-v1/test_host.py",
+            "mode": "100644",
+            "bytes": 1379,
+            "sha256": "d779a762e5504ca59ab9bab29ddb235b63a9cb4e81e0f48a70960e01698b06bb",
+            "git_blob_sha1": "9dadb7b25bb7e3e516f77421ceca425d0a205caf"
+          },
+          "after": {
+            "path": "research/tts-pilot-screening-v1/test_host.py",
+            "mode": "100644",
+            "bytes": 2211,
+            "sha256": "ae6bd826389baf812f9c48376788cb96ccaf69eaa0cb5cca9b358d80b78408aa",
+            "git_blob_sha1": "28870efea1597b157a21bae3f6cb6b39a2d48ce8"
+          }
+        },
+        {
+          "path": "research/tts-quality-remaining-v1/test_execution.py",
+          "before": {
+            "path": "research/tts-quality-remaining-v1/test_execution.py",
+            "mode": "100644",
+            "bytes": 6351,
+            "sha256": "efb7fe9cb76a3dfe9c979a7434a4277ac2ad699eb455495fd2f1c756388c5ef3",
+            "git_blob_sha1": "617c87d3d2364f8ea5cdad5befab414104c615a5"
+          },
+          "after": {
+            "path": "research/tts-quality-remaining-v1/test_execution.py",
+            "mode": "100644",
+            "bytes": 8911,
+            "sha256": "756d12687568bd59ce7fa339cdc3109d04c4d6a52acb156167631426696860ae",
+            "git_blob_sha1": "92107fdc63bd6fc4824b9194185064468d211018"
+          }
+        }
+      ],
+      "historical_fixture_relocations": [
+        {
+          "original_path": ".github/workflows/ci.yml",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/.github/workflows/ci.yml",
+          "original": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 57790,
+            "sha256": "b57725e9703efee681c6e67f546f3f8ee8ac683bdf68f8384bace83214fe4d31",
+            "git_blob_sha1": "6ea42dff4da29188025cbb0a7a3239978268ca3a"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/.github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 57790,
+            "sha256": "b57725e9703efee681c6e67f546f3f8ee8ac683bdf68f8384bace83214fe4d31",
+            "git_blob_sha1": "6ea42dff4da29188025cbb0a7a3239978268ca3a"
+          }
+        },
+        {
+          "original_path": "research/consolidation/source_tests/test_source_retention.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/consolidation/source_tests/test_source_retention.py",
+          "original": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 46441,
+            "sha256": "0a10465b49596e07c8cc3ac2b0d0d2cb0e130b1c92098d94c69fb922c9bd7629",
+            "git_blob_sha1": "a7c53427fdb231e01f178aae2944426e71b7be95"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 46441,
+            "sha256": "0a10465b49596e07c8cc3ac2b0d0d2cb0e130b1c92098d94c69fb922c9bd7629",
+            "git_blob_sha1": "a7c53427fdb231e01f178aae2944426e71b7be95"
+          }
+        },
+        {
+          "original_path": "research/k1-punctuation6-asr18-v1/claim_consumer_fixtures.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/claim_consumer_fixtures.py",
+          "original": {
+            "path": "research/k1-punctuation6-asr18-v1/claim_consumer_fixtures.py",
+            "mode": "100644",
+            "bytes": 7420,
+            "sha256": "8653afb6b487e5cff4975626ac1a831c937829d317b16e64bf3a6ec236d09bd4",
+            "git_blob_sha1": "c13e0bcad059a49e8d3132d38a4aa464ff2f9671"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/claim_consumer_fixtures.py",
+            "mode": "100644",
+            "bytes": 7420,
+            "sha256": "8653afb6b487e5cff4975626ac1a831c937829d317b16e64bf3a6ec236d09bd4",
+            "git_blob_sha1": "c13e0bcad059a49e8d3132d38a4aa464ff2f9671"
+          }
+        },
+        {
+          "original_path": "research/k1-punctuation6-asr18-v1/test_asr18_freeze.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_freeze.py",
+          "original": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_freeze.py",
+            "mode": "100644",
+            "bytes": 4108,
+            "sha256": "52a7bdb532ad74242573f281509869b2ca16d2fe4c294b7b74f9d8bd2494de01",
+            "git_blob_sha1": "5c56dab27798d03f3262b1d66c33d08a7afd3833"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_freeze.py",
+            "mode": "100644",
+            "bytes": 4108,
+            "sha256": "52a7bdb532ad74242573f281509869b2ca16d2fe4c294b7b74f9d8bd2494de01",
+            "git_blob_sha1": "5c56dab27798d03f3262b1d66c33d08a7afd3833"
+          }
+        },
+        {
+          "original_path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+          "original": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+            "mode": "100644",
+            "bytes": 68392,
+            "sha256": "41910dea8433e764b86939e06deaeb84deb1de4f9dcacfa2cdc9967e3d6daaec",
+            "git_blob_sha1": "d0e01a9ac7954c1cc333aeb89ae30e3a1d39dba2"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_host.py",
+            "mode": "100644",
+            "bytes": 68392,
+            "sha256": "41910dea8433e764b86939e06deaeb84deb1de4f9dcacfa2cdc9967e3d6daaec",
+            "git_blob_sha1": "d0e01a9ac7954c1cc333aeb89ae30e3a1d39dba2"
+          }
+        },
+        {
+          "original_path": "research/k1-punctuation6-asr18-v1/test_asr18_prerequisite.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_prerequisite.py",
+          "original": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_prerequisite.py",
+            "mode": "100644",
+            "bytes": 13274,
+            "sha256": "0cf7e79daf66e96e75749f598949e4986f8116efd08e0c43b5da9a8dbe7737d6",
+            "git_blob_sha1": "f0ce827cf551f1750e35b72de9d753f5c326ee9a"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_prerequisite.py",
+            "mode": "100644",
+            "bytes": 13274,
+            "sha256": "0cf7e79daf66e96e75749f598949e4986f8116efd08e0c43b5da9a8dbe7737d6",
+            "git_blob_sha1": "f0ce827cf551f1750e35b72de9d753f5c326ee9a"
+          }
+        },
+        {
+          "original_path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+          "original": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+            "mode": "100644",
+            "bytes": 101709,
+            "sha256": "a5b2564a0104abcec4bfcf8da4053ca6225d4e69c4de67aaffa126b06c71132c",
+            "git_blob_sha1": "270530a68641edd52237ee1169408f6ef1c01a0d"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+            "mode": "100644",
+            "bytes": 101709,
+            "sha256": "a5b2564a0104abcec4bfcf8da4053ca6225d4e69c4de67aaffa126b06c71132c",
+            "git_blob_sha1": "270530a68641edd52237ee1169408f6ef1c01a0d"
+          }
+        },
+        {
+          "original_path": "research/k1-punctuation6-asr18-v1/test_claim_consumer_integration.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_claim_consumer_integration.py",
+          "original": {
+            "path": "research/k1-punctuation6-asr18-v1/test_claim_consumer_integration.py",
+            "mode": "100644",
+            "bytes": 25220,
+            "sha256": "abb1bdbb1f6515f1e5a4b7d259bfead15256bfb8e6bb001b196b40e94bcbc3ce",
+            "git_blob_sha1": "85e0f578bb4f438ce90993bb54e1281a90c3a7bc"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_claim_consumer_integration.py",
+            "mode": "100644",
+            "bytes": 25220,
+            "sha256": "abb1bdbb1f6515f1e5a4b7d259bfead15256bfb8e6bb001b196b40e94bcbc3ce",
+            "git_blob_sha1": "85e0f578bb4f438ce90993bb54e1281a90c3a7bc"
+          }
+        },
+        {
+          "original_path": "research/k1-punctuation6-asr18-v1/test_control_fixture.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_control_fixture.py",
+          "original": {
+            "path": "research/k1-punctuation6-asr18-v1/test_control_fixture.py",
+            "mode": "100644",
+            "bytes": 4757,
+            "sha256": "c42443a7065eca6b0e4b46d301e04b220d1fb13f178192b00fcea97d3a7fd514",
+            "git_blob_sha1": "401763a34c6049f894d69db082523583cc227345"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-asr18-v1/test_control_fixture.py",
+            "mode": "100644",
+            "bytes": 4757,
+            "sha256": "c42443a7065eca6b0e4b46d301e04b220d1fb13f178192b00fcea97d3a7fd514",
+            "git_blob_sha1": "401763a34c6049f894d69db082523583cc227345"
+          }
+        },
+        {
+          "original_path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+          "original": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+            "mode": "100644",
+            "bytes": 26700,
+            "sha256": "5cfaff940374ecfc66281ced5a253540fe2874848c7afc338374322b2764c4d5",
+            "git_blob_sha1": "e9632709a4e4635048fe78ed8ab4d02791cc6576"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py",
+            "mode": "100644",
+            "bytes": 26700,
+            "sha256": "5cfaff940374ecfc66281ced5a253540fe2874848c7afc338374322b2764c4d5",
+            "git_blob_sha1": "e9632709a4e4635048fe78ed8ab4d02791cc6576"
+          }
+        },
+        {
+          "original_path": "tools/verify_research_sources.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/tools/verify_research_sources.py",
+          "original": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 14565,
+            "sha256": "34a2ebd9f2bb33333ee1deef1d9ef488ee36f4e370b822cd0d1e95046cd876ab",
+            "git_blob_sha1": "bb400429a02c6ed03f1c348de6095ac283e55ef3"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 14565,
+            "sha256": "34a2ebd9f2bb33333ee1deef1d9ef488ee36f4e370b822cd0d1e95046cd876ab",
+            "git_blob_sha1": "bb400429a02c6ed03f1c348de6095ac283e55ef3"
+          }
+        },
+        {
+          "original_path": ".github/workflows/qwen12-native-admission-v1.yml",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci-followup-20261017/.github/workflows/qwen12-native-admission-v1.yml",
+          "original": {
+            "path": ".github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 5301,
+            "sha256": "4f3dcbb478c27fcb9a22f7b21a758bc7e8b10036c409166ff6e14aa6f4beda1d",
+            "git_blob_sha1": "58f2fbb53659c84df2fc5445ba30f92d36a2af0f"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci-followup-20261017/.github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 5301,
+            "sha256": "4f3dcbb478c27fcb9a22f7b21a758bc7e8b10036c409166ff6e14aa6f4beda1d",
+            "git_blob_sha1": "58f2fbb53659c84df2fc5445ba30f92d36a2af0f"
+          }
+        },
+        {
+          "original_path": "research/qwen12-native-admission-v1/workflow.yml",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci-followup-20261017/research/qwen12-native-admission-v1/workflow.yml",
+          "original": {
+            "path": "research/qwen12-native-admission-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 5301,
+            "sha256": "4f3dcbb478c27fcb9a22f7b21a758bc7e8b10036c409166ff6e14aa6f4beda1d",
+            "git_blob_sha1": "58f2fbb53659c84df2fc5445ba30f92d36a2af0f"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci-followup-20261017/research/qwen12-native-admission-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 5301,
+            "sha256": "4f3dcbb478c27fcb9a22f7b21a758bc7e8b10036c409166ff6e14aa6f4beda1d",
+            "git_blob_sha1": "58f2fbb53659c84df2fc5445ba30f92d36a2af0f"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-17",
+      "operation_id": "sense-runtime-binding-ci2-20261017",
+      "from_commit": "9afd4a31e7f438546c8ebebb9ef55480d266e823",
+      "from_tree": "bf49e2bd5fd3a4e5b9f0490ef3898f7689edb8a5",
+      "previous_retention_identity": {
+        "path": "research/consolidation/source-retention-2026-10-07.json",
+        "mode": "100644",
+        "bytes": 1879350,
+        "sha256": "e9740d9611bdeda436415260c3fc9495ca2ea6d2a4cd635bf7db12ea41cdf996",
+        "git_blob_sha1": "e6505d1642cf9076e11bd87f171eb0de00bd4c45"
+      },
+      "workflow_source_changed": false,
+      "scope": "Route campaign capsule and pilot activation unit-test fixtures to exact archived historical source bodies while preserving live maintained-source rejection. Preserve both activation-pinned original test bodies and cover archival tampering, missing archives and current-source substitution.",
+      "rationale": "Public test-source and archival metadata only. Preserve every previously published maintenance receipt, all original 718 retained source identities and 834 provenance records, immutable scientific policy and activation source pins, execution freezes and live campaign validation gates. No model execution, weight downloads, dispatch, new ASR result or historical campaign restart is authorized by this maintenance.",
+      "files": [
+        {
+          "path": "research/campaign-capsules-v1/test_campaign_capsule.py",
+          "before": {
+            "path": "research/campaign-capsules-v1/test_campaign_capsule.py",
+            "mode": "100644",
+            "bytes": 15513,
+            "sha256": "d51cb3460eb99487e8764d1a754f51a60ae9a470188730d4fc6d42b77136d907",
+            "git_blob_sha1": "3dce33184bbdda2b2e470f8d71d09d08994b159b"
+          },
+          "after": {
+            "path": "research/campaign-capsules-v1/test_campaign_capsule.py",
+            "mode": "100644",
+            "bytes": 17162,
+            "sha256": "857e672eb1aeda626c017cf0065e6af6374a31fa6ff22849367f754faedaa6c2",
+            "git_blob_sha1": "811b9662eefa39023a05d8006419c615845c45f4"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/activation-template/test_activation.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "mode": "100644",
+            "bytes": 12874,
+            "sha256": "bcaa8d4cefa82ce4c93d8b0202ccdc3bea97927bfd9210b3b95e6f8a73f06dda",
+            "git_blob_sha1": "f522ee2fb27241bff32f92ad4915273c2c14969d"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/test_host.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/test_host.py",
+            "mode": "100644",
+            "bytes": 1379,
+            "sha256": "d779a762e5504ca59ab9bab29ddb235b63a9cb4e81e0f48a70960e01698b06bb",
+            "git_blob_sha1": "9dadb7b25bb7e3e516f77421ceca425d0a205caf"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+          "before": {
+            "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "mode": "100644",
+            "bytes": 12874,
+            "sha256": "bcaa8d4cefa82ce4c93d8b0202ccdc3bea97927bfd9210b3b95e6f8a73f06dda",
+            "git_blob_sha1": "f522ee2fb27241bff32f92ad4915273c2c14969d"
+          },
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "mode": "100644",
+            "bytes": 15574,
+            "sha256": "0e657bcf4f91fc8e817b204012582f6b1f50c63d35f7e4c56e3817bd74187893",
+            "git_blob_sha1": "5ebefad0bc099c90262bd6ed0a51eec805a047a3"
+          }
+        }
+      ],
+      "historical_fixture_relocations": [
+        {
+          "original_path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/activation-template/test_activation.py",
+          "original": {
+            "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "mode": "100644",
+            "bytes": 12874,
+            "sha256": "bcaa8d4cefa82ce4c93d8b0202ccdc3bea97927bfd9210b3b95e6f8a73f06dda",
+            "git_blob_sha1": "f522ee2fb27241bff32f92ad4915273c2c14969d"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "mode": "100644",
+            "bytes": 12874,
+            "sha256": "bcaa8d4cefa82ce4c93d8b0202ccdc3bea97927bfd9210b3b95e6f8a73f06dda",
+            "git_blob_sha1": "f522ee2fb27241bff32f92ad4915273c2c14969d"
+          }
+        },
+        {
+          "original_path": "research/tts-pilot-screening-v1/test_host.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/test_host.py",
+          "original": {
+            "path": "research/tts-pilot-screening-v1/test_host.py",
+            "mode": "100644",
+            "bytes": 1379,
+            "sha256": "d779a762e5504ca59ab9bab29ddb235b63a9cb4e81e0f48a70960e01698b06bb",
+            "git_blob_sha1": "9dadb7b25bb7e3e516f77421ceca425d0a205caf"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/test_host.py",
+            "mode": "100644",
+            "bytes": 1379,
+            "sha256": "d779a762e5504ca59ab9bab29ddb235b63a9cb4e81e0f48a70960e01698b06bb",
+            "git_blob_sha1": "9dadb7b25bb7e3e516f77421ceca425d0a205caf"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -37669,9 +38763,9 @@
     {
       "path": ".github/workflows/qwen12-native-admission-v1.yml",
       "mode": "100644",
-      "bytes": 5301,
-      "sha256": "4f3dcbb478c27fcb9a22f7b21a758bc7e8b10036c409166ff6e14aa6f4beda1d",
-      "git_blob_sha1": "58f2fbb53659c84df2fc5445ba30f92d36a2af0f"
+      "bytes": 6513,
+      "sha256": "e73ff340badc870dcd318f7d3a2945bea16b3b6464c923235aea30b13a6cb4e0",
+      "git_blob_sha1": "6627c9f35234efa832bed2ff2193a87c26192bfd"
     },
     {
       "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
@@ -37808,5 +38902,211 @@
       "sha256": "b21139d3d63467b910f13b4bc2045d08a737799f9d4bc4dae96972f2a9cd1dad",
       "git_blob_sha1": "31d33d8d81739d0e8717960a6339d93baff06a5e"
     }
+  },
+  "current_sense_runtime_revision": {
+    "revision_id": "sense-runtime-binding-20261017",
+    "supersedes_commit": "62c970794f74d7303f3daff246e7062ffb1c85d5",
+    "files": [
+      {
+        "path": "research/qwen6_asr/README.md",
+        "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/README.md",
+        "original": {
+          "path": "research/qwen6_asr/README.md",
+          "mode": "100644",
+          "bytes": 3269,
+          "git_blob_sha1": "9bde20bad9782da362374bbc858288998530fdb8",
+          "sha256": "01bea3649257c18ba19b45b6bb883b9d93999165f20123da9afdd234a1fe4429"
+        },
+        "original_provenance": [
+          {
+            "source_pr": 482,
+            "source_commit": "16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51",
+            "original_path": "research/qwen6_asr/README.md",
+            "path": "research/qwen6_asr/README.md",
+            "git_blob_sha1": "9bde20bad9782da362374bbc858288998530fdb8",
+            "mode": "100644",
+            "kind": "retained-source",
+            "sha256": "01bea3649257c18ba19b45b6bb883b9d93999165f20123da9afdd234a1fe4429",
+            "bytes": 3269,
+            "source_url": "https://github.com/jiying2007/kws-pipeline/blob/16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51/research/qwen6_asr/README.md"
+          }
+        ],
+        "current": {
+          "path": "research/qwen6_asr/README.md",
+          "mode": "100644",
+          "bytes": 4788,
+          "sha256": "e9e74a052b42568f2793eb9e8e98121c250d84ff6964111ea4031894d82146ba",
+          "git_blob_sha1": "f9e4236a8b4333d047d9241d5d955c7737e2e30d"
+        }
+      },
+      {
+        "path": "research/qwen6_asr/core/asr_stage/adapters.py",
+        "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/core/asr_stage/adapters.py",
+        "original": {
+          "path": "research/qwen6_asr/core/asr_stage/adapters.py",
+          "mode": "100644",
+          "bytes": 16560,
+          "git_blob_sha1": "f5d3782817543cc9b364aab929eefc14f7cdf2e7",
+          "sha256": "85512f20280cfa0aeb06b50699664e360db39bbf5b58034d3a2ede5cde8ff6ca"
+        },
+        "original_provenance": [
+          {
+            "source_pr": 482,
+            "source_commit": "16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51",
+            "original_path": "research/qwen6_asr/core/asr_stage/adapters.py",
+            "path": "research/qwen6_asr/core/asr_stage/adapters.py",
+            "git_blob_sha1": "f5d3782817543cc9b364aab929eefc14f7cdf2e7",
+            "mode": "100644",
+            "kind": "retained-source",
+            "sha256": "85512f20280cfa0aeb06b50699664e360db39bbf5b58034d3a2ede5cde8ff6ca",
+            "bytes": 16560,
+            "source_url": "https://github.com/jiying2007/kws-pipeline/blob/16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51/research/qwen6_asr/core/asr_stage/adapters.py"
+          },
+          {
+            "source_pr": 480,
+            "source_commit": "cd30ecfb71d26c099055ca9c2f90f5c084f05b93",
+            "original_path": "research/qwen6_asr/core/asr_stage/adapters.py",
+            "path": "research/qwen6_asr/core/asr_stage/adapters.py",
+            "git_blob_sha1": "f5d3782817543cc9b364aab929eefc14f7cdf2e7",
+            "mode": "100644",
+            "kind": "shared-exact-bytes",
+            "sha256": "85512f20280cfa0aeb06b50699664e360db39bbf5b58034d3a2ede5cde8ff6ca",
+            "bytes": 16560,
+            "source_url": "https://github.com/jiying2007/kws-pipeline/blob/cd30ecfb71d26c099055ca9c2f90f5c084f05b93/research/qwen6_asr/core/asr_stage/adapters.py"
+          },
+          {
+            "source_pr": 481,
+            "source_commit": "480e4f013349917b0cea514633d3f7ae2d98c0b4",
+            "original_path": "research/qwen6_asr/core/asr_stage/adapters.py",
+            "path": "research/qwen6_asr/core/asr_stage/adapters.py",
+            "git_blob_sha1": "f5d3782817543cc9b364aab929eefc14f7cdf2e7",
+            "mode": "100644",
+            "kind": "shared-exact-bytes",
+            "sha256": "85512f20280cfa0aeb06b50699664e360db39bbf5b58034d3a2ede5cde8ff6ca",
+            "bytes": 16560,
+            "source_url": "https://github.com/jiying2007/kws-pipeline/blob/480e4f013349917b0cea514633d3f7ae2d98c0b4/research/qwen6_asr/core/asr_stage/adapters.py"
+          }
+        ],
+        "current": {
+          "path": "research/qwen6_asr/core/asr_stage/adapters.py",
+          "mode": "100644",
+          "bytes": 17938,
+          "sha256": "35b7c392610e78a4bb13cd1cfca57a94b8a3555f38740fc7c9320f04b2d70d3b",
+          "git_blob_sha1": "b37a39d5758986aa87b2b556c7ba9ed2f1b8e0d0"
+        }
+      },
+      {
+        "path": "research/qwen6_asr/core/asr_stage/execution.py",
+        "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/core/asr_stage/execution.py",
+        "original": {
+          "path": "research/qwen6_asr/core/asr_stage/execution.py",
+          "mode": "100644",
+          "bytes": 10872,
+          "git_blob_sha1": "552a4d5a4396ba974dd43cdaefcb9532bce82c95",
+          "sha256": "149befff56ef9da603d8b27174ca1a1d4eae638cc86f356cc5a1b8412ac06c9f"
+        },
+        "original_provenance": [
+          {
+            "source_pr": 482,
+            "source_commit": "16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51",
+            "original_path": "research/qwen6_asr/core/asr_stage/execution.py",
+            "path": "research/qwen6_asr/core/asr_stage/execution.py",
+            "git_blob_sha1": "552a4d5a4396ba974dd43cdaefcb9532bce82c95",
+            "mode": "100644",
+            "kind": "retained-source",
+            "sha256": "149befff56ef9da603d8b27174ca1a1d4eae638cc86f356cc5a1b8412ac06c9f",
+            "bytes": 10872,
+            "source_url": "https://github.com/jiying2007/kws-pipeline/blob/16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51/research/qwen6_asr/core/asr_stage/execution.py"
+          },
+          {
+            "source_pr": 480,
+            "source_commit": "cd30ecfb71d26c099055ca9c2f90f5c084f05b93",
+            "original_path": "research/qwen6_asr/core/asr_stage/execution.py",
+            "path": "research/qwen6_asr/core/asr_stage/execution.py",
+            "git_blob_sha1": "552a4d5a4396ba974dd43cdaefcb9532bce82c95",
+            "mode": "100644",
+            "kind": "shared-exact-bytes",
+            "sha256": "149befff56ef9da603d8b27174ca1a1d4eae638cc86f356cc5a1b8412ac06c9f",
+            "bytes": 10872,
+            "source_url": "https://github.com/jiying2007/kws-pipeline/blob/cd30ecfb71d26c099055ca9c2f90f5c084f05b93/research/qwen6_asr/core/asr_stage/execution.py"
+          },
+          {
+            "source_pr": 481,
+            "source_commit": "480e4f013349917b0cea514633d3f7ae2d98c0b4",
+            "original_path": "research/qwen6_asr/core/asr_stage/execution.py",
+            "path": "research/qwen6_asr/core/asr_stage/execution.py",
+            "git_blob_sha1": "552a4d5a4396ba974dd43cdaefcb9532bce82c95",
+            "mode": "100644",
+            "kind": "shared-exact-bytes",
+            "sha256": "149befff56ef9da603d8b27174ca1a1d4eae638cc86f356cc5a1b8412ac06c9f",
+            "bytes": 10872,
+            "source_url": "https://github.com/jiying2007/kws-pipeline/blob/480e4f013349917b0cea514633d3f7ae2d98c0b4/research/qwen6_asr/core/asr_stage/execution.py"
+          }
+        ],
+        "current": {
+          "path": "research/qwen6_asr/core/asr_stage/execution.py",
+          "mode": "100644",
+          "bytes": 11253,
+          "sha256": "bc03592d2093e6e8c196f372a46d9587f0741bb57ba2518c47fdd1b70e0e9b5c",
+          "git_blob_sha1": "67aa37089416e18211b49ef177097071740b6685"
+        }
+      },
+      {
+        "path": "research/qwen6_asr/core/sense_binding.py",
+        "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/core/sense_binding.py",
+        "original": {
+          "path": "research/qwen6_asr/core/sense_binding.py",
+          "mode": "100644",
+          "bytes": 5393,
+          "git_blob_sha1": "8642327584265414a75e81c5538b64ecfe006793",
+          "sha256": "1a2fd8474d347591939b3ce9ab7411aa9a8f9ce0ffa732d93a95402b677503d2"
+        },
+        "original_provenance": [
+          {
+            "source_pr": 482,
+            "source_commit": "16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51",
+            "original_path": "research/qwen6_asr/core/sense_binding.py",
+            "path": "research/qwen6_asr/core/sense_binding.py",
+            "git_blob_sha1": "8642327584265414a75e81c5538b64ecfe006793",
+            "mode": "100644",
+            "kind": "retained-source",
+            "sha256": "1a2fd8474d347591939b3ce9ab7411aa9a8f9ce0ffa732d93a95402b677503d2",
+            "bytes": 5393,
+            "source_url": "https://github.com/jiying2007/kws-pipeline/blob/16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51/research/qwen6_asr/core/sense_binding.py"
+          },
+          {
+            "source_pr": 480,
+            "source_commit": "cd30ecfb71d26c099055ca9c2f90f5c084f05b93",
+            "original_path": "research/qwen6_asr/core/sense_binding.py",
+            "path": "research/qwen6_asr/core/sense_binding.py",
+            "git_blob_sha1": "8642327584265414a75e81c5538b64ecfe006793",
+            "mode": "100644",
+            "kind": "shared-exact-bytes",
+            "sha256": "1a2fd8474d347591939b3ce9ab7411aa9a8f9ce0ffa732d93a95402b677503d2",
+            "bytes": 5393,
+            "source_url": "https://github.com/jiying2007/kws-pipeline/blob/cd30ecfb71d26c099055ca9c2f90f5c084f05b93/research/qwen6_asr/core/sense_binding.py"
+          },
+          {
+            "source_pr": 481,
+            "source_commit": "480e4f013349917b0cea514633d3f7ae2d98c0b4",
+            "original_path": "research/qwen6_asr/core/sense_binding.py",
+            "path": "research/qwen6_asr/core/sense_binding.py",
+            "git_blob_sha1": "8642327584265414a75e81c5538b64ecfe006793",
+            "mode": "100644",
+            "kind": "shared-exact-bytes",
+            "sha256": "1a2fd8474d347591939b3ce9ab7411aa9a8f9ce0ffa732d93a95402b677503d2",
+            "bytes": 5393,
+            "source_url": "https://github.com/jiying2007/kws-pipeline/blob/480e4f013349917b0cea514633d3f7ae2d98c0b4/research/qwen6_asr/core/sense_binding.py"
+          }
+        ],
+        "current": {
+          "path": "research/qwen6_asr/core/sense_binding.py",
+          "mode": "100644",
+          "bytes": 5585,
+          "sha256": "372aaa181a1d1365ae736b9d248f5426bcd1dbb60ce01077c1828f01cb2753d6",
+          "git_blob_sha1": "6eda36637e135e79ddd1ea41f7fdf75b8378941b"
+        }
+      }
+    ]
   }
 }

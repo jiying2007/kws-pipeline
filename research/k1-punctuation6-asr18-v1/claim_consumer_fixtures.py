@@ -10,6 +10,7 @@ from pathlib import Path
 import campaign_contract as c
 import evidence_transport as t
 import prepare_freeze
+from test_control_fixture import historical_source_tree
 from test_bound_claim_contract import fixture as owner_fixture
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -40,8 +41,9 @@ def bound_public_fixture(*, base_files=None, run=None, scope=None):
         claim_admission_control_sha256=c.digest(control_raw))
     release['prior_public_claim_history_sha256'] = c.digest(c.canonical(c.bound_prior_history_identity(control)))
     release_raw = json.dumps(release, indent=2).encode() + b'\n'
-    freeze = prepare_freeze.build(ROOT)
-    source_files = {name: files.get('source/' + name, c.read_bytes(ROOT / name)) for name in freeze['host_code']}
+    with historical_source_tree(ROOT) as historical:
+        freeze = prepare_freeze.build(historical)
+        source_files = {name: files.get('source/' + name, c.read_bytes(historical / name)) for name in freeze['host_code']}
     publication=t.decode(source_files[NEW+'publication-release.json'])
     publication.update(enabled=True,root_publication_release=True,independent_source_review=True)
     source_files[NEW+'publication-release.json']=c.canonical(publication)

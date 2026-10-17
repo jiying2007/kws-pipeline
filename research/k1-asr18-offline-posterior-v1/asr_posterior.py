@@ -16,6 +16,27 @@ SOURCE = HERE.parents[1]
 MANIFEST_SHA = '62a09d83e05572d81afdfecca72e940fde1b17f5300300cc7bb2a008068969c1'
 ASR_REL = 'research/k1-punctuation6-asr18-v1/'
 MAX_LOG = 8 * 1024 ** 2
+# Exact retained provenance-only closure members. These are never imported as
+# runtime validators by this offline reader. Live model/admission gates continue
+# to bind their current source, and the immutable manifest is not re-pinned.
+HISTORICAL_NONEXECUTED_DEPENDENCIES = frozenset((
+    'research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py',
+    '.github/workflows/ci.yml',
+    'research/consolidation/source_tests/test_source_retention.py',
+    'research/k1-punctuation6-asr18-v1/claim_consumer_fixtures.py',
+    'research/k1-punctuation6-asr18-v1/test_asr18_freeze.py',
+    'research/k1-punctuation6-asr18-v1/test_asr18_host.py',
+    'research/k1-punctuation6-asr18-v1/test_asr18_prerequisite.py',
+    'research/k1-punctuation6-asr18-v1/test_asr18_transport.py',
+    'research/k1-punctuation6-asr18-v1/test_claim_consumer_integration.py',
+    'research/k1-punctuation6-asr18-v1/test_control_fixture.py',
+    'research/qwen6_asr/core/asr_stage/adapters.py',
+    'research/qwen6_asr/core/asr_stage/execution.py',
+    'research/qwen6_asr/core/sense_binding.py',
+    'tools/verify_research_sources.py',
+))
+HISTORICAL_DEPENDENCY_ARCHIVE = 'research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/'
+
 SAFE_FAILURE = '{"schema":"k1-asr18-offline-acceptance-failure-v1","status":"blocked_or_unconfirmed","native_success_established":false,"consumed_attempts":null,"retry_authorized":false}'
 INPUT_KEYS = {'tts_authority_sha256','screening_receipt_sha256','job_sha256',
               'execution_plan_sha256','worker_input_binding_sha256'}
@@ -50,12 +71,21 @@ def regular(path, cap):
         return raw
     finally:os.close(fd)
 
+def _validator_dependency_bytes(row):
+    name = row['path']
+    # No fallback and no caller-supplied archive path. Missing/changed originals
+    # remain fatal, with the same manifest byte length and SHA checked below.
+    retained = HISTORICAL_DEPENDENCY_ARCHIVE + name if name in HISTORICAL_NONEXECUTED_DEPENDENCIES else name
+    body = regular(SOURCE / retained, 8 * 1024 ** 2)
+    require(len(body) == row['bytes'] and sha(body) == row['sha256'], 'fixed validator source bytes')
+    return body
+
+
 def _load_validators():
     raw=regular(HERE/'validator-dependencies.json',1024*1024)
     require(sha(raw)==MANIFEST_SHA,'fixed validator manifest')
     for row in decode(raw)['files']:
-        body=regular(SOURCE/row['path'],8*1024**2)
-        require(len(body)==row['bytes'] and sha(body)==row['sha256'],'fixed validator source bytes')
+        _validator_dependency_bytes(row)
     for path in (SOURCE/'tools',SOURCE/ASR_REL):sys.path.insert(0,str(path))
     import evidence_transport as t
     import evidence_publisher as p
