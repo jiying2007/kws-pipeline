@@ -180,6 +180,13 @@ jobs:
         run: python3 -S -B tests/test_cli_stdout.py
       - name: Verify tracked worktree after Hosted CLI stdout contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Hosted CLI stdout contracts"'
+      - name: SenseVoice runtime binding contracts without model execution
+        run: |
+          python3 -S -B tests/test_sense_runtime_binding.py
+          python3 -S -B -O tests/test_sense_runtime_binding.py
+          python3 -S -B -OO tests/test_sense_runtime_binding.py
+      - name: Verify tracked worktree after SenseVoice runtime binding contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "SenseVoice runtime binding contracts"'
       - name: Near-pronunciation historical decoder synthetic verification
         run: |
           command -v cc

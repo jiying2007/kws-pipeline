@@ -70,15 +70,17 @@ def load_pinned_tokenizer():
     return sp
 
 
-def bound_sense_transcript(decoded, capture, sp):
+def bound_sense_transcript(decoded, capture, sp, *, tokenizer_file=None):
     """Re-decode exact raw IDs and verify metadata token boundary before slicing.
 
     Malformed rich metadata stays an unknown warning, never silently repaired.
     Metadata emotion EMO_UNKNOWN is not the lexical unk token (ID0).
+    Live runtimes pass their verified absolute tokenizer_file; omission retains
+    the historical default for existing offline retained-token callers.
     """
     from asr_stage.decoding import bounded_text, token_ids
     contract = _contract()
-    identity = verify_tokenizer(sp)
+    identity = verify_tokenizer(sp, tokenizer_file)
     if (type(capture) is not dict or set(capture) != {'token_ids', 'decoded', 'token_scope'} or
             capture['decoded'] != decoded or capture['token_scope'] != TOKEN_SCOPE):
         raise ValueError('SenseVoice captured output association mismatch')

@@ -403,6 +403,12 @@ class ContractTests(unittest.TestCase):
         root=HERE.parents[1]
         freeze=c.read_json(HERE/'execution-freeze.json')
         originals={
+            'research/qwen6_asr/core/asr_stage/adapters.py':
+                'research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/core/asr_stage/adapters.py',
+            'research/qwen6_asr/core/asr_stage/execution.py':
+                'research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/core/asr_stage/execution.py',
+            'research/qwen6_asr/core/sense_binding.py':
+                'research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/core/sense_binding.py',
             'research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py':
                 'research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/qwen_loading_gate_v2.py',
             'research/source-screen32-v1/asr_worker.py':
@@ -427,9 +433,17 @@ class ContractTests(unittest.TestCase):
 
     def test_historical_projection_rejects_changed_missing_or_current_archive(self):
         root=HERE.parents[1];read=Path.read_bytes
-        for name in ('qwen_loading_gate_v2.py','asr_worker.py'):
-            archive=root/'research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012'/name
-            live=root/('research/qwen6_asr/core/vendor/'+name if name.startswith('qwen_') else 'research/source-screen32-v1/'+name)
+        paths=[
+            ('research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/qwen_loading_gate_v2.py',
+             'research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py'),
+            ('research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/asr_worker.py',
+             'research/source-screen32-v1/asr_worker.py'),
+        ]
+        paths.extend(('research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/qwen6_asr/'+name,
+                      'research/qwen6_asr/'+name) for name in
+                     ('core/asr_stage/adapters.py','core/asr_stage/execution.py','core/sense_binding.py'))
+        for archived_name,name in paths:
+            archive,live=root/archived_name,root/name
             for replacement in (read(archive)+b' ',read(live)):
                 def changed(path,replacement=replacement):
                     return replacement if path==archive else read(path)
@@ -446,7 +460,10 @@ class ContractTests(unittest.TestCase):
         freeze=c.read_json(HERE/'execution-freeze.json')
         self.assertNotEqual(freeze,prepare_freeze.build())
         for name in ('research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py',
-                     'research/source-screen32-v1/asr_worker.py'):
+                     'research/source-screen32-v1/asr_worker.py',
+                     'research/qwen6_asr/core/asr_stage/adapters.py',
+                     'research/qwen6_asr/core/asr_stage/execution.py',
+                     'research/qwen6_asr/core/sense_binding.py'):
             with tempfile.TemporaryDirectory() as directory:
                 with self.assertRaisesRegex(ValueError,'frozen source identity'):
                     host.stage({name:freeze['inference_code'][name]},Path(directory)/'not-admitted')

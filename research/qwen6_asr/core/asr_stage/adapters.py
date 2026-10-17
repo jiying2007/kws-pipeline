@@ -74,6 +74,15 @@ class PreparedRuntime:
     declaration: dict
     consumed_ids: set
     decoder_inputs: dict
+    tokenizer_file: Path | None = None
+
+
+class SensePostprocessError(RuntimeError):
+    """A completed decode whose bounded output is unbound failure evidence only."""
+
+    def __init__(self, evidence):
+        super().__init__("SenseVoice postprocessing failed; output is unbound")
+        self.evidence = evidence
 
 
 def validate_decoder_manifest(raw, expected_sha256):
@@ -161,7 +170,10 @@ def load_sense_after_approval(root,assets,asset_sha256,sources,source_sha256,
     kwargs = {key:config[key] for key in names if key in config}
     if config.get("tokenizer")!="SentencepiecesTokenizer" or config.get("frontend")!="WavFrontend":
         raise RuntimeError("Unreviewed SenseVoice components")
-    kwargs["tokenizer_conf"] = dict(kwargs["tokenizer_conf"],bpemodel=str(Path(root)/"chn_jpn_yue_eng_ko_spectok.bpe.model"))
+    # Keep the same absolute pathname for loading and every later byte check.
+    # Do not resolve the final component: verify_tokenizer rejects symlinks.
+    tokenizer_file = (Path(root)/"chn_jpn_yue_eng_ko_spectok.bpe.model").absolute()
+    kwargs["tokenizer_conf"] = dict(kwargs["tokenizer_conf"],bpemodel=str(tokenizer_file))
     kwargs["frontend_conf"] = dict(kwargs["frontend_conf"],cmvn_file=str(Path(root)/"am.mvn"),
                                    dither=1.0,snip_edges=True,upsacle_samples=True)
     kwargs.update(model_path=str(root),init_param=None,device="cpu",ncpu=1,batch_size=1,seed=0,
@@ -170,7 +182,7 @@ def load_sense_after_approval(root,assets,asset_sha256,sources,source_sha256,
     if wrapper.kwargs["tokenizer"].get_vocab_size()!=25055:
         raise RuntimeError("Locked tokenizer vocabulary differs from independent schema")
     tokenizer_identity = verify_tokenizer(wrapper.kwargs["tokenizer"].sp,
-        Path(root)/"chn_jpn_yue_eng_ko_spectok.bpe.model")
+        tokenizer_file)
     checkpoint = torch.load(Path(root)/"model.pt",map_location="cpu",weights_only=True)
     loaded = exact_apply(wrapper.model,checkpoint,describe_cpu_tensor,
                          expected_schema=schema,expected_schema_sha256=schema_sha,
@@ -181,7 +193,7 @@ def load_sense_after_approval(root,assets,asset_sha256,sources,source_sha256,
         "dtype":"float32","device":"cpu","frontend_backend":"kaldi-native-fbank",
         "dither":1.0,"dither_rng_reproducibility":"not established by torch/numpy seed",
         "no_vad":True,"use_itn":False,"tokenizer_identity":tokenizer_identity}
-    return PreparedRuntime(SENSE,wrapper,receipt,dec,set(),inputs)
+    return PreparedRuntime(SENSE,wrapper,receipt,dec,set(),inputs,tokenizer_file)
 
 
 def _begin_clip(runtime,bound,decoder_manifest_sha256):
@@ -243,6 +255,9 @@ def infer_sense_once_after_approval(runtime,bound,decoder_manifest_sha256):
     if runtime.model_id!=SENSE: raise RuntimeError("Wrong runtime")
     wrapper = runtime.wrapper
     require_verified_receipt(wrapper.model,describe_cpu_tensor)
+    if runtime.tokenizer_file is None or not runtime.tokenizer_file.is_absolute():
+        raise RuntimeError("SenseVoice runtime lacks an absolute verified tokenizer path")
+    verify_tokenizer(wrapper.kwargs["tokenizer"].sp, runtime.tokenizer_file)
     pcm = _begin_clip(runtime,bound,decoder_manifest_sha256)
     capture = CapturingTokenizer(wrapper.kwargs["tokenizer"])
     import torch
@@ -256,9 +271,20 @@ def infer_sense_once_after_approval(runtime,bound,decoder_manifest_sha256):
     if type(item) is not dict or item.get("key")!=bound.opaque_id or set(item)!={"key","text"}:
         raise RuntimeError("SenseVoice result ID/fields mismatch")
     decoded = bounded_text(item["text"])
-    raw = capture.evidence(decoded)
-    row,metadata,token_binding = bound_sense_transcript(decoded,raw,wrapper.kwargs["tokenizer"].sp)
-    verify_pcm_array(pcm,bound.descriptor["float32_pcm"])
+    # Retain only bounded, JSON-safe decoder fields on postprocessing failure.
+    # This is never a transcript result or evidence of successful binding.
+    failure = {"schema":"sense-postprocess-failure-v1", "status":"failed_unbound",
+        "forward_completion_confirmed":True, "binding_verified":False,
+        "raw_decoded_output":{"key":bound.opaque_id,"text":decoded}}
+    try:
+        raw = capture.evidence(decoded)
+        failure["token_evidence"] = raw
+        row,metadata,token_binding = bound_sense_transcript(decoded,raw,
+            wrapper.kwargs["tokenizer"].sp,tokenizer_file=runtime.tokenizer_file)
+        verify_pcm_array(pcm,bound.descriptor["float32_pcm"])
+    except Exception as exc:
+        failure["exception_type"] = type(exc).__name__
+        raise SensePostprocessError(failure) from exc
     return row,{"raw_result":output,"token_evidence":raw,"metadata":metadata,"token_binding":token_binding,
         "input_binding":bound.descriptor,"use_itn":False,"rich_postprocess_applied":False,
         "completeness_scope":"Returned full-input CTC inference; not acoustic transcript completeness"}

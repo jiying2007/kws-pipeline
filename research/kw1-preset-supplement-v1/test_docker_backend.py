@@ -23,9 +23,26 @@ class BackendTests(unittest.TestCase):
         import worker
         import blind_asr_worker
         repo=Path(b.__file__).resolve().parents[2]
-        files={name:hashlib.sha256((repo/name).read_bytes()).hexdigest() for name in b.dependency_paths()}
+        live_files={name:hashlib.sha256((repo/name).read_bytes()).hexdigest() for name in b.dependency_paths()}
         with tempfile.TemporaryDirectory() as tmp:
-            obj=b.DockerBackend(repo,Path(tmp)/'backend',time.monotonic()+18000,source_lock={'files':files})
+            # Live production constructor keeps rejecting historical pin drift.
+            with self.assertRaisesRegex(ValueError,'retained ASR pins differ'):
+                b.DockerBackend(repo,Path(tmp)/'live-rejected',time.monotonic()+18000,
+                                source_lock={'files':live_files})
+            # Original public source projection is used only by this offline fixture.
+            from blind_pcm import RETAINED_PINS
+            historical={'research/qwen6_asr/'+name for name in (
+                'core/asr_stage/adapters.py','core/asr_stage/execution.py','core/sense_binding.py')}
+            projected=Path(tmp)/'historical-source'
+            files={}
+            for name in b.dependency_paths():
+                source=repo/('research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/'+name if name in historical else name)
+                raw=b.regular_bytes(source)
+                if name in RETAINED_PINS:
+                    self.assertEqual(hashlib.sha256(raw).hexdigest(),RETAINED_PINS[name])
+                target=projected/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(raw)
+                files[name]=hashlib.sha256(raw).hexdigest()
+            obj=b.DockerBackend(projected,Path(tmp)/'backend',time.monotonic()+18000,source_lock={'files':files})
             for engine in ('qwen06','qwen17'):
                 selected=b.PILOT+'/'+engine+'-model-lock.json'
                 obj._stage_code(engine,b.TTS_FILES+(selected,),aliases={b.PILOT+'/qwen-model-lock.json':selected},extra={b.NEW+'/plan.json':(repo/b.NEW/'plan.json').read_bytes()})

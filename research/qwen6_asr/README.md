@@ -32,3 +32,27 @@ Native recovery 3 retains both failed runs: 37335852099 has no retained precise 
 Both setups verify installed packages/source pins and run an offline, independent 120-second import/native-I/O preflight before any model asset download. It constructs no model and loads no weights; fixed 12-sample FLOAT32/PCM16 checks are infrastructure fixtures, separate from the six requests. Failures stop before model downloads and retain safe stage/exception evidence. The preflight consumes the existing setup20min budget; all job, CPU, sampled-memory, disk, artifact and scientific limits remain unchanged.
 
 Prior actual controlled downloads total 5,867,332,928 B; this attempt plans 2,934,954,359 B TTS plus 3,340,966,447 B ASR = 6,275,920,806 B, for a cumulative successful-plan total of 12,143,253,734 B. Each job remains capped at 4GiB controlled transfer; platform/interpreter/artifact traffic is separate. TTS setup attempt3 and ASR setup attempt1 still permit cumulative maximum6 TTS/12 ASR calls; Sohee0.
+
+## Non-default SenseVoice runtime binding repair (2026-10-17)
+
+The maintained adapter now carries the loader-verified absolute tokenizer path
+through `PreparedRuntime` to transcript binding. It rechecks tokenizer bytes,
+vocabulary and token semantics before inference and during binding; no default
+runtime directory or copied-tokenizer workaround is required. Existing offline
+three-argument binding calls keep their historical default. A SenseVoice runtime
+without an explicit absolute tokenizer path fails before inference.
+
+A completed decode followed by token-binding or PCM-validation failure raises
+`SensePostprocessError`. Its bounded raw text/token evidence is explicitly
+`failed_unbound`, never a successful transcript or qualified label. The primary
+executor retains this evidence with error status and no retry. Other callers
+must retain the exception's `evidence` themselves; an exception alone is not a
+durable checkpoint, and process termination/storage failure can still prevent
+retention. Malformed result envelopes and failures before bounded text capture
+remain ordinary errors without this raw-output sidecar.
+
+`python3 -S -B tests/test_sense_runtime_binding.py` exercises only synthetic
+stdlib fakes, including non-default paths, tokenizer mutation, exact token
+re-decoding, failure retention and single-attempt behavior. This repair does not
+rerun historical experiments, recover previously lost output, grant new model
+execution authority, or change historical source pins and experiment facts.

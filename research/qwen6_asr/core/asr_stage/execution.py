@@ -12,7 +12,7 @@ from pathlib import Path
 import signal
 import time
 
-from .adapters import (QWEN, SENSE, validate_decoder_manifest,
+from .adapters import (QWEN, SENSE, SensePostprocessError, validate_decoder_manifest,
     load_qwen_after_approval, load_sense_after_approval,
     infer_qwen_once_after_approval, infer_sense_once_after_approval)
 from .architecture import canonical_sha
@@ -152,12 +152,18 @@ def execute_primary(plan, directory, decoder_bytes, *, loader=None, infer=None,
             outcome.update(row, status='success')
             forward_completed = True
         except Exception as exc:
-            outcome.update(status='timeout' if isinstance(exc, ClipDeadline) else 'error',
+            deadline = isinstance(exc, ClipDeadline) or (
+                isinstance(exc, SensePostprocessError) and isinstance(exc.__cause__, ClipDeadline))
+            outcome.update(status='timeout' if deadline else 'error',
                 raw_text=None, completeness='unknown', quality_flags=[])
             forward_completed = False
             evidence = {'schema':'asr-decoder-failure-evidence-v1',
                 'exception_type':type(exc).__name__, 'detail':'Stage failed; detailed exception text is not public',
                 'forward_completion_confirmed':False}
+            if isinstance(exc, SensePostprocessError):
+                # Preserve failed/unbound decode evidence without promoting a label.
+                evidence = exc.evidence
+                forward_completed = True
         finally:
             signal.setitimer(signal.ITIMER_REAL, 0)
             signal.signal(signal.SIGALRM, previous)

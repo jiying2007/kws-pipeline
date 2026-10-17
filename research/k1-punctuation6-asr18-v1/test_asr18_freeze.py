@@ -35,10 +35,19 @@ class SourceFreezeTests(unittest.TestCase):
 
     def test_complete_measured_self_excluding_snapshot_and_retained_pin(self):
         rosters = freeze.declared_rosters()
+        pins = freeze.retained_pins(freeze.ROOT / freeze.OLD / "asr_worker.py")
+        historical = {"research/qwen6_asr/" + name for name in
+                      ("core/asr_stage/adapters.py", "core/asr_stage/execution.py", "core/sense_binding.py")}
+        with self.assertRaisesRegex(ValueError, "retained source pin"):
+            freeze.build(freeze.ROOT)
         with tempfile.TemporaryDirectory(prefix="k1-synthetic-closure-") as name:
             root = Path(name)
             for relative in rosters["host_code"]:
                 src, target = freeze.ROOT / relative, root / relative
+                if relative in historical:
+                    src = (freeze.ROOT /
+                        "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017" / relative)
+                    self.assertEqual(freeze.identity(src)["sha256"], pins[relative.removeprefix("research/qwen6_asr/")])
                 target.parent.mkdir(parents=True, exist_ok=True)
                 # Missing new host files are explicit synthetic test bodies.
                 # This fixture is never persisted as a genuine source freeze.
