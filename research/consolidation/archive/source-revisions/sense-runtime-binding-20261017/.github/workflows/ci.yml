@@ -1,0 +1,989 @@
+name: ci
+
+on:
+  push:
+    branches: [main, "feature/**", "codex/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  python-contracts:
+    outputs:
+      research_required: ${{ steps.research_changes.outputs.required }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Initialize execution report directory
+        run: printf 'KWS_TEST_REPORT_DIR=%s/checked-unittest\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Install tracked-worktree integrity guard
+        run: |
+          set -euo pipefail
+          guard="$RUNNER_TEMP/check-tracked-worktree.sh"
+          cat >"$guard" <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          stage=${1:?stage name required}
+
+          mapfile -d '' paths < <(git diff --name-only -z HEAD --)
+          if ((${#paths[@]} == 0)); then
+            echo "tracked-worktree clean after: $stage"
+            exit 0
+          fi
+
+          echo "::error title=Tracked worktree polluted::first detected after stage: $stage"
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "tracked status:"
+          git status --short --untracked-files=no
+
+          for path in "${paths[@]}"; do
+            if head_blob=$(git rev-parse "HEAD:$path" 2>/dev/null); then
+              head_sha256=$(git show "HEAD:$path" | sha256sum | awk '{print $1}')
+            else
+              head_blob=MISSING
+              head_sha256=MISSING
+            fi
+
+            if [[ -f "$path" ]]; then
+              worktree_blob=$(git hash-object -- "$path")
+              worktree_sha256=$(sha256sum -- "$path" | awk '{print $1}')
+            elif [[ -e "$path" ]]; then
+              worktree_blob=NONREGULAR
+              worktree_sha256=NONREGULAR
+            else
+              worktree_blob=MISSING
+              worktree_sha256=MISSING
+            fi
+
+            printf 'path=%q head_blob=%s head_sha256=%s worktree_blob=%s worktree_sha256=%s\n' \
+              "$path" "$head_blob" "$head_sha256" "$worktree_blob" "$worktree_sha256"
+          done
+          exit 1
+          EOF
+          chmod +x "$guard"
+          "$guard" "checkout baseline"
+      - name: Select research checks from the complete change
+        id: research_changes
+        run: python3 -B tools/research_ci_changes.py
+      - name: Research change selection contract
+        run: python3 -B tests/test_research_ci_changes.py
+      - name: Verify tracked worktree after Research change selection contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Research change selection contract"'
+      - name: K1 punctuation6 ASR18 offline source contracts
+        id: asr18_contracts
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          asr18_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-asr18-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_asr18_binding", "test_asr18_contract", "test_asr18_prerequisite", "test_asr18_entrypoints", "test_asr18_freeze", "test_asr18_failure_observer", "test_publisher_observation", "test_publisher_checkpoint", "test_transfer_recovery", "test_asr18_host", "test_asr18_metadata", "test_asr18_raw_data_reader", "test_asr18_receipts", "test_asr18_resources", "test_asr18_transport", "test_asr18_worker", "test_bound_claim_contract", "test_claim_admission_host", "test_claim_consumer_integration")); sys.path.insert(0,str(Path("tools").resolve())); from checked_unittest import run_checked_suite; raise SystemExit(run_checked_suite(suite, "asr18"))'
+          mode_logs="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/k1-asr18-contracts.XXXXXX")"
+          stop_contracts() {
+            running="$(jobs -pr)"
+            if [ -n "$running" ]; then kill $running 2>/dev/null || true; fi
+            wait || true
+            exit 2
+          }
+          trap stop_contracts INT TERM
+          python3 -I -S -B -c "$asr18_tests" > "$mode_logs/normal.log" 2>&1 & normal_pid=$!
+          python3 -I -S -B -O -c "$asr18_tests" > "$mode_logs/O.log" 2>&1 & optimized_pid=$!
+          python3 -I -S -B -OO -c "$asr18_tests" > "$mode_logs/OO.log" 2>&1 & double_optimized_pid=$!
+          failed=0
+          for test_pid in "$normal_pid" "$optimized_pid" "$double_optimized_pid"; do
+            wait "$test_pid" || failed=1
+          done
+          trap - INT TERM
+          for mode in normal O OO; do
+            printf 'ASR18_CONTRACT_MODE=%s\n' "$mode"
+            cat "$mode_logs/$mode.log"
+          done
+          exit "$failed"
+      - name: Verify tracked worktree after K1 punctuation6 ASR18 contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "K1 punctuation6 ASR18 contracts"'
+      - name: Fixed zero-model hosted transfer contracts
+        id: transfer_contracts
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          python3 -I -S -B research/k1-evidence-transfer-qualification-v1/test_qualification.py
+          python3 -I -S -B -O research/k1-evidence-transfer-qualification-v1/test_qualification.py
+          python3 -I -S -B -OO research/k1-evidence-transfer-qualification-v1/test_qualification.py
+      - name: Verify tracked worktree after hosted transfer contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Hosted transfer contracts"'
+      - name: Fixed zero-model atomic claim contracts
+        id: atomic_claim_contracts
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          python3 -I -S -B research/k1-atomic-claim-qualification-v1/test_git_claim_qualification.py
+          python3 -I -S -B -O research/k1-atomic-claim-qualification-v1/test_git_claim_qualification.py
+          python3 -I -S -B -OO research/k1-atomic-claim-qualification-v1/test_git_claim_qualification.py
+          python3 -B tools/test_inventory.py --root research/k1-atomic-claim-qualification-v1 --workflow .github/workflows/ci.yml
+      - name: Verify tracked worktree after atomic claim contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Atomic claim contracts"'
+      - name: K1 punctuation6 prepare diagnostic offline source contracts
+        id: prepare_contracts
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          prepare_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-prepare-diagnostic-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_prepare_only", "test_prepare_transport", "test_prepare_hosted", "test_prepare_launch_ci")); sys.path.insert(0,str(Path("tools").resolve())); from checked_unittest import run_checked_suite; raise SystemExit(run_checked_suite(suite, "prepare"))'
+          python3 -I -S -B -c "$prepare_tests"
+          python3 -I -S -B -O -c "$prepare_tests"
+          python3 -I -S -B -OO -c "$prepare_tests"
+      - name: Verify tracked worktree after K1 prepare diagnostic contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "K1 prepare diagnostic contracts"'
+      - name: K1 prepare Docker create inspect remove regression
+        id: prepare_launch_ci
+        timeout-minutes: 8
+        run: python3 -I -S -B research/k1-punctuation6-prepare-diagnostic-v1/prepare_launch_ci.py
+      - name: Verify tracked worktree after K1 prepare launch regression
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "K1 prepare launch regression"'
+      - name: Workflow exact path-filter integrity
+        run: |
+          python3 tools/check_workflow_path_filters.py --self-test
+          python3 tools/check_workflow_path_filters.py .github/workflows
+      - name: Verify tracked worktree after Workflow exact path-filter integrity
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Workflow exact path-filter integrity"'
+      - name: Disabled parallel candidate plan metadata
+        run: |
+          python3 -S -B tests/test_parallel_candidate_plan.py
+          python3 -S -B -O tests/test_parallel_candidate_plan.py
+          python3 -S -B -OO tests/test_parallel_candidate_plan.py
+      - name: Verify tracked worktree after Disabled parallel candidate plan metadata
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Disabled parallel candidate plan metadata"'
+      - name: Candidate encoder source contracts without model execution
+        run: |
+          python3 -S -B tests/test_candidate_encoder_contract.py
+          python3 -S -B -O tests/test_candidate_encoder_contract.py
+          python3 -S -B -OO tests/test_candidate_encoder_contract.py
+          python3 -S -B tests/test_candidate_encoder_source.py
+          python3 -S -B -O tests/test_candidate_encoder_source.py
+          python3 -S -B -OO tests/test_candidate_encoder_source.py
+      - name: Verify tracked worktree after Candidate encoder source contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Candidate encoder source contracts"'
+      - name: Near-pronunciation saved-pair source contracts without inference
+        run: |
+          python3 -S -B research/near_pronunciation_v1/tests/test_saved_pair.py
+          python3 -S -B -O research/near_pronunciation_v1/tests/test_saved_pair.py
+          python3 -S -B -OO research/near_pronunciation_v1/tests/test_saved_pair.py
+          python3 -B tools/test_inventory.py --root research/near_pronunciation_v1/tests --workflow .github/workflows/ci.yml
+      - name: Verify tracked worktree after Near-pronunciation source contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Near-pronunciation source contracts"'
+      - name: Hosted CLI stdout contracts without model execution
+        run: python3 -S -B tests/test_cli_stdout.py
+      - name: Verify tracked worktree after Hosted CLI stdout contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Hosted CLI stdout contracts"'
+      - name: Near-pronunciation historical decoder synthetic verification
+        run: |
+          command -v cc
+          # Qualify the unchanged historical overlay against its original pins.
+          # Current shipping decoder coverage runs separately; this is not its parity claim.
+          python3 -S -B tests/prepare_frozen_decoder_source.py \
+            --source-root . --output-dir "$RUNNER_TEMP/near-pronunciation-frozen-source"
+          python3 -S -B research/near_pronunciation_v1/verify_decoder.py \
+            --source-root "$RUNNER_TEMP/near-pronunciation-frozen-source" \
+            --output-dir "$RUNNER_TEMP/near-pronunciation-decoder-verify"
+      - name: Verify tracked worktree after Near-pronunciation decoder verification
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Near-pronunciation decoder verification"'
+      - name: Three-ASR pending label metadata without model execution
+        run: |
+          python3 -S -B tests/test_reviewed_corpus_admission.py ThreeASRMetadataTests
+          python3 -S -B -O tests/test_reviewed_corpus_admission.py ThreeASRMetadataTests
+          python3 -S -B -OO tests/test_reviewed_corpus_admission.py ThreeASRMetadataTests
+          python3 -S -B tests/test_training_admission.py ThreeASRTrainerMetadataTests
+          python3 -S -B -O tests/test_training_admission.py ThreeASRTrainerMetadataTests
+          python3 -S -B -OO tests/test_training_admission.py ThreeASRTrainerMetadataTests
+      - name: Verify tracked worktree after Three-ASR pending label metadata
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Three-ASR pending label metadata"'
+      - name: Trusted ASR source and native adapter metadata
+        run: |
+          python3 -S -B tests/test_asr_source_resolver.py
+          python3 -S -B -O tests/test_asr_source_resolver.py
+          python3 -S -B -OO tests/test_asr_source_resolver.py
+          python3 -S -B tests/test_asr_producer_metadata.py
+          python3 -S -B -O tests/test_asr_producer_metadata.py
+          python3 -S -B -OO tests/test_asr_producer_metadata.py
+          python3 -S -B tests/test_asr_native_contracts.py
+          python3 -S -B -O tests/test_asr_native_contracts.py
+          python3 -S -B -OO tests/test_asr_native_contracts.py
+      - name: Verify tracked worktree after Trusted ASR source and native adapter metadata
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Trusted ASR source and native adapter metadata"'
+      - name: GitHub hosted resource probe contract
+        run: python3 tests/test_github_hosted_resource_probe.py
+      - name: Verify tracked worktree after GitHub hosted resource probe contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "GitHub hosted resource probe contract"'
+      - name: Release workflow command contract
+        run: |
+          python3 tests/test_release_workflow_contract.py
+          python3 -O tests/test_release_workflow_contract.py
+          python3 -OO tests/test_release_workflow_contract.py
+      - name: Verify tracked worktree after Release workflow command contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Release workflow command contract"'
+      - name: Repository cleanup safety contract
+        run: python3 tests/test_repository_cleanup_contract.py
+      - name: Verify tracked worktree after Repository cleanup safety contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Repository cleanup safety contract"'
+      - name: Dataset split leakage audit
+        run: |
+          python3 -S -B tests/test_dataset_audit.py
+          python3 -S -B -O tests/test_dataset_audit.py
+          python3 -S -B -OO tests/test_dataset_audit.py
+      - name: Verify tracked worktree after Dataset split leakage audit
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Dataset split leakage audit"'
+      - name: Corpus byte identity
+        run: |
+          python3 tests/test_corpus_identity.py
+          python3 -S -B -O tests/test_corpus_identity.py
+          python3 -S -B -OO tests/test_corpus_identity.py
+          python3 tests/test_reviewed_corpus_admission.py
+          python3 tests/test_training_admission.py
+          python3 -S -B -O tests/test_training_admission.py
+          python3 -S -B -OO tests/test_training_admission.py
+          python3 tests/test_native_clip_readback.py
+      - name: Verify tracked worktree after Corpus byte identity
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Corpus byte identity"'
+      - name: False reject positive replay
+        run: python3 tests/test_false_reject_mining.py
+      - name: Verify tracked worktree after False reject positive replay
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "False reject positive replay"'
+      - name: Acoustic scene renderer
+        run: python3 tests/test_domain_scene.py
+      - name: Verify tracked worktree after Acoustic scene renderer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Acoustic scene renderer"'
+      - name: Adaptive domain curriculum
+        run: python3 tests/test_domain_curriculum.py
+      - name: Verify tracked worktree after Adaptive domain curriculum
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Adaptive domain curriculum"'
+      - name: Statistical qualification bounds
+        run: python3 tests/test_statistical_bounds.py
+      - name: Verify tracked worktree after Statistical qualification bounds
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Statistical qualification bounds"'
+      - name: Domain metric scorer
+        run: |
+          python3 tests/test_domain_metrics.py
+          python3 tests/test_training_diagnostics.py
+          python3 tests/test_acoustic_alignment_diagnostic.py
+          python3 tests/test_decoder_boundary_references.py
+          python3 tests/test_decoder_boundary_product_references.py
+          python3 tests/test_decoder_boundary_requalification.py
+          python3 tests/test_decoder_boundary_separability.py
+          python3 tests/test_acoustic_boundary_segmentation.py
+      - name: Verify tracked worktree after Domain metric scorer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Domain metric scorer"'
+      - name: Recorded verdict boolean contract
+        run: python3 tests/test_recorded_verdict_booleans.py
+      - name: Verify tracked worktree after Recorded verdict boolean contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Recorded verdict boolean contract"'
+      # Always runs, including PRs outside research paths. Hosted required checks
+      # fail closed on this job's result, so source retention blocks merging.
+      - name: Verify integrated research retention and cleanup guards
+        run: |
+          python3 -B tools/verify_research_consolidation.py
+          python3 -B research/consolidation/tests/test_research_consolidation.py
+          python3 -B research/consolidation/tests/test_cleanup_retention.py
+          python3 -B tools/test_inventory.py --root research/consolidation/tests --workflow .github/workflows/ci.yml
+      - name: Verify tracked worktree after Integrated research retention and cleanup guards
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Integrated research retention and cleanup guards"'
+      - name: Verify local research source retention and delivery
+        run: |
+          python3 -B tools/verify_research_sources.py
+          python3 -B research/consolidation/source_tests/test_source_retention.py
+          python3 -B -O research/consolidation/source_tests/test_source_retention.py
+          python3 -B -OO research/consolidation/source_tests/test_source_retention.py
+          python3 -B research/consolidation/source_tests/test_publication_index.py
+          python3 -B research/consolidation/source_tests/test_archive_delivery.py
+          python3 -B research/consolidation/source_tests/test_ci_structure.py
+          python3 -B -O research/consolidation/source_tests/test_ci_structure.py
+          python3 -B -OO research/consolidation/source_tests/test_ci_structure.py
+          python3 -B research/d20-diagnostic-admission-v1/test_contract.py
+          python3 -B -O research/d20-diagnostic-admission-v1/test_contract.py
+          python3 -B -OO research/d20-diagnostic-admission-v1/test_contract.py
+          python3 -S -B research/d20-diagnostic-admission-v1/test_saved_inputs.py
+          python3 -S -B -O research/d20-diagnostic-admission-v1/test_saved_inputs.py
+          python3 -S -B -OO research/d20-diagnostic-admission-v1/test_saved_inputs.py
+      - name: Verify tracked worktree after Local research source retention and delivery
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Local research source retention and delivery"'
+      - name: Durable diagnostic evidence chain contract
+        run: |
+          python3 -B tools/verify_durable_trace.py
+          python3 -B research/diagnostic-readiness-2026-10-09/test_durable_trace.py
+          python3 -B -O research/diagnostic-readiness-2026-10-09/test_durable_trace.py
+          python3 -B -OO research/diagnostic-readiness-2026-10-09/test_durable_trace.py
+      - name: Verify tracked worktree after Durable diagnostic evidence chain contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Durable diagnostic evidence chain contract"'
+      - name: Bounded source-screen historical review and live guard contracts
+        run: |
+          python3 -S -B research/experiment_quality_guards/screen32_human_review.py packet --output "$RUNNER_TEMP/screen32-historical-source-packet.json"
+          python3 -B research/source-screen32-v1/test_contract.py
+          python3 -B -O research/source-screen32-v1/test_contract.py
+          python3 -B -OO research/source-screen32-v1/test_contract.py
+      - name: Dormant Whisper third-route offline contracts
+        run: |
+          python3 -S -B research/source-screen32-whisper-v1/test_contract.py
+          python3 -S -B -O research/source-screen32-whisper-v1/test_contract.py
+          python3 -S -B -OO research/source-screen32-whisper-v1/test_contract.py
+      - name: Retained fourth Whisper evidence and three-ASR comparison
+        run: |
+          python3 -S -B research/source-screen32-whisper-v1/evidence/test_fourth_archive.py
+          python3 -S -B -O research/source-screen32-whisper-v1/evidence/test_fourth_archive.py
+          python3 -S -B -OO research/source-screen32-whisper-v1/evidence/test_fourth_archive.py
+          python3 -S -B -m unittest discover -s research/source-screen32-whisper-v1/evidence/run-38126849922/comparison -p 'test_compare*.py'
+          python3 -S -B -O -m unittest discover -s research/source-screen32-whisper-v1/evidence/run-38126849922/comparison -p 'test_compare*.py'
+          python3 -S -B -OO -m unittest discover -s research/source-screen32-whisper-v1/evidence/run-38126849922/comparison -p 'test_compare*.py'
+          python3 -S -B research/source-screen32-whisper-v1/evidence/test_saved_comparison.py
+          python3 -S -B -O research/source-screen32-whisper-v1/evidence/test_saved_comparison.py
+          python3 -S -B -OO research/source-screen32-whisper-v1/evidence/test_saved_comparison.py
+      - name: Verify tracked worktree after Bounded source-screen historical review and live guard contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Bounded source-screen historical review and live guard contracts"'
+      # Explicit stdlib-only suites run once per Python mode in the required
+      # compiler-independent chain. No optional/path-filtered workflow gate.
+      - name: Saved review and dataset quality guards (normal and optimized)
+        run: |
+          python3 -S -B -m unittest discover -s research/experiment_quality_guards/tests -p test_quality_gates.py -v
+          python3 -S -B -m unittest discover -s research/experiment_quality_guards/tests -p test_review_counterexamples.py -v
+          python3 -S -B -m unittest discover -s research/experiment_quality_guards/tests -p test_admission_cli.py -v
+          python3 -S -B -m unittest discover -s research/experiment_quality_guards/tests -p test_public_report.py -v
+          python3 -S -B -m unittest discover -s research/experiment_quality_guards/tests -p test_screen32_human_review.py -v
+          python3 -S -B -O -m unittest discover -s research/experiment_quality_guards/tests -p test_quality_gates.py -v
+          python3 -S -B -O -m unittest discover -s research/experiment_quality_guards/tests -p test_review_counterexamples.py -v
+          python3 -S -B -O -m unittest discover -s research/experiment_quality_guards/tests -p test_admission_cli.py -v
+          python3 -S -B -O -m unittest discover -s research/experiment_quality_guards/tests -p test_public_report.py -v
+          python3 -S -B -O -m unittest discover -s research/experiment_quality_guards/tests -p test_screen32_human_review.py -v
+          python3 -S -B -OO -m unittest discover -s research/experiment_quality_guards/tests -p test_quality_gates.py -v
+          python3 -S -B -OO -m unittest discover -s research/experiment_quality_guards/tests -p test_review_counterexamples.py -v
+          python3 -S -B -OO -m unittest discover -s research/experiment_quality_guards/tests -p test_admission_cli.py -v
+          python3 -S -B -OO -m unittest discover -s research/experiment_quality_guards/tests -p test_public_report.py -v
+          python3 -S -B -OO -m unittest discover -s research/experiment_quality_guards/tests -p test_screen32_human_review.py -v
+          python3 -B tools/test_inventory.py --root research/experiment_quality_guards/tests --workflow .github/workflows/ci.yml
+      - name: Verify tracked worktree after Saved review and dataset quality guards
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Saved review and dataset quality guards"'
+      - name: Model promotion contract
+        run: |
+          python3 tests/test_model_promotion.py
+          python3 -S -B tools/checked_unittest.py --suite promotion-admission
+          python3 -S -B -O tools/checked_unittest.py --suite promotion-admission
+          python3 -S -B -OO tools/checked_unittest.py --suite promotion-admission
+          python3 -S -B tools/checked_unittest.py --suite promotion-source
+          python3 -S -B -O tools/checked_unittest.py --suite promotion-source
+          python3 -S -B -OO tools/checked_unittest.py --suite promotion-source
+          python3 tests/test_feature_cache_contract.py
+      - name: Verify tracked worktree after Model promotion contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Model promotion contract"'
+      - name: Closed offline campaign capsule contracts
+        run: |
+          python3 -I -S -B tools/checked_unittest.py --suite campaign-capsule
+          python3 -I -S -B -O tools/checked_unittest.py --suite campaign-capsule
+          python3 -I -S -B -OO tools/checked_unittest.py --suite campaign-capsule
+      - name: Checked unittest runner regressions
+        run: |
+          python3 -S -B tools/checked_unittest.py --suite execution-guards
+          python3 -S -B -O tools/checked_unittest.py --suite execution-guards
+          python3 -S -B -OO tools/checked_unittest.py --suite execution-guards
+      - name: Verify actual compiler-independent suite execution
+        run: >-
+          python3 -I -S -B tools/checked_unittest.py
+          --verify-reports "$KWS_TEST_REPORT_DIR"
+          --suite asr18 --suite prepare
+          --suite promotion-admission --suite promotion-source
+          --suite campaign-capsule --suite execution-guards
+      - name: Retain actual compiler-independent execution evidence
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: checked-unittest-python-contracts
+          path: ${{ env.KWS_TEST_REPORT_DIR }}/*.json
+          if-no-files-found: error
+      - name: New effect data and TTS probe offline contracts
+        run: |
+          python3 -I -S -B tests/test_model_comparison.py
+          python3 -I -S -B tests/test_model_comparison_split_bridge.py --repo .
+          python3 -I -S -B -O tests/test_model_comparison_split_bridge.py --repo .
+          python3 -I -S -B -OO tests/test_model_comparison_split_bridge.py --repo .
+          python3 -I -S -B -O tests/test_model_comparison.py
+          python3 -I -S -B -OO tests/test_model_comparison.py
+          python3 -I -S -B tests/test_effect_dataset_split.py
+          python3 -I -S -B research/tts-pilot-screening-v1/test_suite.py
+          python3 -I -S -B -O research/tts-pilot-screening-v1/test_suite.py
+          python3 -I -S -B -OO research/tts-pilot-screening-v1/test_suite.py
+          python3 -I -S -B tests/test_historical_base_metadata.py
+          python3 -I -S -B -O tests/test_historical_base_metadata.py
+          python3 -I -S -B -OO tests/test_historical_base_metadata.py
+          python3 -I -S -B -O tests/test_effect_dataset_split.py
+          python3 -I -S -B -OO tests/test_effect_dataset_split.py
+          python3 -I -S -B research/tts-quality-pilot-v1/test_pilot.py
+          python3 -I -S -B -O research/tts-quality-pilot-v1/test_pilot.py
+          python3 -I -S -B -OO research/tts-quality-pilot-v1/test_pilot.py
+          python3 -I -S -B research/kws-candidate-registry-v1/test_registry.py
+          python3 -I -S -B research/kws-balanced-fit-diagnostic-v1/test_contract.py
+          python3 -I -S -B -O research/kws-candidate-registry-v1/test_registry.py
+          python3 -I -S -B -O research/kws-balanced-fit-diagnostic-v1/test_contract.py
+          python3 -I -S -B -OO research/kws-candidate-registry-v1/test_registry.py
+          python3 -I -S -B -OO research/kws-balanced-fit-diagnostic-v1/test_contract.py
+          python3 -I -S -B research/kws-prefix-blank-anchor-v1/test_contract.py
+          python3 -I -S -B -O research/kws-prefix-blank-anchor-v1/test_contract.py
+          python3 -I -S -B -OO research/kws-prefix-blank-anchor-v1/test_contract.py
+          python3 -B tools/test_inventory.py --root research/kws-prefix-blank-anchor-v1 --official-workflows
+          python3 -I -S -B research/kws-anchor-horizon-v1/test_contract.py
+          python3 -I -S -B -O research/kws-anchor-horizon-v1/test_contract.py
+          python3 -I -S -B -OO research/kws-anchor-horizon-v1/test_contract.py
+          python3 -B tools/test_inventory.py --root research/kws-anchor-horizon-v1 --official-workflows
+          python3 -I -S -B research/kws-grouped-balance-v1/test_contract.py
+          python3 -I -S -B -O research/kws-grouped-balance-v1/test_contract.py
+          python3 -I -S -B -OO research/kws-grouped-balance-v1/test_contract.py
+          python3 -I -S -B research/kws-grouped-balance-v1/numeric_preflight.py
+          python3 -B tools/test_inventory.py --root research/kws-grouped-balance-v1 --official-workflows
+          python3 -I -S -B research/kws-lr-stability-v1/test_contract.py
+          python3 -I -S -B -O research/kws-lr-stability-v1/test_contract.py
+          python3 -I -S -B -OO research/kws-lr-stability-v1/test_contract.py
+          python3 -I -S -B research/kws-lr-stability-v1/numeric_preflight.py
+          python3 -B tools/test_inventory.py --root research/kws-lr-stability-v1 --official-workflows
+      - name: Verify tracked worktree after New effect data and TTS probe offline contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "New effect data and TTS probe offline contracts"'
+      - name: Disabled ASR stage3 activation contracts
+        run: |
+          python3 -I -S -B research/tts-pilot-screening-v1/activation-template/test_activation.py
+          python3 -I -S -B -O research/tts-pilot-screening-v1/activation-template/test_activation.py
+          python3 -I -S -B -OO research/tts-pilot-screening-v1/activation-template/test_activation.py
+      - name: Verify tracked worktree after ASR stage3 activation contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "ASR stage3 activation contracts"'
+      - name: Continuous audio intake offline contracts
+        run: |
+          python3 -I -S -B research/alimeeting-continuous-intake-v1/test_suite.py
+          python3 -I -S -B -O research/alimeeting-continuous-intake-v1/test_suite.py
+          python3 -I -S -B -OO research/alimeeting-continuous-intake-v1/test_suite.py
+      - name: Verify tracked worktree after continuous audio intake contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Continuous audio intake contracts"'
+      - name: KW1 supplement and recovered float evidence offline contracts
+        timeout-minutes: 15
+        run: |
+          python3 -I -S -B research/kw1-preset-supplement-v1/test_suite.py
+          python3 -I -S -B research/alimeeting-continuous-intake-v1/float-c-parity-observation-v1/verify_package.py
+          python3 -I -S -B -O research/kw1-preset-supplement-v1/test_suite.py
+          python3 -I -S -B -O research/alimeeting-continuous-intake-v1/float-c-parity-observation-v1/verify_package.py
+          python3 -I -S -B -OO research/kw1-preset-supplement-v1/test_suite.py
+          python3 -I -S -B -OO research/alimeeting-continuous-intake-v1/float-c-parity-observation-v1/verify_package.py
+      - name: Verify tracked worktree after KW1 supplement offline contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "KW1 supplement offline contracts"'
+      - name: Bound remaining TTS continuation contracts
+        run: |
+          python3 -I -S -B research/tts-quality-remaining-v1/run_tests.py
+          python3 -I -S -B -O research/tts-quality-remaining-v1/run_tests.py
+          python3 -I -S -B -OO research/tts-quality-remaining-v1/run_tests.py
+      - name: Verify tracked worktree after remaining TTS contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Remaining TTS contracts"'
+      - name: Python test inventory
+        run: python3 tools/test_inventory.py --official-workflows
+      - name: Verify tracked worktree after Python test inventory
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Python test inventory"'
+      - name: Python syntax
+        run: python3 -m py_compile tools/*.py training/*.py eval/*.py tests/*.py governance/*.py
+      - name: Verify tracked worktree after Python syntax
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Python syntax"'
+
+  asr-offline-posterior:
+    # Stdlib-only evidence fixtures; never setup, load or run a model.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Initialize execution report directory
+        run: printf 'KWS_TEST_REPORT_DIR=%s/checked-unittest\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Read-only ASR evidence acceptance contracts
+        run: |
+          set -euo pipefail
+          posterior_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-asr18-offline-posterior-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(tuple(name[:-3] for name in ("test_asr_posterior.py", "test_offline_custody.py", "test_claim_posterior_integration.py"))); sys.path.insert(0,str(Path("tools").resolve())); from checked_unittest import run_checked_suite; raise SystemExit(run_checked_suite(suite, "posterior"))'
+          python3 -I -S -B -c "$posterior_tests"
+          python3 -I -S -B -O -c "$posterior_tests"
+          python3 -I -S -B -OO -c "$posterior_tests"
+          python3 -I -S -B tools/test_inventory.py --root research/k1-asr18-offline-posterior-v1 --workflow .github/workflows/ci.yml
+      - name: Verify actual posterior suite execution
+        run: python3 -I -S -B tools/checked_unittest.py --verify-reports "$KWS_TEST_REPORT_DIR" --suite posterior
+      - name: Retain actual posterior execution evidence
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: checked-unittest-posterior
+          path: ${{ env.KWS_TEST_REPORT_DIR }}/*.json
+          if-no-files-found: error
+      - name: Verify unchanged tracked source after offline posterior contracts
+        if: always()
+        run: git diff --exit-code HEAD --
+
+  research-sources:
+    needs: python-contracts
+    if: ${{ needs.python-contracts.outputs.research_required == 'true' }}
+    uses: ./.github/workflows/research-source-consolidation.yml
+
+  hosted:
+    # Preserve the existing required check names. always() prevents a failed or
+    # skipped dependency from turning this required gate into a successful skip.
+    needs: [python-contracts, research-sources, asr-offline-posterior, hosted-build, coverage, sanitizers, fuzz, armv7-cross]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        cc: [gcc, clang]
+    steps:
+      - name: Require every applicable CI dependency
+        env:
+          CONTRACT_RESULT: ${{ needs.python-contracts.result }}
+          RESEARCH_REQUIRED: ${{ needs.python-contracts.outputs.research_required }}
+          RESEARCH_RESULT: ${{ needs.research-sources.result }}
+          POSTERIOR_RESULT: ${{ needs.asr-offline-posterior.result }}
+          BUILD_RESULT: ${{ needs.hosted-build.result }}
+          COVERAGE_RESULT: ${{ needs.coverage.result }}
+          SANITIZERS_RESULT: ${{ needs.sanitizers.result }}
+          FUZZ_RESULT: ${{ needs.fuzz.result }}
+          ARM_RESULT: ${{ needs.armv7-cross.result }}
+        run: |
+          set -euo pipefail
+          for result in "$CONTRACT_RESULT" "$POSTERIOR_RESULT" "$BUILD_RESULT" "$COVERAGE_RESULT" "$SANITIZERS_RESULT" "$FUZZ_RESULT" "$ARM_RESULT"; do
+            test "$result" = success
+          done
+          if [[ "$RESEARCH_REQUIRED" == true ]]; then
+            test "$RESEARCH_RESULT" = success
+          else
+            test "$RESEARCH_REQUIRED" = false
+            test "$RESEARCH_RESULT" = skipped
+          fi
+
+  hosted-build:
+    # Actual compiler-dependent work starts immediately, without Python/research needs.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        cc: [gcc, clang]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install tracked-worktree integrity guard
+        run: |
+          set -euo pipefail
+          guard="$RUNNER_TEMP/check-tracked-worktree.sh"
+          cat >"$guard" <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          stage=${1:?stage name required}
+
+          mapfile -d '' paths < <(git diff --name-only -z HEAD --)
+          if ((${#paths[@]} == 0)); then
+            echo "tracked-worktree clean after: $stage"
+            exit 0
+          fi
+
+          echo "::error title=Tracked worktree polluted::first detected after stage: $stage"
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "tracked status:"
+          git status --short --untracked-files=no
+
+          for path in "${paths[@]}"; do
+            if head_blob=$(git rev-parse "HEAD:$path" 2>/dev/null); then
+              head_sha256=$(git show "HEAD:$path" | sha256sum | awk '{print $1}')
+            else
+              head_blob=MISSING
+              head_sha256=MISSING
+            fi
+
+            if [[ -f "$path" ]]; then
+              worktree_blob=$(git hash-object -- "$path")
+              worktree_sha256=$(sha256sum -- "$path" | awk '{print $1}')
+            elif [[ -e "$path" ]]; then
+              worktree_blob=NONREGULAR
+              worktree_sha256=NONREGULAR
+            else
+              worktree_blob=MISSING
+              worktree_sha256=MISSING
+            fi
+
+            printf 'path=%q head_blob=%s head_sha256=%s worktree_blob=%s worktree_sha256=%s\n' \
+              "$path" "$head_blob" "$head_sha256" "$worktree_blob" "$worktree_sha256"
+          done
+          exit 1
+          EOF
+          chmod +x "$guard"
+          "$guard" "checkout baseline"
+      - name: Configure
+        env:
+          CC: ${{ matrix.cc }}
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+      - name: Verify tracked worktree after Configure
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Configure"'
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Verify tracked worktree after Build
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Build"'
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+      - name: Verify tracked worktree after Test
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Test"'
+      - name: Single-pass WAV trace artificial contract
+        run: >-
+          python3 -B tests/test_wav_trace.py
+          --wav-runner ./build/kws_wav --replay-runner ./build/kws_decoder_replay
+      - name: Verify tracked worktree after WAV trace contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "WAV trace contract"'
+      - name: Clang static analysis
+        if: matrix.cc == 'clang'
+        run: |
+          set -euo pipefail
+          for source in src/*.c; do
+            clang --analyze -std=c11 -Wall -Wextra -Wpedantic -Wconversion -Wshadow \
+              -Iinclude -Isrc -Ibuild/generated "$source"
+          done
+      - name: Verify tracked worktree after Clang static analysis
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Clang static analysis"'
+      - name: Frontend C/spec parity
+        run: python3 tests/test_frontend_parity.py ./build/kws_feature_dump
+      - name: Verify tracked worktree after Frontend C/spec parity
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Frontend C/spec parity"'
+      - name: Domain-aware multi-frontend training loop
+        run: python3 tests/test_domain_loop.py --runner ./build/kws_wav
+      - name: Verify tracked worktree after Domain-aware multi-frontend training loop
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Domain-aware multi-frontend training loop"'
+      - name: Streaming long-FAR smoke
+        run: python3 tests/test_long_far.py --runner ./build/kws_raw_stream
+      - name: Verify tracked worktree after Streaming long-FAR smoke
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Streaming long-FAR smoke"'
+      - name: Keyword compiler
+        run: |
+          python3 tests/test_keyword_compile.py
+          python3 tests/test_keyword_set_identity.py
+      - name: Verify tracked worktree after Keyword compiler
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Keyword compiler"'
+      - name: Parameter contract and generated header
+        run: python3 tests/test_parameter_contract.py
+      - name: Verify tracked worktree after Parameter contract and generated header
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Parameter contract and generated header"'
+      - name: Decoder path shadow/runtime replay contract
+        run: python3 tests/test_decoder_policy_replay.py --path-runner ./build/kws_decoder_path_replay
+      - name: Verify tracked worktree after Decoder path shadow/runtime replay contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Decoder path shadow/runtime replay contract"'
+      - name: Prepare pinned scorer fixtures
+        run: python3 tools/prepare_eval_context_fixtures.py
+      - name: Product metric scorer
+        run: python3 tests/test_eval.py
+      - name: Verify tracked worktree after Product metric scorer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Product metric scorer"'
+      - name: Corpus provenance sidecar
+        run: python3 tests/test_run_corpus.py
+      - name: Verify tracked worktree after Corpus provenance sidecar
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Corpus provenance sidecar"'
+      - name: Real-artifact board benchmark contract
+        env:
+          CC: ${{ matrix.cc }}
+        run: |
+          python3 -B tests/test_board_bench.py --runner ./build/kws_board_bench
+          python3 -B -O tests/test_board_bench.py --statistics-only
+          python3 -B -OO tests/test_board_bench.py --statistics-only
+      - name: Verify tracked worktree after Real-artifact board benchmark contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Real-artifact board benchmark contract"'
+      - name: Release qualification manifest and gate
+        run: |
+          python3 tests/test_release_qualification.py
+          python3 -S -B -O tests/test_release_qualification.py --event-metadata-only
+          python3 -S -B -OO tests/test_release_qualification.py --event-metadata-only
+      - name: Verify tracked worktree after Release qualification manifest and gate
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Release qualification manifest and gate"'
+      - name: Runtime soak collector contract
+        run: python3 tests/test_runtime_soak.py
+      - name: Verify tracked worktree after Runtime soak collector contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Runtime soak collector contract"'
+      - name: Target evidence collector contract
+        run: python3 tests/test_target_evidence.py
+      - name: Verify tracked worktree after Target evidence collector contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Target evidence collector contract"'
+      - name: Final AFE execution identity and fresh-output contracts
+        run: |
+          python3 -S -B tests/test_final_afe_execution_contract.py
+          python3 -S -B -O tests/test_final_afe_execution_contract.py
+          python3 -S -B -OO tests/test_final_afe_execution_contract.py
+      - name: Verify tracked worktree after Final AFE execution contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Final AFE execution contracts"'
+      - name: Audio discontinuity contract
+        run: python3 tests/test_audio_discontinuity_contract.py
+      - name: Verify tracked worktree after Audio discontinuity contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Audio discontinuity contract"'
+      - name: Training supply-chain contract
+        run: python3 tests/test_training_supply_chain.py
+      - name: Verify tracked worktree after Training supply-chain contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Training supply-chain contract"'
+      - name: Model family resource dimension contracts
+        run: |
+          python3 -S -B tests/test_model_family_resource_estimate.py
+          python3 -S -B -O tests/test_model_family_resource_estimate.py
+          python3 -S -B -OO tests/test_model_family_resource_estimate.py
+      - name: Verify tracked worktree after Model family resource dimension contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Model family resource dimension contracts"'
+      - name: Reproducibility tool contract
+        run: |
+          python3 tests/test_reproducible_sdk.py
+          python3 tests/test_sbom.py
+      - name: Verify tracked worktree after Reproducibility tool contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Reproducibility tool contract"'
+      - name: Terminal documentation contract
+        run: python3 tests/test_terminal_docs.py
+      - name: Verify tracked worktree after Terminal documentation contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Terminal documentation contract"'
+      - name: Live main ruleset verifier contract
+        run: python3 tests/test_live_ruleset_contract.py
+      - name: Verify tracked worktree after Live main ruleset verifier contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Live main ruleset verifier contract"'
+      - name: Restricted development corpus contract
+        run: python3 tests/test_restricted_development_dataset.py
+      - name: Verify tracked worktree after Restricted development corpus contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Restricted development corpus contract"'
+      - name: Real-human qualification contract
+        run: python3 tests/test_real_human_qualification.py
+      - name: Verify tracked worktree after Real-human qualification contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Real-human qualification contract"'
+      - name: Target and shipping promotion contract
+        run: python3 tests/test_target_shipping_contract.py
+      - name: Upload target and shipping promotion diagnostic
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: target-shipping-contract-diagnostic-${{ matrix.cc }}
+          path: .target-shipping-contract-diagnostic.json
+          if-no-files-found: error
+          include-hidden-files: true
+      - name: Verify tracked worktree after Target and shipping promotion contract
+        if: always()
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Target and shipping promotion contract"'
+      - name: Frozen replay build contract
+        run: python3 tests/test_frozen_replay_build_contract.py
+      - name: Verify tracked worktree after Frozen replay build contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Frozen replay build contract"'
+      - name: Model release contract pin
+        run: python3 tests/test_model_release_pin.py
+      - name: Verify tracked worktree after Model release contract pin
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Model release contract pin"'
+      - name: Runtime purity contract
+        run: python3 tests/test_runtime_purity_contract.py
+      - name: Verify tracked worktree after Runtime purity contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Runtime purity contract"'
+      - name: Runtime purity gate
+        run: python3 tools/check_runtime_purity.py --library build/libkws_pipeline.a
+      - name: Verify tracked worktree after Runtime purity gate
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Runtime purity gate"'
+      - name: Deferred verdict contract
+        run: python3 tests/test_deferred_verdicts.py
+      - name: Verify tracked worktree after Deferred verdict contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Deferred verdict contract"'
+      - name: Dataset iteration contract
+        run: python3 tests/test_dataset_iteration.py
+      - name: Verify tracked worktree after Dataset iteration contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Dataset iteration contract"'
+      - name: Product training data contract
+        run: |
+          python3 tests/test_product_training_entry_contract.py
+          python3 tests/test_product_development_experiment.py
+          python3 tests/test_replay_provider_semantic_identity.py
+          python3 tests/test_adversarial_refinement_source.py
+          python3 tests/test_adversarial_command_tts_parallel.py
+          python3 tests/test_base_wake_pressure_balance.py
+          python3 tests/test_replay_keyword_ids.py
+          python3 tests/test_refinement_progress.py
+          python3 tests/test_speech_like_download_retry.py
+      - name: Verify tracked worktree after Product training data contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Product training data contract"'
+      - name: Deferred verdict gate
+        run: python3 tools/check_deferred_verdicts.py .github/workflows
+      - name: Verify tracked worktree after Deferred verdict gate
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Deferred verdict gate"'
+      - name: Benchmark signal contract
+        run: python3 tests/test_bench_signal.py
+      - name: Verify tracked worktree after Benchmark signal contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Benchmark signal contract"'
+      - name: Hosted benchmark signal
+        run: |
+          ./build/kws_bench | python3 tools/check_bench_signal.py --max-rtf 0.1
+      - name: Verify tracked worktree after Hosted benchmark signal
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Hosted benchmark signal"'
+      - name: Install SDK
+        run: cmake --install build --prefix "$RUNNER_TEMP/kws-install"
+      - name: Verify tracked worktree after Install SDK
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Install SDK"'
+      - name: Validate pkg-config metadata
+        run: PKG_CONFIG_PATH="$RUNNER_TEMP/kws-install/lib/pkgconfig" pkg-config --modversion kws-pipeline
+      - name: Verify tracked worktree after Validate pkg-config metadata
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Validate pkg-config metadata"'
+      - name: Configure clean SDK consumer
+        env:
+          CC: ${{ matrix.cc }}
+        run: >-
+          cmake -S tests/consumer -B build-consumer
+          -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/kws-install"
+      - name: Verify tracked worktree after Configure clean SDK consumer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Configure clean SDK consumer"'
+      - name: Build clean SDK consumer
+        run: cmake --build build-consumer --parallel
+      - name: Verify tracked worktree after Build clean SDK consumer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Build clean SDK consumer"'
+      - name: Run clean SDK consumer
+        run: ./build-consumer/kws_pipeline_consumer
+      - name: Verify tracked worktree after Run clean SDK consumer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Run clean SDK consumer"'
+      - name: Independent second SDK build
+        env:
+          CC: ${{ matrix.cc }}
+        run: |
+          cmake -S . -B build-repro -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build-repro --parallel
+          cmake --install build-repro --prefix "$RUNNER_TEMP/kws-install-repro"
+      - name: Verify tracked worktree after Independent second SDK build
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Independent second SDK build"'
+      - name: Reproducible installed SDK gate
+        run: >-
+          python3 tools/check_reproducible_sdk.py
+          "$RUNNER_TEMP/kws-install" "$RUNNER_TEMP/kws-install-repro"
+      - name: Verify tracked worktree after Reproducible installed SDK gate
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Reproducible installed SDK gate"'
+
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Configure coverage build
+        run: >-
+          cmake -S . -B build-coverage -DCMAKE_BUILD_TYPE=Debug
+          -DKWS_BUILD_BENCH=OFF -DKWS_BUILD_TOOLS=OFF -DKWS_BUILD_FUZZ=OFF
+          -DCMAKE_C_FLAGS="-O0 --coverage"
+          -DCMAKE_EXE_LINKER_FLAGS="--coverage"
+      - name: Build and run C tests
+        run: |
+          cmake --build build-coverage --parallel
+          ctest --test-dir build-coverage --output-on-failure
+      - name: Generate gcov reports
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          data=(build-coverage/CMakeFiles/kws_pipeline.dir/src/*.gcda)
+          test "${#data[@]}" -gt 0
+          for file in "${data[@]}"; do
+            gcov "$file" >/dev/null
+          done
+      - name: C line coverage gate
+        run: python3 tools/check_gcov.py --root . --minimum 55
+
+  sanitizers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Configure ASan/UBSan
+        run: >-
+          cmake -S . -B build-san -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+      - name: Build
+        run: cmake --build build-san --parallel
+      - name: Test
+        run: ctest --test-dir build-san --output-on-failure
+
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify parser instrumentation and SDK isolation
+        run: python3 tests/test_fuzz_instrumentation.py
+      - name: Configure Clang libFuzzer + ASan/UBSan
+        env:
+          CC: clang
+        run: >-
+          cmake -S . -B build-fuzz -DCMAKE_BUILD_TYPE=Debug
+          -DKWS_BUILD_TESTS=OFF -DKWS_BUILD_BENCH=OFF -DKWS_BUILD_TOOLS=OFF
+          -DKWS_BUILD_FUZZ=ON -DKWS_STRICT=ON
+          -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+      - name: Build fuzz targets
+        run: cmake --build build-fuzz --parallel
+      - name: Generate canonical fuzz seeds
+        run: python3 tests/generate_fuzz_seeds.py --output build-fuzz/corpus
+      - name: Fuzz model parser smoke
+        run: ./build-fuzz/kws_fuzz_model -runs=2000 -max_len=4096 -timeout=5 build-fuzz/corpus/model
+      - name: Fuzz keyword-pack parser smoke
+        run: ./build-fuzz/kws_fuzz_keyword_pack -runs=2000 -max_len=2048 -timeout=5 build-fuzz/corpus/keyword_pack
+
+  armv7-cross:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install cross compiler and ARM user-mode emulator
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+          gcc-arm-linux-gnueabihf qemu-user-static
+      - name: Locate ARM sysroot for the emulator
+        run: |
+          set -euo pipefail
+          loader="$(find /usr/arm-linux-gnueabihf -name 'ld-linux-armhf.so.3' -print -quit)"
+          test -n "$loader"
+          sysroot="$(dirname "$(dirname "$loader")")"
+          echo "ARM sysroot for qemu-arm-static: $sysroot"
+          echo "KWS_ARM_SYSROOT=$sysroot" >>"$GITHUB_ENV"
+      - name: Configure hosted reference build
+        run: >-
+          cmake -S . -B build-ref
+          -DCMAKE_BUILD_TYPE=Release
+          -DKWS_BUILD_TESTS=OFF
+          -DKWS_BUILD_BENCH=OFF
+          -DKWS_BUILD_TOOLS=ON
+          -DKWS_BUILD_FUZZ=OFF
+          -DKWS_STRICT=ON
+      - name: Build hosted reference runners
+        run: cmake --build build-ref --parallel
+      - name: Configure Cortex-A32
+        run: >-
+          cmake -S . -B build-arm
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc
+          -DCMAKE_C_FLAGS="-mcpu=cortex-a32 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+          -DCMAKE_CROSSCOMPILING_EMULATOR="/usr/bin/qemu-arm-static;-L;$KWS_ARM_SYSROOT"
+          -DKWS_BUILD_TESTS=ON
+          -DKWS_BUILD_BENCH=OFF
+          -DKWS_BUILD_TOOLS=ON
+          -DKWS_BUILD_FUZZ=OFF
+          -DKWS_STRICT=ON
+      - name: Cross build core, tests and target qualification tools
+        run: cmake --build build-arm --parallel
+      - name: Run the Cortex-A32 test suite under qemu-arm-static
+        run: ctest --test-dir build-arm --output-on-failure
+      - name: Frontend C/spec parity on the Cortex-A32 build
+        run: |
+          set -euo pipefail
+          wrapper="$RUNNER_TEMP/qemu-arm-kws-feature-dump"
+          cat >"$wrapper" <<EOF
+          #!/usr/bin/env bash
+          exec /usr/bin/qemu-arm-static -L "$KWS_ARM_SYSROOT" ./build-arm/kws_feature_dump "\$@"
+          EOF
+          chmod +x "$wrapper"
+          python3 tests/test_frontend_parity.py "$wrapper"
+      - name: NEON int8 kernel parity against the hosted reference
+        run: >-
+          python3 tests/test_arm_parity.py
+          --reference-runner ./build-ref/kws_wav
+          --candidate-runner ./build-arm/kws_wav
+          --emulator /usr/bin/qemu-arm-static
+          --emulator-sysroot "$KWS_ARM_SYSROOT"

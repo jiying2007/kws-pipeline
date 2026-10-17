@@ -13,6 +13,45 @@ import prepare_freeze
 import prepare_prerequisite
 
 
+# Test-only preservation of exact source bytes expected by historical contracts.
+# Live admission/staging continues to check the maintained paths and reject drift.
+HISTORICAL_RETAINED = frozenset('research/qwen6_asr/' + name for name in (
+    'core/asr_stage/adapters.py', 'core/asr_stage/execution.py', 'core/sense_binding.py'))
+HISTORICAL_ARCHIVE = 'research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/'
+
+
+def historical_source_bytes(root, names):
+    """Verified test source projection; never a production source resolver."""
+    root = Path(root)
+    pins = {'research/qwen6_asr/' + name: sha for name, sha in
+            prepare_freeze.retained_pins(root / prepare_freeze.OLD / 'asr_worker.py').items()}
+    result = {}
+    for name in sorted(names):
+        raw = c.read_bytes(root / name, cap=8*c.MIB)
+        # Nested temporary fixtures may already hold the exact historical bytes.
+        if name in HISTORICAL_RETAINED and c.digest(raw) != pins[name]:
+            raw = c.read_bytes(root / HISTORICAL_ARCHIVE / name, cap=8*c.MIB)
+        if name in pins:
+            c.require(c.digest(raw) == pins[name], 'historical fixture retained source pin: ' + name)
+        result[name] = raw
+    return result
+
+
+@contextmanager
+def historical_source_tree(root, *, extra=()):
+    """Materialize the explicit public closure for zero-model fixture validation."""
+    names = set(prepare_freeze.declared_rosters(root)['host_code']) | set(extra)
+    original = historical_source_bytes(root, names)
+    with tempfile.TemporaryDirectory(prefix='k1-historical-source-') as directory:
+        target = Path(directory) / 'checkout'
+        for name, raw in original.items():
+            path = target / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
+        prepare_freeze.build(target)  # The real unchanged live gate verifies the copy.
+        yield target
+
+
 def synthetic_prerequisite(release, *, root=None, freeze=None):
     """Invented success-shaped bytes only for temporary zero-model tests; never actual proof."""
     p = prepare_prerequisite
@@ -51,9 +90,10 @@ def synthetic_enabled_source(source):
     names.update(str(path.relative_to(root)) for path in source.iterdir()
         if path.is_file() and path.suffix in ('.py','.json','.md','.yml','.yaml','.txt'))
     original={name:c.read_bytes(root/name,cap=8*c.MIB) for name in sorted(names)}
+    projected=historical_source_bytes(root,names)
     with tempfile.TemporaryDirectory(prefix='k1-synthetic-enabled-source-') as name:
         target=Path(name)/'checkout'
-        for relative,body in original.items():
+        for relative,body in projected.items():
             path=target/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(body)
         copied=target/prepare_freeze.NEW
         for filename,keys in APPROVALS.items():

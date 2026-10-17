@@ -145,6 +145,9 @@ def materialize_scope_copy(root):
     """Change compiled selectors in an isolated source copy, then remeasure bytes."""
     source=HERE.parents[1]
     shutil.copytree(source,root,ignore=shutil.ignore_patterns('.git','__pycache__','*.pyc'))
+    from test_control_fixture import HISTORICAL_RETAINED, historical_source_bytes
+    for name,raw in historical_source_bytes(source,HISTORICAL_RETAINED).items():
+        (root/name).write_bytes(raw)
     campaign='k1-punctuation6-asr18-synthetic-next'
     workflow='.github/workflows/k1-asr18-synthetic-next.yml'
     package=root/'research/k1-punctuation6-asr18-v1'
@@ -164,15 +167,24 @@ def materialize_scope_copy(root):
     raw=(package/'workflow.yml').read_bytes().replace(c.current_scope()['campaign'].encode(),campaign.encode())
     (package/'workflow.yml').write_bytes(raw);(root/workflow).write_bytes(raw)
     # Bootstrap in the copied source before importing the posterior's pinned validator.
-    code="""import sys,json,hashlib,re
+    code="""import sys,json,hashlib,re,ast
 from pathlib import Path
 root=Path(sys.argv[1]);package=root/'research/k1-punctuation6-asr18-v1'
 sys.path.insert(0,str(package));import campaign_contract as c,prepare_freeze
 (package/'execution-freeze.json').write_bytes(c.canonical(prepare_freeze.build(root)))
 manifest=root/'research/k1-asr18-offline-posterior-v1/validator-dependencies.json'
 value=json.loads(manifest.read_bytes())
+# The synthetic manifest measures the same fixed provenance-only archives as
+# the real resolver, while compiled validator/control changes remain live-bound.
+policy={}
+for node in ast.parse(manifest.with_name('asr_posterior.py').read_bytes()).body:
+ if isinstance(node,ast.Assign):
+  for target in node.targets:
+   if isinstance(target,ast.Name) and target.id in ('HISTORICAL_NONEXECUTED_DEPENDENCIES','HISTORICAL_DEPENDENCY_ARCHIVE'):
+    policy[target.id]=ast.literal_eval(node.value.args[0] if isinstance(node.value,ast.Call) else node.value)
 for row in value['files']:
- raw=(root/row['path']).read_bytes();row.update(bytes=len(raw),sha256=hashlib.sha256(raw).hexdigest(),git_blob_sha1=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\\0'+raw).hexdigest())
+ relative=policy['HISTORICAL_DEPENDENCY_ARCHIVE']+row['path'] if row['path'] in policy['HISTORICAL_NONEXECUTED_DEPENDENCIES'] else row['path']
+ raw=(root/relative).read_bytes();row.update(bytes=len(raw),sha256=hashlib.sha256(raw).hexdigest(),git_blob_sha1=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\\0'+raw).hexdigest())
 raw=c.canonical(value);manifest.write_bytes(raw)
 path=manifest.with_name('asr_posterior.py');path.write_text(re.sub(r"MANIFEST_SHA = '[0-9a-f]{64}'","MANIFEST_SHA = '"+hashlib.sha256(raw).hexdigest()+"'",path.read_text()))
 import test_claim_consumer_integration as test;test.materialized_scope_paths()

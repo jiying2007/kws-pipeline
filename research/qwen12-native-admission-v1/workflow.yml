@@ -55,16 +55,30 @@ jobs:
           fetch-depth: 1
       - name: Stdlib-only contract and transport fixtures
         run: |
-          for flags in '' '-O' '-OO'; do
-            python3 -B $flags research/qwen12-native-admission-v1/test_contract.py
-            python3 -B $flags research/qwen12-native-admission-v1/test_log_transport.py
-            python3 -B $flags research/qwen12-native-admission-v1/test_branch_transport.py
-            python3 -B $flags research/qwen12-native-admission-v1/test_evidence_publisher.py
-            python3 -B $flags research/qwen12-native-admission-v1/test_native_v2_adapter.py
-            python3 -B $flags research/qwen12-native-admission-v1/test_whisper_binding.py
-            python3 -B $flags research/qwen12-native-admission-v1/test_native_locks.py
-            python3 -B $flags research/qwen12-native-admission-v1/test_worker_receipts.py
-          done
+          python3 -B research/qwen12-native-admission-v1/test_contract.py
+          python3 -B research/qwen12-native-admission-v1/test_log_transport.py
+          python3 -B research/qwen12-native-admission-v1/test_branch_transport.py
+          python3 -B research/qwen12-native-admission-v1/test_evidence_publisher.py
+          python3 -B research/qwen12-native-admission-v1/test_native_v2_adapter.py
+          python3 -B research/qwen12-native-admission-v1/test_whisper_binding.py
+          python3 -B research/qwen12-native-admission-v1/test_native_locks.py
+          python3 -B research/qwen12-native-admission-v1/test_worker_receipts.py
+          python3 -B -O research/qwen12-native-admission-v1/test_contract.py
+          python3 -B -O research/qwen12-native-admission-v1/test_log_transport.py
+          python3 -B -O research/qwen12-native-admission-v1/test_branch_transport.py
+          python3 -B -O research/qwen12-native-admission-v1/test_evidence_publisher.py
+          python3 -B -O research/qwen12-native-admission-v1/test_native_v2_adapter.py
+          python3 -B -O research/qwen12-native-admission-v1/test_whisper_binding.py
+          python3 -B -O research/qwen12-native-admission-v1/test_native_locks.py
+          python3 -B -O research/qwen12-native-admission-v1/test_worker_receipts.py
+          python3 -B -OO research/qwen12-native-admission-v1/test_contract.py
+          python3 -B -OO research/qwen12-native-admission-v1/test_log_transport.py
+          python3 -B -OO research/qwen12-native-admission-v1/test_branch_transport.py
+          python3 -B -OO research/qwen12-native-admission-v1/test_evidence_publisher.py
+          python3 -B -OO research/qwen12-native-admission-v1/test_native_v2_adapter.py
+          python3 -B -OO research/qwen12-native-admission-v1/test_whisper_binding.py
+          python3 -B -OO research/qwen12-native-admission-v1/test_native_locks.py
+          python3 -B -OO research/qwen12-native-admission-v1/test_worker_receipts.py
           python3 -B tools/test_inventory.py --root research/qwen12-native-admission-v1 --workflow .github/workflows/qwen12-native-admission-v1.yml
   transport-fixture:
     if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-transport-preflight-12m-v1' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}

@@ -24,7 +24,7 @@ import asr18_metadata as m
 from test_asr18_contract import invented_projection
 from test_asr18_binding import setup_binding as unbound_setup_binding
 from input_binding import verify_screening_receipt
-from test_control_fixture import DISABLED_APPROVALS, synthetic_enabled_source, synthetic_prerequisite
+from test_control_fixture import DISABLED_APPROVALS, synthetic_enabled_source, synthetic_prerequisite, historical_source_tree
 
 
 def synthetic_enabled_host_test(function):
@@ -103,9 +103,10 @@ def public_fixture():
     import prepare_freeze
     import prepare_prerequisite
     names=set(prepare_prerequisite.SCIENTIFIC_MEMBERS)|prepare_prerequisite.EXCLUDED
-    source={name:c.read_bytes(HERE.parents[1]/name) for name in names}
-    preliminary=prepare_freeze.build(HERE.parents[1])
-    source[h.NEW+'prepare-prerequisite.json']=synthetic_prerequisite(release,root=HERE.parents[1],freeze=preliminary)
+    with historical_source_tree(HERE.parents[1]) as historical:
+        source={name:c.read_bytes(historical/name) for name in names}
+        preliminary=prepare_freeze.build(historical)
+        source[h.NEW+'prepare-prerequisite.json']=synthetic_prerequisite(release,root=historical,freeze=preliminary)
     source[h.NEW+'execution-release.json']=c.canonical(release)
     freeze={'schema':'k1-asr18-source-freeze-v1',**{role:{name:{'bytes':len(body),'sha256':c.digest(body)} for name,body in source.items()}
         for role in ('host_code','setup_code','inference_code')}}

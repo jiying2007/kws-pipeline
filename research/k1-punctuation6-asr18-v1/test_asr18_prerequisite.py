@@ -7,11 +7,13 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import campaign_contract as c
 import prepare_freeze
 import prepare_prerequisite as p
-from test_control_fixture import DISABLED_APPROVALS, synthetic_prerequisite, synthetic_enabled_source
+from test_control_fixture import (DISABLED_APPROVALS, synthetic_prerequisite, synthetic_enabled_source,
+    HISTORICAL_ARCHIVE, HISTORICAL_RETAINED, historical_source_bytes, historical_source_tree)
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -21,8 +23,9 @@ def fixture():
     release = c.current_disabled_release(c.read_bytes(HERE / c.CLAIM_CONTROL_FILE))
     for key in c.RELEASE_APPROVALS: release[key] = True
     for key in c.RELEASE_AUTHORITIES: release[key] = c.digest(('prerequisite-fixture-' + key).encode())
-    freeze = prepare_freeze.build(ROOT)
-    raw = synthetic_prerequisite(release, root=ROOT, freeze=freeze)
+    with historical_source_tree(ROOT) as historical:
+        freeze = prepare_freeze.build(historical)
+        raw = synthetic_prerequisite(release, root=historical, freeze=freeze)
     return release, freeze, raw
 
 
@@ -36,7 +39,10 @@ class PreparePrerequisite(unittest.TestCase):
         self.assertEqual(release['claim_admission_mode'], c.CURRENT_CLAIM_MODE)
         self.assertEqual(release['claim_admission_control_sha256'], c.digest(c.read_bytes(HERE / c.CLAIM_CONTROL_FILE)))
         self.assertEqual(c.digest(raw),release['prepare_prerequisite_sha256'])
-        value=p.validate_receipt(raw,release,source_freeze=freeze,source_root=ROOT)
+        with self.assertRaisesRegex(ValueError,'scientific source byte identity'):
+            p.validate_receipt(raw,release,source_freeze=freeze,source_root=ROOT)
+        with historical_source_tree(ROOT) as historical:
+            value=p.validate_receipt(raw,release,source_freeze=freeze,source_root=historical)
         self.assertEqual(value['outcome'],'complete_prepare_verified')
         self.assertEqual(value['diagnostic_forward_calls'],0)
         self.assertEqual(c.digest(raw),'27762aeebffd67243808c56a71f4c4c125fe76f79496f6169a3dd250abb67c77')
@@ -52,9 +58,32 @@ class PreparePrerequisite(unittest.TestCase):
 
     def test_real_pure_gate_accepts_only_exact_root_pinned_complete_projection(self):
         release,freeze,raw=fixture()
-        self.assertEqual(p.validate_receipt(raw,release,source_freeze=freeze)['diagnostic_forward_calls'],0)
-        self.assertEqual(c.require_execution_release(release,freeze,
-            expected_freeze_sha256=c.digest(c.canonical(freeze)),prepare_prerequisite_raw=raw),release)
+        with historical_source_tree(ROOT) as historical:
+            members={'source/'+name:c.read_bytes(historical/name) for name in p.SCIENTIFIC_MEMBERS}
+            self.assertEqual(p.validate_receipt(raw,release,source_freeze=freeze,source_members=members)['diagnostic_forward_calls'],0)
+            self.assertEqual(c.require_execution_release(release,freeze,
+                expected_freeze_sha256=c.digest(c.canonical(freeze)),prepare_prerequisite_raw=raw,
+                source_members=members),release)
+            with historical_source_tree(historical) as nested:
+                self.assertFalse((nested / HISTORICAL_ARCHIVE).exists())
+                self.assertEqual(prepare_freeze.build(nested), freeze)
+                self.assertEqual(historical_source_bytes(nested, HISTORICAL_RETAINED),
+                                 {name: members['source/'+name] for name in HISTORICAL_RETAINED})
+
+        read = c.read_bytes
+        for name in HISTORICAL_RETAINED:
+            archive = ROOT / HISTORICAL_ARCHIVE / name
+            for replacement in (read(archive) + b" ", read(ROOT / name)):
+                def changed(path, *args, **kwargs):
+                    return replacement if Path(path) == archive else read(path, *args, **kwargs)
+                with self.subTest(name=name), patch.object(c, 'read_bytes', side_effect=changed):
+                    with self.assertRaisesRegex(ValueError, 'historical fixture retained source pin'):
+                        historical_source_bytes(ROOT, [name])
+            def missing(path, *args, **kwargs):
+                if Path(path) == archive: raise FileNotFoundError(path)
+                return read(path, *args, **kwargs)
+            with self.subTest(name=name), patch.object(c, 'read_bytes', side_effect=missing):
+                with self.assertRaises(FileNotFoundError): historical_source_bytes(ROOT, [name])
 
     def test_all_actual_identity_fields_hash_bound_even_with_valid_syntax(self):
         release,freeze,raw=fixture();original=c.decode_json(raw)
@@ -111,24 +140,25 @@ class PreparePrerequisite(unittest.TestCase):
                 p.validate_receipt(raw,{**release,key:'e'*64})
 
     def test_scientific_identity_remeasures_bytes_and_ignores_only_four_controls(self):
-        _,freeze,_=fixture()
-        members={'source/'+name:c.read_bytes(ROOT/name) for name in p.SCIENTIFIC_MEMBERS}
-        expected=p.scientific_identity(ROOT,freeze)
-        self.assertEqual(p.scientific_identity_from_members(members,freeze),expected)
-        changed=copy.deepcopy(freeze)
-        for name in p.EXCLUDED:changed['inference_code'][name]={'bytes':1,'sha256':'0'*64}
-        self.assertEqual(p.scientific_identity_from_members(members,changed),expected)
-        name=p.SCIENTIFIC_MEMBERS[0]
-        with self.assertRaisesRegex(ValueError,'byte identity'):
-            p.scientific_identity_from_members({**members,'source/'+name:members['source/'+name]+b'\n'},freeze)
-        changed=copy.deepcopy(freeze);changed['inference_code'].pop(name)
-        with self.assertRaisesRegex(ValueError,'source roster'):p.scientific_identity(ROOT,changed)
-        # A coherent caller-made freeze cannot replace the independently pinned prepare science.
-        release,freeze,raw=fixture();changed=copy.deepcopy(freeze)
-        body=members['source/'+name]+b'\n';changed_members={**members,'source/'+name:body}
-        changed['inference_code'][name]={'bytes':len(body),'sha256':c.digest(body)}
-        with self.assertRaisesRegex(ValueError,'unchanged scientific source'):
-            p.validate_receipt(raw,release,source_freeze=changed,source_members=changed_members)
+        with historical_source_tree(ROOT) as historical:
+            _,freeze,_=fixture()
+            members={'source/'+name:c.read_bytes(historical/name) for name in p.SCIENTIFIC_MEMBERS}
+            expected=p.scientific_identity(historical,freeze)
+            self.assertEqual(p.scientific_identity_from_members(members,freeze),expected)
+            changed=copy.deepcopy(freeze)
+            for name in p.EXCLUDED:changed['inference_code'][name]={'bytes':1,'sha256':'0'*64}
+            self.assertEqual(p.scientific_identity_from_members(members,changed),expected)
+            name=p.SCIENTIFIC_MEMBERS[0]
+            with self.assertRaisesRegex(ValueError,'byte identity'):
+                p.scientific_identity_from_members({**members,'source/'+name:members['source/'+name]+b'\n'},freeze)
+            changed=copy.deepcopy(freeze);changed['inference_code'].pop(name)
+            with self.assertRaisesRegex(ValueError,'source roster'):p.scientific_identity(historical,changed)
+            # A coherent caller-made freeze cannot replace the independently pinned prepare science.
+            release,freeze,raw=fixture();changed=copy.deepcopy(freeze)
+            body=members['source/'+name]+b'\n';changed_members={**members,'source/'+name:body}
+            changed['inference_code'][name]={'bytes':len(body),'sha256':c.digest(body)}
+            with self.assertRaisesRegex(ValueError,'unchanged scientific source'):
+                p.validate_receipt(raw,release,source_freeze=changed,source_members=changed_members)
 
     def test_projector_only_copies_verified_allowlist_and_no_private_fingerprints(self):
         release,_,raw=fixture();value=c.decode_json(raw)
