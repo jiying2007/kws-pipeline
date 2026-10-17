@@ -67,6 +67,25 @@ class CandidateNumericCIContracts(unittest.TestCase):
         self.assertIn("if-no-files-found: error", artifact)
         self.assertNotIn("path: build/\n", artifact)
 
+    def test_direct_fit_delivery_scopes_and_fixture(self):
+        for path in ("research/direct_fit/result_delivery.py", "research/direct_fit/README-delivery.md",
+                     "tests/test_direct_fit_delivery.py"):
+            self.assertEqual(changes.scopes([path]), (False, True))
+            self.assertEqual(changes.scopes([path, "training/train_ctc.py"]), (True, True))
+        filters = [path for _, path in exact_path_filters(ROOT / changes.WORKFLOW)]
+        self.assertEqual(filters.count("tests/test_direct_fit_delivery.py"), 2)
+        job = self.workflow.split("  objective-math:\n", 1)[1].split("  live-base-binding:\n", 1)[0]
+        step = job.split("      - name: Direct fit bounded delivery software fixtures\n", 1)[1].split("      - name:", 1)[0]
+        self.assertIn("timeout-minutes: 2", step)
+        self.assertIn("needs.select-scope.outputs.candidate_required == 'true'", step)
+        self.assertIn("python3 -B tests/test_direct_fit_delivery.py", step)
+        self.assertIn("--report build/direct-fit-delivery-fixture.json", step)
+        self.assertNotIn("continue-on-error", step)
+        artifact = job.split("      - name: Retain direct fit delivery software fixture receipt\n", 1)[1]
+        self.assertIn("path: build/direct-fit-delivery-fixture.json", artifact)
+        self.assertIn("if-no-files-found: error", artifact)
+        self.assertNotIn("path: build/\n", artifact)
+
     def test_direct_fixture_step_and_receipt_are_bounded(self):
         job = self.workflow.split("  objective-math:\n", 1)[1].split("  live-base-binding:\n", 1)[0]
         step = job.split("      - name: Direct KWS three-class software fixture contracts\n", 1)[1].split("      - name:", 1)[0]
