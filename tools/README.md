@@ -61,6 +61,12 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`verify_speech_like_backend_bundle.py`](verify_speech_like_backend_bundle.py)
 - [`verify_speech_like_runtime_bundle.py`](verify_speech_like_runtime_bundle.py)
 
+## Saved-speech research queue
+
+- [`import_saved_speech_result.py`](import_saved_speech_result.py) — Import preserved native results without running ASR or TTS.
+- [`speech_data_queue.py`](speech_data_queue.py) — Validate saved evidence, isolate uncertain items and export machine-weak research datasets.
+- [Research queue and weak-loader guide](../docs/speech-data-queue.md) — Research-only inputs; machine agreement is not human gold or product qualification.
+
 ## Disabled research plan metadata
 
 - [`validate_parallel_candidate_plan.py`](validate_parallel_candidate_plan.py) checks the

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 58243,
-      "sha256": "81073bd92ec1b9d79acec5ccf0cb767e31d8cffd6d9e9ea838d04eb1ce3156bc",
-      "git_blob_sha1": "6547b6db6ca460441e08b4f6580a676b08ad7564"
+      "bytes": 58680,
+      "sha256": "56700df86b9800e0b6b54b8c59b829502444abe201d1bfe5fc0ad5f8cb613507",
+      "git_blob_sha1": "5705ea9ae6e767223491cbccb046cc92aea1addf"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -38747,6 +38747,166 @@
             "bytes": 1379,
             "sha256": "d779a762e5504ca59ab9bab29ddb235b63a9cb4e81e0f48a70960e01698b06bb",
             "git_blob_sha1": "9dadb7b25bb7e3e516f77421ceca425d0a205caf"
+          }
+        }
+      ]
+    },
+    {
+      "id": "maintained-speech-data-queue-20261017",
+      "date": "2026-10-17",
+      "base_commit": "65c09a8340e69c869935743df3c514ffa35bcba6",
+      "workflow_source_changed": true,
+      "scope": "Add offline saved-speech screening, isolated weak research dataset loader and synthetic CI contracts to the existing ci workflow. No new workflow, runtime execution or product admission change.",
+      "rationale": "Public code, synthetic fixtures, documentation and exact source/CI metadata only. Private saved audio and result bodies are excluded. All historical source pins and previous maintenance records are preserved.",
+      "files": [
+        {
+          "path": "docs/speech-data-queue.md",
+          "before": null,
+          "after": {
+            "path": "docs/speech-data-queue.md",
+            "mode": "100644",
+            "bytes": 7737,
+            "sha256": "b1d914c2ebc4e9cd5aa1153a8a7f2d37ebddc6bd3875cb5d34c14bfb6dd3ef5e",
+            "git_blob_sha1": "14cea3b614817273e5d2c2c53cafab5b3afb8629"
+          }
+        },
+        {
+          "path": "tests/test_speech_data_queue.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_speech_data_queue.py",
+            "mode": "100644",
+            "bytes": 12745,
+            "sha256": "baf3c63ca15d61ccb57c0e594b6bdda5fdd6100e66602f01c992bc029605dab1",
+            "git_blob_sha1": "675441a01929e67cffd2ff9816e3849c2d8a2fb1"
+          }
+        },
+        {
+          "path": "tools/import_saved_speech_result.py",
+          "before": null,
+          "after": {
+            "path": "tools/import_saved_speech_result.py",
+            "mode": "100644",
+            "bytes": 4709,
+            "sha256": "6e5d0c72eb8b5fa95682b0e3e6699067f57f4eb4b887ebbaa9c11328d1fbb163",
+            "git_blob_sha1": "6729fa1e552fff80a7ee1524ea12370a2a9ea078"
+          }
+        },
+        {
+          "path": "tools/speech_data_queue.py",
+          "before": null,
+          "after": {
+            "path": "tools/speech_data_queue.py",
+            "mode": "100644",
+            "bytes": 25374,
+            "sha256": "3d6f2efd03da3617737a033d75ea59e02adda34834b5ff5cbc7a31f26c1c9fb8",
+            "git_blob_sha1": "669f1878cf76d340fe572b62ed7f6d7d89b452cc"
+          }
+        },
+        {
+          "path": "training/weak_speech_dataset.py",
+          "before": null,
+          "after": {
+            "path": "training/weak_speech_dataset.py",
+            "mode": "100644",
+            "bytes": 3931,
+            "sha256": "4eae57a8d4978d0ef27730806c9e4d3f26796b25bb20d7fbd92146d77928d6a6",
+            "git_blob_sha1": "d79a89064031fc20f595d507dc169a8e3943b2ca"
+          }
+        },
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 58243,
+            "sha256": "81073bd92ec1b9d79acec5ccf0cb767e31d8cffd6d9e9ea838d04eb1ce3156bc",
+            "git_blob_sha1": "6547b6db6ca460441e08b4f6580a676b08ad7564"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 58680,
+            "sha256": "56700df86b9800e0b6b54b8c59b829502444abe201d1bfe5fc0ad5f8cb613507",
+            "git_blob_sha1": "5705ea9ae6e767223491cbccb046cc92aea1addf"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 2906,
+            "sha256": "f472ac131f4890a02faeb835f9ff0463900753518164bb1db60c3bb97529e4cb",
+            "git_blob_sha1": "d1d6cc0049ea7d701593dbf9c2ad195ff34c67f2"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3086,
+            "sha256": "04b0fc55b24c3d3815bc982b44645b7f97beb91d9a341bf6c5a47581aa48985d",
+            "git_blob_sha1": "8cf396564c30fbccd80ba0e989dfe8ab67814cee"
+          }
+        },
+        {
+          "path": "tests/test_research_ci_changes.py",
+          "before": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 7036,
+            "sha256": "35e8e54ca76fc0ffa6c6cafe9077a6b96c84610db70b204a7d6015021b37f2a2",
+            "git_blob_sha1": "102e38841f16811df2e43dcbd88bb758630b5870"
+          },
+          "after": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 7443,
+            "sha256": "02d7617754cebff3f51026a1c93817b531f950ee8c3f31c1cd7b0b22e5c74db1",
+            "git_blob_sha1": "9446e2b98417248d8196a37c825c1f45fdef5cb8"
+          }
+        }
+      ]
+    },
+    {
+      "id": "speech-data-queue-navigation-20261017",
+      "date": "2026-10-17",
+      "base_commit": "4337e8c63397219df340e233beebeaee377aae22",
+      "workflow_source_changed": false,
+      "scope": "Complete navigation for the two maintained saved-speech tools and research weak-loader guide.",
+      "rationale": "Repair the exact engineering-tool index contract without changing runtime, CI commands, historical pins, private data or language-conditioned candidate source.",
+      "files": [
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 10598,
+            "sha256": "5c8b65967a9f81290ff2b3f2c120b2ed4565edfd4d222589a58556994c947ef1",
+            "git_blob_sha1": "8ac320cd8e2834a3a9e9125655d4df9c6d9d938d"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 11066,
+            "sha256": "a411faa3c7417d5c652dfae9667a3ca7c5bbd075b3c528673ca4152c84faaf58",
+            "git_blob_sha1": "4ccf80738e966d1e4e1590f2dc51bd966d5c2c5e"
+          }
+        },
+        {
+          "path": "docs/README.md",
+          "before": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 8743,
+            "sha256": "605bccb0d2e0752cc6bfd9357cc91d29e7330a40cf0ea052e119e154d491379d",
+            "git_blob_sha1": "d354da6504e2e5054b0ab9201a211137bb0df679"
+          },
+          "after": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 8971,
+            "sha256": "271205de0e72f6270fe2c04499485e7365411347a2fead5e4047f110341bb7b5",
+            "git_blob_sha1": "257429b87a621be7bc9a5a8f44e815a9ad4f37f5"
           }
         }
       ]

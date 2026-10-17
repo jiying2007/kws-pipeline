@@ -10,6 +10,9 @@ EXACT = frozenset({
     'tools/verify_research_sources.py', 'tools/verify_research_publication.py',
     'tools/run_research_source_checks.py', 'tools/check_workflow_path_filters.py',
     'tools/research_ci_changes.py', 'tests/test_research_ci_changes.py',
+    'tools/speech_data_queue.py', 'tools/import_saved_speech_result.py',
+    'training/weak_speech_dataset.py', 'tests/test_speech_data_queue.py',
+    'docs/speech-data-queue.md',
 })
 
 
