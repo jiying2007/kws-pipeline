@@ -12,6 +12,10 @@
 - [Restricted development-corpus validation](RESTRICTED_DEVELOPMENT_CORPUS.md): local structural checks and aggregate-only receipts; no qualification or publication authority
 - [Historical branch outcomes](../research/consolidation/history/BRANCH_OUTCOMES.md) and [reading older notes](../research/consolidation/history/READING_NOTES.md)
 
+## Research data preparation
+
+- [Saved-speech queue and weak dataset loader](speech-data-queue.md): offline evidence capture, uncertainty isolation and research-only machine labels; no model execution or product qualification.
+
 ## Product contracts
 
 Current machine-readable product authority is `configs/shipping.xiaowo.json`. The immutable promoted model is `model-749187ec1d66`, historically synthetic-qualified for exactly `你好小窝` and `小窝小窝`. The current source contract records `recalibration_required=true`; that historical result does not qualify changed runtime source. The frozen commercial candidate is `deployment-c20f3eb88e43`. The product remains `shipping_approved=false` until real-human final-AFE acoustic evidence and physical target-board evidence both pass and the explicit terminal shipping promotion succeeds.

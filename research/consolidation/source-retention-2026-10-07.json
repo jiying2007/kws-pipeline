@@ -38866,6 +38866,50 @@
           }
         }
       ]
+    },
+    {
+      "id": "speech-data-queue-navigation-20261017",
+      "date": "2026-10-17",
+      "base_commit": "4337e8c63397219df340e233beebeaee377aae22",
+      "workflow_source_changed": false,
+      "scope": "Complete navigation for the two maintained saved-speech tools and research weak-loader guide.",
+      "rationale": "Repair the exact engineering-tool index contract without changing runtime, CI commands, historical pins, private data or language-conditioned candidate source.",
+      "files": [
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 10598,
+            "sha256": "5c8b65967a9f81290ff2b3f2c120b2ed4565edfd4d222589a58556994c947ef1",
+            "git_blob_sha1": "8ac320cd8e2834a3a9e9125655d4df9c6d9d938d"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 11066,
+            "sha256": "a411faa3c7417d5c652dfae9667a3ca7c5bbd075b3c528673ca4152c84faaf58",
+            "git_blob_sha1": "4ccf80738e966d1e4e1590f2dc51bd966d5c2c5e"
+          }
+        },
+        {
+          "path": "docs/README.md",
+          "before": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 8743,
+            "sha256": "605bccb0d2e0752cc6bfd9357cc91d29e7330a40cf0ea052e119e154d491379d",
+            "git_blob_sha1": "d354da6504e2e5054b0ab9201a211137bb0df679"
+          },
+          "after": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 8971,
+            "sha256": "271205de0e72f6270fe2c04499485e7365411347a2fead5e4047f110341bb7b5",
+            "git_blob_sha1": "257429b87a621be7bc9a5a8f44e815a9ad4f37f5"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
