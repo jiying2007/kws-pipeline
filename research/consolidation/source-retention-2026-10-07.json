@@ -38638,6 +38638,118 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-17",
+      "operation_id": "sense-runtime-binding-ci2-20261017",
+      "from_commit": "9afd4a31e7f438546c8ebebb9ef55480d266e823",
+      "from_tree": "bf49e2bd5fd3a4e5b9f0490ef3898f7689edb8a5",
+      "previous_retention_identity": {
+        "path": "research/consolidation/source-retention-2026-10-07.json",
+        "mode": "100644",
+        "bytes": 1879350,
+        "sha256": "e9740d9611bdeda436415260c3fc9495ca2ea6d2a4cd635bf7db12ea41cdf996",
+        "git_blob_sha1": "e6505d1642cf9076e11bd87f171eb0de00bd4c45"
+      },
+      "workflow_source_changed": false,
+      "scope": "Route campaign capsule and pilot activation unit-test fixtures to exact archived historical source bodies while preserving live maintained-source rejection. Preserve both activation-pinned original test bodies and cover archival tampering, missing archives and current-source substitution.",
+      "rationale": "Public test-source and archival metadata only. Preserve every previously published maintenance receipt, all original 718 retained source identities and 834 provenance records, immutable scientific policy and activation source pins, execution freezes and live campaign validation gates. No model execution, weight downloads, dispatch, new ASR result or historical campaign restart is authorized by this maintenance.",
+      "files": [
+        {
+          "path": "research/campaign-capsules-v1/test_campaign_capsule.py",
+          "before": {
+            "path": "research/campaign-capsules-v1/test_campaign_capsule.py",
+            "mode": "100644",
+            "bytes": 15513,
+            "sha256": "d51cb3460eb99487e8764d1a754f51a60ae9a470188730d4fc6d42b77136d907",
+            "git_blob_sha1": "3dce33184bbdda2b2e470f8d71d09d08994b159b"
+          },
+          "after": {
+            "path": "research/campaign-capsules-v1/test_campaign_capsule.py",
+            "mode": "100644",
+            "bytes": 17162,
+            "sha256": "857e672eb1aeda626c017cf0065e6af6374a31fa6ff22849367f754faedaa6c2",
+            "git_blob_sha1": "811b9662eefa39023a05d8006419c615845c45f4"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/activation-template/test_activation.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "mode": "100644",
+            "bytes": 12874,
+            "sha256": "bcaa8d4cefa82ce4c93d8b0202ccdc3bea97927bfd9210b3b95e6f8a73f06dda",
+            "git_blob_sha1": "f522ee2fb27241bff32f92ad4915273c2c14969d"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/test_host.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/test_host.py",
+            "mode": "100644",
+            "bytes": 1379,
+            "sha256": "d779a762e5504ca59ab9bab29ddb235b63a9cb4e81e0f48a70960e01698b06bb",
+            "git_blob_sha1": "9dadb7b25bb7e3e516f77421ceca425d0a205caf"
+          }
+        },
+        {
+          "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+          "before": {
+            "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "mode": "100644",
+            "bytes": 12874,
+            "sha256": "bcaa8d4cefa82ce4c93d8b0202ccdc3bea97927bfd9210b3b95e6f8a73f06dda",
+            "git_blob_sha1": "f522ee2fb27241bff32f92ad4915273c2c14969d"
+          },
+          "after": {
+            "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "mode": "100644",
+            "bytes": 15574,
+            "sha256": "0e657bcf4f91fc8e817b204012582f6b1f50c63d35f7e4c56e3817bd74187893",
+            "git_blob_sha1": "5ebefad0bc099c90262bd6ed0a51eec805a047a3"
+          }
+        }
+      ],
+      "historical_fixture_relocations": [
+        {
+          "original_path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/activation-template/test_activation.py",
+          "original": {
+            "path": "research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "mode": "100644",
+            "bytes": 12874,
+            "sha256": "bcaa8d4cefa82ce4c93d8b0202ccdc3bea97927bfd9210b3b95e6f8a73f06dda",
+            "git_blob_sha1": "f522ee2fb27241bff32f92ad4915273c2c14969d"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/activation-template/test_activation.py",
+            "mode": "100644",
+            "bytes": 12874,
+            "sha256": "bcaa8d4cefa82ce4c93d8b0202ccdc3bea97927bfd9210b3b95e6f8a73f06dda",
+            "git_blob_sha1": "f522ee2fb27241bff32f92ad4915273c2c14969d"
+          }
+        },
+        {
+          "original_path": "research/tts-pilot-screening-v1/test_host.py",
+          "archive_path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/test_host.py",
+          "original": {
+            "path": "research/tts-pilot-screening-v1/test_host.py",
+            "mode": "100644",
+            "bytes": 1379,
+            "sha256": "d779a762e5504ca59ab9bab29ddb235b63a9cb4e81e0f48a70960e01698b06bb",
+            "git_blob_sha1": "9dadb7b25bb7e3e516f77421ceca425d0a205caf"
+          },
+          "archived": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-ci2-20261017/research/tts-pilot-screening-v1/test_host.py",
+            "mode": "100644",
+            "bytes": 1379,
+            "sha256": "d779a762e5504ca59ab9bab29ddb235b63a9cb4e81e0f48a70960e01698b06bb",
+            "git_blob_sha1": "9dadb7b25bb7e3e516f77421ceca425d0a205caf"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
