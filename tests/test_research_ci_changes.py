@@ -41,6 +41,13 @@ class ChangeSelectionTests(unittest.TestCase):
         self.git('add', '.')
         self.git('commit', '-m', path)
 
+    def test_maintained_speech_queue_selects_research_dependencies(self):
+        for path in ('tools/speech_data_queue.py', 'tools/import_saved_speech_result.py',
+                     'training/weak_speech_dataset.py', 'tests/test_speech_data_queue.py',
+                     'docs/speech-data-queue.md'):
+            with self.subTest(path=path):
+                self.assertTrue(changes.relevant([path]))
+
     def test_full_pr_delta_against_first_merge_parent(self):
         self.git('checkout', '-b', 'topic')
         self.commit('research/synthetic.txt', 'a')
