@@ -14,6 +14,8 @@
 
 ## Research data preparation
 
+- [Causal research incremental assets](../research/causal-kws-increment-2026-10-18/README.md): reusable joint/merge/timing cores, artificial contracts and anonymous bounded evidence; research-only policy tiers.
+
 - [Causal event-head core and scalar oracle](../research/causal-event-head/README.md): artificial CI and bounded historical preflight; exposed tiny-fit remains flush-only risk.
 - [Causal MDTC research core](../research/causal-mdtc/README.md): fixed upstream source/license, stdlib contracts and explicit synthetic probe limitations.
 - [Threshold before refractory research adapter](../research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017/README.zh-CN.md): unchanged fixed-grid research code and anonymous comparison, no product threshold selection.

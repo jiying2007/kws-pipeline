@@ -1,0 +1,13 @@
+{
+  "schema": "continuous-two-profile-status-v1",
+  "status": "EXECUTED_AND_INDEPENDENTLY_REVIEWED",
+  "aggregate_path": "evidence/continuous-S-aggregate.json",
+  "aggregate_sha256": "cf4b61cab217cbff0e5b6c429b87aaa6ad3623c22750eab70b4096697aa21ba7",
+  "execution_review_sha256": "c97c86e78ff8b129c0a7e1808d762f82ae7d5e73b15629bde1d361aded887f5b",
+  "execution_verification_sha256": "38c023c31e5232f2cf96aa7d4752812febff266dea0f299262ec51761556149b",
+  "freeze_sha256": "23e9f6b02dbd688dde20525e2adc76e48a645df23ce16cd410db3c232e593b1f",
+  "receipt_sha256": "dc035ab9cb534de77d552df969203d3f362f8cd7e7a0f34d30b58c74abc8c42b",
+  "synthetic_tail_policy": "none",
+  "old_S_reference_parity_claimed": false,
+  "independent_gold_hours": 0
+}

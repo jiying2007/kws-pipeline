@@ -1,0 +1,36 @@
+{
+  "schema": "public-core-provenance-v1",
+  "records": [
+    {
+      "path": "core/joint_branch.py",
+      "source_sha256": "8353b299ec9002ab46f3b7fabad221d3d209ef445c4f1e6d0374c87a036c45d1",
+      "reuse": "byte-identical validated source",
+      "role": "reusable source core, not a standalone training or inference entry"
+    },
+    {
+      "path": "core/online_merge.py",
+      "source_sha256": "359697e535e80519a744e8969b26f50023ed99a3d3e7fe29a9ef7537fbd8d36a",
+      "reuse": "byte-identical validated source",
+      "role": "reusable source core, not a standalone training or inference entry"
+    },
+    {
+      "path": "core/timing_auxiliary.py",
+      "source_sha256": "752547c7552fad1912e788470320c7e548b233ff97507fdc4db612d12071cab8",
+      "reuse": "byte-identical validated source",
+      "role": "reusable source core, not a standalone training or inference entry"
+    },
+    {
+      "path": "core/event_state.py",
+      "source_sha256": "51e59007f75684ba4d962d4c7df04c9517ebca91789e0c339eaa1db6af31b08b",
+      "exported_span_sha256": "c00a4d5eca8582234a28917c77ee9272b0b79725e83e7f12a3c9c007e2fac714",
+      "source_line_range": [
+        41,
+        59
+      ],
+      "reuse": "exact class source span; unrelated data/schedule policy excluded"
+    }
+  ],
+  "private_source_paths_omitted": true,
+  "weights_included": false,
+  "runtime_validation": "Static and synthetic coverage plus separately reported L60 numeric consistency; no board acceptance."
+}

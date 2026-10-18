@@ -1,0 +1,582 @@
+{
+  "status": "completed_once_research_only",
+  "source_scope": "Previously model-unread fixed 1800-second mirror meeting excerpt; official transcript metadata; no acoustic gold labels",
+  "source_seconds": 1800,
+  "profiles": {
+    "OR_conservative": {
+      "B": 0.7,
+      "A_KW2": 0.85
+    },
+    "B_effect_priority": {
+      "B": 0.1
+    }
+  },
+  "CTC_conservative": {
+    "threshold": 0.7,
+    "duration_valid_candidates": 0,
+    "events": 0,
+    "threshold_rejections": 0
+  },
+  "CTC_effect_priority": {
+    "threshold": 0.1,
+    "duration_valid_candidates": 0,
+    "events": 0
+  },
+  "A_raw_events_by_keyword": [
+    0,
+    0
+  ],
+  "OR_events": 0,
+  "OR_suppressed": 0,
+  "profile_views": {
+    "B_conservative": {
+      "raw_real_events": [
+        0,
+        0
+      ],
+      "views": {
+        "native": {
+          "primary_transcript_conditioned": {
+            "eligible_seconds": 1800.0,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_row_clean": {
+            "eligible_seconds": 1798.6,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_window_clean": {
+            "eligible_seconds": 1794.9,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine": {
+            "eligible_seconds": 1479.98,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine_acoustic_window_clean": {
+            "eligible_seconds": 1474.88,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          }
+        },
+        "common": {
+          "primary_transcript_conditioned": {
+            "eligible_seconds": 1799.7,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_row_clean": {
+            "eligible_seconds": 1796.74,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_window_clean": {
+            "eligible_seconds": 1794.9,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine": {
+            "eligible_seconds": 1479.68,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine_acoustic_window_clean": {
+            "eligible_seconds": 1474.88,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          }
+        }
+      }
+    },
+    "B_effect_priority": {
+      "raw_real_events": [
+        0,
+        0
+      ],
+      "views": {
+        "native": {
+          "primary_transcript_conditioned": {
+            "eligible_seconds": 1800.0,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_row_clean": {
+            "eligible_seconds": 1798.6,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_window_clean": {
+            "eligible_seconds": 1794.9,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine": {
+            "eligible_seconds": 1479.98,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine_acoustic_window_clean": {
+            "eligible_seconds": 1474.88,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          }
+        },
+        "common": {
+          "primary_transcript_conditioned": {
+            "eligible_seconds": 1799.7,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_row_clean": {
+            "eligible_seconds": 1796.74,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_window_clean": {
+            "eligible_seconds": 1794.9,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine": {
+            "eligible_seconds": 1479.68,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine_acoustic_window_clean": {
+            "eligible_seconds": 1474.88,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          }
+        }
+      }
+    },
+    "A_KW2": {
+      "raw_real_events": [
+        0,
+        0
+      ],
+      "views": {
+        "native": {
+          "primary_transcript_conditioned": {
+            "eligible_seconds": 1799.7,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_row_clean": {
+            "eligible_seconds": 1796.74,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_window_clean": {
+            "eligible_seconds": 1796.74,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine": {
+            "eligible_seconds": 1501.22,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine_acoustic_window_clean": {
+            "eligible_seconds": 1498.26,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          }
+        },
+        "common": {
+          "primary_transcript_conditioned": {
+            "eligible_seconds": 1799.7,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_row_clean": {
+            "eligible_seconds": 1796.74,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_window_clean": {
+            "eligible_seconds": 1794.9,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine": {
+            "eligible_seconds": 1479.68,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine_acoustic_window_clean": {
+            "eligible_seconds": 1474.88,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          }
+        }
+      }
+    },
+    "OR_conservative": {
+      "raw_real_events": [
+        0,
+        0
+      ],
+      "views": {
+        "native": {
+          "primary_transcript_conditioned": {
+            "eligible_seconds": 1799.7,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_row_clean": {
+            "eligible_seconds": 1796.74,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_window_clean": {
+            "eligible_seconds": 1794.9,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine": {
+            "eligible_seconds": 1479.68,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine_acoustic_window_clean": {
+            "eligible_seconds": 1474.88,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          }
+        },
+        "common": {
+          "primary_transcript_conditioned": {
+            "eligible_seconds": 1799.7,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_row_clean": {
+            "eligible_seconds": 1796.74,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "acoustic_window_clean": {
+            "eligible_seconds": 1794.9,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine": {
+            "eligible_seconds": 1479.68,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          },
+          "unknown_marker_quarantine_acoustic_window_clean": {
+            "eligible_seconds": 1474.88,
+            "events": [
+              0,
+              0
+            ],
+            "conditional_operational_events_per_hour": [
+              0.0,
+              0.0
+            ],
+            "gold_FA_per_hour": null
+          }
+        }
+      }
+    }
+  },
+  "model_loads": 2,
+  "teacher_rows": 59999,
+  "auxiliary_head_rows": 59999,
+  "CTC_adapter_rows": 119998,
+  "CTC_beam_updates": 359742,
+  "CTC_windows": 2858,
+  "A_state_steps": 59991,
+  "merge_steps": 59999,
+  "synthetic_EOF_rows": 0,
+  "outer_wall_seconds": 507.4016623159987,
+  "sampled_process_tree_peak_rss_bytes": 264167424,
+  "gold_negative_seconds": 0,
+  "independent_gold_validation_hours": 0,
+  "limitations": [
+    "No target-positive recall measured in this meeting excerpt",
+    "Zero observed events is not natural FAR certification",
+    "The two CTC states were independently executed from the same original float32 posterior",
+    "The effect-priority threshold was fixed from previously exposed development curves before reading this meeting with the model",
+    "Core timing excludes the auxiliary head and merge; use total wall, not pure kernel cost",
+    "No SSC305 device qualification; no threshold retuning on this source"
+  ]
+}

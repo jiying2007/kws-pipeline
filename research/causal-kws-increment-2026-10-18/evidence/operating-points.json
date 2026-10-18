@@ -1,0 +1,473 @@
+{
+  "schema": "two-profile-research-operating-points-v1",
+  "status": "FIXED_RESEARCH_POINTS_NOT_PRODUCT_ACCEPTANCE",
+  "reference_clips": 26,
+  "positive_reference_counts": [
+    5,
+    6
+  ],
+  "one_vs_rest_weak_negative_reference_counts": [
+    21,
+    20
+  ],
+  "weak_reference_category_counts": {
+    "near": 9,
+    "ordinary": 2,
+    "incomplete_or_repeated": 4
+  },
+  "unknown_reference_count": 0,
+  "profiles": {
+    "ctc_conservative": {
+      "threshold": 0.7,
+      "existing_development_windows": {
+        "eof_plus150": {
+          "clips": 26,
+          "double_negative_events": 0,
+          "duplicate_events": 0,
+          "hits": [
+            4,
+            4
+          ],
+          "macro_recall": 0.7333333333333334,
+          "misses": [
+            1,
+            2
+          ],
+          "negative_clips": [
+            21,
+            20
+          ],
+          "negative_events": [
+            0,
+            0
+          ],
+          "negative_trigger_clips": [
+            0,
+            0
+          ],
+          "positive_clips": [
+            5,
+            6
+          ],
+          "wrong_keyword_events": 0
+        },
+        "eof_plus300": {
+          "clips": 26,
+          "double_negative_events": 0,
+          "duplicate_events": 0,
+          "hits": [
+            4,
+            4
+          ],
+          "macro_recall": 0.7333333333333334,
+          "misses": [
+            1,
+            2
+          ],
+          "negative_clips": [
+            21,
+            20
+          ],
+          "negative_events": [
+            0,
+            0
+          ],
+          "negative_trigger_clips": [
+            0,
+            0
+          ],
+          "positive_clips": [
+            5,
+            6
+          ],
+          "wrong_keyword_events": 0
+        },
+        "full": {
+          "clips": 26,
+          "double_negative_events": 0,
+          "duplicate_events": 0,
+          "hits": [
+            4,
+            4
+          ],
+          "macro_recall": 0.7333333333333334,
+          "misses": [
+            1,
+            2
+          ],
+          "negative_clips": [
+            21,
+            20
+          ],
+          "negative_events": [
+            0,
+            0
+          ],
+          "negative_trigger_clips": [
+            0,
+            0
+          ],
+          "positive_clips": [
+            5,
+            6
+          ],
+          "wrong_keyword_events": 0
+        },
+        "pre_eof": {
+          "clips": 26,
+          "double_negative_events": 0,
+          "duplicate_events": 0,
+          "hits": [
+            4,
+            4
+          ],
+          "macro_recall": 0.7333333333333334,
+          "misses": [
+            1,
+            2
+          ],
+          "negative_clips": [
+            21,
+            20
+          ],
+          "negative_events": [
+            0,
+            0
+          ],
+          "negative_trigger_clips": [
+            0,
+            0
+          ],
+          "positive_clips": [
+            5,
+            6
+          ],
+          "wrong_keyword_events": 0
+        }
+      }
+    },
+    "ctc_effect_priority": {
+      "threshold": 0.1,
+      "existing_development_windows": {
+        "eof_plus150": {
+          "clips": 26,
+          "double_negative_events": 3,
+          "duplicate_events": 0,
+          "hits": [
+            5,
+            6
+          ],
+          "macro_recall": 1.0,
+          "misses": [
+            0,
+            0
+          ],
+          "negative_clips": [
+            21,
+            20
+          ],
+          "negative_events": [
+            1,
+            2
+          ],
+          "negative_trigger_clips": [
+            1,
+            2
+          ],
+          "positive_clips": [
+            5,
+            6
+          ],
+          "wrong_keyword_events": 0
+        },
+        "eof_plus300": {
+          "clips": 26,
+          "double_negative_events": 3,
+          "duplicate_events": 0,
+          "hits": [
+            5,
+            6
+          ],
+          "macro_recall": 1.0,
+          "misses": [
+            0,
+            0
+          ],
+          "negative_clips": [
+            21,
+            20
+          ],
+          "negative_events": [
+            1,
+            2
+          ],
+          "negative_trigger_clips": [
+            1,
+            2
+          ],
+          "positive_clips": [
+            5,
+            6
+          ],
+          "wrong_keyword_events": 0
+        },
+        "full": {
+          "clips": 26,
+          "double_negative_events": 3,
+          "duplicate_events": 0,
+          "hits": [
+            5,
+            6
+          ],
+          "macro_recall": 1.0,
+          "misses": [
+            0,
+            0
+          ],
+          "negative_clips": [
+            21,
+            20
+          ],
+          "negative_events": [
+            1,
+            2
+          ],
+          "negative_trigger_clips": [
+            1,
+            2
+          ],
+          "positive_clips": [
+            5,
+            6
+          ],
+          "wrong_keyword_events": 0
+        },
+        "pre_eof": {
+          "clips": 26,
+          "double_negative_events": 3,
+          "duplicate_events": 0,
+          "hits": [
+            5,
+            5
+          ],
+          "macro_recall": 0.9166666666666667,
+          "misses": [
+            0,
+            1
+          ],
+          "negative_clips": [
+            21,
+            20
+          ],
+          "negative_events": [
+            1,
+            2
+          ],
+          "negative_trigger_clips": [
+            1,
+            2
+          ],
+          "positive_clips": [
+            5,
+            6
+          ],
+          "wrong_keyword_events": 0
+        }
+      },
+      "near_reference_events": 3,
+      "ordinary_reference_events": 0,
+      "incomplete_reference_events": 0,
+      "one_positive_needs_synthetic_tail_ms": 105
+    },
+    "conservative_OR_posthoc": {
+      "ctc_threshold": 0.7,
+      "head_keyword2_threshold": 0.85,
+      "head_keyword1_used": false,
+      "existing_development_windows": {
+        "eof_plus150": {
+          "clips": 26,
+          "double_negative_events": 0,
+          "duplicate_events": 0,
+          "events_before_285ms": 0,
+          "hits": [
+            4,
+            5
+          ],
+          "macro_recall": 0.8166666666666667,
+          "misses": [
+            1,
+            1
+          ],
+          "negative_clips": [
+            21,
+            20
+          ],
+          "negative_events": [
+            0,
+            0
+          ],
+          "negative_trigger_clips": [
+            0,
+            0
+          ],
+          "positive_clips": [
+            5,
+            6
+          ],
+          "unevaluable": [],
+          "unknown_clips": [
+            0,
+            0
+          ],
+          "unknown_events": [
+            0,
+            0
+          ],
+          "wrong_keyword_events": 0
+        },
+        "eof_plus300": {
+          "clips": 26,
+          "double_negative_events": 0,
+          "duplicate_events": 0,
+          "events_before_285ms": 0,
+          "hits": [
+            4,
+            5
+          ],
+          "macro_recall": 0.8166666666666667,
+          "misses": [
+            1,
+            1
+          ],
+          "negative_clips": [
+            21,
+            20
+          ],
+          "negative_events": [
+            0,
+            0
+          ],
+          "negative_trigger_clips": [
+            0,
+            0
+          ],
+          "positive_clips": [
+            5,
+            6
+          ],
+          "unevaluable": [],
+          "unknown_clips": [
+            0,
+            0
+          ],
+          "unknown_events": [
+            0,
+            0
+          ],
+          "wrong_keyword_events": 0
+        },
+        "full": {
+          "clips": 26,
+          "double_negative_events": 0,
+          "duplicate_events": 0,
+          "events_before_285ms": 0,
+          "hits": [
+            4,
+            5
+          ],
+          "macro_recall": 0.8166666666666667,
+          "misses": [
+            1,
+            1
+          ],
+          "negative_clips": [
+            21,
+            20
+          ],
+          "negative_events": [
+            0,
+            0
+          ],
+          "negative_trigger_clips": [
+            0,
+            0
+          ],
+          "positive_clips": [
+            5,
+            6
+          ],
+          "unevaluable": [],
+          "unknown_clips": [
+            0,
+            0
+          ],
+          "unknown_events": [
+            0,
+            0
+          ],
+          "wrong_keyword_events": 0
+        },
+        "pre_eof": {
+          "clips": 26,
+          "double_negative_events": 0,
+          "duplicate_events": 0,
+          "events_before_285ms": 0,
+          "hits": [
+            4,
+            5
+          ],
+          "macro_recall": 0.8166666666666667,
+          "misses": [
+            1,
+            1
+          ],
+          "negative_clips": [
+            21,
+            20
+          ],
+          "negative_events": [
+            0,
+            0
+          ],
+          "negative_trigger_clips": [
+            0,
+            0
+          ],
+          "positive_clips": [
+            5,
+            6
+          ],
+          "unevaluable": [],
+          "unknown_clips": [
+            0,
+            0
+          ],
+          "unknown_events": [
+            0,
+            0
+          ],
+          "wrong_keyword_events": 0
+        }
+      },
+      "additional_target_hits": 1,
+      "posthoc": true,
+      "new_model_or_decoder_calls": 0
+    }
+  },
+  "evidence_sha256": {
+    "existing_development_curve": "c66f3f762feedca83b21311630baa2700129769aa003c904d311a64c262cdf14",
+    "posthoc_OR_saved_event_analysis": "9ca1e0cf74d44b5b938a58b6c14e17fab30f9ca880c1c8e9aaef9e0824d0e709"
+  },
+  "limitations": [
+    "Development references were already exposed, historical or machine-weak; not gold or independent FRR/FAR.",
+    "The OR is a post-hoc complement on these same references, not a separately validated gain.",
+    "The .10 point trades three near-reference triggers for higher reference recall; .70 is the conservative point.",
+    "Shortclip probabilities were recomputed in float64. Continuous execution retains original float32; no bitwise equality claim.",
+    "Synthetic EOF-assisted development hits are separate from real-input hits; the new continuous experiment uses no synthetic tail.",
+    "Thresholds and checkpoints are not changed after observing the new continuous source."
+  ],
+  "model_sha256": "a366d9f5ebe7027a496e3f119debcf1e19d2f7a79226c96b31a4ddb3a2757f77",
+  "head_checkpoint_sha256": "12f97c535e122c0e097068243fdf49b5ebb9c7566ff7d9268129fee932334f74",
+  "device_validated": false,
+  "new_independent_gold_hours": 0
+}

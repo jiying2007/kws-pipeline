@@ -1,0 +1,59 @@
+{
+  "schema": "continuous-joint-prefix-diagnostic-v1",
+  "status": "EXECUTED_AND_INDEPENDENTLY_REVIEWED",
+  "source_seconds": 60,
+  "counts": {
+    "model_load_reserved": 2,
+    "model_load_completed": 2,
+    "fbank_reserved": 5998,
+    "fbank_completed": 5998,
+    "forward_reserved": 1999,
+    "forward_completed": 1999,
+    "softmax_reserved": 1999,
+    "softmax_completed": 1999,
+    "adapter_reserved": 1999,
+    "adapter_completed": 1999,
+    "head_forward_reserved": 1999,
+    "head_forward_completed": 1999,
+    "head_sigmoid_reserved": 1999,
+    "head_sigmoid_completed": 1999,
+    "head_state_reserved": 1991,
+    "head_state_completed": 1991,
+    "merge_reserved": 1999,
+    "merge_completed": 1999
+  },
+  "decoder_counts": {
+    "rows_decoded": 1999,
+    "beam_updates": 5871,
+    "windows_started": 48,
+    "candidates_seen": 0,
+    "events_emitted": 0
+  },
+  "events": {
+    "A": [
+      0,
+      0
+    ],
+    "OR": 0
+  },
+  "synthetic_EOF_rows": 0,
+  "exact_prefix_checks": {
+    "feature_rows": 1999,
+    "head_logit_rows": 1999,
+    "full_posterior_segments": 60
+  },
+  "runtime": {
+    "torch_intraop_threads": 2,
+    "interop_threads": 1,
+    "outer_wall_seconds": 16.065770066998084,
+    "sampled_process_tree_peak_rss_bytes": 262807552
+  },
+  "source_evidence_sha256": "17180481236f06bf0715029e5330898cbf7f99838c3f25ccb9ff5722be43bb13",
+  "execution_review_sha256": "cdc478093af8337b3828f07d64e2351f18618a6188df9ab44cd509bbf6a9a373",
+  "limitations": [
+    "Already-exposed zero-event prefix; not raw-positive end-to-end evidence.",
+    "Exactness concerns saved numeric prefixes; historical hidden state tensors were not saved.",
+    "Host resource observations include loading and auditing, not board or single-core benchmarks."
+  ],
+  "new_independent_gold_hours": 0
+}
