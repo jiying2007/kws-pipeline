@@ -230,6 +230,12 @@ jobs:
           python3 -S -B tests/test_language_conditioned_queue.py
           python3 -S -B -O tests/test_language_conditioned_queue.py
           python3 -S -B -OO tests/test_language_conditioned_queue.py
+          python3 -S -B tests/test_batch_weak_import.py
+          python3 -S -B -O tests/test_batch_weak_import.py
+          python3 -S -B -OO tests/test_batch_weak_import.py
+          python3 -S -B tests/test_batch_weak_import_integration.py
+          python3 -S -B -O tests/test_batch_weak_import_integration.py
+          python3 -S -B -OO tests/test_batch_weak_import_integration.py
       - name: Verify tracked worktree after Maintained speech data queue contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Maintained speech data queue contracts"'
       - name: GitHub hosted resource probe contract

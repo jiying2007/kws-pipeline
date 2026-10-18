@@ -140,7 +140,7 @@ def verify_qwen(raw, before, generation):
     return t
 
 
-def verify_sense(raw, parsed, receipt):
+def verify_sense(raw, parsed, receipt, *, emotion_ids=None):
     from sense_binding import CONTRACT_SHA256, TOKENIZER_SHA256, _contract
     require(raw['inference_arguments'] == {'language': 'zh', 'use_itn': False, 'text_norm': 'woitn',
             'fs': 16000, 'data_type': 'sound', 'output_timestamp': False, 'ban_emo_unk': False, 'device': 'cpu'},
@@ -164,7 +164,8 @@ def verify_sense(raw, parsed, receipt):
             'Sense token boundary/parser invalid')
     require(token['tokenizer'] == raw['tokenizer_identity'] == receipt['receipt']['tokenizer_identity']
             and token['tokenizer']['sha256'] == TOKENIZER_SHA256, 'Sense tokenizer identity mismatch')
-    emotion_ids = {'NEUTRAL': 25004, 'EMO_UNKNOWN': 25009}
+    if emotion_ids is None:
+        emotion_ids = {'NEUTRAL': 25004, 'EMO_UNKNOWN': 25009}
     metadata = parsed['metadata']
     require(type(metadata) is list and len(metadata) == 4 and metadata[1] in emotion_ids, 'unreviewed Sense metadata variant')
     require(ids == token['metadata_token_ids'] + token['lexical_token_ids'] and len(token['metadata_token_ids']) == 4
@@ -175,7 +176,7 @@ def verify_sense(raw, parsed, receipt):
     require(0 not in lexical and all(x < 25055 for x in ids), 'Sense lexical unknown/invalid token')
     extracted = _contract()['corrected_sense_extract'](decoded, lexical)
     require(extracted['quality_flags'] == [] and extracted['completeness'] == 'complete'
-            and all(extracted[k] == parsed[k] for k in ('raw_text','quality_flags','completeness')),
+            and all(extracted[k] == parsed[k] for k in ('raw_text','quality_flags','completeness','metadata')),
             'Sense parsed outcome mismatch')
     require(parsed['metadata'] == ['zh',metadata[1],'Speech','woitn'], 'Sense metadata mismatch')
     return extracted['raw_text']

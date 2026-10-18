@@ -18,6 +18,11 @@ EXACT = frozenset({
     'tools/import_language_conditioned_result.py',
     'tools/language_conditioned_vote.py',
     'tools/speech_history_evidence.py',
+    'docs/batch-weak-import.md',
+    'tests/test_batch_weak_import.py',
+    'tests/test_batch_weak_import_integration.py',
+    'tools/batch_weak_import.py',
+    'tools/batch-source-contract.json',
 })
 
 
