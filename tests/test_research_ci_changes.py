@@ -48,6 +48,27 @@ class ChangeSelectionTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
 
+    def test_conditioned_queue_selects_all_incremental_paths(self):
+        for path in ('docs/language-conditioned-weak-import.md', 'tests/test_language_conditioned_queue.py', 'tools/import_language_conditioned_result.py', 'tools/language_conditioned_vote.py', 'tools/speech_data_queue.py', 'tools/speech_history_evidence.py', 'training/weak_speech_dataset.py'):
+            with self.subTest(path=path):
+                self.assertTrue(changes.relevant([path]))
+
+    def test_conditioned_queue_ci_runs_three_modes_without_gate(self):
+        spec = importlib.util.spec_from_file_location('test_inventory', ROOT / 'tools/test_inventory.py')
+        inventory = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(inventory)
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text()
+        expected = {'python3 -S -B ' + mode + 'tests/test_language_conditioned_queue.py'
+                    for mode in ('', '-O ', '-OO ')}
+        seen = set()
+        for job, block, gated in inventory.run_blocks(workflow):
+            commands = set(line.strip() for line in block.splitlines())
+            matches = expected & commands
+            if matches:
+                self.assertFalse(gated)
+                seen.update(matches)
+        self.assertEqual(seen, expected)
+
     def test_full_pr_delta_against_first_merge_parent(self):
         self.git('checkout', '-b', 'topic')
         self.commit('research/synthetic.txt', 'a')

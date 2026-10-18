@@ -45,6 +45,16 @@ def load_examples(package: Path, *, feature_dim=32, frontend='logmel'):
                                 ('speaker_id', 'lineage_group'), ('split', 'split'), ('kind', 'actual_kind'), ('tokens', 'tokens')]:
             if row[field] != expected[original]:
                 raise ValueError('weak example differs from screened result')
+        # Conditioned metadata is label provenance, not optional decoration.
+        protocol = 'source-language-conditioned-asr-v1'
+        if protocol in expected.get('asr_protocols', []) or protocol in row.get('asr_protocols', []):
+            for field in ('asr_protocols', 'source_language_conditions', 'detected_language',
+                          'language_is_model_independent_observation', 'intended_text'):
+                if field not in row or field not in expected or row[field] != expected[field]:
+                    raise ValueError('conditioned weak provenance differs from screened result: ' + field)
+            if (row['detected_language'] is not None
+                    or row['language_is_model_independent_observation'] is not False):
+                raise ValueError('source-language conditioning is not independent language detection')
         path = (package / row['audio']).resolve(strict=True)
         if row['audio'] not in manifest or not path.is_relative_to(package):
             raise ValueError('audio not retained in package')

@@ -67,6 +67,13 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`speech_data_queue.py`](speech_data_queue.py) — Validate saved evidence, isolate uncertain items and export machine-weak research datasets.
 - [Research queue and weak-loader guide](../docs/speech-data-queue.md) — Research-only inputs; machine agreement is not human gold or product qualification.
 
+## Source-language-conditioned saved results
+
+- [`import_language_conditioned_result.py`](import_language_conditioned_result.py) — Preserve and import existing language-conditioned result archives offline.
+- [`language_conditioned_vote.py`](language_conditioned_vote.py) — Validate archived native token, prompt, source and PCM bindings.
+- [`speech_history_evidence.py`](speech_history_evidence.py) — Retain prior attempts and check bounded source-rights evidence.
+- [Language-conditioned weak-import guide](../docs/language-conditioned-weak-import.md) — Source language is supplied conditioning, not independent language detection; research weak labels only.
+
 ## Disabled research plan metadata
 
 - [`validate_parallel_candidate_plan.py`](validate_parallel_candidate_plan.py) checks the

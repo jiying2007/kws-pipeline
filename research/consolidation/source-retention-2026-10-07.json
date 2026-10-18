@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 58680,
-      "sha256": "56700df86b9800e0b6b54b8c59b829502444abe201d1bfe5fc0ad5f8cb613507",
-      "git_blob_sha1": "5705ea9ae6e767223491cbccb046cc92aea1addf"
+      "bytes": 58882,
+      "sha256": "41a4ed98ddc7d8345afdef273ab49166a8bdb15dadbfc0c5ba4af86fc4507ebb",
+      "git_blob_sha1": "508e348076ae42562ea57b3f68a3f4f95844dd21"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -38907,6 +38907,190 @@
             "bytes": 8971,
             "sha256": "271205de0e72f6270fe2c04499485e7365411347a2fead5e4047f110341bb7b5",
             "git_blob_sha1": "257429b87a621be7bc9a5a8f44e815a9ad4f37f5"
+          }
+        }
+      ]
+    },
+    {
+      "id": "language-conditioned-weak-import-20261017",
+      "date": "2026-10-17",
+      "base_commit": "91002304799adba99bd5a7c6b63a7f0b59b99232",
+      "workflow_source_changed": true,
+      "scope": "Offline language-conditioned saved-result import and research weak loader; extend existing synthetic CI contracts in three Python modes and current navigation.",
+      "rationale": "Public code, synthetic fixtures, documentation and exact source/CI identities only. Preserve all prior maintenance including PR599 navigation. No private audio, per-item results, model execution or training.",
+      "files": [
+        {
+          "path": "docs/language-conditioned-weak-import.md",
+          "before": null,
+          "after": {
+            "path": "docs/language-conditioned-weak-import.md",
+            "mode": "100644",
+            "bytes": 5475,
+            "sha256": "905d70ae75b4a197b655ede1687ca2d2dcb1cb2dc9f201fa2b70d38d8bcc4d01",
+            "git_blob_sha1": "6db9d00d54a418ae594702932e8ef50e22fec287"
+          }
+        },
+        {
+          "path": "tests/test_language_conditioned_queue.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_language_conditioned_queue.py",
+            "mode": "100644",
+            "bytes": 19607,
+            "sha256": "d49d29f3c79810795b809117ce346b5f6333413ade47674cfab52415f434732d",
+            "git_blob_sha1": "809cff63fe730386189e4f8297b3ed8ea055e29e"
+          }
+        },
+        {
+          "path": "tools/import_language_conditioned_result.py",
+          "before": null,
+          "after": {
+            "path": "tools/import_language_conditioned_result.py",
+            "mode": "100644",
+            "bytes": 4258,
+            "sha256": "ece451994b2ca97d04ec5de6dd82dd0918579f1c3e9f19f97559a37986c1a357",
+            "git_blob_sha1": "b29bde972cbfc2b350fcae322beb7a0a2a79fa28"
+          }
+        },
+        {
+          "path": "tools/language_conditioned_vote.py",
+          "before": null,
+          "after": {
+            "path": "tools/language_conditioned_vote.py",
+            "mode": "100644",
+            "bytes": 19251,
+            "sha256": "ff664c25118bde6328f622ef25b28a36f6a26b3862468fa215c32ef9e217030d",
+            "git_blob_sha1": "e36b81b516583272896aa236dcbe08ae21fb3693"
+          }
+        },
+        {
+          "path": "tools/speech_data_queue.py",
+          "before": {
+            "path": "tools/speech_data_queue.py",
+            "mode": "100644",
+            "bytes": 25374,
+            "sha256": "3d6f2efd03da3617737a033d75ea59e02adda34834b5ff5cbc7a31f26c1c9fb8",
+            "git_blob_sha1": "669f1878cf76d340fe572b62ed7f6d7d89b452cc"
+          },
+          "after": {
+            "path": "tools/speech_data_queue.py",
+            "mode": "100644",
+            "bytes": 29082,
+            "sha256": "1427bc8d557965a4a6155b8a071c15578aa964a7970205e7813689395be8b240",
+            "git_blob_sha1": "181c77d8a187da08c597b6b8c14f50bddefa7aa2"
+          }
+        },
+        {
+          "path": "tools/speech_history_evidence.py",
+          "before": null,
+          "after": {
+            "path": "tools/speech_history_evidence.py",
+            "mode": "100644",
+            "bytes": 6254,
+            "sha256": "90702c26cac2013eb1d20a79a2eea5851054b274282230ee796fe1fca7edb275",
+            "git_blob_sha1": "b529d5c74fbc490f05538dc4e7705f1115ecda23"
+          }
+        },
+        {
+          "path": "training/weak_speech_dataset.py",
+          "before": {
+            "path": "training/weak_speech_dataset.py",
+            "mode": "100644",
+            "bytes": 3931,
+            "sha256": "4eae57a8d4978d0ef27730806c9e4d3f26796b25bb20d7fbd92146d77928d6a6",
+            "git_blob_sha1": "d79a89064031fc20f595d507dc169a8e3943b2ca"
+          },
+          "after": {
+            "path": "training/weak_speech_dataset.py",
+            "mode": "100644",
+            "bytes": 4794,
+            "sha256": "a3e514c9db4ae4e43eecd393896e013ad245c5b204ed404ccfac6e741ac93232",
+            "git_blob_sha1": "5a7a0a263c943402f53ca410c870f7a567218a6a"
+          }
+        },
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 58680,
+            "sha256": "56700df86b9800e0b6b54b8c59b829502444abe201d1bfe5fc0ad5f8cb613507",
+            "git_blob_sha1": "5705ea9ae6e767223491cbccb046cc92aea1addf"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 58882,
+            "sha256": "41a4ed98ddc7d8345afdef273ab49166a8bdb15dadbfc0c5ba4af86fc4507ebb",
+            "git_blob_sha1": "508e348076ae42562ea57b3f68a3f4f95844dd21"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3086,
+            "sha256": "04b0fc55b24c3d3815bc982b44645b7f97beb91d9a341bf6c5a47581aa48985d",
+            "git_blob_sha1": "8cf396564c30fbccd80ba0e989dfe8ab67814cee"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3315,
+            "sha256": "28f6d0d8e659fe828a5a8b2007b8f132faf4bbcc35e4c136bc124de69600dea5",
+            "git_blob_sha1": "aac4197fa917d5660b77e406bca1574e5efac2be"
+          }
+        },
+        {
+          "path": "tests/test_research_ci_changes.py",
+          "before": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 7443,
+            "sha256": "02d7617754cebff3f51026a1c93817b531f950ee8c3f31c1cd7b0b22e5c74db1",
+            "git_blob_sha1": "9446e2b98417248d8196a37c825c1f45fdef5cb8"
+          },
+          "after": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 8738,
+            "sha256": "7dd1e87915fa6be9292dbda82aa61a80c71d20d78f7704bc0ad9b0960223d339",
+            "git_blob_sha1": "c3c608c9f29a8293b67fb3fcab390e1360d53d88"
+          }
+        },
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 11066,
+            "sha256": "a411faa3c7417d5c652dfae9667a3ca7c5bbd075b3c528673ca4152c84faaf58",
+            "git_blob_sha1": "4ccf80738e966d1e4e1590f2dc51bd966d5c2c5e"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 11735,
+            "sha256": "773dae1fa4427c42a690fb1c2a4117c7d0b90c6749aab76c56eb0482a201d3aa",
+            "git_blob_sha1": "c7afbb3fe8b36dab55c29344a859e59e290811bd"
+          }
+        },
+        {
+          "path": "docs/README.md",
+          "before": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 8971,
+            "sha256": "271205de0e72f6270fe2c04499485e7365411347a2fead5e4047f110341bb7b5",
+            "git_blob_sha1": "257429b87a621be7bc9a5a8f44e815a9ad4f37f5"
+          },
+          "after": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 9165,
+            "sha256": "43985563cd0fa849e3191ecaa7157cd780c9da0c54bd22b9a99e956fafe389e8",
+            "git_blob_sha1": "8358b0cc53b3a321197ea96b2354a7359742e53e"
           }
         }
       ]

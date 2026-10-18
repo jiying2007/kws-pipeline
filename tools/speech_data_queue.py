@@ -2,7 +2,8 @@
 """Offline maintained speech queue. Never imports runtimes, invokes or admits models.
 
 Inputs are supplied evidence, not authenticated execution/rights receipts. Outputs
-are machine candidates and proposed work only, never training admission or gold.
+are research-only machine candidates and proposed work, never product admission
+or human gold. The separate research weak loader can consume screened examples.
 """
 from __future__ import annotations
 
@@ -76,6 +77,10 @@ def validate(plan):
     for keyword in plan['keywords']:
         require(normalize(text(keyword)) == keyword, 'keywords must already be normalized')
     text(plan['tokens_path']); sha(plan['tokens_sha256'])
+    conditioned = any(r.get('protocol') == 'source-language-conditioned-asr-v1' for r in recognizers)
+    if conditioned:
+        require(all(r.get('protocol') == 'source-language-conditioned-asr-v1' for r in recognizers),
+                'cannot silently mix auto and language-conditioned votes')
     ids = set()
     require(isinstance(plan['items'], list) and bool(plan['items']), 'items required')
     for item in plan['items']:
@@ -97,6 +102,9 @@ def validate(plan):
         require(isinstance(item.get('rights'), dict), 'rights metadata required')
         require(item['rights'].get('research_use') in {'allowed', 'unknown', 'prohibited'}, 'rights decision required')
         text(item['rights']['path']); sha(item['rights']['sha256'])
+        if conditioned and item['source_kind'] in {'tts', 'clone'}:
+            require(item['rights'].get('review_schema') == 'internal-noncommercial-research-source-review-v1',
+                    'conditioned generated source requires bounded source-rights evidence')
     return canonical_hash(plan)
 
 
@@ -179,6 +187,11 @@ def generation_binding(item, history, audio, root):
 
 def native_vote(event, recognizer, audio, root):
     """Read saved native output; event-authored text never becomes a label."""
+    if event.get('protocol') == 'source-language-conditioned-asr-v1':
+        from language_conditioned_vote import native_vote as conditioned_vote
+        return conditioned_vote(event, recognizer, audio, root)
+    require(recognizer.get('protocol', 'anonymous-two-asr-raw-v1') == 'anonymous-two-asr-raw-v1',
+            'recognizer/event protocol mismatch')
     refs = {a['path']: a['sha256'] for a in event['raw_artifacts']}
     def read(field):
         path = event[field]
@@ -224,6 +237,12 @@ def evaluate(plan, events, root):
     plan_hash = validate(plan)
     histories = validate_events(plan, events, plan_hash)
     groups = lineage_groups(plan['items'])
+    from speech_history_evidence import load_history, verify_research_rights
+    historical, history_error = [], None
+    try:
+        historical = load_history(plan, root)
+    except (ValueError, KeyError, TypeError, OSError) as exc:
+        history_error = str(exc)
     token_path = confined(root, plan['tokens_path'])
     require(hashlib.sha256(token_path.read_bytes()).hexdigest() == plan['tokens_sha256'], 'token vocabulary changed')
     token_map = load_tokens(token_path)
@@ -247,16 +266,25 @@ def evaluate(plan, events, root):
             r = next(r for r in plan['recognizers'] if r['id'] == operation)
             task.update(model_sha256=r['model_sha256'], config_sha256=r['config_sha256'])
             task.pop('recipe_sha256')
+            if r.get('protocol') == 'source-language-conditioned-asr-v1':
+                task.update(protocol=r['protocol'],
+                    source_language_condition=r['protocol_config']['source_language_condition'],
+                    blindness_scope='target-text-blind-source-language-conditioned')
         tasks.append(task)
         remaining -= 1
     for item in plan['items']:
         group, conflict = groups[item['id']]
         row = {'item_id': item['id'], 'lineage_group': group, 'status': 'quarantine',
-               'machine_text': None, 'human_gold': False, 'product_training_admitted': False,
+               'machine_text': None, 'human_gold': False,
+               'intended_text': item['intended_text'], 'intent_kind': item['intent_kind'], 'product_training_admitted': False,
                'research_weak_allowed': False,
                'attempts': [{k: e[k] for k in ('operation', 'attempt', 'call_state', 'outcome')}
                             for e in events if e['item_id'] == item['id']]}
         rows.append(row)
+        row['historical_attempts'] = [{k: e[k] for k in ('operation', 'attempt', 'call_state', 'outcome')}
+                                    for e in historical if e['item_id'] == item['id']]
+        if history_error:
+            row['reason'] = 'historical_evidence_incomplete'; row['detail'] = history_error; continue
         if conflict:
             row['reason'] = 'lineage_split_conflict'; continue
         try:
@@ -289,7 +317,10 @@ def evaluate(plan, events, root):
             row['reason'] = 'audio_integrity'; row['detail'] = str(exc); continue
         if item['source_kind'] in {'tts', 'clone'}:
             try:
-                generation_binding(item, histories[(item['id'], 'generate')], audio, root)
+                generated = histories[(item['id'], 'generate')] or [e for e in historical
+                    if e['item_id'] == item['id'] and e['operation'] == 'generate']
+                generation_binding(item, generated, audio, root)
+                verify_research_rights(item, generated, audio, root)
             except (ValueError, KeyError, TypeError, OSError) as exc:
                 row['reason'] = 'generation_evidence_incomplete'; row['detail'] = str(exc); continue
         votes = []
@@ -308,6 +339,13 @@ def evaluate(plan, events, root):
                     row['native_evidence_error'] = True
             elif last['call_state'] == 'not_called' and not row.get('preflight_error'):
                 propose(item, recognizer['id'], audio)
+        row['normalized_asr_votes'] = votes[:]
+        protocols = [r.get('protocol', 'anonymous-two-asr-raw-v1') for r in primary]
+        row['asr_protocols'] = protocols
+        if 'source-language-conditioned-asr-v1' in protocols:
+            row['language_is_model_independent_observation'] = False
+            row['detected_language'] = None
+            row['source_language_conditions'] = [r.get('protocol_config', {}).get('source_language_condition') for r in primary]
         if len(votes) < 2:
             row['reason'] = 'primary_asr_incomplete'; continue
         if votes[0] != votes[1]:
@@ -372,6 +410,10 @@ def evaluate(plan, events, root):
                            'infra_failures': sum(e['outcome'] == 'infra_failure' for e in events),
                            'budget_exceeded': consumed > plan['call_budget'],
                            'remaining_after_proposals': remaining},
+            'historical_statistics': {'attempt_records': len(historical),
+                'known_calls': sum(e['call_state'] == 'called' for e in historical),
+                'infra_failures': sum(e['outcome'] == 'infra_failure' for e in historical),
+                'scope': 'preserved-prior-experiment-not-current-call-budget'},
             'authority': 'unverified-offline-machine-candidates-only'}
 
 
@@ -391,6 +433,8 @@ def capture(plan_path, events_path, root, output):
     refs = [(i.get('audio_path'), i.get('file_sha256')) for i in plan['items'] if i.get('audio_path')]
     refs += [(a['path'], a['sha256']) for e in events for a in e['raw_artifacts']]
     refs += [(plan['tokens_path'], plan['tokens_sha256'])]
+    refs += [(a['path'], a['sha256']) for a in plan.get('historical_evidence', {}).get('artifacts', [])]
+    refs += [(a['path'], a['sha256']) for i in plan['items'] for a in i['rights'].get('supporting_artifacts', [])]
     # Retain rights evidence, not multi-GB model assets. Their exact inventory
     # and expected digests remain in raw-plan.json; missing assets quarantine.
     for item in plan['items']:
@@ -427,7 +471,12 @@ def capture(plan_path, events_path, root, output):
                      'speaker_id': row['lineage_group'], 'source_id': row['item_id'],
                      'file_sha256': row['file_sha256'], 'pcm_sha256': row['pcm_sha256'],
                      'label_source': 'weak-machine-agreement', 'purpose': 'noncommercial-research-only',
-                     'human_gold': False, 'product_qualified': False})
+                     'human_gold': False, 'product_qualified': False,
+                     'intended_text': next(i['intended_text'] for i in plan['items'] if i['id'] == row['item_id']),
+                     'asr_protocols': row.get('asr_protocols', []),
+                     'source_language_conditions': row.get('source_language_conditions'),
+                     'detected_language': row.get('detected_language'),
+                     'language_is_model_independent_observation': row.get('language_is_model_independent_observation')})
     for name, rows in [('weak-train.jsonl', [r for r in weak if r['split'] == 'train']),
                        ('weak-heldout.jsonl', [r for r in weak if r['split'] != 'train']),
                        ('quarantine.jsonl', [r for r in report['items'] if r['status'] == 'quarantine']),
