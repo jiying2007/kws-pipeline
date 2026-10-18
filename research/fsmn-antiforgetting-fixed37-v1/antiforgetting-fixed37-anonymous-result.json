@@ -1,0 +1,1151 @@
+{
+  "schema": "fixed-B-single-pass-antiforgetting-aggregate-v1",
+  "status": "COMPLETED_NO_PROMOTION",
+  "model_source": "WeKWS FSMN-CTC 2599 output classes, frozen backbone with B-initialized final affine",
+  "base_model_sha256": "a366d9f5ebe7027a496e3f119debcf1e19d2f7a79226c96b31a4ddb3a2757f77",
+  "protocol": {
+    "post_evidence": true,
+    "training_unique": 146,
+    "presentations_per_arm": 148,
+    "steps_per_arm": 37,
+    "seed": 0,
+    "head_trainable_parameters": 366459,
+    "regularizer_lambda": {
+      "control": 0,
+      "treatment": 0.1
+    },
+    "base_competition_lambda": 0.1,
+    "regularizer": "teacher||student KL, half conditional nonblank distribution and half binary blank/nonblank distribution; T1; valid-frame mean per sample then batch mean",
+    "eval_cohorts": {
+      "exposed_development": 26,
+      "exposed_Cosy_protection": 12
+    },
+    "thresholds": [
+      0.1,
+      0.7
+    ],
+    "windows": "analytic body decision availability and cumulative body plus300ms synthetic suffix",
+    "no_checkpoint_or_threshold_selection": true,
+    "exact_training_eval_recording_overlap": 0,
+    "source_or_speaker_independence_claim": false
+  },
+  "results": {
+    "baseline": {
+      "same26": {
+        "0.1": {
+          "pre_eof": {
+            "clips": 26,
+            "positive_clips": [
+              5,
+              6
+            ],
+            "hits": [
+              5,
+              5
+            ],
+            "misses": [
+              0,
+              1
+            ],
+            "negative_clips": [
+              21,
+              20
+            ],
+            "negative_trigger_clips": [
+              1,
+              2
+            ],
+            "negative_events": [
+              1,
+              2
+            ],
+            "unknown_clips": [
+              0,
+              0
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.9166666666666667,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 3,
+            "events_before_285ms": 0
+          },
+          "eof_plus300": {
+            "clips": 26,
+            "positive_clips": [
+              5,
+              6
+            ],
+            "hits": [
+              5,
+              6
+            ],
+            "misses": [
+              0,
+              0
+            ],
+            "negative_clips": [
+              21,
+              20
+            ],
+            "negative_trigger_clips": [
+              1,
+              2
+            ],
+            "negative_events": [
+              1,
+              2
+            ],
+            "unknown_clips": [
+              0,
+              0
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 1.0,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 3,
+            "events_before_285ms": 0
+          }
+        },
+        "0.7": {
+          "pre_eof": {
+            "clips": 26,
+            "positive_clips": [
+              5,
+              6
+            ],
+            "hits": [
+              4,
+              4
+            ],
+            "misses": [
+              1,
+              2
+            ],
+            "negative_clips": [
+              21,
+              20
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              0,
+              0
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.7333333333333334,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          },
+          "eof_plus300": {
+            "clips": 26,
+            "positive_clips": [
+              5,
+              6
+            ],
+            "hits": [
+              4,
+              4
+            ],
+            "misses": [
+              1,
+              2
+            ],
+            "negative_clips": [
+              21,
+              20
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              0,
+              0
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.7333333333333334,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          }
+        }
+      },
+      "Cosy12_protection": {
+        "0.1": {
+          "pre_eof": {
+            "clips": 12,
+            "positive_clips": [
+              2,
+              2
+            ],
+            "hits": [
+              1,
+              0
+            ],
+            "misses": [
+              1,
+              2
+            ],
+            "negative_clips": [
+              5,
+              5
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              5,
+              5
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.25,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          },
+          "eof_plus300": {
+            "clips": 12,
+            "positive_clips": [
+              2,
+              2
+            ],
+            "hits": [
+              2,
+              2
+            ],
+            "misses": [
+              0,
+              0
+            ],
+            "negative_clips": [
+              5,
+              5
+            ],
+            "negative_trigger_clips": [
+              1,
+              0
+            ],
+            "negative_events": [
+              1,
+              0
+            ],
+            "unknown_clips": [
+              5,
+              5
+            ],
+            "unknown_events": [
+              1,
+              2
+            ],
+            "macro_recall": 1.0,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 1,
+            "events_before_285ms": 0
+          }
+        },
+        "0.7": {
+          "pre_eof": {
+            "clips": 12,
+            "positive_clips": [
+              2,
+              2
+            ],
+            "hits": [
+              1,
+              0
+            ],
+            "misses": [
+              1,
+              2
+            ],
+            "negative_clips": [
+              5,
+              5
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              5,
+              5
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.25,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          },
+          "eof_plus300": {
+            "clips": 12,
+            "positive_clips": [
+              2,
+              2
+            ],
+            "hits": [
+              2,
+              2
+            ],
+            "misses": [
+              0,
+              0
+            ],
+            "negative_clips": [
+              5,
+              5
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              5,
+              5
+            ],
+            "unknown_events": [
+              1,
+              0
+            ],
+            "macro_recall": 1.0,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          }
+        }
+      }
+    },
+    "control": {
+      "same26": {
+        "0.1": {
+          "pre_eof": {
+            "clips": 26,
+            "positive_clips": [
+              5,
+              6
+            ],
+            "hits": [
+              5,
+              5
+            ],
+            "misses": [
+              0,
+              1
+            ],
+            "negative_clips": [
+              21,
+              20
+            ],
+            "negative_trigger_clips": [
+              1,
+              2
+            ],
+            "negative_events": [
+              1,
+              2
+            ],
+            "unknown_clips": [
+              0,
+              0
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.9166666666666667,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 3,
+            "events_before_285ms": 0
+          },
+          "eof_plus300": {
+            "clips": 26,
+            "positive_clips": [
+              5,
+              6
+            ],
+            "hits": [
+              5,
+              5
+            ],
+            "misses": [
+              0,
+              1
+            ],
+            "negative_clips": [
+              21,
+              20
+            ],
+            "negative_trigger_clips": [
+              1,
+              2
+            ],
+            "negative_events": [
+              1,
+              2
+            ],
+            "unknown_clips": [
+              0,
+              0
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.9166666666666667,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 3,
+            "events_before_285ms": 0
+          }
+        },
+        "0.7": {
+          "pre_eof": {
+            "clips": 26,
+            "positive_clips": [
+              5,
+              6
+            ],
+            "hits": [
+              4,
+              4
+            ],
+            "misses": [
+              1,
+              2
+            ],
+            "negative_clips": [
+              21,
+              20
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              0,
+              0
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.7333333333333334,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          },
+          "eof_plus300": {
+            "clips": 26,
+            "positive_clips": [
+              5,
+              6
+            ],
+            "hits": [
+              4,
+              4
+            ],
+            "misses": [
+              1,
+              2
+            ],
+            "negative_clips": [
+              21,
+              20
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              0,
+              0
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.7333333333333334,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          }
+        }
+      },
+      "Cosy12_protection": {
+        "0.1": {
+          "pre_eof": {
+            "clips": 12,
+            "positive_clips": [
+              2,
+              2
+            ],
+            "hits": [
+              1,
+              0
+            ],
+            "misses": [
+              1,
+              2
+            ],
+            "negative_clips": [
+              5,
+              5
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              5,
+              5
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.25,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          },
+          "eof_plus300": {
+            "clips": 12,
+            "positive_clips": [
+              2,
+              2
+            ],
+            "hits": [
+              2,
+              2
+            ],
+            "misses": [
+              0,
+              0
+            ],
+            "negative_clips": [
+              5,
+              5
+            ],
+            "negative_trigger_clips": [
+              1,
+              0
+            ],
+            "negative_events": [
+              1,
+              0
+            ],
+            "unknown_clips": [
+              5,
+              5
+            ],
+            "unknown_events": [
+              1,
+              2
+            ],
+            "macro_recall": 1.0,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 1,
+            "events_before_285ms": 0
+          }
+        },
+        "0.7": {
+          "pre_eof": {
+            "clips": 12,
+            "positive_clips": [
+              2,
+              2
+            ],
+            "hits": [
+              1,
+              0
+            ],
+            "misses": [
+              1,
+              2
+            ],
+            "negative_clips": [
+              5,
+              5
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              5,
+              5
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.25,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          },
+          "eof_plus300": {
+            "clips": 12,
+            "positive_clips": [
+              2,
+              2
+            ],
+            "hits": [
+              2,
+              2
+            ],
+            "misses": [
+              0,
+              0
+            ],
+            "negative_clips": [
+              5,
+              5
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              5,
+              5
+            ],
+            "unknown_events": [
+              1,
+              0
+            ],
+            "macro_recall": 1.0,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          }
+        }
+      }
+    },
+    "treatment": {
+      "same26": {
+        "0.1": {
+          "pre_eof": {
+            "clips": 26,
+            "positive_clips": [
+              5,
+              6
+            ],
+            "hits": [
+              5,
+              5
+            ],
+            "misses": [
+              0,
+              1
+            ],
+            "negative_clips": [
+              21,
+              20
+            ],
+            "negative_trigger_clips": [
+              1,
+              2
+            ],
+            "negative_events": [
+              1,
+              2
+            ],
+            "unknown_clips": [
+              0,
+              0
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.9166666666666667,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 3,
+            "events_before_285ms": 0
+          },
+          "eof_plus300": {
+            "clips": 26,
+            "positive_clips": [
+              5,
+              6
+            ],
+            "hits": [
+              5,
+              5
+            ],
+            "misses": [
+              0,
+              1
+            ],
+            "negative_clips": [
+              21,
+              20
+            ],
+            "negative_trigger_clips": [
+              1,
+              2
+            ],
+            "negative_events": [
+              1,
+              2
+            ],
+            "unknown_clips": [
+              0,
+              0
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.9166666666666667,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 3,
+            "events_before_285ms": 0
+          }
+        },
+        "0.7": {
+          "pre_eof": {
+            "clips": 26,
+            "positive_clips": [
+              5,
+              6
+            ],
+            "hits": [
+              4,
+              4
+            ],
+            "misses": [
+              1,
+              2
+            ],
+            "negative_clips": [
+              21,
+              20
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              0,
+              0
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.7333333333333334,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          },
+          "eof_plus300": {
+            "clips": 26,
+            "positive_clips": [
+              5,
+              6
+            ],
+            "hits": [
+              4,
+              4
+            ],
+            "misses": [
+              1,
+              2
+            ],
+            "negative_clips": [
+              21,
+              20
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              0,
+              0
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.7333333333333334,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          }
+        }
+      },
+      "Cosy12_protection": {
+        "0.1": {
+          "pre_eof": {
+            "clips": 12,
+            "positive_clips": [
+              2,
+              2
+            ],
+            "hits": [
+              1,
+              0
+            ],
+            "misses": [
+              1,
+              2
+            ],
+            "negative_clips": [
+              5,
+              5
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              5,
+              5
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.25,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          },
+          "eof_plus300": {
+            "clips": 12,
+            "positive_clips": [
+              2,
+              2
+            ],
+            "hits": [
+              2,
+              2
+            ],
+            "misses": [
+              0,
+              0
+            ],
+            "negative_clips": [
+              5,
+              5
+            ],
+            "negative_trigger_clips": [
+              1,
+              0
+            ],
+            "negative_events": [
+              1,
+              0
+            ],
+            "unknown_clips": [
+              5,
+              5
+            ],
+            "unknown_events": [
+              1,
+              2
+            ],
+            "macro_recall": 1.0,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 1,
+            "events_before_285ms": 0
+          }
+        },
+        "0.7": {
+          "pre_eof": {
+            "clips": 12,
+            "positive_clips": [
+              2,
+              2
+            ],
+            "hits": [
+              1,
+              0
+            ],
+            "misses": [
+              1,
+              2
+            ],
+            "negative_clips": [
+              5,
+              5
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              5,
+              5
+            ],
+            "unknown_events": [
+              0,
+              0
+            ],
+            "macro_recall": 0.25,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          },
+          "eof_plus300": {
+            "clips": 12,
+            "positive_clips": [
+              2,
+              2
+            ],
+            "hits": [
+              2,
+              2
+            ],
+            "misses": [
+              0,
+              0
+            ],
+            "negative_clips": [
+              5,
+              5
+            ],
+            "negative_trigger_clips": [
+              0,
+              0
+            ],
+            "negative_events": [
+              0,
+              0
+            ],
+            "unknown_clips": [
+              5,
+              5
+            ],
+            "unknown_events": [
+              1,
+              0
+            ],
+            "macro_recall": 1.0,
+            "duplicate_events": 0,
+            "wrong_keyword_events": 0,
+            "double_negative_events": 0,
+            "events_before_285ms": 0
+          }
+        }
+      }
+    }
+  },
+  "trace_statistics": {
+    "control": {
+      "base_loss": {
+        "min": 0.9866095185279846,
+        "max": 7.766812324523926,
+        "mean": 3.476714532117586,
+        "final": 2.8776473999023438
+      },
+      "full_ctc": {
+        "min": 0.9754395484924316,
+        "max": 7.766812324523926,
+        "mean": 3.469495145050255,
+        "final": 2.8776473999023438
+      },
+      "competition": {
+        "min": 0.0,
+        "max": 0.9548187255859375,
+        "mean": 0.07219389826059341,
+        "final": 0.0
+      },
+      "KL_nonblank": {
+        "min": 0.0,
+        "max": 0.008089395239949226,
+        "mean": 0.0027092415360597,
+        "final": 0.007161798886954784
+      },
+      "KL_binary": {
+        "min": 0.0,
+        "max": 0.000781700829975307,
+        "mean": 0.00029210968635173205,
+        "final": 0.000781700829975307
+      },
+      "regularizer": {
+        "min": 0.0,
+        "max": 0.004320402629673481,
+        "mean": 0.0015006756084649416,
+        "final": 0.003971749916672707
+      },
+      "total": {
+        "min": 0.9866095185279846,
+        "max": 7.766812324523926,
+        "mean": 3.476714532117586,
+        "final": 2.8776473999023438
+      },
+      "gradient_norm_before_clip": {
+        "min": 3.822751522064209,
+        "max": 25.792842864990234,
+        "mean": 15.461079301060858,
+        "final": 15.25082015991211
+      },
+      "clipped_steps": 36,
+      "regularizer_gradient_separately_measured": false,
+      "weighted_regularizer_scalar_mean": 0.0
+    },
+    "treatment": {
+      "base_loss": {
+        "min": 0.9865947961807251,
+        "max": 7.76690673828125,
+        "mean": 3.4767701529167794,
+        "final": 2.877932548522949
+      },
+      "full_ctc": {
+        "min": 0.9754273295402527,
+        "max": 7.76690673828125,
+        "mean": 3.469551197580389,
+        "final": 2.877932548522949
+      },
+      "competition": {
+        "min": 0.0,
+        "max": 0.9548187255859375,
+        "mean": 0.07218968324564598,
+        "final": 0.0
+      },
+      "KL_nonblank": {
+        "min": 0.0,
+        "max": 0.006721880752593279,
+        "mean": 0.0023079544026168644,
+        "final": 0.005805361550301313
+      },
+      "KL_binary": {
+        "min": 0.0,
+        "max": 0.0007789115188643336,
+        "mean": 0.0002913673660677395,
+        "final": 0.0007789115188643336
+      },
+      "regularizer": {
+        "min": 0.0,
+        "max": 0.0036359273362904787,
+        "mean": 0.0012996608912618358,
+        "final": 0.0032921365927904844
+      },
+      "total": {
+        "min": 0.9867843985557556,
+        "max": 7.7669997215271,
+        "mean": 3.4769001055408166,
+        "final": 2.8782618045806885
+      },
+      "gradient_norm_before_clip": {
+        "min": 3.823395252227783,
+        "max": 25.799039840698242,
+        "mean": 15.460956998773524,
+        "final": 15.24878215789795
+      },
+      "clipped_steps": 36,
+      "regularizer_gradient_separately_measured": false,
+      "weighted_regularizer_scalar_mean": 0.0001299660891261836
+    }
+  },
+  "decision": "Keep original B. Both new heads lost the same previously detected target at0.1 in the300ms tail window. The fixed lambda0.1 treatment showed no discrete gain over control. Both preserved Cosy protection in this short single-pass recipe; preservation cannot be attributed to regularization. No model promotion or additional parameter search.",
+  "limitations": [
+    "Old training mix was changed equally for both arms to one pass; do not attribute differences versus earlier220-step runs only to regularization.",
+    "Cosy positive references include two historically human-confirmed synthetic recordings and two machine-weak references; unknowns are excluded from negative denominators.",
+    "KL scalars and total gradient norm were recorded; separate KL gradient contributions were not measured.",
+    "Previously exposed development data, no independent natural-speaker acceptance, continuous false-alarms/hour or device validation."
+  ]
+}

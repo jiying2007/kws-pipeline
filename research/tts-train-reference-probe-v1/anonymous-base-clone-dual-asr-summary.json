@@ -1,0 +1,156 @@
+{
+  "schema": "anonymous-base-clone-dual-asr-technical-summary-v1",
+  "date": "2026-10-18",
+  "scope": "public aggregate technical evidence only",
+  "planned_audio_denominator": 16,
+  "reference_groups": 4,
+  "source_lineage_scope": "AISHELL3 train-only reference groups from a third-party mirror, not official-byte verified; historical speaker exposure UNKNOWN; no independent-speaker holdout claim",
+  "tts": {
+    "model": "Qwen3-TTS-12Hz-0.6B-Base",
+    "model_loads": 1,
+    "reference_preparations_completed": 4,
+    "generations_completed": 16,
+    "valid_pcm_outputs": 16,
+    "eos_and_native_tail_binding_verified": true,
+    "target_based_cropping": false,
+    "wall_seconds": 262.4115735219966,
+    "sampled_cpu_seconds": 886.71,
+    "sampled_peak_rss_bytes": 5922041856,
+    "cleanup_verified": true,
+    "original_evidence_preserved": true,
+    "legacy_summary_count_defect": "Generic reserved_calls field retained an incorrect value of8;16 completed generations verified independently; original artifact unchanged.",
+    "original_total_disk_budget_pass": false,
+    "disk_budget_exception": "Original32MiB total incremental allocation omitted archive duplication. A subsequent82MiB delivery-peak amendment permitted retaining and delivering originals; it does not make the original total budget compliant."
+  },
+  "asr": {
+    "independent_model_families": [
+      "Qwen3-ASR-0.6B",
+      "SenseVoiceSmall"
+    ],
+    "statistically_independent_errors_claimed": false,
+    "model_loads": 2,
+    "recognition_calls": 32,
+    "completed_outputs": 32,
+    "unknown_consumptions_or_completions": 0,
+    "retries": 0,
+    "third_decoder_calls": 0,
+    "text_or_hotword_hints": false,
+    "language_conditions_only": true,
+    "native_raw_evidence_retained": true,
+    "normalization": "Unicode punctuation and whitespace removal only; no homophone, character or lexical substitution",
+    "strict_raw_full_text_agreement": 0,
+    "normalized_full_text_agreement": 14,
+    "normalized_agreement_matching_requested_text": 14,
+    "agreement_off_requested_text": 0,
+    "disagreement_quarantined": 2,
+    "planned_audio_denominator": 16,
+    "by_requested_class": [
+      {
+        "requested_text": "你好小窝",
+        "denominator": 4,
+        "agreement_matching_requested_text": 4,
+        "agreement_off_intent": 0,
+        "disagreements": 0
+      },
+      {
+        "requested_text": "小窝小窝",
+        "denominator": 4,
+        "agreement_matching_requested_text": 4,
+        "agreement_off_intent": 0,
+        "disagreements": 0
+      },
+      {
+        "requested_text": "你好小屋",
+        "denominator": 4,
+        "agreement_matching_requested_text": 2,
+        "agreement_off_intent": 0,
+        "disagreements": 2
+      },
+      {
+        "requested_text": "小屋小屋",
+        "denominator": 4,
+        "agreement_matching_requested_text": 4,
+        "agreement_off_intent": 0,
+        "disagreements": 0
+      }
+    ],
+    "anonymized_reference_coverage": [
+      {
+        "group": "reference_group_1",
+        "planned": 4,
+        "agreement_matching_requested_text": 4,
+        "disagreement_quarantined": 0
+      },
+      {
+        "group": "reference_group_2",
+        "planned": 4,
+        "agreement_matching_requested_text": 3,
+        "disagreement_quarantined": 1
+      },
+      {
+        "group": "reference_group_3",
+        "planned": 4,
+        "agreement_matching_requested_text": 4,
+        "disagreement_quarantined": 0
+      },
+      {
+        "group": "reference_group_4",
+        "planned": 4,
+        "agreement_matching_requested_text": 3,
+        "disagreement_quarantined": 1
+      }
+    ],
+    "stages": [
+      {
+        "family": "qwen3_asr_0_6b",
+        "load_count": 1,
+        "recognitions_completed": 16,
+        "wall_seconds": 370.73388940197765,
+        "sampled_cpu_seconds": 368.64,
+        "sampled_peak_rss_bytes": 6282051584,
+        "original_supervisor_leader_reaped": true,
+        "original_supervisor_live_processes_after": 0
+      },
+      {
+        "family": "sensevoice_small",
+        "load_count": 1,
+        "recognitions_completed": 16,
+        "wall_seconds": 60.784341399004916,
+        "sampled_cpu_seconds": 59.57,
+        "sampled_peak_rss_bytes": 2466578432,
+        "original_supervisor_leader_reaped": true,
+        "original_supervisor_live_processes_after": 0
+      }
+    ],
+    "stage_output_and_process_log_cap_bytes": 8388608,
+    "declared_new_local_peak_allocation_bytes": 96128192,
+    "disk_free_floor_bytes": 2147483648,
+    "all_result_readbacks_verified": true,
+    "all_model_process_cleanup_verified": true
+  },
+  "interpretation": {
+    "label_strength": "machine weak evidence only",
+    "agreement_is_truth": false,
+    "human_gold": false,
+    "training_admitted": false,
+    "product_acceptance": false,
+    "independent_evaluation_claim": false,
+    "word_or_event_timing_truth_established": false,
+    "two_disagreements_quarantined_without_correction": true,
+    "limitations": [
+      "Small four-reference pilot, not a general accuracy estimate.",
+      "Shared Mandarin language prior and related TTS/ASR vendor family can correlate errors.",
+      "CPU/RSS/output monitoring is sampled process-group supervision, not a hard cgroup/filesystem quota.",
+      "Original TTS count and total-disk accounting defects remain disclosed.",
+      "Third-party mirror source; official distribution byte equivalence unverified; historical speaker exposure UNKNOWN."
+    ]
+  },
+  "privacy": {
+    "individual_reference_ids_included": false,
+    "individual_transcripts_included": false,
+    "audio_or_audio_hashes_included": false,
+    "private_paths_or_library_ids_included": false,
+    "weights_or_credentials_included": false
+  },
+  "companion_markdown": "ANONYMOUS-SUMMARY.md"
+}

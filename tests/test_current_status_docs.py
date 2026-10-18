@@ -34,7 +34,7 @@ class CurrentStatusDocs(unittest.TestCase):
                 self.assertIn(term, current)
         self.assertIn('历史五 token SKU', current)
         self.assertIn('两个新头均不晋升', current)
-        self.assertIn('完整 C B/OR 链未集成', current)
+        self.assertIn('OR 链未集成', current)
 
     def test_receipts_are_merge_scoped_and_history_is_marked(self):
         text = self.text(STATUS)

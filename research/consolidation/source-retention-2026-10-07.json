@@ -41073,6 +41073,134 @@
           }
         }
       ]
+    },
+    {
+      "id": "fixed37-and-train-reference-diagnostics-20261018",
+      "date": "2026-10-18",
+      "base_commit": "98a924797e0835e44a2231aa1dfc57e73cfe5ef9",
+      "base_tree": "692f6eb2568be63e804047595e1b067527b89f35",
+      "workflow_source_changed": false,
+      "scope": "Retain six reviewed public research files: fixed37 continuation/control versus teacher-KL aggregate and executed arithmetic excerpt, anonymous train-reference TTS/dual-ASR screening, and official-head versus B synthetic16 diagnostics. Correct the existing current-status entry for merged B C research integration and link these diagnostics; preserve historical snapshots.",
+      "rationale": "No new model execution or training in publication. Neither fixed37 head is promoted; 14 weak matched labels and two quarantines are not automatic training admission. Preserve historical TTS count and archive-budget defects, source/speaker exposure unknown, unknown-label event separately, and offline body/+300ms analysis boundaries. No private audio, weights, per-record transcripts, identifiers or private delivery manifests. Existing CI remains unchanged; no isolated helper functions or experiment-specific workflow added.",
+      "files": [
+        {
+          "path": "docs/KWS_LANDING_STATUS.md",
+          "before": {
+            "path": "docs/KWS_LANDING_STATUS.md",
+            "mode": "100644",
+            "bytes": 21471,
+            "sha256": "8e976aa58ed8c4a06e20af2380a7a214973c543cc364663912e5a43923610e5a",
+            "git_blob_sha1": "62e3755a442c4784fb91bba5c6d59590efc1e698"
+          },
+          "after": {
+            "path": "docs/KWS_LANDING_STATUS.md",
+            "mode": "100644",
+            "bytes": 23576,
+            "sha256": "d7da77a0f89d3429855dfd80b44a5c7ef812ffdcf4f0c10fabca5dfe81315cdd",
+            "git_blob_sha1": "6766005b794c0c98b484557c5ec7356d9dd708aa"
+          }
+        },
+        {
+          "path": "research/README.md",
+          "before": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 18826,
+            "sha256": "a46a3a8280ec004dcc29872534847c340094907d2a086460f6374e3460ce8b72",
+            "git_blob_sha1": "65305380b5bf961de4db437d2f91a06083ae7d36"
+          },
+          "after": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 19064,
+            "sha256": "5762c95de0473454123ddb8546ff71dbf6ae5f4a34deec868868cba0b98f3bc3",
+            "git_blob_sha1": "bc1f4982739098de03b388cdd469fa2d632065b0"
+          }
+        },
+        {
+          "path": "research/fsmn-antiforgetting-fixed37-v1/antiforgetting-fixed37-anonymous-result.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-antiforgetting-fixed37-v1/antiforgetting-fixed37-anonymous-result.json",
+            "mode": "100644",
+            "bytes": 27023,
+            "sha256": "f565667e6a3879920027eedb5f6afa8cd76fa7daa12445e638a77436590e219b",
+            "git_blob_sha1": "d309a2fdf5db00fc2fecaea1248caadcffb2f6b5"
+          }
+        },
+        {
+          "path": "research/fsmn-antiforgetting-fixed37-v1/fixed_teacher_regularizer.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-antiforgetting-fixed37-v1/fixed_teacher_regularizer.py",
+            "mode": "100644",
+            "bytes": 835,
+            "sha256": "e0f3aaf659ca269e8c2ab279ac6ef75e84a3ab57df9871fd4581da63805e98c5",
+            "git_blob_sha1": "56df62bfce204c6ce55d16afb629973a148e500a"
+          }
+        },
+        {
+          "path": "research/fsmn-official-vs-b-synthetic16-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-official-vs-b-synthetic16-v1/README.md",
+            "mode": "100644",
+            "bytes": 1676,
+            "sha256": "21d7e36a2c5f21550c69c90c0caab9d29bd234825078a137397847fe5e68b1f6",
+            "git_blob_sha1": "bd38653330b1750c1553e805e9e6d089fda7ded0"
+          }
+        },
+        {
+          "path": "research/fsmn-official-vs-b-synthetic16-v1/official-vs-b-synthetic16-result.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-official-vs-b-synthetic16-v1/official-vs-b-synthetic16-result.json",
+            "mode": "100644",
+            "bytes": 6452,
+            "sha256": "0fe052009d98a909ddcb9cc2730aa74e3092b61d7b7eca36e49350d3f97f845a",
+            "git_blob_sha1": "8c63c96a4fce2a21fa261ddaf7910b34c717b1e7"
+          }
+        },
+        {
+          "path": "research/tts-train-reference-probe-v1/ANONYMOUS-SUMMARY.md",
+          "before": null,
+          "after": {
+            "path": "research/tts-train-reference-probe-v1/ANONYMOUS-SUMMARY.md",
+            "mode": "100644",
+            "bytes": 3149,
+            "sha256": "ac8b8df9cc08caf9fb4a8df8c85494c6a7886377dc745df9abf6d789b6836e3e",
+            "git_blob_sha1": "9f543af0cc6c709fc50e535e4793491dcd708736"
+          }
+        },
+        {
+          "path": "research/tts-train-reference-probe-v1/anonymous-base-clone-dual-asr-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/tts-train-reference-probe-v1/anonymous-base-clone-dual-asr-summary.json",
+            "mode": "100644",
+            "bytes": 5798,
+            "sha256": "3622f28557eb33e33aef9765e2202199f11b8403c965d26416c3e93415ef18e6",
+            "git_blob_sha1": "ca3732ea8b402b11c69aa518e6d032997414e0f3"
+          }
+        },
+        {
+          "path": "tests/test_current_status_docs.py",
+          "before": {
+            "path": "tests/test_current_status_docs.py",
+            "mode": "100644",
+            "bytes": 2740,
+            "sha256": "a7dbb0dc2f135d8a2f739fd3ebe4c82b9caa2a4e27460988f04106a740b561b9",
+            "git_blob_sha1": "5a9de948a87535dfc31411d3272acf0137fa0ba9"
+          },
+          "after": {
+            "path": "tests/test_current_status_docs.py",
+            "mode": "100644",
+            "bytes": 2729,
+            "sha256": "b11c44572d5acf17500e03840f07275ac3b0afe43f1b0e0f0cb973a249a86e28",
+            "git_blob_sha1": "a312a1217ed56805834f653cbdaec5fff904620a"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

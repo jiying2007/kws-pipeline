@@ -1,0 +1,242 @@
+{
+  "schema": "official-vs-adapted-head-synthetic16-fixed-diagnostic-v1",
+  "description": "Fixed current decoder and shared frozen encoder compare original official head with existing B head; no training. Results are synthetic train-only development diagnostics, not independent generalization or promotion.",
+  "label_evidence": {
+    "total_inputs": 16,
+    "weak_target_clips": 8,
+    "weak_near_clips": 6,
+    "ASR_disagreement_clips": 2,
+    "human_gold": false,
+    "selection_by_KWS": false,
+    "label_method": "two blind ASR transcripts agree after punctuation/whitespace normalization; disagreement stays unknown",
+    "reference_source": "four train-only reference recordings from third-party mirror; not byte-verified against official release",
+    "historical_speaker_exposure": "UNKNOWN"
+  },
+  "protocol": {
+    "thresholds": [
+      0.1,
+      0.7
+    ],
+    "tail_ms": 300,
+    "frontend": "original Kaldi80, 25ms/10ms, context2+2, stride3; full-clip offline with per-clip empty FSMN caches",
+    "windows": "pre_eof and eof_plus300 use 30*decision_row+45ms analytical index; right context means this is not online availability or a separate body-only forward",
+    "comparison": "identical current threshold-before-refractory decoder; not original historical feasibility decoder",
+    "head_classes": 2599,
+    "shared_non_head_tensors": 28,
+    "changed_head_tensors": 2,
+    "threshold_search": false
+  },
+  "models": {
+    "official_checkpoint_sha256": "d3d89b5dde08c2926d46a97eab6f7179a87b1946ccebd16c02e77042ea8389fe",
+    "adapted_B_checkpoint_sha256": "a366d9f5ebe7027a496e3f119debcf1e19d2f7a79226c96b31a4ddb3a2757f77"
+  },
+  "results": [
+    {
+      "model": "official",
+      "threshold": 0.1,
+      "window": "pre_eof",
+      "target_hits": [
+        1,
+        0
+      ],
+      "target_denominator": [
+        4,
+        4
+      ],
+      "near_denominator": 6,
+      "near_trigger_clips": 0,
+      "near_events": 0,
+      "unknown_denominator": 2,
+      "unknown_trigger_clips": 0,
+      "unknown_events": 0,
+      "wrong_keyword_events": 0,
+      "duplicates": 0,
+      "unevaluable": []
+    },
+    {
+      "model": "official",
+      "threshold": 0.1,
+      "window": "eof_plus300",
+      "target_hits": [
+        3,
+        2
+      ],
+      "target_denominator": [
+        4,
+        4
+      ],
+      "near_denominator": 6,
+      "near_trigger_clips": 0,
+      "near_events": 0,
+      "unknown_denominator": 2,
+      "unknown_trigger_clips": 0,
+      "unknown_events": 0,
+      "wrong_keyword_events": 0,
+      "duplicates": 0,
+      "unevaluable": []
+    },
+    {
+      "model": "official",
+      "threshold": 0.7,
+      "window": "pre_eof",
+      "target_hits": [
+        0,
+        0
+      ],
+      "target_denominator": [
+        4,
+        4
+      ],
+      "near_denominator": 6,
+      "near_trigger_clips": 0,
+      "near_events": 0,
+      "unknown_denominator": 2,
+      "unknown_trigger_clips": 0,
+      "unknown_events": 0,
+      "wrong_keyword_events": 0,
+      "duplicates": 0,
+      "unevaluable": []
+    },
+    {
+      "model": "official",
+      "threshold": 0.7,
+      "window": "eof_plus300",
+      "target_hits": [
+        0,
+        0
+      ],
+      "target_denominator": [
+        4,
+        4
+      ],
+      "near_denominator": 6,
+      "near_trigger_clips": 0,
+      "near_events": 0,
+      "unknown_denominator": 2,
+      "unknown_trigger_clips": 0,
+      "unknown_events": 0,
+      "wrong_keyword_events": 0,
+      "duplicates": 0,
+      "unevaluable": []
+    },
+    {
+      "model": "B",
+      "threshold": 0.1,
+      "window": "pre_eof",
+      "target_hits": [
+        1,
+        0
+      ],
+      "target_denominator": [
+        4,
+        4
+      ],
+      "near_denominator": 6,
+      "near_trigger_clips": 0,
+      "near_events": 0,
+      "unknown_denominator": 2,
+      "unknown_trigger_clips": 0,
+      "unknown_events": 0,
+      "wrong_keyword_events": 0,
+      "duplicates": 0,
+      "unevaluable": []
+    },
+    {
+      "model": "B",
+      "threshold": 0.1,
+      "window": "eof_plus300",
+      "target_hits": [
+        4,
+        4
+      ],
+      "target_denominator": [
+        4,
+        4
+      ],
+      "near_denominator": 6,
+      "near_trigger_clips": 0,
+      "near_events": 0,
+      "unknown_denominator": 2,
+      "unknown_trigger_clips": 1,
+      "unknown_events": 1,
+      "wrong_keyword_events": 0,
+      "duplicates": 0,
+      "unevaluable": []
+    },
+    {
+      "model": "B",
+      "threshold": 0.7,
+      "window": "pre_eof",
+      "target_hits": [
+        1,
+        0
+      ],
+      "target_denominator": [
+        4,
+        4
+      ],
+      "near_denominator": 6,
+      "near_trigger_clips": 0,
+      "near_events": 0,
+      "unknown_denominator": 2,
+      "unknown_trigger_clips": 0,
+      "unknown_events": 0,
+      "wrong_keyword_events": 0,
+      "duplicates": 0,
+      "unevaluable": []
+    },
+    {
+      "model": "B",
+      "threshold": 0.7,
+      "window": "eof_plus300",
+      "target_hits": [
+        4,
+        2
+      ],
+      "target_denominator": [
+        4,
+        4
+      ],
+      "near_denominator": 6,
+      "near_trigger_clips": 0,
+      "near_events": 0,
+      "unknown_denominator": 2,
+      "unknown_trigger_clips": 0,
+      "unknown_events": 0,
+      "wrong_keyword_events": 0,
+      "duplicates": 0,
+      "unevaluable": []
+    }
+  ],
+  "calls": {
+    "load_started": 2,
+    "load_completed": 2,
+    "frontend_started": 16,
+    "frontend_completed": 16,
+    "encoder_started": 16,
+    "encoder_completed": 16,
+    "prefix250_started": 16,
+    "prefix250_completed": 16,
+    "tail140_started": 16,
+    "tail140_completed": 16,
+    "head_started": 32,
+    "head_completed": 32,
+    "probability_rows": 1664,
+    "adapter_rows": 3328,
+    "beam_steps": 3992,
+    "windows": 116,
+    "training": 0,
+    "ASR": 0,
+    "TTS": 0
+  },
+  "resource": {
+    "exit_code": 0,
+    "stop_reason": null,
+    "wall_seconds": 11.081936399976257,
+    "sampled_process_tree_peak_rss": 314408960,
+    "sampling_seconds": 0.2,
+    "instantaneous_RSS_not_guaranteed": true,
+    "no_automatic_retry": true
+  },
+  "conclusion": "At +300ms, .1 target hits increase 5/8 to8/8; .7 increases0/8 to6/8. All6 weak near clips remain untriggered. B produces one event on one of2 unknown-label clips at .1; this is not counted as a labeled false positive. Body analytical window differs markedly. No training admission, deployment promotion, or independent accuracy claim."
+}
