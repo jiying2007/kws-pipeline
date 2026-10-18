@@ -1,0 +1,95 @@
+{
+  "scope": "only listed public code/license/synthetic tests/anonymized results; no weights/audio/private locators",
+  "files": [
+    {
+      "path": "PROBE-SUMMARY.json",
+      "bytes": 4402,
+      "sha256": "653aa29580184542e25de9b26d95ce2bc899cc8be931860e8d96ec3d4c69de5d",
+      "original_bytes": false
+    },
+    {
+      "path": "README.md",
+      "bytes": 3307,
+      "sha256": "d674cf5be779f451e49b58739d34c8db0a045286b5cb7ed9d28db2093c22230c",
+      "original_bytes": false
+    },
+    {
+      "path": "config.json",
+      "bytes": 2331,
+      "sha256": "f70d4662d43e8a2154c21e3f3af2373b37d093fe61a4a645768944ace6bef12e",
+      "original_bytes": true
+    },
+    {
+      "path": "geometry.json",
+      "bytes": 509,
+      "sha256": "d76de489f7d6c87172ff5c50b0baeeed9013c072a4226794f1f0894ba37a497c",
+      "original_bytes": true
+    },
+    {
+      "path": "geometry_labels.py",
+      "bytes": 2759,
+      "sha256": "7248c8ed6320eb777d5fd7907df2e1b44bf9111531ccaa747de9084ae7578fd6",
+      "original_bytes": true
+    },
+    {
+      "path": "model.py",
+      "bytes": 6534,
+      "sha256": "b54eaa545c80ae8f3b9bc0d2ef431ce81cf0dc6338c52ea4ba7268f4235d8c1f",
+      "original_bytes": true
+    },
+    {
+      "path": "probe_synthetic.py",
+      "bytes": 6388,
+      "sha256": "49ca8a3b9d07c5ab100790b1b91bdc4fdcf3a440f57b70ed0ff24f4a26f95ee3",
+      "original_bytes": true
+    },
+    {
+      "path": "process_supervisor.py",
+      "bytes": 4300,
+      "sha256": "88bbf9bcd8a8d75558460c35e774fdaa7c14e842924eb05ff4a0d25726cb76ca",
+      "original_bytes": true
+    },
+    {
+      "path": "reference/LICENSE",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "original_bytes": true
+    },
+    {
+      "path": "reference/examples/hi_xiaowen/s0/conf/mdtc_small.yaml",
+      "bytes": 946,
+      "sha256": "2368cfca399a4a6215bfa1647e45ab50c2d4012cb19060895b9ddabd3a1b65aa",
+      "original_bytes": true
+    },
+    {
+      "path": "reference/wekws/model/kws_model.py",
+      "bytes": 8180,
+      "sha256": "9690002018e506d124bcca3c47783b2a167cedf98db0c8a43c6eb9f4e19da323",
+      "original_bytes": true
+    },
+    {
+      "path": "reference/wekws/model/mdtc.py",
+      "bytes": 9734,
+      "sha256": "2c8e30d7b56d941ae9cc21dc04bcf6500d10dc785b2a18277d3699d1b0755eb7",
+      "original_bytes": true
+    },
+    {
+      "path": "reference/wekws/model/subsampling.py",
+      "bytes": 2297,
+      "sha256": "c73d07d7b2a7020f647cf8082f13fc61a540a43560e3b20aef18bd2278c85819",
+      "original_bytes": true
+    },
+    {
+      "path": "source-retention.json",
+      "bytes": 2360,
+      "sha256": "67283ad5dd8c0a2b0f18dee45b4890459e1724c4b71b111d4806a8a05aa3d94a",
+      "original_bytes": true
+    },
+    {
+      "path": "test_static.py",
+      "bytes": 2034,
+      "sha256": "46717b844d8952d9420690fdf391ae27f3d1f39b6a67e96292563eccc599e029",
+      "original_bytes": true
+    }
+  ]
+}

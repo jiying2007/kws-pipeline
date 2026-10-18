@@ -1,0 +1,37 @@
+{
+  "schema": "event-head-anonymous-engineering-evidence.v1",
+  "qualification_allowed": false,
+  "synthetic_preflight": {
+    "status": "PASS_TINY_TENSOR_PREFLIGHT_ONLY",
+    "head_forwards": 7,
+    "input_frames": 95,
+    "backward_calls": 1,
+    "optimizer_steps": 0,
+    "cache_loads": 0,
+    "teacher_forwards": 0,
+    "production_head_forwards": 0,
+    "precision": "float64 oracle, float32 production constructor only",
+    "comparison_atol": 1e-10,
+    "comparison_rtol": 1e-10,
+    "max_absolute_error_recorded": false
+  },
+  "exposed_two_example_diagnostic": {
+    "status": "FLUSH_ONLY_MEMORIZATION_RISK",
+    "examples": 2,
+    "optimizer_steps": 31,
+    "backward_calls": 31,
+    "head_forwards": 70,
+    "input_frames": 3535,
+    "weights_only_cache_loads": 1,
+    "teacher_forwards": 0,
+    "weights_saved": false,
+    "flush_learned": true,
+    "pre_eof_learned": false,
+    "latest_evaluation_completed_updates": 31,
+    "limitations": [
+      "Not independent or blind.",
+      "Not a real-world generalization, complete-phrase or device test.",
+      "Tail difference may include legitimate frozen-backbone delay as well as padding or boundary effects."
+    ]
+  }
+}

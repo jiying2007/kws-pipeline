@@ -1,0 +1,575 @@
+{
+  "status": "executed_aggregate_for_review",
+  "common_clips": 68,
+  "grid": [
+    0.0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9
+  ],
+  "models": {
+    "seed0_B": {
+      "selected_threshold": 0.6,
+      "development_reference_positive_misses": 3,
+      "development_reference_positive_clips": 8,
+      "development_noncanonical_reference_triggers": 0,
+      "development_noncanonical_reference_clips": 9,
+      "development_curve": [
+        {
+          "threshold": 0.0,
+          "positive_clips": 8,
+          "missed_positive_clips": 0,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.1,
+          "positive_clips": 8,
+          "missed_positive_clips": 0,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.2,
+          "positive_clips": 8,
+          "missed_positive_clips": 1,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.3,
+          "positive_clips": 8,
+          "missed_positive_clips": 1,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.4,
+          "positive_clips": 8,
+          "missed_positive_clips": 1,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.5,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.6,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 0
+        },
+        {
+          "threshold": 0.7,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 0
+        },
+        {
+          "threshold": 0.8,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 0
+        },
+        {
+          "threshold": 0.9,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 0
+        }
+      ],
+      "selected_split_counts": [
+        {
+          "clips": 17,
+          "dimension": "split",
+          "events": 5,
+          "extra_same_keyword_events": 0,
+          "missed_positive_clip_fraction": 0.375,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "per_keyword": {
+            "1": {
+              "missed_positive_clips": 1,
+              "negative_reference_clips": 13,
+              "positive_clips": 4,
+              "triggered_negative_reference_clips": 0
+            },
+            "2": {
+              "missed_positive_clips": 2,
+              "negative_reference_clips": 13,
+              "positive_clips": 4,
+              "triggered_negative_reference_clips": 0
+            }
+          },
+          "positive_clips": 8,
+          "triggered_negative_reference_clip_fraction": 0.0,
+          "triggered_negative_reference_clips": 0,
+          "triggered_unknown_clips": 0,
+          "unknown_clips": 0,
+          "value": "development",
+          "wrong_keyword_events_on_positive": 0
+        },
+        {
+          "clips": 25,
+          "dimension": "split",
+          "events": 9,
+          "extra_same_keyword_events": 0,
+          "missed_positive_clip_fraction": 0.0,
+          "missed_positive_clips": 0,
+          "negative_reference_clips": 10,
+          "per_keyword": {
+            "1": {
+              "missed_positive_clips": 0,
+              "negative_reference_clips": 12,
+              "positive_clips": 2,
+              "triggered_negative_reference_clips": 2
+            },
+            "2": {
+              "missed_positive_clips": 0,
+              "negative_reference_clips": 12,
+              "positive_clips": 2,
+              "triggered_negative_reference_clips": 1
+            }
+          },
+          "positive_clips": 4,
+          "triggered_negative_reference_clip_fraction": 0.3,
+          "triggered_negative_reference_clips": 3,
+          "triggered_unknown_clips": 2,
+          "unknown_clips": 11,
+          "value": "observed_diagnostic",
+          "wrong_keyword_events_on_positive": 0
+        },
+        {
+          "clips": 26,
+          "dimension": "split",
+          "events": 12,
+          "extra_same_keyword_events": 0,
+          "missed_positive_clip_fraction": 0.18181818181818182,
+          "missed_positive_clips": 2,
+          "negative_reference_clips": 15,
+          "per_keyword": {
+            "1": {
+              "missed_positive_clips": 0,
+              "negative_reference_clips": 22,
+              "positive_clips": 4,
+              "triggered_negative_reference_clips": 2
+            },
+            "2": {
+              "missed_positive_clips": 2,
+              "negative_reference_clips": 19,
+              "positive_clips": 7,
+              "triggered_negative_reference_clips": 1
+            }
+          },
+          "positive_clips": 11,
+          "triggered_negative_reference_clip_fraction": 0.2,
+          "triggered_negative_reference_clips": 3,
+          "triggered_unknown_clips": 0,
+          "unknown_clips": 0,
+          "value": "train",
+          "wrong_keyword_events_on_positive": 0
+        }
+      ],
+      "model_forwards": 0,
+      "encoder": 0,
+      "optimizer": 0
+    },
+    "lastblock_unfrozen": {
+      "selected_threshold": 0.6,
+      "development_reference_positive_misses": 3,
+      "development_reference_positive_clips": 8,
+      "development_noncanonical_reference_triggers": 0,
+      "development_noncanonical_reference_clips": 9,
+      "development_curve": [
+        {
+          "threshold": 0.0,
+          "positive_clips": 8,
+          "missed_positive_clips": 1,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 2
+        },
+        {
+          "threshold": 0.1,
+          "positive_clips": 8,
+          "missed_positive_clips": 1,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 2
+        },
+        {
+          "threshold": 0.2,
+          "positive_clips": 8,
+          "missed_positive_clips": 1,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 2
+        },
+        {
+          "threshold": 0.3,
+          "positive_clips": 8,
+          "missed_positive_clips": 1,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.4,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.5,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.6,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 0
+        },
+        {
+          "threshold": 0.7,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 0
+        },
+        {
+          "threshold": 0.8,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 0
+        },
+        {
+          "threshold": 0.9,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 0
+        }
+      ],
+      "selected_split_counts": [
+        {
+          "clips": 17,
+          "dimension": "split",
+          "events": 5,
+          "extra_same_keyword_events": 0,
+          "missed_positive_clip_fraction": 0.375,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "per_keyword": {
+            "1": {
+              "missed_positive_clips": 1,
+              "negative_reference_clips": 13,
+              "positive_clips": 4,
+              "triggered_negative_reference_clips": 0
+            },
+            "2": {
+              "missed_positive_clips": 2,
+              "negative_reference_clips": 13,
+              "positive_clips": 4,
+              "triggered_negative_reference_clips": 0
+            }
+          },
+          "positive_clips": 8,
+          "triggered_negative_reference_clip_fraction": 0.0,
+          "triggered_negative_reference_clips": 0,
+          "triggered_unknown_clips": 0,
+          "unknown_clips": 0,
+          "value": "development",
+          "wrong_keyword_events_on_positive": 0
+        },
+        {
+          "clips": 25,
+          "dimension": "split",
+          "events": 9,
+          "extra_same_keyword_events": 0,
+          "missed_positive_clip_fraction": 0.0,
+          "missed_positive_clips": 0,
+          "negative_reference_clips": 10,
+          "per_keyword": {
+            "1": {
+              "missed_positive_clips": 0,
+              "negative_reference_clips": 12,
+              "positive_clips": 2,
+              "triggered_negative_reference_clips": 3
+            },
+            "2": {
+              "missed_positive_clips": 0,
+              "negative_reference_clips": 12,
+              "positive_clips": 2,
+              "triggered_negative_reference_clips": 0
+            }
+          },
+          "positive_clips": 4,
+          "triggered_negative_reference_clip_fraction": 0.3,
+          "triggered_negative_reference_clips": 3,
+          "triggered_unknown_clips": 2,
+          "unknown_clips": 11,
+          "value": "observed_diagnostic",
+          "wrong_keyword_events_on_positive": 0
+        },
+        {
+          "clips": 26,
+          "dimension": "split",
+          "events": 13,
+          "extra_same_keyword_events": 0,
+          "missed_positive_clip_fraction": 0.09090909090909091,
+          "missed_positive_clips": 1,
+          "negative_reference_clips": 15,
+          "per_keyword": {
+            "1": {
+              "missed_positive_clips": 0,
+              "negative_reference_clips": 22,
+              "positive_clips": 4,
+              "triggered_negative_reference_clips": 2
+            },
+            "2": {
+              "missed_positive_clips": 1,
+              "negative_reference_clips": 19,
+              "positive_clips": 7,
+              "triggered_negative_reference_clips": 1
+            }
+          },
+          "positive_clips": 11,
+          "triggered_negative_reference_clip_fraction": 0.2,
+          "triggered_negative_reference_clips": 3,
+          "triggered_unknown_clips": 0,
+          "unknown_clips": 0,
+          "value": "train",
+          "wrong_keyword_events_on_positive": 0
+        }
+      ],
+      "model_forwards": 0,
+      "encoder": 0,
+      "optimizer": 0
+    },
+    "weak20": {
+      "selected_threshold": 0.6,
+      "development_reference_positive_misses": 3,
+      "development_reference_positive_clips": 8,
+      "development_noncanonical_reference_triggers": 0,
+      "development_noncanonical_reference_clips": 9,
+      "development_curve": [
+        {
+          "threshold": 0.0,
+          "positive_clips": 8,
+          "missed_positive_clips": 0,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.1,
+          "positive_clips": 8,
+          "missed_positive_clips": 0,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.2,
+          "positive_clips": 8,
+          "missed_positive_clips": 1,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.3,
+          "positive_clips": 8,
+          "missed_positive_clips": 1,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.4,
+          "positive_clips": 8,
+          "missed_positive_clips": 1,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.5,
+          "positive_clips": 8,
+          "missed_positive_clips": 2,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 1
+        },
+        {
+          "threshold": 0.6,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 0
+        },
+        {
+          "threshold": 0.7,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 0
+        },
+        {
+          "threshold": 0.8,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 0
+        },
+        {
+          "threshold": 0.9,
+          "positive_clips": 8,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "triggered_negative_reference_clips": 0
+        }
+      ],
+      "selected_split_counts": [
+        {
+          "clips": 17,
+          "dimension": "split",
+          "events": 5,
+          "extra_same_keyword_events": 0,
+          "missed_positive_clip_fraction": 0.375,
+          "missed_positive_clips": 3,
+          "negative_reference_clips": 9,
+          "per_keyword": {
+            "1": {
+              "missed_positive_clips": 1,
+              "negative_reference_clips": 13,
+              "positive_clips": 4,
+              "triggered_negative_reference_clips": 0
+            },
+            "2": {
+              "missed_positive_clips": 2,
+              "negative_reference_clips": 13,
+              "positive_clips": 4,
+              "triggered_negative_reference_clips": 0
+            }
+          },
+          "positive_clips": 8,
+          "triggered_negative_reference_clip_fraction": 0.0,
+          "triggered_negative_reference_clips": 0,
+          "triggered_unknown_clips": 0,
+          "unknown_clips": 0,
+          "value": "development",
+          "wrong_keyword_events_on_positive": 0
+        },
+        {
+          "clips": 25,
+          "dimension": "split",
+          "events": 8,
+          "extra_same_keyword_events": 0,
+          "missed_positive_clip_fraction": 0.25,
+          "missed_positive_clips": 1,
+          "negative_reference_clips": 10,
+          "per_keyword": {
+            "1": {
+              "missed_positive_clips": 0,
+              "negative_reference_clips": 12,
+              "positive_clips": 2,
+              "triggered_negative_reference_clips": 2
+            },
+            "2": {
+              "missed_positive_clips": 1,
+              "negative_reference_clips": 12,
+              "positive_clips": 2,
+              "triggered_negative_reference_clips": 1
+            }
+          },
+          "positive_clips": 4,
+          "triggered_negative_reference_clip_fraction": 0.3,
+          "triggered_negative_reference_clips": 3,
+          "triggered_unknown_clips": 2,
+          "unknown_clips": 11,
+          "value": "observed_diagnostic",
+          "wrong_keyword_events_on_positive": 0
+        },
+        {
+          "clips": 26,
+          "dimension": "split",
+          "events": 12,
+          "extra_same_keyword_events": 0,
+          "missed_positive_clip_fraction": 0.18181818181818182,
+          "missed_positive_clips": 2,
+          "negative_reference_clips": 15,
+          "per_keyword": {
+            "1": {
+              "missed_positive_clips": 0,
+              "negative_reference_clips": 22,
+              "positive_clips": 4,
+              "triggered_negative_reference_clips": 2
+            },
+            "2": {
+              "missed_positive_clips": 2,
+              "negative_reference_clips": 19,
+              "positive_clips": 7,
+              "triggered_negative_reference_clips": 1
+            }
+          },
+          "positive_clips": 11,
+          "triggered_negative_reference_clip_fraction": 0.2,
+          "triggered_negative_reference_clips": 3,
+          "triggered_unknown_clips": 0,
+          "unknown_clips": 0,
+          "value": "train",
+          "wrong_keyword_events_on_positive": 0
+        }
+      ],
+      "model_forwards": 0,
+      "encoder": 0,
+      "optimizer": 0
+    }
+  },
+  "selection": "no candidate promotion; retain original research control",
+  "limitations": [
+    "Reference-conditioned short clips; not true FRR/FAR or FA/hour.",
+    "Historical development was exposed; unknown excluded from truth denominators.",
+    "Only common68 full-logit intersection replayed; missing796 remain unavailable for zero-forward threshold replay.",
+    "One shared threshold/model; no grid expansion, new training or independently verified acceptance."
+  ],
+  "bounded_tradeoffs": {
+    "all_selected_thresholds": 0.6,
+    "limited_gain_theta": 0.5,
+    "positive_reference_misses_at_theta05": [
+      3,
+      3,
+      2
+    ],
+    "noncanonical_reference_triggers_at_theta05": [
+      1,
+      1,
+      1
+    ],
+    "historically_confirmed_TTS_anchors_detected_at_selected_point": [
+      2,
+      2,
+      1
+    ],
+    "anchor_denominator": 2,
+    "weak20_regressed_anchor_survives_only_grid_theta_at_most": 0.2,
+    "weak20_noncanonical_development_triggers_at_those_lower_points": 1,
+    "model_order": [
+      "seed0_B",
+      "lastblock_unfrozen",
+      "weak20"
+    ],
+    "no_new_independent_hours": true
+  }
+}

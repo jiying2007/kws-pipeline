@@ -14,6 +14,10 @@
 
 ## Research data preparation
 
+- [Causal event-head core and scalar oracle](../research/causal-event-head/README.md): artificial CI and bounded historical preflight; exposed tiny-fit remains flush-only risk.
+- [Causal MDTC research core](../research/causal-mdtc/README.md): fixed upstream source/license, stdlib contracts and explicit synthetic probe limitations.
+- [Threshold before refractory research adapter](../research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017/README.zh-CN.md): unchanged fixed-grid research code and anonymous comparison, no product threshold selection.
+
 - [Research progress: TTS, weak20 and C parity](../research/progress-20261018/RESULTS.md): reviewed aggregate findings and positive regressions; no model promotion or numerical-admission change.
 
 - [Full-alphabet three-window C research decoder](../research/fsmn2599-three-window-c/README.md): isolated posterior-only source and artificial-fixture checks; no shipping integration or acoustic-model admission.

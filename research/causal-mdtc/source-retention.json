@@ -1,0 +1,50 @@
+{
+  "repository": "wenet-e2e/wekws",
+  "commit": "6a45aeb994dd81c0969ff877a5a7c46d60ed0c86",
+  "license": "Apache-2.0",
+  "retrieval": "GitHub connector fixed-ref UTF-8 content",
+  "notice_lookup": "Root NOTICE returned 404 at pinned ref; no claim about other paths",
+  "sources": [
+    {
+      "path": "reference/wekws/model/mdtc.py",
+      "git_blob_sha1": "4a0f7287dec43ec12d262343525c461b5fd1e31e",
+      "url": "https://github.com/wenet-e2e/wekws/blob/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/wekws/model/mdtc.py",
+      "sha256": "2c8e30d7b56d941ae9cc21dc04bcf6500d10dc785b2a18277d3699d1b0755eb7",
+      "bytes": 9734,
+      "git_blob_verified": true
+    },
+    {
+      "path": "reference/wekws/model/subsampling.py",
+      "git_blob_sha1": "cbe6ab7fc1e9bc3b4eb29399dda45fbc39708058",
+      "url": "https://github.com/wenet-e2e/wekws/blob/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/wekws/model/subsampling.py",
+      "sha256": "c73d07d7b2a7020f647cf8082f13fc61a540a43560e3b20aef18bd2278c85819",
+      "bytes": 2297,
+      "git_blob_verified": true
+    },
+    {
+      "path": "reference/examples/hi_xiaowen/s0/conf/mdtc_small.yaml",
+      "git_blob_sha1": "936a5d5061303d7a97ee221d66472620b02edf2b",
+      "url": "https://github.com/wenet-e2e/wekws/blob/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/examples/hi_xiaowen/s0/conf/mdtc_small.yaml",
+      "sha256": "2368cfca399a4a6215bfa1647e45ab50c2d4012cb19060895b9ddabd3a1b65aa",
+      "bytes": 946,
+      "git_blob_verified": true
+    },
+    {
+      "path": "reference/LICENSE",
+      "git_blob_sha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "url": "https://github.com/wenet-e2e/wekws/blob/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "bytes": 11357,
+      "git_blob_verified": true
+    },
+    {
+      "path": "reference/wekws/model/kws_model.py",
+      "git_blob_sha1": "7519059c109c87d613c52518eff340376e673423",
+      "url": "https://github.com/wenet-e2e/wekws/blob/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/wekws/model/kws_model.py",
+      "sha256": "9690002018e506d124bcca3c47783b2a167cedf98db0c8a43c6eb9f4e19da323",
+      "bytes": 8180,
+      "git_blob_verified": true
+    }
+  ],
+  "local_copy_note": "All retained local UTF-8 source bytes verify against upstream git blob SHA1 plus local SHA256."
+}

@@ -1,0 +1,35 @@
+{
+  "parameters": 42594,
+  "weight_macs_per_frame": 37952,
+  "weight_macs_per_second": 3795200,
+  "cache_lengths": [
+    4,
+    4,
+    8,
+    16,
+    32,
+    64,
+    4,
+    8,
+    16,
+    32,
+    64,
+    4,
+    8,
+    16,
+    32,
+    64
+  ],
+  "cache_elements": 12032,
+  "cache_fp32_bytes": 48128,
+  "max_left_context_frames": 376,
+  "receptive_field_frames": 377,
+  "multiscale_rf_frames": [
+    129,
+    253,
+    377
+  ],
+  "pcm_span_samples": 60560,
+  "bn_float_buffers": 3072,
+  "bn_int64_counters": 48
+}
