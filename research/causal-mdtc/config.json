@@ -1,0 +1,75 @@
+{
+  "status": "PREPARED_ONLY_NO_NUMERICAL_EXECUTION",
+  "model": {
+    "name": "MDTC32-long-fbank80-event-v1",
+    "input_dim": 80,
+    "hidden_dim": 32,
+    "stacks": 3,
+    "stack_size": 5,
+    "kernel": 5,
+    "outputs": [
+      "你好小窝",
+      "小窝小窝"
+    ],
+    "activation": "independent_sigmoid",
+    "pretrained_weights": null,
+    "bn_mode": "running statistics fixed at initialization; affine parameters trainable"
+  },
+  "frontend": {
+    "sample_rate": 16000,
+    "channels": 1,
+    "pcm": "signed PCM16 LE converted to unscaled float32",
+    "fbank_kwargs": {
+      "num_mel_bins": 80,
+      "frame_length": 25.0,
+      "frame_shift": 10.0,
+      "dither": 0.0,
+      "energy_floor": 0.0,
+      "sample_frequency": 16000.0,
+      "snip_edges": true,
+      "subtract_mean": false,
+      "window_type": "povey",
+      "preemphasis_coefficient": 0.97,
+      "remove_dc_offset": true,
+      "round_to_power_of_two": true,
+      "raw_energy": true,
+      "use_energy": false,
+      "use_log_fbank": true,
+      "use_power": true,
+      "low_freq": 20.0,
+      "high_freq": 0.0,
+      "htk_compat": false,
+      "vtln_low": 100.0,
+      "vtln_high": -500.0,
+      "vtln_warp": 1.0,
+      "blackman_coeff": 0.42,
+      "channel": -1,
+      "min_duration": 0.0
+    },
+    "cmvn": "new 80-bin train-only global mean/inverse std; not 400-bin FSMN CMVN",
+    "context_splicing": false,
+    "subsampling": 1,
+    "eof_padding_samples": 0,
+    "frame_availability_sample": "400+160*j",
+    "reference_runtime": "torch and torchaudio 2.11.0+cpu; installed metadata only, not loaded"
+  },
+  "loss": {
+    "type": "two independent event max-logit BCE",
+    "known_weight": 1.0,
+    "weak_weight": 0.25,
+    "unknown_weight": 0.0,
+    "weak_weight_is": "pre-registered heuristic, not a probability",
+    "padding": "excluded from pooling",
+    "negative_before_target_end": false,
+    "human_status_requirement": "explicit keyword-specific human confirmation and task admission; historical acceptance defaults weak_positive, other word unknown",
+    "training_admission": "not established by this packet; no private sample IDs assigned"
+  },
+  "execution_counts": {
+    "model_forward": 0,
+    "backward": 0,
+    "training_steps": 0,
+    "feature_extraction": 0,
+    "compilation": 0,
+    "large_asset_downloads": 0
+  }
+}

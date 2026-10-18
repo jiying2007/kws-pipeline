@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 59628,
-      "sha256": "4dd0f1ce6cabddf12ffb8be1801a72b73a901dea7f14a3bfe763935ddcb25ca9",
-      "git_blob_sha1": "0de19eeba0fdbabc4515f75ff2f38c716b7909e8"
+      "bytes": 60062,
+      "sha256": "714176bd545f8fdab65a042d5922a616f4fdcb2d2eb371d295276d98d11f196b",
+      "git_blob_sha1": "553409ff5946f90207362c728a4279ffd235f3c3"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -39767,6 +39767,382 @@
             "bytes": 10183,
             "sha256": "2277f4ef7edb85b3bd984ee0b30f866a3b45076c5655c663a155e182c3da359c",
             "git_blob_sha1": "051523f0fe1d0878979befb02de1f42c68a1bb7e"
+          }
+        }
+      ]
+    },
+    {
+      "id": "causal-research-core-batch-20261018",
+      "date": "2026-10-18",
+      "base_commit": "816f72b14df0986119c549939b10a211451cf138",
+      "base_tree": "8e0570ed6ca0f921a8d8ecd988236b242f02e115",
+      "workflow_source_changed": true,
+      "scope": "Batch retained threshold-before-refractory, causal event head and pinned MDTC source with artificial stdlib CI and anonymous bounded evidence.",
+      "rationale": "No weights, private label audits/posteriors, model downloads or automatic numerical probe/training. Preserve original core bytes and reported threshold/flush-only/serialized-state-budget limitations.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 59628,
+            "sha256": "4dd0f1ce6cabddf12ffb8be1801a72b73a901dea7f14a3bfe763935ddcb25ca9",
+            "git_blob_sha1": "0de19eeba0fdbabc4515f75ff2f38c716b7909e8"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 59988,
+            "sha256": "a754bde6d4c1c74985700c9a50a70ae40ba6ebe05d89b839da44917e8192022d",
+            "git_blob_sha1": "c2dff6641f59c98964ebc559c85699adcaadf238"
+          }
+        },
+        {
+          "path": "docs/README.md",
+          "before": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 10183,
+            "sha256": "2277f4ef7edb85b3bd984ee0b30f866a3b45076c5655c663a155e182c3da359c",
+            "git_blob_sha1": "051523f0fe1d0878979befb02de1f42c68a1bb7e"
+          },
+          "after": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 10757,
+            "sha256": "9aa2a23cd9e820b6cab03070720357b2531fe8e3ad60d29dc90085f281092698",
+            "git_blob_sha1": "80c251d75cb9e1b4af4a030fba374259779b36a3"
+          }
+        },
+        {
+          "path": "research/causal-event-head/README.md",
+          "before": null,
+          "after": {
+            "path": "research/causal-event-head/README.md",
+            "mode": "100644",
+            "bytes": 1920,
+            "sha256": "ce992c81aabc26eec905d92fe7e53380e2f407bf77a126908c811a02b0736b48",
+            "git_blob_sha1": "3e829348265f5d665b2d559d93ceb88ae1a3f2a3"
+          }
+        },
+        {
+          "path": "research/causal-event-head/anonymous-counts.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-event-head/anonymous-counts.json",
+            "mode": "100644",
+            "bytes": 1185,
+            "sha256": "46426d761bcd1ef85c7f30b66961384898a7740080fa7b0085f35d5851f69f2d",
+            "git_blob_sha1": "985201dd66cb2312fcccc21e96490817c27d62e9"
+          }
+        },
+        {
+          "path": "research/causal-event-head/event_head.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-event-head/event_head.py",
+            "mode": "100644",
+            "bytes": 7209,
+            "sha256": "786fc17c0199ae415ee570ab57deecfaf2dc2855a865f4c93805991c00e45b2b",
+            "git_blob_sha1": "bd554244a5ce8a2cbbaa6369b8797be69e3d5b2f"
+          }
+        },
+        {
+          "path": "research/causal-event-head/test_event_head_synthetic.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-event-head/test_event_head_synthetic.py",
+            "mode": "100644",
+            "bytes": 1805,
+            "sha256": "dfe3d4fc5bea31fa06f02dfb6b979132887ef0a5e71e1e7b1d9320e27f4993b9",
+            "git_blob_sha1": "ac76d8a48bbb5e5f1876e2536e935ab214eef893"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/PROBE-SUMMARY.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/PROBE-SUMMARY.json",
+            "mode": "100644",
+            "bytes": 4402,
+            "sha256": "653aa29580184542e25de9b26d95ce2bc899cc8be931860e8d96ec3d4c69de5d",
+            "git_blob_sha1": "2c68661655083c95e027485fb6e544ff27e13b6b"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/PUBLIC-ALLOWLIST.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/PUBLIC-ALLOWLIST.json",
+            "mode": "100644",
+            "bytes": 2932,
+            "sha256": "eaec2afcdc451a828913cdad515eb859f2a50f639d2e2b2c17da0af6fab2db25",
+            "git_blob_sha1": "40f04b54e3a3935b0ed016cfd8469a0092f0a4a1"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/README.md",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/README.md",
+            "mode": "100644",
+            "bytes": 3307,
+            "sha256": "d674cf5be779f451e49b58739d34c8db0a045286b5cb7ed9d28db2093c22230c",
+            "git_blob_sha1": "efc8d7274dba90b6daa7ff06f758cb3b55f26015"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/config.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/config.json",
+            "mode": "100644",
+            "bytes": 2331,
+            "sha256": "f70d4662d43e8a2154c21e3f3af2373b37d093fe61a4a645768944ace6bef12e",
+            "git_blob_sha1": "b032b43285311ac18952df7c6df6fb5e52c45040"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/geometry.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/geometry.json",
+            "mode": "100644",
+            "bytes": 509,
+            "sha256": "d76de489f7d6c87172ff5c50b0baeeed9013c072a4226794f1f0894ba37a497c",
+            "git_blob_sha1": "197f6d6915b182774d85a83b8310bc9d43ec76a6"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/geometry_labels.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/geometry_labels.py",
+            "mode": "100644",
+            "bytes": 2759,
+            "sha256": "7248c8ed6320eb777d5fd7907df2e1b44bf9111531ccaa747de9084ae7578fd6",
+            "git_blob_sha1": "3c0fcc4c1ed6c4f20e17934e586122f2ce689604"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/model.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/model.py",
+            "mode": "100644",
+            "bytes": 6534,
+            "sha256": "b54eaa545c80ae8f3b9bc0d2ef431ce81cf0dc6338c52ea4ba7268f4235d8c1f",
+            "git_blob_sha1": "31d2424bef8912043f891187fa0f67683f174e55"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/probe_synthetic.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/probe_synthetic.py",
+            "mode": "100644",
+            "bytes": 6388,
+            "sha256": "49ca8a3b9d07c5ab100790b1b91bdc4fdcf3a440f57b70ed0ff24f4a26f95ee3",
+            "git_blob_sha1": "7c4ef75d73f461eb1673ec67f4e540bbc74ef148"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/process_supervisor.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/process_supervisor.py",
+            "mode": "100644",
+            "bytes": 4300,
+            "sha256": "88bbf9bcd8a8d75558460c35e774fdaa7c14e842924eb05ff4a0d25726cb76ca",
+            "git_blob_sha1": "d3a469d27652c23535b3a0815a1a0aba9a4546b2"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/reference/LICENSE",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/reference/LICENSE",
+            "mode": "100644",
+            "bytes": 11357,
+            "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+            "git_blob_sha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/reference/examples/hi_xiaowen/s0/conf/mdtc_small.yaml",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/reference/examples/hi_xiaowen/s0/conf/mdtc_small.yaml",
+            "mode": "100644",
+            "bytes": 946,
+            "sha256": "2368cfca399a4a6215bfa1647e45ab50c2d4012cb19060895b9ddabd3a1b65aa",
+            "git_blob_sha1": "936a5d5061303d7a97ee221d66472620b02edf2b"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/reference/wekws/model/kws_model.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/reference/wekws/model/kws_model.py",
+            "mode": "100644",
+            "bytes": 8180,
+            "sha256": "9690002018e506d124bcca3c47783b2a167cedf98db0c8a43c6eb9f4e19da323",
+            "git_blob_sha1": "7519059c109c87d613c52518eff340376e673423"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/reference/wekws/model/mdtc.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/reference/wekws/model/mdtc.py",
+            "mode": "100644",
+            "bytes": 9734,
+            "sha256": "2c8e30d7b56d941ae9cc21dc04bcf6500d10dc785b2a18277d3699d1b0755eb7",
+            "git_blob_sha1": "4a0f7287dec43ec12d262343525c461b5fd1e31e"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/reference/wekws/model/subsampling.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/reference/wekws/model/subsampling.py",
+            "mode": "100644",
+            "bytes": 2297,
+            "sha256": "c73d07d7b2a7020f647cf8082f13fc61a540a43560e3b20aef18bd2278c85819",
+            "git_blob_sha1": "cbe6ab7fc1e9bc3b4eb29399dda45fbc39708058"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/source-retention.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/source-retention.json",
+            "mode": "100644",
+            "bytes": 2360,
+            "sha256": "67283ad5dd8c0a2b0f18dee45b4890459e1724c4b71b111d4806a8a05aa3d94a",
+            "git_blob_sha1": "420ea2865772a10e2642bd618cf01fc41b25cb75"
+          }
+        },
+        {
+          "path": "research/causal-mdtc/test_static.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-mdtc/test_static.py",
+            "mode": "100644",
+            "bytes": 2034,
+            "sha256": "46717b844d8952d9420690fdf391ae27f3d1f39b6a67e96292563eccc599e029",
+            "git_blob_sha1": "af9af590a4179ea009cc44b7867478e5b75970f3"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017/PUBLIC-AGGREGATES.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017/PUBLIC-AGGREGATES.json",
+            "mode": "100644",
+            "bytes": 18139,
+            "sha256": "3fc4c41f110a43cc8fc569c918329f86655cacdb005078f2e178e857a6a56345",
+            "git_blob_sha1": "1aab208a46d1932df6e87d9a13e5bf967b41a13a"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017/README.zh-CN.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017/README.zh-CN.md",
+            "mode": "100644",
+            "bytes": 4275,
+            "sha256": "5f00f241034176e58f02f728e9e1374ec8b919001da0e7b6a77301976fe93f9a",
+            "git_blob_sha1": "cf9efece4227c1afab79be0ba8a1e525a97a7bba"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017/adapter-source-pins.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017/adapter-source-pins.json",
+            "mode": "100644",
+            "bytes": 495,
+            "sha256": "0eacbfd0dcebfc77ea8b5f0bfd449d5f2cbc67154ddd1f145e6e7796d1e5ef6e",
+            "git_blob_sha1": "1b54242055b16e0b267d1758da70cc7c08d13c23"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017/test_threshold_adapter.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017/test_threshold_adapter.py",
+            "mode": "100644",
+            "bytes": 3749,
+            "sha256": "c4a0c9190da6dba5d4f0e442cb033979ea1088bbb1bf6a22c4ae17c5f42c6ee5",
+            "git_blob_sha1": "6fe0b596a5b594878fe38762f0ec2d93a22153b6"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017/threshold_before_refractory.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017/threshold_before_refractory.py",
+            "mode": "100644",
+            "bytes": 2912,
+            "sha256": "11fb94be4bcce3573519d5c68e45a5eb2d80d765b03ecd64b1ab0640e137a772",
+            "git_blob_sha1": "954a41962e529bb9fc7bbdd727f4908daff57296"
+          }
+        },
+        {
+          "path": "tests/test_causal_research_contract.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 1481,
+            "sha256": "30804683f629e82f690be63549f55a475ef190ae49342f293381c9da792948da",
+            "git_blob_sha1": "73993f09a3c2009abdae2753b325d7b2e6730be9"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3557,
+            "sha256": "310838839fa0168a4a4350485ffdcdcfac5b26f13df9a515038a35ae235bc017",
+            "git_blob_sha1": "1e2e54e8539925da58283bdc3b9b71f3c4a9352c"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3603,
+            "sha256": "5a7a43cfafd24651abbb29ffcfc91770b44ce84e26706f9b15043aaebe367786",
+            "git_blob_sha1": "bdc78e7abb297cf1ccf483e1d479806772cf27c8"
+          }
+        }
+      ]
+    },
+    {
+      "id": "causal-research-ci-executable-declarations-20261018",
+      "date": "2026-10-18",
+      "base_commit": "7e7c6c78667c334470b3fd676edbc7aa28f512e8",
+      "base_tree": "8aef1f4cb1af3c5a0223d2326dc10112b6d79c37",
+      "workflow_source_changed": true,
+      "scope": "Replace shell-mode loop with three literal Python mode commands for the existing executable-declaration inventory.",
+      "rationale": "First hosted run executed all artificial cases but release-workflow inventory failed to recognize the variable option. Preserve tests, all three modes and gates; no inventory bypass or scope expansion.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 59988,
+            "sha256": "a754bde6d4c1c74985700c9a50a70ae40ba6ebe05d89b839da44917e8192022d",
+            "git_blob_sha1": "c2dff6641f59c98964ebc559c85699adcaadf238"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 60062,
+            "sha256": "714176bd545f8fdab65a042d5922a616f4fdcb2d2eb371d295276d98d11f196b",
+            "git_blob_sha1": "553409ff5946f90207362c728a4279ffd235f3c3"
           }
         }
       ]

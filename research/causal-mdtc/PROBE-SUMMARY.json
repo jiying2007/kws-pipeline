@@ -1,0 +1,168 @@
+{
+  "numerical_engineering_probe": "PASS",
+  "all_execution_gates_passed": false,
+  "single_file_artifact_budget": "EXCEEDED",
+  "random_untrained_state_bytes": 307891,
+  "single_file_limit_bytes": 209715.2,
+  "overall_10MiB_output_budget": "WITHIN",
+  "random_state_included": false,
+  "forward_attempts": 489,
+  "rejected_input_attempts": 7,
+  "successful_forward_calls_inferred_from_control_flow": 482,
+  "backward_calls": 1,
+  "optimizer_steps": 0,
+  "audio_reads": 0,
+  "torch": "2.11.0+cpu",
+  "seed": 0,
+  "threads": 1,
+  "wall_seconds": 5.897188995993929,
+  "sampled_live_process_tree_peak_rss_bytes": 357548032,
+  "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-05,
+    "scope": "same-runtime synthetic FP32; not old C conformance"
+  },
+  "checks": [
+    {
+      "name": "chunk1_logits",
+      "max_abs": 8.344650268554688e-07,
+      "max_rel_floor1e_12": 0.00027156693977303803,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "chunk1_cache",
+      "max_abs": 9.5367431640625e-07,
+      "max_rel_floor1e_12": 0.0008051031036302447,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "chunk7_logits",
+      "max_abs": 4.172325134277344e-07,
+      "max_rel_floor1e_12": 6.032973374203721e-07,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "chunk7_cache",
+      "max_abs": 2.682209014892578e-07,
+      "max_rel_floor1e_12": 2.1907793779973872e-05,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "chunk31_logits",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "chunk31_cache",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "future_cannot_change_past",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "stream_a",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "stream_b",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "stream_a_cache",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "stream_b_cache",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "session_reset",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "reset_cache",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "batch_vs_single_stream_a",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "batch_vs_single_stream_b",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "padding_sample0",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "padding_sample1",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "padding_loss",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    },
+    {
+      "name": "unknown_label_abstention",
+      "max_abs": 0.0,
+      "max_rel_floor1e_12": 0.0,
+      "over_tolerance": 0,
+      "first_over_index": null
+    }
+  ],
+  "warning": "Converting requires_grad diagnostic tensor to float emitted a retained warning; no optimizer step occurred.",
+  "limits": [
+    "synthetic model/loss engineering only",
+    "no raw PCM frontend implementation validation",
+    "data admission and train-only CMVN not implemented",
+    "no trained model, FAR/FRR, C equivalence or device qualification"
+  ],
+  "original_probe_source_sha256": "49ca8a3b9d07c5ab100790b1b91bdc4fdcf3a440f57b70ed0ff24f4a26f95ee3"
+}

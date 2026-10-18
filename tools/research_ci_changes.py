@@ -7,6 +7,7 @@ from pathlib import Path
 import subprocess
 
 EXACT = frozenset({
+    'tests/test_causal_research_contract.py',
     'tests/test_research_three_window_c.py',
     'tools/verify_research_sources.py', 'tools/verify_research_publication.py',
     'tools/run_research_source_checks.py', 'tools/check_workflow_path_filters.py',

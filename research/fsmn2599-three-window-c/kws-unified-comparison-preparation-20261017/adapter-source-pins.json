@@ -1,0 +1,7 @@
+{
+  "three_window_events.py": "f65403a78bbe55566cae914062b1671c055c198a87fb7cb5c000d0a80d60cd26",
+  "posterior_events.py": "56d6ada2c531de25f72a713db77b07ef9d8326b8b1e238bd776d40155d8584ec",
+  "beam_minimal_patch_candidate.py": "f822a40a136ea216cd9a3dd4dc9257000d69e15820cb6276360d9518a9800360",
+  "vendor/stream_kws_ctc.py": "2a5d462f1c0830beee844427cbf0063e38f7b981dcd6e7990ec7a633acf46e53",
+  "vendor/decoder_tail_fix.py": "5fc55921a555c78cb08c12018850652d98d4283594f875366284dc1df0e71f4d"
+}

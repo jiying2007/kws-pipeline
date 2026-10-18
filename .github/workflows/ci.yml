@@ -651,6 +651,13 @@ jobs:
         run: ctest --test-dir build --output-on-failure
       - name: Verify tracked worktree after Test
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Test"'
+      - name: Causal research stdlib and artificial oracle contracts
+        run: |
+          python3 -S -B tests/test_causal_research_contract.py
+          python3 -S -B -O tests/test_causal_research_contract.py
+          python3 -S -B -OO tests/test_causal_research_contract.py
+      - name: Verify tracked worktree after Causal research contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Causal research contracts"'
       - name: Three-window research C synthetic differential contract
         env:
           CC: ${{ matrix.cc }}
