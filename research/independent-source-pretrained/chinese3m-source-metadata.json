@@ -1,0 +1,75 @@
+{
+  "schema": "public-source-metadata-v1",
+  "model": {
+    "repository": "https://www.modelscope.cn/models/pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01",
+    "revision": "3787015f084cb241dfa0e4ba237703a2d4322d50",
+    "license": "Apache-2.0",
+    "license_evidence": {
+      "filename": "README.md",
+      "sha256": "dd0ec68b5d9ee736f016fc982078bd3cdbccc69057e9910bdd45580992d13367",
+      "scope": "exact model repository card; not inferred from framework license or issue3802"
+    },
+    "files": [
+      {
+        "Path": "README.md",
+        "Sha256": "dd0ec68b5d9ee736f016fc982078bd3cdbccc69057e9910bdd45580992d13367",
+        "Size": 767,
+        "file_last_change_revision": "3787015f084cb241dfa0e4ba237703a2d4322d50"
+      },
+      {
+        "Path": "decoder-epoch-12-avg-2-chunk-16-left-64.onnx",
+        "Sha256": "bb3d8640cc6a495088707173bc1707a8a4ffe014594fc9adcba8389e27d0339f",
+        "Size": 675349,
+        "file_last_change_revision": "c7f531779e2324b104e58899d2d7727ea98e0b19"
+      },
+      {
+        "Path": "encoder-epoch-12-avg-2-chunk-16-left-64.onnx",
+        "Sha256": "24af8573b2425ee2e707d57653d4697a31fdf3a6528fef6e8dc9452d28dc9750",
+        "Size": 12174219,
+        "file_last_change_revision": "c7f531779e2324b104e58899d2d7727ea98e0b19"
+      },
+      {
+        "Path": "joiner-epoch-12-avg-2-chunk-16-left-64.onnx",
+        "Sha256": "d990f5b67ae9d740048709f5d5f3e777af442061896a8322d5c3ab3ec480f3cb",
+        "Size": 253410,
+        "file_last_change_revision": "c7f531779e2324b104e58899d2d7727ea98e0b19"
+      },
+      {
+        "Path": "tokens.txt",
+        "Sha256": "72316508d9119696145abc6f1f8cdc46287535c34e5ce7e595f845cb1499cf2e",
+        "Size": 1627,
+        "file_last_change_revision": "c7f531779e2324b104e58899d2d7727ea98e0b19"
+      }
+    ],
+    "revision_semantics": "Top-level revision is the pinned repository snapshot; per-file file_last_change_revision is the last-change commit reported by the repository listing."
+  },
+  "runtime": [
+    {
+      "filename": "sherpa_onnx-1.13.8-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "url": "https://files.pythonhosted.org/packages/13/78/2f712b7408ddbb64614c20388912414705b728516224e737b63f2adec94a/sherpa_onnx-1.13.8-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "bytes": 4400575,
+      "sha256": "6949773017647febc0c3696dffb2c67dd3febd4737b87e3dd135a42773704a06",
+      "version": "1.13.8",
+      "license": "Apache-2.0",
+      "license_evidence": "downloaded wheel METADATA; sherpa_onnx also includes Apache LICENSE"
+    },
+    {
+      "filename": "sherpa_onnx_core-1.13.8-py3-none-manylinux2014_x86_64.whl",
+      "url": "https://files.pythonhosted.org/packages/b6/ca/e27c1fb5c54b181d4a5450f3d5c789d9da02eb42dc9b20cfdab5dda4c864/sherpa_onnx_core-1.13.8-py3-none-manylinux2014_x86_64.whl",
+      "bytes": 10642497,
+      "sha256": "4da90acf435373d7b2ba9cc0be806e7e274d28f63f5780880b5dea6721626e36",
+      "version": "1.13.8",
+      "license": "Apache-2.0",
+      "license_evidence": "downloaded wheel METADATA; sherpa_onnx also includes Apache LICENSE"
+    }
+  ],
+  "acquisition": {
+    "actual_total_http_body_bytes": 28148444,
+    "all_exact_sha_and_sizes_matched": true,
+    "weight_audio_redistribution": false
+  },
+  "limitations": [
+    "Bundled third-party native components retain their own notices; package metadata does not relicense every dependency.",
+    "Model is a research comparison; no commercial/deployment suitability conclusion."
+  ]
+}

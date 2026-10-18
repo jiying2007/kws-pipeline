@@ -1,0 +1,77 @@
+{
+  "schema": "fsmn2599-stream-c-anonymous-observation-v1",
+  "qualification_allowed": false,
+  "production_claims": false,
+  "reference_numerical_gate": "FAIL_UNCHANGED",
+  "softmax": "independent_research_contract_not_Torch_parity",
+  "or_composition": "NOT_IMPLEMENTED",
+  "public_rearranged_build": "CORRECTED_CONTRACT_PASS_3_COMPILES_36_SYMBOLS_8_MOCK_GROUPS",
+  "historical_private_layout": {
+    "build": "PASS",
+    "synthetic_glue_groups": 8,
+    "synthetic_handles": 40,
+    "synthetic_generations": 48,
+    "mock_attempts": {
+      "fbank": 197,
+      "network": 64,
+      "softmax": 58,
+      "decoder": 55,
+      "callbacks": 52
+    },
+    "real_diagnostic": "ACTUAL_TWO_LANE_REVIEW_PASS_TRANSPORT_INVARIANCE_ONLY",
+    "recordings": 3,
+    "source_seconds": 63.84,
+    "threshold": 0.7,
+    "lanes": 2,
+    "loads": 2,
+    "fbank_calls": 12936,
+    "network_calls": 4310,
+    "softmax_calls": 4310,
+    "decoder_calls": 4310,
+    "eof_calls": 6,
+    "synthetic_zero_samples": 28800,
+    "posterior_stream_hash_pairs_equal": 3,
+    "event_structure_and_binary64_score_pairs_equal": 3,
+    "events_per_lane": 2,
+    "live_events_eof_derived": 0,
+    "transport_endpoints_checked_independently": true,
+    "automatic_retries": 0
+  },
+  "scope": "Same-C transport chunk invariance on existing exposed recordings only. Not a new benchmark, new negative hours, model improvement, C/Torch parity, board or product admission.",
+  "private_inputs_distributed": false,
+  "public_build_scope": {
+    "direct_build_py_executed": true,
+    "test_entry_wrapper_executed": false,
+    "hosted_ci_executed": false,
+    "example_executed": false,
+    "production_library_loaded": false,
+    "SSC305_executed": false,
+    "real_B_two_lane_runtime": "original bound runtime, not public-layout built binaries",
+    "production_library_sha256": "d0f698b2ccfe7c93b8013386b34e63a738ca0e27f97ce9a8e7071382a8ab92e6",
+    "linkage": "single DSO; identical decoder and softmax sources directly linked; system libc/libm only"
+  },
+  "preceding_public_rearranged_build": "PASS_3_COMPILES_36_SYMBOLS_8_MOCK_GROUPS",
+  "support_contract_correction": {
+    "lifecycle_rejects_support_false": false,
+    "diagnostic_counters_preserved": true,
+    "mock_case": "valid+finished, support=false injection; not reachability proof",
+    "observed_negative_audio_failure": false,
+    "isolated_mock_summary_separation": "PASS",
+    "actual_real_input_execution_after_correction": true
+  },
+  "current_single_DSO_same26_diagnostic": {
+    "result_file": "SAME26-RESULTS.json",
+    "status": "ACTUAL_SAME26_REVIEW_PASS",
+    "runtime_sha256": "d0f698b2ccfe7c93b8013386b34e63a738ca0e27f97ce9a8e7071382a8ab92e6",
+    "recordings": 26,
+    "thresholds": [
+      0.7,
+      0.1
+    ],
+    "all_recordings_retained": true,
+    "same_per_recording_detections_as_saved_reference": true,
+    "event_structures_equal": 22,
+    "scores_bitexact": false,
+    "scope": "exposed26 diagnostic only; no new numerical or product qualification"
+  }
+}

@@ -1,0 +1,344 @@
+{
+  "schema": "fsmn-B-same26-full-C-anonymous-diagnostic-v1",
+  "review_status": "ACTUAL_SAME26_REVIEW_PASS",
+  "cohort": "same26 already-exposed development recordings; not independent evaluation",
+  "checkpoint_sha256": "a366d9f5ebe7027a496e3f119debcf1e19d2f7a79226c96b31a4ddb3a2757f77",
+  "runtime_sha256": "d0f698b2ccfe7c93b8013386b34e63a738ca0e27f97ce9a8e7071382a8ab92e6",
+  "thresholds": [
+    0.7,
+    0.1
+  ],
+  "one_backbone_shared_posterior": true,
+  "denominators": {
+    "recordings": 26,
+    "raw_seconds": 41.6,
+    "padded_seconds": 49.4,
+    "positive_kw1": 5,
+    "positive_kw2": 6,
+    "negative_kw1": 21,
+    "negative_kw2": 20,
+    "both_negative": 15,
+    "total_target_positives": 11
+  },
+  "actual_counts": {
+    "real_samples": 665600,
+    "real_feed_calls": 2080,
+    "fbank_calls": 4888,
+    "network_calls": 1623,
+    "softmax_calls": 1623,
+    "posterior_callbacks": 1623,
+    "decoder_rows_total": 3246,
+    "beam_updates_total": 4386,
+    "decoder_windows_total": 102,
+    "adapter_finish_calls": 26,
+    "decoder_finish_calls_total": 52,
+    "synthetic_zero_samples": 124800
+  },
+  "model_loads": 1,
+  "completed_recordings": 26,
+  "excluded_recordings": 0,
+  "support_warning_count": 0,
+  "scoring": [
+    {
+      "threshold": 0.7,
+      "keyword_id": 1,
+      "mode": "full_EOF300",
+      "counts": {
+        "old": {
+          "TP": 4,
+          "FN": 1,
+          "FP": 0,
+          "TN": 21
+        },
+        "new": {
+          "TP": 4,
+          "FN": 1,
+          "FP": 0,
+          "TN": 21
+        }
+      },
+      "old_live_caveat": null,
+      "gained_recording_count": 0,
+      "lost_recording_count": 0
+    },
+    {
+      "threshold": 0.7,
+      "keyword_id": 1,
+      "mode": "strict_live",
+      "counts": {
+        "old": {
+          "TP": 4,
+          "FN": 1,
+          "FP": 0,
+          "TN": 21
+        },
+        "new": {
+          "TP": 4,
+          "FN": 1,
+          "FP": 0,
+          "TN": 21
+        }
+      },
+      "old_live_caveat": "old required<=N only; old EOF origin unavailable",
+      "gained_recording_count": 0,
+      "lost_recording_count": 0
+    },
+    {
+      "threshold": 0.7,
+      "keyword_id": 1,
+      "mode": "EOF150_source_clock",
+      "counts": {
+        "old": {
+          "TP": 4,
+          "FN": 1,
+          "FP": 0,
+          "TN": 21
+        },
+        "new": {
+          "TP": 4,
+          "FN": 1,
+          "FP": 0,
+          "TN": 21
+        }
+      },
+      "old_live_caveat": null,
+      "gained_recording_count": 0,
+      "lost_recording_count": 0
+    },
+    {
+      "threshold": 0.7,
+      "keyword_id": 2,
+      "mode": "full_EOF300",
+      "counts": {
+        "old": {
+          "TP": 4,
+          "FN": 2,
+          "FP": 0,
+          "TN": 20
+        },
+        "new": {
+          "TP": 4,
+          "FN": 2,
+          "FP": 0,
+          "TN": 20
+        }
+      },
+      "old_live_caveat": null,
+      "gained_recording_count": 0,
+      "lost_recording_count": 0
+    },
+    {
+      "threshold": 0.7,
+      "keyword_id": 2,
+      "mode": "strict_live",
+      "counts": {
+        "old": {
+          "TP": 4,
+          "FN": 2,
+          "FP": 0,
+          "TN": 20
+        },
+        "new": {
+          "TP": 4,
+          "FN": 2,
+          "FP": 0,
+          "TN": 20
+        }
+      },
+      "old_live_caveat": "old required<=N only; old EOF origin unavailable",
+      "gained_recording_count": 0,
+      "lost_recording_count": 0
+    },
+    {
+      "threshold": 0.7,
+      "keyword_id": 2,
+      "mode": "EOF150_source_clock",
+      "counts": {
+        "old": {
+          "TP": 4,
+          "FN": 2,
+          "FP": 0,
+          "TN": 20
+        },
+        "new": {
+          "TP": 4,
+          "FN": 2,
+          "FP": 0,
+          "TN": 20
+        }
+      },
+      "old_live_caveat": null,
+      "gained_recording_count": 0,
+      "lost_recording_count": 0
+    },
+    {
+      "threshold": 0.1,
+      "keyword_id": 1,
+      "mode": "full_EOF300",
+      "counts": {
+        "old": {
+          "TP": 5,
+          "FN": 0,
+          "FP": 1,
+          "TN": 20
+        },
+        "new": {
+          "TP": 5,
+          "FN": 0,
+          "FP": 1,
+          "TN": 20
+        }
+      },
+      "old_live_caveat": null,
+      "gained_recording_count": 0,
+      "lost_recording_count": 0
+    },
+    {
+      "threshold": 0.1,
+      "keyword_id": 1,
+      "mode": "strict_live",
+      "counts": {
+        "old": {
+          "TP": 5,
+          "FN": 0,
+          "FP": 1,
+          "TN": 20
+        },
+        "new": {
+          "TP": 5,
+          "FN": 0,
+          "FP": 1,
+          "TN": 20
+        }
+      },
+      "old_live_caveat": "old required<=N only; old EOF origin unavailable",
+      "gained_recording_count": 0,
+      "lost_recording_count": 0
+    },
+    {
+      "threshold": 0.1,
+      "keyword_id": 1,
+      "mode": "EOF150_source_clock",
+      "counts": {
+        "old": {
+          "TP": 5,
+          "FN": 0,
+          "FP": 1,
+          "TN": 20
+        },
+        "new": {
+          "TP": 5,
+          "FN": 0,
+          "FP": 1,
+          "TN": 20
+        }
+      },
+      "old_live_caveat": null,
+      "gained_recording_count": 0,
+      "lost_recording_count": 0
+    },
+    {
+      "threshold": 0.1,
+      "keyword_id": 2,
+      "mode": "full_EOF300",
+      "counts": {
+        "old": {
+          "TP": 6,
+          "FN": 0,
+          "FP": 2,
+          "TN": 18
+        },
+        "new": {
+          "TP": 6,
+          "FN": 0,
+          "FP": 2,
+          "TN": 18
+        }
+      },
+      "old_live_caveat": null,
+      "gained_recording_count": 0,
+      "lost_recording_count": 0
+    },
+    {
+      "threshold": 0.1,
+      "keyword_id": 2,
+      "mode": "strict_live",
+      "counts": {
+        "old": {
+          "TP": 5,
+          "FN": 1,
+          "FP": 2,
+          "TN": 18
+        },
+        "new": {
+          "TP": 5,
+          "FN": 1,
+          "FP": 2,
+          "TN": 18
+        }
+      },
+      "old_live_caveat": "old required<=N only; old EOF origin unavailable",
+      "gained_recording_count": 0,
+      "lost_recording_count": 0
+    },
+    {
+      "threshold": 0.1,
+      "keyword_id": 2,
+      "mode": "EOF150_source_clock",
+      "counts": {
+        "old": {
+          "TP": 6,
+          "FN": 0,
+          "FP": 2,
+          "TN": 18
+        },
+        "new": {
+          "TP": 6,
+          "FN": 0,
+          "FP": 2,
+          "TN": 18
+        }
+      },
+      "old_live_caveat": null,
+      "gained_recording_count": 0,
+      "lost_recording_count": 0
+    }
+  ],
+  "event_comparison": [
+    {
+      "threshold": 0.7,
+      "paired_events": 8,
+      "unmatched_events": 0,
+      "same_event_structure_and_source_grid": 8,
+      "exact_equal_binary64_scores": 0,
+      "max_absolute_score_difference": 6.735640875277227e-06,
+      "new_live_events": 8,
+      "new_EOF_derived_events": 0
+    },
+    {
+      "threshold": 0.1,
+      "paired_events": 14,
+      "unmatched_events": 0,
+      "same_event_structure_and_source_grid": 14,
+      "exact_equal_binary64_scores": 0,
+      "max_absolute_score_difference": 1.265684736864725e-05,
+      "new_live_events": 13,
+      "new_EOF_derived_events": 1
+    }
+  ],
+  "resource_observation": {
+    "elapsed_worker_seconds": 2.0537532820017077,
+    "worker_cpu_seconds": 2.126301,
+    "peak_rss_kib": 22188
+  },
+  "interpretation": "No lost/gained per-recording keyword detections at these fixed thresholds on this exposed cohort; scores and posterior numerical equality not established",
+  "timing_caveat": "Old body uses analytic required<=N and lacks EOF-origin labels; new live additionally requires !eof_derived. Model processing row, nominal8-row residual delay, source support and transport delivery remain distinct.",
+  "path_difference": "Original offline_batch140/Torch logits and Python double softmax versus canonical C/expf FP32 posterior; warmup rows and126/42 windows retained on both paths. Differences cannot be attributed uniquely to adapter.",
+  "reference_numerical_gate": "FAIL_UNCHANGED",
+  "qualification_allowed": false,
+  "production_claims": false,
+  "OR_implemented": false,
+  "SSC305_tested": false,
+  "new_reference_replay_or_Torch_calls": 0,
+  "threshold_searches": 0
+}

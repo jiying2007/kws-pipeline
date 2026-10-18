@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 61040,
-      "sha256": "3e21f4b65f2ddee9a4e3c106e27c3ad81fa35b8197d38d76b248b6414de21c32",
-      "git_blob_sha1": "c31cca997cdf80efb5b848ba0b50f9595bca6a52"
+      "bytes": 61451,
+      "sha256": "a78210b9837bfb76c8814ca4d282d2279c9de34eb4ae81a60ffd615bf7690612",
+      "git_blob_sha1": "0e5e459405fbffd5e69deb966c92bdee2817f447"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -40745,6 +40745,331 @@
             "bytes": 4280,
             "sha256": "0a512786abfcda324d5ebaf38dd8c73e3e077c8f5a8da9eb92adf40b41d2a59a",
             "git_blob_sha1": "4d740b44607cc62b1628593ff1473acab8ab2dad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "fsmn-b-stream-and-teacher-diagnostic-20261018",
+      "date": "2026-10-18",
+      "base_commit": "45d0d048bbbc356ddbb69aa410f2dc16629a6231",
+      "base_tree": "cd5785d2d91816b2eb4d5d48badba7cf03a07733",
+      "workflow_source_changed": true,
+      "scope": "Publish bounded research B full-chain C source and anonymous existing same26 diagnostics, plus independent pretrained teacher source metadata and anonymous diagnostic results. Add one GCC-only synthetic transport build contract within existing hosted-build.",
+      "rationale": "Reuse exact existing decoder and FFT sources; preserve all prior checks and sync active CI identity. Hosted entry compiles three targets and runs eight mock groups; no trained payload, real audio or model loading. Diagnostic scores are not bit-identical and strict 1e-5 numerical gate remains failed; OR is not implemented and no production/SSC305 qualification is asserted.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 61040,
+            "sha256": "3e21f4b65f2ddee9a4e3c106e27c3ad81fa35b8197d38d76b248b6414de21c32",
+            "git_blob_sha1": "c31cca997cdf80efb5b848ba0b50f9595bca6a52"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 61451,
+            "sha256": "a78210b9837bfb76c8814ca4d282d2279c9de34eb4ae81a60ffd615bf7690612",
+            "git_blob_sha1": "0e5e459405fbffd5e69deb966c92bdee2817f447"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/API-CONTRACT.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/API-CONTRACT.md",
+            "mode": "100644",
+            "bytes": 5632,
+            "sha256": "39cbfaf97b044fc3483eb1c861bbe9d39d78cdf63dad46a036d4cd0c9688b295",
+            "git_blob_sha1": "686712cc250c6f27e9f76a330493b1b324260c25"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/LICENSE",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/LICENSE",
+            "mode": "100644",
+            "bytes": 11357,
+            "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+            "git_blob_sha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/LICENSE.torchaudio",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/LICENSE.torchaudio",
+            "mode": "100644",
+            "bytes": 1338,
+            "sha256": "93a58861a858cc108e6b6b833e08e76e8b2a66339e4a8007c8a5a8c1ff9c40d6",
+            "git_blob_sha1": "1bec23eaf1dd562ae3d3216420b1b1bbfbd39cbc"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/NOTICE.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/NOTICE.md",
+            "mode": "100644",
+            "bytes": 2970,
+            "sha256": "a5c8875be7c31a30f537dde8f1fcbfb1e9c2bbb842d23fa3833f0b3f89d12960",
+            "git_blob_sha1": "53f42faf0dab400af9bd1e4f7dcdd753577e882b"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/README.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/README.md",
+            "mode": "100644",
+            "bytes": 9370,
+            "sha256": "9d2cc231521ae73347a4206682c18ae861f6803e0da0ad9aa09a229f491f8c44",
+            "git_blob_sha1": "987ccb7d05b15f270004e73e76e6514359bc73e5"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/RESULTS.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/RESULTS.json",
+            "mode": "100644",
+            "bytes": 3005,
+            "sha256": "a60ed25e11323da11dd3edefa199d80fd1c1867244507b1968fda7d524429172",
+            "git_blob_sha1": "e4f9bdbb25f111b42380b17a1d3cee18ad41111a"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/SAME26-RESULTS.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/SAME26-RESULTS.json",
+            "mode": "100644",
+            "bytes": 8180,
+            "sha256": "1558524604f54912df4243850c6de0cd547f537dbed03de27b811dd4eda028d0",
+            "git_blob_sha1": "162662bc6e0e2b0efaaeac01784ad00daeb7bb0d"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/b_stream_adapter.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/b_stream_adapter.c",
+            "mode": "100644",
+            "bytes": 10945,
+            "sha256": "475ae35ff44bb6049cc6be734e789af6b0081944c3460b74cede4ce366497dac",
+            "git_blob_sha1": "2bc1922bbbb1a28a8ff25642bca0d502b43f556d"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/b_stream_adapter.h",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/b_stream_adapter.h",
+            "mode": "100644",
+            "bytes": 3585,
+            "sha256": "3d25d9dba31220c71afbbc31d6c8022431b48badf9261294c05823f6b401a8a2",
+            "git_blob_sha1": "8b133287e278a64cd13ec9e0b76e93d2f7b0d106"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/build.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/build.py",
+            "mode": "100644",
+            "bytes": 12511,
+            "sha256": "a1a574037760814646d82e327b6cd54d0f3d754ee814977970429c55398c566c",
+            "git_blob_sha1": "395ed848e6db99d0372404bd8551671591522551"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/canonical_fbank.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/canonical_fbank.c",
+            "mode": "100644",
+            "bytes": 4558,
+            "sha256": "e8823f7b7790a5712c80c790baa4b7726f8ec635241fa68d18a26abe4849540b",
+            "git_blob_sha1": "4c81d27b6168b5368404a20e2b9330e22b77246f"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/canonical_fbank.h",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/canonical_fbank.h",
+            "mode": "100644",
+            "bytes": 1627,
+            "sha256": "cd1fecdc364a0714f7ac8320d1c7ef47ef661c06a68e981bd9975c7f3142e6e5",
+            "git_blob_sha1": "b0412187dc5cb00e22577c0abe1c41201636b3d5"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/canonical_pcm.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/canonical_pcm.c",
+            "mode": "100644",
+            "bytes": 4084,
+            "sha256": "9631201666df788d1a40649ca43a0786d91408acea520c1235a25199847df57b",
+            "git_blob_sha1": "31ccda4a0d0b16a1e478a5789fccdde287fd806e"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/canonical_pcm.h",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/canonical_pcm.h",
+            "mode": "100644",
+            "bytes": 2717,
+            "sha256": "0049a01f57ebc475a53a23ace7f8cd0edd52c8dd326ab892a0353284c229bb31",
+            "git_blob_sha1": "bc52229ec8d12ac0a2b5ec6b68a7414b9722128c"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/canonical_tables.h",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/canonical_tables.h",
+            "mode": "100644",
+            "bytes": 246938,
+            "sha256": "6f0ab0eb88d2bfa32a5a6b169c790dd6daa13a0d87914c2b795e96f58597313a",
+            "git_blob_sha1": "7d09eeb84024426a5b9873798c5d0dab41a0fb22"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/example_pcm.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/example_pcm.c",
+            "mode": "100644",
+            "bytes": 3690,
+            "sha256": "40e09f1c4fbb84162a9dee7c51392e812b5be6a8a62e808a281cb9a5b2bb0e6d",
+            "git_blob_sha1": "88bd18f271edef1d799a3767e945058dc66326a6"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/fsmn2599.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/fsmn2599.c",
+            "mode": "100644",
+            "bytes": 8535,
+            "sha256": "4df119142637924a40556fdeaffc1a5a135ac3028d56a7d82a42f63be9477660",
+            "git_blob_sha1": "89dc525715920f21dcb6a07e92efefdae5152b3d"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/fsmn2599.h",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/fsmn2599.h",
+            "mode": "100644",
+            "bytes": 3393,
+            "sha256": "a755fc8d58b425064e94ddfeaf60d3126b487588dd858e7c965d60857376f9c3",
+            "git_blob_sha1": "23a44bf10ea0aa1c50cae309ac2830640da66150"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/sha256.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/sha256.c",
+            "mode": "100644",
+            "bytes": 6113,
+            "sha256": "28023c2b965033d60a8db9f65099a0855e1816f7251bfa95109e634cef34e6a1",
+            "git_blob_sha1": "a512f1c3c2913a3d95463f36b666851fa8546934"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/sha256.h",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/sha256.h",
+            "mode": "100644",
+            "bytes": 222,
+            "sha256": "8272fb003f5ae29a116acc76252f17c02d276a7caea382dd652fa39ab5dd2aea",
+            "git_blob_sha1": "eb0c618ba937153d62eb043114ecf7beb0c9d7a3"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/softmax2599.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/softmax2599.c",
+            "mode": "100644",
+            "bytes": 2623,
+            "sha256": "32e7733b1b84f5ebe52c221d8116fe1bec13ec532c5377d1e283102839dd94e3",
+            "git_blob_sha1": "6e388dc0ffb8f6e3cccfc47697e7c2eaa6c46089"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/softmax2599.h",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/softmax2599.h",
+            "mode": "100644",
+            "bytes": 1503,
+            "sha256": "bad79ed1fcf07567e024fb5c0da079bf0834202bf0d3f29d0e8d428c5be6b700",
+            "git_blob_sha1": "5646edf1b872c93f964b017faeac66337b011dd2"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/source-binding.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 3530,
+            "sha256": "a5635d7f26291732e23d79fe42f81b612aa4439bced9426b5fd974ff875b3e3b",
+            "git_blob_sha1": "f2e40de13a2cc9b38cab5e07a5afcac790fbf826"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_b_stream_adapter.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_b_stream_adapter.c",
+            "mode": "100644",
+            "bytes": 18368,
+            "sha256": "22a1faf6c2ab8fa2c6b6afc3468c16f0420a3ec908b42e8714167b8df6a0e0a6",
+            "git_blob_sha1": "8ff4aaca9b8e8f45a811969f150bc1f69d6c58ee"
+          }
+        },
+        {
+          "path": "research/independent-source-pretrained/chinese3m-fixed26-anonymous-result.json",
+          "before": null,
+          "after": {
+            "path": "research/independent-source-pretrained/chinese3m-fixed26-anonymous-result.json",
+            "mode": "100644",
+            "bytes": 15511,
+            "sha256": "d054c29973fd3c061d01fb47f91abcb662ec179892f4853bb0ba8acac69b7318",
+            "git_blob_sha1": "39ed24e55bff29b3c72bd6ce14f6873095fb0784"
+          }
+        },
+        {
+          "path": "research/independent-source-pretrained/chinese3m-source-metadata.json",
+          "before": null,
+          "after": {
+            "path": "research/independent-source-pretrained/chinese3m-source-metadata.json",
+            "mode": "100644",
+            "bytes": 3513,
+            "sha256": "0f59eca889ecce0870d7bc664788ed7ffc3b4e9a476b212d8c5ada07a7175fa2",
+            "git_blob_sha1": "3467bf4b784a3fd092991ff34dfb4bdd054e1478"
+          }
+        },
+        {
+          "path": "tests/test_research_fsmn_stream.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_fsmn_stream.py",
+            "mode": "100644",
+            "bytes": 2010,
+            "sha256": "1be2cd0f5a2d1ed2eeaf771ce8576d00e185210a11fd99efdb175be7302e37fb",
+            "git_blob_sha1": "48c6bc8495b3039856fe930c04c4a516589c2cb7"
           }
         }
       ]
