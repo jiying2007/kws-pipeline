@@ -14,6 +14,9 @@
 
 ## Research data preparation
 
+- [Fixed seed0 B research candidate metadata](../research/fsmn2599-seed0-b-candidate-v1/MODEL_CARD.md): unpromoted candidate, metadata only; no best-model or deployment claim.
+- [Pinned public model-source evidence](../research/model-source-evidence-20261017/README.md): exact upstream revisions, license declarations and source identities; no weight bodies or blanket training-data rights grant.
+
 - [Saved-speech queue and weak dataset loader](speech-data-queue.md): offline evidence capture, uncertainty isolation and research-only machine labels; no model execution or product qualification.
 
 - [Source-language-conditioned weak import](language-conditioned-weak-import.md): saved-result verification with explicit language conditioning, retained history and research-only weak labels.

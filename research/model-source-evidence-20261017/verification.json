@@ -1,0 +1,12 @@
+{
+  "created_at_utc": "2026-10-17T22:55:18.836173+00:00",
+  "candidate_path": "public-source-metadata-candidate.json",
+  "candidate_sha256": "28b880d7d9d6a74b23a291b4697753e0f6da0402426b4d9b1c0c4471799e64b5",
+  "evidence_files": 7,
+  "fixed_model_card_bytes": 923,
+  "fixed_model_card_sha256": "f6995b667243217033c7b9a5fb080b03096ed8d30b65eb81a5e10a9c4f37c73e",
+  "fixed_listing_sha256": "78fe694c7fffdf58e6f7b329b0940024b93311becf4ec2955f9f54b35a423ea7",
+  "original_model_files_rehashed": 4,
+  "wekws_local_matches": 3,
+  "all_assertions_passed": true
+}

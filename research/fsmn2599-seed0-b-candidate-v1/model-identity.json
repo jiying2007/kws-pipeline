@@ -1,0 +1,133 @@
+{
+  "schema": "kws-fsmn2599-research-candidate-identity-v1",
+  "candidate_id": "fsmn2599-seed0-b-step220-a366d9f5",
+  "status": "RESEARCH_CANDIDATE_NOT_PROMOTED",
+  "checkpoint": {
+    "expected_filename": "model.final.pt",
+    "bytes": 3037273,
+    "sha256": "a366d9f5ebe7027a496e3f119debcf1e19d2f7a79226c96b31a4ddb3a2757f77",
+    "format": "PyTorch full state_dict",
+    "included_in_publication": false,
+    "git_registry_entry": null,
+    "immutable_model_release_url": null
+  },
+  "base_checkpoint": {
+    "upstream_path": "avg_30.pt",
+    "source_revision": "cd0c18d0dda6742c371fbb72ec66185906a9885d",
+    "bytes": 3040011,
+    "sha256": "d3d89b5dde08c2926d46a97eab6f7179a87b1946ccebd16c02e77042ea8389fe",
+    "source_url": "https://modelscope.cn/api/v1/models/thuduj12/kws_wenwen_fsmn_ctc/repo?Revision=cd0c18d0dda6742c371fbb72ec66185906a9885d&FilePath=avg_30.pt"
+  },
+  "recorded_tensor_identity": {
+    "basis": "Existing completed-run before/after tensor-hash audit; metadata preparation only rehashed the model file bytes.",
+    "entries": 30,
+    "unchanged_entries": 28,
+    "changed_keys": [
+      "backbone.out_linear2.linear.bias",
+      "backbone.out_linear2.linear.weight"
+    ],
+    "changed_tensors": {
+      "backbone.out_linear2.linear.bias": {
+        "before_sha256": "7aba68eff0c6974168b081cd35a191f9e2494b0aa93f0f2600335059adcbdbe3",
+        "after_sha256": "06a78c2ab018ba80b354d967190b3373a54418d57a28f1cbd5a7291c2a20f960"
+      },
+      "backbone.out_linear2.linear.weight": {
+        "before_sha256": "d00f3ab12cf2501061a219e61b00864bde8569b54e37a666ae82d189e701ddc5",
+        "after_sha256": "47cb5c85aaa7e187fbd91ad8cdc43f1233b130096661e063230e99360257d7be"
+      }
+    }
+  },
+  "architecture": {
+    "input_dim": 400,
+    "output_dim": 2599,
+    "final_head_input_dim": 140,
+    "final_head_trainable_elements": 366459,
+    "state_elements_including_cmvn_buffers": 756933,
+    "cmvn": "Stored mean and inverse standard deviation, each 400 elements",
+    "type": "WeKws FSMN",
+    "layers": 4,
+    "linear_dim": 250,
+    "projection_dim": 128,
+    "left_order": 10,
+    "right_order": 2,
+    "left_stride": 1,
+    "right_stride": 1,
+    "input_affine_dim": 140,
+    "output_affine_dim": 140
+  },
+  "recipe": {
+    "scope": "Documented fixed historical head-only recipe; complete private corpus/cache/optimizer/trace are not distributed.",
+    "schedule_seed": 0,
+    "fixed_final_step": 220,
+    "selection_rule": "Original fixed seed0 B final step 220; no best-seed selection or early stopping",
+    "training_unique": 146,
+    "training_unique_by_source": {
+      "old20": 12,
+      "Qwen36": 14,
+      "MSWC-train120": 120
+    },
+    "sample_presentations": 880,
+    "batch_size": 4,
+    "group_exposures": {
+      "historical_Qwen12": 40,
+      "weak_Qwen14": 20,
+      "MSWC120": 1
+    },
+    "optimizer": {
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "lr": 0.0001,
+      "type": "Adam",
+      "weight_decay": 0
+    },
+    "gradient_clip_norm": 5,
+    "lambda_pair": 0.1,
+    "matched_arm_A_lambda_pair": 0.0,
+    "full_transcript_and_competitor_ctc_normalization": "Each score normalized by its full transcript token length; weighted sum divided by full batch size 4; sample weights 1.",
+    "eligible_unique": 16,
+    "eligible_presentations": 440,
+    "competitor_ctc_scores": 920,
+    "feature_cache_semantics": "Historical offline-batch encoder features, not canonical streaming cache",
+    "encoder_training": false,
+    "dev_grid_or_checkpoint_search": false,
+    "excluded_training_sources": [
+      "Cosy recordings",
+      "AISHELL voice-clone material",
+      "newer 15-candidate set",
+      "eight historical background sessions"
+    ]
+  },
+  "research_targets": [
+    {
+      "text": "你好小窝",
+      "output_indices": [
+        1027,
+        1401,
+        1462,
+        2093
+      ]
+    },
+    {
+      "text": "小窝小窝",
+      "output_indices": [
+        1462,
+        2093,
+        1462,
+        2093
+      ]
+    }
+  ],
+  "rights": {
+    "repository_existing_license": "Apache-2.0",
+    "base_declared_license": "Apache-2.0",
+    "dataset_license_for_MSWC_source_material": "CC-BY-4.0",
+    "project_purpose": "Noncommercial research",
+    "new_legal_use_restriction_created": false
+  },
+  "load_contract": "LOADING.md",
+  "evidence_contract": "evidence-status.json",
+  "attribution": "NOTICE.md"
+}
