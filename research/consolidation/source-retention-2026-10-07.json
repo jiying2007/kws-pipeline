@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 59988,
-      "sha256": "a754bde6d4c1c74985700c9a50a70ae40ba6ebe05d89b839da44917e8192022d",
-      "git_blob_sha1": "c2dff6641f59c98964ebc559c85699adcaadf238"
+      "bytes": 60062,
+      "sha256": "714176bd545f8fdab65a042d5922a616f4fdcb2d2eb371d295276d98d11f196b",
+      "git_blob_sha1": "553409ff5946f90207362c728a4279ffd235f3c3"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -40115,6 +40115,34 @@
             "bytes": 3603,
             "sha256": "5a7a43cfafd24651abbb29ffcfc91770b44ce84e26706f9b15043aaebe367786",
             "git_blob_sha1": "bdc78e7abb297cf1ccf483e1d479806772cf27c8"
+          }
+        }
+      ]
+    },
+    {
+      "id": "causal-research-ci-executable-declarations-20261018",
+      "date": "2026-10-18",
+      "base_commit": "7e7c6c78667c334470b3fd676edbc7aa28f512e8",
+      "base_tree": "8aef1f4cb1af3c5a0223d2326dc10112b6d79c37",
+      "workflow_source_changed": true,
+      "scope": "Replace shell-mode loop with three literal Python mode commands for the existing executable-declaration inventory.",
+      "rationale": "First hosted run executed all artificial cases but release-workflow inventory failed to recognize the variable option. Preserve tests, all three modes and gates; no inventory bypass or scope expansion.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 59988,
+            "sha256": "a754bde6d4c1c74985700c9a50a70ae40ba6ebe05d89b839da44917e8192022d",
+            "git_blob_sha1": "c2dff6641f59c98964ebc559c85699adcaadf238"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 60062,
+            "sha256": "714176bd545f8fdab65a042d5922a616f4fdcb2d2eb371d295276d98d11f196b",
+            "git_blob_sha1": "553409ff5946f90207362c728a4279ffd235f3c3"
           }
         }
       ]
