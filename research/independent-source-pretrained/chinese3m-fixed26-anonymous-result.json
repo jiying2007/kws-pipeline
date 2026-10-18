@@ -1,0 +1,565 @@
+{
+  "schema": "public-anonymous-research-result-v2",
+  "status": "EXECUTED_INDEPENDENTLY_REVIEWED_EXPOSED_DEV_ONLY",
+  "data": {
+    "exposed_development_clips": 26,
+    "target_reference_pairs": 11,
+    "historical_human_basis_entries": 8,
+    "machine_weak_entries": 18,
+    "natural_independent_target_gold": 0,
+    "body_seconds": 41.6,
+    "synthetic_tail_seconds": 7.8
+  },
+  "fixed_teacher": {
+    "keywords_threshold": 0.25,
+    "keywords_score": 1,
+    "max_active_paths": 4,
+    "num_trailing_blanks": 1,
+    "threads": 1,
+    "provider": "cpu",
+    "dtype": "fp32"
+  },
+  "phases": {
+    "body": {
+      "teacher": {
+        "hits": 8,
+        "positive_reference_pairs": 11,
+        "negative_events": 1,
+        "negative_triggered_clips": 1,
+        "triggered_clips": 9,
+        "events": 9,
+        "wrong_keyword_events_on_positive_clips": 0,
+        "target_duplicate_events": 0
+      },
+      "B_grid": [
+        {
+          "threshold": 0.05,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.1,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.15,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.2,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.25,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.3,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.35,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.4,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.45,
+          "hits": 9,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.5,
+          "hits": 8,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.55,
+          "hits": 8,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.6,
+          "hits": 8,
+          "negative_events": 2,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.65,
+          "hits": 8,
+          "negative_events": 1,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.7,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": true
+        },
+        {
+          "threshold": 0.75,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": true
+        },
+        {
+          "threshold": 0.8,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": true
+        },
+        {
+          "threshold": 0.85,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": true
+        },
+        {
+          "threshold": 0.9,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": true
+        },
+        {
+          "threshold": 0.95,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": true
+        },
+        {
+          "threshold": 0.98,
+          "hits": 3,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.99,
+          "hits": 1,
+          "negative_events": 0,
+          "dominates_teacher": false
+        }
+      ],
+      "dominating_B_thresholds": [
+        0.7,
+        0.75,
+        0.8,
+        0.85,
+        0.9,
+        0.95
+      ],
+      "semantics": "cumulative events decided during natural body only"
+    },
+    "tail300": {
+      "teacher": {
+        "hits": 10,
+        "positive_reference_pairs": 11,
+        "negative_events": 2,
+        "negative_triggered_clips": 2,
+        "triggered_clips": 12,
+        "events": 12,
+        "wrong_keyword_events_on_positive_clips": 0,
+        "target_duplicate_events": 0
+      },
+      "B_grid": [
+        {
+          "threshold": 0.05,
+          "hits": 11,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.1,
+          "hits": 11,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.15,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.2,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.25,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.3,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.35,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.4,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.45,
+          "hits": 9,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.5,
+          "hits": 8,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.55,
+          "hits": 8,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.6,
+          "hits": 8,
+          "negative_events": 2,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.65,
+          "hits": 8,
+          "negative_events": 1,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.7,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.75,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.8,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.85,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.9,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.95,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.98,
+          "hits": 3,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.99,
+          "hits": 1,
+          "negative_events": 0,
+          "dominates_teacher": false
+        }
+      ],
+      "dominating_B_thresholds": [],
+      "semantics": "cumulative body plus fixed synthetic300ms tail; excludes later EOF drain"
+    },
+    "EOF": {
+      "teacher": {
+        "hits": 10,
+        "positive_reference_pairs": 11,
+        "negative_events": 2,
+        "negative_triggered_clips": 2,
+        "triggered_clips": 12,
+        "events": 12,
+        "wrong_keyword_events_on_positive_clips": 0,
+        "target_duplicate_events": 0
+      },
+      "B_grid": [
+        {
+          "threshold": 0.05,
+          "hits": 11,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.1,
+          "hits": 11,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.15,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.2,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.25,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.3,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.35,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.4,
+          "hits": 10,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.45,
+          "hits": 9,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.5,
+          "hits": 8,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.55,
+          "hits": 8,
+          "negative_events": 3,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.6,
+          "hits": 8,
+          "negative_events": 2,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.65,
+          "hits": 8,
+          "negative_events": 1,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.7,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.75,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.8,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.85,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.9,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.95,
+          "hits": 8,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.98,
+          "hits": 3,
+          "negative_events": 0,
+          "dominates_teacher": false
+        },
+        {
+          "threshold": 0.99,
+          "hits": 1,
+          "negative_events": 0,
+          "dominates_teacher": false
+        }
+      ],
+      "dominating_B_thresholds": [],
+      "semantics": "cumulative body plus300ms tail plus later EOF drain",
+      "teacher_EOF_incremental_events": 0,
+      "B_EOF_caveat": "B grid repeats existing saved body+300ms cutoff; no new B EOF run or separately observed B EOF phase"
+    }
+  },
+  "counts": {
+    "spotter_constructors_started": 1,
+    "spotter_constructors_completed": 1,
+    "streams_started": 26,
+    "streams_completed": 26,
+    "accept_calls": 2470,
+    "accepted_samples": 790400,
+    "decode_calls_started": 132,
+    "decode_calls_completed": 132,
+    "explicit_reset_calls": 12,
+    "input_finished_calls": 26,
+    "events": 12,
+    "phase_accept": {
+      "body": 2080,
+      "tail300": 390
+    },
+    "phase_decode": {
+      "body": 106,
+      "tail300": 22,
+      "EOF_after_tail300": 4
+    }
+  },
+  "internal_onnx_sessions": null,
+  "internal_ort_forwards": null,
+  "internal_resets": null,
+  "resources": {
+    "exit_code": 0,
+    "stop_reason": null,
+    "wall_seconds": 2.839975469003548,
+    "sampled_process_tree_peak_rss": 85323776,
+    "interval_seconds": 0.2,
+    "limit_is_sampled_not_instantaneous": true
+  },
+  "decision": "Keep fixed research baseline only; no promotion, distillation, new tuning, or deployment port.",
+  "limits": [
+    "Exposed developer-set comparisons only; no independent natural recall or FAR certification.",
+    "Historical human-basis entries do not make all per-keyword negatives human gold.",
+    "EOF is a separate phase, never counted as tail-only availability.",
+    "B21 points are saved JSON arithmetic, not new decoding or tuning.",
+    "OR comparison is an earlier posthoc event union, not a new joint run.",
+    "Internal native counts are unknown, not zero.",
+    "Runtime timing is this host end-to-end; not hardware-board or pure-kernel performance.",
+    "Raw scores are not calibrated across models.",
+    "Sampled memory limit does not establish an instantaneous peak."
+  ],
+  "fixed_comparators": {
+    "B_theta0.70": {
+      "body_hits": 8,
+      "body_plus300_hits": 8,
+      "negative_events": 0
+    },
+    "B_theta0.10": {
+      "body_hits": 10,
+      "body_plus300_hits": 11,
+      "negative_events": 3
+    },
+    "OR_B0.70_A240_KW2_0.85_saved_posthoc": {
+      "body_hits": 9,
+      "body_plus300_hits": 9,
+      "negative_events": 0
+    }
+  },
+  "description": "固定官方默认中文3.3M仅保留研究对照，不晋升。正文8/11参考目标+1弱负被现有B工作点支配；固定300ms尾后10/11+2弱负仅是旧21点以外的权衡点。所有26条已暴露，不能视为独立真人验收，也不能用作第四ASR或gold标签。",
+  "protocol_caveat": {
+    "original": "Original body and 300ms synthetic-tail results are fixed decision-observation windows, not the official finite-file completion protocol. Body dominance only applies under that window and does not establish whole-model inferiority.",
+    "official_example": "Sherpa-onnx v1.13.8 KWS Python example appends 0.66s zeros before input_finished; this is not a universal minimum or sufficiency guarantee.",
+    "source": "https://github.com/k2-fsa/sherpa-onnx/blob/v1.13.8/python-api-examples/keyword-spotter.py#L69-L77",
+    "EOF": "input_finished enables edge feature completion, not arbitrary model-chunk padding."
+  },
+  "post_evidence_660ms_supplement": {
+    "status": "EXECUTED_INDEPENDENTLY_REVIEWED_PROTOCOL_SENSITIVITY_ONLY",
+    "design": "After inspecting original results; same 26 exposed clips, model, defaults and single CPU thread; 20ms incremental accepts; not independently preregistered acceptance. No B 660ms replay.",
+    "accepted_samples": 940160,
+    "accepted_seconds": 58.76,
+    "accept_calls": 2938,
+    "streams": 26,
+    "decode_calls": 158,
+    "phase_decode_calls": {
+      "body": 106,
+      "first300ms": 22,
+      "extra360ms": 30,
+      "EOF": 0
+    },
+    "phase_new_events": {
+      "body": 9,
+      "first300ms": 3,
+      "extra360ms": 0,
+      "EOF": 0
+    },
+    "cumulative_through660_and_EOF": {
+      "target_hits": 10,
+      "target_reference_pairs": 11,
+      "weak_negative_triggered_clips": 2,
+      "events": 12,
+      "triggered_clips": 12
+    },
+    "common_prefix_comparison": {
+      "clip_events_all_equal": true,
+      "clips_compared": 26,
+      "global_body_and_first300_decode_calls_equal": true,
+      "excludes_original_EOF": true,
+      "per_clip_decode_trace_equivalence": "not observable in original saved record"
+    },
+    "internal_session_forward_reset_counts": null,
+    "interpretation": "Additional 360ms yielded 30 additional decoder calls and no additional events in these samples. Does not prove arbitrary tail sufficiency, natural continuous-context performance, independence or model superiority."
+  }
+}

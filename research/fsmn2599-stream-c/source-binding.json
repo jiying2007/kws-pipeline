@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "files": [
+    {
+      "path": "research/fsmn2599-stream-c/b_stream_adapter.c",
+      "bytes": 10945,
+      "sha256": "475ae35ff44bb6049cc6be734e789af6b0081944c3460b74cede4ce366497dac"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/b_stream_adapter.h",
+      "bytes": 3585,
+      "sha256": "3d25d9dba31220c71afbbc31d6c8022431b48badf9261294c05823f6b401a8a2"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/canonical_fbank.c",
+      "bytes": 4558,
+      "sha256": "e8823f7b7790a5712c80c790baa4b7726f8ec635241fa68d18a26abe4849540b"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/canonical_fbank.h",
+      "bytes": 1627,
+      "sha256": "cd1fecdc364a0714f7ac8320d1c7ef47ef661c06a68e981bd9975c7f3142e6e5"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/canonical_pcm.c",
+      "bytes": 4084,
+      "sha256": "9631201666df788d1a40649ca43a0786d91408acea520c1235a25199847df57b"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/canonical_pcm.h",
+      "bytes": 2717,
+      "sha256": "0049a01f57ebc475a53a23ace7f8cd0edd52c8dd326ab892a0353284c229bb31"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/canonical_tables.h",
+      "bytes": 246938,
+      "sha256": "6f0ab0eb88d2bfa32a5a6b169c790dd6daa13a0d87914c2b795e96f58597313a"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/fsmn2599.c",
+      "bytes": 8535,
+      "sha256": "4df119142637924a40556fdeaffc1a5a135ac3028d56a7d82a42f63be9477660"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/fsmn2599.h",
+      "bytes": 3393,
+      "sha256": "a755fc8d58b425064e94ddfeaf60d3126b487588dd858e7c965d60857376f9c3"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/sha256.c",
+      "bytes": 6113,
+      "sha256": "28023c2b965033d60a8db9f65099a0855e1816f7251bfa95109e634cef34e6a1"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/sha256.h",
+      "bytes": 222,
+      "sha256": "8272fb003f5ae29a116acc76252f17c02d276a7caea382dd652fa39ab5dd2aea"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/softmax2599.c",
+      "bytes": 2623,
+      "sha256": "32e7733b1b84f5ebe52c221d8116fe1bec13ec532c5377d1e283102839dd94e3"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/softmax2599.h",
+      "bytes": 1503,
+      "sha256": "bad79ed1fcf07567e024fb5c0da079bf0834202bf0d3f29d0e8d428c5be6b700"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/test_b_stream_adapter.c",
+      "bytes": 18368,
+      "sha256": "22a1faf6c2ab8fa2c6b6afc3468c16f0420a3ec908b42e8714167b8df6a0e0a6"
+    },
+    {
+      "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
+      "bytes": 26243,
+      "sha256": "dd971cfcb57cf4a823415ca508a7389b15c9e1728379f11bb6969f1fd31f3bbf"
+    },
+    {
+      "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.h",
+      "bytes": 4957,
+      "sha256": "318c43814fa0b096fa87e72d5ae0844dffb84874fd95f0bcae8a0624ddcdd696"
+    },
+    {
+      "path": "research/donor_fbank/fft_twiddles.h",
+      "bytes": 12495,
+      "sha256": "fb628e5c3672a39dbd33bde612d48731f5abde72cbe401c4bc8273033ff01d0f"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/example_pcm.c",
+      "bytes": 3690,
+      "sha256": "40e09f1c4fbb84162a9dee7c51392e812b5be6a8a62e808a281cb9a5b2bb0e6d"
+    }
+  ],
+  "qualification_allowed": false,
+  "dependency_repo_commit": "6cb57da2a73fe5859e4e139769598ffc28a42cf5",
+  "note": "New module sources plus existing decoder and FFT constants; no binary, audio, checkpoint or learned payload."
+}
