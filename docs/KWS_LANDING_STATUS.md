@@ -3,7 +3,7 @@
 ## Current model and engineering status
 
 Status checked 2026-10-18 against merged main
-`6cb57da2a73fe5859e4e139769598ffc28a42cf5`. This is the single current
+`98a924797e0835e44a2231aa1dfc57e73cfe5ef9`. This is the single current
 summary; dated checkpoints below retain their original evidence scope.
 
 1. **Historical five-token SKU:** `model-749187ec1d66` retains its historical
@@ -21,8 +21,10 @@ summary; dated checkpoints below retain their original evidence scope.
    adds the fixed-threshold interface; hosted integration checks passed on the
    exact merge commit below. This covers artificial decoder/ABI contracts,
    separate from retained private fixed-posterior parity evidence.
-   Frontend/acoustic-network `atol=rtol=1e-5` remains **FAIL**; the complete C B/OR
-   chain is not integrated, and SSC305/device qualification has not passed.
+   [PR #609](https://github.com/jiying2007/kws-pipeline/pull/609) adds actual ARM/QEMU synthetic decoder checks.
+   [PR #610](https://github.com/jiying2007/kws-pipeline/pull/610) integrates the [full B C research source](../research/fsmn2599-stream-c/README.md)
+   with bounded GCC build/mock checks; the OR chain is not integrated.
+   Frontend/acoustic-network `atol=rtol=1e-5` remains **FAIL**, and SSC305/device qualification has not passed.
    Decoder parity does not establish acoustic accuracy, FAR or shipping approval.
 
 当前摘要以以上 main 提交为准，五类证据分开：
@@ -36,8 +38,15 @@ summary; dated checkpoints below retain their original evidence scope.
    历史正例回退，继续保留原 B 和保守 OR。
 5. posterior-only C 的 #608 固定阈值接口已通过所列合并提交的托管集成检查；
    人工 decoder/ABI 契约与历史私有 posterior 一致性证据分开。
-   frontend/network 的 `atol=rtol=1e-5` 仍 **FAIL**，完整 C B/OR 链未集成，
-   SSC305/设备资格未通过。解码器一致性不是声学准确率、FAR 或 shipping 资格。
+   #609 增加真实 ARM/QEMU 人工解码检查；#610 已集成完整 B C 研究源码及有界 GCC 构建/mock检查，OR 链未集成。
+   frontend/network 的 `atol=rtol=1e-5` 仍 **FAIL**，SSC305/设备资格未通过。
+   解码器一致性不是声学准确率、FAR 或 shipping 资格。
+
+### Latest fixed-scope diagnostics / 最新固定范围诊断
+
+- [Fixed37 continuation versus teacher-KL](../research/fsmn-antiforgetting-fixed37-v1/antiforgetting-fixed37-anonymous-result.json): both heads lose one exposed positive in the body-plus-300ms window at 0.1; no discrete regularization benefit, neither head promoted.
+- [Train-reference TTS and dual-ASR](../research/tts-train-reference-probe-v1/ANONYMOUS-SUMMARY.md): 16 outputs, 14 weak intent-matched agreements, two quarantines; source/speaker exposure remains unknown and weak agreement is not automatic training admission. Original count/archive-budget defects remain recorded.
+- [Official head versus B on synthetic16](../research/fsmn-official-vs-b-synthetic16-v1/README.md): offline body-plus-300ms analysis gives 5/8 to 8/8 at 0.1 and 0/8 to 6/8 at 0.7; six weak near-word negatives have zero events. B has one event among two unknown-label clips at 0.1, reported separately. Body-only counts are 1/8 for both at 0.1 and 0/8 to 1/8 at 0.7; these offline windows are not real-time recall or independent qualification.
 
 ### Integration receipts checked 2026-10-18
 
@@ -51,6 +60,8 @@ integration/CI pending status. They do not reclassify failed numerical evidence.
 | [#606](https://github.com/jiying2007/kws-pipeline/pull/606), causal research assets | `6f7523f7fae3e598e700426a43a3095d6ede1118` | [39113813122](https://github.com/jiying2007/kws-pipeline/actions/runs/39113813122) | [39113813078](https://github.com/jiying2007/kws-pipeline/actions/runs/39113813078) |
 | [#607](https://github.com/jiying2007/kws-pipeline/pull/607), no-promotion decision | `e3e63c28e9e183ca70cc86c0a0bbfdcceb0bf346` | [39115489962](https://github.com/jiying2007/kws-pipeline/actions/runs/39115489962) | [39115490023](https://github.com/jiying2007/kws-pipeline/actions/runs/39115490023) |
 | [#608](https://github.com/jiying2007/kws-pipeline/pull/608), C threshold interface | `6cb57da2a73fe5859e4e139769598ffc28a42cf5` | [39120269068](https://github.com/jiying2007/kws-pipeline/actions/runs/39120269068) | [39120269075](https://github.com/jiying2007/kws-pipeline/actions/runs/39120269075) |
+| [#609](https://github.com/jiying2007/kws-pipeline/pull/609), ARM decoder/current entry | `45d0d048bbbc356ddbb69aa410f2dc16629a6231` | [39134726864](https://github.com/jiying2007/kws-pipeline/actions/runs/39134726864) | [39134726700](https://github.com/jiying2007/kws-pipeline/actions/runs/39134726700) |
+| [#610](https://github.com/jiying2007/kws-pipeline/pull/610), B C research source/diagnostics | `98a924797e0835e44a2231aa1dfc57e73cfe5ef9` | [39136736860](https://github.com/jiying2007/kws-pipeline/actions/runs/39136736860) | [39136736549](https://github.com/jiying2007/kws-pipeline/actions/runs/39136736549) |
 
 以上是合并提交上的 push/main 成功收据，不是 PR head 测试或新增声学实验。
 历史准备文件的 NOT_RUN/PENDING 仍描述当时状态；后续收据只更新集成/CI 状态，

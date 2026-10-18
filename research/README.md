@@ -11,6 +11,7 @@ are unchanged by this consolidation.
 ## Research navigation and retained checkpoints / 研究导航与历史检查点
 
 Current summary / 当前统一摘要：[model and engineering status](../docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status).
+Latest fixed-scope results / 最新固定范围结果：[fixed37, train-reference screening and official-versus-B synthetic16](../docs/KWS_LANDING_STATUS.md#latest-fixed-scope-diagnostics--最新固定范围诊断). No model is promoted.
 Dated notes below retain their original scope; the D20 checklist applies to that diagnostic lane, not all research.
 下列日期记录保留原范围；D20 准入清单只适用于该诊断线，不代表全部研究的当前状态。
 
