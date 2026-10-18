@@ -7,3 +7,9 @@ c9a0584ef6e5d22488e8f3b831b95c0771b16e480f1858b8542f6ff1d90f1ed9  kws-fsmn-three
 d99a79e6984bb7cb60954d2c0ae3cc36230779c91f451dd32d504bcb79152b4c  kws-fsmn-three-window-adapter-20261017/test_posterior_events.py
 068d025c1e55101f0cec717471b7dbb33e8d38eb975fa8b1dec26e05a98a5889  kws-fsmn-three-window-adapter-20261017/test_beam_minimal_patch_candidate.py
 2252b3b2a76f03648d24345d83ec422279ac116a5965e37fe322e5201c0ec29f  kws-fsmn-three-window-adapter-20261017/test-patched-final-summary.json
+
+# Current threshold-interface revision; paths relative to the research module root.
+dd971cfcb57cf4a823415ca508a7389b15c9e1728379f11bb6969f1fd31f3bbf  kws-fsmn2599-three-window-c-preparation-20261018/kws3.c
+318c43814fa0b096fa87e72d5ae0844dffb84874fd95f0bcae8a0624ddcdd696  kws-fsmn2599-three-window-c-preparation-20261018/kws3.h
+9c73ec54d177d98b8b52fe78dae98beb41e4f11700560ee9a9d0c675db8b6abc  kws-fsmn2599-three-window-c-preparation-20261018/test_threshold.c
+f8b0a8ea09938339eccfe629a3800ecf9299b590a616e88175348896b86379eb  kws-fsmn2599-three-window-c-preparation-20261018/THRESHOLD-INTERFACE-RESULTS.json

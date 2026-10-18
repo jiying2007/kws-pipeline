@@ -40450,6 +40450,124 @@
           }
         }
       ]
+    },
+    {
+      "id": "kws3-fixed-threshold-interface-20261018",
+      "date": "2026-10-18",
+      "base_commit": "e3e63c28e9e183ca70cc86c0a0bbfdcceb0bf346",
+      "base_tree": "0b70a65331fbc38038037318af3d340d2fb3286a",
+      "workflow_source_changed": false,
+      "scope": "Extend the existing research C decoder with fixed threshold creation and diagnostics; preserve default-zero behavior and previous ABI symbols.",
+      "rationale": "Retain legacy eight smoke groups and 28 differential methods, add eight bounded synthetic threshold groups and 13-symbol production checks under existing gcc/clang sanitizer CI. Saved-posterior parity does not resolve frontend/network numerical failures or qualify deployment. No private payloads, weights or model execution.",
+      "files": [
+        {
+          "path": "research/fsmn2599-three-window-c/README.md",
+          "before": {
+            "path": "research/fsmn2599-three-window-c/README.md",
+            "mode": "100644",
+            "bytes": 3388,
+            "sha256": "c25e516561efda5648fdbbfad9ca42e313fbe880a4f0d4b2b1d89419a654048a",
+            "git_blob_sha1": "bab74ed1b3edefdae755fd7b0f237d068f02ccba"
+          },
+          "after": {
+            "path": "research/fsmn2599-three-window-c/README.md",
+            "mode": "100644",
+            "bytes": 6347,
+            "sha256": "1b92cc46b9d069297130c246c116cfae2bdc4373358d89a219f5613708db4e86",
+            "git_blob_sha1": "5ba7f6e322be5030b0eeabf54b7e83f99fe32bc2"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/SOURCE-SHA256SUMS",
+          "before": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/SOURCE-SHA256SUMS",
+            "mode": "100644",
+            "bytes": 1194,
+            "sha256": "498c0d807e29a944563e53d52881a84f71af956dc9f19740138e2b86c1be6de5",
+            "git_blob_sha1": "82ac294fb1016e6d6ed96831f392b3eccebba163"
+          },
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/SOURCE-SHA256SUMS",
+            "mode": "100644",
+            "bytes": 1803,
+            "sha256": "e01d5bd5d897a1baae53416c430c7858e0c0d3aed034980aac522f1368e66d69",
+            "git_blob_sha1": "382e8f0957d072cffafe162d821bad6a53940799"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/THRESHOLD-INTERFACE-RESULTS.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/THRESHOLD-INTERFACE-RESULTS.json",
+            "mode": "100644",
+            "bytes": 3882,
+            "sha256": "f8b0a8ea09938339eccfe629a3800ecf9299b590a616e88175348896b86379eb",
+            "git_blob_sha1": "63b33d9a37ffbf0ec95c483d531bfbf87b32cad6"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
+          "before": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
+            "mode": "100644",
+            "bytes": 25066,
+            "sha256": "115706319c90be72aa0deff2f291da0053119bc76d4ea1b5f36bfe43faaa1d6a",
+            "git_blob_sha1": "3d01081ee57259aa71e83c9f241941ebec12dd24"
+          },
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
+            "mode": "100644",
+            "bytes": 26243,
+            "sha256": "dd971cfcb57cf4a823415ca508a7389b15c9e1728379f11bb6969f1fd31f3bbf",
+            "git_blob_sha1": "6fa0ff3d4e2c0b865d0c9a7d41bd4a73237b1141"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.h",
+          "before": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.h",
+            "mode": "100644",
+            "bytes": 4368,
+            "sha256": "e912d38a3ba40b3032df2cd63fbd3445e9223fdc02e21453309b7da46d9fc3e9",
+            "git_blob_sha1": "befa382517b25e95e478596ebba4f4cc774fc583"
+          },
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.h",
+            "mode": "100644",
+            "bytes": 4957,
+            "sha256": "318c43814fa0b096fa87e72d5ae0844dffb84874fd95f0bcae8a0624ddcdd696",
+            "git_blob_sha1": "8b6690a1339a284052857430ce76e6c0c479a7c8"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/test_threshold.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/test_threshold.c",
+            "mode": "100644",
+            "bytes": 25027,
+            "sha256": "9c73ec54d177d98b8b52fe78dae98beb41e4f11700560ee9a9d0c675db8b6abc",
+            "git_blob_sha1": "1baf5ddc9f05b2e39e0fe8daf78130656432c117"
+          }
+        },
+        {
+          "path": "tests/test_research_three_window_c.py",
+          "before": {
+            "path": "tests/test_research_three_window_c.py",
+            "mode": "100644",
+            "bytes": 2813,
+            "sha256": "a9f852ab512908572447e126f2de08f0223882d138d34a9a62e2401356d8933a",
+            "git_blob_sha1": "6092807668dc39c63cdd88b88d671794321a1ef0"
+          },
+          "after": {
+            "path": "tests/test_research_three_window_c.py",
+            "mode": "100644",
+            "bytes": 4798,
+            "sha256": "3bcaea5839adcf86b32267760eb503d1f254f01f7b28dd57c0de49dc81f75fc6",
+            "git_blob_sha1": "044c04b947530eccff9d65c7a003507e68fae152"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
