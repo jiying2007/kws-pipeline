@@ -13,6 +13,11 @@ EXACT = frozenset({
     'tools/speech_data_queue.py', 'tools/import_saved_speech_result.py',
     'training/weak_speech_dataset.py', 'tests/test_speech_data_queue.py',
     'docs/speech-data-queue.md',
+    'docs/language-conditioned-weak-import.md',
+    'tests/test_language_conditioned_queue.py',
+    'tools/import_language_conditioned_result.py',
+    'tools/language_conditioned_vote.py',
+    'tools/speech_history_evidence.py',
 })
 
 

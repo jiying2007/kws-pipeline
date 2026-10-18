@@ -16,6 +16,8 @@
 
 - [Saved-speech queue and weak dataset loader](speech-data-queue.md): offline evidence capture, uncertainty isolation and research-only machine labels; no model execution or product qualification.
 
+- [Source-language-conditioned weak import](language-conditioned-weak-import.md): saved-result verification with explicit language conditioning, retained history and research-only weak labels.
+
 ## Product contracts
 
 Current machine-readable product authority is `configs/shipping.xiaowo.json`. The immutable promoted model is `model-749187ec1d66`, historically synthetic-qualified for exactly `你好小窝` and `小窝小窝`. The current source contract records `recalibration_required=true`; that historical result does not qualify changed runtime source. The frozen commercial candidate is `deployment-c20f3eb88e43`. The product remains `shipping_approved=false` until real-human final-AFE acoustic evidence and physical target-board evidence both pass and the explicit terminal shipping promotion succeeds.
