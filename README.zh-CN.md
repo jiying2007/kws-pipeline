@@ -4,7 +4,7 @@
 
 研究入口：[可复用模块、保留的实验结论与资格边界](research/README.md)
 
-当前研究入口：[r5 原生解码完成结果与本轮仅源码优化边界](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry)。既有三路 ASR 来源筛查和近音工具仍由该入口保留链接。原生完成、一致率、源码及合成测试均不代表真实 FAR 或召回改善。
+当前状态：[模型与工程摘要](docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status)，核对日期 2026-10-18。历史 SKU、保留的 FSMN B/OR、不晋升决定与 posterior-only C 分属不同证据范围；软件 CI 成功不代表声学或设备资格。
 
 当前归档交付：[完整公开归档、索引与可验证恢复](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md)。旧展开副本目标已取消；历史状态仍为 NOT_PUSHED。D20 数值失败、D90 尚未执行数值验证、fixed50 支持不足、旧模型 nightly 失败分别保留；真人与实机验证暂缓。
 
@@ -14,7 +14,7 @@
 
 `kws-pipeline` 是面向**低算力嵌入式 Linux / RTOS 产品**的常驻端侧唤醒引擎，目标包括 Cortex-A32、Cortex-A7 及相近 CPU 预算。
 
-当前已经完成 synthetic qualification 的产品 SKU **严格只包含两个四字中文唤醒词**：
+历史已完成 synthetic qualification 的产品 SKU **严格只包含两个四字中文唤醒词**：
 
 - **你好小窝** — `ni3 hao3 xiao3 wo1`
 - **小窝小窝** — `xiao3 wo1 xiao3 wo1`
@@ -36,7 +36,9 @@
  -> wake event
 ```
 
-## 当前 Engineering-Qualified 模型
+<a id="当前-engineering-qualified-模型"></a>
+
+## 历史 Engineering-Qualified 模型
 
 当前不可变模型 Release 为 [`model-749187ec1d66`](https://github.com/jiying2007/kws-pipeline/releases/tag/model-749187ec1d66)，精确绑定：
 
@@ -53,7 +55,7 @@
 [nightly run 37860130019](https://github.com/jiying2007/kws-pipeline/actions/runs/37860130019)
 已失败：**8 小时内 2 次误接受**，upper95 **0.786974 FA/h**（门槛为 0 次误接受且
 upper95 ≤ 0.40）。这不是 D20/D90 的结果，shipping approval 仍为 false。
-见[本次审计](research/consolidation/CI_AUDIT_2026-10-09.md)。另见[2026-10-14 当前入口](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry)：后续 nightly `38482297930` 仍失败，绑定其历史执行源码，并非对当前 main 的新增声学评估。
+见[本次审计](research/consolidation/CI_AUDIT_2026-10-09.md)。另见[2026-10-14 历史入口](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry)：后续 nightly `38482297930` 仍失败，绑定其历史执行源码，并非对当前 main 的新增声学评估。
 
 `configs/shipping.xiaowo.json` 是机器可读的当前产品 contract。它故意保持 `shipping_approved=false`：synthetic qualification 是强工程证据，但不能替代后续真实人声 + 最终 AFE 声学资格和物理目标板证据。
 

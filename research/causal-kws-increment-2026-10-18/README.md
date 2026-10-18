@@ -1,6 +1,19 @@
 # Small causal-KWS research increment
 
+## Historical preparation snapshot
+
 Offline publication candidate, 2026-10-18. This directory contains reusable research cores, anonymous synthetic contracts, aggregate evidence and public-source identity metadata. Integration and remote CI are still pending. No weights, feature caches, audio, individual training labels or transcripts are included. It cannot reproduce the private training runs offline.
+
+## Later integration status (2026-10-18)
+
+The opening paragraph preserves publication-candidate preparation status.
+Integration subsequently completed through merged PRs #606 and #607; their
+push/main CI and cleanup runs succeeded. See the [exact merge-commit/run receipts
+and current evidence boundaries](../../docs/KWS_LANDING_STATUS.md#integration-receipts-checked-2026-10-18).
+The local-check and publication instructions below are historical preparation
+instructions, not current pending work or fresh execution authority.
+No historical source, aggregate, local-validation receipt or experiment result
+is reclassified by this integration update.
 
 ## Retained assets
 

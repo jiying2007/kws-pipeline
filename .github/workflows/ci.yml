@@ -772,6 +772,13 @@ jobs:
         run: python3 tests/test_terminal_docs.py
       - name: Verify tracked worktree after Terminal documentation contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Terminal documentation contract"'
+      - name: Current model status documentation contract
+        run: |
+          python3 -S -B tests/test_current_status_docs.py
+          python3 -S -B -O tests/test_current_status_docs.py
+          python3 -S -B -OO tests/test_current_status_docs.py
+      - name: Verify tracked worktree after Current model status documentation contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Current model status documentation contract"'
       - name: Live main ruleset verifier contract
         run: python3 tests/test_live_ruleset_contract.py
       - name: Verify tracked worktree after Live main ruleset verifier contract
@@ -979,6 +986,16 @@ jobs:
           sysroot="$(dirname "$(dirname "$loader")")"
           echo "ARM sysroot for qemu-arm-static: $sysroot"
           echo "KWS_ARM_SYSROOT=$sysroot" >>"$GITHUB_ENV"
+      - name: Research ARM decoder runner contracts without compilation
+        run: |
+          python3 -S -B tests/test_research_three_window_arm.py
+          python3 -S -B -O tests/test_research_three_window_arm.py
+          python3 -S -B -OO tests/test_research_three_window_arm.py
+      - name: Research three-window C decoder ARM smoke and production ABI
+        run: >-
+          python3 -S -B tests/run_research_three_window_arm.py
+          --emulator /usr/bin/qemu-arm-static
+          --emulator-sysroot "$KWS_ARM_SYSROOT"
       - name: Configure hosted reference build
         run: >-
           cmake -S . -B build-ref
