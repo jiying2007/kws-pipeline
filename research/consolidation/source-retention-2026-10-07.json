@@ -40400,6 +40400,56 @@
           }
         }
       ]
+    },
+    {
+      "id": "next11-controlled-result-record-20261018",
+      "date": "2026-10-18",
+      "base_commit": "6f7523f7fae3e598e700426a43a3095d6ede1118",
+      "base_tree": "9edd60fade88a9f0ba9c2704b9b8d395b11a02dc",
+      "workflow_source_changed": false,
+      "scope": "Retain two independently reviewed public aggregate/decision files and their existing research navigation entry.",
+      "rationale": "Bounded matched-step study complete; neither new head promoted. Preserve original CTC/OR identity, explicit regressions and evidence limits. Public hashes and aggregate counts only; no private data, weights or policy changes.",
+      "files": [
+        {
+          "path": "research/causal-kws-increment-2026-10-18/NEXT11-DECISION.md",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/NEXT11-DECISION.md",
+            "mode": "100644",
+            "bytes": 4598,
+            "sha256": "421c499e713d53b9bace43f7da0136c13d3c4f5bbf1508775d58c0047f6dbd8e",
+            "git_blob_sha1": "7efcf7befb71fa3f0c8f1717edfa0d0a05208f6b"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/README.md",
+          "before": {
+            "path": "research/causal-kws-increment-2026-10-18/README.md",
+            "mode": "100644",
+            "bytes": 7356,
+            "sha256": "4d1e93afa71a4ccc556111fcc26a92b3f4f2082db3530d6de26a32ef8ec99e87",
+            "git_blob_sha1": "b72f7ef601207c6039363a724fbc357b74eb2316"
+          },
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/README.md",
+            "mode": "100644",
+            "bytes": 7825,
+            "sha256": "eb6efbf9b0f24fe73749f398abad8d0483f92b5494be47c504a6e7af803403ef",
+            "git_blob_sha1": "821ea850d60b587c7942187ce466e7d59c56c12e"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/evidence/next11-controlled-increment-aggregate.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/evidence/next11-controlled-increment-aggregate.json",
+            "mode": "100644",
+            "bytes": 392675,
+            "sha256": "27b51772a388955f44be3d262f9133c181767c3869f682d1ff8875148c6fb9b7",
+            "git_blob_sha1": "357c990db20a4b0b54d14f9b07d88fc2066779e4"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

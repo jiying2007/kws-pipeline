@@ -45,3 +45,7 @@ Corpus terms, author-code licensing and mirror metadata are distinct. `evidence/
 From this directory, run `PYTHONDONTWRITEBYTECODE=1 python -B -m unittest discover -s tests -p 'test_*.py'`. Repeat with `-O` and `-OO`. These tests use only the Python standard library; there is no numerical model, real decoder, recognizer, audio or tensor load. `LOCAL-VALIDATION.json` records the actual local checks. Remote CI must be run on the eventual integration commit and recorded separately.
 
 Use only the explicit public manifest payload. The suggested destination is `research/causal-kws-increment-2026-10-18/`; a publisher may adapt imports/navigation to the then-current main branch without copying one-off experiment directories. No remote branch or pull request is changed by this candidate.
+
+## Controlled next-eleven increment
+
+[Final bounded comparison and retention decision](NEXT11-DECISION.md) records the completed matched-step control/treatment experiment and links to its [anonymous aggregate](evidence/next11-controlled-increment-aggregate.json). Neither new head is promoted; retain the original CTC model and existing conservative OR research candidate. Training-fit gains, development limits and the historical positive regression remain explicit.
