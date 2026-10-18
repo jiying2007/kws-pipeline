@@ -14,6 +14,8 @@
 
 ## Research data preparation
 
+- [Research progress: TTS, weak20 and C parity](../research/progress-20261018/RESULTS.md): reviewed aggregate findings and positive regressions; no model promotion or numerical-admission change.
+
 - [Full-alphabet three-window C research decoder](../research/fsmn2599-three-window-c/README.md): isolated posterior-only source and artificial-fixture checks; no shipping integration or acoustic-model admission.
 
 - [Fixed seed0 B research candidate metadata](../research/fsmn2599-seed0-b-candidate-v1/MODEL_CARD.md): unpromoted candidate, metadata only; no best-model or deployment claim.
