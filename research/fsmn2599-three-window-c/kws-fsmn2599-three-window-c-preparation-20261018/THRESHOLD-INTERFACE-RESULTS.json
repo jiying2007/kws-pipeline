@@ -1,0 +1,125 @@
+{
+  "schema": "kws3-threshold-interface-anonymous-v1",
+  "date": "2026-10-18",
+  "status": "PASS_DECODER_INTERFACE_AND_FIXED_POSTERIOR_PARITY",
+  "source_sha256": {
+    "kws3.c": "dd971cfcb57cf4a823415ca508a7389b15c9e1728379f11bb6969f1fd31f3bbf",
+    "kws3.h": "318c43814fa0b096fa87e72d5ae0844dffb84874fd95f0bcae8a0624ddcdd696",
+    "test_threshold.c": "9c73ec54d177d98b8b52fe78dae98beb41e4f11700560ee9a9d0c675db8b6abc"
+  },
+  "preparation_freeze_sha256": "cfe2019c86a14b876a0efdfc1187b622a5a4711ce527537430d65c218a5b5e8f",
+  "execution_manifest_sha256": "99f24ef5f1f52513c2340758532f7f4cf3c13a6073b9e4af983b1f11f0b69f5b",
+  "independent_execution_review_sha256": "1ef86776eb8fdca7a8378e5891a2a3d0ab1397ca0f35c8430253d15d676e767c",
+  "actual_compilations": 2,
+  "synthetic": {
+    "fixtures_passed": 8,
+    "completed_rows": 569,
+    "step_attempts": 572,
+    "beam_updates": 949,
+    "windows": 21,
+    "direct_merge_calls": 11
+  },
+  "saved_short_clip_replay": {
+    "clips": 68,
+    "thresholds": [
+      0.0,
+      0.1,
+      0.7
+    ],
+    "independent_sessions": 204,
+    "source_posterior_rows": 4921,
+    "single_generation_float64_softmax_rows": 4921,
+    "c_rows": 14763,
+    "beam_updates": 22008,
+    "windows": 453,
+    "events": 105,
+    "threshold_rejections": 18,
+    "exact_saved_event_summary_comparisons": 204,
+    "event_score_comparison": "binary64 byte exact",
+    "historical_posterior_sha256_matches": 68,
+    "input_npz_byte_sha256_matches": 68,
+    "per_threshold": [
+      {
+        "threshold": 0.0,
+        "clips": 68,
+        "events": 41,
+        "threshold_rejections": 0,
+        "rows": 4921,
+        "beam_updates": 7336,
+        "windows": 151
+      },
+      {
+        "threshold": 0.1,
+        "clips": 68,
+        "events": 40,
+        "threshold_rejections": 1,
+        "rows": 4921,
+        "beam_updates": 7336,
+        "windows": 151
+      },
+      {
+        "threshold": 0.7,
+        "clips": 68,
+        "events": 24,
+        "threshold_rejections": 17,
+        "rows": 4921,
+        "beam_updates": 7336,
+        "windows": 151
+      }
+    ],
+    "new_python_decoder_calls": 0,
+    "model_loads": 0,
+    "model_forwards": 0,
+    "audio_reads": 0,
+    "automatic_retries": 0
+  },
+  "abi": {
+    "old_public_symbols_preserved": 11,
+    "total_public_symbols": 13,
+    "symbols": [
+      "kws3_create",
+      "kws3_create_with_threshold",
+      "kws3_destroy",
+      "kws3_finish",
+      "kws3_get_summary",
+      "kws3_get_threshold_status",
+      "kws3_keyword",
+      "kws3_process",
+      "kws3_reset",
+      "kws3_status_string",
+      "kws3_step",
+      "kws3_step_f32",
+      "kws3_storage_bytes"
+    ],
+    "production_test_hooks": false,
+    "old_event_summary_layouts_unchanged": true,
+    "legacy_constructor_threshold": 0.0
+  },
+  "host_resource_observation": {
+    "wall_seconds": 58.414999929998885,
+    "max_sampled_stage_process_tree_rss_bytes": 36544512,
+    "target_device_evidence": false
+  },
+  "integration_ci": {
+    "status": "PENDING_NEW_INTEGRATION_CI",
+    "existing_smoke_groups": 8,
+    "existing_differential_methods": 28,
+    "existing_c_backed_differential_methods": 25,
+    "new_threshold_fixture_groups": 8,
+    "serial_compilations_per_compiler": 4,
+    "new_source_legacy_suite_rerun_claimed": false,
+    "sanitizer_ci_pending": true
+  },
+  "boundaries": {
+    "fixed_private_posterior_evidence_reproducible_from_public_files": false,
+    "public_ci_inputs": "artificial synthetic fixtures only",
+    "frontend_and_acoustic_network_atol": 1e-05,
+    "frontend_and_acoustic_network_rtol": 1e-05,
+    "existing_frontend_and_acoustic_network_gate": "FAIL_UNCHANGED",
+    "accuracy_or_false_alarm_rate_admission": false,
+    "full_c_chain_admission": false,
+    "model_promotion": false,
+    "ssc305_or_other_target_qualification": false,
+    "c_or_event_head_branch_implemented_by_this_change": false
+  }
+}

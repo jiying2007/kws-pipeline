@@ -39,6 +39,8 @@ typedef struct {
 typedef struct { uint32_t keyword_id; int64_t frames[4]; } dedup_key;
 typedef struct {
     kws3_summary metrics;
+    double threshold; /* Immutable config; reset preserves it. */
+    uint64_t threshold_rejections; /* Transactional, reset clears it. */
     int64_t last_accepted_end;
     size_t window_count, seen_count;
     window windows[KWS3_WINDOWS];
@@ -93,11 +95,14 @@ static void local_reset(window *w) {
 size_t kws3_storage_bytes(void) { return sizeof(kws3_decoder); }
 kws3_status kws3_reset(kws3_decoder *d, const char *id) {
     size_t n;
+    double threshold;
     char copy[KWS3_ID_BYTES];
     if (!d || !identity_valid(id,&n)) return KWS3_ARGUMENT;
     /* Permit resetting from the current summary's identity without alias loss. */
     memcpy(copy,id,n+1);
+    threshold=d->committed.threshold;
     memset(&d->committed,0,sizeof(d->committed));
+    d->committed.threshold=threshold;
     memcpy(d->committed.metrics.recording_id,copy,n+1);
     d->committed.metrics.valid=1;
     d->committed.metrics.numerical_support_ok=1;
@@ -105,15 +110,28 @@ kws3_status kws3_reset(kws3_decoder *d, const char *id) {
     return KWS3_OK;
 }
 kws3_status kws3_create(const char *id, kws3_decoder **out) {
+    return kws3_create_with_threshold(id,0.,out);
+}
+kws3_status kws3_create_with_threshold(const char *id, double threshold,
+                                       kws3_decoder **out) {
     kws3_decoder *d;
     size_t n;
     if (!out) return KWS3_ARGUMENT;
     *out=NULL;
-    if (!identity_valid(id,&n)) return KWS3_ARGUMENT;
+    if (!identity_valid(id,&n) || !isfinite(threshold) ||
+        threshold<0. || threshold>1.) return KWS3_ARGUMENT;
     if (!environment_ok()) return KWS3_ENVIRONMENT;
     d=(kws3_decoder *)calloc(1,sizeof(*d));
     if (!d) return KWS3_ALLOCATION;
+    d->committed.threshold=threshold==0. ? 0. : threshold;
     (void)kws3_reset(d,id); *out=d; return KWS3_OK;
+}
+kws3_status kws3_get_threshold_status(const kws3_decoder *d, double *threshold,
+                                      uint64_t *rejections) {
+    if (!d || !threshold || !rejections) return KWS3_ARGUMENT;
+    *threshold=d->committed.threshold;
+    *rejections=d->committed.threshold_rejections;
+    return KWS3_OK;
 }
 void kws3_destroy(kws3_decoder *d) { free(d); }
 
@@ -342,6 +360,10 @@ static kws3_status merge(state *s, kws3_event candidates[3], size_t count,
         if (s->seen_count>=KWS3_DEDUP_KEYS) return KWS3_CAPACITY;
         s->seen[s->seen_count].keyword_id=e->keyword_id;
         memcpy(s->seen[s->seen_count++].frames,e->node_frames,sizeof(e->node_frames));
+        /* Same source-pinned order as ThresholdBeforeRefractory: local_reset
+         * already happened, rejected candidates retain their exact seen key,
+         * and do not start or extend shared refractory. Equality is accepted. */
+        if (e->score<s->threshold) { ++s->threshold_rejections; continue; }
         if (s->last_accepted_end!=-1 && e->end_frame-s->last_accepted_end<50) {
             ++s->metrics.refractory_rejections; continue;
         }

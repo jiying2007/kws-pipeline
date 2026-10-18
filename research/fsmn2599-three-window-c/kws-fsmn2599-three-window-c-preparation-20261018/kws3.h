@@ -64,6 +64,14 @@ typedef void (*kws3_event_sink)(void *user, const kws3_event *event);
 /* Only create/destroy allocate/free. One handle per stream, no global mutable
  * state. Nonempty NUL-terminated identity <=255 bytes; longer IDs are errors. */
 kws3_status kws3_create(const char *recording_id, kws3_decoder **out);
+/* Explicit immutable finite threshold in [0,1]. Old create is exactly theta0.
+ * reset preserves threshold and clears rejection count. Reject before refractory
+ * but after seen registration; score==threshold is accepted.
+ * Existing event/summary layouts and original 11 symbols are unchanged. */
+kws3_status kws3_create_with_threshold(const char *recording_id, double threshold,
+                                       kws3_decoder **out);
+kws3_status kws3_get_threshold_status(const kws3_decoder *decoder, double *threshold,
+                                      uint64_t *rejections);
 void kws3_destroy(kws3_decoder *decoder);
 size_t kws3_storage_bytes(void);
 kws3_status kws3_reset(kws3_decoder *decoder, const char *recording_id);
