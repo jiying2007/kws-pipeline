@@ -1,0 +1,215 @@
+{
+  "schema": "kws-public-model-source-metadata-candidate-v1",
+  "status": "LOCAL_CANDIDATE_NOT_PUBLISHED",
+  "reviewed_at_utc": "2026-10-17T22:55:18.835741+00:00",
+  "scope": "Public upstream code, model-card, license and source-file identity metadata only. No trained checkpoint or audio is included.",
+  "source_locks": {
+    "wekws": {
+      "repository": "https://github.com/wenet-e2e/wekws",
+      "commit": "6a45aeb994dd81c0969ff877a5a7c46d60ed0c86",
+      "license": "Apache-2.0",
+      "basis": "Explicit upstream LICENSE; fetched source files byte-match historical local references."
+    },
+    "fsmn": {
+      "repository": "thuduj12/kws_wenwen_fsmn_ctc",
+      "revision": "cd0c18d0dda6742c371fbb72ec66185906a9885d",
+      "license": "Apache-2.0",
+      "basis": "Explicit license in the model repository README at this exact revision, independently bound to model files by the same-revision official API listing.",
+      "separate_LICENSE_or_NOTICE_in_fixed_listing": false
+    },
+    "qwen_tts": {
+      "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+      "declared_model_license": "Apache-2.0",
+      "audio_output_separate_terms": "Not separately specified in this pinned card; this is not evidence of a prohibition."
+    },
+    "mswc": {
+      "source_url": "https://mlcommons.org/datasets/multilingual-spoken-words/",
+      "declared_dataset_license": "CC-BY-4.0",
+      "download_condition": "Do not attempt to determine the identity of speakers."
+    }
+  },
+  "official_fetch_receipts": [
+    {
+      "path": "evidence/modelscope-fsmn-model-card.md",
+      "source_url": "https://modelscope.cn/api/v1/models/thuduj12/kws_wenwen_fsmn_ctc/repo?Revision=cd0c18d0dda6742c371fbb72ec66185906a9885d&FilePath=README.md",
+      "fetched_and_saved_at_utc": "2026-10-17T22:54:43.628066+00:00",
+      "timestamp_basis": "File write-completion timestamp after successful HTTP200 retrieval by this collector.",
+      "http_status": 200,
+      "bytes": 923,
+      "sha256": "f6995b667243217033c7b9a5fb080b03096ed8d30b65eb81a5e10a9c4f37c73e",
+      "prior_observed_sha256_match": true
+    },
+    {
+      "path": "evidence/modelscope-fsmn-file-list.json",
+      "source_url": "https://modelscope.cn/api/v1/models/thuduj12/kws_wenwen_fsmn_ctc/repo/files?Revision=cd0c18d0dda6742c371fbb72ec66185906a9885d&Recursive=true",
+      "fetched_and_saved_at_utc": "2026-10-17T22:54:44.050370+00:00",
+      "timestamp_basis": "File write-completion timestamp after successful HTTP200 retrieval by this collector.",
+      "http_status": 200,
+      "bytes": 3169,
+      "sha256": "78fe694c7fffdf58e6f7b329b0940024b93311becf4ec2955f9f54b35a423ea7",
+      "prior_observed_sha256_match": null
+    },
+    {
+      "path": "evidence/wekws-LICENSE.txt",
+      "source_url": "https://raw.githubusercontent.com/wenet-e2e/wekws/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/LICENSE",
+      "fetched_and_saved_at_utc": "2026-10-17T22:54:41.560195+00:00",
+      "timestamp_basis": "File write-completion timestamp after successful HTTP200 retrieval by this collector.",
+      "http_status": 200,
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "prior_observed_sha256_match": true
+    },
+    {
+      "path": "evidence/wekws-hi-xiaowen-README.md",
+      "source_url": "https://raw.githubusercontent.com/wenet-e2e/wekws/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/examples/hi_xiaowen/s0/README.md",
+      "fetched_and_saved_at_utc": "2026-10-17T22:54:41.455047+00:00",
+      "timestamp_basis": "File write-completion timestamp after successful HTTP200 retrieval by this collector.",
+      "http_status": 200,
+      "bytes": 4326,
+      "sha256": "e7bde06f838a80a52cce1306051d10221dd0aa6b62e741c1c13929ce18c91fc3",
+      "prior_observed_sha256_match": true
+    },
+    {
+      "path": "evidence/wekws-fsmn.py",
+      "source_url": "https://raw.githubusercontent.com/wenet-e2e/wekws/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/wekws/model/fsmn.py",
+      "fetched_and_saved_at_utc": "2026-10-17T22:54:41.522114+00:00",
+      "timestamp_basis": "File write-completion timestamp after successful HTTP200 retrieval by this collector.",
+      "http_status": 200,
+      "bytes": 19625,
+      "sha256": "62265f349ae1dd95580e614557ee58c0ee361fea9e41ac62c6634d5c6ff6c2d3",
+      "prior_observed_sha256_match": true
+    },
+    {
+      "path": "evidence/wekws-stream-kws-ctc.py",
+      "source_url": "https://raw.githubusercontent.com/wenet-e2e/wekws/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/wekws/bin/stream_kws_ctc.py",
+      "fetched_and_saved_at_utc": "2026-10-17T22:54:41.547074+00:00",
+      "timestamp_basis": "File write-completion timestamp after successful HTTP200 retrieval by this collector.",
+      "http_status": 200,
+      "bytes": 24939,
+      "sha256": "2a5d462f1c0830beee844427cbf0063e38f7b981dcd6e7990ec7a633acf46e53",
+      "prior_observed_sha256_match": true
+    },
+    {
+      "path": "evidence/qwen-customvoice-model-card.md",
+      "source_url": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice/resolve/85e237c12c027371202489a0ec509ded67b5e4b5/README.md",
+      "fetched_and_saved_at_utc": "2026-10-17T22:54:47.783572+00:00",
+      "timestamp_basis": "File write-completion timestamp after successful HTTP200 retrieval by this collector.",
+      "http_status": 200,
+      "bytes": 3263,
+      "sha256": "1e3adeecc7a72d6756fdb77c2847f8e994195e105b51206a7a5c049b0dfa48a8",
+      "prior_observed_sha256_match": true
+    }
+  ],
+  "additional_read_only_web_references": [
+    {
+      "source_url": "https://mlcommons.org/datasets/multilingual-spoken-words/",
+      "read_at_utc_window": [
+        "2026-10-17T22:49:44Z",
+        "2026-10-17T22:50:05Z"
+      ],
+      "raw_bytes_retained": false,
+      "sha256": null,
+      "basis": "Official page text read through web tool; no raw-byte hash claimed."
+    },
+    {
+      "source_url": "https://creativecommons.org/licenses/by/4.0/legalcode.en",
+      "read_at_utc_window": [
+        "2026-10-17T22:51:56Z",
+        "2026-10-17T22:52:06Z"
+      ],
+      "raw_bytes_retained": false,
+      "sha256": null,
+      "basis": "Official legalcode read through web tool; no raw-byte hash claimed."
+    }
+  ],
+  "original_model_file_bindings": [
+    {
+      "upstream_path": "avg_30.pt",
+      "bytes": 3040011,
+      "sha256": "d3d89b5dde08c2926d46a97eab6f7179a87b1946ccebd16c02e77042ea8389fe",
+      "source_revision": "cd0c18d0dda6742c371fbb72ec66185906a9885d",
+      "file_last_change_revision": "80c9e2a7f4a620ddb3814023a44020473e5fc210",
+      "source_url": "https://modelscope.cn/api/v1/models/thuduj12/kws_wenwen_fsmn_ctc/repo?Revision=cd0c18d0dda6742c371fbb72ec66185906a9885d&FilePath=avg_30.pt",
+      "local_existing_path": "kws-fsmn-official/avg_30.pt",
+      "local_bytes_rehashed_match": true,
+      "included_in_candidate_evidence": false
+    },
+    {
+      "upstream_path": "config.yaml",
+      "bytes": 1139,
+      "sha256": "2755715dfb28693afb8158b805ac5461b2aa4efbb410d4483590da8b6f6bfeae",
+      "source_revision": "cd0c18d0dda6742c371fbb72ec66185906a9885d",
+      "file_last_change_revision": "5d0b204c744c61094cbb9757c1645991fa9a1540",
+      "source_url": "https://modelscope.cn/api/v1/models/thuduj12/kws_wenwen_fsmn_ctc/repo?Revision=cd0c18d0dda6742c371fbb72ec66185906a9885d&FilePath=config.yaml",
+      "local_existing_path": "kws-fsmn-official/config.yaml",
+      "local_bytes_rehashed_match": true,
+      "included_in_candidate_evidence": false
+    },
+    {
+      "upstream_path": "global_cmvn.kaldi",
+      "bytes": 1711,
+      "sha256": "278d109a9e4e70189e2d657ed52ea846446d5abdd58bcc9cb6b8800a52dac91c",
+      "source_revision": "cd0c18d0dda6742c371fbb72ec66185906a9885d",
+      "file_last_change_revision": "c4b49b6555c8eb14c1626b645ed35d5bbeca0b0f",
+      "source_url": "https://modelscope.cn/api/v1/models/thuduj12/kws_wenwen_fsmn_ctc/repo?Revision=cd0c18d0dda6742c371fbb72ec66185906a9885d&FilePath=global_cmvn.kaldi",
+      "local_existing_path": "kws-fsmn-official/global_cmvn.kaldi",
+      "local_bytes_rehashed_match": true,
+      "included_in_candidate_evidence": false
+    },
+    {
+      "upstream_path": "tokens.txt",
+      "bytes": 24528,
+      "sha256": "5914b5e048e14dd8e1cce6914333cbbf8b382df7679c26041e35bd1c86db43aa",
+      "source_revision": "cd0c18d0dda6742c371fbb72ec66185906a9885d",
+      "file_last_change_revision": "8abf46a04a58486f196beb33cee5b3841f9fad4f",
+      "source_url": "https://modelscope.cn/api/v1/models/thuduj12/kws_wenwen_fsmn_ctc/repo?Revision=cd0c18d0dda6742c371fbb72ec66185906a9885d&FilePath=tokens.txt",
+      "local_existing_path": "kws-fsmn-official/tokens.txt",
+      "local_bytes_rehashed_match": true,
+      "included_in_candidate_evidence": false
+    }
+  ],
+  "wekws_historical_reference_matches": [
+    {
+      "evidence_path": "evidence/wekws-hi-xiaowen-README.md",
+      "local_existing_path": "kws-fsmn-official/reference_hi_xiaowen_README.md",
+      "byte_identical": true
+    },
+    {
+      "evidence_path": "evidence/wekws-fsmn.py",
+      "local_existing_path": "kws-fsmn-official/reference_wekws_model_fsmn.py",
+      "byte_identical": true
+    },
+    {
+      "evidence_path": "evidence/wekws-stream-kws-ctc.py",
+      "local_existing_path": "kws-fsmn-official/reference_wekws_bin_stream_kws_ctc.py",
+      "byte_identical": true
+    }
+  ],
+  "bounded_review_conclusions": {
+    "code_license_explicit": true,
+    "base_model_license_explicit": true,
+    "base_modification_and_redistribution_basis": "Apache-2.0 sections 2 and 4, subject to retaining required license, attribution and modification notices.",
+    "code_license_not_used_to_infer_weight_license": true,
+    "generated_audio_missing_separate_terms_is_automatic_release_block": false,
+    "generated_audio_interpretation": "Assess the actual selected release assets and documented synthetic-data lineage. Absence of a separate output license is neither a prohibition nor an all-rights guarantee.",
+    "noncommercial_project_scope": "The stated project is noncommercial research; this does not itself supply missing third-party rights or impose a new upstream noncommercial license.",
+    "trained_model_status": "No specific final trained checkpoint is approved or rejected by this source-metadata candidate. Model quality/selection and exact release contents remain a separate task.",
+    "no_absolute_personality_rights_guarantee_required_or_asserted": true
+  },
+  "release_notice_checklist": [
+    "Include Apache-2.0 text and retain applicable copyright/attribution notices.",
+    "Mark model and code modifications; identify the exact base checkpoint and version.",
+    "Preserve upstream NOTICE content if any distributed component includes it.",
+    "Keep model licenses, source-data licenses, generated-audio scope and project authorization separate.",
+    "For redistributed MSWC materials, retain attribution/license/source links and describe modifications; do not attempt speaker identification."
+  ],
+  "mutation_summary": {
+    "historical_files_changed": false,
+    "repository_or_external_publication": false,
+    "new_model_downloads": 0,
+    "model_execution": false,
+    "new_audio_generation": false,
+    "new_legal_agreements_accepted": false
+  }
+}

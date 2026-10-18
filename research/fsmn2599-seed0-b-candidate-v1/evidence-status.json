@@ -1,0 +1,123 @@
+{
+  "schema": "kws-research-candidate-evidence-status-v1",
+  "as_of_date_utc": "2026-10-18",
+  "checkpoint_sha256": "a366d9f5ebe7027a496e3f119debcf1e19d2f7a79226c96b31a4ddb3a2757f77",
+  "development_replay": {
+    "completed": true,
+    "clips_per_model": 864,
+    "clip_groups": {
+      "historical_Qwen": 20,
+      "weak_Qwen": 36,
+      "Cosy_diagnostic_only": 12,
+      "MSWC_development": 796
+    },
+    "decoder": "Fixed repaired three-window adapter; 126 output-frame window, stride 42, diagnostic threshold 0",
+    "probabilities": "All 2599 float32 saved logits normalized with float64 max-shift, math.exp and math.fsum",
+    "candidate_bearing_clips": {
+      "old_headonly": 39,
+      "prior_dataextension": 28,
+      "A_seed0": 40,
+      "B_seed0": 41
+    },
+    "B_vs_A_gained_clips": 1,
+    "B_vs_A_lost_clips": 0,
+    "only_gained_clip": "historical Eric stock-preset KW2 sample",
+    "B_score": 0.1159931423,
+    "A_and_B_greedy": "小屋小屋",
+    "inherited_presence_known_rows": 853,
+    "inherited_presence_unknown_rows": 11,
+    "fresh_independent_qualification": false
+  },
+  "fixed_order_sensitivity": {
+    "completed_new_runs": 4,
+    "order_seeds": [
+      0,
+      1,
+      2
+    ],
+    "same_seed_B_vs_A_gains": [
+      1,
+      1,
+      1
+    ],
+    "same_seed_B_vs_A_losses": [
+      0,
+      0,
+      0
+    ],
+    "only_paired_gain": "same historical Eric KW2 sample",
+    "B_scores_by_order": [
+      0.1159931423,
+      0.1130185379,
+      0.1143355206
+    ],
+    "all_six_Eric_greedy": "小屋小屋",
+    "seed1_shared_extra_candidate_label": "unknown; preserved as null, not a known negative or admitted positive",
+    "saved_result_independent_review": "PASS for bounded execution and saved-result comparisons",
+    "best_seed_selected": false,
+    "additional_independent_samples_created": false
+  },
+  "historical_background": {
+    "sessions": 8,
+    "unique_source_seconds": 15138.215,
+    "unique_source_hours": 4.205059722,
+    "count_unique_hours_once": true,
+    "new_independent_validation_hours": 0,
+    "admitted_negative_seconds": 0,
+    "posterior_rows_per_head": 504679,
+    "A_candidates": 0,
+    "A_events": 0,
+    "B_candidates": 0,
+    "B_events": 0,
+    "cached_old_exact_posterior_hash_match": true,
+    "cached_old_decoder_ran": false,
+    "cached_old_candidate_count": null,
+    "original_old_fullgraph_inherited_candidates": 0,
+    "A_B_zero_mass_warnings": 0,
+    "A_B_empty_beam_warnings": 0,
+    "A_B_duplicate_or_refractory_rejections": 0,
+    "uncovered_tail_seconds_not_admitted_negative": 47.384,
+    "establishes_FAR": false,
+    "establishes_FRR": false,
+    "discriminates_A_vs_B_candidate_counts": false
+  },
+  "native_parity": {
+    "model_scope": "old-head reference; shared runtime prerequisite, not B-specific completed test",
+    "old_head_checkpoint_sha256": "0182290585dce024f48637604ffe0901a16e4a4744c73ebddb9f68ea27ae4ad4",
+    "B_specific_complete_C_parity_established": false,
+    "frames": 76,
+    "original_four_lane": "FAIL",
+    "eight_lane_fp32": "FAIL",
+    "four_lane_fmaf": "FAIL",
+    "gate": "Strict logit and cache numerical tolerance",
+    "tolerance_relaxed": false,
+    "SSC305_qualified": false
+  },
+  "not_established": [
+    "Final best-model selection",
+    "Independent gold-label generalization",
+    "Calibrated recall/FRR/FAR operating point",
+    "Fresh accepted continuous-negative exposure",
+    "C end-to-end numerical/runtime acceptance",
+    "SSC305 physical-board timing/memory/power/soak",
+    "Final real-human/microphone/enclosure/AFE qualification",
+    "Successful model-promotion receipt and immutable promoted tuple",
+    "Privacy or memorization audit"
+  ],
+  "publication": {
+    "class": "METADATA_ONLY",
+    "weight_payload_included": false,
+    "research_weight_git_exception": false,
+    "product_registry_changed": false,
+    "shipping_approval_changed": false,
+    "counts_are_acoustic_qualification": false
+  },
+  "metadata_preparation_execution": {
+    "model_deserializations": 0,
+    "Torch_imports": 0,
+    "training_or_inference_calls": 0,
+    "audio_reads_or_decodes": 0,
+    "posterior_replays": 0,
+    "model_bytes_read_for_hash_only": true
+  }
+}

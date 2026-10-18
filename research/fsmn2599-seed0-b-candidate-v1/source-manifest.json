@@ -1,0 +1,169 @@
+{
+  "schema": "kws-research-candidate-public-sources-v1",
+  "review_date_utc": "2026-10-18",
+  "scope": "Public source and license identity metadata only; no model, source-code or audio payloads.",
+  "repository_policy_base": {
+    "commit": "b3e2ceb4c37638793bac01965d0f9e02904d3b18",
+    "license": "Apache-2.0",
+    "model_storage_policy_url": "https://github.com/jiying2007/kws-pipeline/blob/b3e2ceb4c37638793bac01965d0f9e02904d3b18/models/README.md",
+    "release_qualification_url": "https://github.com/jiying2007/kws-pipeline/blob/b3e2ceb4c37638793bac01965d0f9e02904d3b18/docs/RELEASE_QUALIFICATION.md",
+    "research_weight_git_exception_created": false
+  },
+  "source_locks": {
+    "wekws": {
+      "repository": "https://github.com/wenet-e2e/wekws",
+      "commit": "6a45aeb994dd81c0969ff877a5a7c46d60ed0c86",
+      "license": "Apache-2.0",
+      "basis": "Explicit upstream LICENSE; fetched source files byte-match historical local references."
+    },
+    "fsmn": {
+      "repository": "thuduj12/kws_wenwen_fsmn_ctc",
+      "revision": "cd0c18d0dda6742c371fbb72ec66185906a9885d",
+      "license": "Apache-2.0",
+      "basis": "Explicit license in the model repository README at this exact revision, independently bound to model files by the same-revision official API listing.",
+      "separate_LICENSE_or_NOTICE_in_fixed_listing": false
+    },
+    "qwen_tts": {
+      "repository": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+      "declared_model_license": "Apache-2.0",
+      "audio_output_separate_terms": "Not separately specified in this pinned card; this is not evidence of a prohibition."
+    },
+    "mswc": {
+      "source_url": "https://mlcommons.org/datasets/multilingual-spoken-words/",
+      "declared_dataset_license": "CC-BY-4.0",
+      "download_condition": "Do not attempt to determine the identity of speakers."
+    }
+  },
+  "byte_verified_public_sources": [
+    {
+      "source_role": "modelscope-fsmn-model-card.md",
+      "source_url": "https://modelscope.cn/api/v1/models/thuduj12/kws_wenwen_fsmn_ctc/repo?Revision=cd0c18d0dda6742c371fbb72ec66185906a9885d&FilePath=README.md",
+      "bytes": 923,
+      "sha256": "f6995b667243217033c7b9a5fb080b03096ed8d30b65eb81a5e10a9c4f37c73e",
+      "verified_at_utc": "2026-10-17T22:54:43.628066+00:00",
+      "payload_included": false
+    },
+    {
+      "source_role": "modelscope-fsmn-file-list.json",
+      "source_url": "https://modelscope.cn/api/v1/models/thuduj12/kws_wenwen_fsmn_ctc/repo/files?Revision=cd0c18d0dda6742c371fbb72ec66185906a9885d&Recursive=true",
+      "bytes": 3169,
+      "sha256": "78fe694c7fffdf58e6f7b329b0940024b93311becf4ec2955f9f54b35a423ea7",
+      "verified_at_utc": "2026-10-17T22:54:44.050370+00:00",
+      "payload_included": false
+    },
+    {
+      "source_role": "wekws-LICENSE.txt",
+      "source_url": "https://raw.githubusercontent.com/wenet-e2e/wekws/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/LICENSE",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "verified_at_utc": "2026-10-17T22:54:41.560195+00:00",
+      "payload_included": false
+    },
+    {
+      "source_role": "wekws-hi-xiaowen-README.md",
+      "source_url": "https://raw.githubusercontent.com/wenet-e2e/wekws/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/examples/hi_xiaowen/s0/README.md",
+      "bytes": 4326,
+      "sha256": "e7bde06f838a80a52cce1306051d10221dd0aa6b62e741c1c13929ce18c91fc3",
+      "verified_at_utc": "2026-10-17T22:54:41.455047+00:00",
+      "payload_included": false
+    },
+    {
+      "source_role": "wekws-fsmn.py",
+      "source_url": "https://raw.githubusercontent.com/wenet-e2e/wekws/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/wekws/model/fsmn.py",
+      "bytes": 19625,
+      "sha256": "62265f349ae1dd95580e614557ee58c0ee361fea9e41ac62c6634d5c6ff6c2d3",
+      "verified_at_utc": "2026-10-17T22:54:41.522114+00:00",
+      "payload_included": false
+    },
+    {
+      "source_role": "wekws-stream-kws-ctc.py",
+      "source_url": "https://raw.githubusercontent.com/wenet-e2e/wekws/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/wekws/bin/stream_kws_ctc.py",
+      "bytes": 24939,
+      "sha256": "2a5d462f1c0830beee844427cbf0063e38f7b981dcd6e7990ec7a633acf46e53",
+      "verified_at_utc": "2026-10-17T22:54:41.547074+00:00",
+      "payload_included": false
+    },
+    {
+      "source_role": "qwen-customvoice-model-card.md",
+      "source_url": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice/resolve/85e237c12c027371202489a0ec509ded67b5e4b5/README.md",
+      "bytes": 3263,
+      "sha256": "1e3adeecc7a72d6756fdb77c2847f8e994195e105b51206a7a5c049b0dfa48a8",
+      "verified_at_utc": "2026-10-17T22:54:47.783572+00:00",
+      "payload_included": false
+    },
+    {
+      "source_role": "upstream-model/avg_30.pt",
+      "source_url": "https://modelscope.cn/api/v1/models/thuduj12/kws_wenwen_fsmn_ctc/repo?Revision=cd0c18d0dda6742c371fbb72ec66185906a9885d&FilePath=avg_30.pt",
+      "revision": "cd0c18d0dda6742c371fbb72ec66185906a9885d",
+      "bytes": 3040011,
+      "sha256": "d3d89b5dde08c2926d46a97eab6f7179a87b1946ccebd16c02e77042ea8389fe",
+      "payload_included": false
+    },
+    {
+      "source_role": "upstream-model/config.yaml",
+      "source_url": "https://modelscope.cn/api/v1/models/thuduj12/kws_wenwen_fsmn_ctc/repo?Revision=cd0c18d0dda6742c371fbb72ec66185906a9885d&FilePath=config.yaml",
+      "revision": "cd0c18d0dda6742c371fbb72ec66185906a9885d",
+      "bytes": 1139,
+      "sha256": "2755715dfb28693afb8158b805ac5461b2aa4efbb410d4483590da8b6f6bfeae",
+      "payload_included": false
+    },
+    {
+      "source_role": "upstream-model/global_cmvn.kaldi",
+      "source_url": "https://modelscope.cn/api/v1/models/thuduj12/kws_wenwen_fsmn_ctc/repo?Revision=cd0c18d0dda6742c371fbb72ec66185906a9885d&FilePath=global_cmvn.kaldi",
+      "revision": "cd0c18d0dda6742c371fbb72ec66185906a9885d",
+      "bytes": 1711,
+      "sha256": "278d109a9e4e70189e2d657ed52ea846446d5abdd58bcc9cb6b8800a52dac91c",
+      "payload_included": false
+    },
+    {
+      "source_role": "upstream-model/tokens.txt",
+      "source_url": "https://modelscope.cn/api/v1/models/thuduj12/kws_wenwen_fsmn_ctc/repo?Revision=cd0c18d0dda6742c371fbb72ec66185906a9885d&FilePath=tokens.txt",
+      "revision": "cd0c18d0dda6742c371fbb72ec66185906a9885d",
+      "bytes": 24528,
+      "sha256": "5914b5e048e14dd8e1cce6914333cbbf8b382df7679c26041e35bd1c86db43aa",
+      "payload_included": false
+    },
+    {
+      "source_role": "repository-license",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/blob/b3e2ceb4c37638793bac01965d0f9e02904d3b18/LICENSE",
+      "git_blob_sha1": "3e14d4b16918fcff8fa45dd71148ffbe468388fa",
+      "bytes": 9108,
+      "sha256": "06d4c76347e397987c4951179b1c65fbd17bc948e09b5617b38be02bc1f93eab",
+      "payload_included": false
+    }
+  ],
+  "official_web_references": [
+    {
+      "url": "https://www.apache.org/licenses/LICENSE-2.0",
+      "scope": "Redistribution and attribution conditions",
+      "read_date_utc": "2026-10-18",
+      "raw_bytes_retained": false
+    },
+    {
+      "url": "https://mlcommons.org/datasets/multilingual-spoken-words/",
+      "scope": "Dataset attribution, CC-BY-4.0, intended KWS uses and no speaker identification",
+      "read_date_utc": "2026-10-18",
+      "raw_bytes_retained": false
+    },
+    {
+      "url": "https://creativecommons.org/licenses/by/4.0/legalcode.en",
+      "scope": "CC-BY-4.0 terms",
+      "read_date_utc": "2026-10-18",
+      "raw_bytes_retained": false
+    }
+  ],
+  "notice_check": {
+    "modelscope_fixed_listing_separate_LICENSE_or_NOTICE": false,
+    "wekws_fixed_recursive_tree_separate_NOTICE": false,
+    "applicable_upstream_attribution_retained_in": "NOTICE.md",
+    "future_binary_distribution_must_include_applicable_license_text": true
+  },
+  "rights_boundary": {
+    "base_weight_license_not_inferred_from_code_license": true,
+    "no_separate_TTS_output_terms_is_automatic_prohibition": false,
+    "universal_output_rights_or_personality_rights_guaranteed": false,
+    "new_model_license_created": false,
+    "upstream_terms_restricted_to_noncommercial": false
+  }
+}
