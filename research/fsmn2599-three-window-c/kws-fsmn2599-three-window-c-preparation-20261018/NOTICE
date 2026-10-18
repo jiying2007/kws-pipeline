@@ -1,0 +1,32 @@
+Full-alphabet three-window candidate decoder, research preparation 2026-10-18.
+Modified C implementation of reviewed Python wrapper and retained WeKws semantics.
+
+Upstream: https://github.com/wenet-e2e/wekws
+Fixed commit: 6a45aeb994dd81c0969ff877a5a7c46d60ed0c86
+Original file:
+https://github.com/wenet-e2e/wekws/blob/6a45aeb994dd81c0969ff877a5a7c46d60ed0c86/wekws/bin/stream_kws_ctc.py
+Copyright (c) 2023 Jing Du (thuduj12@163.com).
+Licensed under Apache License, Version 2.0; the complete text is in LICENSE.
+
+Immediate reviewed reference (not the defective six-class decoder):
+kws-fsmn-three-window-adapter-20261017/three_window_events.py
+SHA256 f65403a78bbe55566cae914062b1671c055c198a87fb7cb5c000d0a80d60cd26
+posterior_events.py
+SHA256 56d6ada2c531de25f72a713db77b07ef9d8326b8b1e238bd776d40155d8584ec
+beam_minimal_patch_candidate.py
+SHA256 f822a40a136ea216cd9a3dd4dc9257000d69e15820cb6276360d9518a9800360
+vendor/stream_kws_ctc.py
+SHA256 2a5d462f1c0830beee844427cbf0063e38f7b981dcd6e7990ec7a633acf46e53
+vendor/decoder_tail_fix.py
+SHA256 5fc55921a555c78cb08c12018850652d98d4283594f875366284dc1df0e71f4d
+
+Modifications: full-alphabet double C input validation and global top3; fixed
+126/42 windows; three reviewed beam patch semantics; fixed value-owned node
+storage; stable insertion-order ranking; shared exact-node dedup/refractory;
+row-level transactional state; bounded identity, clock and output contracts;
+chunk and float32 promotion APIs; isolated test-only hooks. No model, audio,
+weights, private corpus, production integration or publication is included.
+
+The expansion-summation arithmetic is implemented for this adapter's finite
+nonnegative bounded input contract, with explicit binary64 rounding assumptions.
+Boundary agreement with Python math.fsum remains a required unrun validation.
