@@ -651,6 +651,12 @@ jobs:
         run: ctest --test-dir build --output-on-failure
       - name: Verify tracked worktree after Test
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Test"'
+      - name: Three-window research C synthetic differential contract
+        env:
+          CC: ${{ matrix.cc }}
+        run: python3 -S -B tests/test_research_three_window_c.py --sanitizers
+      - name: Verify tracked worktree after Three-window research C contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Three-window research C contract"'
       - name: Single-pass WAV trace artificial contract
         run: >-
           python3 -B tests/test_wav_trace.py

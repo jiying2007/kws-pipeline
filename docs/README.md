@@ -14,6 +14,8 @@
 
 ## Research data preparation
 
+- [Full-alphabet three-window C research decoder](../research/fsmn2599-three-window-c/README.md): isolated posterior-only source and artificial-fixture checks; no shipping integration or acoustic-model admission.
+
 - [Fixed seed0 B research candidate metadata](../research/fsmn2599-seed0-b-candidate-v1/MODEL_CARD.md): unpromoted candidate, metadata only; no best-model or deployment claim.
 - [Pinned public model-source evidence](../research/model-source-evidence-20261017/README.md): exact upstream revisions, license declarations and source identities; no weight bodies or blanket training-data rights grant.
 

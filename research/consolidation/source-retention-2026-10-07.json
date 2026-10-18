@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 59268,
-      "sha256": "5fc4736185f762a7fde373757118e6a202e05e4d582cba59c1ba914fdde02fa8",
-      "git_blob_sha1": "42528f522462cdf6703c351455593c8c38f13449"
+      "bytes": 59628,
+      "sha256": "4dd0f1ce6cabddf12ffb8be1801a72b73a901dea7f14a3bfe763935ddcb25ca9",
+      "git_blob_sha1": "0de19eeba0fdbabc4515f75ff2f38c716b7909e8"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -39457,6 +39457,277 @@
             "bytes": 9773,
             "sha256": "bee49f435fcc37c0eeab10be42486ec84abfdde101218c7e3c334245cb7a620a",
             "git_blob_sha1": "9983288a7e5367b547ce3a17ef04be5521a4305a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "three-window-c-research-source-20261018",
+      "date": "2026-10-18",
+      "base_commit": "a127cb8bacf5136b85b88d10d6e1d0314c03d373",
+      "base_tree": "7960c2c40dff096462ddea70ee7641c23eb772a7",
+      "workflow_source_changed": true,
+      "scope": "Integrate isolated reviewed posterior-only C research decoder and pinned artificial-fixture reference; existing hosted compiler matrix executes bounded sanitizer/differential checks.",
+      "rationale": "Preserve exact 17 reviewed source files and historical scientific pins. No weights, real posterior arrays, private audio/result bodies, shipping default changes or acoustic admission.",
+      "files": [
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
+            "mode": "100644",
+            "bytes": 25066,
+            "sha256": "115706319c90be72aa0deff2f291da0053119bc76d4ea1b5f36bfe43faaa1d6a",
+            "git_blob_sha1": "3d01081ee57259aa71e83c9f241941ebec12dd24"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.h",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.h",
+            "mode": "100644",
+            "bytes": 4368,
+            "sha256": "e912d38a3ba40b3032df2cd63fbd3445e9223fdc02e21453309b7da46d9fc3e9",
+            "git_blob_sha1": "befa382517b25e95e478596ebba4f4cc774fc583"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3_test.h",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3_test.h",
+            "mode": "100644",
+            "bytes": 1461,
+            "sha256": "e0e3f777c3a042acd0b2c580644e38a84df835d4601865513179052befa216dd",
+            "git_blob_sha1": "c3c46fc34b604f06b937c864c3fdd2789bd87860"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/test_synthetic.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/test_synthetic.c",
+            "mode": "100644",
+            "bytes": 6613,
+            "sha256": "26a4b890b24652828c88b3aab4975128925bf39fed713555df534a3d507e4418",
+            "git_blob_sha1": "e8d0c394197c75644c0f2ba7e1cc74e5d432eb91"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/test_differential.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/test_differential.py",
+            "mode": "100644",
+            "bytes": 13002,
+            "sha256": "96e9e68b7f6dd216f339de3511f522f7016ef821b59820b57e3a48cd3a7f82f7",
+            "git_blob_sha1": "81666b76abfb461466c98e189c16695ff41b7f27"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/LICENSE",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/LICENSE",
+            "mode": "100644",
+            "bytes": 11357,
+            "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+            "git_blob_sha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/NOTICE",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/NOTICE",
+            "mode": "100644",
+            "bytes": 1804,
+            "sha256": "afc9fe057c4a2296fdc43f1308a4f4615a6646529cb56da5110b21596ab99b4e",
+            "git_blob_sha1": "2a494e35bf6431f8aa2c3f3289df89a60cd5b24d"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/FIXTURE-MAP.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/FIXTURE-MAP.md",
+            "mode": "100644",
+            "bytes": 29373,
+            "sha256": "a05de47458a072dc5ef8de1cf92541df29929786905ad5c841e0215613d3c099",
+            "git_blob_sha1": "dc3f86e5d4ae7f4342bbf91d7ac997f4b408db16"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/SOURCE-SHA256SUMS",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/SOURCE-SHA256SUMS",
+            "mode": "100644",
+            "bytes": 1194,
+            "sha256": "498c0d807e29a944563e53d52881a84f71af956dc9f19740138e2b86c1be6de5",
+            "git_blob_sha1": "82ac294fb1016e6d6ed96831f392b3eccebba163"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/three_window_events.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/three_window_events.py",
+            "mode": "100644",
+            "bytes": 11587,
+            "sha256": "f65403a78bbe55566cae914062b1671c055c198a87fb7cb5c000d0a80d60cd26",
+            "git_blob_sha1": "1750f78cbc983eee4ca50f9975dd250f18709001"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/posterior_events.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/posterior_events.py",
+            "mode": "100644",
+            "bytes": 8940,
+            "sha256": "56d6ada2c531de25f72a713db77b07ef9d8326b8b1e238bd776d40155d8584ec",
+            "git_blob_sha1": "2aa3311546b750c4a3fef38fa79380fa8b4254f7"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/beam_minimal_patch_candidate.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/beam_minimal_patch_candidate.py",
+            "mode": "100644",
+            "bytes": 2719,
+            "sha256": "f822a40a136ea216cd9a3dd4dc9257000d69e15820cb6276360d9518a9800360",
+            "git_blob_sha1": "979fd518bfdb7cc2c9df46d98e506d7cd2419a3c"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/test_three_window_events.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/test_three_window_events.py",
+            "mode": "100644",
+            "bytes": 11428,
+            "sha256": "c9a0584ef6e5d22488e8f3b831b95c0771b16e480f1858b8542f6ff1d90f1ed9",
+            "git_blob_sha1": "a014246251670d0678321082de6b2d5b746fb9c1"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/test_posterior_events.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/test_posterior_events.py",
+            "mode": "100644",
+            "bytes": 7428,
+            "sha256": "d99a79e6984bb7cb60954d2c0ae3cc36230779c91f451dd32d504bcb79152b4c",
+            "git_blob_sha1": "dd79903df1bb6a47c85b84322bc321d390477599"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/test_beam_minimal_patch_candidate.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/test_beam_minimal_patch_candidate.py",
+            "mode": "100644",
+            "bytes": 6164,
+            "sha256": "068d025c1e55101f0cec717471b7dbb33e8d38eb975fa8b1dec26e05a98a5889",
+            "git_blob_sha1": "d82d1f5e511f80d133589e3208f8803213262195"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/vendor/stream_kws_ctc.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/vendor/stream_kws_ctc.py",
+            "mode": "100644",
+            "bytes": 24939,
+            "sha256": "2a5d462f1c0830beee844427cbf0063e38f7b981dcd6e7990ec7a633acf46e53",
+            "git_blob_sha1": "cbd60893cbb9dbfe2bc02016c37a2c53f916300c"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/vendor/decoder_tail_fix.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn-three-window-adapter-20261017/vendor/decoder_tail_fix.py",
+            "mode": "100644",
+            "bytes": 718,
+            "sha256": "5fc55921a555c78cb08c12018850652d98d4283594f875366284dc1df0e71f4d",
+            "git_blob_sha1": "52b1ca9e7cb697f6b962f8c4cb9da1799d36ce63"
+          }
+        },
+        {
+          "path": "tests/test_research_three_window_c.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_three_window_c.py",
+            "mode": "100644",
+            "bytes": 2813,
+            "sha256": "a9f852ab512908572447e126f2de08f0223882d138d34a9a62e2401356d8933a",
+            "git_blob_sha1": "6092807668dc39c63cdd88b88d671794321a1ef0"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/README.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-three-window-c/README.md",
+            "mode": "100644",
+            "bytes": 3388,
+            "sha256": "c25e516561efda5648fdbbfad9ca42e313fbe880a4f0d4b2b1d89419a654048a",
+            "git_blob_sha1": "bab74ed1b3edefdae755fd7b0f237d068f02ccba"
+          }
+        },
+        {
+          "path": "docs/README.md",
+          "before": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 9773,
+            "sha256": "bee49f435fcc37c0eeab10be42486ec84abfdde101218c7e3c334245cb7a620a",
+            "git_blob_sha1": "9983288a7e5367b547ce3a17ef04be5521a4305a"
+          },
+          "after": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 9987,
+            "sha256": "604171d35789eea903e3fe7a31baa5576967cbc2deaa10c425d75f2bbb6dfc7e",
+            "git_blob_sha1": "93a8ec590cef4a405801a6356756923726e11071"
+          }
+        },
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 59268,
+            "sha256": "5fc4736185f762a7fde373757118e6a202e05e4d582cba59c1ba914fdde02fa8",
+            "git_blob_sha1": "42528f522462cdf6703c351455593c8c38f13449"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 59628,
+            "sha256": "4dd0f1ce6cabddf12ffb8be1801a72b73a901dea7f14a3bfe763935ddcb25ca9",
+            "git_blob_sha1": "0de19eeba0fdbabc4515f75ff2f38c716b7909e8"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3512,
+            "sha256": "b24c061af273209f0ce2ebaf22cd4c6f56e859f575690983c1d18906bc8450d8",
+            "git_blob_sha1": "7b514b9509fe542c36602433bbc69e1f1e6f27cb"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3557,
+            "sha256": "310838839fa0168a4a4350485ffdcdcfac5b26f13df9a515038a35ae235bc017",
+            "git_blob_sha1": "1e2e54e8539925da58283bdc3b9b71f3c4a9352c"
           }
         }
       ]
