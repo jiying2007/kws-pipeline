@@ -39731,6 +39731,45 @@
           }
         }
       ]
+    },
+    {
+      "id": "research-progress-aggregate-20261018",
+      "date": "2026-10-18",
+      "base_commit": "ba1896178e3d29d5689f3a5a0f0cc70786ff3b9e",
+      "base_tree": "ac4f68bbd3f19af68d00470b73b1826df2784f4c",
+      "workflow_source_changed": false,
+      "scope": "Retain reviewed anonymous aggregate findings for bounded TTS, matched last-block, weak20 and C numerical diagnostics.",
+      "rationale": "Document limited fitting gains alongside known-positive confidence/candidate regressions. Original candidate card identities, thresholds, storage policy and strict numerical failures remain unchanged. No weight or private per-item content.",
+      "files": [
+        {
+          "path": "research/progress-20261018/RESULTS.md",
+          "before": null,
+          "after": {
+            "path": "research/progress-20261018/RESULTS.md",
+            "mode": "100644",
+            "bytes": 8280,
+            "sha256": "e86ed4c1491df0e6805bfb41b949e15a417bbae7da503630013582178776000f",
+            "git_blob_sha1": "56c23734167df081bb1ab11669c603134fb8f7fb"
+          }
+        },
+        {
+          "path": "docs/README.md",
+          "before": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 9987,
+            "sha256": "604171d35789eea903e3fe7a31baa5576967cbc2deaa10c425d75f2bbb6dfc7e",
+            "git_blob_sha1": "93a8ec590cef4a405801a6356756923726e11071"
+          },
+          "after": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 10183,
+            "sha256": "2277f4ef7edb85b3bd984ee0b30f866a3b45076c5655c663a155e182c3da359c",
+            "git_blob_sha1": "051523f0fe1d0878979befb02de1f42c68a1bb7e"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
