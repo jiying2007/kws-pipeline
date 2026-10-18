@@ -1,0 +1,99 @@
+{
+  "asr_models": {
+    "qwen06": {
+      "asset_lock_sha256": "69a085208a42c3cc428d0d5c1bbcb973db0417fb40f20c0ecea78f6218b6e777",
+      "model_id": "Qwen/Qwen3-ASR-0.6B",
+      "revision": "5eb144179a02acc5e5ba31e748d22b0cf3e303b0"
+    },
+    "sensevoice": {
+      "asset_lock_sha256": "114f80592d0ad8c65437d205a50bcdb28ebb70f3fce68d6307a52d6057fd9c74",
+      "model_id": "FunAudioLLM/SenseVoiceSmall",
+      "revision": "3847d57b6bdf2dd8875cb1508d2af43d80a16bf7"
+    }
+  },
+  "execution_sources": {
+    "controller-source.py": "79c28ae154d962baf8fdc9a034e5290addf1ec6a71b1270bf3c7e1710bb31250",
+    "namespace-controller-source.py": "a60ce6e6a4e68cd5d5e6c9038afb35ca822bf420fbb4943e491c1c53f2c8dd07",
+    "worker-source.py": "844e951d4a7d3b01d37c459b3175a032b891024f2bbac536a7c8d1351c8d97c9"
+  },
+  "native_dependencies": {
+    "asr_architecture": {
+      "path": "kws-sense-binding-fix-20261017/candidate/research/qwen6_asr/core/asr_stage/architecture.py",
+      "sha256": "d3f0d67bcf724c34763ac4666a1570b02dfd979182e6183403ef91e0897d58ab"
+    },
+    "asr_loaders": {
+      "path": "kws-sense-binding-fix-20261017/candidate/research/qwen6_asr/core/asr_stage/adapters.py",
+      "sha256": "35b7c392610e78a4bb13cd1cfca57a94b8a3555f38740fc7c9320f04b2d70d3b"
+    },
+    "asr_locks": {
+      "path": "kws-sense-binding-fix-20261017/candidate/research/qwen6_asr/model-locks.json",
+      "sha256": "8b0813aba3c2447c7dc30b47e856e4ce9a619a98d32ed6dfa9f44dc6646714e4"
+    },
+    "native": {
+      "path": "kws-language-controlled-asr-executor-20261017/native_adapter.py",
+      "sha256": "b7380c981241d3433d24e10193c7f7b3ebde25b25690f2f5cf040c3e9f93696d"
+    },
+    "pcm": {
+      "path": "kws-sense-binding-fix-20261017/candidate/research/qwen6_asr/core/pcm/pcm_binding.py",
+      "sha256": "1f8cb1e8fba2c99dfd969b7f33a12011243aa68f0a6e1eb0dbf45d90fc9b1684"
+    },
+    "protocol": {
+      "path": "kws-language-controlled-asr-preparation-20261017/language_conditioned_protocol.py",
+      "sha256": "c84748f9d18ab8f4aa6b0cd2a659b5a890b189f1cc3c84af86fcc7ad959bcfb8"
+    },
+    "signal": {
+      "path": "sohee-durable-execution-20261017/runner/signal_helpers.py",
+      "sha256": "7e32294322893fe5d9ababc7010add22d78cbc0438bec8b55d757095fe071353"
+    },
+    "tts_gate": {
+      "path": "sohee-durable-execution-20261017/source/research/qwen6_tts/runtime_gate.py",
+      "sha256": "f4333b694bb1bc261e4bdeea6d586dc9f76b1afce6ce0af9dfcdb74d57d12815"
+    },
+    "tts_lock": {
+      "path": "sohee-durable-execution-20261017/source/research/qwen6_tts/model-lock.json",
+      "sha256": "c2dd1e752e1b139e490691b5e1d68daf75684e66687b4175672391d0bc9f3133"
+    },
+    "tts_runtime_lock": {
+      "path": "sohee-durable-execution-20261017/source/research/qwen6_tts/runtime-lock.json",
+      "sha256": "6a707c2fa2c2ae8f842176a7f9c8301186d51fddef167c413160c7f2816613de"
+    },
+    "tts_setup": {
+      "path": "sohee-durable-execution-20261017/source/research/qwen6_tts/setup_locked.py",
+      "sha256": "aac8d8e66504444f2965aa8d95dcfef9e8c6fa63d74f2eade15ca1290bc6b4b3"
+    },
+    "tts_setup_models": {
+      "path": "sohee-durable-execution-20261017/source/research/qwen6_tts/model-locks.json",
+      "sha256": "c206556a633b7d04c334494fc5a82934a19d572c125982c689f18f8b2d472110"
+    },
+    "tts_wheel_identity": {
+      "path": "sohee-durable-execution-20261017/source/research/qwen6_tts/wheel_identity.py",
+      "sha256": "623ee07a0d8f85ba1d7218a56fcd0e270df8c6e2c3e353dd52b3184ca915d8d5"
+    }
+  },
+  "schema": "bounded-batch-offline-source-contract-v1",
+  "sense_metadata": {
+    "basis": "SentencePiece ModelProto repeated SentencePiece field order; stdlib wire decode, no tokenizer import; only explicit supported metadata variants",
+    "emotion_ids": {
+      "ANGRY": 25003,
+      "EMO_UNKNOWN": 25009,
+      "NEUTRAL": 25004,
+      "SURPRISED": 25007
+    },
+    "tokenizer_sha256": "aa87f86064c3730d799ddf7af3c04659151102cba548bce325cf06ba4da4e6a8",
+    "vocabulary_size": 25055
+  },
+  "tts_recipe": {
+    "do_sample": true,
+    "language": "Chinese",
+    "max_new_tokens": 120,
+    "non_streaming_mode": true,
+    "repetition_penalty": 1.05,
+    "subtalker_dosample": true,
+    "subtalker_temperature": 0.9,
+    "subtalker_top_k": 50,
+    "subtalker_top_p": 1.0,
+    "temperature": 0.9,
+    "top_k": 50,
+    "top_p": 1.0
+  }
+}

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 58882,
-      "sha256": "41a4ed98ddc7d8345afdef273ab49166a8bdb15dadbfc0c5ba4af86fc4507ebb",
-      "git_blob_sha1": "508e348076ae42562ea57b3f68a3f4f95844dd21"
+      "bytes": 59268,
+      "sha256": "5fc4736185f762a7fde373757118e6a202e05e4d582cba59c1ba914fdde02fa8",
+      "git_blob_sha1": "42528f522462cdf6703c351455593c8c38f13449"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -39091,6 +39091,157 @@
             "bytes": 9165,
             "sha256": "43985563cd0fa849e3191ecaa7157cd780c9da0c54bd22b9a99e956fafe389e8",
             "git_blob_sha1": "8358b0cc53b3a321197ea96b2354a7359742e53e"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bounded-batch-weak-import-integration-20261018",
+      "date": "2026-10-18",
+      "base_commit": "fe8e78c2cff07a7b1c632deab15cf565e7b4d654",
+      "base_tree": "ee19eeddc094d4294ad813a6adc929f02a7aa6e7",
+      "workflow_source_changed": true,
+      "scope": "Integrate reviewed bounded native batch offline weak import and explicit metadata/PCM candidate reader; extend existing synthetic CI run block in three Python modes, selector coverage, declaration inventory and navigation.",
+      "rationale": "Public code, hand-built fixtures and public source metadata only. Five reviewed business files retain exact revision2 bytes. Original Dylan/Serena source and current-experiment-admission-false scope unchanged. No new model execution, private recordings/results, download, training, or remote mutation. Preserve all prior retention history.",
+      "files": [
+        {
+          "path": "docs/batch-weak-import.md",
+          "before": null,
+          "after": {
+            "path": "docs/batch-weak-import.md",
+            "mode": "100644",
+            "bytes": 7519,
+            "sha256": "2eae91948df0c4c0a339db44c4c102ee916862cd2d11474796d26545baf9df8e",
+            "git_blob_sha1": "f2dc1e3dc45ac0c4928bd21958c1c7f66cbe9573"
+          }
+        },
+        {
+          "path": "tests/test_batch_weak_import.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_batch_weak_import.py",
+            "mode": "100644",
+            "bytes": 29293,
+            "sha256": "5d1b6457c3fa53bbae966b4e88a29a5abb54b561341f01ec0d68c5c5fac1265c",
+            "git_blob_sha1": "ebed4d144e23341d84c585597ff6a8de11fe6efa"
+          }
+        },
+        {
+          "path": "tools/batch-source-contract.json",
+          "before": null,
+          "after": {
+            "path": "tools/batch-source-contract.json",
+            "mode": "100644",
+            "bytes": 4318,
+            "sha256": "30cd9db25ae5da28b3d812ee3f119e4b58df601930801f892a33fd5d4ef870d0",
+            "git_blob_sha1": "2cf4ca6795c92859439fbbc99c5accd997ab6e82"
+          }
+        },
+        {
+          "path": "tools/batch_weak_import.py",
+          "before": null,
+          "after": {
+            "path": "tools/batch_weak_import.py",
+            "mode": "100644",
+            "bytes": 43688,
+            "sha256": "8801ee7943a06ff8f9c93dd9236ed6f9afe48e52641b303d86a18e72506e2e8e",
+            "git_blob_sha1": "3a622cd1608148f6e9ea32420f6e160fa25ae082"
+          }
+        },
+        {
+          "path": "tools/language_conditioned_vote.py",
+          "before": {
+            "path": "tools/language_conditioned_vote.py",
+            "mode": "100644",
+            "bytes": 19251,
+            "sha256": "ff664c25118bde6328f622ef25b28a36f6a26b3862468fa215c32ef9e217030d",
+            "git_blob_sha1": "e36b81b516583272896aa236dcbe08ae21fb3693"
+          },
+          "after": {
+            "path": "tools/language_conditioned_vote.py",
+            "mode": "100644",
+            "bytes": 19315,
+            "sha256": "275a3af54af7d06fd1f84b1e61eba15e1e942f0e7c959bf1b7daa2df92ba9e41",
+            "git_blob_sha1": "aba227c641d8d73787ff07f467acf1e2fd096e7d"
+          }
+        },
+        {
+          "path": "tests/test_batch_weak_import_integration.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_batch_weak_import_integration.py",
+            "mode": "100644",
+            "bytes": 4712,
+            "sha256": "33dbde69babdbb4e2fd2cd2ab85e452d71b1f5b0ed6157cb5dd6b3415e3b4716",
+            "git_blob_sha1": "b6207a77e8c105dd0eb8dbaaeb248b6b4cdd5d03"
+          }
+        },
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 58882,
+            "sha256": "41a4ed98ddc7d8345afdef273ab49166a8bdb15dadbfc0c5ba4af86fc4507ebb",
+            "git_blob_sha1": "508e348076ae42562ea57b3f68a3f4f95844dd21"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 59268,
+            "sha256": "5fc4736185f762a7fde373757118e6a202e05e4d582cba59c1ba914fdde02fa8",
+            "git_blob_sha1": "42528f522462cdf6703c351455593c8c38f13449"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3315,
+            "sha256": "28f6d0d8e659fe828a5a8b2007b8f132faf4bbcc35e4c136bc124de69600dea5",
+            "git_blob_sha1": "aac4197fa917d5660b77e406bca1574e5efac2be"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3512,
+            "sha256": "b24c061af273209f0ce2ebaf22cd4c6f56e859f575690983c1d18906bc8450d8",
+            "git_blob_sha1": "7b514b9509fe542c36602433bbc69e1f1e6f27cb"
+          }
+        },
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 11735,
+            "sha256": "773dae1fa4427c42a690fb1c2a4117c7d0b90c6749aab76c56eb0482a201d3aa",
+            "git_blob_sha1": "c7afbb3fe8b36dab55c29344a859e59e290811bd"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 12272,
+            "sha256": "c2020871910845a40fb2615676cb640e36f9018bc6ed4a54542b7cc089e969ec",
+            "git_blob_sha1": "1938c24891b0ac12ec2f7f02b76f57a1de3a6a61"
+          }
+        },
+        {
+          "path": "docs/README.md",
+          "before": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 9165,
+            "sha256": "43985563cd0fa849e3191ecaa7157cd780c9da0c54bd22b9a99e956fafe389e8",
+            "git_blob_sha1": "8358b0cc53b3a321197ea96b2354a7359742e53e"
+          },
+          "after": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 9375,
+            "sha256": "6bb3f0009f6768243ae0b8d3bd969290e3b3bc1969ff5d84c9e210d21de72b08",
+            "git_blob_sha1": "6f81ccc325ace3a287480405713a7306f6ce0c70"
           }
         }
       ]

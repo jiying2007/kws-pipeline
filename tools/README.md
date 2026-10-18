@@ -74,6 +74,12 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`speech_history_evidence.py`](speech_history_evidence.py) — Retain prior attempts and check bounded source-rights evidence.
 - [Language-conditioned weak-import guide](../docs/language-conditioned-weak-import.md) — Source language is supplied conditioning, not independent language detection; research weak labels only.
 
+## Bounded batch saved-result candidates
+
+- [`batch_weak_import.py`](batch_weak_import.py) — Offline bounded native batch verification and full-transcript research-candidate metadata/PCM inspection.
+- [`batch-source-contract.json`](batch-source-contract.json) — Public source/model identities and explicit tokenizer metadata map.
+- [Bounded batch weak-import guide](../docs/batch-weak-import.md) — Restricted Dylan/Serena source review, original split and full transcript preservation; current experiment admission remains false.
+
 ## Disabled research plan metadata
 
 - [`validate_parallel_candidate_plan.py`](validate_parallel_candidate_plan.py) checks the
