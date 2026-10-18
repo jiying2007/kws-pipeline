@@ -1,0 +1,50 @@
+{
+  "schema": "offline-public-candidate-validation-v1",
+  "status": "PASS_STATIC_AND_SYNTHETIC_ONLY",
+  "test_runs": [
+    {
+      "mode": "normal",
+      "tests": 10,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "..........\n----------------------------------------------------------------------\nRan 10 tests in 0.002s\n\nOK\n"
+    },
+    {
+      "mode": "-O",
+      "tests": 10,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "..........\n----------------------------------------------------------------------\nRan 10 tests in 0.004s\n\nOK\n"
+    },
+    {
+      "mode": "-OO",
+      "tests": 10,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "..........\n----------------------------------------------------------------------\nRan 10 tests in 0.002s\n\nOK\n"
+    }
+  ],
+  "ast_modules": [
+    "core/event_state.py",
+    "core/joint_branch.py",
+    "core/online_merge.py",
+    "core/timing_auxiliary.py",
+    "tests/test_core_contracts.py",
+    "tests/test_policy_contracts.py"
+  ],
+  "byte_identical_core_copies": 3,
+  "exact_source_spans": 1,
+  "reviewed_anonymous_S_export_byte_identical": true,
+  "private_content_scan_flags": 0,
+  "scan_scope": "All allowlisted text inspected for absolute private paths, private identifiers, actual per-item label records and private artifact references.",
+  "real_model_calls": 0,
+  "real_decoder_replays": 0,
+  "real_audio_or_tensor_loads": 0,
+  "remote_ci_status": "NOT_RUN_FOR_THIS_CANDIDATE",
+  "remote_commit": null,
+  "source_license_text_hash_status": "Recorded separately in public-sources.json; never inferred from a declaration hash.",
+  "limitations": [
+    "Synthetic wiring does not exercise the real Torch constructor or numerical model.",
+    "Privacy scan supports an explicit manually inspected allowlist; it is not proof that arbitrary external inputs are safe to publish."
+  ]
+}

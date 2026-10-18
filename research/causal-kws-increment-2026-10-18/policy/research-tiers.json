@@ -1,0 +1,54 @@
+{
+  "schema": "anonymous-weak-research-tiers-v1",
+  "status": "POST_EVIDENCE_POLICY_NO_TRAINING",
+  "policy_timing": "Defined after inspecting the ASR evidence; not preregistered.",
+  "source_policy_sha256": "cd94be416696db3aca048fdbe627f75f7eb937a2decadda8b08344388c0ac658",
+  "source_seal_sha256": "8ae936ce40895b3917e1a3129ff6fb1bd66a90bc6915693752390a7e661b8968",
+  "comparison_sha256": "082af2d75abf9e1396e7265a46114906349006038862642939f8395e6ffb937e",
+  "aggregate_counts": {
+    "strict_dual_machine_weak_existing": 8,
+    "majority_low_confidence_candidate": 3,
+    "pronunciation_conflict_abstain": 1
+  },
+  "rules": [
+    {
+      "tier": "strict_dual_machine_weak_existing",
+      "condition": "Already admitted by the sealed strict-dual weak-evidence policy.",
+      "action": "Retain original admission and label.",
+      "new_weight_override": null,
+      "human_gold": false,
+      "final_acceptance_eligible": false
+    },
+    {
+      "tier": "majority_low_confidence_candidate",
+      "condition": "Previously quarantined; two of three normalized ASR transcripts agree with intended text; dissent retained.",
+      "action": "Separate low-confidence training candidate only, pending a separately authorized experiment.",
+      "original_admission": "quarantine",
+      "preexisting_split": "train_voice_lineage_only",
+      "suggested_research_weight": 0.1,
+      "weight_is_probability": false,
+      "weight_rationale": "Cautious ablation heuristic, not calibrated confidence.",
+      "human_gold": false,
+      "final_acceptance_eligible": false
+    },
+    {
+      "tier": "pronunciation_conflict_abstain",
+      "condition": "All three ASRs agree on another pronunciation rather than the intended target.",
+      "action": "Diagnostic only; no supervised target or negative label.",
+      "suggested_research_weight": 0.0,
+      "negative_relabel_allowed": false,
+      "human_gold": false,
+      "final_acceptance_eligible": false
+    }
+  ],
+  "invariants": {
+    "original_records_unchanged": true,
+    "original_labels_unchanged": true,
+    "dissent_retained": true,
+    "train_dev_lineage_unchanged": true,
+    "no_actual_training": true,
+    "no_gold_promotion": true,
+    "no_equal_quality_pooling": true
+  },
+  "implementation_scope": "Declarative research policy and anonymous fixtures only; not a new automatic admission or labeling pipeline."
+}

@@ -40146,6 +40146,260 @@
           }
         }
       ]
+    },
+    {
+      "id": "causal-research-increment-assets-20261018",
+      "date": "2026-10-18",
+      "base_commit": "76d2d588e3048ae5357caa79c94353a7d4d28fbe",
+      "base_tree": "1fc472c90dbbc20c93cfcff7762de899041a6d31",
+      "workflow_source_changed": false,
+      "scope": "Retain reviewed reusable joint, merge and timing source with artificial contracts and anonymous aggregates.",
+      "rationale": "Extend the existing three-mode stdlib CI wrapper by ten cases; no new workflow, model execution, data, weights or admission changes. Preserve original allowlist bytes and 112 maintenance records.",
+      "files": [
+        {
+          "path": "docs/README.md",
+          "before": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 10757,
+            "sha256": "9aa2a23cd9e820b6cab03070720357b2531fe8e3ad60d29dc90085f281092698",
+            "git_blob_sha1": "80c251d75cb9e1b4af4a030fba374259779b36a3"
+          },
+          "after": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 10969,
+            "sha256": "c7638a80fa598fc80af686b9a5099a8df3b9d3009d06795054dcc31f7897316d",
+            "git_blob_sha1": "f44ec77152d10283fac3d09010e9340f8b718cc5"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/LOCAL-VALIDATION.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/LOCAL-VALIDATION.json",
+            "mode": "100644",
+            "bytes": 1876,
+            "sha256": "38b9fd4fc5c6f26e445c323bd6358355f934669b9b8404979e9b0747b111de5f",
+            "git_blob_sha1": "461aa1d0709915037f4b7960d89a9bdcddf15094"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/LONG-TERM-ASSETS.md",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/LONG-TERM-ASSETS.md",
+            "mode": "100644",
+            "bytes": 2626,
+            "sha256": "5e8ca8dc77731c45fbfc459607aca9a9777fa8c743a30e1e4360b57edd565775",
+            "git_blob_sha1": "c15e936486c0d3bb6b59fbde83b7baff32287b93"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/MANIFEST.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/MANIFEST.json",
+            "mode": "100644",
+            "bytes": 3137,
+            "sha256": "c9a90472f9be0a280a51de0249cbfa31c098caee4f2c01dca95d0ecc3b6bdca5",
+            "git_blob_sha1": "74151a25d8f1be3e74131594bc5da5d5effc8c71"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/README.md",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/README.md",
+            "mode": "100644",
+            "bytes": 7356,
+            "sha256": "4d1e93afa71a4ccc556111fcc26a92b3f4f2082db3530d6de26a32ef8ec99e87",
+            "git_blob_sha1": "b72f7ef601207c6039363a724fbc357b74eb2316"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/SOURCE-RETENTION-CANDIDATE.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/SOURCE-RETENTION-CANDIDATE.json",
+            "mode": "100644",
+            "bytes": 5557,
+            "sha256": "689bc674029420fa75ceafbcbf5b7de1d2296d103c3d84c48a8ebb316c69cf62",
+            "git_blob_sha1": "1d0eedead288bcaa52139f3e73d5540e4c82f87f"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/core/event_state.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/core/event_state.py",
+            "mode": "100644",
+            "bytes": 1304,
+            "sha256": "c00a4d5eca8582234a28917c77ee9272b0b79725e83e7f12a3c9c007e2fac714",
+            "git_blob_sha1": "f556af5a81de5461945c521e728ba9cb1e27f8fb"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/core/joint_branch.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/core/joint_branch.py",
+            "mode": "100644",
+            "bytes": 5503,
+            "sha256": "8353b299ec9002ab46f3b7fabad221d3d209ef445c4f1e6d0374c87a036c45d1",
+            "git_blob_sha1": "05347217b28bc02e2d008248c97cde2e31dcb8ef"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/core/online_merge.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/core/online_merge.py",
+            "mode": "100644",
+            "bytes": 1176,
+            "sha256": "359697e535e80519a744e8969b26f50023ed99a3d3e7fe29a9ef7537fbd8d36a",
+            "git_blob_sha1": "36512cca9b932c8031fddf50ea1496a9c44a5d54"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/core/timing_auxiliary.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/core/timing_auxiliary.py",
+            "mode": "100644",
+            "bytes": 2850,
+            "sha256": "752547c7552fad1912e788470320c7e548b233ff97507fdc4db612d12071cab8",
+            "git_blob_sha1": "0512ef5aff96a19e80e44eaf111833681397f267"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/evidence/continuous-S-aggregate.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/evidence/continuous-S-aggregate.json",
+            "mode": "100644",
+            "bytes": 14972,
+            "sha256": "cf4b61cab217cbff0e5b6c429b87aaa6ad3623c22750eab70b4096697aa21ba7",
+            "git_blob_sha1": "525837d030ac62ba0cdecbe89c88f847b0bc503f"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/evidence/continuous-S-status.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/evidence/continuous-S-status.json",
+            "mode": "100644",
+            "bytes": 736,
+            "sha256": "2985654da4240c34deab3e38454c5c5843e40e59f14d44ef3b67db7938000730",
+            "git_blob_sha1": "9896a12b7f74a6ea2b3f4521607b229b4e667d37"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/evidence/core-provenance.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/evidence/core-provenance.json",
+            "mode": "100644",
+            "bytes": 1471,
+            "sha256": "5aae6d3157900fc168a1d69cca7da5f7ead7cd1815b766f1f973b36e228c07d3",
+            "git_blob_sha1": "3f925e759a6957ce7e54aad0b5a79e14fa771fb1"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/evidence/joint-pilot-L-aggregate.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/evidence/joint-pilot-L-aggregate.json",
+            "mode": "100644",
+            "bytes": 1793,
+            "sha256": "64c0199765e900a4e43a358ed2e12f7531644bdcc749067fb306e18f2d49a5b4",
+            "git_blob_sha1": "4d71dfd80bfe4993d86c0c64f1fb7cdbabb1935a"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/evidence/operating-points.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/evidence/operating-points.json",
+            "mode": "100644",
+            "bytes": 10692,
+            "sha256": "03c9be37c4105452fb56c4b6ac9e913e2920a2b6521fef80d9b7f8a5025ccd2f",
+            "git_blob_sha1": "31ff2a25d1cd2319fe1858c4ce3b5ea4acf222ba"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/evidence/public-sources.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/evidence/public-sources.json",
+            "mode": "100644",
+            "bytes": 3175,
+            "sha256": "f3c395ad38e1b258643e0f3f342861200a59955a2f1ede8b1050f976f47a1d6a",
+            "git_blob_sha1": "e04420e0a9c2cfd5edccc39224d341df479ca460"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/evidence/timing-auxiliary-aggregate.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/evidence/timing-auxiliary-aggregate.json",
+            "mode": "100644",
+            "bytes": 9384,
+            "sha256": "af3bee27627f0253443c0fb4e92045a9225f251a34cdfa2d8280b3da72132e1d",
+            "git_blob_sha1": "5cf236d5453cf9e6f1c9e5587836a5a0fe5388ab"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/policy/research-tiers.json",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/policy/research-tiers.json",
+            "mode": "100644",
+            "bytes": 2376,
+            "sha256": "2f9040984149da49765a821b0c3a0747ab6ffb9761608fa48f9fcee725efcdd7",
+            "git_blob_sha1": "2367d6c629beaed0f7d8e490499d4d965ecfc5bd"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/tests/test_core_contracts.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/tests/test_core_contracts.py",
+            "mode": "100644",
+            "bytes": 4176,
+            "sha256": "74690e7e9d3dc92837e19066a59e27d31e11f77432689bcc032d3af5e9e112ed",
+            "git_blob_sha1": "2a48e3a08005c94ff7140f4d315c6610fcffa685"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/tests/test_policy_contracts.py",
+          "before": null,
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/tests/test_policy_contracts.py",
+            "mode": "100644",
+            "bytes": 2079,
+            "sha256": "42566b3836f084f21b0405a8e7922b03f37a335ee218cd414321d2110d13ffdd",
+            "git_blob_sha1": "ac64e8af2d033bdb58c04c09e7cd2dec0596fb78"
+          }
+        },
+        {
+          "path": "tests/test_causal_research_contract.py",
+          "before": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 1481,
+            "sha256": "30804683f629e82f690be63549f55a475ef190ae49342f293381c9da792948da",
+            "git_blob_sha1": "73993f09a3c2009abdae2753b325d7b2e6730be9"
+          },
+          "after": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 1653,
+            "sha256": "1e075951b885223af59ac68cb3a7c0d8152b52d1709984e945c3dd75c361de26",
+            "git_blob_sha1": "b45d091131570926c99046b0921f57068679638a"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

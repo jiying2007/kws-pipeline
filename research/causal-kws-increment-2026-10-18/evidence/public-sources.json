@@ -1,0 +1,66 @@
+{
+  "schema": "public-corpus-source-identity-v1",
+  "dataset": "AISHELL-4",
+  "official_source_page": "https://www.openslr.org/111/",
+  "official_test_archive_url": "https://www.openslr.org/resources/111/test.tar.gz",
+  "author_code_url": "https://github.com/felixfuyihui/AISHELL-4",
+  "corpus_license": {
+    "declared": "CC-BY-SA-4.0",
+    "scope": "Corpus declaration reported by the official OpenSLR page.",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "legalcode_url": "https://creativecommons.org/licenses/by-sa/4.0/legalcode.en",
+    "retrieved_license_text_sha256": null,
+    "hash_status": "No local legalcode byte snapshot is claimed by this metadata.",
+    "source_declaration_record_sha256": "d8ec07c97357372617feffc3588c29dc19eece10d616339927986d733f6852d5"
+  },
+  "author_code_license": {
+    "declared": "Apache-2.0",
+    "scope": "Author code only; separate from corpus terms."
+  },
+  "mirror": {
+    "url": "https://huggingface.co/datasets/AISHELL/AISHELL-4",
+    "revision": "aada72727856313b19d4a030383c426364931dbf",
+    "declared_metadata_license": "apache-2.0",
+    "metadata_sha256": "d940c2db20ecbebc2c67e929ee06dae12c813baadeba9d09f49780908bb624f2",
+    "official_publisher_link_established": false,
+    "scope": "Metadata label does not establish corpus relicensing or official publisher identity."
+  },
+  "complete_official_archive_sha256": null,
+  "complete_archive_hash_claimed": false,
+  "derived_excerpt_metadata": [
+    {
+      "alias": "L",
+      "source": "official selected member in a partial archive acquisition",
+      "channel_index": 0,
+      "seconds": 1800,
+      "sample_rate": 16000,
+      "channels": 1,
+      "sample_bits": 16,
+      "wav_sha256": "3b89aef178e3241e64530c22dd2a6ce3958eec9a1ea8c2858095dc92a4e27b89",
+      "pcm_sha256": "0c1ccc10c4f2e2f77c2ac545c0f35b57f778666a2b3fe08350eff6cb4bd58010",
+      "official_transcript_sha256": "d4b0f6a1c63a7ee0db14b49c592bacea69bceea07bffbe4479f3cfa8d2764978"
+    },
+    {
+      "alias": "S",
+      "source": "fixed_revision_mirror_member_hash_verified_not_official_audio_identity",
+      "channel_index": 0,
+      "seconds": 1800,
+      "sample_rate": 16000,
+      "channels": 1,
+      "sample_bits": 16,
+      "wav_sha256": "87d0c0838b5a793f36eb4584298ac76c4f290e369f3c8a7ad644299f2909b3ae",
+      "pcm_sha256": "7c1d8bd33bd523b3aa2a544b851b4f70ffa32e41bf5d7bff8c51dd7c077f5725",
+      "official_transcript_sha256": "036bde0e39a5c4cdf770cf7d6d52ea66cd6d43b44bdb468dcf4ef0fbef261c4b"
+    }
+  ],
+  "audio_or_transcripts_included": false,
+  "modifications": "Channel 0 only, first 1800 seconds, PCM16 mono at original 16 kHz; no concatenation or silence trimming.",
+  "cross_session_speaker_identity_reconciled": false,
+  "independent_gold_hours": 0,
+  "limitations": [
+    "Official transcript provenance does not certify mirrored audio identity.",
+    "Partial archive extraction does not provide a complete official archive checksum.",
+    "These hashes identify evidence and derivatives; no audio redistribution rights or accuracy certification are added.",
+    "The declarative source/license record hash is not a hash of the legalcode text."
+  ]
+}

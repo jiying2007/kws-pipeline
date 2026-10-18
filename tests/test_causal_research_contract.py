@@ -6,6 +6,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 CASES = (
+    ('research/causal-kws-increment-2026-10-18/tests', 'test_core_contracts.py', 6),
+    ('research/causal-kws-increment-2026-10-18/tests', 'test_policy_contracts.py', 4),
     ('research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017', 'test_threshold_adapter.py', 6),
     ('research/causal-event-head', 'test_event_head_synthetic.py', 6),
     ('research/causal-mdtc', 'test_static.py', 8),
