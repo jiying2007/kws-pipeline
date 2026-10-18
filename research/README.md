@@ -8,9 +8,13 @@ are unchanged by this consolidation.
 本入口把可复用工具、实验结论与产品资格分开。研究代码通过测试，不代表模型通过
 声学或板端验证。失败结论保留；旧实验的一次性执行许可不因整理而重新生效。
 
-## Current research and retention / 当前研究与保留状态
+## Research navigation and retained checkpoints / 研究导航与历史检查点
 
-**2026-10-14 current iteration:** [Known FAR original-prefix diagnostic](known-far-diagnostic-v1/README.md) retains both reproduced failures and logits/VAD/decoder traces; it does not clear FAR. [Closed campaign preparation](campaign-capsules-v1/README.md) generates review-only control projections without activating a run. [Actual test execution evidence](../docs/TEST_EXECUTION_EVIDENCE.md) distinguishes guarded cases from declarations.
+Current summary / 当前统一摘要：[model and engineering status](../docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status).
+Dated notes below retain their original scope; the D20 checklist applies to that diagnostic lane, not all research.
+下列日期记录保留原范围；D20 准入清单只适用于该诊断线，不代表全部研究的当前状态。
+
+**2026-10-14 historical iteration:** [Known FAR original-prefix diagnostic](known-far-diagnostic-v1/README.md) retains both reproduced failures and logits/VAD/decoder traces; it does not clear FAR. [Closed campaign preparation](campaign-capsules-v1/README.md) generates review-only control projections without activating a run. [Actual test execution evidence](../docs/TEST_EXECUTION_EVIDENCE.md) distinguishes guarded cases from declarations.
 
 **2026-10-11 source/evidence audit:** [Confirmed defects, corrections and verification boundaries](../docs/KWS_AUDIT_2026-10-11.md) covers output reliability, AFE and promotion admission, optimized-mode guards and fixture-only evaluation. It does not qualify acoustic performance.
 
@@ -119,7 +123,7 @@ complete tests and exact scope; the CTC workflow runs both independent oracles.
   does not prove backend consumption, historical dispatch or numerical admission.
   CMVN is a saved separate call, not an internal stage-0 observation; D20 FAIL,
   D90 NOT_RUN and execution NOT_READY remain unchanged.
-- [Current admission checklist / 当前唯一准入清单](d20-diagnostic-admission-v1/PLAN-SCHEMA.md#current-admission-checklist):
+- [D20 diagnostic admission checklist / D20 诊断准入清单](d20-diagnostic-admission-v1/PLAN-SCHEMA.md#current-admission-checklist):
   start here before proposing further diagnostics. Establish and independently
   verify a hard-memory scope before any exact-backend import inside that scope.
   Exact backend, historical source binding and independently accepted one-stage
@@ -140,7 +144,7 @@ For the next scientific validation priority, see the
 [continuous-state, VAD and event-matched evaluation boundary](../docs/EVALUATION.md#current-diagnostic-priority-and-admission-boundary).
 This proposes no new run, blanket reset, threshold sweep, model or training.
 
-当前只以以上准入清单为操作入口；PR #502 补充及更早协议保留为历史证据。
+D20 诊断线以以上准入清单为操作入口；PR #502 补充及更早协议保留为历史证据。
 必须先建立并验证硬限制，再在该隔离范围内检查精确后端 import；不得无约束安装、
 import 后再判断是否符合预算。先复核已有 trace，不重复采集、不扩大训练。
 D20 raw FAIL、D90 NOT_RUN、FA 根因未定、fixed50 支持不足、真人及实机资格 deferred

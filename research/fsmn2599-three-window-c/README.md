@@ -78,6 +78,37 @@ Four serial compilations each have a 45-second bound; three test processes each
 have a 60-second bound, followed by a 10-second production symbol audit.
 No downloads, model calls, real-posterior input, or permanent binary output.
 
+## ARM hard-float compatibility smoke
+
+The existing `armv7-cross` CI job also runs the two unchanged C fixture sources
+under `qemu-arm-static`, using its discovered hard-float sysroot. The small runner
+is `tests/run_research_three_window_arm.py`; its seven standard-library command
+contracts run in normal, `-O` and `-OO` modes without compiling C. Existing
+shipping-core ARM checks and hosted gcc/clang sanitizer/ctypes differential
+checks remain in place. ARM libraries are never loaded into x86 Python.
+
+Three serial builds use `arm-linux-gnueabihf-gcc`, C11, warnings-as-errors,
+`-mcpu=cortex-a32 -mfpu=neon-vfpv4 -mfloat-abi=hard`, and
+`-fno-fast-math -ffp-contract=off -fexcess-precision=standard`.
+The two fixture executables use `-O1 -g`; the independent production shared
+library uses `-O2 -fPIC -shared`, without `KWS3_TESTING`. Each build has a
+45-second bound, each of the two QEMU runs a 60-second bound, and cross-`nm`
+has a 10-second bound. Failure or timeout is fatal, with no fallback or retry.
+Temporary binaries are removed on normal exit or Python exception.
+
+Completion requires eight legacy smoke groups and eight threshold groups:
+569 completed rows, 572 step attempts, 949 beam updates, 21 windows and 11
+direct merges. The ARM production ABI audit requires the same 13 `kws3_`
+symbols as the hosted audit, with no test hooks. The original 11 symbols and
+event/summary declarations remain untouched; opaque decoder storage can differ
+across architectures and is queried, not pinned to the old host size.
+
+This is an artificial-fixture decoder compatibility check, not SSC305 SDK or
+board qualification, latency/memory/RTF measurement, sanitizer coverage, or
+frontend/acoustic-network numerical acceptance. The existing strict numerical
+failures remain unresolved. No models, audio or private posterior inputs are
+used; the hosted 28-method differential suite remains a separate check.
+
 ## API and limits
 
 See [kws3.h](kws-fsmn2599-three-window-c-preparation-20261018/kws3.h) for create,

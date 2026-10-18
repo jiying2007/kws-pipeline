@@ -4,7 +4,7 @@
 
 Research: [reusable modules, retained results and qualification boundaries](research/README.md)
 
-Current research entry: [r5 native-completion result and source-only optimization boundaries](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry). The completed three-ASR source screen and near-pronunciation tooling remain linked there. Native completion, ASR agreement and source/synthetic checks do not establish real-world FAR or recall improvement.
+Current status: [model and engineering summary](docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status), checked 2026-10-18. Historical SKU, retained FSMN B/OR, the no-promotion decision and posterior-only C are separate evidence scopes; successful software CI does not establish acoustic or device qualification.
 
 Current archive delivery: [complete public archive, index and verified restoration](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md). The old expanded-copy target is cancelled; its historical status remains NOT_PUSHED. D20 numerical failure and D90 not yet tested, fixed50 inconclusive support and the old-model nightly failure remain separate; human/device qualification is deferred.
 
@@ -20,7 +20,7 @@ Current archive delivery: [complete public archive, index and verified restorati
 > `configs/shipping.xiaowo.json` keeps `shipping_approved=false` until both
 > exist. See [Validation boundary](#validation-boundary).
 
-`kws-pipeline` is a low-compute, always-on keyword spotting engine for embedded Linux/RTOS-class products. The **currently qualified synthetic product SKU** is deliberately narrow and ships exactly two four-character Mandarin wake phrases:
+`kws-pipeline` is a low-compute, always-on keyword spotting engine for embedded Linux/RTOS-class products. The **historically synthetic-qualified product SKU** is deliberately narrow and ships exactly two four-character Mandarin wake phrases:
 
 - **你好小窝** — `ni3 hao3 xiao3 wo1`
 - **小窝小窝** — `xiao3 wo1 xiao3 wo1`
@@ -40,7 +40,9 @@ PCM16 16 kHz
  -> wake event
 ```
 
-## Current engineering-qualified model
+<a id="current-engineering-qualified-model"></a>
+
+## Historical engineering-qualified model
 
 The current immutable model release is [`model-749187ec1d66`](https://github.com/jiying2007/kws-pipeline/releases/tag/model-749187ec1d66) and is bound to:
 

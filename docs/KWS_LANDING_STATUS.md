@@ -1,5 +1,61 @@
 # KWS product landing status
 
+## Current model and engineering status
+
+Status checked 2026-10-18 against merged main
+`6cb57da2a73fe5859e4e139769598ffc28a42cf5`. This is the single current
+summary; dated checkpoints below retain their original evidence scope.
+
+1. **Historical five-token SKU:** `model-749187ec1d66` retains its historical
+   synthetic qualification, but the frozen-model nightly failed.
+   `shipping_approved=false` and `recalibration_required=true` remain unchanged.
+2. **Original FSMN B:** retain the [seed0 B research candidate](../research/fsmn2599-seed0-b-candidate-v1/MODEL_CARD.md).
+   It is not a promoted model or an independently qualified best model.
+3. **Conservative OR:** retain the [B 0.70 + auxiliary KW2 0.85 candidate](../research/causal-kws-increment-2026-10-18/README.md).
+   Its post-hoc development complement is not an independent validation win;
+   exposed/weak labels and continuous-stream evidence limits still apply.
+4. **New eleven-record increment:** the [controlled experiment is complete](../research/causal-kws-increment-2026-10-18/NEXT11-DECISION.md),
+   but neither new head is promoted. Keep the original B and conservative OR;
+   training-fit gains do not remove the historical positive regression.
+5. **Posterior-only C decoder:** [PR #608](https://github.com/jiying2007/kws-pipeline/pull/608)
+   adds the fixed-threshold interface; hosted integration checks passed on the
+   exact merge commit below. This covers artificial decoder/ABI contracts,
+   separate from retained private fixed-posterior parity evidence.
+   Frontend/acoustic-network `atol=rtol=1e-5` remains **FAIL**; the complete C B/OR
+   chain is not integrated, and SSC305/device qualification has not passed.
+   Decoder parity does not establish acoustic accuracy, FAR or shipping approval.
+
+当前摘要以以上 main 提交为准，五类证据分开：
+
+1. 历史五 token SKU 保留合成资格记录，但旧模型 nightly 已失败；
+   `shipping_approved=false`、`recalibration_required=true` 不变。
+2. 原 FSMN seed0 B 保留为研究候选，未晋升，未证明为独立验证的最佳模型。
+3. 保守 OR（B 0.70 + 辅助 KW2 0.85）保留为研究候选；事后选择的开发集互补
+   不是独立胜出，暴露/弱标签与连续流证据限制仍在。
+4. 新十一条弱数据的受控实验已完成，但两个新头均不晋升；训练拟合收益未消除
+   历史正例回退，继续保留原 B 和保守 OR。
+5. posterior-only C 的 #608 固定阈值接口已通过所列合并提交的托管集成检查；
+   人工 decoder/ABI 契约与历史私有 posterior 一致性证据分开。
+   frontend/network 的 `atol=rtol=1e-5` 仍 **FAIL**，完整 C B/OR 链未集成，
+   SSC305/设备资格未通过。解码器一致性不是声学准确率、FAR 或 shipping 资格。
+
+### Integration receipts checked 2026-10-18
+
+These are successful **push/main merge-commit runs**, not PR-head runs or new
+acoustic experiments. Preparation-time NOT_RUN/PENDING statements in retained
+source/result files remain historical; these later receipts supersede only
+integration/CI pending status. They do not reclassify failed numerical evidence.
+
+| Integration | Exact merge commit | ci | repository-cleanup |
+| --- | --- | --- | --- |
+| [#606](https://github.com/jiying2007/kws-pipeline/pull/606), causal research assets | `6f7523f7fae3e598e700426a43a3095d6ede1118` | [39113813122](https://github.com/jiying2007/kws-pipeline/actions/runs/39113813122) | [39113813078](https://github.com/jiying2007/kws-pipeline/actions/runs/39113813078) |
+| [#607](https://github.com/jiying2007/kws-pipeline/pull/607), no-promotion decision | `e3e63c28e9e183ca70cc86c0a0bbfdcceb0bf346` | [39115489962](https://github.com/jiying2007/kws-pipeline/actions/runs/39115489962) | [39115490023](https://github.com/jiying2007/kws-pipeline/actions/runs/39115490023) |
+| [#608](https://github.com/jiying2007/kws-pipeline/pull/608), C threshold interface | `6cb57da2a73fe5859e4e139769598ffc28a42cf5` | [39120269068](https://github.com/jiying2007/kws-pipeline/actions/runs/39120269068) | [39120269075](https://github.com/jiying2007/kws-pipeline/actions/runs/39120269075) |
+
+以上是合并提交上的 push/main 成功收据，不是 PR head 测试或新增声学实验。
+历史准备文件的 NOT_RUN/PENDING 仍描述当时状态；后续收据只更新集成/CI 状态，
+不改变数值失败、模型晋升或设备资格结论。
+
 ## 2026-10-16 data/model roadmap checkpoint
 
 Read-only evidence audit at `a7015ff61947b423ed0162b692a39f7590255941`.
@@ -175,11 +231,11 @@ real-human/final-AFE, physical-board or shipping gates.
 
 A later [bounded original-prefix diagnostic](../research/known-far-diagnostic-v1/README.md) restored both failed events with the original-equivalent runtime, retained logits/VAD/decoder state, and keeps the original regression failed. It does not qualify this changed main or clear recalibration.
 
-## Current entry points
+## Historical diagnostic entry points (2026-10-14)
 
-Use the [research map](../research/README.md) and its
-[unique current admission checklist](../research/d20-diagnostic-admission-v1/PLAN-SCHEMA.md#current-admission-checklist)
-for current work. Neither source checks nor dated experiment receipts authorize
+For the retained D20 diagnostic lane, use the [research map](../research/README.md) and its
+[lane-specific admission checklist](../research/d20-diagnostic-admission-v1/PLAN-SCHEMA.md#current-admission-checklist)
+for that diagnostic work. Neither source checks nor dated experiment receipts authorize
 new numerical execution, model calls, acquisition, training or qualification.
 The [earlier roadmap](KWS_RESEARCH_PRODUCT_ROADMAP.md) and
 [execution record](KWS_LANDING_EXECUTION.md) retain their historical context.

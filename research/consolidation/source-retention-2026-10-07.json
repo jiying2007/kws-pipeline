@@ -40568,6 +40568,186 @@
           }
         }
       ]
+    },
+    {
+      "id": "research-arm-decoder-current-entry-20261018",
+      "date": "2026-10-18",
+      "base_commit": "6cb57da2a73fe5859e4e139769598ffc28a42cf5",
+      "base_tree": "eababa51d191899c759104802c4af679757caf15",
+      "workflow_source_changed": true,
+      "scope": "Add bounded synthetic research decoder ARM/QEMU and production ABI checks inside existing armv7-cross job; consolidate current model/engineering status entry and retain historical sections.",
+      "rationale": "Preserve shipping-core, hosted sanitizer and differential checks. Seven ARM runner contracts and three status-document contracts run in normal/O/OO modes. Actual ARM execution requires CI evidence; this metadata does not assert execution success. Strict frontend/network numerical failures, full C integration and SSC305/device qualification remain unresolved. No private audio, weights, posterior payloads or credentials.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 60062,
+            "sha256": "714176bd545f8fdab65a042d5922a616f4fdcb2d2eb371d295276d98d11f196b",
+            "git_blob_sha1": "553409ff5946f90207362c728a4279ffd235f3c3"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 61040,
+            "sha256": "3e21f4b65f2ddee9a4e3c106e27c3ad81fa35b8197d38d76b248b6414de21c32",
+            "git_blob_sha1": "c31cca997cdf80efb5b848ba0b50f9595bca6a52"
+          }
+        },
+        {
+          "path": "README.md",
+          "before": {
+            "path": "README.md",
+            "mode": "100644",
+            "bytes": 19134,
+            "sha256": "04aee348f9ea51c888b73bb6bc3274851ae16831c674a084f43938cb433042a6",
+            "git_blob_sha1": "57d56fa16e3cb3ae946a8f6eb8ad73c7c0470775"
+          },
+          "after": {
+            "path": "README.md",
+            "mode": "100644",
+            "bytes": 19152,
+            "sha256": "138566f0e8fce746d1166e1500c5aadb026a3aa33cee289eaf59830b97b3ef66",
+            "git_blob_sha1": "1aef9370f3de1fa59c8f33c00a63344dff6f6a60"
+          }
+        },
+        {
+          "path": "README.zh-CN.md",
+          "before": {
+            "path": "README.zh-CN.md",
+            "mode": "100644",
+            "bytes": 18049,
+            "sha256": "4c24f043d5a0d5663035d867a65a50065a8e42f27e3f857bf14ebc5cd7143801",
+            "git_blob_sha1": "c091ec01498811f7f3e8252cca8dcc2bc68edfab"
+          },
+          "after": {
+            "path": "README.zh-CN.md",
+            "mode": "100644",
+            "bytes": 18069,
+            "sha256": "7072123ae7232d624ffda0c991d59b83c3b903efd5a1b5b51ce0e22ff802bb10",
+            "git_blob_sha1": "24ee74af39b8430f3657860f968a277a4b9fe2da"
+          }
+        },
+        {
+          "path": "docs/KWS_LANDING_STATUS.md",
+          "before": {
+            "path": "docs/KWS_LANDING_STATUS.md",
+            "mode": "100644",
+            "bytes": 16974,
+            "sha256": "24e59d8b8c718a7ac80a05c95454e0dbca3748e618d5234400be8b50b8783964",
+            "git_blob_sha1": "abc4d18823a79d41dfc0e877775dad5757758a44"
+          },
+          "after": {
+            "path": "docs/KWS_LANDING_STATUS.md",
+            "mode": "100644",
+            "bytes": 21471,
+            "sha256": "8e976aa58ed8c4a06e20af2380a7a214973c543cc364663912e5a43923610e5a",
+            "git_blob_sha1": "62e3755a442c4784fb91bba5c6d59590efc1e698"
+          }
+        },
+        {
+          "path": "docs/README.md",
+          "before": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 10969,
+            "sha256": "c7638a80fa598fc80af686b9a5099a8df3b9d3009d06795054dcc31f7897316d",
+            "git_blob_sha1": "f44ec77152d10283fac3d09010e9340f8b718cc5"
+          },
+          "after": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 11021,
+            "sha256": "68d6f1a5f72e1a80a9a7fcb07748c006c6e6053b23cdc9ddb180bd716fb1f7eb",
+            "git_blob_sha1": "452ed5e422b21ec7f571284a2eb3e3306ad933cf"
+          }
+        },
+        {
+          "path": "research/README.md",
+          "before": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 18422,
+            "sha256": "9399654af6b895d0f48738602f454ea3f4f49847769c2183af993b713037edac",
+            "git_blob_sha1": "2fe454addb5323b64fdcee6cb8c56b60f76ef8c3"
+          },
+          "after": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 18826,
+            "sha256": "a46a3a8280ec004dcc29872534847c340094907d2a086460f6374e3460ce8b72",
+            "git_blob_sha1": "65305380b5bf961de4db437d2f91a06083ae7d36"
+          }
+        },
+        {
+          "path": "research/causal-kws-increment-2026-10-18/README.md",
+          "before": {
+            "path": "research/causal-kws-increment-2026-10-18/README.md",
+            "mode": "100644",
+            "bytes": 7825,
+            "sha256": "eb6efbf9b0f24fe73749f398abad8d0483f92b5494be47c504a6e7af803403ef",
+            "git_blob_sha1": "821ea850d60b587c7942187ce466e7d59c56c12e"
+          },
+          "after": {
+            "path": "research/causal-kws-increment-2026-10-18/README.md",
+            "mode": "100644",
+            "bytes": 8513,
+            "sha256": "cb438f41efed7458ba5f7c44e4ba089581d9e3c6170a5fdc184b6e521983dcbf",
+            "git_blob_sha1": "067189d34a64f69cd443dd60974b2cc26a4e4afe"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/README.md",
+          "before": {
+            "path": "research/fsmn2599-three-window-c/README.md",
+            "mode": "100644",
+            "bytes": 6347,
+            "sha256": "1b92cc46b9d069297130c246c116cfae2bdc4373358d89a219f5613708db4e86",
+            "git_blob_sha1": "5ba7f6e322be5030b0eeabf54b7e83f99fe32bc2"
+          },
+          "after": {
+            "path": "research/fsmn2599-three-window-c/README.md",
+            "mode": "100644",
+            "bytes": 8257,
+            "sha256": "3dc8060eabf94141e20e580c903f70509fbb65e25a4c1b58a34ff5ab608f963f",
+            "git_blob_sha1": "18603e4c1a73bdf469445d979ea3d1f3f80db0c1"
+          }
+        },
+        {
+          "path": "tests/run_research_three_window_arm.py",
+          "before": null,
+          "after": {
+            "path": "tests/run_research_three_window_arm.py",
+            "mode": "100644",
+            "bytes": 2745,
+            "sha256": "771ef5ef09fdfb72c7d656c2fa8f705d9b3ebb5efa9efe44fe077846d53b6d93",
+            "git_blob_sha1": "bcaa43f39a6e66fd70115f7b774b16718aa6c974"
+          }
+        },
+        {
+          "path": "tests/test_current_status_docs.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_current_status_docs.py",
+            "mode": "100644",
+            "bytes": 2740,
+            "sha256": "a7dbb0dc2f135d8a2f739fd3ebe4c82b9caa2a4e27460988f04106a740b561b9",
+            "git_blob_sha1": "5a9de948a87535dfc31411d3272acf0137fa0ba9"
+          }
+        },
+        {
+          "path": "tests/test_research_three_window_arm.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_three_window_arm.py",
+            "mode": "100644",
+            "bytes": 4280,
+            "sha256": "0a512786abfcda324d5ebaf38dd8c73e3e077c8f5a8da9eb92adf40b41d2a59a",
+            "git_blob_sha1": "4d740b44607cc62b1628593ff1473acab8ab2dad"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
