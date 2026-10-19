@@ -97,3 +97,51 @@ This is a contract-fidelity correction, not an observed negative-audio failure.
 All-nontarget top3 rows retain the previous beam in the original decoder. A
 private mock summary with valid/finished=true and support=false tests field
 separation only; it is not proof that this state is reachable from valid rows.
+
+## Capture discontinuities and absolute clocks
+
+This PCM transport API does not detect missing device blocks, XRUN, route changes,
+sequence gaps, suspend/resume or clock resets. The capture integration must detect
+these conditions. Stop feeding the old generation, discard any incomplete PCM16LE
+sample, resynchronise to a complete sample boundary, and call `bsa_reset` before
+feeding the first post-gap sample. Check reset success. Do not call `bsa_finish`
+at a gap: it appends synthetic zeros and may emit artificial tail events. Do not
+silently concatenate post-gap bytes or invent missing PCM samples. An unknown
+loss must remain unknown in capture diagnostics, not be recorded as zero loss.
+Already delivered events belong to their old generation and cannot be retracted.
+Reset clears frontend overlap, network cache and decoder refractory/dedup state;
+a refractory period spanning generations, if desired, is an explicit product
+policy outside this adapter, not something reset preserves.
+
+Store a capture-side record per generation: recording identity, generation,
+discontinuity reason, first complete sample's absolute device sample index (if
+known), monotonic timestamp anchor, clock epoch, and known/unknown loss. With an
+unbroken 16 kHz clock and origin A, a relative real sample endpoint r maps to A+r;
+its timestamp is anchor_ns + r*62500. Check integer overflow. These are endpoint
+coordinates: origin denotes the first sample's start, not an additional sample.
+For an XRUN with unknown loss or a clock reset, establish a new epoch/anchor;
+never infer a precise missing duration or compare incomparable device epochs.
+
+`required_padded_sample` maps to a real acquisition endpoint only for non-EOF
+rows. At EOF, it may exceed available real samples and is a synthetic coordinate;
+label it accordingly rather than reporting a future hardware capture timestamp.
+`available_real_sample` denotes the entire supplied block endpoint, and neither
+clock measures wall-clock callback completion/alert latency. Record actual
+callback monotonic time separately when profiling latency. `decision_frame` and
+node frames are model/decoder coordinates, not sample-accurate acoustic boundaries.
+
+No ABI fields or model arithmetic are changed by this contract. The bounded
+`test_capture_contract.c` exercises the actual reset/transport with mocked
+acoustic/decoder components, an odd byte at a gap, absolute-clock arithmetic,
+repeated finish, and continuous arbitrary chunks. It is not a hardware XRUN test
+or long-running acoustic qualification. `test_cpp_link.cpp` checks C++ linkage
+against the actual C library at build time; it is not executed.
+
+The optional header-only `bsa_capture.h` implements that reset and mapping pattern
+without changing the DSO exports. `bsa_capture_reset` takes an explicit reason and
+anchor, calls the real reset, and binds the mapping to the returned generation.
+`bsa_capture_map_real` rejects stale generations and overflow, and preserves
+unknown coordinates. Capture anchors must come from the caller's actual device
+or acquisition clock, not from this helper. The helper neither detects a missing
+block nor reconstructs byte alignment; callers must provide that integration.
+For EOF rows, map available_real_sample only; required_padded_sample is synthetic.

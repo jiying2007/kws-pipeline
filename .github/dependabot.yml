@@ -2,6 +2,12 @@ version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
+    # Fixed one-time research identities; see research/consolidation/fixed-workflow-maintenance.md.
+    exclude-paths:
+      - ".github/workflows/kw1-preset-supplement-20261014-v1.yml"
+      - ".github/workflows/tts-pilot-asr-20261014-v1.yml"
+      - ".github/workflows/tts-quality-probe-20261014-v1.yml"
+      - ".github/workflows/tts-quality-remaining-20261014-v1.yml"
     schedule:
       interval: weekly
       day: monday

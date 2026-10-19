@@ -4,6 +4,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "kws3.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define BSA_ABI 1u
 #define BSA_MODEL_ID "fsmn-B-a366d9f5"
 typedef struct bsa_handle bsa_handle;
@@ -61,4 +64,7 @@ int bsa_destroy(bsa_handle *);
  * Each numerical API saves/masks/restores fenv. RNE/gradual-underflow required;
  * no rounding or FTZ/DAZ changes. Restore failure reports possibly changed FP
  * environment. Existing frontend/network strict FAIL remains unchanged. */
+#ifdef __cplusplus
+}
+#endif
 #endif
