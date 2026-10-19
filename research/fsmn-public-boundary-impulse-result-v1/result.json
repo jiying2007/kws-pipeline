@@ -1,0 +1,170 @@
+{
+  "schema": "public-boundary-impulse-stage-diagnostic-v1",
+  "date_utc": "2026-10-19",
+  "status": "NEW_ENVIRONMENT_DIAGNOSTIC_ONLY",
+  "execution_status": "SUCCESS",
+  "historical_attribution_allowed": false,
+  "qualification_allowed": false,
+  "old_fail_status": "UNCHANGED",
+  "B_status": "EXPORTED_NOT_NUMERICALLY_VALIDATED",
+  "input": {
+    "kind": "public_synthetic_boundary_impulse",
+    "sample_rate_hz": 16000,
+    "frame_index_zero_based": 2,
+    "global_start_inclusive": 320,
+    "global_end_exclusive": 720,
+    "raw_pcm16_samples": 400,
+    "zeros": 399,
+    "impulse_local_sample": 399,
+    "impulse_global_sample": 719,
+    "impulse_amplitude": 28000,
+    "sha256": "9d9f31ba5c3f021103c0a1dc2bc19a94bdca7e110e1583b5bc638afc2ebd9332"
+  },
+  "anchors": {
+    "Torch": false,
+    "C": true
+  },
+  "interpretation": "New C endpoint matches saved historical C bytes; new Torch endpoint does not match saved historical Torch bytes. Stage differences describe this new environment only; do not explain or replace historical failures.",
+  "frozen_rule": "localization only; abs(C-ref)<=1e-5+1e-5*abs(ref)",
+  "calls": {
+    "C_frontend": 1,
+    "Torch_frontend": 1,
+    "Torch_rfft": 1,
+    "model": 0,
+    "training": 0,
+    "retries": 0
+  },
+  "runtime": {
+    "torch": "2.11.0+cpu",
+    "torchaudio": "2.11.0+cpu",
+    "threads": 2,
+    "interop_threads": 1,
+    "mkl": "2024.2 Product Build 20240605",
+    "cpu_capability_reported": "AVX512",
+    "historical_dispatch_recovered": false
+  },
+  "resources": {
+    "total_wall_seconds": 2.3143388500029687,
+    "per_command_wall_limit_seconds": 30,
+    "total_wall_limit_seconds": 300,
+    "per_child_AS_hard_bytes": 1073741824,
+    "Torch_sampled_group_RSS_peak_bytes": 289181696,
+    "RSS_peak_is_sampled_not_hard_peak": true,
+    "retained_log_artifact_bytes": 46588,
+    "retained_log_artifact_cap_bytes": 8388608,
+    "compiler_transient_scratch_hard_aggregate_quota": false,
+    "hard_aggregate_CPU_claim": false
+  },
+  "rows": [
+    {
+      "stage": "dc",
+      "count": 400,
+      "byte_equal": true,
+      "violations": 0,
+      "max_abs": 0.0,
+      "max_abs_index": 0,
+      "max_tolerance_ratio": 0.0,
+      "signed_bias": 0.0,
+      "C_sha256": "8d46c8646970686abb90955823fe92eda6e29a4ee892fd9683d011905e834290",
+      "Torch_sha256": "8d46c8646970686abb90955823fe92eda6e29a4ee892fd9683d011905e834290"
+    },
+    {
+      "stage": "preemphasis",
+      "count": 400,
+      "byte_equal": true,
+      "violations": 0,
+      "max_abs": 0.0,
+      "max_abs_index": 0,
+      "max_tolerance_ratio": 0.0,
+      "signed_bias": 0.0,
+      "C_sha256": "7ae38ed39db594f2571bedca8bc01cb214ba2f34d562e79904acbd6023b44b49",
+      "Torch_sha256": "7ae38ed39db594f2571bedca8bc01cb214ba2f34d562e79904acbd6023b44b49"
+    },
+    {
+      "stage": "windowed",
+      "count": 512,
+      "byte_equal": true,
+      "violations": 0,
+      "max_abs": 0.0,
+      "max_abs_index": 0,
+      "max_tolerance_ratio": 0.0,
+      "signed_bias": 0.0,
+      "C_sha256": "37ca87ce13ba1320993517d162833ff76d557b1550722cfd0bf49a798ab4479c",
+      "Torch_sha256": "37ca87ce13ba1320993517d162833ff76d557b1550722cfd0bf49a798ab4479c"
+    },
+    {
+      "stage": "fft_re",
+      "count": 257,
+      "byte_equal": false,
+      "violations": 1,
+      "max_abs": 3.0517578125e-05,
+      "max_abs_index": 1,
+      "max_tolerance_ratio": 2.280406204557238,
+      "signed_bias": -2.6843905989542705e-08,
+      "C_sha256": "eafe51410c0873acfa6d1c42231bbf8eee4c0f760d2bbe0ea6559c5caa2e98ee",
+      "Torch_sha256": "4b764653cdddde55548a39466217ec703ff9db14eee5b4eda760858d12b5b094"
+    },
+    {
+      "stage": "fft_im",
+      "count": 257,
+      "byte_equal": false,
+      "violations": 1,
+      "max_abs": 2.288818359375e-05,
+      "max_abs_index": 255,
+      "max_tolerance_ratio": 2.2887135903812994,
+      "signed_bias": -1.4656524459631202e-07,
+      "C_sha256": "7775d44aff0ae8258d0f018ab311327e7997306d68c33d56a9ee85845e8833ce",
+      "Torch_sha256": "c1d1daa20ea3ac8dc64e1e1f1d94b36f5f1b411c1b1c7d8bfe6c01f43968cfa6"
+    },
+    {
+      "stage": "power",
+      "count": 257,
+      "byte_equal": false,
+      "violations": 0,
+      "max_abs": 0.000244140625,
+      "max_abs_index": 2,
+      "max_tolerance_ratio": 0.22128932380436914,
+      "signed_bias": -1.0311482122932027e-06,
+      "C_sha256": "8f80cea7bbe26ca83d41fab1d029f648700f4e07c8f5551e730b37b66ffa71d8",
+      "Torch_sha256": "fcc39b83133cdebd1d7bf351fd60789f77729ebffc757c183732a571ee0c9527"
+    },
+    {
+      "stage": "mel",
+      "count": 80,
+      "byte_equal": false,
+      "violations": 0,
+      "max_abs": 0.000244140625,
+      "max_abs_index": 1,
+      "max_tolerance_ratio": 0.21278970593042973,
+      "signed_bias": -3.3626073172365877e-06,
+      "C_sha256": "955087837cfbfd25d5ee35742981c65a2c54f344c59d03bd7d54c10704f2d613",
+      "Torch_sha256": "9ebfb125f2bfe596222b08de0e4d53042f5d4fb9e192e8e7e998628c51100bea"
+    },
+    {
+      "stage": "logfbank",
+      "count": 80,
+      "byte_equal": false,
+      "violations": 34,
+      "max_abs": 0.009482383728027344,
+      "max_abs_index": 63,
+      "max_tolerance_ratio": 59.75409773505947,
+      "signed_bias": 0.0002408890752121806,
+      "C_sha256": "0bdc4e23d9a198a8a2886820a6b017514f475deb6c38a1ba8fc4844c22469c68",
+      "Torch_sha256": "9ad78a0e35ca27fb93a0335b04ab474fd3ffee2b27a9812284a4318442d9b7d2"
+    }
+  ],
+  "historical_failure_preserved": {
+    "fbank_failed_elements": 36,
+    "fbank_total_elements": 18320,
+    "context_failed_elements": 72,
+    "context_total_elements": 30400,
+    "max_abs": 0.008889198303222656
+  },
+  "source_identity": {
+    "historical_C_sha256": "e8823f7b7790a5712c80c790baa4b7726f8ec635241fa68d18a26abe4849540b",
+    "current_C_sha256": "7e84597f4bf55880301a26134a030b090aad4b4e42ca2f43e5ed7970fc954bc9",
+    "kaldi_sha256": "5cbea1a584ddea748f6f68a621d794e13334e88d9faa1d40986f7af32f196d29",
+    "Povey_sha256": "a396b90a8784f0dc7048fb8c84ef2c547a1080ae5429e0042489972f7307a20a",
+    "mel_sha256": "7a5ab6166a6fd620719ff98979180b3430e1ba52c2be5b0fdac40ba2d8557e4c"
+  }
+}
