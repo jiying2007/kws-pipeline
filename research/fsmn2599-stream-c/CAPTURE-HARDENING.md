@@ -61,3 +61,35 @@ Suggested existing-job step:
 Cross-build success is not proof of SSC305 runtime, libm/fenv compatibility,
 realtime speed, memory, audio capture correctness or FAR. Those need separate
 board and acoustic evidence. Do not relabel this check as full-chain ARM parity.
+
+## ARM/QEMU public synthetic correctness regression
+
+`python3 -S -B research/fsmn2599-stream-c/check_arm_synthetic.py --execute
+--emulator-sysroot /usr/arm-linux-gnueabihf` is a separate opt-in entry.
+Ordinary ARM CI keeps the existing four-mode C/C++ compile/link gate and then
+runs this synthetic entry. Missing cross tools, QEMU or loader are errors.
+
+Each of default, profile, block2 and both compiles the complete public runtime
+and four synthetic fixtures: invalid parameters with errno/fenv preservation,
+mock adapter transport, profiler fake-clock failure/backwards-clock/saturation,
+and 648 bytewise affine output plus FP sticky-flag comparisons. Both affine
+bodies come from the bound production source; the default body must equal the
+frozen scalar reference. Strict FP flags, ARM ELF32 little-endian EABI5 hard-float
+and the exact default/optional export sets are checked. The extracted default
+branch is tested in default/profile; block2 in block2/both.
+
+`KWS_FIXTURE_CORRECTNESS_ONLY` disables only affine fixture warmup/timing loops;
+the old host entry retains its timing behavior. QEMU uses an ARMv7 Cortex-A7
+emulated CPU for Cortex-A32/NEON-VFPv4 hard-float binaries, with a bounded 256 MiB
+guest address reservation. This is ISA correctness evidence, never SSC305
+hardware timing, full-model execution or acoustic qualification.
+
+The runner permits 300 seconds total wall/child CPU, 30 seconds per command,
+1 GiB address space per child, 8 MiB cumulative child output and 8 MiB serialized
+evidence. The existing guard also caps temporary files at 16 MiB and kills the
+whole process group on failure. No failed numerical run is retried. JSON records
+tool versions, source/tool/ELF hashes, complete commands and the 16 actual
+synthetic executions; in-flight failures retain attempted commands and available
+artifact hashes, return nonzero, and clean temporary files. CI logs retain the
+report. No learned model payload or private audio is loaded, and the strict
+historical 1e-5 FAIL and all model-promotion boundaries remain unchanged.

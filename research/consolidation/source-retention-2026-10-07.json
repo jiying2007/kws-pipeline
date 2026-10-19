@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 61628,
-      "sha256": "0ceb916b8853a2f8e6b9b73365a36c9621f00988da375023c3a54e22ebbf4290",
-      "git_blob_sha1": "9a18121f6df88ab298ad05e8782e53221ffbfb08"
+      "bytes": 61870,
+      "sha256": "6850b1c8aaf9be7b333e6ddfab82e7c836347bc1eb300c8aca00d22fd9d2d0a5",
+      "git_blob_sha1": "f0876491546097550f2d3ec4a0a409618224dff9"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -41895,6 +41895,141 @@
             "bytes": 3104,
             "sha256": "64b096164e69462e00a1c77b05f0564cde9510a8b814ec75388b83ff6b9057d3",
             "git_blob_sha1": "ec8cfab2a8f933aeebf8276f0a42f772f71ce4cd"
+          }
+        }
+      ]
+    },
+    {
+      "id": "arm-qemu-public-synthetic-20261019",
+      "date": "2026-10-19",
+      "base_commit": "02a9562f3f2593db38451b95cc20fd7f073df52f",
+      "base_tree": "91b856008171811a4b47fd13b622adf80f0e6c17",
+      "workflow_source_changed": true,
+      "scope": "Add bounded four-mode ARM/QEMU public synthetic correctness execution after the existing compile/link gate; preserve host fixture timing by default.",
+      "rationale": "No learned model/audio or training/ASR/TTS; no performance or SSC305 qualification. Preserve strict historical 1e-5 FAIL, default-off options, production ABI and fixed workflow identities.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 61628,
+            "sha256": "0ceb916b8853a2f8e6b9b73365a36c9621f00988da375023c3a54e22ebbf4290",
+            "git_blob_sha1": "9a18121f6df88ab298ad05e8782e53221ffbfb08"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 61870,
+            "sha256": "6850b1c8aaf9be7b333e6ddfab82e7c836347bc1eb300c8aca00d22fd9d2d0a5",
+            "git_blob_sha1": "f0876491546097550f2d3ec4a0a409618224dff9"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/CAPTURE-HARDENING.md",
+          "before": {
+            "path": "research/fsmn2599-stream-c/CAPTURE-HARDENING.md",
+            "mode": "100644",
+            "bytes": 3491,
+            "sha256": "50309d836c4ead082b43a2b478c4e23328a54db0d48884d6cf5f949e3156b87d",
+            "git_blob_sha1": "aec3a1daea48fcc34e933de0fa84fb0eed4dc54d"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/CAPTURE-HARDENING.md",
+            "mode": "100644",
+            "bytes": 5545,
+            "sha256": "5ac5d5ba7101a3a12f129027a30cc63be9ec7b1c2b925e40f0a3fe30cd9744d3",
+            "git_blob_sha1": "249ad0ebbb699778c904559c8c0bb6fc337f9b40"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/build.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/build.py",
+            "mode": "100644",
+            "bytes": 13806,
+            "sha256": "c6e929921b9b12e8f69af7843742b0b28f84884255fdd105cae976dd44965bea",
+            "git_blob_sha1": "8557362744ca2f8d3f29a69828b39d9cc90002e1"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/build.py",
+            "mode": "100644",
+            "bytes": 13857,
+            "sha256": "a57a8c553a096edb55d51268d882d0627752b3074124f30fd4d7b0d982b3a5c0",
+            "git_blob_sha1": "27d99adaeb9ea2289c1020bf186d590325a99810"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
+            "mode": "100644",
+            "bytes": 11641,
+            "sha256": "6be8c3803840deee8278e9e0342ca2d3d5d10e3e05ac021b2a1ee0dfd532354f",
+            "git_blob_sha1": "c06568bbc76535d91866bd9ffcbe5f24bfd30730"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/source-binding.json",
+          "before": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 5660,
+            "sha256": "a95e2b9df640c69d6adba7a5e57517c5a4fae252ed8b5c351677fca82f2adfbd",
+            "git_blob_sha1": "171e04851460a1b28f9450de0fe91b960ed0340a"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 6028,
+            "sha256": "4e889c3252e953518f5f9586a73adae0be76e5314cdc6e8077b5902d3d669053",
+            "git_blob_sha1": "1bf2038e8d831e0eb20e12cd5fa4ef62d54d4e87"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_affine_block2.c",
+          "before": {
+            "path": "research/fsmn2599-stream-c/test_affine_block2.c",
+            "mode": "100644",
+            "bytes": 2887,
+            "sha256": "9143edb206f0e6a85b9967575d9c7f77413b0fa058aa9b0113eba6cd308bd00e",
+            "git_blob_sha1": "8be0aa40e83bbff713cd878ec523703f69f1bbaa"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_affine_block2.c",
+            "mode": "100644",
+            "bytes": 3124,
+            "sha256": "2ff74262bf7a7e693f1ca4fb6b508fbf794b555ff0cd5c800cb6491ef73ebdd0",
+            "git_blob_sha1": "5fcff96d3f7412bc0e483fc4aa628d4e3717879a"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_arm_synthetic.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_arm_synthetic.py",
+            "mode": "100644",
+            "bytes": 4371,
+            "sha256": "6221c13bb3d04cde6b534a9a831e43e9500f218e9c76688b16d7607d1dcaaaf9",
+            "git_blob_sha1": "cc2aecadd5aa85e2e54e02fdf492a72b9548dac1"
+          }
+        },
+        {
+          "path": "tests/test_causal_research_contract.py",
+          "before": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 1786,
+            "sha256": "803ae99d08931f5252a25b8bf3ae0b395de1ab2191519f916150a8b9e5522acd",
+            "git_blob_sha1": "1d5854064cb52c07316756219809de1d57c37f27"
+          },
+          "after": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 1850,
+            "sha256": "37ef49fb897754f8ae40844e92daa4aa31de2a59ef2d20c2d97488a5c2ed8299",
+            "git_blob_sha1": "868e31c93e834db5f5d1e7c5e8329c323727686e"
           }
         }
       ]

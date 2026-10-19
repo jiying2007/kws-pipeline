@@ -1005,6 +1005,11 @@ jobs:
           --emulator-sysroot "$KWS_ARM_SYSROOT"
       - name: Full B research ARM C and C++ compile/link (no execution)
         run: python3 -S -B tests/run_research_fsmn_stream_arm_build.py --execute
+      - name: Public synthetic ARM QEMU four-mode correctness only
+        timeout-minutes: 6
+        run: >-
+          python3 -S -B research/fsmn2599-stream-c/check_arm_synthetic.py
+          --execute --emulator-sysroot "$KWS_ARM_SYSROOT"
       - name: Configure hosted reference build
         run: >-
           cmake -S . -B build-ref
