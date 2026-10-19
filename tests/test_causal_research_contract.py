@@ -13,8 +13,8 @@ CASES = (
     ('research/causal-mdtc', 'test_static.py', 8),
     ('research/evaluation_integrity', 'test_bound_metrics.py', 16),
     ('research/bounded-lifecycle-v2', 'test_controller.py', 17),
-    ('research/fsmn2599-stream-c', 'test_arm_synthetic.py', 7),
-    ('research/fsmn2599-stream-c', 'test_arm_dependencies.py', 15),
+    ('research/fsmn2599-stream-c', 'test_arm_synthetic.py', 12),
+    ('research/fsmn2599-stream-c', 'test_arm_dependencies.py', 19),
 )
 
 def main():

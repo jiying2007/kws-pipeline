@@ -43,8 +43,8 @@
     },
     {
       "path": "research/fsmn2599-stream-c/build.py",
-      "bytes": 13968,
-      "sha256": "9e649dee400437c2095979113aebab78e38254745db24acbf4a833570429826a"
+      "bytes": 14635,
+      "sha256": "d81d8a4d44dfa88525472b631a4b8ec475cdd2896b2e04eaa10e2716dd97d81c"
     },
     {
       "path": "research/fsmn2599-stream-c/canonical_fbank.c",
@@ -73,13 +73,13 @@
     },
     {
       "path": "research/fsmn2599-stream-c/check_arm_dependencies.py",
-      "bytes": 18795,
-      "sha256": "da090fda66f3601fce288047282807d41eb840859e6fe339f6b00f9374ab860c"
+      "bytes": 20097,
+      "sha256": "22047eb9a593ecc7044bb968fca54ca2210f98846bd7ac52f6f7d2bec3346902"
     },
     {
       "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
-      "bytes": 14138,
-      "sha256": "50531e1d032401ef5957ea975da2c408f60e936ee3ec5d877ca51823c3d0f16d"
+      "bytes": 14861,
+      "sha256": "1791af2e4e52216504cb286d4dbb792d876d94f99f83ea6a5e8c9cbd318888b8"
     },
     {
       "path": "research/fsmn2599-stream-c/check_profile.py",
@@ -133,13 +133,13 @@
     },
     {
       "path": "research/fsmn2599-stream-c/test_arm_dependencies.py",
-      "bytes": 6450,
-      "sha256": "0fda6310b8ede1c4a6467d87daca35ddefb73fa2cb8c7a97876b40c2438cd580"
+      "bytes": 9861,
+      "sha256": "a0df4571c8dc225cac9e58de6165b1e1e9c4ade9d430832ce85ecc92e8a603e8"
     },
     {
       "path": "research/fsmn2599-stream-c/test_arm_synthetic.py",
-      "bytes": 5269,
-      "sha256": "d2755b38240d64abe5541b1a4ce13276c9f234da310201526f3537ab9aad1567"
+      "bytes": 10198,
+      "sha256": "099b111592a6aecb415b2df754987fae8350f05d423d46e49a0078e0897b6136"
     },
     {
       "path": "research/fsmn2599-stream-c/test_b_stream_adapter.c",

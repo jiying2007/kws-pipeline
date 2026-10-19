@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 import re
 import shutil
+import sys
+import tempfile
 import time
 
 import check_arm_synthetic as arm
@@ -149,13 +151,38 @@ def save(folder, report):
     if len(encoded.encode()) > arm.OUTPUT_BYTES:
         raise RuntimeError('report output limit')
     previous = folder / 'report.json'
-    size = sum(p.stat().st_size for p in folder.rglob('*') if p.is_file() and p != previous)
+    # Charge both old and pending reports at the atomic replacement peak.
+    size = sum(p.stat().st_size for p in folder.rglob('*') if p.is_file())
     if size + len(encoded.encode()) > ARCHIVE_BYTES:
         raise RuntimeError('retained directory size limit')
-    previous.write_text(encoded)
+    pending = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=folder,
+                                         prefix='.report-', delete=False) as stream:
+            pending = Path(stream.name)
+            stream.write(encoded)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(pending, previous)
+        descriptor = os.open(folder, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+    finally:
+        if pending is not None:
+            pending.unlink(missing_ok=True)
 
 
-def finalize(folder, report):
+def io_failure():
+    # Storage may be unwritable. Do not promise another disk write or expose
+    # exception paths; this stderr receipt is explicitly not durable evidence.
+    print(json.dumps({'schema': 1, 'status': 'FAIL',
+                      'retention_error': 'report I/O failure; disk receipt may be stale or durability unknown',
+                      'qualification_allowed': False}), file=sys.stderr)
+
+
+def _finalize(folder, report):
     """Always reserve a bounded failure receipt; never relabel truncation PASS."""
     try:
         save(folder, report)
@@ -178,6 +205,14 @@ def finalize(folder, report):
                        'omitted_artifact_count': len(report['omitted_artifacts'])}
             report.clear(); report.update(summary)
         save(folder, report)
+
+
+def finalize(folder, report):
+    try:
+        _finalize(folder, report)
+    except OSError:
+        report['status'] = 'FAIL'
+        raise
 
 
 def execute(destination, sysroot, emulator):
@@ -351,7 +386,11 @@ def main():
         parser.print_help(); return 0
     if args.output is None or args.emulator is None:
         parser.error('--output and --emulator are required')
-    return 0 if execute(args.output.absolute(), args.sysroot.absolute(), args.emulator.absolute()) else 1
+    try:
+        return 0 if execute(args.output.absolute(), args.sysroot.absolute(), args.emulator.absolute()) else 1
+    except OSError:
+        io_failure()
+        return 1
 
 
 if __name__ == '__main__':

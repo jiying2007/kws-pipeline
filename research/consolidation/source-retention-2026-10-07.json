@@ -42267,6 +42267,136 @@
           }
         }
       ]
+    },
+    {
+      "id": "research-failure-evidence-hardening-20261019",
+      "date": "2026-10-19",
+      "base_commit": "e35ab738805a3aa1ea720fcfaad90d4422d5179e",
+      "base_tree": "4c8bfd42d53cf3c61dfcc939e32ca289f03edb9b",
+      "workflow_source_changed": false,
+      "scope": "Repair bounded child cleanup and durable failure-report paths with public mock fault regressions.",
+      "rationale": "Cover post-spawn initialization failures, escaped JSON report overflow, and atomic snapshot I/O failures. No model/audio or diagnostic replay; existing public CI remains authorized. Preserve all historical evidence, numerical gates, production ABI and default-off options.",
+      "files": [
+        {
+          "path": "research/fsmn2599-stream-c/build.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/build.py",
+            "mode": "100644",
+            "bytes": 13968,
+            "sha256": "9e649dee400437c2095979113aebab78e38254745db24acbf4a833570429826a",
+            "git_blob_sha1": "c41a8ca08fecd726c8b95b9ed48dba6e3c99e8fa"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/build.py",
+            "mode": "100644",
+            "bytes": 14635,
+            "sha256": "d81d8a4d44dfa88525472b631a4b8ec475cdd2896b2e04eaa10e2716dd97d81c",
+            "git_blob_sha1": "422b539b85c39af4d02865cb07570e3bfc72beee"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/check_arm_dependencies.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/check_arm_dependencies.py",
+            "mode": "100644",
+            "bytes": 18795,
+            "sha256": "da090fda66f3601fce288047282807d41eb840859e6fe339f6b00f9374ab860c",
+            "git_blob_sha1": "22be2d5761dc519542579404548b99788de53988"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/check_arm_dependencies.py",
+            "mode": "100644",
+            "bytes": 20097,
+            "sha256": "22047eb9a593ecc7044bb968fca54ca2210f98846bd7ac52f6f7d2bec3346902",
+            "git_blob_sha1": "08afa01f8ae16e078cb4ed1a5dcd08d87962a115"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
+            "mode": "100644",
+            "bytes": 14138,
+            "sha256": "50531e1d032401ef5957ea975da2c408f60e936ee3ec5d877ca51823c3d0f16d",
+            "git_blob_sha1": "88d11f7852fafc1112aa7b686d9a4d597d725fd7"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
+            "mode": "100644",
+            "bytes": 14861,
+            "sha256": "1791af2e4e52216504cb286d4dbb792d876d94f99f83ea6a5e8c9cbd318888b8",
+            "git_blob_sha1": "a923d3a4e67c24e9363324b7c40dd7a68989b3f7"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/source-binding.json",
+          "before": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 6766,
+            "sha256": "24ac9792b05f8dedaa0bd068e5145bf1575688fd4a577a295fe09478a77bbfae",
+            "git_blob_sha1": "c7e072e8195e7e40470a83764be452164098758b"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 6767,
+            "sha256": "071178d21dd2212208ab45929bfaaafb7be401375143c9b46e8b45a896229fb7",
+            "git_blob_sha1": "943f735a5f6b82a4ac9f52e2ff930367112710d5"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_arm_dependencies.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/test_arm_dependencies.py",
+            "mode": "100644",
+            "bytes": 6450,
+            "sha256": "0fda6310b8ede1c4a6467d87daca35ddefb73fa2cb8c7a97876b40c2438cd580",
+            "git_blob_sha1": "95586c829000b0a8947f48e95270d09276a85749"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_arm_dependencies.py",
+            "mode": "100644",
+            "bytes": 9861,
+            "sha256": "a0df4571c8dc225cac9e58de6165b1e1e9c4ade9d430832ce85ecc92e8a603e8",
+            "git_blob_sha1": "6ab59acd53de044b0277b8519c6c48a097bbed61"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_arm_synthetic.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/test_arm_synthetic.py",
+            "mode": "100644",
+            "bytes": 5269,
+            "sha256": "d2755b38240d64abe5541b1a4ce13276c9f234da310201526f3537ab9aad1567",
+            "git_blob_sha1": "6fbff2331d525390dd37afa316f3588a322d46e7"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_arm_synthetic.py",
+            "mode": "100644",
+            "bytes": 10198,
+            "sha256": "099b111592a6aecb415b2df754987fae8350f05d423d46e49a0078e0897b6136",
+            "git_blob_sha1": "bae33aa23c50514f88262f26732ed2c6ff501c58"
+          }
+        },
+        {
+          "path": "tests/test_causal_research_contract.py",
+          "before": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 1918,
+            "sha256": "617c9d2e41e6aea1223aa5a6c448a67c048ecd160a4449f14401ce82de43c6e9",
+            "git_blob_sha1": "682f2075fe184855af0c7ed8ec034618ce794945"
+          },
+          "after": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 1919,
+            "sha256": "a9b48b4dc7d5b4c34e67c6084d970460d6abdf482e9c70cf470c08009d36785e",
+            "git_blob_sha1": "acddd3434d88238d21804d510e7f54e1b5cef9fd"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
