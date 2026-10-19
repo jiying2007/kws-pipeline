@@ -38,6 +38,20 @@ class ResearchFsmnStreamTest(unittest.TestCase):
         self.assertEqual(set(report["production_exports"]),
                          guard.ADAPTER | guard.DECODER_EXPORTS | guard.CORE_EXPORTS)
 
+    def test_optin_profile_block2_public_matrix(self):
+        if not EXECUTE:
+            self.skipTest("explicit test entry --execute is required")
+        driver = Path(__file__).resolve().parents[1] / "research/fsmn2599-stream-c/check_profile.py"
+        spec = importlib.util.spec_from_file_location("optin_matrix", driver)
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        report = module.execute()
+        self.assertEqual(report["compiler_invocations"], 19)
+        self.assertEqual(report["program_invocations"], 11)
+        self.assertEqual([len(report["modes"][k]["exports"]) for k in ("default", "profile", "block2", "profile_block2")], [36,39,36,39])
+        self.assertEqual(report["model_loads"], 0)
+        self.assertEqual(report["model_forwards"], 0)
+        self.assertFalse(report["qualification_allowed"])
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)

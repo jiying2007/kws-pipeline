@@ -1,3 +1,6 @@
+#ifdef KWS_B_PROFILE
+#include "b_profile.h"
+#endif
 /* SPDX-License-Identifier: Apache-2.0
  * New fixed arithmetic candidate, SOURCE PREPARED ONLY; no execution yet. */
 #include "softmax2599.h"
@@ -25,8 +28,14 @@ static int environment_ok(void) {
     return fegetround()==FE_TONEAREST && subf>0 && subf+subf==FLT_MIN &&
            subd>0 && subd+subd==DBL_MIN && promoted==0x1p-149;
 }
+#ifdef KWS_B_PROFILE
+static ksx_status ksx_softmax2599_profile_impl(const float *x,size_t nx,float *out,size_t no,
+                         ksx_workspace *w)
+#else
 ksx_status ksx_softmax2599(const float *x,size_t nx,float *out,size_t no,
-                         ksx_workspace *w) {
+                         ksx_workspace *w)
+#endif
+{
     float peak;
     double total=0.;
     size_t bytes=KSX_CLASSES*sizeof(float);
@@ -62,3 +71,13 @@ ksx_status ksx_softmax2599(const float *x,size_t nx,float *out,size_t no,
     memcpy(out,w->probabilities,bytes);
     return KSX_OK;
 }
+
+#ifdef KWS_B_PROFILE
+ksx_status ksx_softmax2599(const float *x,size_t nx,float *out,size_t no,
+                         ksx_workspace *w) {
+ b_profile_stamp stamp=b_profile_begin();
+ ksx_status rc=ksx_softmax2599_profile_impl(x,nx,out,no,w);
+ b_profile_end(B_PROFILE_SOFTMAX,stamp,rc==KSX_OK);
+ return rc;
+}
+#endif

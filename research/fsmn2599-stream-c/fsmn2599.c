@@ -1,3 +1,6 @@
+#ifdef KWS_B_PROFILE
+#include "b_profile.h"
+#endif
 /* SPDX-License-Identifier: Apache-2.0
  * Modified from the isolated A20 native FP32 model. Original WeKws FSMN:
  * Copyright 2022 Yueyue Nyy; 2023 Jing Du. See NOTICE.md for fixed source IDs.
@@ -92,6 +95,37 @@ fsmn2599_status fsmn2599_copy_cache(const fsmn2599_model *m, float *out, size_t 
     return FSMN2599_OK;
 }
 
+#ifdef KWS_AFFINE_BLOCK2
+/* Two output rows; each output keeps the original four accumulation chains.
+ * Row-major weights, no packing, no extra model state. Strict FP flags required.
+ * Tail input lanes and odd output row use the identical original operations. */
+static void affine(const float *x, float *y, const float *w, const float *b, int ni, int no) {
+    int o = 0;
+    for (; o + 1 < no; o += 2) {
+        float s0[4] = {0, 0, 0, 0}, s1[4] = {0, 0, 0, 0};
+        const float *w0 = w + o * ni, *w1 = w0 + ni;
+        int i = 0;
+        for (; i + 3 < ni; i += 4) {
+            for (int k = 0; k < 4; ++k) {
+                float v = x[i + k];
+                s0[k] += v * w0[i + k];
+                s1[k] += v * w1[i + k];
+            }
+        }
+        for (; i < ni; ++i) {
+            s0[i % 4] += x[i] * w0[i];
+            s1[i % 4] += x[i] * w1[i];
+        }
+        y[o] = ((s0[0] + s0[1]) + (s0[2] + s0[3])) + (b ? b[o] : 0.0f);
+        y[o+1] = ((s1[0] + s1[1]) + (s1[2] + s1[3])) + (b ? b[o+1] : 0.0f);
+    }
+    for (; o < no; ++o) {
+        float sum[4] = {0, 0, 0, 0};
+        for (int i = 0; i < ni; ++i) sum[i % 4] += x[i] * w[o * ni + i];
+        y[o] = ((sum[0] + sum[1]) + (sum[2] + sum[3])) + (b ? b[o] : 0.0f);
+    }
+}
+#else
 static void affine(const float *x, float *y, const float *w, const float *b, int ni, int no) {
     for (int o = 0; o < no; ++o) {
         float sum[4] = {0, 0, 0, 0};
@@ -99,6 +133,7 @@ static void affine(const float *x, float *y, const float *w, const float *b, int
         y[o] = ((sum[0] + sum[1]) + (sum[2] + sum[3])) + (b ? b[o] : 0.0f);
     }
 }
+#endif
 
 static int finite_values(const float *x, size_t count) {
     for (size_t i = 0; i < count; ++i) if (!isfinite(x[i])) return 0;
@@ -149,6 +184,10 @@ fsmn2599_status fsmn2599_step(fsmn2599_model *m, const float *x, size_t nx,
         return FSMN2599_OVERLAP;
     if (!finite_values(x, nx)) return FSMN2599_NONFINITE;
     if (t) memset(t, 0, tb);
+#ifdef KWS_B_PROFILE
+    b_profile_stamp profile_stamp=b_profile_begin();
+    unsigned profile_stage=B_PROFILE_BODY;
+#endif
     const float *w = m->weights;
     float z[400], a[250], b[250], p[128], mem[128];
     for (unsigned i = 0; i < 400; ++i) z[i] = (x[i] - w[i]) * w[400u + i];
@@ -175,12 +214,22 @@ fsmn2599_status fsmn2599_step(fsmn2599_model *m, const float *x, size_t nx,
     affine(b, a, w + 355334u, w + 390334u, 250, 140);
     if (!finite_values(a, 140)) goto fault;
     trace_stage(t, 19, a, 140);
+#ifdef KWS_B_PROFILE
+    b_profile_end(B_PROFILE_BODY,profile_stamp,1);
+    profile_stage=B_PROFILE_HEAD;profile_stamp=b_profile_begin();
+#endif
     affine(a, y, w + FSMN2599_HEAD_WEIGHT_OFFSET, w + FSMN2599_HEAD_BIAS_OFFSET,
            140, FSMN2599_OUTPUTS);
     if (!finite_values(y, FSMN2599_OUTPUTS)) goto fault;
     trace_stage(t, 20, y, FSMN2599_OUTPUTS);
+#ifdef KWS_B_PROFILE
+    b_profile_end(B_PROFILE_HEAD,profile_stamp,1);
+#endif
     return FSMN2599_OK;
 fault:
+#ifdef KWS_B_PROFILE
+    b_profile_end(profile_stage,profile_stamp,0);
+#endif
     m->fault = 1;
     return FSMN2599_NONFINITE;
 }

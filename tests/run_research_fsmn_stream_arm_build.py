@@ -34,29 +34,39 @@ def execute(root):
         sources = [module / name for name in ('b_stream_adapter.c', 'canonical_pcm.c',
                    'canonical_fbank.c', 'fsmn2599.c', 'sha256.c', 'softmax2599.c')]
         sources.append(decoder / 'kws3.c')
-        library = temp / 'libb_stream_adapter.so'
         started, cpu = time.monotonic(), 0.0
-        commands = [
-            [cc, *build.FLAGS, *flags, '-fPIC', '-shared', '-Wl,-z,defs', *include,
-             *map(str, sources), '-lm', '-o', str(library)],
-            [cxx, '-std=c++11', '-Wall', '-Wextra', '-Werror', '-pedantic', *flags,
-             *include, str(module / 'test_cpp_link.cpp'), str(library), '-lm',
-             '-o', str(temp / 'cpp_link')],
-        ]
-        for command in commands:
-            _, spent = build.run_bounded(command, temp, 60-(time.monotonic()-started), 60-cpu)
-            cpu += spent
-        output, _ = build.run_bounded([nm, '-D', '--defined-only', str(library)], temp, 5, 5)
-        exports = {line.split()[-1] for line in output.splitlines() if line.strip()}
-        expected = build.ADAPTER | build.DECODER_EXPORTS | build.CORE_EXPORTS
-        if exports != expected:
-            raise RuntimeError('full B ARM exported symbols differ from fixed public ABI')
+        modes = [('default', []), ('profile', ['-DKWS_B_PROFILE']),
+                 ('block2', ['-DKWS_AFFINE_BLOCK2']),
+                 ('profile_block2', ['-DKWS_B_PROFILE', '-DKWS_AFFINE_BLOCK2'])]
+        results = {}
+        for name, defines in modes:
+            library = temp / (name + '.so')
+            extra = [str(module / 'b_profile.c')] if '-DKWS_B_PROFILE' in defines else []
+            commands = [
+                [cc, *build.FLAGS, *flags, *defines, '-fPIC', '-shared', '-Wl,-z,defs', *include,
+                 *map(str, sources), *extra, '-lm', '-o', str(library)],
+                [cxx, '-std=c++11', '-Wall', '-Wextra', '-Werror', '-pedantic', *flags, *defines,
+                 *include, str(module / 'test_cpp_link.cpp'), str(library), '-lm',
+                 '-o', str(temp / ('cpp_' + name))],
+            ]
+            for command in commands:
+                _, spent = build.run_bounded(command, temp, 60-(time.monotonic()-started), 60-cpu)
+                cpu += spent
+            output, _ = build.run_bounded([nm, '-D', '--defined-only', str(library)], temp, 5, 5)
+            exports = {line.split()[-1] for line in output.splitlines() if line.strip()}
+            expected = build.ADAPTER | build.DECODER_EXPORTS | build.CORE_EXPORTS
+            if '-DKWS_B_PROFILE' in defines:
+                expected |= {'b_profile_get', 'b_profile_reset', 'b_profile_size'}
+            if exports != expected:
+                raise RuntimeError('full B ARM opt-in exported symbols differ: ' + name)
+            results[name] = {'cpp_link': True, 'exports': sorted(exports), 'defines': defines}
         if build.validate_sources(root) != binding:
             raise RuntimeError('source binding changed during cross-build')
-    return {'schema': 1, 'full_B_ARM_compile_link': True, 'cpp_link': True,
-            'compiler_invocations': 2, 'exports': sorted(exports),
+    return {'schema': 2, 'full_B_ARM_compile_link': True, 'cpp_link': True,
+            'compiler_invocations': 8, 'modes': results,
             'source_binding_sha256': binding, 'target': 'cortex-a32/neon-vfpv4/hard',
             'binary_executions': 0, 'model_loads': 0, 'qualification_allowed': False}
+
 
 
 def main():

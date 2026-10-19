@@ -1,0 +1,394 @@
+{
+  "schema": "kws-optin-host-evidence-v1",
+  "status": "INDEPENDENT_REVIEW_PASS",
+  "host": "cloud x86_64, strict GCC FP flags; no ARM runtime measurements",
+  "input_scope": "One previously exposed 35.62-second development stream, continuous fixed320 PCM transport with synthetic 0.5-second silence gaps, threshold 0.7. Corpus identities, audio and posterior/input hashes omitted.",
+  "new_independent_test_hours": 0,
+  "profile_instrumentation_pair": {
+    "posterior_row_byte_chain_equal": true,
+    "complete_event_bits_equal": true,
+    "stage_time_percent": {
+      "frontend": 9.190445626562072,
+      "fsmn_body": 44.350179443144434,
+      "head2599": 39.96258237015281,
+      "softmax2599": 2.284029592638667,
+      "decoder": 4.212762967502015
+    },
+    "timer_errors": 0,
+    "saturated": false
+  },
+  "block2_initial_pair": {
+    "posterior_row_byte_chain_equal": true,
+    "complete_event_bits_equal": true,
+    "events_per_lane": 8,
+    "rows_per_lane": 1186,
+    "wall_seconds_off": 1.0329131259995847,
+    "wall_seconds_on": 0.48151491599946894,
+    "performance_qualification": false
+  },
+  "block2_six_balanced_pairs": {
+    "claim": "Repeated single-host timing of one exposed development stream, not independent audio acceptance, ARM/SSC305, cross-machine or quality qualification. No outlier removal or best-run selection. CPU time not measured; per-process CPU and AS limits enforced separately.",
+    "new_independent_test_hours": 0,
+    "order": [
+      "AB",
+      "BA",
+      "AB",
+      "BA",
+      "AB",
+      "BA"
+    ],
+    "paired_on_over_off_wall": {
+      "max": 0.3708425994471674,
+      "median": 0.36617569749071144,
+      "min": 0.352798438762867,
+      "values": [
+        0.3708425994471674,
+        0.3658595727940861,
+        0.3681171770279484,
+        0.352798438762867,
+        0.36649182218733684,
+        0.36518719574481695
+      ]
+    },
+    "pairs": [
+      {
+        "off_peak_sampled_rss_bytes": 4452352,
+        "off_wall_seconds": 0.9609516990003613,
+        "on_over_off_wall": 0.3708425994471674,
+        "on_peak_sampled_rss_bytes": 4448256,
+        "on_wall_seconds": 0.35636182600046595,
+        "order": "AB",
+        "pair": 1
+      },
+      {
+        "off_peak_sampled_rss_bytes": 4452352,
+        "off_wall_seconds": 1.0709300320004331,
+        "on_over_off_wall": 0.3658595727940861,
+        "on_peak_sampled_rss_bytes": 4452352,
+        "on_wall_seconds": 0.3918100040000354,
+        "order": "BA",
+        "pair": 2
+      },
+      {
+        "off_peak_sampled_rss_bytes": 4448256,
+        "off_wall_seconds": 0.9769697189994986,
+        "on_over_off_wall": 0.3681171770279484,
+        "on_peak_sampled_rss_bytes": 4452352,
+        "on_wall_seconds": 0.35963933499988343,
+        "order": "AB",
+        "pair": 3
+      },
+      {
+        "off_peak_sampled_rss_bytes": 4440064,
+        "off_wall_seconds": 1.002767717000097,
+        "on_over_off_wall": 0.352798438762867,
+        "on_peak_sampled_rss_bytes": 4452352,
+        "on_wall_seconds": 0.35377488499943865,
+        "order": "BA",
+        "pair": 4
+      },
+      {
+        "off_peak_sampled_rss_bytes": 4448256,
+        "off_wall_seconds": 0.9508202200004234,
+        "on_over_off_wall": 0.36649182218733684,
+        "on_peak_sampled_rss_bytes": 4452352,
+        "on_wall_seconds": 0.3484678350005197,
+        "order": "AB",
+        "pair": 5
+      },
+      {
+        "off_peak_sampled_rss_bytes": 4452352,
+        "off_wall_seconds": 1.027907235999919,
+        "on_over_off_wall": 0.36518719574481695,
+        "on_peak_sampled_rss_bytes": 4452352,
+        "on_wall_seconds": 0.3753785610006162,
+        "order": "BA",
+        "pair": 6
+      }
+    ],
+    "peak_sampled_rss_bytes": {
+      "block2-off": {
+        "max": 4452352,
+        "median": 4450304.0,
+        "min": 4440064,
+        "values": [
+          4452352,
+          4452352,
+          4448256,
+          4440064,
+          4448256,
+          4452352
+        ]
+      },
+      "block2-on": {
+        "max": 4452352,
+        "median": 4452352.0,
+        "min": 4448256,
+        "values": [
+          4448256,
+          4452352,
+          4452352,
+          4452352,
+          4452352,
+          4452352
+        ]
+      }
+    },
+    "stages": {
+      "decoder": {
+        "off_total_ns": {
+          "max": 40318120,
+          "median": 37517991.0,
+          "min": 36265034,
+          "values": [
+            36265034,
+            40318120,
+            37456496,
+            37579486,
+            37055180,
+            38762046
+          ]
+        },
+        "on_total_ns": {
+          "max": 39336530,
+          "median": 37991299.0,
+          "min": 35951999,
+          "values": [
+            37811616,
+            38578367,
+            39336530,
+            37000597,
+            35951999,
+            38170982
+          ]
+        },
+        "paired_on_over_off": {
+          "max": 1.0501924686174595,
+          "median": 0.9846735436307666,
+          "min": 0.956849352102727,
+          "values": [
+            1.042646644147638,
+            0.956849352102727,
+            1.0501924686174595,
+            0.9845956115525369,
+            0.9702286967706,
+            0.9847514757089963
+          ]
+        }
+      },
+      "frontend": {
+        "off_total_ns": {
+          "max": 86723401,
+          "median": 82382821.0,
+          "min": 80138430,
+          "values": [
+            80138430,
+            86723401,
+            80902968,
+            81769574,
+            82996068,
+            85278876
+          ]
+        },
+        "on_total_ns": {
+          "max": 90832698,
+          "median": 82981740.0,
+          "min": 80865019,
+          "values": [
+            81709668,
+            87048430,
+            83971420,
+            81992060,
+            80865019,
+            90832698
+          ]
+        },
+        "paired_on_over_off": {
+          "max": 1.065125412769277,
+          "median": 1.0116772147352155,
+          "min": 0.9743234944575928,
+          "values": [
+            1.0196065483189527,
+            1.0037478811514784,
+            1.0379275578616596,
+            1.0027208898018718,
+            0.9743234944575928,
+            1.065125412769277
+          ]
+        }
+      },
+      "fsmn_body": {
+        "off_total_ns": {
+          "max": 426303638,
+          "median": 400102379.0,
+          "min": 379695120,
+          "values": [
+            384645095,
+            426303638,
+            394383134,
+            405821624,
+            379695120,
+            409780580
+          ]
+        },
+        "on_total_ns": {
+          "max": 73678416,
+          "median": 69627165.5,
+          "min": 66847968,
+          "values": [
+            69779703,
+            73678416,
+            69303956,
+            69474628,
+            66847968,
+            72299525
+          ]
+        },
+        "paired_on_over_off": {
+          "max": 0.18141321417344475,
+          "median": 0.17589222143541933,
+          "min": 0.1711949878747713,
+          "values": [
+            0.18141321417344475,
+            0.172830840350464,
+            0.17572748432999674,
+            0.1711949878747713,
+            0.1760569585408419,
+            0.1764347275803065
+          ]
+        }
+      },
+      "head2599": {
+        "off_total_ns": {
+          "max": 391877759,
+          "median": 361621447.5,
+          "min": 347680889,
+          "values": [
+            351356347,
+            391877759,
+            355399159,
+            367843736,
+            347680889,
+            380729348
+          ]
+        },
+        "on_total_ns": {
+          "max": 63277434,
+          "median": 60874550.0,
+          "min": 59183683,
+          "values": [
+            61384388,
+            63277434,
+            59953670,
+            59183683,
+            60364712,
+            61679165
+          ]
+        },
+        "paired_on_over_off": {
+          "max": 0.17470692794970344,
+          "median": 0.1653482769559404,
+          "min": 0.16089354583980192,
+          "values": [
+            0.17470692794970344,
+            0.16147237894151578,
+            0.16869389946980712,
+            0.16089354583980192,
+            0.1736210240764772,
+            0.16200265444207365
+          ]
+        }
+      },
+      "softmax2599": {
+        "off_total_ns": {
+          "max": 22594937,
+          "median": 21815068.0,
+          "min": 20399569,
+          "values": [
+            20538773,
+            22115619,
+            21514517,
+            22381857,
+            20399569,
+            22594937
+          ]
+        },
+        "on_total_ns": {
+          "max": 22586718,
+          "median": 20898726.5,
+          "min": 20079040,
+          "values": [
+            21110762,
+            22586718,
+            21012496,
+            20784957,
+            20079040,
+            20577120
+          ]
+        },
+        "paired_on_over_off": {
+          "max": 1.0278492293575667,
+          "median": 0.9804767017858499,
+          "min": 0.9106960554924318,
+          "values": [
+            1.0278492293575667,
+            1.0213016420657275,
+            0.9766659414199259,
+            0.9286520327602844,
+            0.9842874621517739,
+            0.9106960554924318
+          ]
+        }
+      }
+    },
+    "status": "ALL_SIX_PAIRS_COMPLETE",
+    "wall_seconds": {
+      "block2-off": {
+        "max": 1.0709300320004331,
+        "median": 0.9898687179997978,
+        "min": 0.9508202200004234,
+        "values": [
+          0.9609516990003613,
+          1.0709300320004331,
+          0.9769697189994986,
+          1.002767717000097,
+          0.9508202200004234,
+          1.027907235999919
+        ]
+      },
+      "block2-on": {
+        "max": 0.3918100040000354,
+        "median": 0.3580005805001747,
+        "min": 0.3484678350005197,
+        "values": [
+          0.35636182600046595,
+          0.3918100040000354,
+          0.35963933499988343,
+          0.35377488499943865,
+          0.3484678350005197,
+          0.3753785610006162
+        ]
+      }
+    }
+  },
+  "gates": {
+    "all_twelve_lanes_exit_zero": true,
+    "all_six_posterior_chains_and_complete_event_bits_equal": true,
+    "all_stage_counts_exact": true,
+    "all_timer_errors_and_saturation_zero": true,
+    "total_samples": 6839040,
+    "total_feeds": 21372,
+    "total_fbank": 42720,
+    "total_network_head_softmax_decoder_each": 14232,
+    "finish_calls": 0,
+    "reset_calls": 0
+  },
+  "limitations": [
+    "Same stream repeated, no independent acoustic acceptance hours",
+    "No ARM/SSC305 or cross-host performance qualification",
+    "Dense posterior arrays not retained; cryptographic byte-chain comparisons cover all rows",
+    "Masked traps, RNE, gradual underflow and strict FP compiler flags still required",
+    "Historical C/Torch 1e-5 FAIL remains unchanged",
+    "Opt-ins remain disabled by default; no production model changes"
+  ]
+}
