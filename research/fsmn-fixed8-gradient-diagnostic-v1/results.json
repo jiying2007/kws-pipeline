@@ -1,0 +1,725 @@
+{
+  "schema": "anonymous-fixed8-gradient-diagnostic-v1",
+  "experiment_identity": "fixed8-three-frozen-head-states-gradient-only",
+  "source_freeze_sha256": "d94a4341d94800280f61aaaf8bde406a2bb29c8873917cf9af2c683138b95292",
+  "review": "saved scalars, complete call ledger, hashes and mathematical identities independently checked; no tensor rerun",
+  "data": {
+    "training_roster": 146,
+    "batches_per_state": 8,
+    "batch_size": 8,
+    "presentations_per_state": 64,
+    "unique_clips": 54,
+    "per_batch_groups": {
+      "target": 2,
+      "competitor": 1,
+      "confusable": 1,
+      "ordinary": 4
+    },
+    "eligible_per_batch": 3,
+    "sample_weights": 1.0,
+    "historical_weak_labels_unchanged": true,
+    "independent_test": false
+  },
+  "math": {
+    "base": "CTC + 0.1 * competition",
+    "total": "base + 0.1 * KL",
+    "CTC_normalization": "target token length, then mean over all eight samples",
+    "competition_normalization": "mean over all eight samples, not only three eligible samples",
+    "KL": "0.5 * (conditional nonblank KL + binary blank/nonblank KL), teacher||student, T=1; valid-frame mean per sample, then sample mean",
+    "ratio_percent": "100 * norm(0.1 * gradient(KL)) / norm(gradient(base)); summary mean is mean of eight batch ratios",
+    "clip": "min(1, 5/(total_gradient_norm+1e-6)); hypothetical, no optimizer call"
+  },
+  "completed_counts": {
+    "load_started": 4,
+    "load_completed": 4,
+    "teacher_started": 8,
+    "teacher_completed": 8,
+    "student_started": 24,
+    "student_completed": 24,
+    "grad_started": 72,
+    "grad_completed": 72,
+    "full_ctc_started": 24,
+    "full_ctc_completed": 24,
+    "competitor_ctc_started": 138,
+    "competitor_ctc_completed": 138,
+    "optimizer_steps": 0,
+    "encoder": 0,
+    "eval": 0
+  },
+  "head_parameters_unchanged": true,
+  "host": {
+    "exit": 0,
+    "failure": null,
+    "wall_seconds": 7.581605382999896,
+    "peak_sampled_process_group_RSS": 432959488,
+    "sample_period": 0.2,
+    "instantaneous_memory_bound": false,
+    "no_retry": true
+  },
+  "summary": {
+    "B": {
+      "batches": 8,
+      "mean_losses": {
+        "CTC": 2.3246666938066483,
+        "competition": 0.20839704759418964,
+        "KL": 0.0
+      },
+      "mean_gradient_norms": {
+        "CTC": 9.083373168871166,
+        "competition": 2.0041982986195612,
+        "KL": 1.8318933088197263e-07,
+        "base": 9.146538868327204,
+        "total": 9.146538868362795
+      },
+      "weighted_KL_over_base_gradient_percent": {
+        "min": 1.4240541676238935e-07,
+        "mean": 2.1321438040022163e-07,
+        "max": 3.6861673378953533e-07
+      },
+      "KL_base_cosine": null,
+      "base_total_cosine": {
+        "min": 0.9999999999999998,
+        "mean": 0.9999999999999999,
+        "max": 1.0000000000000002
+      },
+      "hypothetical_clip5_coefficient": {
+        "min": 0.3844398830981743,
+        "mean": 0.5759928244774238,
+        "max": 0.8086795014907217
+      },
+      "hypothetical_clip5_triggered": 8
+    },
+    "control": {
+      "batches": 8,
+      "mean_losses": {
+        "CTC": 2.172912087291479,
+        "competition": 0.20390063524246216,
+        "KL": 0.004413144779391587
+      },
+      "mean_gradient_norms": {
+        "CTC": 8.61883963756473,
+        "competition": 2.005071216035071,
+        "KL": 0.30211729147017713,
+        "base": 8.679676788583771,
+        "total": 8.678123249192966
+      },
+      "weighted_KL_over_base_gradient_percent": {
+        "min": 0.26339135818879433,
+        "mean": 0.36605874356436485,
+        "max": 0.5285764292612675
+      },
+      "KL_base_cosine": {
+        "min": -0.18078035572034037,
+        "mean": -0.05316033551007609,
+        "max": 0.04275157144987583
+      },
+      "base_total_cosine": {
+        "min": 0.9999860967120913,
+        "mean": 0.9999928450042634,
+        "max": 0.9999965364655075
+      },
+      "hypothetical_clip5_coefficient": {
+        "min": 0.44894049383433604,
+        "mean": 0.6001811664251627,
+        "max": 0.8102515905020181
+      },
+      "hypothetical_clip5_triggered": 8
+    },
+    "treatment": {
+      "batches": 8,
+      "mean_losses": {
+        "CTC": 2.173001453280449,
+        "competition": 0.20389887131750584,
+        "KL": 0.0036580999731086195
+      },
+      "mean_gradient_norms": {
+        "CTC": 8.618884083123197,
+        "competition": 2.004884538817555,
+        "KL": 0.19345120739512978,
+        "base": 8.679723747746586,
+        "total": 8.67804830841445
+      },
+      "weighted_KL_over_base_gradient_percent": {
+        "min": 0.15984824930851285,
+        "mean": 0.23157053462765972,
+        "max": 0.30911399398658607
+      },
+      "KL_base_cosine": {
+        "min": -0.27333765732463927,
+        "mean": -0.08714496418708274,
+        "max": 0.06524638544104726
+      },
+      "base_total_cosine": {
+        "min": 0.9999952447169194,
+        "mean": 0.9999972528682181,
+        "max": 0.9999987299364967
+      },
+      "hypothetical_clip5_coefficient": {
+        "min": 0.4489186371748351,
+        "mean": 0.6001978232596886,
+        "max": 0.8102307816872434
+      },
+      "hypothetical_clip5_triggered": 8
+    }
+  },
+  "per_batch": [
+    {
+      "batch": 1,
+      "state": "B",
+      "loss": {
+        "CTC": 2.6141836643218994,
+        "competition": 0.18365584313869476,
+        "KL": 0.0
+      },
+      "gradient_norm": {
+        "CTC": 9.00173779457216,
+        "competition": 0.9829709723238795,
+        "KL": 1.592043063320912e-07,
+        "base": 9.00419657001675,
+        "total": 9.00419657003434
+      },
+      "weighted_KL_norm": 1.5920430633209122e-08,
+      "clip5_coefficient": 0.5552965670855367,
+      "clip_effective_gradient_norm": 4.999999444703433,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 1.7681122917976796e-07,
+      "KL_base_cosine": null,
+      "base_total_cosine": 1.0
+    },
+    {
+      "batch": 1,
+      "state": "control",
+      "loss": {
+        "CTC": 2.454878330230713,
+        "competition": 0.18276885151863098,
+        "KL": 0.00460963835939765
+      },
+      "gradient_norm": {
+        "CTC": 8.70929279350689,
+        "competition": 1.0677919947909846,
+        "KL": 0.27843580940598944,
+        "base": 8.71096733749346,
+        "total": 8.709593405403037
+      },
+      "weighted_KL_norm": 0.027843580940598946,
+      "clip5_coefficient": 0.574079545759126,
+      "clip_effective_gradient_norm": 4.999999425920455,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.31963821997995007,
+      "KL_base_cosine": -0.050938718032131174,
+      "base_total_cosine": 0.9999949032044939
+    },
+    {
+      "batch": 1,
+      "state": "treatment",
+      "loss": {
+        "CTC": 2.4550247192382812,
+        "competition": 0.18275496363639832,
+        "KL": 0.0037571899592876434
+      },
+      "gradient_norm": {
+        "CTC": 8.70965549889587,
+        "competition": 1.0672779495107285,
+        "KL": 0.20945041138753837,
+        "base": 8.71133268196743,
+        "total": 8.709923407643977
+      },
+      "weighted_KL_norm": 0.02094504113875384,
+      "clip5_coefficient": 0.574057794992103,
+      "clip_effective_gradient_norm": 4.999999425942205,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.24043440772397937,
+      "KL_base_cosine": -0.0684807755948966,
+      "base_total_cosine": 0.9999971221850342
+    },
+    {
+      "batch": 2,
+      "state": "B",
+      "loss": {
+        "CTC": 1.8101694583892822,
+        "competition": 0.12375956773757935,
+        "KL": 0.0
+      },
+      "gradient_norm": {
+        "CTC": 12.99724040948849,
+        "competition": 1.7195018632734833,
+        "KL": 1.8521154031328104e-07,
+        "base": 13.005933659273362,
+        "total": 13.005933659290156
+      },
+      "weighted_KL_norm": 1.8521154031328106e-08,
+      "clip5_coefficient": 0.3844398830981743,
+      "clip_effective_gradient_norm": 4.999999615560117,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 1.4240541676238935e-07,
+      "KL_base_cosine": null,
+      "base_total_cosine": 0.9999999999999998
+    },
+    {
+      "batch": 2,
+      "state": "control",
+      "loss": {
+        "CTC": 1.5219255685806274,
+        "competition": 0.1204376071691513,
+        "KL": 0.004725713282823563
+      },
+      "gradient_norm": {
+        "CTC": 11.136834319362846,
+        "competition": 1.6121959270993484,
+        "KL": 0.302815468900651,
+        "base": 11.142766981456164,
+        "total": 11.137332496686211
+      },
+      "weighted_KL_norm": 0.030281546890065097,
+      "clip5_coefficient": 0.44894049383433604,
+      "clip_effective_gradient_norm": 4.999999551059506,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.2717596710086441,
+      "KL_base_cosine": -0.18078035572034037,
+      "base_total_cosine": 0.9999964245222179
+    },
+    {
+      "batch": 2,
+      "state": "treatment",
+      "loss": {
+        "CTC": 1.522028923034668,
+        "competition": 0.12043720483779907,
+        "KL": 0.004038386978209019
+      },
+      "gradient_norm": {
+        "CTC": 11.137434341915263,
+        "competition": 1.6122843581215787,
+        "KL": 0.20170377473548243,
+        "base": 11.143371181161118,
+        "total": 11.137874743957381
+      },
+      "weighted_KL_norm": 0.020170377473548246,
+      "clip5_coefficient": 0.4489186371748351,
+      "clip_effective_gradient_norm": 4.999999551081363,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.1810078579061254,
+      "KL_base_cosine": -0.27333765732463927,
+      "base_total_cosine": 0.9999984827050881
+    },
+    {
+      "batch": 3,
+      "state": "B",
+      "loss": {
+        "CTC": 3.078378677368164,
+        "competition": 0.09716065227985382,
+        "KL": 0.0
+      },
+      "gradient_norm": {
+        "CTC": 6.164007794436979,
+        "competition": 1.5887944821547741,
+        "KL": 1.5638432157295268e-07,
+        "base": 6.182918179596457,
+        "total": 6.1829181797034405
+      },
+      "weighted_KL_norm": 1.563843215729527e-08,
+      "clip5_coefficient": 0.8086795014907217,
+      "clip_effective_gradient_norm": 4.999999191320498,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 2.529296313333383e-07,
+      "KL_base_cosine": null,
+      "base_total_cosine": 0.9999999999999998
+    },
+    {
+      "batch": 3,
+      "state": "control",
+      "loss": {
+        "CTC": 3.029664993286133,
+        "competition": 0.10529711842536926,
+        "KL": 0.004299755208194256
+      },
+      "gradient_norm": {
+        "CTC": 6.37778446623038,
+        "competition": 1.8571322179121839,
+        "KL": 0.3367330220382543,
+        "base": 6.413428500307684,
+        "total": 6.414956294312081
+      },
+      "weighted_KL_norm": 0.03367330220382543,
+      "clip5_coefficient": 0.7794284155926222,
+      "clip_effective_gradient_norm": 4.999999220571584,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.5250436985804077,
+      "KL_base_cosine": 0.04275157144987583,
+      "base_total_cosine": 0.9999862481064126
+    },
+    {
+      "batch": 3,
+      "state": "treatment",
+      "loss": {
+        "CTC": 3.0297584533691406,
+        "competition": 0.10526713728904724,
+        "KL": 0.0035043037496507168
+      },
+      "gradient_norm": {
+        "CTC": 6.376453577692235,
+        "competition": 1.8560639868713666,
+        "KL": 0.19820411564387055,
+        "base": 6.4120072044513,
+        "total": 6.413330904615527
+      },
+      "weighted_KL_norm": 0.019820411564387058,
+      "clip5_coefficient": 0.7796259533054286,
+      "clip_effective_gradient_norm": 4.999999220374047,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.30911399398658607,
+      "KL_base_cosine": 0.06524638544104726,
+      "base_total_cosine": 0.9999952447169194
+    },
+    {
+      "batch": 4,
+      "state": "B",
+      "loss": {
+        "CTC": 3.7460193634033203,
+        "competition": 0.5648718476295471,
+        "KL": 0.0
+      },
+      "gradient_norm": {
+        "CTC": 8.941597747975226,
+        "competition": 5.8934802945486275,
+        "KL": 1.4071981824614495e-07,
+        "base": 9.365577545476429,
+        "total": 9.365577545517906
+      },
+      "weighted_KL_norm": 1.4071981824614496e-08,
+      "clip5_coefficient": 0.5338698485842986,
+      "clip_effective_gradient_norm": 4.999999466130152,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 1.5025215216344304e-07,
+      "KL_base_cosine": null,
+      "base_total_cosine": 1.0000000000000002
+    },
+    {
+      "batch": 4,
+      "state": "control",
+      "loss": {
+        "CTC": 3.6248960494995117,
+        "competition": 0.5291215777397156,
+        "KL": 0.00441387202590704
+      },
+      "gradient_norm": {
+        "CTC": 8.664577190361342,
+        "competition": 5.63932212430824,
+        "KL": 0.33291582491167604,
+        "base": 9.052950467353613,
+        "total": 9.04970492434974
+      },
+      "weighted_KL_norm": 0.03329158249116761,
+      "clip5_coefficient": 0.5525041412170829,
+      "clip_effective_gradient_norm": 4.99999944749586,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.3677428989722453,
+      "KL_base_cosine": -0.09930881406777267,
+      "base_total_cosine": 0.999993300117247
+    },
+    {
+      "batch": 4,
+      "state": "treatment",
+      "loss": {
+        "CTC": 3.6250505447387695,
+        "competition": 0.5291842818260193,
+        "KL": 0.003653366584330797
+      },
+      "gradient_norm": {
+        "CTC": 8.665883299879608,
+        "competition": 5.640137648227541,
+        "KL": 0.20519926402871969,
+        "base": 9.054386589528901,
+        "total": 9.050983978981582
+      },
+      "weighted_KL_norm": 0.02051992640287197,
+      "clip5_coefficient": 0.5524260631976654,
+      "clip_effective_gradient_norm": 4.999999447573937,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.22662966949746308,
+      "KL_base_cosine": -0.16692325471218675,
+      "base_total_cosine": 0.9999975016251372
+    },
+    {
+      "batch": 5,
+      "state": "B",
+      "loss": {
+        "CTC": 2.6367247104644775,
+        "competition": 0.2585524022579193,
+        "KL": 0.0
+      },
+      "gradient_norm": {
+        "CTC": 11.330393271347832,
+        "competition": 1.7106075209083589,
+        "KL": 1.9637395818117179e-07,
+        "base": 11.34761805576329,
+        "total": 11.347618055771225
+      },
+      "weighted_KL_norm": 1.963739581811718e-08,
+      "clip5_coefficient": 0.4406210655667963,
+      "clip_effective_gradient_norm": 4.999999559378934,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 1.730530206569971e-07,
+      "KL_base_cosine": null,
+      "base_total_cosine": 0.9999999999999998
+    },
+    {
+      "batch": 5,
+      "state": "control",
+      "loss": {
+        "CTC": 2.423548698425293,
+        "competition": 0.253479540348053,
+        "KL": 0.00426425551995635
+      },
+      "gradient_norm": {
+        "CTC": 10.915234071319768,
+        "competition": 1.6174576213674412,
+        "KL": 0.28789935811861855,
+        "base": 10.930478512976014,
+        "total": 10.929323638778001
+      },
+      "weighted_KL_norm": 0.028789935811861858,
+      "clip5_coefficient": 0.4574848094693476,
+      "clip_effective_gradient_norm": 4.999999542515191,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.26339135818879433,
+      "KL_base_cosine": -0.04142857137029722,
+      "base_total_cosine": 0.9999965364655075
+    },
+    {
+      "batch": 5,
+      "state": "treatment",
+      "loss": {
+        "CTC": 2.4236106872558594,
+        "competition": 0.25349289178848267,
+        "KL": 0.003613168839365244
+      },
+      "gradient_norm": {
+        "CTC": 10.91501220582961,
+        "competition": 1.6177507510128906,
+        "KL": 0.17471843386720481,
+        "base": 10.930268840792369,
+        "total": 10.928915404338612
+      },
+      "weighted_KL_norm": 0.017471843386720483,
+      "clip5_coefficient": 0.45750189817675585,
+      "clip_effective_gradient_norm": 4.999999542498102,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.15984824930851285,
+      "KL_base_cosine": -0.0782591909955264,
+      "base_total_cosine": 0.9999987299364967
+    },
+    {
+      "batch": 6,
+      "state": "B",
+      "loss": {
+        "CTC": 1.5776492357254028,
+        "competition": 0.20210053026676178,
+        "KL": 0.0
+      },
+      "gradient_norm": {
+        "CTC": 9.432562749186834,
+        "competition": 1.2080792637918623,
+        "KL": 1.454671292041762e-07,
+        "base": 9.456963914429911,
+        "total": 9.456963914435075
+      },
+      "weighted_KL_norm": 1.4546712920417622e-08,
+      "clip5_coefficient": 0.5287108544061552,
+      "clip_effective_gradient_norm": 4.999999471289146,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 1.5382011660445818e-07,
+      "KL_base_cosine": null,
+      "base_total_cosine": 0.9999999999999999
+    },
+    {
+      "batch": 6,
+      "state": "control",
+      "loss": {
+        "CTC": 1.4022830724716187,
+        "competition": 0.20142599940299988,
+        "KL": 0.004465904086828232
+      },
+      "gradient_norm": {
+        "CTC": 8.921302602991505,
+        "competition": 1.2994786092658466,
+        "KL": 0.2609155120942742,
+        "base": 8.950759828966577,
+        "total": 8.949756666920692
+      },
+      "weighted_KL_norm": 0.026091551209427424,
+      "clip5_coefficient": 0.5586743447233841,
+      "clip_effective_gradient_norm": 4.999999441325655,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.29150096425321986,
+      "KL_base_cosine": -0.039902799603892994,
+      "base_total_cosine": 0.999995757164108
+    },
+    {
+      "batch": 6,
+      "state": "treatment",
+      "loss": {
+        "CTC": 1.402341604232788,
+        "competition": 0.20140838623046875,
+        "KL": 0.0037180015351623297
+      },
+      "gradient_norm": {
+        "CTC": 8.92097598568125,
+        "competition": 1.298971086214669,
+        "KL": 0.1915336718501503,
+        "base": 8.950414222163817,
+        "total": 8.94932687446629
+      },
+      "weighted_KL_norm": 0.019153367185015032,
+      "clip5_coefficient": 0.5587011751201689,
+      "clip_effective_gradient_norm": 4.999999441298825,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.21399419858787933,
+      "KL_base_cosine": -0.05783792833501978,
+      "base_total_cosine": 0.9999977174264599
+    },
+    {
+      "batch": 7,
+      "state": "B",
+      "loss": {
+        "CTC": 0.5809249877929688,
+        "competition": 0.15206529200077057,
+        "KL": 0.0
+      },
+      "gradient_norm": {
+        "CTC": 6.910192973721204,
+        "competition": 1.573275973207251,
+        "KL": 2.5508876072660476e-07,
+        "base": 6.920162253736689,
+        "total": 6.920162253788924
+      },
+      "weighted_KL_norm": 2.550887607266048e-08,
+      "clip5_coefficient": 0.7225263070582045,
+      "clip_effective_gradient_norm": 4.999999277473693,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 3.6861673378953533e-07,
+      "KL_base_cosine": null,
+      "base_total_cosine": 1.0
+    },
+    {
+      "batch": 7,
+      "state": "control",
+      "loss": {
+        "CTC": 0.4776017367839813,
+        "competition": 0.14978554844856262,
+        "KL": 0.004255180712789297
+      },
+      "gradient_norm": {
+        "CTC": 6.166034298851758,
+        "competition": 1.4518747056027197,
+        "KL": 0.3263038822619124,
+        "base": 6.173258287698358,
+        "total": 6.1709217832580805
+      },
+      "weighted_KL_norm": 0.03263038822619124,
+      "clip5_coefficient": 0.8102515905020181,
+      "clip_effective_gradient_norm": 4.99999918974841,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.5285764292612675,
+      "KL_base_cosine": -0.07423468825359705,
+      "base_total_cosine": 0.9999860967120913
+    },
+    {
+      "batch": 7,
+      "state": "treatment",
+      "loss": {
+        "CTC": 0.47765839099884033,
+        "competition": 0.14978249371051788,
+        "KL": 0.0034895995631814003
+      },
+      "gradient_norm": {
+        "CTC": 6.166313912031653,
+        "competition": 1.4520219575195008,
+        "KL": 0.17546272997192375,
+        "base": 6.173534171467155,
+        "total": 6.171080268460184
+      },
+      "weighted_KL_norm": 0.017546272997192375,
+      "clip5_coefficient": 0.8102307816872434,
+      "clip_effective_gradient_norm": 4.999999189769219,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.2842176379016051,
+      "KL_base_cosine": -0.14124760556903823,
+      "base_total_cosine": 0.9999960384414286
+    },
+    {
+      "batch": 8,
+      "state": "B",
+      "loss": {
+        "CTC": 2.553283452987671,
+        "competition": 0.08501024544239044,
+        "KL": 0.0
+      },
+      "gradient_norm": {
+        "CTC": 7.889252610240607,
+        "competition": 1.3568760187482543,
+        "KL": 2.270648124793583e-07,
+        "base": 7.888940768324746,
+        "total": 7.8889407683612935
+      },
+      "weighted_KL_norm": 2.270648124793583e-08,
+      "clip5_coefficient": 0.6337985685295038,
+      "clip_effective_gradient_norm": 4.999999366201432,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 2.8782674271184394e-07,
+      "KL_base_cosine": null,
+      "base_total_cosine": 1.0
+    },
+    {
+      "batch": 8,
+      "state": "control",
+      "loss": {
+        "CTC": 2.448498249053955,
+        "competition": 0.08888883888721466,
+        "KL": 0.004270839039236307
+      },
+      "gradient_norm": {
+        "CTC": 8.059657357893352,
+        "competition": 1.495316527933804,
+        "KL": 0.2909194540300411,
+        "base": 8.062804392418299,
+        "total": 8.063396783835891
+      },
+      "weighted_KL_norm": 0.02909194540300411,
+      "clip5_coefficient": 0.6200859903033852,
+      "clip_effective_gradient_norm": 4.9999993799140094,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.3608167082703898,
+      "KL_base_cosine": 0.018559691517546967,
+      "base_total_cosine": 0.9999934937420298
+    },
+    {
+      "batch": 8,
+      "state": "treatment",
+      "loss": {
+        "CTC": 2.448538303375244,
+        "competition": 0.08886361122131348,
+        "KL": 0.0034907825756818056
+      },
+      "gradient_norm": {
+        "CTC": 8.059343843060079,
+        "competition": 1.4945685730621645,
+        "KL": 0.19133725767614843,
+        "base": 8.06247509044059,
+        "total": 8.062950884852043
+      },
+      "weighted_KL_norm": 0.019133725767614844,
+      "clip5_coefficient": 0.620120282423309,
+      "clip_effective_gradient_norm": 4.999999379879718,
+      "actual_parameter_update_norm": 0,
+      "weighted_KL_over_base_gradient_percent": 0.23731826210912665,
+      "KL_base_cosine": 0.02368031359359779,
+      "base_total_cosine": 0.9999971859091805
+    }
+  ],
+  "limitations": [
+    "Post-evidence endpoint diagnosis on a deliberately balanced train-only schedule; does not reproduce the historical 37-step batch distribution or establish a causal training effect.",
+    "B versus identical B has zero KL loss and floating-point residual gradients; its KL angles have no substantive interpretation.",
+    "Clip-effective gradient is hypothetical. No optimizer state, Adam update, parameter step, encoder, or protection evaluation was executed.",
+    "Small regularizer gradient at these endpoints does not determine a useful lambda; no lambda search or automatic subsequent training is authorized."
+  ]
+}
