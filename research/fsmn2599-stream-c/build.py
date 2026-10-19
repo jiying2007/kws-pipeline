@@ -143,13 +143,15 @@ def run_bounded(argv, directory, wall, cpu, output_limit=OUTPUT_LIMIT):
     env = {"PATH": "/usr/bin:/bin", "LC_ALL": "C", "LANG": "C", "TMPDIR": str(directory)}
     start = time.monotonic()
     before = child_cpu()
-    proc = subprocess.Popen(argv, cwd=directory, env=env, stdin=subprocess.DEVNULL,
-                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                            start_new_session=True, preexec_fn=limits)
     output = bytearray()
-    selector = selectors.DefaultSelector()
-    selector.register(proc.stdout, selectors.EVENT_READ)
+    proc = None
+    selector = None
     try:
+        proc = subprocess.Popen(argv, cwd=directory, env=env, stdin=subprocess.DEVNULL,
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                start_new_session=True, preexec_fn=limits)
+        selector = selectors.DefaultSelector()
+        selector.register(proc.stdout, selectors.EVENT_READ)
         while selector.get_map() or proc.poll() is None:
             if time.monotonic() - start > wall or group_cpu(proc.pid) > cpu:
                 raise RuntimeError("child wall/aggregate CPU budget exhausted")
@@ -176,12 +178,22 @@ def run_bounded(argv, directory, wall, cpu, output_limit=OUTPUT_LIMIT):
     finally:
         # Also kill orphaned group members after a successful direct-child exit.
         try:
-            os.killpg(proc.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        proc.wait()
-        selector.close()
-        proc.stdout.close()
+            if proc is not None:
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+        finally:
+            try:
+                if proc is not None:
+                    proc.wait()
+            finally:
+                try:
+                    if selector is not None:
+                        selector.close()
+                finally:
+                    if proc is not None and proc.stdout is not None:
+                        proc.stdout.close()
 
 
 def execute():

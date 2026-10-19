@@ -3,11 +3,11 @@ import struct
 import io
 import json
 import time
-from contextlib import redirect_stdout
+from contextlib import redirect_stdout, redirect_stderr
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import check_arm_synthetic as arm
 
 
@@ -92,6 +92,57 @@ class DriverTests(unittest.TestCase):
         with patch.object(arm.guard, 'validate_sources', return_value='identity'), patch.object(arm.shutil, 'which', return_value=None):
             with self.assertRaisesRegex(RuntimeError, 'required tool missing'):
                 arm.execute('/missing')
+
+    def test_spawn_initialization_failures_always_cleanup(self):
+        for stage in ('spawn', 'selector', 'register', 'interrupt'):
+            with self.subTest(stage=stage):
+                proc, selector = Mock(), Mock()
+                factory = Mock(return_value=selector)
+                popen = Mock(return_value=proc)
+                if stage == 'spawn': popen.side_effect = OSError('spawn failed')
+                if stage == 'selector': factory.side_effect = OSError('descriptor limit')
+                if stage == 'register': selector.register.side_effect = OSError('registration failed')
+                if stage == 'interrupt': selector.register.side_effect = KeyboardInterrupt()
+                with patch.object(arm.guard.subprocess, 'Popen', popen), patch.object(arm.guard.selectors, 'DefaultSelector', factory), patch.object(arm.guard.os, 'killpg') as kill:
+                    with self.assertRaises((OSError, KeyboardInterrupt)):
+                        arm.guard.run_bounded(['never-executed'], Path('/tmp'), 1, 1)
+                    self.assertEqual(kill.call_count, stage != 'spawn')
+                    self.assertEqual(proc.wait.call_count, stage != 'spawn')
+                    self.assertEqual(proc.stdout.close.call_count, stage != 'spawn')
+                    self.assertEqual(selector.close.call_count, stage in ('register', 'interrupt'))
+
+    def test_cleanup_errors_do_not_skip_remaining_resources(self):
+        for stage in ('kill', 'wait', 'selector_close'):
+            with self.subTest(stage=stage):
+                proc, selector = Mock(), Mock()
+                selector.register.side_effect = RuntimeError('setup failure')
+                kill = Mock()
+                {'kill': kill, 'wait': proc.wait, 'selector_close': selector.close}[stage].side_effect = OSError('cleanup failure')
+                with patch.object(arm.guard.subprocess, 'Popen', return_value=proc), patch.object(arm.guard.selectors, 'DefaultSelector', return_value=selector), patch.object(arm.guard.os, 'killpg', kill):
+                    with self.assertRaises(OSError):
+                        arm.guard.run_bounded(['never-executed'], Path('/tmp'), 1, 1)
+                proc.wait.assert_called_once(); selector.close.assert_called_once(); proc.stdout.close.assert_called_once()
+
+    def test_escaped_success_report_becomes_bounded_failure(self):
+        out, err = io.StringIO(), io.StringIO()
+        report = {'status': 'PUBLIC_ARM_QEMU_SYNTHETIC_PASS', 'commands': [{'output': chr(1)*200}]}
+        with patch.object(arm, 'OUTPUT_BYTES', 1024), patch.object(arm, 'execute', return_value=report), patch.object(arm.sys, 'argv', ['driver', '--execute']), redirect_stdout(out), redirect_stderr(err):
+            self.assertEqual(arm.main(), 1)
+        receipt = json.loads(out.getvalue())
+        self.assertEqual(receipt['status'], 'FAIL'); self.assertEqual(receipt['command_attempts'], 1)
+        self.assertLessEqual(len(out.getvalue().encode()), 1024)
+        self.assertNotIn('commands', receipt); self.assertFalse(receipt['qualification_allowed'])
+
+    def test_oversized_failure_report_keeps_small_receipt(self):
+        out = io.StringIO()
+        with patch.object(arm, 'OUTPUT_BYTES', 1024), redirect_stdout(out), self.assertRaisesRegex(RuntimeError, 'structured evidence'):
+            with arm.evidence_directory(time.monotonic(), 'source') as (tmp, budget):
+                budget.commands = [{'output': chr(1)*200}]
+                raise RuntimeError('next command failed')
+        receipt = json.loads(out.getvalue())
+        self.assertEqual(receipt['status'], 'FAIL'); self.assertEqual(receipt['command_attempts'], 1)
+        self.assertLessEqual(len(out.getvalue().encode()), 1024)
+        self.assertFalse(tmp.exists())
 
     def test_loader_override_rejected(self):
         with patch.dict(arm.os.environ, {'LD_AUDIT':'untrusted'}):

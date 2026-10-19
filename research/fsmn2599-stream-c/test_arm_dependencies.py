@@ -1,5 +1,7 @@
 """Dependency failures and durable evidence, without ARM execution."""
 import json
+import io
+from contextlib import redirect_stderr, contextmanager
 from pathlib import Path
 import tempfile
 import unittest
@@ -118,6 +120,60 @@ class ClosureTests(unittest.TestCase):
                               'Build ID: abc123')
         self.assertEqual(parsed['version_needs'], {'libc.so.6': ['GLIBC_2.4']})
         self.assertEqual(parsed['build_ids'], ['abc123'])
+
+    def test_atomic_report_pre_replace_failures_preserve_previous(self):
+        for stage in ('write', 'fsync', 'replace'):
+            with self.subTest(stage=stage):
+                output = self.base / stage; output.mkdir()
+                previous = output / 'report.json'; previous.write_text('{"status":"INCOMPLETE"}\n')
+                before = previous.read_bytes()
+                report = {'status': 'NEW_SNAPSHOT_PASS'}
+                original = dep.tempfile.NamedTemporaryFile
+                @contextmanager
+                def partial_write(**kwargs):
+                    with original(**kwargs) as stream:
+                        write = stream.write
+                        def fail(data):
+                            write(data[:7]); stream.flush()
+                            raise OSError('synthetic partial write')
+                        stream.write = fail
+                        yield stream
+                failure = (patch.object(dep.tempfile, 'NamedTemporaryFile', partial_write)
+                           if stage == 'write' else patch.object(dep.os, stage, side_effect=OSError('synthetic I/O failure')))
+                with failure:
+                    with self.assertRaises(OSError): dep.finalize(output, report)
+                self.assertEqual(previous.read_bytes(), before)
+                self.assertEqual(report['status'], 'FAIL')
+                self.assertEqual(sorted(p.name for p in output.iterdir()), ['report.json'])
+
+    def test_atomic_report_directory_sync_failure_is_not_success(self):
+        output = self.base / 'dirsync'; output.mkdir()
+        report = {'status': 'NEW_SNAPSHOT_PASS'}
+        with patch.object(dep.os, 'fsync', side_effect=[None, OSError('directory sync failed')]):
+            with self.assertRaises(OSError): dep.finalize(output, report)
+        self.assertEqual(report['status'], 'FAIL')
+        self.assertEqual(json.loads((output / 'report.json').read_text())['status'], 'NEW_SNAPSHOT_PASS')
+        self.assertEqual(sorted(p.name for p in output.iterdir()), ['report.json'])
+
+    def test_atomic_report_success_and_peak_charge(self):
+        output = self.base / 'atomic'; output.mkdir()
+        dep.save(output, {'status': 'INCOMPLETE'})
+        old_size = (output / 'report.json').stat().st_size
+        new = {'status': 'FAIL'}
+        new_size = len((json.dumps(new, indent=2)+'\n').encode())
+        with patch.object(dep, 'ARCHIVE_BYTES', old_size + new_size - 1):
+            with self.assertRaisesRegex(RuntimeError, 'retained'): dep.save(output, new)
+        self.assertEqual(json.loads((output / 'report.json').read_text())['status'], 'INCOMPLETE')
+        dep.save(output, new)
+        self.assertEqual(json.loads((output / 'report.json').read_text()), new)
+
+    def test_io_failure_main_has_bounded_stderr_and_nonzero_exit(self):
+        err = io.StringIO()
+        with patch.object(dep, 'execute', side_effect=OSError('/private/path')), patch.object(dep.sys, 'argv', ['driver', '--execute', '--output', '/unused', '--emulator', '/unused']), redirect_stderr(err):
+            self.assertEqual(dep.main(), 1)
+        receipt = json.loads(err.getvalue())
+        self.assertEqual(receipt['status'], 'FAIL'); self.assertFalse(receipt['qualification_allowed'])
+        self.assertNotIn('/private', err.getvalue()); self.assertLess(len(err.getvalue()), 1024)
 
     def test_early_failure_retained_and_no_child_retry(self):
         output = self.base / 'output'

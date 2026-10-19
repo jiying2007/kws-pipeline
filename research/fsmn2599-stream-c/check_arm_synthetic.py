@@ -31,8 +31,19 @@ OUTPUT_BYTES = 8 * 1024**2
 def emit(report):
     encoded = json.dumps(report, indent=2)
     if len(encoded.encode()) + 1 > OUTPUT_BYTES:
-        raise RuntimeError('serialized evidence exceeds 8 MiB')
+        # Command bytes can expand under JSON escaping and appear in multiple
+        # report fields. Never feed the oversized commands back into a FAIL.
+        summary = {'schema': 1, 'status': 'FAIL',
+                   'error': 'serialized evidence limit; incomplete receipt',
+                   'full_report_bytes': len(encoded.encode()) + 1,
+                   'full_report_sha256': hashlib.sha256(encoded.encode()).hexdigest(),
+                   'command_attempts': len(report.get('commands', [])),
+                   'execution_attempts': len(report.get('executions', [])),
+                   'qualification_allowed': False, 'performance_claim': False}
+        print(json.dumps(summary, separators=(',', ':')))
+        return False
     print(encoded)
+    return True
 
 
 @contextmanager
@@ -255,7 +266,8 @@ def main():
         parser.print_help()
         return
     try:
-        emit(execute(args.emulator_sysroot, args.emulator))
+        if not emit(execute(args.emulator_sysroot, args.emulator)):
+            return 1
     except Exception as exc:
         print('ARM synthetic check failed: ' + str(exc)[:4096], file=sys.stderr)
         return 1

@@ -26803,7 +26803,7 @@
       "public_main_base_tree": "a296feacc661c0a45401c7bdd6bca584168d5389",
       "workflow_source_changed": false,
       "scope": "Close all nine r5 source execution/publication/claim approvals after the single terminal run; preserve original executed source, result evidence, scientific contracts and resource budgets.",
-      "rationale": "Close all nine r5 execution/publication/claim approvals after immutable run 38518609834 at a1159dc902634e65b1fb2a7bbf219389f84089d5 received root-pinned, independent complete_native_verified acceptance for all eighteen original native slots. Preserve ledger_reported_attempts=18 and consumed_attempts=null; archive exact six-by-three transcripts and original resource commitments, including 57 acknowledged single owned-CID removals and zero actual fallback probes. Only k1p6-002 agrees on non-target 你好小屋; human_gold/training_admitted remain false and acoustic completeness unknown. Restore explicitly closed current-control test expectations while retaining enabled synthetic positives, negative owner/admission gates and existing future-name lookalike regressions; refresh only derived freezes/dependency pins/public retention metadata. Original executed source, result/checkpoint evidence, prior failure interpretation, 47 scientific bodies, six inputs, prepare proof and all model/resource/API budgets are unchanged. This ordinary closeout source grants no execution, retry or new allowance.",
+      "rationale": "Close all nine r5 execution/publication/claim approvals after immutable run 38518609834 at a1159dc902634e65b1fb2a7bbf219389f84089d5 received root-pinned, independent complete_native_verified acceptance for all eighteen original native slots. Preserve ledger_reported_attempts=18 and consumed_attempts=null; archive exact six-by-three transcripts and original resource commitments, including 57 acknowledged single owned-CID removals and zero actual fallback probes. Only k1p6-002 agrees on non-target \u4f60\u597d\u5c0f\u5c4b; human_gold/training_admitted remain false and acoustic completeness unknown. Restore explicitly closed current-control test expectations while retaining enabled synthetic positives, negative owner/admission gates and existing future-name lookalike regressions; refresh only derived freezes/dependency pins/public retention metadata. Original executed source, result/checkpoint evidence, prior failure interpretation, 47 scientific bodies, six inputs, prepare proof and all model/resource/API budgets are unchanged. This ordinary closeout source grants no execution, retry or new allowance.",
       "files": [
         {
           "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
@@ -42264,6 +42264,136 @@
             "bytes": 4907,
             "sha256": "3061db0dc38cb6eb580f406c078da1ff52f01215840aa52d782740ed1b0d020f",
             "git_blob_sha1": "1cc758365a5eca6cebe5d018dbfb07ee63f3016b"
+          }
+        }
+      ]
+    },
+    {
+      "id": "research-failure-evidence-hardening-20261019",
+      "date": "2026-10-19",
+      "base_commit": "e35ab738805a3aa1ea720fcfaad90d4422d5179e",
+      "base_tree": "4c8bfd42d53cf3c61dfcc939e32ca289f03edb9b",
+      "workflow_source_changed": false,
+      "scope": "Repair bounded child cleanup and durable failure-report paths with public mock fault regressions.",
+      "rationale": "Cover post-spawn initialization failures, escaped JSON report overflow, and atomic snapshot I/O failures. No model/audio or diagnostic replay; existing public CI remains authorized. Preserve all historical evidence, numerical gates, production ABI and default-off options.",
+      "files": [
+        {
+          "path": "research/fsmn2599-stream-c/build.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/build.py",
+            "mode": "100644",
+            "bytes": 13968,
+            "sha256": "9e649dee400437c2095979113aebab78e38254745db24acbf4a833570429826a",
+            "git_blob_sha1": "c41a8ca08fecd726c8b95b9ed48dba6e3c99e8fa"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/build.py",
+            "mode": "100644",
+            "bytes": 14398,
+            "sha256": "8f57e5b439793c9787eef89da14e8213669372d3fc3c3ecc27a3a980b5306f77",
+            "git_blob_sha1": "4ecc5aea89211aab6eb9be369efc46b6a852cdc1"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/check_arm_dependencies.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/check_arm_dependencies.py",
+            "mode": "100644",
+            "bytes": 18795,
+            "sha256": "da090fda66f3601fce288047282807d41eb840859e6fe339f6b00f9374ab860c",
+            "git_blob_sha1": "22be2d5761dc519542579404548b99788de53988"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/check_arm_dependencies.py",
+            "mode": "100644",
+            "bytes": 20097,
+            "sha256": "22047eb9a593ecc7044bb968fca54ca2210f98846bd7ac52f6f7d2bec3346902",
+            "git_blob_sha1": "08afa01f8ae16e078cb4ed1a5dcd08d87962a115"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
+            "mode": "100644",
+            "bytes": 14138,
+            "sha256": "50531e1d032401ef5957ea975da2c408f60e936ee3ec5d877ca51823c3d0f16d",
+            "git_blob_sha1": "88d11f7852fafc1112aa7b686d9a4d597d725fd7"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
+            "mode": "100644",
+            "bytes": 14861,
+            "sha256": "1791af2e4e52216504cb286d4dbb792d876d94f99f83ea6a5e8c9cbd318888b8",
+            "git_blob_sha1": "a923d3a4e67c24e9363324b7c40dd7a68989b3f7"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/source-binding.json",
+          "before": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 6766,
+            "sha256": "24ac9792b05f8dedaa0bd068e5145bf1575688fd4a577a295fe09478a77bbfae",
+            "git_blob_sha1": "c7e072e8195e7e40470a83764be452164098758b"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 6766,
+            "sha256": "29ec333ced65342377e858de4898eb7061fb8e6df1a0bfb3e40b9c37308e5a6f",
+            "git_blob_sha1": "cb218ccd2bd33b3fb7ae7f22ecd32a64f773d156"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_arm_dependencies.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/test_arm_dependencies.py",
+            "mode": "100644",
+            "bytes": 6450,
+            "sha256": "0fda6310b8ede1c4a6467d87daca35ddefb73fa2cb8c7a97876b40c2438cd580",
+            "git_blob_sha1": "95586c829000b0a8947f48e95270d09276a85749"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_arm_dependencies.py",
+            "mode": "100644",
+            "bytes": 9861,
+            "sha256": "a0df4571c8dc225cac9e58de6165b1e1e9c4ade9d430832ce85ecc92e8a603e8",
+            "git_blob_sha1": "6ab59acd53de044b0277b8519c6c48a097bbed61"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_arm_synthetic.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/test_arm_synthetic.py",
+            "mode": "100644",
+            "bytes": 5269,
+            "sha256": "d2755b38240d64abe5541b1a4ce13276c9f234da310201526f3537ab9aad1567",
+            "git_blob_sha1": "6fbff2331d525390dd37afa316f3588a322d46e7"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_arm_synthetic.py",
+            "mode": "100644",
+            "bytes": 9050,
+            "sha256": "27d85a6182dca7a906126eb92f3ac42ac820bcd8e57e7f69a11645c5591c1fe7",
+            "git_blob_sha1": "4ab45ebf3a0a63724f397873dea9eb5169da33bc"
+          }
+        },
+        {
+          "path": "tests/test_causal_research_contract.py",
+          "before": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 1918,
+            "sha256": "617c9d2e41e6aea1223aa5a6c448a67c048ecd160a4449f14401ce82de43c6e9",
+            "git_blob_sha1": "682f2075fe184855af0c7ed8ec034618ce794945"
+          },
+          "after": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 1919,
+            "sha256": "1b3eb83ad15d0278b6ff8bf46c0cec770d6770e3da7349d78550fec05925e2b6",
+            "git_blob_sha1": "96d99d323065fc66221791ce73de4991cc18f6e5"
           }
         }
       ]
