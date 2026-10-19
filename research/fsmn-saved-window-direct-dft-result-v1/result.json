@@ -1,0 +1,101 @@
+{
+  "status": "CONVERGED_HIGH_PRECISION_DIAGNOSTIC_ONLY",
+  "certified_truth": false,
+  "historical_attribution_allowed": false,
+  "qualification_allowed": false,
+  "old_fail_status": "UNCHANGED",
+  "original_frontend_calls": 0,
+  "FFT_library_calls": 0,
+  "model_calls": 0,
+  "precisions": [
+    60,
+    100
+  ],
+  "backend": "python",
+  "mpmath_version": "1.3.0",
+  "exact_rational_anchors_passed": true,
+  "convergence_rule": "abs(diff)<=1e-45*max(1,abs(100dps component))",
+  "closer_margin_rule": "squared error difference>1e-35*max(1,Cerr2,Terr2), same direction at both precisions",
+  "closer_counts": {
+    "C_CLOSER": 147,
+    "TORCH_CLOSER": 106,
+    "INDETERMINATE_AT_PREDECLARED_MARGIN": 4
+  },
+  "global_L2_squared_direction": "C_CLOSER",
+  "summary": {
+    "c": {
+      "L2_error": "0.0000364444113563723565144097363660290844699388402883969325634044194189652176585659091067642400602041480393446",
+      "max_complex_error": "0.0000155911304521683560321916680474323863514374248239139103165640898268702746735387726678884859891802447291917",
+      "max_re_abs": "0.0000142540243387574657398043539091087702526512897114596135072267141980233531078149605915299733657431199113961",
+      "max_im_abs": "0.0000140211811746640980884024506484963340164919143991160628291265797974899527772201210990887046986492981537773"
+    },
+    "torch": {
+      "L2_error": "0.0000412321912519765226359416266384224125907532815703406275291190237397410984992337022044217179839252053882019",
+      "max_complex_error": "0.000019243260696973963070291253331199885415983172470755246329166735668494302320132612417345983300981277009959",
+      "max_re_abs": "0.0000190324910468890578710964771175839584073666363252634641983294676454709338001174276046291336519534325503183",
+      "max_im_abs": "0.00000886700241908590191159754935150366598350808560088393717087342020251004722277987890091129530135070184622273"
+    }
+  },
+  "schema": "public-saved-window-direct-dft-summary-v1",
+  "date_utc": "2026-10-19",
+  "B_status": "EXPORTED_NOT_NUMERICALLY_VALIDATED",
+  "scope": "One direct-DFT diagnostic on the existing identical 512-point binary32 windowed input; no frontend rerun or power/mel/log analysis",
+  "input_identity": {
+    "length": 512,
+    "dtype": "little-endian IEEE754 binary32",
+    "windowed_sha256": "37ca87ce13ba1320993517d162833ff76d557b1550722cfd0bf49a798ab4479c",
+    "C_and_Torch_windowed_byte_equal": true,
+    "generated_anew": false
+  },
+  "source_identity": {
+    "mpmath_official_release": "https://pypi.org/project/mpmath/1.3.0/",
+    "mpmath_wheel_sha256": "a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c",
+    "mpmath_wheel_bytes": 536198,
+    "algorithm": "Explicit direct sum over n=0..511 for k=0..256, fixed roots at each precision, no FFT library",
+    "summation_order": "increasing sample index; independent recomputation at 60 and 100 decimal digits"
+  },
+  "validation": {
+    "standard_test_count": 32,
+    "standard_tests_passed": true,
+    "standard_test_signals": [
+      "zero",
+      "quarter-period unit impulse",
+      "constant one",
+      "alternating sign"
+    ],
+    "test_bins": [
+      0,
+      1,
+      128,
+      256
+    ],
+    "fixed_precisions_same_implementation": true,
+    "full_60_digit_DFT_array_retained": false,
+    "retained_60_digit_evidence": "Convergence differences, stable-direction decisions and aggregate summaries only; not a complete independently replayable 60-digit result array",
+    "rigorous_interval_or_correct_rounding_proof": false
+  },
+  "limits_and_observations": {
+    "attempts": 1,
+    "automatic_retries": 0,
+    "worker_commands": 1,
+    "total_wall_cap_seconds": 300,
+    "worker_wall_cap_seconds": 30,
+    "per_child_AS_hard_bytes": 1073741824,
+    "retained_output_cap_bytes": 8388608,
+    "total_wall_seconds": 1.073541218000173,
+    "worker_wall_seconds": 1.0313283809991844,
+    "sampled_process_group_RSS_peak_bytes": 17256448,
+    "RSS_is_sampled_not_hard_peak": true,
+    "hard_aggregate_CPU_claim": false,
+    "worker_result_bytes": 239538,
+    "paired_log_bytes": 481
+  },
+  "interpretation_limits": [
+    "The 60/100-digit references use the same mpmath direct-sum implementation; agreement is convergence evidence, not independent certification.",
+    "The complete 60-digit DFT array was not retained; saved evidence does not permit full separate recomputation of every convergence decision without a new numerical operation.",
+    "C is closer in aggregate complex L2 for this saved input under the preregistered margin; C is not closer in every bin.",
+    "No conclusion about downstream power/mel/log accuracy, end-to-end performance, model qualification or historical failure cause follows.",
+    "The previous new Torch endpoint did not match the historical Torch endpoint; historical attribution remains stopped.",
+    "No epsilon, numerical tolerance, historical gate or model status was changed."
+  ]
+}

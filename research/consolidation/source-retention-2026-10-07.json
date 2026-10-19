@@ -42217,6 +42217,56 @@
           }
         }
       ]
+    },
+    {
+      "id": "saved-window-direct-dft-summary-20261019",
+      "date": "2026-10-19",
+      "base_commit": "4c479ec8193d5ebb2a518258c381a1f906a3058d",
+      "base_tree": "96e62fdcb35d170c1a6fdd3545476fe8b17a82f6",
+      "workflow_source_changed": false,
+      "scope": "Retain two byte-exact anonymous saved-window direct-DFT summaries in a separate research directory and add navigation only.",
+      "rationale": "CONVERGED_HIGH_PRECISION_DIAGNOSTIC_ONLY: same mpmath implementation at 60/100 digits, no certified oracle and no full retained 60-digit array. Existing saved-input complex-DFT errors only; no downstream logfbank, model qualification or historical-root-cause conclusion. Preserve all prior evidence, gates and B EXPORTED_NOT_NUMERICALLY_VALIDATED. No diagnostic replay for publication; ordinary existing public CI only.",
+      "files": [
+        {
+          "path": "research/README.md",
+          "before": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 19946,
+            "sha256": "7fa0e1a853efded9df76f3c5b4a94e735aba92afd4eb8eed2d2a0b1a37953c14",
+            "git_blob_sha1": "16ea176278fd3781b11532eeddfabc03791121e8"
+          },
+          "after": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 20311,
+            "sha256": "18fa677f0dcc3419403bdb29c0ad1cbe5999e0baa935d36240c191348ae0075b",
+            "git_blob_sha1": "503663ee8abd0373abf0530bc800b6ec76abb2a5"
+          }
+        },
+        {
+          "path": "research/fsmn-saved-window-direct-dft-result-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-saved-window-direct-dft-result-v1/README.md",
+            "mode": "100644",
+            "bytes": 2876,
+            "sha256": "51df909ff0fa0c98d2e111ea4991eec561f04c0213755134b31845741a505d16",
+            "git_blob_sha1": "8cf7b0b3cc2b9de3ed87466cc1ef7d8a33fea32f"
+          }
+        },
+        {
+          "path": "research/fsmn-saved-window-direct-dft-result-v1/result.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-saved-window-direct-dft-result-v1/result.json",
+            "mode": "100644",
+            "bytes": 4907,
+            "sha256": "3061db0dc38cb6eb580f406c078da1ff52f01215840aa52d782740ed1b0d020f",
+            "git_blob_sha1": "1cc758365a5eca6cebe5d018dbfb07ee63f3016b"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
