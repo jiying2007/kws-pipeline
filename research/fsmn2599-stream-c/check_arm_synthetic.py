@@ -84,6 +84,20 @@ def check_elf(path):
     return {'sha256': sha(path), 'bytes': len(raw), 'elf_flags': hex(flags)}
 
 
+def check_emulator(path, pin):
+    raw = path.read_bytes()
+    if len(raw) != pin['binary_bytes'] or sha(path) != pin['binary_sha256']:
+        raise RuntimeError('emulator differs from pinned official static i386 binary')
+    if raw[:7] != b'\x7fELF\x01\x01\x01' or struct.unpack_from('<H', raw, 18)[0] != 3:
+        raise RuntimeError('emulator must be ELF32 i386, not an ELF64 personality switch')
+    offset = struct.unpack_from('<I', raw, 28)[0]
+    size, count = struct.unpack_from('<HH', raw, 42)
+    if size != 32 or not count or offset+size*count > len(raw):
+        raise RuntimeError('invalid emulator program headers')
+    if any(struct.unpack_from('<I', raw, offset+i*size)[0] == 3 for i in range(count)):
+        raise RuntimeError('emulator must be static (no PT_INTERP)')
+
+
 class Budget:
     def __init__(self, directory):
         self.directory = directory
@@ -113,16 +127,22 @@ class Budget:
         return output
 
 
-def execute(sysroot):
+def execute(sysroot, emulator_path=None):
     started = time.monotonic()
     if any(k in os.environ for k in ('LD_PRELOAD', 'LD_LIBRARY_PATH', 'LD_AUDIT')):
         raise RuntimeError('loader overrides forbidden')
     binding = guard.validate_sources(ROOT)
     tools = {}
-    for name in ('arm-linux-gnueabihf-gcc', 'arm-linux-gnueabihf-nm', 'arm-linux-gnueabihf-readelf', 'qemu-arm-static'):
+    for name in ('arm-linux-gnueabihf-gcc', 'arm-linux-gnueabihf-nm', 'arm-linux-gnueabihf-readelf'):
         tools[name] = shutil.which(name, path='/usr/bin:/bin')
         if not tools[name]:
             raise RuntimeError('required tool missing (no skip): ' + name)
+    if emulator_path is None:
+        raise RuntimeError('explicit pinned i386 emulator path is required')
+    pinned = json.loads((M / 'qemu-i386-tool.json').read_text())
+    emulator_path = Path(emulator_path).resolve()
+    check_emulator(emulator_path, pinned)
+    tools['qemu-arm-i386'] = str(emulator_path)
     sysroot = Path(sysroot).resolve()
     loader = sysroot / 'lib/ld-linux-armhf.so.3'
     if not loader.is_file():
@@ -144,9 +164,25 @@ def execute(sysroot):
         common = [cc, *guard.FLAGS, *ARM_FLAGS, '-I'+str(M), '-I'+str(decoder), '-I'+str(tmp / 'include')]
         sources = [str(M / n) for n in ('b_stream_adapter.c', 'canonical_pcm.c', 'canonical_fbank.c', 'fsmn2599.c', 'sha256.c', 'softmax2599.c')]
         sources.append(str(decoder / 'kws3.c'))
-        # Bound QEMU's reserved guest VA as well as host RLIMIT_AS.
-        emulator = [tools['qemu-arm-static'], '-R', '256M', '-cpu', 'max', '-L', str(sysroot)]
+        # True ELF32 host QEMU uses sparse guest mappings. Small -R reservations
+        # are invalid for ARM's high commpage; ELF64 default reserves 4 GiB.
+        # Keep the host RLIMIT_AS hard limit at 1 GiB; never rely on guest rlimits.
+        emulator = [tools['qemu-arm-i386'], '-cpu', 'max', '-L', str(sysroot)]
         modes, executions = {}, []
+        probe_source = tmp / 'startup.c'
+        probe_source.write_text('#include <stdio.h>\nint main(void){puts("ARM loader startup PASS");return 0;}\n')
+        probe = tmp / 'startup'
+        budget.run(common + [str(probe_source), '-o', str(probe)], 'compile')
+        budget.evidence['artifacts']['startup'] = check_elf(probe)
+        header = budget.run([tools['arm-linux-gnueabihf-readelf'], '-l', str(probe)], 'startup-headers')
+        if 'Requesting program interpreter:' not in header:
+            raise RuntimeError('startup probe must exercise dynamic ARM loader')
+        startup = {'mode': None, 'fixture': 'loader-startup', 'binary_sha256': sha(probe),
+                   'source_sha256': sha(probe_source), 'command_index': len(budget.commands)}
+        budget.evidence['executions'].append(startup)
+        if budget.run([*emulator, str(probe)], 'startup-execution') != 'ARM loader startup PASS\n':
+            raise RuntimeError('ARM dynamic loader startup probe failed')
+        executions.append(startup)
         for name, defines in MODES:
             folder = tmp / name
             folder.mkdir()
@@ -201,7 +237,8 @@ def execute(sysroot):
                 'sysroot': str(sysroot), 'loader_sha256': sha(loader),
                 'fp_flags': guard.FLAGS, 'arm_flags': ARM_FLAGS, 'modes': modes,
                 'commands': budget.commands, 'executions': executions, 'binary_executions': len(executions),
-                'compiler_invocations': 20, 'affine_cases_per_mode': 648,
+                'compiler_invocations': 21, 'synthetic_executions': 16,
+                'startup_probe': startup, 'emulator_pin': pinned, 'affine_cases_per_mode': 648,
                 'usage': {'wall_seconds': elapsed, 'child_cpu_seconds': budget.cpu, 'child_output_bytes': budget.output},
                 'limits': {'total_seconds': TOTAL_SECONDS, 'program_seconds': PROGRAM_SECONDS, 'as_bytes': AS_BYTES, 'output_bytes': OUTPUT_BYTES},
                 'model_loads': 0, 'model_forwards': 0, 'audio_reads': 0,
@@ -212,12 +249,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--execute', action='store_true')
     parser.add_argument('--emulator-sysroot', default='/usr/arm-linux-gnueabihf')
+    parser.add_argument('--emulator', help='independently extracted pinned i386 static qemu-arm')
     args = parser.parse_args()
     if not args.execute:
         parser.print_help()
         return
     try:
-        emit(execute(args.emulator_sysroot))
+        emit(execute(args.emulator_sysroot, args.emulator))
     except Exception as exc:
         print('ARM synthetic check failed: ' + str(exc)[:4096], file=sys.stderr)
         return 1

@@ -65,7 +65,7 @@ board and acoustic evidence. Do not relabel this check as full-chain ARM parity.
 ## ARM/QEMU public synthetic correctness regression
 
 `python3 -S -B research/fsmn2599-stream-c/check_arm_synthetic.py --execute
---emulator-sysroot /usr/arm-linux-gnueabihf` is a separate opt-in entry.
+--emulator-sysroot /usr/arm-linux-gnueabihf --emulator /path/to/pinned/qemu-arm` is a separate opt-in entry.
 Ordinary ARM CI keeps the existing four-mode C/C++ compile/link gate and then
 runs this synthetic entry. Missing cross tools, QEMU or loader are errors.
 
@@ -80,8 +80,7 @@ branch is tested in default/profile; block2 in block2/both.
 
 `KWS_FIXTURE_CORRECTNESS_ONLY` disables only affine fixture warmup/timing loops;
 the old host entry retains its timing behavior. QEMU uses its ARMv8-capable `max` AArch32
-emulated CPU for Cortex-A32/NEON-VFPv4 hard-float binaries, with a bounded 256 MiB
-guest address reservation. This is ISA correctness evidence, never SSC305
+emulated CPU for Cortex-A32/NEON-VFPv4 hard-float binaries, using the pinned Debian static i386 host build and sparse guest mappings. This is ISA correctness evidence, never SSC305
 hardware timing, full-model execution or acoustic qualification.
 
 The runner permits 300 seconds total wall/child CPU, 30 seconds per command,
@@ -89,7 +88,19 @@ The runner permits 300 seconds total wall/child CPU, 30 seconds per command,
 evidence. The existing guard also caps temporary files at 16 MiB and kills the
 whole process group on failure. No failed numerical run is retried. JSON records
 tool versions, source/tool/ELF hashes, complete commands and the 16 actual
-synthetic executions; in-flight failures retain attempted commands and available
+synthetic executions plus one dynamic-loader startup probe; in-flight failures retain attempted commands and available
 artifact hashes, return nonzero, and clean temporary files. CI logs retain the
 report. No learned model payload or private audio is loaded, and the strict
 historical 1e-5 FAIL and all model-promotion boundaries remain unchanged.
+
+The stock Ubuntu ELF64 QEMU 8.2.2 failed before the first fixture with a
+`page_set_flags` assertion: ARM needs the high commpage at 0xffff0f00, whereas
+a small `-R` clips the guest address range. Default reservation is 4 GiB and
+conflicts with the required host AS limit. Do not retry that configuration.
+The separate i386 tool is package/binary SHA-pinned in `qemu-i386-tool.json`,
+verified against Debian's signed release/index chain at integration time, and
+extracted without system installation or replacement. The runner requires true
+ELF32/EM_386/static geometry, no `-R`, and the same 1 GiB host hard limit. An
+explicit dynamic ARM startup probe must pass once before any numerical cases;
+unsupported IA32 host kernels fail closed. Guest setrlimit is not relied upon.
+The existing compile/link and decoder gates retain their original system QEMU.

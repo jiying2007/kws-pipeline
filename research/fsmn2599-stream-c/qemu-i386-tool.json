@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "package_url": "https://deb.debian.org/debian/pool/main/q/qemu/qemu-user_10.0.13+ds-0+deb13u1_i386.deb",
+  "package_sha256": "ac72cb41df4f296756b227dbf31158f4acd30993b348431f6e96fbf72630cc1c",
+  "package_bytes": 36367304,
+  "binary_sha256": "eb7ed15c021675f9c56bbb447a503a325806b552d25f5f672958704bcd09836e",
+  "binary_bytes": 12544120,
+  "version": "1:10.0.13+ds-0+deb13u1",
+  "architecture": "i386",
+  "provenance": {
+    "inrelease_sha256": "0584fba32e13e0ab8285fb16c27adea1ec03a73669c18702821094fd6ca86675",
+    "packages_xz_sha256": "1e864b05cc1acc937760ddcdfd8cf724347d71b9b99e9ffbca4768b392634f34",
+    "verified_trixie_signing_key": "04B54C3CDCA79751B16BC6B5225629DF75B188BD",
+    "verification": "gpg verifies official InRelease with installed Debian archive keyring; InRelease SHA256 binds Packages.xz, which binds package SHA256. No package install, only static qemu-arm extraction."
+  }
+}

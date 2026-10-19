@@ -34,6 +34,21 @@ class DriverTests(unittest.TestCase):
             for offset,value in ((4,2),(5,2),(18,62),(37,2)):
                 changed = raw.copy(); changed[offset] = value; p.write_bytes(changed)
                 with self.assertRaises(RuntimeError): arm.check_elf(p)
+            host = raw + bytearray(32)
+            struct.pack_into('<H', host, 18, 3)
+            struct.pack_into('<I', host, 28, 52)
+            struct.pack_into('<HH', host, 42, 32, 1)
+            struct.pack_into('<I', host, 52, 1)
+            p.write_bytes(host)
+            pin = {'binary_bytes': len(host), 'binary_sha256': arm.sha(p)}
+            arm.check_emulator(p, pin)
+            struct.pack_into('<I', host, 52, 3)  # Dynamic host loader forbidden.
+            p.write_bytes(host)
+            with self.assertRaisesRegex(RuntimeError, 'pinned'): arm.check_emulator(p, pin)
+            pin['binary_sha256'] = arm.sha(p)
+            with self.assertRaisesRegex(RuntimeError, 'static'): arm.check_emulator(p, pin)
+            host[4] = 2; p.write_bytes(host); pin['binary_sha256'] = arm.sha(p)
+            with self.assertRaisesRegex(RuntimeError, 'ELF32'): arm.check_emulator(p, pin)
 
     def test_shared_budget_and_command_evidence(self):
         with patch.object(arm.guard, 'run_bounded', return_value=('ok', 2.0)) as run:

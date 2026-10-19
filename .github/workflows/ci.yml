@@ -1005,11 +1005,22 @@ jobs:
           --emulator-sysroot "$KWS_ARM_SYSROOT"
       - name: Full B research ARM C and C++ compile/link (no execution)
         run: python3 -S -B tests/run_research_fsmn_stream_arm_build.py --execute
+      - name: Extract pinned static i386 QEMU without replacing system tools
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          mapfile -t pin < <(python3 -c 'import json; p=json.load(open("research/fsmn2599-stream-c/qemu-i386-tool.json")); print(p["package_url"]); print(p["package_sha256"])')
+          tool_dir="$RUNNER_TEMP/kws-qemu-i386"
+          mkdir -p "$tool_dir"
+          curl --fail --location --max-time 90 --max-filesize 36367304 "${pin[0]}" -o "$tool_dir/qemu.deb"
+          echo "${pin[1]}  $tool_dir/qemu.deb" | sha256sum --check --strict
+          dpkg-deb --fsys-tarfile "$tool_dir/qemu.deb" | tar -x -C "$tool_dir" ./usr/bin/qemu-arm
+          echo "KWS_SYNTHETIC_QEMU=$tool_dir/usr/bin/qemu-arm" >> "$GITHUB_ENV"
       - name: Public synthetic ARM QEMU four-mode correctness only
         timeout-minutes: 6
         run: >-
           python3 -S -B research/fsmn2599-stream-c/check_arm_synthetic.py
-          --execute --emulator-sysroot "$KWS_ARM_SYSROOT"
+          --execute --emulator-sysroot "$KWS_ARM_SYSROOT" --emulator "$KWS_SYNTHETIC_QEMU"
       - name: Configure hosted reference build
         run: >-
           cmake -S . -B build-ref
