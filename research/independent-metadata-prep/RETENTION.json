@@ -1,0 +1,44 @@
+{
+  "schema": "public-metadata-preparation-retention-v1",
+  "repository": "jiying2007/kws-pipeline",
+  "base_commit": "4de34e8f29ed90e02cc11335895459ecb2e4e198",
+  "scope": "public generic code, synthetic tests and producer-reported frozen anonymous history only",
+  "input_route": "four public plaintext files with individually verified SHA-256; Library ZIP not consumed",
+  "private_inputs_read_this_consumer": false,
+  "current_revision_real_input_runs": 0,
+  "historical_summary_basis": "producer handoff; not independently re-executed by this consumer",
+  "files": [
+    {
+      "path": "research/independent-metadata-prep/metadata.py",
+      "bytes": 10723,
+      "sha256": "4344d55e75070b23cd495a66e530d83204543f145133ae838348cdc3df4aefc9"
+    },
+    {
+      "path": "research/independent-metadata-prep/test_metadata.py",
+      "bytes": 7461,
+      "sha256": "37aa3cf68fc86bb7ede018a1f9a019978bc7e254cad4bc900b9e60b7fdc34337"
+    },
+    {
+      "path": "research/independent-metadata-prep/README.md",
+      "bytes": 7260,
+      "sha256": "34e3d7aef68ff1ec20a53a2ae0a2205bd60d17e6b10af5cc4e071dd6843559fb"
+    },
+    {
+      "path": "research/independent-metadata-prep/ANONYMOUS-SUMMARY.json",
+      "bytes": 705,
+      "sha256": "762c277b68049ec7b2ccc00d6aa8445417a1d0f6c4ad3e7e25f6c6c8f06c2c24"
+    }
+  ],
+  "consumer_validation": {
+    "synthetic_tests_per_mode": 13,
+    "modes": [
+      "normal",
+      "-O",
+      "-OO"
+    ],
+    "all_passed": true,
+    "test_command": "python3 [-O|-OO] -m unittest discover -s research/independent-metadata-prep -p test_metadata.py -v",
+    "execution_scope": "public synthetic fixtures only; no audio, ASR, model, or real input replay"
+  },
+  "qualification": "none; accepted negative seconds and new independent hours remain zero"
+}
