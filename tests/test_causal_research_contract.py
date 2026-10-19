@@ -11,6 +11,8 @@ CASES = (
     ('research/fsmn2599-three-window-c/kws-unified-comparison-preparation-20261017', 'test_threshold_adapter.py', 6),
     ('research/causal-event-head', 'test_event_head_synthetic.py', 6),
     ('research/causal-mdtc', 'test_static.py', 8),
+    ('research/evaluation_integrity', 'test_bound_metrics.py', 16),
+    ('research/bounded-lifecycle-v2', 'test_controller.py', 17),
 )
 
 def main():
