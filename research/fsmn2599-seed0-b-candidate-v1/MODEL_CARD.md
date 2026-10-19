@@ -95,6 +95,19 @@ orders into a larger independent sample size.
   substitute for any required gate or attest that a 2599-class model matches the
   current five-token shipping ABI/keyword contract.
 
+### 2026-10-19 B-specific numerical update
+
+The earlier deployment paragraph describes the 2026-10-18 evidence boundary.
+The same exact B checkpoint/payload now has a
+[completed strict network-only comparison](../fsmn2599-stream-c/B76-NUMERICAL-RESULT-2026-10-19.md)
+on one reused saved 76-frame context and the recorded current CPU environment.
+It is **STRICT_NUMERICAL_MISMATCH**: default C has 209 logit and 3,983 cache
+failures. A single first-layer FP64 arm has zero logit failures but 6,342 cache
+failures, and is stopped without promotion. This result supersedes only the
+earlier absence of a completed B-specific test; it changes neither the old-head
+or frontend identities nor the open acoustic, FAR, device and shipping gates.
+No model weights, production-default change or threshold change is published.
+
 ## Rights and intended use
 
 The current work is noncommercial research. The repository already uses
