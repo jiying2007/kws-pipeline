@@ -1,3 +1,6 @@
+#ifdef KWS_B_PROFILE
+#include "b_profile.h"
+#endif
 /* SPDX-License-Identifier: Apache-2.0
  * Derived from source-pinned WeKws stream_kws_ctc.py, Copyright (c) 2023
  * Jing Du (thuduj12@163.com), with the reviewed wrapper/three-site patches.
@@ -428,8 +431,14 @@ static kws3_status advance(kws3_decoder *d, kws3_event out[3], size_t *emitted) 
     s->window_count=keep;
     return KWS3_OK;
 }
+#ifdef KWS_B_PROFILE
+static kws3_status kws3_step_profile_impl(kws3_decoder *d, const double *p, size_t classes,
+                     kws3_event *events, size_t cap, size_t *count)
+#else
 kws3_status kws3_step(kws3_decoder *d, const double *p, size_t classes,
-                     kws3_event *events, size_t cap, size_t *count) {
+                     kws3_event *events, size_t cap, size_t *count)
+#endif
+{
     kws3_status rc;
     kws3_event output[3];
     size_t n=0;
@@ -598,5 +607,15 @@ kws3_status kws3_test_merge(kws3_decoder *d,const kws3_event *input,size_t n,
     if (rc!=KWS3_OK) return fail(d,rc);
     d->committed=d->trial; memcpy(out,events,emitted*sizeof(*out));
     *count=emitted; return KWS3_OK;
+}
+#endif
+
+#ifdef KWS_B_PROFILE
+kws3_status kws3_step(kws3_decoder *d, const double *p, size_t classes,
+                     kws3_event *events, size_t cap, size_t *count) {
+ b_profile_stamp stamp=b_profile_begin();
+ kws3_status rc=kws3_step_profile_impl(d,p,classes,events,cap,count);
+ b_profile_end(B_PROFILE_DECODER,stamp,rc==KWS3_OK);
+ return rc;
 }
 #endif

@@ -2,6 +2,26 @@
   "schema": 1,
   "files": [
     {
+      "path": "research/donor_fbank/fft_twiddles.h",
+      "bytes": 12495,
+      "sha256": "fb628e5c3672a39dbd33bde612d48731f5abde72cbe401c4bc8273033ff01d0f"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/affine_reference.inc",
+      "bytes": 360,
+      "sha256": "682108dea86bb5e508cdaa5b156450578b35651fe9c4ab0dcc8ef533d687b6b1"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/b_profile.c",
+      "bytes": 2425,
+      "sha256": "42f82bbbd96b38619c56d246fd891a5342ccd135461311811f2939dfff3c4195"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/b_profile.h",
+      "bytes": 1491,
+      "sha256": "80a560c40100fbe3b88946a554866e61864111c72d9533fb07ce6dd0f72fd49c"
+    },
+    {
       "path": "research/fsmn2599-stream-c/b_stream_adapter.c",
       "bytes": 10945,
       "sha256": "475ae35ff44bb6049cc6be734e789af6b0081944c3460b74cede4ce366497dac"
@@ -12,9 +32,19 @@
       "sha256": "08772441536f582ae855efe9911dc467f912d8a02f45f89cbcb640d16e41932e"
     },
     {
+      "path": "research/fsmn2599-stream-c/bsa_capture.h",
+      "bytes": 3031,
+      "sha256": "c7b6b8117d3fdb79de4f8eb6223b74e76e62ce091be14bc0a77704fafcaa8670"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/build.py",
+      "bytes": 13806,
+      "sha256": "c6e929921b9b12e8f69af7843742b0b28f84884255fdd105cae976dd44965bea"
+    },
+    {
       "path": "research/fsmn2599-stream-c/canonical_fbank.c",
-      "bytes": 4558,
-      "sha256": "e8823f7b7790a5712c80c790baa4b7726f8ec635241fa68d18a26abe4849540b"
+      "bytes": 5034,
+      "sha256": "7e84597f4bf55880301a26134a030b090aad4b4e42ca2f43e5ed7970fc954bc9"
     },
     {
       "path": "research/fsmn2599-stream-c/canonical_fbank.h",
@@ -37,9 +67,19 @@
       "sha256": "6f0ab0eb88d2bfa32a5a6b169c790dd6daa13a0d87914c2b795e96f58597313a"
     },
     {
+      "path": "research/fsmn2599-stream-c/check_profile.py",
+      "bytes": 4882,
+      "sha256": "de14fd765555c7f05b5ce46c0e18a7040ba5a3b92e2b916d8dc4fdaa6e60345d"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/example_pcm.c",
+      "bytes": 3690,
+      "sha256": "40e09f1c4fbb84162a9dee7c51392e812b5be6a8a62e808a281cb9a5b2bb0e6d"
+    },
+    {
       "path": "research/fsmn2599-stream-c/fsmn2599.c",
-      "bytes": 8535,
-      "sha256": "4df119142637924a40556fdeaffc1a5a135ac3028d56a7d82a42f63be9477660"
+      "bytes": 10274,
+      "sha256": "12b237eb78fdccb16658e66f096c32cac60814131e2afcd457af648d3c6c1dd7"
     },
     {
       "path": "research/fsmn2599-stream-c/fsmn2599.h",
@@ -58,8 +98,8 @@
     },
     {
       "path": "research/fsmn2599-stream-c/softmax2599.c",
-      "bytes": 2623,
-      "sha256": "32e7733b1b84f5ebe52c221d8116fe1bec13ec532c5377d1e283102839dd94e3"
+      "bytes": 3161,
+      "sha256": "d2cb8ee4891809445bbd3b04912196d847d8f943066b3dd64479b861a863b6e4"
     },
     {
       "path": "research/fsmn2599-stream-c/softmax2599.h",
@@ -67,34 +107,14 @@
       "sha256": "bad79ed1fcf07567e024fb5c0da079bf0834202bf0d3f29d0e8d428c5be6b700"
     },
     {
+      "path": "research/fsmn2599-stream-c/test_affine_block2.c",
+      "bytes": 2887,
+      "sha256": "9143edb206f0e6a85b9967575d9c7f77413b0fa058aa9b0113eba6cd308bd00e"
+    },
+    {
       "path": "research/fsmn2599-stream-c/test_b_stream_adapter.c",
       "bytes": 18368,
       "sha256": "22a1faf6c2ab8fa2c6b6afc3468c16f0420a3ec908b42e8714167b8df6a0e0a6"
-    },
-    {
-      "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
-      "bytes": 26243,
-      "sha256": "dd971cfcb57cf4a823415ca508a7389b15c9e1728379f11bb6969f1fd31f3bbf"
-    },
-    {
-      "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.h",
-      "bytes": 4957,
-      "sha256": "318c43814fa0b096fa87e72d5ae0844dffb84874fd95f0bcae8a0624ddcdd696"
-    },
-    {
-      "path": "research/donor_fbank/fft_twiddles.h",
-      "bytes": 12495,
-      "sha256": "fb628e5c3672a39dbd33bde612d48731f5abde72cbe401c4bc8273033ff01d0f"
-    },
-    {
-      "path": "research/fsmn2599-stream-c/example_pcm.c",
-      "bytes": 3690,
-      "sha256": "40e09f1c4fbb84162a9dee7c51392e812b5be6a8a62e808a281cb9a5b2bb0e6d"
-    },
-    {
-      "path": "research/fsmn2599-stream-c/bsa_capture.h",
-      "bytes": 3031,
-      "sha256": "c7b6b8117d3fdb79de4f8eb6223b74e76e62ce091be14bc0a77704fafcaa8670"
     },
     {
       "path": "research/fsmn2599-stream-c/test_capture_contract.c",
@@ -103,11 +123,36 @@
     },
     {
       "path": "research/fsmn2599-stream-c/test_cpp_link.cpp",
-      "bytes": 293,
-      "sha256": "ab5d7a17bdb4527ef068577607195fde033cb9f155143c19a087ab50788a49f5"
+      "bytes": 436,
+      "sha256": "a52de4acd5128c9b77c1be884c9348f5ec47707f1803da455271f69baf1314c7"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/test_profile_contract.c",
+      "bytes": 1443,
+      "sha256": "0b0500f0ac3ed627f55c57f8c969851d95dd046eff9bfa9fc5509cfe7f2aa500"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/test_profile_unit.c",
+      "bytes": 1792,
+      "sha256": "63d16d6fcf3cbcd67eadd0bc22ec01a68ea5350d77aeeed51322eebb75f40579"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/test_timer_overhead.c",
+      "bytes": 621,
+      "sha256": "1447337ebf5b53139504b108104ba8d491cb1175017dec283e0ee9992f6ee111"
+    },
+    {
+      "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
+      "bytes": 26838,
+      "sha256": "e6d57e167fe85f150517eeb7b54f38eb9ce46a54922bff8897eaa8f7bedca41f"
+    },
+    {
+      "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.h",
+      "bytes": 4957,
+      "sha256": "318c43814fa0b096fa87e72d5ae0844dffb84874fd95f0bcae8a0624ddcdd696"
     }
   ],
   "qualification_allowed": false,
-  "dependency_repo_commit": "6cb57da2a73fe5859e4e139769598ffc28a42cf5",
-  "note": "Candidate capture-contract and C++ hardening, based on a38d0262; no acoustic arithmetic or model changes."
+  "dependency_repo_commit": "0f01c477ec4e8679e7a03f088fa131cd791aaf83",
+  "note": "Opt-in profile and order-preserving affine block2; default remains off; public mock/toy only."
 }

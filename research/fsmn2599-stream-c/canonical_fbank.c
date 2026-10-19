@@ -1,3 +1,6 @@
+#ifdef KWS_B_PROFILE
+#include "b_profile.h"
+#endif
 /* Research candidate, NOT numerically validated. FFT adapted from the isolated
  * donor_fbank.c radix2 skeleton, Apache-2.0. Algorithm semantics audited against
  * pinned Torchaudio compliance/kaldi.py, BSD-2-Clause. See NOTICE.md. */
@@ -54,7 +57,12 @@ int kcf_fbank_init(kcf_fbank *s, const kcf_tables *t) {
     s->tables=t; s->magic=KCF_BANK_MAGIC;
     return KCF_FBANK_OK;
 }
-int kcf_fbank_frame(kcf_fbank *s, const int16_t pcm[400], float out[80], kcf_trace *t) {
+#ifdef KWS_B_PROFILE
+static int kcf_fbank_frame_profile_impl(kcf_fbank *s, const int16_t pcm[400], float out[80], kcf_trace *t)
+#else
+int kcf_fbank_frame(kcf_fbank *s, const int16_t pcm[400], float out[80], kcf_trace *t)
+#endif
+{
     int32_t sum=0;
     float row[80];
     if (!s || !pcm || !out) return KCF_FBANK_ARGUMENT;
@@ -100,3 +108,12 @@ int kcf_fbank_frame(kcf_fbank *s, const int16_t pcm[400], float out[80], kcf_tra
 int kcf_fbank_callback(void *s, const int16_t pcm[400], float row[80]) {
     return kcf_fbank_frame((kcf_fbank *)s,pcm,row,NULL);
 }
+
+#ifdef KWS_B_PROFILE
+int kcf_fbank_frame(kcf_fbank *s, const int16_t pcm[400], float out[80], kcf_trace *t) {
+ b_profile_stamp stamp=b_profile_begin();
+ int rc=kcf_fbank_frame_profile_impl(s,pcm,out,t);
+ b_profile_end(B_PROFILE_FRONTEND,stamp,rc==KCF_FBANK_OK);
+ return rc;
+}
+#endif

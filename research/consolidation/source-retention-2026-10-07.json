@@ -41613,6 +41613,291 @@
           }
         }
       ]
+    },
+    {
+      "id": "default-off-profile-block2-runtime-integration-20261019",
+      "date": "2026-10-19",
+      "base_commit": "4f2e408f8676b137c18da2c054937c4499dfda92",
+      "base_tree": "f3b1a8985401aaec6b39027cc8f4860f2c39188f",
+      "workflow_source_changed": false,
+      "scope": "Integrate twenty reviewed public files for default-off operator profiling and two-row affine research options, synthetic host/ARM compile checks and retained anonymous host observations through existing test entry points.",
+      "rationale": "Both optional features remain disabled by default. Public source integration does not rerun private inference, training or audio. Preserve complete 2599-class softmax and strict floating-point settings; historical C/Torch strict numerical FAIL and physical-device qualification boundaries remain. Host compiler observations and opt-in checks do not imply ARM numerical parity, device speedup or model promotion. Existing workflow bytes and all prior evidence/retention history are preserved.",
+      "files": [
+        {
+          "path": "research/fsmn2599-stream-c/OPT-IN-PROFILE-BLOCK2.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/OPT-IN-PROFILE-BLOCK2.md",
+            "mode": "100644",
+            "bytes": 5686,
+            "sha256": "a8ecabfaa2210ea2241d3064ad237f4935d5d9add7fdfc6403c6f6706c86c266",
+            "git_blob_sha1": "26c8a5b36a4b223fd13d03164ad61123d835d1c6"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/PORTABLE-NUMERIC-CONTRACT.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/PORTABLE-NUMERIC-CONTRACT.md",
+            "mode": "100644",
+            "bytes": 4145,
+            "sha256": "adbe3d6051d9d79d0a7b5f1437cb77496d6ad7b507a7385b053a0f8c2f5f5e18",
+            "git_blob_sha1": "d730be8c6b4ae27ae158c370222d692911c9fb76"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/affine_reference.inc",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/affine_reference.inc",
+            "mode": "100644",
+            "bytes": 360,
+            "sha256": "682108dea86bb5e508cdaa5b156450578b35651fe9c4ab0dcc8ef533d687b6b1",
+            "git_blob_sha1": "b04acccbbe9ac58ea37574cdc0465ca0d75e70a9"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/b_profile.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/b_profile.c",
+            "mode": "100644",
+            "bytes": 2425,
+            "sha256": "42f82bbbd96b38619c56d246fd891a5342ccd135461311811f2939dfff3c4195",
+            "git_blob_sha1": "cb1f72bf048b99decb369360e5219c284e7e3284"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/b_profile.h",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/b_profile.h",
+            "mode": "100644",
+            "bytes": 1491,
+            "sha256": "80a560c40100fbe3b88946a554866e61864111c72d9533fb07ce6dd0f72fd49c",
+            "git_blob_sha1": "903f3ee38b909495213fe5f9ef3017d6b13e0fb6"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/build.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/build.py",
+            "mode": "100644",
+            "bytes": 13609,
+            "sha256": "dd990514c9c3d84f7e32889a133ac8b0248f0665fc642323c3a172a99184686f",
+            "git_blob_sha1": "5419b88add4173cee48a45a9c76de10bc10963ae"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/build.py",
+            "mode": "100644",
+            "bytes": 13806,
+            "sha256": "c6e929921b9b12e8f69af7843742b0b28f84884255fdd105cae976dd44965bea",
+            "git_blob_sha1": "8557362744ca2f8d3f29a69828b39d9cc90002e1"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/canonical_fbank.c",
+          "before": {
+            "path": "research/fsmn2599-stream-c/canonical_fbank.c",
+            "mode": "100644",
+            "bytes": 4558,
+            "sha256": "e8823f7b7790a5712c80c790baa4b7726f8ec635241fa68d18a26abe4849540b",
+            "git_blob_sha1": "4c81d27b6168b5368404a20e2b9330e22b77246f"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/canonical_fbank.c",
+            "mode": "100644",
+            "bytes": 5034,
+            "sha256": "7e84597f4bf55880301a26134a030b090aad4b4e42ca2f43e5ed7970fc954bc9",
+            "git_blob_sha1": "ed857c2c79ee759a708c46ff900407b81b7ca26e"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/check_profile.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/check_profile.py",
+            "mode": "100644",
+            "bytes": 4882,
+            "sha256": "de14fd765555c7f05b5ce46c0e18a7040ba5a3b92e2b916d8dc4fdaa6e60345d",
+            "git_blob_sha1": "f9c5b6f43233a091a5ea3063d197c9b022e79187"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/fsmn2599.c",
+          "before": {
+            "path": "research/fsmn2599-stream-c/fsmn2599.c",
+            "mode": "100644",
+            "bytes": 8535,
+            "sha256": "4df119142637924a40556fdeaffc1a5a135ac3028d56a7d82a42f63be9477660",
+            "git_blob_sha1": "89dc525715920f21dcb6a07e92efefdae5152b3d"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/fsmn2599.c",
+            "mode": "100644",
+            "bytes": 10274,
+            "sha256": "12b237eb78fdccb16658e66f096c32cac60814131e2afcd457af648d3c6c1dd7",
+            "git_blob_sha1": "08288ae8080a641f8ff29d46568acbd72221075f"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/host-optin-results-20261019.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/host-optin-results-20261019.json",
+            "mode": "100644",
+            "bytes": 10808,
+            "sha256": "3f58f7253f533c713b81cbec5b8992f66637c5babcebf20071219d998f71cfa5",
+            "git_blob_sha1": "53f502efe600ed32e74276194bc1a047e4b258a8"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/softmax2599.c",
+          "before": {
+            "path": "research/fsmn2599-stream-c/softmax2599.c",
+            "mode": "100644",
+            "bytes": 2623,
+            "sha256": "32e7733b1b84f5ebe52c221d8116fe1bec13ec532c5377d1e283102839dd94e3",
+            "git_blob_sha1": "6e388dc0ffb8f6e3cccfc47697e7c2eaa6c46089"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/softmax2599.c",
+            "mode": "100644",
+            "bytes": 3161,
+            "sha256": "d2cb8ee4891809445bbd3b04912196d847d8f943066b3dd64479b861a863b6e4",
+            "git_blob_sha1": "38d2cfce3ce3c64dd72966f2e6211b052ca4f111"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/source-binding.json",
+          "before": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 4065,
+            "sha256": "dd267d6f8b72dfa166f18541343f56c13f4252152ea2882f8aa961cd157727f7",
+            "git_blob_sha1": "7347662a27ddc9ae0905f5757d32147b6f4b0d68"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 5660,
+            "sha256": "a95e2b9df640c69d6adba7a5e57517c5a4fae252ed8b5c351677fca82f2adfbd",
+            "git_blob_sha1": "171e04851460a1b28f9450de0fe91b960ed0340a"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_affine_block2.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_affine_block2.c",
+            "mode": "100644",
+            "bytes": 2887,
+            "sha256": "9143edb206f0e6a85b9967575d9c7f77413b0fa058aa9b0113eba6cd308bd00e",
+            "git_blob_sha1": "8be0aa40e83bbff713cd878ec523703f69f1bbaa"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_cpp_link.cpp",
+          "before": {
+            "path": "research/fsmn2599-stream-c/test_cpp_link.cpp",
+            "mode": "100644",
+            "bytes": 293,
+            "sha256": "ab5d7a17bdb4527ef068577607195fde033cb9f155143c19a087ab50788a49f5",
+            "git_blob_sha1": "bb1e38d1ccc51c0b6c1e5103427bbccac5eac764"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_cpp_link.cpp",
+            "mode": "100644",
+            "bytes": 436,
+            "sha256": "a52de4acd5128c9b77c1be884c9348f5ec47707f1803da455271f69baf1314c7",
+            "git_blob_sha1": "0c0c92e48ad54bd6260a48e30c005c9776dff6d0"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_profile_contract.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_profile_contract.c",
+            "mode": "100644",
+            "bytes": 1443,
+            "sha256": "0b0500f0ac3ed627f55c57f8c969851d95dd046eff9bfa9fc5509cfe7f2aa500",
+            "git_blob_sha1": "70dae1927375cb7246bbc2c8276a928510244263"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_profile_unit.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_profile_unit.c",
+            "mode": "100644",
+            "bytes": 1792,
+            "sha256": "63d16d6fcf3cbcd67eadd0bc22ec01a68ea5350d77aeeed51322eebb75f40579",
+            "git_blob_sha1": "a50208de2409f138f956481a64850fdd8d1e2b48"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_timer_overhead.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_timer_overhead.c",
+            "mode": "100644",
+            "bytes": 621,
+            "sha256": "1447337ebf5b53139504b108104ba8d491cb1175017dec283e0ee9992f6ee111",
+            "git_blob_sha1": "504b3194b03f9bd396f6373027e5345d3cbaa41a"
+          }
+        },
+        {
+          "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
+          "before": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
+            "mode": "100644",
+            "bytes": 26243,
+            "sha256": "dd971cfcb57cf4a823415ca508a7389b15c9e1728379f11bb6969f1fd31f3bbf",
+            "git_blob_sha1": "6fa0ff3d4e2c0b865d0c9a7d41bd4a73237b1141"
+          },
+          "after": {
+            "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
+            "mode": "100644",
+            "bytes": 26838,
+            "sha256": "e6d57e167fe85f150517eeb7b54f38eb9ce46a54922bff8897eaa8f7bedca41f",
+            "git_blob_sha1": "26adf5b8e987fbf501cce0c591d01e90741e1235"
+          }
+        },
+        {
+          "path": "tests/run_research_fsmn_stream_arm_build.py",
+          "before": {
+            "path": "tests/run_research_fsmn_stream_arm_build.py",
+            "mode": "100644",
+            "bytes": 3503,
+            "sha256": "ef61e551eba2571b3320ab06ca212d829402618428b6368aae0cd9450eac4339",
+            "git_blob_sha1": "2c44cc2af64a63b360e1377e51e6824814a002e4"
+          },
+          "after": {
+            "path": "tests/run_research_fsmn_stream_arm_build.py",
+            "mode": "100644",
+            "bytes": 4148,
+            "sha256": "4c37e52cfc0fe21a0493a3e1c1d7bbb94de51177279a438740519bc6fcb25401",
+            "git_blob_sha1": "0e75bebdcd83efbecd32eeef5d20fc7067ffc283"
+          }
+        },
+        {
+          "path": "tests/test_research_fsmn_stream.py",
+          "before": {
+            "path": "tests/test_research_fsmn_stream.py",
+            "mode": "100644",
+            "bytes": 2230,
+            "sha256": "ef13c505923dc1ddad90def71c4c8095b1511f8d78ed8b47363f1832182b98b8",
+            "git_blob_sha1": "b22c26378a229a8351590f7eecc0163a93815461"
+          },
+          "after": {
+            "path": "tests/test_research_fsmn_stream.py",
+            "mode": "100644",
+            "bytes": 3104,
+            "sha256": "64b096164e69462e00a1c77b05f0564cde9510a8b814ec75388b83ff6b9057d3",
+            "git_blob_sha1": "ec8cfab2a8f933aeebf8276f0a42f772f71ce4cd"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
