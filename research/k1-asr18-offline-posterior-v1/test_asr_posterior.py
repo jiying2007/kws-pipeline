@@ -618,7 +618,7 @@ print(json.dumps({'status':'synthetic guarded acceptance passed', **observed,
         self.assertEqual(a.sha((a.HERE / 'validator-dependencies.json').read_bytes()),
                          '62a09d83e05572d81afdfecca72e940fde1b17f5300300cc7bb2a008068969c1')
         archived = a.HISTORICAL_NONEXECUTED_DEPENDENCIES
-        self.assertEqual(len(archived), 14)
+        self.assertEqual(len(archived), 15)
         # Direct and transitive imported validators always remain live-byte bound.
         validator_names = ('evidence_transport.py', 'evidence_publisher.py', 'campaign_contract.py',
             'transfer_recovery.py', 'failure_observer.py', 'prepare_freeze.py',

@@ -42571,6 +42571,79 @@
           }
         }
       ]
+    },
+    {
+      "id": "web-preset12-ci-inventory-dependency-20261019",
+      "date": "2026-10-19",
+      "base_commit": "b59845818ed727c25f00042cb20160a298669299",
+      "base_tree": "ff80962f564d0af78ee493188c932d023044c895",
+      "workflow_source_changed": false,
+      "scope": "Include the new boundary test in the exact CI inventory; preserve the previous CI-structure test bytes for the frozen offline posterior dependency manifest.",
+      "rationale": "Only the provenance-only nonexecuted test source is archived using the existing exact-path mechanism. The immutable validator manifest, imported live validators, production admission and inference authority remain unchanged.",
+      "files": [
+        {
+          "path": "research/consolidation/source_tests/test_ci_structure.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 64334,
+            "sha256": "c87de80c2ffe1f25e90a218ea5c2ebfe2d69a0d11a6c22de954ff019f6b4fbc7",
+            "git_blob_sha1": "9e632058df60ebaf7da777ed3a0f5da230df95ca"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 64365,
+            "sha256": "355573568f101b4c032d2c68bde673a8e12ef894fc709e573109b43161675704",
+            "git_blob_sha1": "8b6d13106e5b14da2c36caf87d3e888e31e816c5"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/consolidation/source_tests/test_ci_structure.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 64334,
+            "sha256": "c87de80c2ffe1f25e90a218ea5c2ebfe2d69a0d11a6c22de954ff019f6b4fbc7",
+            "git_blob_sha1": "9e632058df60ebaf7da777ed3a0f5da230df95ca"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 42510,
+            "sha256": "d1918e432688c326cd85b9115bc63772e8217427d649b6e2d91515de429f2239",
+            "git_blob_sha1": "f3f0982c12f941b2f7ce9bdd1d851ed4eb7a41b9"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 42574,
+            "sha256": "99f8c04bcbe368728b9cfe9c1ddb0dbb89eac3676e018062c77dfdb2033e27d5",
+            "git_blob_sha1": "a0ec19e63bc5d5381ddcd7971077b35a1d21581a"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40771,
+            "sha256": "4b4d97097a72692f950623f7e8fe98989f4eea5ed6fe0fb448e31d9f66556535",
+            "git_blob_sha1": "1142794fa3e92d8034838146722340d15670ba58"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40771,
+            "sha256": "933cda8b4c79ec106de8f3a2c1c284ea6eea9978159407931d0154af77fe76dd",
+            "git_blob_sha1": "675428f67d0c3264780e40be3cbafe82b0d0d553"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
