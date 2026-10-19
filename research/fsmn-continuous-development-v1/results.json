@@ -1,0 +1,483 @@
+{
+  "schema": "anonymous-continuous-development-summary-v1",
+  "date": "2026-10-19",
+  "review_status": "independently_checked_saved_results_no_new_inference",
+  "source_freeze_sha256": "e21081bd41db39604d75660b7fcc93e256212f08e181d51a86ce00a9f8efa171",
+  "binary_sha256": "a076702e2b2391cae1c0370759de8619e9bd654e12133fee20597344d56ae61f",
+  "scope": {
+    "unique_previously_exposed_source_clips": 20,
+    "reference_protection_source_clips": 38,
+    "complete38_protection": false,
+    "unique_source_audio_seconds": 26.12,
+    "target_clips": 8,
+    "known_negative_clips": 7,
+    "unknown_label_clips": 5,
+    "sample_rate_hz": 16000,
+    "execution": "host_incremental_fast_replay",
+    "independent_test": false,
+    "device_validation": false,
+    "real_world_FAR_estimate": false
+  },
+  "execution": {
+    "lanes": 12,
+    "completed_lanes": 12,
+    "samples": 7447040,
+    "feed_calls": 24930,
+    "fbank_completed": 46520,
+    "network_completed": 15504,
+    "finish_calls": 0,
+    "lane_wall_seconds_sum": 12.612987172999965,
+    "maximum_sampled_child_rss_bytes": 4435968
+  },
+  "transport_pairs": [
+    {
+      "gap_ms": 0.0,
+      "threshold": 0.1,
+      "posterior_chain_equal": true,
+      "event_structure_equal_excluding_delivery_fields": true
+    },
+    {
+      "gap_ms": 0.0,
+      "threshold": 0.7,
+      "posterior_chain_equal": true,
+      "event_structure_equal_excluding_delivery_fields": true
+    },
+    {
+      "gap_ms": 500.0,
+      "threshold": 0.1,
+      "posterior_chain_equal": true,
+      "event_structure_equal_excluding_delivery_fields": true
+    },
+    {
+      "gap_ms": 500.0,
+      "threshold": 0.7,
+      "posterior_chain_equal": true,
+      "event_structure_equal_excluding_delivery_fields": true
+    },
+    {
+      "gap_ms": 1500.0,
+      "threshold": 0.1,
+      "posterior_chain_equal": true,
+      "event_structure_equal_excluding_delivery_fields": true
+    },
+    {
+      "gap_ms": 1500.0,
+      "threshold": 0.7,
+      "posterior_chain_equal": true,
+      "event_structure_equal_excluding_delivery_fields": true
+    }
+  ],
+  "per_lane": [
+    {
+      "gap_ms": 0.0,
+      "threshold": 0.1,
+      "transport": "fixed320",
+      "target_hits": 6,
+      "target_denominator": 8,
+      "total_events": 17,
+      "unknown_events": 6,
+      "other_unmatched_events": 5,
+      "cross_seam_events_overlapping_other_categories": 10,
+      "cross_seam_unknown_events": 5,
+      "cross_seam_other_unmatched_events": 5,
+      "duplicate_target_events": 0,
+      "ambiguous_events": 0,
+      "after_clip_end_hits": 2,
+      "right_censored_target_clips": 0,
+      "eligible_negative_seconds": {
+        "speech": 4.16,
+        "synthetic_silence": 0.0
+      },
+      "eligible_false_events": {
+        "speech": 0,
+        "synthetic_silence": 0
+      },
+      "supplied_endpoint_minus_last_node_ms": {
+        "min": 50.0,
+        "max": 60.0
+      },
+      "supplied_endpoint_minus_required_endpoint_ms": {
+        "min": 5.0,
+        "max": 15.0
+      }
+    },
+    {
+      "gap_ms": 0.0,
+      "threshold": 0.7,
+      "transport": "fixed320",
+      "target_hits": 5,
+      "target_denominator": 8,
+      "total_events": 10,
+      "unknown_events": 2,
+      "other_unmatched_events": 3,
+      "cross_seam_events_overlapping_other_categories": 5,
+      "cross_seam_unknown_events": 2,
+      "cross_seam_other_unmatched_events": 3,
+      "duplicate_target_events": 0,
+      "ambiguous_events": 0,
+      "after_clip_end_hits": 2,
+      "right_censored_target_clips": 0,
+      "eligible_negative_seconds": {
+        "speech": 4.16,
+        "synthetic_silence": 0.0
+      },
+      "eligible_false_events": {
+        "speech": 0,
+        "synthetic_silence": 0
+      },
+      "supplied_endpoint_minus_last_node_ms": {
+        "min": 50.0,
+        "max": 60.0
+      },
+      "supplied_endpoint_minus_required_endpoint_ms": {
+        "min": 5.0,
+        "max": 15.0
+      }
+    },
+    {
+      "gap_ms": 0.0,
+      "threshold": 0.1,
+      "transport": "cycle1_159_320_641",
+      "target_hits": 6,
+      "target_denominator": 8,
+      "total_events": 17,
+      "unknown_events": 6,
+      "other_unmatched_events": 5,
+      "cross_seam_events_overlapping_other_categories": 10,
+      "cross_seam_unknown_events": 5,
+      "cross_seam_other_unmatched_events": 5,
+      "duplicate_target_events": 0,
+      "ambiguous_events": 0,
+      "after_clip_end_hits": 2,
+      "right_censored_target_clips": 0,
+      "eligible_negative_seconds": {
+        "speech": 4.16,
+        "synthetic_silence": 0.0
+      },
+      "eligible_false_events": {
+        "speech": 0,
+        "synthetic_silence": 0
+      },
+      "supplied_endpoint_minus_last_node_ms": {
+        "min": 45.4375,
+        "max": 84.8125
+      },
+      "supplied_endpoint_minus_required_endpoint_ms": {
+        "min": 0.4375,
+        "max": 39.8125
+      }
+    },
+    {
+      "gap_ms": 0.0,
+      "threshold": 0.7,
+      "transport": "cycle1_159_320_641",
+      "target_hits": 5,
+      "target_denominator": 8,
+      "total_events": 10,
+      "unknown_events": 2,
+      "other_unmatched_events": 3,
+      "cross_seam_events_overlapping_other_categories": 5,
+      "cross_seam_unknown_events": 2,
+      "cross_seam_other_unmatched_events": 3,
+      "duplicate_target_events": 0,
+      "ambiguous_events": 0,
+      "after_clip_end_hits": 2,
+      "right_censored_target_clips": 0,
+      "eligible_negative_seconds": {
+        "speech": 4.16,
+        "synthetic_silence": 0.0
+      },
+      "eligible_false_events": {
+        "speech": 0,
+        "synthetic_silence": 0
+      },
+      "supplied_endpoint_minus_last_node_ms": {
+        "min": 45.4375,
+        "max": 72.1875
+      },
+      "supplied_endpoint_minus_required_endpoint_ms": {
+        "min": 0.4375,
+        "max": 27.1875
+      }
+    },
+    {
+      "gap_ms": 500.0,
+      "threshold": 0.1,
+      "transport": "fixed320",
+      "target_hits": 7,
+      "target_denominator": 8,
+      "total_events": 17,
+      "unknown_events": 5,
+      "other_unmatched_events": 5,
+      "cross_seam_events_overlapping_other_categories": 9,
+      "cross_seam_unknown_events": 4,
+      "cross_seam_other_unmatched_events": 5,
+      "duplicate_target_events": 0,
+      "ambiguous_events": 0,
+      "after_clip_end_hits": 3,
+      "right_censored_target_clips": 0,
+      "eligible_negative_seconds": {
+        "speech": 5.56,
+        "synthetic_silence": 2.72
+      },
+      "eligible_false_events": {
+        "speech": 0,
+        "synthetic_silence": 0
+      },
+      "supplied_endpoint_minus_last_node_ms": {
+        "min": 50.0,
+        "max": 60.0
+      },
+      "supplied_endpoint_minus_required_endpoint_ms": {
+        "min": 5.0,
+        "max": 15.0
+      }
+    },
+    {
+      "gap_ms": 500.0,
+      "threshold": 0.7,
+      "transport": "fixed320",
+      "target_hits": 5,
+      "target_denominator": 8,
+      "total_events": 8,
+      "unknown_events": 2,
+      "other_unmatched_events": 1,
+      "cross_seam_events_overlapping_other_categories": 2,
+      "cross_seam_unknown_events": 1,
+      "cross_seam_other_unmatched_events": 1,
+      "duplicate_target_events": 0,
+      "ambiguous_events": 0,
+      "after_clip_end_hits": 2,
+      "right_censored_target_clips": 0,
+      "eligible_negative_seconds": {
+        "speech": 5.56,
+        "synthetic_silence": 2.72
+      },
+      "eligible_false_events": {
+        "speech": 0,
+        "synthetic_silence": 0
+      },
+      "supplied_endpoint_minus_last_node_ms": {
+        "min": 50.0,
+        "max": 60.0
+      },
+      "supplied_endpoint_minus_required_endpoint_ms": {
+        "min": 5.0,
+        "max": 15.0
+      }
+    },
+    {
+      "gap_ms": 500.0,
+      "threshold": 0.1,
+      "transport": "cycle1_159_320_641",
+      "target_hits": 7,
+      "target_denominator": 8,
+      "total_events": 17,
+      "unknown_events": 5,
+      "other_unmatched_events": 5,
+      "cross_seam_events_overlapping_other_categories": 9,
+      "cross_seam_unknown_events": 4,
+      "cross_seam_other_unmatched_events": 5,
+      "duplicate_target_events": 0,
+      "ambiguous_events": 0,
+      "after_clip_end_hits": 3,
+      "right_censored_target_clips": 0,
+      "eligible_negative_seconds": {
+        "speech": 5.56,
+        "synthetic_silence": 2.72
+      },
+      "eligible_false_events": {
+        "speech": 0,
+        "synthetic_silence": 0
+      },
+      "supplied_endpoint_minus_last_node_ms": {
+        "min": 45.5,
+        "max": 76.8125
+      },
+      "supplied_endpoint_minus_required_endpoint_ms": {
+        "min": 0.5,
+        "max": 31.8125
+      }
+    },
+    {
+      "gap_ms": 500.0,
+      "threshold": 0.7,
+      "transport": "cycle1_159_320_641",
+      "target_hits": 5,
+      "target_denominator": 8,
+      "total_events": 8,
+      "unknown_events": 2,
+      "other_unmatched_events": 1,
+      "cross_seam_events_overlapping_other_categories": 2,
+      "cross_seam_unknown_events": 1,
+      "cross_seam_other_unmatched_events": 1,
+      "duplicate_target_events": 0,
+      "ambiguous_events": 0,
+      "after_clip_end_hits": 2,
+      "right_censored_target_clips": 0,
+      "eligible_negative_seconds": {
+        "speech": 5.56,
+        "synthetic_silence": 2.72
+      },
+      "eligible_false_events": {
+        "speech": 0,
+        "synthetic_silence": 0
+      },
+      "supplied_endpoint_minus_last_node_ms": {
+        "min": 45.5,
+        "max": 76.8125
+      },
+      "supplied_endpoint_minus_required_endpoint_ms": {
+        "min": 0.5,
+        "max": 31.8125
+      }
+    },
+    {
+      "gap_ms": 1500.0,
+      "threshold": 0.1,
+      "transport": "fixed320",
+      "target_hits": 7,
+      "target_denominator": 8,
+      "total_events": 12,
+      "unknown_events": 3,
+      "other_unmatched_events": 2,
+      "cross_seam_events_overlapping_other_categories": 4,
+      "cross_seam_unknown_events": 2,
+      "cross_seam_other_unmatched_events": 2,
+      "duplicate_target_events": 0,
+      "ambiguous_events": 0,
+      "after_clip_end_hits": 3,
+      "right_censored_target_clips": 0,
+      "eligible_negative_seconds": {
+        "speech": 8.28,
+        "synthetic_silence": 9.0
+      },
+      "eligible_false_events": {
+        "speech": 0,
+        "synthetic_silence": 0
+      },
+      "supplied_endpoint_minus_last_node_ms": {
+        "min": 50.0,
+        "max": 60.0
+      },
+      "supplied_endpoint_minus_required_endpoint_ms": {
+        "min": 5.0,
+        "max": 15.0
+      }
+    },
+    {
+      "gap_ms": 1500.0,
+      "threshold": 0.7,
+      "transport": "fixed320",
+      "target_hits": 6,
+      "target_denominator": 8,
+      "total_events": 6,
+      "unknown_events": 0,
+      "other_unmatched_events": 0,
+      "cross_seam_events_overlapping_other_categories": 0,
+      "cross_seam_unknown_events": 0,
+      "cross_seam_other_unmatched_events": 0,
+      "duplicate_target_events": 0,
+      "ambiguous_events": 0,
+      "after_clip_end_hits": 3,
+      "right_censored_target_clips": 0,
+      "eligible_negative_seconds": {
+        "speech": 8.28,
+        "synthetic_silence": 9.0
+      },
+      "eligible_false_events": {
+        "speech": 0,
+        "synthetic_silence": 0
+      },
+      "supplied_endpoint_minus_last_node_ms": {
+        "min": 50.0,
+        "max": 60.0
+      },
+      "supplied_endpoint_minus_required_endpoint_ms": {
+        "min": 5.0,
+        "max": 15.0
+      }
+    },
+    {
+      "gap_ms": 1500.0,
+      "threshold": 0.1,
+      "transport": "cycle1_159_320_641",
+      "target_hits": 7,
+      "target_denominator": 8,
+      "total_events": 12,
+      "unknown_events": 3,
+      "other_unmatched_events": 2,
+      "cross_seam_events_overlapping_other_categories": 4,
+      "cross_seam_unknown_events": 2,
+      "cross_seam_other_unmatched_events": 2,
+      "duplicate_target_events": 0,
+      "ambiguous_events": 0,
+      "after_clip_end_hits": 3,
+      "right_censored_target_clips": 0,
+      "eligible_negative_seconds": {
+        "speech": 8.28,
+        "synthetic_silence": 9.0
+      },
+      "eligible_false_events": {
+        "speech": 0,
+        "synthetic_silence": 0
+      },
+      "supplied_endpoint_minus_last_node_ms": {
+        "min": 49.4375,
+        "max": 83.75
+      },
+      "supplied_endpoint_minus_required_endpoint_ms": {
+        "min": 4.4375,
+        "max": 38.75
+      }
+    },
+    {
+      "gap_ms": 1500.0,
+      "threshold": 0.7,
+      "transport": "cycle1_159_320_641",
+      "target_hits": 6,
+      "target_denominator": 8,
+      "total_events": 6,
+      "unknown_events": 0,
+      "other_unmatched_events": 0,
+      "cross_seam_events_overlapping_other_categories": 0,
+      "cross_seam_unknown_events": 0,
+      "cross_seam_other_unmatched_events": 0,
+      "duplicate_target_events": 0,
+      "ambiguous_events": 0,
+      "after_clip_end_hits": 3,
+      "right_censored_target_clips": 0,
+      "eligible_negative_seconds": {
+        "speech": 8.28,
+        "synthetic_silence": 9.0
+      },
+      "eligible_false_events": {
+        "speech": 0,
+        "synthetic_silence": 0
+      },
+      "supplied_endpoint_minus_last_node_ms": {
+        "min": 49.4375,
+        "max": 73.5625
+      },
+      "supplied_endpoint_minus_required_endpoint_ms": {
+        "min": 4.4375,
+        "max": 28.5625
+      }
+    }
+  ],
+  "count_semantics": {
+    "mutually_exclusive": "target_hits, unknown_events, other_unmatched_events; duplicate/ambiguous are zero in this run",
+    "cross_seam": "overlapping annotation; never add to mutually exclusive counts",
+    "unknown": "not verified positive or negative; not silently treated as a true negative",
+    "eligible_false_events": "restricted node-span negative regions after target/unknown exclusion; does not cover all non-hit events"
+  },
+  "delay_semantics": "Audio sample-coordinate difference, not measured acoustic word-end or device latency. Every last node equals decision row*3 in this run; required endpoint is 45ms after that node. Supplied endpoint adds transport batching.",
+  "limitations": [
+    "All 20 sources were previously exposed; only 20 of the 38-source reference roster are represented.",
+    "Three gaps, two transports and two thresholds reuse the same sources; repeated and synthetic silence durations are not independent exposure hours.",
+    "Eligible false-event count zero does not erase unknown or cross-seam/unmatched events and does not establish real-world FAR.",
+    "Coarse clip labels and node-span matching are not word-timing gold.",
+    "Gap changes context and event attribution as well as acoustic scores; equal aggregate recall can hide changed hit sets.",
+    "Host fast replay validates this binary/input configuration, not microphone capture, hardware latency, ARM execution or generalization."
+  ]
+}

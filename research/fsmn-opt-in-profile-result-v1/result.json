@@ -1,0 +1,197 @@
+{
+  "schema": "kws-opt-in-profile-development-result-v1",
+  "status": "INDEPENDENT_REVIEW_PASS",
+  "scope": "One fixed exposed-development continuous stream, two sequential processes: off then on. Cloud x86_64 host only.",
+  "audio_seconds_per_process": 35.62,
+  "new_independent_test_hours": 0,
+  "per_process": {
+    "samples": 569920,
+    "feed_calls": 1781,
+    "fbank_rows": 3560,
+    "network_rows": 1186,
+    "finish_calls": 0,
+    "reset_calls": 0
+  },
+  "identity_check": {
+    "input_byte_chain_equal": true,
+    "all_1186_float32_posterior_rows_byte_chain_equal": true,
+    "event_count": 8,
+    "full_event_fields_and_binary64_score_grid_bits_equal": true,
+    "actual_event_recording_identity_validated_before_normalization": true,
+    "historical_retained_fields_and_posterior_chain_equal": true,
+    "dense_posterior_arrays_retained": false
+  },
+  "profile": {
+    "abi": 1,
+    "timer": "CLOCK_MONOTONIC",
+    "timer_errors": 0,
+    "saturated": 0,
+    "exclusive_scoped_time_ns": 874021688,
+    "stage_percent_denominator": "sum of five exclusive scope durations; excludes transport, callback hashing, process startup, wrapper and timer overhead outside scopes",
+    "stages": [
+      {
+        "stage": "frontend",
+        "calls": 3560,
+        "failed_calls": 0,
+        "histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          3412,
+          112,
+          29,
+          6,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max_ns": 264512,
+        "min_ns": 20380,
+        "timed_calls": 3560,
+        "total_ns": 80326488,
+        "exclusive_scoped_time_percent": 9.190445626562072
+      },
+      {
+        "stage": "fsmn_body",
+        "calls": 1186,
+        "failed_calls": 0,
+        "histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1167,
+          16,
+          3,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max_ns": 1537261,
+        "min_ns": 297511,
+        "timed_calls": 1186,
+        "total_ns": 387630187,
+        "exclusive_scoped_time_percent": 44.350179443144434
+      },
+      {
+        "stage": "head2599",
+        "calls": 1186,
+        "failed_calls": 0,
+        "histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1178,
+          7,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        "max_ns": 2292802,
+        "min_ns": 272064,
+        "timed_calls": 1186,
+        "total_ns": 349281637,
+        "exclusive_scoped_time_percent": 39.96258237015281
+      },
+      {
+        "stage": "softmax2599",
+        "calls": 1186,
+        "failed_calls": 0,
+        "histogram": [
+          0,
+          0,
+          0,
+          0,
+          1035,
+          99,
+          44,
+          8,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max_ns": 107339,
+        "min_ns": 13861,
+        "timed_calls": 1186,
+        "total_ns": 19962914,
+        "exclusive_scoped_time_percent": 2.284029592638667
+      },
+      {
+        "stage": "decoder",
+        "calls": 1186,
+        "failed_calls": 0,
+        "histogram": [
+          0,
+          0,
+          0,
+          0,
+          50,
+          753,
+          349,
+          32,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "max_ns": 141800,
+        "min_ns": 15233,
+        "timed_calls": 1186,
+        "total_ns": 36820462,
+        "exclusive_scoped_time_percent": 4.212762967502015
+      }
+    ]
+  },
+  "observed_process_wall_seconds": {
+    "off": 0.9851559839999027,
+    "on": 0.9632046060000903
+  },
+  "sampled_process_rss_bytes": {
+    "off": 4505600,
+    "on": 4452352
+  },
+  "limits": {
+    "repeats_per_mode": 1,
+    "performance_improvement_claimed": false,
+    "ARM_or_SSC305_measured": false,
+    "Torch_1e_minus5_gate": "historical FAIL remains unchanged",
+    "production_qualification": false,
+    "timing_warning": "Single noisy pair; on/off wall difference is not a speedup or rigorous instrumentation-overhead estimate."
+  },
+  "source_identity": {
+    "paired_source_freeze_sha256": "ceb2506009f52119d036d483145ad8683dbed7b1a5adf8ccd75e9a698193b76d",
+    "profiler_source_freeze_sha256": "2bd2727b1daba76a3320a88d74081e0f23398f225f08bcec660e2e866e36a448",
+    "default_dso_byte_identity_preserved_in_mock_build": true,
+    "default_export_count": 36,
+    "opt_in_export_count": 39
+  }
+}

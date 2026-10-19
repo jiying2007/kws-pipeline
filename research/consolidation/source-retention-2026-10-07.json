@@ -41497,6 +41497,122 @@
           }
         }
       ]
+    },
+    {
+      "id": "continuous-gradient-profile-balanced40-evidence-20261019",
+      "date": "2026-10-19",
+      "base_commit": "0f01c477ec4e8679e7a03f088fa131cd791aaf83",
+      "base_tree": "735bad2ee4c461efd004f631717d3529344c183c",
+      "workflow_source_changed": false,
+      "scope": "Retain eight reviewed anonymous result/README files covering continuous host replay, frozen-head fixed8 gradients, one opt-in operator-profile pair, and balanced40 failed nonregression; add current research navigation.",
+      "rationale": "Saved evidence only; no new model execution, training, workflow or runtime source change. Exposed inputs are not independent FAR or device latency evidence. The single noisy profiling pair makes no speedup claim. Balanced40 loses one baseline target identity in paired lanes and is not promoted; original B remains the research baseline. Historical strict numerical FAIL remains. No private audio, weights, recording IDs, transcripts or private artifact paths are published.",
+      "files": [
+        {
+          "path": "research/fsmn-continuous-development-v1/results.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-continuous-development-v1/results.json",
+            "mode": "100644",
+            "bytes": 14629,
+            "sha256": "03912dc29950a0b9f69ffabe6fda282c69618171b3e8825c459a62d789f6087c",
+            "git_blob_sha1": "745e1327146f0bb9d6997e1c370e7536817ca4f0"
+          }
+        },
+        {
+          "path": "research/fsmn-continuous-development-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-continuous-development-v1/README.md",
+            "mode": "100644",
+            "bytes": 3631,
+            "sha256": "bf8818d7ec13af3d13d579a0359c7d10217561e78d23c0083a09cd59e2474f63",
+            "git_blob_sha1": "e1325bc241ffed71c4a6b4acc9674e2f1c01cd51"
+          }
+        },
+        {
+          "path": "research/fsmn-fixed8-gradient-diagnostic-v1/results.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-fixed8-gradient-diagnostic-v1/results.json",
+            "mode": "100644",
+            "bytes": 23861,
+            "sha256": "84638017a9fdbe5873961b34da1cfa4d0937d923e892dbff11982f982611a1ea",
+            "git_blob_sha1": "0cbb23356d83b21e1fd89879414bb9ea8a1bda05"
+          }
+        },
+        {
+          "path": "research/fsmn-fixed8-gradient-diagnostic-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-fixed8-gradient-diagnostic-v1/README.md",
+            "mode": "100644",
+            "bytes": 4493,
+            "sha256": "a8738ff5da79c43f4a556280464a3e3dda37528d448fc3b9a3d527ebb25b830e",
+            "git_blob_sha1": "ed9ef180e93b2e0dbb8fbc5b5a9ee457f177c726"
+          }
+        },
+        {
+          "path": "research/fsmn-opt-in-profile-result-v1/result.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-opt-in-profile-result-v1/result.json",
+            "mode": "100644",
+            "bytes": 4673,
+            "sha256": "da348ec4f77b71e1ea127295e4a3cbb3c97771a281cc600a456cd1f6b41e1975",
+            "git_blob_sha1": "08b1bb58ac6833f57b0a94dc81c0ca8abb710512"
+          }
+        },
+        {
+          "path": "research/fsmn-opt-in-profile-result-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-opt-in-profile-result-v1/README.md",
+            "mode": "100644",
+            "bytes": 2819,
+            "sha256": "97d4f38fa82f28359a75c5a0dd18ada59932d56bc2252c2c06a07dfb59a7671c",
+            "git_blob_sha1": "cd82003913accce47763a5159608a1494fcd8029"
+          }
+        },
+        {
+          "path": "research/fsmn-balanced40-control-result-v1/results.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-balanced40-control-result-v1/results.json",
+            "mode": "100644",
+            "bytes": 39678,
+            "sha256": "7cceda18ceaf8df2fe73bcbbe5e6bf6c09d4bace1b116afe57273b733c8d2ae6",
+            "git_blob_sha1": "3c6ca57eb5ab82fc80459a87850c5840ada6387d"
+          }
+        },
+        {
+          "path": "research/fsmn-balanced40-control-result-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-balanced40-control-result-v1/README.md",
+            "mode": "100644",
+            "bytes": 4332,
+            "sha256": "8b67e4ff30c1a178ff409e1534cd1a617652b2f69e610bfd29f07d2866915716",
+            "git_blob_sha1": "c51a6fbce3732c127c87c00aa796ce10865d1175"
+          }
+        },
+        {
+          "path": "research/README.md",
+          "before": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 19064,
+            "sha256": "5762c95de0473454123ddb8546ff71dbf6ae5f4a34deec868868cba0b98f3bc3",
+            "git_blob_sha1": "bc1f4982739098de03b388cdd469fa2d632065b0"
+          },
+          "after": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 19587,
+            "sha256": "8170ed06181d5dd780fcb659ec5ffdc98f1d95f175996528085f9850022e3ba0",
+            "git_blob_sha1": "5f4ec80ac74e76932f5c4a0fa8ab15d478b88b61"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
