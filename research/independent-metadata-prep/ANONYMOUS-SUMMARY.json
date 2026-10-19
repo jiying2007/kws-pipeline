@@ -1,0 +1,25 @@
+{
+  "status": "METADATA_PREPARATION_ONLY_NOT_ADMISSION",
+  "historical_result_frozen": true,
+  "historical_sessions": 8,
+  "historical_split": "development",
+  "accepted_negative_seconds": 0,
+  "new_independent_hours": 0,
+  "candidate_sessions": 20,
+  "candidate_exposure": "unknown",
+  "candidate_independence": "unknown",
+  "historical_scoped_ledger_count": 5,
+  "historical_transcript_supported_candidate_seconds": "13972.870",
+  "historical_unknown_seconds": "1165.345",
+  "current_revision_real_input_runs": 0,
+  "current_revision_synthetic_tests": 13,
+  "test_modes": [
+    "normal",
+    "-O",
+    "-OO"
+  ],
+  "audio_reads": 0,
+  "model_calls": 0,
+  "asr_calls": 0,
+  "screening_complete": false
+}
