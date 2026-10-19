@@ -11,6 +11,7 @@ are unchanged by this consolidation.
 ## Research navigation and retained checkpoints / 研究导航与历史检查点
 
 Current summary / 当前统一摘要：[model and engineering status](../docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status).
+2026-10-19 public synthetic evidence: [single-frame boundary-impulse stage diagnostic](fsmn-public-boundary-impulse-result-v1/README.md) is NEW_ENVIRONMENT_DIAGNOSTIC_ONLY. The new Torch historical endpoint does not match; C matches. Saved-value low-energy/log analysis applies only to this new environment, with no historical attribution or model promotion.
 Retained fixed-scope results / 已保留固定范围结果：[fixed37, train-reference screening and official-versus-B synthetic16](../docs/KWS_LANDING_STATUS.md#latest-fixed-scope-diagnostics--最新固定范围诊断). No model is promoted.
 2026-10-19 development diagnostics: [continuous host replay](fsmn-continuous-development-v1/README.md), [fixed8 frozen-head gradients](fsmn-fixed8-gradient-diagnostic-v1/README.md), [single-pair operator profiling](fsmn-opt-in-profile-result-v1/README.md), and [balanced40 failed nonregression](fsmn-balanced40-control-result-v1/README.md). Original B remains the research baseline; balanced40 is not promoted. These exposed-input diagnostics establish neither independent FAR nor device latency or causal KL benefit.
 Dated notes below retain their original scope; the D20 checklist applies to that diagnostic lane, not all research.

@@ -42167,6 +42167,56 @@
           }
         }
       ]
+    },
+    {
+      "id": "public-boundary-impulse-summary-20261019",
+      "date": "2026-10-19",
+      "base_commit": "2468eeb8a50619178e942afb9812b290af04faa0",
+      "base_tree": "77c5d599693572a56d206ea840f4a17139b19144",
+      "workflow_source_changed": false,
+      "scope": "Retain two public synthetic single-frame diagnostic summaries and add research navigation only.",
+      "rationale": "NEW_ENVIRONMENT_DIAGNOSTIC_ONLY: new Torch historical endpoint mismatch, C match; no historical attribution or qualification. Include subsequent saved-value low-energy/log explanation without new execution. Preserve all prior evidence, failed gates and B EXPORTED_NOT_NUMERICALLY_VALIDATED status. Supplied original result.json SHA256 4d6307ad46e8abe088217978d428b1e953772466f306ba9278f8a41c8b8421ae and original README.md SHA256 e766aa6b32ef0492c53332115f56291ec7362a546d1cefc169160eaf608a15fc verified before README amendment.",
+      "files": [
+        {
+          "path": "research/README.md",
+          "before": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 19587,
+            "sha256": "8170ed06181d5dd780fcb659ec5ffdc98f1d95f175996528085f9850022e3ba0",
+            "git_blob_sha1": "5f4ec80ac74e76932f5c4a0fa8ab15d478b88b61"
+          },
+          "after": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 19946,
+            "sha256": "7fa0e1a853efded9df76f3c5b4a94e735aba92afd4eb8eed2d2a0b1a37953c14",
+            "git_blob_sha1": "16ea176278fd3781b11532eeddfabc03791121e8"
+          }
+        },
+        {
+          "path": "research/fsmn-public-boundary-impulse-result-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-public-boundary-impulse-result-v1/README.md",
+            "mode": "100644",
+            "bytes": 3304,
+            "sha256": "a806da8a0e0ac80bcb0310f6ea14e9ed8c070b28c4d9f0af78bb8e7771f6c94d",
+            "git_blob_sha1": "a02f3cb4717f264865712e371a91a613c3dd40ee"
+          }
+        },
+        {
+          "path": "research/fsmn-public-boundary-impulse-result-v1/result.json",
+          "before": null,
+          "after": {
+            "path": "research/fsmn-public-boundary-impulse-result-v1/result.json",
+            "mode": "100644",
+            "bytes": 6064,
+            "sha256": "4d6307ad46e8abe088217978d428b1e953772466f306ba9278f8a41c8b8421ae",
+            "git_blob_sha1": "c105e6737d5f6f9475c7bb5524dde151d3f253b2"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
