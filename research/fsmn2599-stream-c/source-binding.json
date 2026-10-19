@@ -12,6 +12,11 @@
       "sha256": "682108dea86bb5e508cdaa5b156450578b35651fe9c4ab0dcc8ef533d687b6b1"
     },
     {
+      "path": "research/fsmn2599-stream-c/arm_environment_probe.c",
+      "bytes": 685,
+      "sha256": "f9598756a1dc27871ff7434d93e23306c63acccd58752798a916bf7d654995fa"
+    },
+    {
       "path": "research/fsmn2599-stream-c/b_profile.c",
       "bytes": 2425,
       "sha256": "42f82bbbd96b38619c56d246fd891a5342ccd135461311811f2939dfff3c4195"
@@ -38,8 +43,8 @@
     },
     {
       "path": "research/fsmn2599-stream-c/build.py",
-      "bytes": 13880,
-      "sha256": "f4a03c1f2ed817d315e5c18cc5e7aed50207591d0583de463cbd518add3e80ae"
+      "bytes": 13968,
+      "sha256": "9e649dee400437c2095979113aebab78e38254745db24acbf4a833570429826a"
     },
     {
       "path": "research/fsmn2599-stream-c/canonical_fbank.c",
@@ -67,6 +72,11 @@
       "sha256": "6f0ab0eb88d2bfa32a5a6b169c790dd6daa13a0d87914c2b795e96f58597313a"
     },
     {
+      "path": "research/fsmn2599-stream-c/check_arm_dependencies.py",
+      "bytes": 18795,
+      "sha256": "da090fda66f3601fce288047282807d41eb840859e6fe339f6b00f9374ab860c"
+    },
+    {
       "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
       "bytes": 14138,
       "sha256": "50531e1d032401ef5957ea975da2c408f60e936ee3ec5d877ca51823c3d0f16d"
@@ -92,6 +102,11 @@
       "sha256": "a755fc8d58b425064e94ddfeaf60d3126b487588dd858e7c965d60857376f9c3"
     },
     {
+      "path": "research/fsmn2599-stream-c/qemu-i386-tool.json",
+      "bytes": 920,
+      "sha256": "f7b431404a373c51261ff4b90aa3c0fccdaa4aeebe2b4de0a3cb830b8e01e06c"
+    },
+    {
       "path": "research/fsmn2599-stream-c/sha256.c",
       "bytes": 6113,
       "sha256": "28023c2b965033d60a8db9f65099a0855e1816f7251bfa95109e634cef34e6a1"
@@ -115,6 +130,11 @@
       "path": "research/fsmn2599-stream-c/test_affine_block2.c",
       "bytes": 3124,
       "sha256": "2ff74262bf7a7e693f1ca4fb6b508fbf794b555ff0cd5c800cb6491ef73ebdd0"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/test_arm_dependencies.py",
+      "bytes": 6450,
+      "sha256": "0fda6310b8ede1c4a6467d87daca35ddefb73fa2cb8c7a97876b40c2438cd580"
     },
     {
       "path": "research/fsmn2599-stream-c/test_arm_synthetic.py",
@@ -160,11 +180,6 @@
       "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.h",
       "bytes": 4957,
       "sha256": "318c43814fa0b096fa87e72d5ae0844dffb84874fd95f0bcae8a0624ddcdd696"
-    },
-    {
-      "path": "research/fsmn2599-stream-c/qemu-i386-tool.json",
-      "bytes": 920,
-      "sha256": "f7b431404a373c51261ff4b90aa3c0fccdaa4aeebe2b4de0a3cb830b8e01e06c"
     }
   ],
   "qualification_allowed": false,

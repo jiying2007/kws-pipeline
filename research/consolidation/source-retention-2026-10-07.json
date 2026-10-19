@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 62667,
-      "sha256": "be768a67f6406aa7ed9cf5e8e15c6af476b31c73469ee5df9354f513307d56a1",
-      "git_blob_sha1": "8e24ba478108f2ecf5369a4aad9a43826cd8f11a"
+      "bytes": 63405,
+      "sha256": "d2fe49911b3c221703cef9f56639eec85478ffd005fb8ee8d5f6e843675faa74",
+      "git_blob_sha1": "dda46af2a6a595c844d694b416aa88725e854705"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -42041,6 +42041,129 @@
             "bytes": 1850,
             "sha256": "37ef49fb897754f8ae40844e92daa4aa31de2a59ef2d20c2d97488a5c2ed8299",
             "git_blob_sha1": "868e31c93e834db5f5d1e7c5e8329c323727686e"
+          }
+        }
+      ]
+    },
+    {
+      "id": "arm-dependency-snapshot-20261019",
+      "date": "2026-10-19",
+      "base_commit": "2ee32a7dd60b15a3a1b24b096319f584b05c47dc",
+      "base_tree": "2f7869d8f323de9f0d7d45e7c909628f60eed131",
+      "workflow_source_changed": true,
+      "scope": "Add a separate bounded ARM dependency snapshot: compile-only B/C++ ELF, recursive identities and one public FP environment probe, with durable success/failure evidence.",
+      "rationale": "No B/model/audio or numerical-fixture execution by the new driver. Preserve historical 616 MISSING_ORIGINAL_ELF_SYSROOT, inherited unclosed numerical gate, default-off options, production ABI and fixed workflow identities.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 62667,
+            "sha256": "be768a67f6406aa7ed9cf5e8e15c6af476b31c73469ee5df9354f513307d56a1",
+            "git_blob_sha1": "8e24ba478108f2ecf5369a4aad9a43826cd8f11a"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 63405,
+            "sha256": "d2fe49911b3c221703cef9f56639eec85478ffd005fb8ee8d5f6e843675faa74",
+            "git_blob_sha1": "dda46af2a6a595c844d694b416aa88725e854705"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/ARM-DEPENDENCY-SNAPSHOT.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/ARM-DEPENDENCY-SNAPSHOT.md",
+            "mode": "100644",
+            "bytes": 3022,
+            "sha256": "75509c1c4382b524f10e870e2927c91c6bf7044ce80ee3765effb11f92ecfde5",
+            "git_blob_sha1": "41582626dd97ef350f9c25f59ba70a5ac4aafbf2"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/arm_environment_probe.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/arm_environment_probe.c",
+            "mode": "100644",
+            "bytes": 685,
+            "sha256": "f9598756a1dc27871ff7434d93e23306c63acccd58752798a916bf7d654995fa",
+            "git_blob_sha1": "f312ae67b10430ba8ae7b90686f27e2ec8bc7ed9"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/build.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/build.py",
+            "mode": "100644",
+            "bytes": 13880,
+            "sha256": "f4a03c1f2ed817d315e5c18cc5e7aed50207591d0583de463cbd518add3e80ae",
+            "git_blob_sha1": "bf88a25f2650a484e6a0176a7587fa0e5ab0d8a6"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/build.py",
+            "mode": "100644",
+            "bytes": 13968,
+            "sha256": "9e649dee400437c2095979113aebab78e38254745db24acbf4a833570429826a",
+            "git_blob_sha1": "c41a8ca08fecd726c8b95b9ed48dba6e3c99e8fa"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/check_arm_dependencies.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/check_arm_dependencies.py",
+            "mode": "100644",
+            "bytes": 18795,
+            "sha256": "da090fda66f3601fce288047282807d41eb840859e6fe339f6b00f9374ab860c",
+            "git_blob_sha1": "22be2d5761dc519542579404548b99788de53988"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/source-binding.json",
+          "before": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 6208,
+            "sha256": "ac4ebb958e98790b79562d68498d7c53567371883c187299c76c2a15c4af0628",
+            "git_blob_sha1": "cbc75d914cf66000655ef976450852f280f5b65d"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 6766,
+            "sha256": "24ac9792b05f8dedaa0bd068e5145bf1575688fd4a577a295fe09478a77bbfae",
+            "git_blob_sha1": "c7e072e8195e7e40470a83764be452164098758b"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_arm_dependencies.py",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_arm_dependencies.py",
+            "mode": "100644",
+            "bytes": 6450,
+            "sha256": "0fda6310b8ede1c4a6467d87daca35ddefb73fa2cb8c7a97876b40c2438cd580",
+            "git_blob_sha1": "95586c829000b0a8947f48e95270d09276a85749"
+          }
+        },
+        {
+          "path": "tests/test_causal_research_contract.py",
+          "before": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 1850,
+            "sha256": "37ef49fb897754f8ae40844e92daa4aa31de2a59ef2d20c2d97488a5c2ed8299",
+            "git_blob_sha1": "868e31c93e834db5f5d1e7c5e8329c323727686e"
+          },
+          "after": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 1918,
+            "sha256": "617c9d2e41e6aea1223aa5a6c448a67c048ecd160a4449f14401ce82de43c6e9",
+            "git_blob_sha1": "682f2075fe184855af0c7ed8ec034618ce794945"
           }
         }
       ]

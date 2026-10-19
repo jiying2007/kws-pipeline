@@ -31,6 +31,7 @@ LOCAL_FILES = (
     "b_profile.c", "b_profile.h", "test_profile_contract.c", "test_profile_unit.c",
     "test_timer_overhead.c", "test_affine_block2.c", "affine_reference.inc",
     "check_profile.py", "check_arm_synthetic.py", "test_arm_synthetic.py", "qemu-i386-tool.json", "build.py",
+    "check_arm_dependencies.py", "test_arm_dependencies.py", "arm_environment_probe.c",
 )
 INPUTS = frozenset([f"{MODULE}/{name}" for name in LOCAL_FILES] +
                    [f"{DECODER}/kws3.c", f"{DECODER}/kws3.h", FFT])
