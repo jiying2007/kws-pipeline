@@ -79,7 +79,7 @@ and the exact default/optional export sets are checked. The extracted default
 branch is tested in default/profile; block2 in block2/both.
 
 `KWS_FIXTURE_CORRECTNESS_ONLY` disables only affine fixture warmup/timing loops;
-the old host entry retains its timing behavior. QEMU uses an ARMv7 Cortex-A7
+the old host entry retains its timing behavior. QEMU uses its ARMv8-capable `max` AArch32
 emulated CPU for Cortex-A32/NEON-VFPv4 hard-float binaries, with a bounded 256 MiB
 guest address reservation. This is ISA correctness evidence, never SSC305
 hardware timing, full-model execution or acoustic qualification.

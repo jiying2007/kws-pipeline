@@ -145,7 +145,7 @@ def execute(sysroot):
         sources = [str(M / n) for n in ('b_stream_adapter.c', 'canonical_pcm.c', 'canonical_fbank.c', 'fsmn2599.c', 'sha256.c', 'softmax2599.c')]
         sources.append(str(decoder / 'kws3.c'))
         # Bound QEMU's reserved guest VA as well as host RLIMIT_AS.
-        emulator = [tools['qemu-arm-static'], '-R', '256M', '-cpu', 'cortex-a7', '-L', str(sysroot)]
+        emulator = [tools['qemu-arm-static'], '-R', '256M', '-cpu', 'max', '-L', str(sysroot)]
         modes, executions = {}, []
         for name, defines in MODES:
             folder = tmp / name
@@ -164,8 +164,8 @@ def execute(sysroot):
             if {line.split()[-1] for line in symbols.splitlines() if line.strip()} != expected:
                 raise RuntimeError('unexpected ARM ABI: ' + name)
             attributes = budget.run([tools['arm-linux-gnueabihf-readelf'], '-A', str(lib)], 'elf-attributes')
-            if 'Tag_CPU_arch: v7' not in attributes or 'Tag_ABI_VFP_args: VFP registers' not in attributes:
-                raise RuntimeError('ARMv7 VFP calling convention missing')
+            if 'Tag_CPU_arch: v8' not in attributes or 'Tag_ABI_VFP_args: VFP registers' not in attributes:
+                raise RuntimeError('ARMv8 AArch32 VFP calling convention missing')
             fixtures = (
                 ('contract', [str(M / 'test_profile_contract.c'), str(lib)]),
                 ('mock', [str(M / 'test_b_stream_adapter.c'), str(M / 'canonical_pcm.c')]),
