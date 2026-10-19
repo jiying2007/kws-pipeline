@@ -14,6 +14,7 @@ CASES = (
     ('research/evaluation_integrity', 'test_bound_metrics.py', 16),
     ('research/bounded-lifecycle-v2', 'test_controller.py', 17),
     ('research/fsmn2599-stream-c', 'test_arm_synthetic.py', 7),
+    ('research/fsmn2599-stream-c', 'test_arm_dependencies.py', 15),
 )
 
 def main():
