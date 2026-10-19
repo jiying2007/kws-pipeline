@@ -94,4 +94,6 @@ The original metric source file and original PCM were absent: this was a
 reconstruction of audited arithmetic and artifact/roster audit, not a new
 verification of native inference binding. No model or training was run.
 Private adapters, reconstructed metric and result artifacts are excluded from
-the public allowlist. Consult validation-status.json for the current result.
+the public allowlist. The historical `validation-status.json` is private and is
+not included in this public directory; the preceding paragraph is the public
+validation summary, not a claim that those private inputs can be reproduced here.

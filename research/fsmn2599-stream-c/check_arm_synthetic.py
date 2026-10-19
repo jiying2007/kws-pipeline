@@ -216,6 +216,7 @@ def execute(sysroot, emulator_path=None):
             fixtures = (
                 ('contract', [str(M / 'test_profile_contract.c'), str(lib)]),
                 ('mock', [str(M / 'test_b_stream_adapter.c'), str(M / 'canonical_pcm.c')]),
+                ('capture', [str(M / 'test_capture_contract.c'), str(M / 'canonical_pcm.c')]),
                 ('unit', [str(M / 'test_profile_unit.c')]),
                 ('affine', [str(M / 'test_affine_block2.c')]),
             )
@@ -228,12 +229,14 @@ def execute(sysroot, emulator_path=None):
                 budget.evidence['executions'].append(attempt)
                 output = budget.run([*emulator, str(binary)], 'synthetic-execution')
                 outputs[test] = output
+                if test == 'capture' and output.strip() != 'capture contract groups=2; gap reset and chunk invariance; mock only':
+                    raise RuntimeError('capture mock completion missing')
                 executions.append({'mode': name, 'fixture': test, 'binary_sha256': artifacts[test]['sha256'], 'command_index': len(budget.commands)-1})
                 if test == 'affine' and (not output.startswith('PASS 648 bytewise output and FP sticky-flag comparisons;') or 'reference_ns' in output):
                     raise RuntimeError('affine correctness-only completion missing')
             modes[name] = {'defines': defines, 'artifacts': artifacts, 'exports': sorted(expected),
                            'extracted_source_sha256': sha(inc), 'outputs': outputs}
-        for test in ('contract', 'mock', 'unit', 'affine'):
+        for test in ('contract', 'mock', 'capture', 'unit', 'affine'):
             if len({m['outputs'][test] for m in modes.values()}) != 1:
                 raise RuntimeError('four-mode observable fixture outputs differ: ' + test)
         if guard.validate_sources(ROOT) != binding:
@@ -248,7 +251,8 @@ def execute(sysroot, emulator_path=None):
                 'sysroot': str(sysroot), 'loader_sha256': sha(loader),
                 'fp_flags': guard.FLAGS, 'arm_flags': ARM_FLAGS, 'modes': modes,
                 'commands': budget.commands, 'executions': executions, 'binary_executions': len(executions),
-                'compiler_invocations': 21, 'synthetic_executions': 16,
+                'compiler_invocations': 25, 'synthetic_executions': 20,
+                'capture_groups_per_mode': 2,
                 'startup_probe': startup, 'emulator_pin': pinned, 'affine_cases_per_mode': 648,
                 'usage': {'wall_seconds': elapsed, 'child_cpu_seconds': budget.cpu, 'child_output_bytes': budget.output},
                 'limits': {'total_seconds': TOTAL_SECONDS, 'program_seconds': PROGRAM_SECONDS, 'as_bytes': AS_BYTES, 'output_bytes': OUTPUT_BYTES},
