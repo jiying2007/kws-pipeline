@@ -1,0 +1,45 @@
+{
+  "schema": "paired12-research-aggregate-v1",
+  "scope": "Posthoc descriptive screening against generation requests; not acoustic accuracy or training admission",
+  "product_keywords": [
+    "你好小窝",
+    "小窝小窝"
+  ],
+  "normalization": "comparison only: remove Unicode category P punctuation; raw originals unchanged; no homophone folding",
+  "total": {
+    "items": 12,
+    "sense_request_matches": 9,
+    "qwen_request_matches": 8,
+    "engine_agreement": 10
+  },
+  "product_target_subset": {
+    "items": 4,
+    "sense_request_matches": 2,
+    "qwen_request_matches": 2
+  },
+  "near_sound_subset": {
+    "items": 8,
+    "sense_request_matches": 7,
+    "qwen_request_matches": 6
+  },
+  "qwen_resources": {
+    "group_wall_seconds": 171.67944807899767,
+    "child_cpu_seconds": 170.05871199999999,
+    "rss_sampled_max_bytes": 6281240576,
+    "rss_is_hard_peak": false,
+    "attempts_consumed": 12,
+    "retries": 0,
+    "all_eos_id": 151645,
+    "new_token_count_range": [
+      9,
+      10
+    ],
+    "max_new_tokens": 512,
+    "cap_hits": 0
+  },
+  "acoustic_completeness": "UNKNOWN",
+  "training_admitted": false,
+  "independent_review": "execution originals PASS; corrected target grouping confirmed",
+  "native_v2_compatible": false,
+  "reason": "Qwen512 differs from frozen256; sherpa QUInt8 differs from FP32 CTC and lacks raw CTC boundary trace. Research evidence remains valid within its actual identities."
+}
