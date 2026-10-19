@@ -82,7 +82,7 @@ jobs:
           test -f "$RUNNER_TEMP/pilot-asr-output/results.json"
           python3 -I -S -B research/tts-pilot-screening-v1/export_public.py --host-root "$RUNNER_TEMP/pilot-asr-output" --derived-root "$RUNNER_TEMP/pilot-derived" --output "$RUNNER_TEMP/pilot-asr-public"
           echo 'ready=true' >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: ${{ always() && steps.public.outputs.ready == 'true' }}
         with:
           name: tts-pilot-asr-20261014-v1-public

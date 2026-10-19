@@ -53,7 +53,7 @@ jobs:
           set -euo pipefail
           python3 -I -S -B research/kw1-preset-supplement-v1/launcher.py --finalize --work "$RUNNER_TEMP/kw1-once" --public "$RUNNER_TEMP/kw1-public"
           echo 'ready=true' >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: ${{ always() && steps.public.outputs.ready == 'true' }}
         with:
           name: kw1-preset-supplement-20261014-v1-public
