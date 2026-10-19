@@ -8,8 +8,8 @@
     },
     {
       "path": "research/fsmn2599-stream-c/b_stream_adapter.h",
-      "bytes": 3585,
-      "sha256": "3d25d9dba31220c71afbbc31d6c8022431b48badf9261294c05823f6b401a8a2"
+      "bytes": 3652,
+      "sha256": "08772441536f582ae855efe9911dc467f912d8a02f45f89cbcb640d16e41932e"
     },
     {
       "path": "research/fsmn2599-stream-c/canonical_fbank.c",
@@ -90,9 +90,24 @@
       "path": "research/fsmn2599-stream-c/example_pcm.c",
       "bytes": 3690,
       "sha256": "40e09f1c4fbb84162a9dee7c51392e812b5be6a8a62e808a281cb9a5b2bb0e6d"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/bsa_capture.h",
+      "bytes": 3031,
+      "sha256": "c7b6b8117d3fdb79de4f8eb6223b74e76e62ce091be14bc0a77704fafcaa8670"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/test_capture_contract.c",
+      "bytes": 4940,
+      "sha256": "5c5c490ac7a250db3e488ab0532cd2424c14b6cd4cc4bbfd900cb8097baf3256"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/test_cpp_link.cpp",
+      "bytes": 293,
+      "sha256": "ab5d7a17bdb4527ef068577607195fde033cb9f155143c19a087ab50788a49f5"
     }
   ],
   "qualification_allowed": false,
   "dependency_repo_commit": "6cb57da2a73fe5859e4e139769598ffc28a42cf5",
-  "note": "New module sources plus existing decoder and FFT constants; no binary, audio, checkpoint or learned payload."
+  "note": "Candidate capture-contract and C++ hardening, based on a38d0262; no acoustic arithmetic or model changes."
 }

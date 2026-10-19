@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Opt-in, bounded research build and eight mocked glue groups only.
+"""Opt-in bounded build, eight legacy and two capture mock groups.
 
 No payloads, real audio, Torch, downloads or numerical qualification. Production
 is inspected as ELF symbols only, never loaded. All generated files are removed.
@@ -26,7 +26,8 @@ LOCAL_FILES = (
     "b_stream_adapter.c", "b_stream_adapter.h", "canonical_pcm.c", "canonical_pcm.h",
     "canonical_fbank.c", "canonical_fbank.h", "canonical_tables.h", "fsmn2599.c",
     "fsmn2599.h", "sha256.c", "sha256.h", "softmax2599.c", "softmax2599.h",
-    "test_b_stream_adapter.c", "example_pcm.c",
+    "test_b_stream_adapter.c", "example_pcm.c", "bsa_capture.h",
+    "test_capture_contract.c", "test_cpp_link.cpp",
 )
 INPUTS = frozenset([f"{MODULE}/{name}" for name in LOCAL_FILES] +
                    [f"{DECODER}/kws3.c", f"{DECODER}/kws3.h", FFT])
@@ -185,9 +186,10 @@ def execute():
         raise RuntimeError("loader overrides are forbidden")
     binding_sha = validate_sources(root)
     gcc = shutil.which("gcc", path="/usr/bin:/bin")
+    cxx = shutil.which("g++", path="/usr/bin:/bin")
     nm = shutil.which("nm", path="/usr/bin:/bin")
-    if not gcc or not nm:
-        raise RuntimeError("gcc and nm are required")
+    if not gcc or not cxx or not nm:
+        raise RuntimeError("gcc, g++ and nm are required")
     module = root / MODULE
     decoder = root / DECODER
     with tempfile.TemporaryDirectory(prefix="fsmn-stream-build-") as temporary:
@@ -199,6 +201,8 @@ def execute():
         production = temp / "libb_stream_adapter.so"
         fixture = temp / "test_b_stream_adapter"
         example = temp / "example_pcm"
+        capture = temp / "test_capture_contract"
+        cpp = temp / "test_cpp_link"
         shared_sources = [module / name for name in (
             "b_stream_adapter.c", "canonical_pcm.c", "canonical_fbank.c", "fsmn2599.c",
             "sha256.c", "softmax2599.c")] + [decoder / "kws3.c"]
@@ -212,6 +216,10 @@ def execute():
             # Compile/link the public usage example, but never execute it.
             [gcc, *FLAGS, *include, str(module / "example_pcm.c"),
              *map(str, shared_sources), "-lm", "-o", str(example)],
+            [gcc, *FLAGS, *include, str(module / "test_capture_contract.c"),
+             str(module / "canonical_pcm.c"), "-lm", "-o", str(capture)],
+            [cxx, "-std=c++11", "-Wall", "-Wextra", "-Werror", "-pedantic", *include,
+             str(module / "test_cpp_link.cpp"), str(production), "-lm", "-o", str(cpp)],
         ]
         for command in commands:
             _, spent = run_bounded(
@@ -227,15 +235,22 @@ def execute():
         if exported != expected:
             raise RuntimeError("production export mismatch: " + repr({
                 "missing": sorted(expected - exported), "unexpected": sorted(exported - expected)}))
-        # Only generated-executable invocation: exactly eight mock groups once.
+        # Legacy mock executable: exactly eight groups once.
         result, fixture_cpu = run_bounded([str(fixture)], temp, 30, 30)
         if result.strip() != FIXTURE_MESSAGE:
             raise RuntimeError("unexpected fixture completion output")
         if validate_sources(root) != binding_sha:
             raise RuntimeError("source binding changed during fixtures")
-        report = {"schema": 1, "source_binding_sha256": binding_sha,
+        capture_result, capture_cpu = run_bounded([str(capture)], temp, 30, 30)
+        if capture_result.strip() != "capture contract groups=2; gap reset and chunk invariance; mock only":
+            raise RuntimeError("unexpected capture fixture output")
+        if validate_sources(root) != binding_sha:
+            raise RuntimeError("source binding changed during capture fixtures")
+        report = {"schema": 1, "capture_fixture_groups": 2, "capture_fixture_runs": 1,
+                  "capture_fixture_cpu_seconds": capture_cpu, "cpp_link_pass": True,
+                  "cpp_executed": False, "source_binding_sha256": binding_sha,
                   "production_loaded": False, "fixture_groups": 8, "fixture_runs": 1,
-                  "compiler_invocations": 3, "example_executed": False,
+                  "compiler_invocations": 5, "example_executed": False,
                   "compile_budget_seconds": COMPILE_BUDGET_SECONDS,
                   "qualification_allowed": False, "compile_wall_seconds": compile_wall,
                   "compile_cpu_seconds": compile_cpu, "fixture_cpu_seconds": fixture_cpu,

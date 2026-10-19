@@ -984,7 +984,7 @@ jobs:
       - name: Install cross compiler and ARM user-mode emulator
         run: >-
           sudo apt-get update && sudo apt-get install -y
-          gcc-arm-linux-gnueabihf qemu-user-static
+          gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf qemu-user-static
       - name: Locate ARM sysroot for the emulator
         run: |
           set -euo pipefail
@@ -1003,6 +1003,8 @@ jobs:
           python3 -S -B tests/run_research_three_window_arm.py
           --emulator /usr/bin/qemu-arm-static
           --emulator-sysroot "$KWS_ARM_SYSROOT"
+      - name: Full B research ARM C and C++ compile/link (no execution)
+        run: python3 -S -B tests/run_research_fsmn_stream_arm_build.py --execute
       - name: Configure hosted reference build
         run: >-
           cmake -S . -B build-ref

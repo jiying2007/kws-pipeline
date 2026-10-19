@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 61451,
-      "sha256": "a78210b9837bfb76c8814ca4d282d2279c9de34eb4ae81a60ffd615bf7690612",
-      "git_blob_sha1": "0e5e459405fbffd5e69deb966c92bdee2817f447"
+      "bytes": 61628,
+      "sha256": "0ceb916b8853a2f8e6b9b73365a36c9621f00988da375023c3a54e22ebbf4290",
+      "git_blob_sha1": "9a18121f6df88ab298ad05e8782e53221ffbfb08"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -41198,6 +41198,302 @@
             "bytes": 2729,
             "sha256": "b11c44572d5acf17500e03840f07275ac3b0afe43f1b0e0f0cb973a249a86e28",
             "git_blob_sha1": "a312a1217ed56805834f653cbdaec5fff904620a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "reviewed-research-hardening-20261019",
+      "date": "2026-10-19",
+      "base_commit": "a38d0262eafe4e6111c559026aad71d781423701",
+      "base_tree": "6040c97e0122ddb64fbb2d2711d51c95a084289d",
+      "workflow_source_changed": true,
+      "scope": "Integrate reviewed public ID/PCM metric binding, B capture/C++ contracts, full B ARM compile/link runner, cooperative bounded lifecycle and exact Dependabot historical-workflow exclusions; wire synthetic tests into ordinary CI.",
+      "rationale": "Source and artificial contract checks only. No training, TTS, ASR, private audio/weights or historical research workflow execution. Four fixed historical workflows and original inventory/provenance remain unchanged. ARM compile/link is not device numerical or performance qualification; production SDK unchanged.",
+      "files": [
+        {
+          "path": ".github/dependabot.yml",
+          "before": {
+            "path": ".github/dependabot.yml",
+            "mode": "100644",
+            "bytes": 281,
+            "sha256": "2fb27f4af451e84982c3d890e29a0d34681ba88e7feaf4c89a04ba4c9fbec465",
+            "git_blob_sha1": "01a6f7e0d9c263cd1270f705e3cc76fbcecd1a2d"
+          },
+          "after": {
+            "path": ".github/dependabot.yml",
+            "mode": "100644",
+            "bytes": 652,
+            "sha256": "d8d20b627fbb4ec2979fd99da784425fdb1074c2d7140c0992b169f398766599",
+            "git_blob_sha1": "339ae4706cbc7269f921de5fe98754539d217213"
+          }
+        },
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 61451,
+            "sha256": "a78210b9837bfb76c8814ca4d282d2279c9de34eb4ae81a60ffd615bf7690612",
+            "git_blob_sha1": "0e5e459405fbffd5e69deb966c92bdee2817f447"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 61628,
+            "sha256": "0ceb916b8853a2f8e6b9b73365a36c9621f00988da375023c3a54e22ebbf4290",
+            "git_blob_sha1": "9a18121f6df88ab298ad05e8782e53221ffbfb08"
+          }
+        },
+        {
+          "path": "research/bounded-lifecycle-v2/README.md",
+          "before": null,
+          "after": {
+            "path": "research/bounded-lifecycle-v2/README.md",
+            "mode": "100644",
+            "bytes": 11583,
+            "sha256": "4b214f16f2589b8f1bb99e0502f4ce16f923933afcd1c7a82b46c6e44b7c9bb0",
+            "git_blob_sha1": "834f5948c7e0927c39ab5601112bef9cc5aa1275"
+          }
+        },
+        {
+          "path": "research/bounded-lifecycle-v2/controller.py",
+          "before": null,
+          "after": {
+            "path": "research/bounded-lifecycle-v2/controller.py",
+            "mode": "100644",
+            "bytes": 16487,
+            "sha256": "fff3eb2dc197a6b83e3a60089db5f79678b210dc1d618f610a7caad32a5e638d",
+            "git_blob_sha1": "bac134e76384077f0874f3eff8f42ff0126cdef2"
+          }
+        },
+        {
+          "path": "research/bounded-lifecycle-v2/test_controller.py",
+          "before": null,
+          "after": {
+            "path": "research/bounded-lifecycle-v2/test_controller.py",
+            "mode": "100644",
+            "bytes": 13312,
+            "sha256": "c134e4cf12b305326a9fd5ec5990ce1553a0ba9172bea21b8ccbb47a090dd949",
+            "git_blob_sha1": "14e87ebd3003ae4925536a55cd499ac1e6a67db4"
+          }
+        },
+        {
+          "path": "research/consolidation/fixed-workflow-maintenance.md",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/fixed-workflow-maintenance.md",
+            "mode": "100644",
+            "bytes": 4379,
+            "sha256": "4c95a7073dec81a96989f41b29e2283689a33d1e559c6d0f9f6322a0e3bc638f",
+            "git_blob_sha1": "44e82780ad663503c5be24a5708ec08e0f410528"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 57039,
+            "sha256": "3ba1390ea9b9db04c151dbcf87f2375667d05b77c357fd174c335d57916b8319",
+            "git_blob_sha1": "d080fb0ee3f3f42844a8865aba804a7f916755fc"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 63041,
+            "sha256": "4e0801afb766f6102cd25892969c52213fe34a7e5ffd88207be8dff0069ff2ea",
+            "git_blob_sha1": "68cb2d87043cde732446c22b1119099e3b7ff677"
+          }
+        },
+        {
+          "path": "research/evaluation_integrity/README.md",
+          "before": null,
+          "after": {
+            "path": "research/evaluation_integrity/README.md",
+            "mode": "100644",
+            "bytes": 6137,
+            "sha256": "d8a46190f67d9d4d7ea585064f7d971fd27c688968e26f38d76793da042cc5cb",
+            "git_blob_sha1": "a9d9eaf0e9edc1d509bb75c35f3108f8e41e1729"
+          }
+        },
+        {
+          "path": "research/evaluation_integrity/bound_metrics.py",
+          "before": null,
+          "after": {
+            "path": "research/evaluation_integrity/bound_metrics.py",
+            "mode": "100644",
+            "bytes": 3853,
+            "sha256": "1ea5dc306ad335770303aeb0a44a0c895d38e6db6dc5109bca9b93106f15427f",
+            "git_blob_sha1": "b309f8cfd97a1a7b3410278aee6f702887f199fd"
+          }
+        },
+        {
+          "path": "research/evaluation_integrity/test_bound_metrics.py",
+          "before": null,
+          "after": {
+            "path": "research/evaluation_integrity/test_bound_metrics.py",
+            "mode": "100644",
+            "bytes": 4592,
+            "sha256": "d707036aa9873afd3e09a5bf1622ee5fa62629877042424c0b0412e2d646443c",
+            "git_blob_sha1": "ac5a9a1881c9f12f87bec9b79baf4284bb34beeb"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/API-CONTRACT.md",
+          "before": {
+            "path": "research/fsmn2599-stream-c/API-CONTRACT.md",
+            "mode": "100644",
+            "bytes": 5632,
+            "sha256": "39cbfaf97b044fc3483eb1c861bbe9d39d78cdf63dad46a036d4cd0c9688b295",
+            "git_blob_sha1": "686712cc250c6f27e9f76a330493b1b324260c25"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/API-CONTRACT.md",
+            "mode": "100644",
+            "bytes": 8924,
+            "sha256": "847ef2fce5c167a3a2f4c294f20660091585e732a4c77c97efa2b79b558fe357",
+            "git_blob_sha1": "4d459eeff0cda6b320a555802d002c88e6df31a7"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/CAPTURE-HARDENING.md",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/CAPTURE-HARDENING.md",
+            "mode": "100644",
+            "bytes": 3491,
+            "sha256": "50309d836c4ead082b43a2b478c4e23328a54db0d48884d6cf5f949e3156b87d",
+            "git_blob_sha1": "aec3a1daea48fcc34e933de0fa84fb0eed4dc54d"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/b_stream_adapter.h",
+          "before": {
+            "path": "research/fsmn2599-stream-c/b_stream_adapter.h",
+            "mode": "100644",
+            "bytes": 3585,
+            "sha256": "3d25d9dba31220c71afbbc31d6c8022431b48badf9261294c05823f6b401a8a2",
+            "git_blob_sha1": "8b133287e278a64cd13ec9e0b76e93d2f7b0d106"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/b_stream_adapter.h",
+            "mode": "100644",
+            "bytes": 3652,
+            "sha256": "08772441536f582ae855efe9911dc467f912d8a02f45f89cbcb640d16e41932e",
+            "git_blob_sha1": "41b2a24d5b6ff0a3ff823d05efe1516651bfe10c"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/bsa_capture.h",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/bsa_capture.h",
+            "mode": "100644",
+            "bytes": 3031,
+            "sha256": "c7b6b8117d3fdb79de4f8eb6223b74e76e62ce091be14bc0a77704fafcaa8670",
+            "git_blob_sha1": "9627cf474ac09139e44450f2bf635e2b6858a8c5"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/build.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/build.py",
+            "mode": "100644",
+            "bytes": 12511,
+            "sha256": "a1a574037760814646d82e327b6cd54d0f3d754ee814977970429c55398c566c",
+            "git_blob_sha1": "395ed848e6db99d0372404bd8551671591522551"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/build.py",
+            "mode": "100644",
+            "bytes": 13609,
+            "sha256": "dd990514c9c3d84f7e32889a133ac8b0248f0665fc642323c3a172a99184686f",
+            "git_blob_sha1": "5419b88add4173cee48a45a9c76de10bc10963ae"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/source-binding.json",
+          "before": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 3530,
+            "sha256": "a5635d7f26291732e23d79fe42f81b612aa4439bced9426b5fd974ff875b3e3b",
+            "git_blob_sha1": "f2e40de13a2cc9b38cab5e07a5afcac790fbf826"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 4065,
+            "sha256": "dd267d6f8b72dfa166f18541343f56c13f4252152ea2882f8aa961cd157727f7",
+            "git_blob_sha1": "7347662a27ddc9ae0905f5757d32147b6f4b0d68"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_capture_contract.c",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_capture_contract.c",
+            "mode": "100644",
+            "bytes": 4940,
+            "sha256": "5c5c490ac7a250db3e488ab0532cd2424c14b6cd4cc4bbfd900cb8097baf3256",
+            "git_blob_sha1": "2e6f3b2bd5a6c7563f58c99ca282ae2dfd8ca20d"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/test_cpp_link.cpp",
+          "before": null,
+          "after": {
+            "path": "research/fsmn2599-stream-c/test_cpp_link.cpp",
+            "mode": "100644",
+            "bytes": 293,
+            "sha256": "ab5d7a17bdb4527ef068577607195fde033cb9f155143c19a087ab50788a49f5",
+            "git_blob_sha1": "bb1e38d1ccc51c0b6c1e5103427bbccac5eac764"
+          }
+        },
+        {
+          "path": "tests/run_research_fsmn_stream_arm_build.py",
+          "before": null,
+          "after": {
+            "path": "tests/run_research_fsmn_stream_arm_build.py",
+            "mode": "100644",
+            "bytes": 3503,
+            "sha256": "ef61e551eba2571b3320ab06ca212d829402618428b6368aae0cd9450eac4339",
+            "git_blob_sha1": "2c44cc2af64a63b360e1377e51e6824814a002e4"
+          }
+        },
+        {
+          "path": "tests/test_causal_research_contract.py",
+          "before": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 1653,
+            "sha256": "1e075951b885223af59ac68cb3a7c0d8152b52d1709984e945c3dd75c361de26",
+            "git_blob_sha1": "b45d091131570926c99046b0921f57068679638a"
+          },
+          "after": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 1786,
+            "sha256": "803ae99d08931f5252a25b8bf3ae0b395de1ab2191519f916150a8b9e5522acd",
+            "git_blob_sha1": "1d5854064cb52c07316756219809de1d57c37f27"
+          }
+        },
+        {
+          "path": "tests/test_research_fsmn_stream.py",
+          "before": {
+            "path": "tests/test_research_fsmn_stream.py",
+            "mode": "100644",
+            "bytes": 2010,
+            "sha256": "1be2cd0f5a2d1ed2eeaf771ce8576d00e185210a11fd99efdb175be7302e37fb",
+            "git_blob_sha1": "48c6bc8495b3039856fe930c04c4a516589c2cb7"
+          },
+          "after": {
+            "path": "tests/test_research_fsmn_stream.py",
+            "mode": "100644",
+            "bytes": 2230,
+            "sha256": "ef13c505923dc1ddad90def71c4c8095b1511f8d78ed8b47363f1832182b98b8",
+            "git_blob_sha1": "b22c26378a229a8351590f7eecc0163a93815461"
           }
         }
       ]

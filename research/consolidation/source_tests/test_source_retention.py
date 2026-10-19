@@ -959,4 +959,116 @@ class SenseRuntimeRevisionTests(unittest.TestCase):
             self.assertNotEqual(raw, (self.root / row['path']).read_bytes())
 
 
+
+
+class FixedWorkflowDependabotTests(unittest.TestCase):
+    """Four fixed identities; this is not a general YAML parser/schema validator."""
+    ROOT = Path(__file__).resolve().parents[3]
+    PINS = {
+        '.github/workflows/kw1-preset-supplement-20261014-v1.yml':
+            'd31048e6c4a01517befa831778d0216620d1ec162916d49476bf0e7396253f39',
+        '.github/workflows/tts-pilot-asr-20261014-v1.yml':
+            'd2db3f712ea86f74e0b9917e9513bf4cf6c187e7b579806c411ccb6ca70cc8dc',
+        '.github/workflows/tts-quality-probe-20261014-v1.yml':
+            'f516406eab52aacaf8e0ca2ec31705829bffc17a261c64b50e4522ba68e32106',
+        '.github/workflows/tts-quality-remaining-20261014-v1.yml':
+            'eecf226fcf03fe0a5be29992fc54d440eac87f79fdfdb05132f8d71968f122ae',
+    }
+
+    @classmethod
+    def validate_config(cls, text):
+        # CI's source contracts are stdlib-only. Read just the existing block-YAML
+        # ecosystem/directory/exclude-paths shape, with explicit indentation.
+        # Unrelated schedule/group values are not parsed or frozen. Unsupported
+        # representations of these three fields fail closed for manual review.
+        import re
+        lines = [line.rstrip() for line in text.splitlines()
+                 if line.strip() and not line.lstrip().startswith('#')]
+        def scalar(value):
+            value = value.strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
+                return value[1:-1]
+            return value
+        entries = [i for i, line in enumerate(lines)
+                   if line.startswith('  - package-ecosystem:')]
+        candidates = []
+        for position, start in enumerate(entries):
+            end = entries[position + 1] if position + 1 < len(entries) else len(lines)
+            if scalar(lines[start].split(':', 1)[1]) == 'github-actions':
+                candidates.append(lines[start:end])
+        if len(candidates) != 1:
+            raise ValueError('expected one explicitly scoped github-actions entry')
+        entry = candidates[0]
+        directories = [scalar(line.split(':', 1)[1]) for line in entry
+                       if line.startswith('    directory:')]
+        if directories != ['/'] or any(re.match(r'\s*directories:', line) for line in entry):
+            raise ValueError('fixed paths require the repository-root directory')
+        if any(re.match(r'\s*ignore:', line) for line in entry):
+            raise ValueError('dependency-wide ignore is outside fixed-path scope')
+        keys = [i for i, line in enumerate(entry) if re.match(r'\s*exclude-paths:', line)]
+        if len(keys) != 1 or entry[keys[0]] != '    exclude-paths:':
+            raise ValueError('exclude-paths must be a direct ecosystem block list')
+        paths = []
+        for line in entry[keys[0] + 1:]:
+            if len(line) - len(line.lstrip()) <= 4:
+                break
+            if not line.startswith('      - ') or line.startswith('       '):
+                raise ValueError('unsupported exclude-paths list representation')
+            path = scalar(line[8:])
+            if not re.fullmatch(r'[A-Za-z0-9_./-]+', path):
+                raise ValueError('exclude-paths must be literal file paths')
+            paths.append(path)
+        if len(paths) != len(set(paths)) or set(paths) != set(cls.PINS):
+            raise ValueError('fixed workflow exclusions must be exactly the four paths')
+
+    def test_exact_scoped_exclusions_preserve_general_updates(self):
+        self.validate_config((self.ROOT / '.github/dependabot.yml').read_text())
+
+    def test_unrelated_schedule_changes_are_allowed(self):
+        text = (self.ROOT / '.github/dependabot.yml').read_text()
+        changed = text.replace('interval: weekly', 'interval: daily').replace(
+            'day: monday', 'day: friday').replace('"09:00"', '"12:30"').replace(
+            'timezone: Asia/Singapore', 'timezone: Etc/UTC')
+        self.assertNotEqual(changed, text)
+        self.validate_config(changed)
+
+    def test_exclusion_order_is_not_frozen(self):
+        text = (self.ROOT / '.github/dependabot.yml').read_text()
+        old = ''.join('      - "' + name + '"\n' for name in self.PINS)
+        new = ''.join('      - "' + name + '"\n' for name in reversed(self.PINS))
+        self.assertIn(old, text)
+        self.validate_config(text.replace(old, new))
+
+    def test_fixed_workflow_bytes_are_unchanged(self):
+        for name, digest in self.PINS.items():
+            with self.subTest(path=name):
+                path = self.ROOT / name
+                self.assertFalse(path.is_symlink())
+                self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), digest)
+
+    def test_missing_wildcard_duplicate_and_global_ignores_rejected(self):
+        text = (self.ROOT / '.github/dependabot.yml').read_text()
+        first = next(iter(self.PINS))
+        line = '      - "' + first + '"\n'
+        variants = (
+            text.replace(line, ''),
+            text.replace(first, '.github/workflows/**'),
+            text.replace(line, line + line),
+            text.replace('    exclude-paths:', '        exclude-paths:'),
+            text + '    ignore:\n      - dependency-name: actions/upload-artifact\n',
+            text.replace('    directory: /', '    directory: /.github/workflows'),
+            text.replace('    exclude-paths:', '    exclude-paths: []\n    exclude-paths:'),
+        )
+        for altered in variants:
+            with self.subTest(config=altered), self.assertRaises(ValueError):
+                self.validate_config(altered)
+
+    def test_ordinary_workflows_and_future_campaigns_are_not_excluded(self):
+        from fnmatch import fnmatchcase
+        for candidate in ('.github/workflows/ci.yml',
+                          '.github/workflows/kw1-supplement-observation.yml',
+                          '.github/workflows/tts-quality-probe-20261014-v2.yml'):
+            self.assertFalse(any(fnmatchcase(candidate, excluded) for excluded in self.PINS))
+
+
 if __name__=='__main__':unittest.main(verbosity=2)
