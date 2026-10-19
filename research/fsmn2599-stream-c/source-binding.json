@@ -43,8 +43,8 @@
     },
     {
       "path": "research/fsmn2599-stream-c/build.py",
-      "bytes": 14398,
-      "sha256": "8f57e5b439793c9787eef89da14e8213669372d3fc3c3ecc27a3a980b5306f77"
+      "bytes": 14635,
+      "sha256": "d81d8a4d44dfa88525472b631a4b8ec475cdd2896b2e04eaa10e2716dd97d81c"
     },
     {
       "path": "research/fsmn2599-stream-c/canonical_fbank.c",
@@ -138,8 +138,8 @@
     },
     {
       "path": "research/fsmn2599-stream-c/test_arm_synthetic.py",
-      "bytes": 9050,
-      "sha256": "27d85a6182dca7a906126eb92f3ac42ac820bcd8e57e7f69a11645c5591c1fe7"
+      "bytes": 10198,
+      "sha256": "099b111592a6aecb415b2df754987fae8350f05d423d46e49a0078e0897b6136"
     },
     {
       "path": "research/fsmn2599-stream-c/test_b_stream_adapter.c",

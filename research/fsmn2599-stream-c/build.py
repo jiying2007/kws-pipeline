@@ -54,6 +54,7 @@ DISK_LIMIT = 16 * 1024 * 1024
 OUTPUT_LIMIT = 1024 * 1024
 FIXTURE_MESSAGE = "eight synthetic glue groups completed; no acoustic qualification"
 COMPILE_BUDGET_SECONDS = 60
+CLEANUP_SECONDS = 2
 
 
 def validate_sources(root):
@@ -186,7 +187,10 @@ def run_bounded(argv, directory, wall, cpu, output_limit=OUTPUT_LIMIT):
         finally:
             try:
                 if proc is not None:
-                    proc.wait()
+                    try:
+                        proc.wait(timeout=CLEANUP_SECONDS)
+                    except subprocess.TimeoutExpired as exc:
+                        raise RuntimeError('child cleanup timed out; termination unconfirmed') from exc
             finally:
                 try:
                     if selector is not None:

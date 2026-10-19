@@ -133,6 +133,20 @@ class DriverTests(unittest.TestCase):
         self.assertLessEqual(len(out.getvalue().encode()), 1024)
         self.assertNotIn('commands', receipt); self.assertFalse(receipt['qualification_allowed'])
 
+    def test_group_kill_errors_have_bounded_reaping(self):
+        for missing in (True, False):
+            with self.subTest(missing=missing):
+                proc, selector = Mock(), Mock()
+                selector.register.side_effect = RuntimeError('setup failure')
+                kill_error = ProcessLookupError('group already gone') if missing else PermissionError('kill denied')
+                if not missing:
+                    proc.wait.side_effect = arm.guard.subprocess.TimeoutExpired('fixture', arm.guard.CLEANUP_SECONDS)
+                with patch.object(arm.guard.subprocess, 'Popen', return_value=proc), patch.object(arm.guard.selectors, 'DefaultSelector', return_value=selector), patch.object(arm.guard.os, 'killpg', side_effect=kill_error):
+                    with self.assertRaisesRegex(RuntimeError, 'setup failure' if missing else 'termination unconfirmed'):
+                        arm.guard.run_bounded(['never-executed'], Path('/tmp'), 1, 1)
+                proc.wait.assert_called_once_with(timeout=arm.guard.CLEANUP_SECONDS)
+                selector.close.assert_called_once(); proc.stdout.close.assert_called_once()
+
     def test_oversized_failure_report_keeps_small_receipt(self):
         out = io.StringIO()
         with patch.object(arm, 'OUTPUT_BYTES', 1024), redirect_stdout(out), self.assertRaisesRegex(RuntimeError, 'structured evidence'):
