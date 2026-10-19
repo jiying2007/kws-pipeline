@@ -42397,6 +42397,85 @@
           }
         }
       ]
+    },
+    {
+      "id": "arm-capture-current-status-20261019",
+      "date": "2026-10-19",
+      "base_commit": "4de34e8f29ed90e02cc11335895459ecb2e4e198",
+      "base_tree": "d254376a9e1385494c333fa23ebd7f923abd074b",
+      "workflow_source_changed": false,
+      "scope": "Run existing public capture mocks in all four ARM modes and reconcile current engineering status and private validation reference.",
+      "rationale": "Existing capture fixture only: gap/reset, byte chunking and time mapping with mocked acoustic/decoder backends. Historical canonical-frontend/old-head FAIL remains distinct from B EXPORTED_NOT_NUMERICALLY_VALIDATED. Preserve historical evidence and gates; no private inference, training or diagnostic replay.",
+      "files": [
+        {
+          "path": "docs/KWS_LANDING_STATUS.md",
+          "before": {
+            "path": "docs/KWS_LANDING_STATUS.md",
+            "mode": "100644",
+            "bytes": 23576,
+            "sha256": "d7da77a0f89d3429855dfd80b44a5c7ef812ffdcf4f0c10fabca5dfe81315cdd",
+            "git_blob_sha1": "6766005b794c0c98b484557c5ec7356d9dd708aa"
+          },
+          "after": {
+            "path": "docs/KWS_LANDING_STATUS.md",
+            "mode": "100644",
+            "bytes": 26648,
+            "sha256": "39ccb8af8c130b3293f24fcb5c0d82559b0a382409c1e3eb18bf02817157f699",
+            "git_blob_sha1": "3a19a7eb9826ec870df2be856bc56c2bd871b14f"
+          }
+        },
+        {
+          "path": "research/evaluation_integrity/README.md",
+          "before": {
+            "path": "research/evaluation_integrity/README.md",
+            "mode": "100644",
+            "bytes": 6137,
+            "sha256": "d8a46190f67d9d4d7ea585064f7d971fd27c688968e26f38d76793da042cc5cb",
+            "git_blob_sha1": "a9d9eaf0e9edc1d509bb75c35f3108f8e41e1729"
+          },
+          "after": {
+            "path": "research/evaluation_integrity/README.md",
+            "mode": "100644",
+            "bytes": 6299,
+            "sha256": "242a19cc424c1e9293703cecbfa5ab40ab3449f3b6ea1b70e7d963e657977c9e",
+            "git_blob_sha1": "a77f987d32004a2eb38403238f9d6b53c24bb858"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
+          "before": {
+            "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
+            "mode": "100644",
+            "bytes": 14861,
+            "sha256": "1791af2e4e52216504cb286d4dbb792d876d94f99f83ea6a5e8c9cbd318888b8",
+            "git_blob_sha1": "a923d3a4e67c24e9363324b7c40dd7a68989b3f7"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
+            "mode": "100644",
+            "bytes": 15218,
+            "sha256": "f0c8544e5dd93df8f1ded1df5a77327333b1c6e16ef071d45587954173b73f68",
+            "git_blob_sha1": "adf80e081e49b73a22f2420e72856bd0916bd8dd"
+          }
+        },
+        {
+          "path": "research/fsmn2599-stream-c/source-binding.json",
+          "before": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 6767,
+            "sha256": "071178d21dd2212208ab45929bfaaafb7be401375143c9b46e8b45a896229fb7",
+            "git_blob_sha1": "943f735a5f6b82a4ac9f52e2ff930367112710d5"
+          },
+          "after": {
+            "path": "research/fsmn2599-stream-c/source-binding.json",
+            "mode": "100644",
+            "bytes": 6767,
+            "sha256": "d68c61d083c2a3f1156973098ac6b9d099c864b7dda8ec6b0315d11470845c28",
+            "git_blob_sha1": "3a4a02e5d743dec94b268a3a9b04ea53dba341a1"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

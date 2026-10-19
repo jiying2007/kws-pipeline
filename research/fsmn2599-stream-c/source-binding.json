@@ -78,8 +78,8 @@
     },
     {
       "path": "research/fsmn2599-stream-c/check_arm_synthetic.py",
-      "bytes": 14861,
-      "sha256": "1791af2e4e52216504cb286d4dbb792d876d94f99f83ea6a5e8c9cbd318888b8"
+      "bytes": 15218,
+      "sha256": "f0c8544e5dd93df8f1ded1df5a77327333b1c6e16ef071d45587954173b73f68"
     },
     {
       "path": "research/fsmn2599-stream-c/check_profile.py",
