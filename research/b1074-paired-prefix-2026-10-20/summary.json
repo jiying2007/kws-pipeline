@@ -1,0 +1,93 @@
+{
+  "schema": "b1074-public-summary-v1",
+  "date": "2026-10-20",
+  "scope": {
+    "model_arm": "B",
+    "network_steps_per_side": 1074,
+    "samples": 515840,
+    "sample_rate_hz": 16000,
+    "duration_seconds": 32.24,
+    "fixed_feed_samples": 320,
+    "threshold": 0.7,
+    "finish_calls": 0,
+    "resets_between_clips": 0,
+    "input": "Previously exposed synthetic-gap development prefix",
+    "shared_components": [
+      "C frontend",
+      "C softmax",
+      "C decoder"
+    ],
+    "torch_frontend_tested": false
+  },
+  "strict_numerics": {
+    "status": "FAIL",
+    "scope": "network_logits_cache_strict",
+    "atol": 1e-05,
+    "rtol": 1e-05,
+    "criterion": "abs(C - Torch) <= atol + rtol * abs(Torch)",
+    "gate_relaxed": false,
+    "logits": {
+      "failures": 1715,
+      "values": 2791326,
+      "rows_with_failures": 165,
+      "max_absolute_error": 0.00030517578125,
+      "max_tolerance_ratio": 5.110223810407924
+    },
+    "cache": {
+      "failures": 40213,
+      "values": 6048768,
+      "rows_with_failures": 1073,
+      "max_absolute_error": 9.918212890625e-05,
+      "max_tolerance_ratio": 3.6455709626958663
+    }
+  },
+  "event_stability": {
+    "status": "STABLE_THIS_EXPOSED_PREFIX",
+    "event_count_each_side": 6,
+    "keyword_nodes_and_clocks_equal": true,
+    "historical_C_scores_nodes_clocks_exact": true,
+    "max_event_score_absolute_difference": 6.098042450997099e-07,
+    "minimum_C_margin_to_threshold": 0.039627504851356465,
+    "posterior_max_absolute_difference": 4.231929779052734e-06,
+    "top3_changes": 0,
+    "target_floor_crossings": 0,
+    "target_top3_membership_changes": 0
+  },
+  "human_evidence": {
+    "historical_whole_phrase_confirmations_retained": 2,
+    "new_independent_positive_examples": 0,
+    "context": "Single-user known-context confirmations sharing a synthetic reference voice",
+    "other_ten_labels_promoted": false,
+    "timing": "One retained target is emitted within its original clip; the other is emitted in the following synthetic gap."
+  },
+  "saved_result_audit": {
+    "integrity": "PASS",
+    "numeric_gate": "FAIL",
+    "real_model_frontend_decoder_calls": 0,
+    "torch_imported": false
+  },
+  "resource_observation": {
+    "cpu_seconds_late_snapshot": 17.076947129999997,
+    "wall_seconds_late_snapshot": 15.775962145999074,
+    "exact_final_totals": false,
+    "interpretation": "CPU is a post-comparison snapshot; wall is recorded before final receipt writes and checks. Neither is a precise final total or a performance benchmark."
+  },
+  "limits": {
+    "independent_acceptance": false,
+    "natural_stream_recall_established": false,
+    "natural_stream_FAR_established": false,
+    "whole_model_or_all_layer_numerical_pass": false,
+    "real_number_accuracy_established": false,
+    "product_qualification": false,
+    "B76_failure_changed": false,
+    "rejected_FP64_candidate_changed": false
+  },
+  "publication": {
+    "summary_only": true,
+    "new_scientific_runs": 0,
+    "private_data_included": false,
+    "raw_evidence_publicly_reproducible_from_this_summary": false
+  },
+  "publication_base_main": "a8c68c93de2c9218dd7e696bf3643d61e1a04d1c",
+  "runtime_provenance": "Execution dependencies were frozen separately; publication_base_main does not identify the complete runtime source provenance."
+}
