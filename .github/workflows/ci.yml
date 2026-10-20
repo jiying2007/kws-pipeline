@@ -292,6 +292,15 @@ jobs:
           python3 -S -B -OO -m unittest discover -s tests -p test_report_offline_effect.py -v
       - name: Verify tracked worktree after Statistical qualification bounds
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Statistical qualification bounds"'
+      - name: Research retention event linkage synthetic contracts
+        run: |
+          python3 -S -B -m unittest discover -s tests -p test_link_retention_events.py -v
+          python3 -S -B -O -m unittest discover -s tests -p test_link_retention_events.py -v
+          python3 -S -B -OO -m unittest discover -s tests -p test_link_retention_events.py -v
+          python3 -S -B research/bounded-local-retention-2026-10-20/trace/run_checks.py --repo-root . --cc gcc
+          python3 -S -B research/bounded-local-retention-2026-10-20/trace/run_checks.py --repo-root . --cc clang
+      - name: Verify tracked worktree after Research retention event linkage
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Research retention event linkage"'
       - name: Domain metric scorer
         run: |
           python3 tests/test_domain_metrics.py

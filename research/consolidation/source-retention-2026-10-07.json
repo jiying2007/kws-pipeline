@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 64070,
-      "sha256": "3731beeccf45854c847c022bdd4fe90e12c725bc845a2b1a23020fe11e1c1709",
-      "git_blob_sha1": "acef8ae86fa327058f5ce09171a4a2fdba96cfda"
+      "bytes": 64821,
+      "sha256": "e8feeaeb68e8f230e1ab1fcd5af4ae6b7418ea45e9c6f3dcf87bd7b8d0807394",
+      "git_blob_sha1": "04ccc3ecaa81fc33703fe47ed78b0929e7c4edc8"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -42749,6 +42749,155 @@
             "bytes": 11695,
             "sha256": "cde21811eea8e4e91d06a5099e14947fd861c3283ae009078f05c1ce79ed1c23",
             "git_blob_sha1": "b11b7ec30d828e6efb743997461bb7f17e96d5fb"
+          }
+        }
+      ]
+    },
+    {
+      "id": "retention-event-linkage-synthetic-20261020",
+      "date": "2026-10-20",
+      "base_commit": "6a7b1737bb579f93cc54f21f3449f215b67f31ae",
+      "base_tree": "60fe447ec6b0a72b391ed9af3ee42db3c57a8b00",
+      "workflow_source_changed": true,
+      "scope": "Run bounded research event linkage unit contracts in three Python modes and source-only native checks under GCC and Clang.",
+      "rationale": "Public research source and invented posterior fixtures only. Preserve original aggregate ABI, decoder scoring, production settings and scientific admission. No model calls or audio inputs.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 64070,
+            "sha256": "3731beeccf45854c847c022bdd4fe90e12c725bc845a2b1a23020fe11e1c1709",
+            "git_blob_sha1": "acef8ae86fa327058f5ce09171a4a2fdba96cfda"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 64821,
+            "sha256": "e8feeaeb68e8f230e1ab1fcd5af4ae6b7418ea45e9c6f3dcf87bd7b8d0807394",
+            "git_blob_sha1": "04ccc3ecaa81fc33703fe47ed78b0929e7c4edc8"
+          }
+        },
+        {
+          "path": "research/bounded-local-retention-2026-10-20/trace/README.md",
+          "before": null,
+          "after": {
+            "path": "research/bounded-local-retention-2026-10-20/trace/README.md",
+            "mode": "100644",
+            "bytes": 6780,
+            "sha256": "d500b9ab467b44f466114f55f2ced1848879ebe5bb1005a50e812a442917e71c",
+            "git_blob_sha1": "93a3f029e67ac58afccfab40f5bb50ff3445aff2"
+          }
+        },
+        {
+          "path": "research/bounded-local-retention-2026-10-20/trace/build_trace.py",
+          "before": null,
+          "after": {
+            "path": "research/bounded-local-retention-2026-10-20/trace/build_trace.py",
+            "mode": "100644",
+            "bytes": 4530,
+            "sha256": "d443a17555449ed8d96807097e2d5b04d3a0ed9c9327021d6662367d1bc9900b",
+            "git_blob_sha1": "3a2df68c0ff4657a24b9fc017daa4658ac7b8aac"
+          }
+        },
+        {
+          "path": "research/bounded-local-retention-2026-10-20/trace/exports.map",
+          "before": null,
+          "after": {
+            "path": "research/bounded-local-retention-2026-10-20/trace/exports.map",
+            "mode": "100644",
+            "bytes": 158,
+            "sha256": "81556c684f1aef3c138745fe09240a1e108a262baa3d703bd4f40a707347d56e",
+            "git_blob_sha1": "c5304e91038cb6f7d52dbf3b9954eb8c791bb160"
+          }
+        },
+        {
+          "path": "research/bounded-local-retention-2026-10-20/trace/run_checks.py",
+          "before": null,
+          "after": {
+            "path": "research/bounded-local-retention-2026-10-20/trace/run_checks.py",
+            "mode": "100644",
+            "bytes": 4986,
+            "sha256": "d3d59e0a802f043c377a5b530a828a17b24567255c9c368893640ec387b6993e",
+            "git_blob_sha1": "a5b3430dac58032f7dad58fcd3afd76137fe0d25"
+          }
+        },
+        {
+          "path": "research/bounded-local-retention-2026-10-20/trace/test_native.c",
+          "before": null,
+          "after": {
+            "path": "research/bounded-local-retention-2026-10-20/trace/test_native.c",
+            "mode": "100644",
+            "bytes": 3864,
+            "sha256": "6f3723ba1c5a5ca103e5e5e8c469e730e5309e5cb01de93fb9431ccf4b84c260",
+            "git_blob_sha1": "084a2f5cf9cc0473af6f7b2a130c32f71aa22215"
+          }
+        },
+        {
+          "path": "research/bounded-local-retention-2026-10-20/trace/test_rows.c",
+          "before": null,
+          "after": {
+            "path": "research/bounded-local-retention-2026-10-20/trace/test_rows.c",
+            "mode": "100644",
+            "bytes": 960,
+            "sha256": "c61e028207d47c113684d65ec4c856a1986d0db8478a18b350d38410a7958998",
+            "git_blob_sha1": "2a00285520996c75a7dfe87b883ffd52ac3baf85"
+          }
+        },
+        {
+          "path": "research/bounded-local-retention-2026-10-20/trace/trace_json.h",
+          "before": null,
+          "after": {
+            "path": "research/bounded-local-retention-2026-10-20/trace/trace_json.h",
+            "mode": "100644",
+            "bytes": 2689,
+            "sha256": "6c0d1556bac6bc54f14dd93732b532c232324f34a4900d6ccf76c897ed63289e",
+            "git_blob_sha1": "a4263fde12dbcea35fca584e7141c44214ef7f16"
+          }
+        },
+        {
+          "path": "research/bounded-local-retention-2026-10-20/trace/trace_mode.c",
+          "before": null,
+          "after": {
+            "path": "research/bounded-local-retention-2026-10-20/trace/trace_mode.c",
+            "mode": "100644",
+            "bytes": 4080,
+            "sha256": "6350a4b2e05ea04e8af76ee290cec2c38d66d56563ed0c3ae78bc23b1fd733b5",
+            "git_blob_sha1": "0243254a522a4d93b0bb2f5fdfeb75cce41d8c76"
+          }
+        },
+        {
+          "path": "research/bounded-local-retention-2026-10-20/trace/trace_mode.h",
+          "before": null,
+          "after": {
+            "path": "research/bounded-local-retention-2026-10-20/trace/trace_mode.h",
+            "mode": "100644",
+            "bytes": 919,
+            "sha256": "bfc6ceb2d2650bc64969daca277d44d78294f2e6a21a643be47c798a8b3c2804",
+            "git_blob_sha1": "68c36cd9effa2efbf8d987ed4bdf3c2cd8edefe7"
+          }
+        },
+        {
+          "path": "tests/test_link_retention_events.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_link_retention_events.py",
+            "mode": "100644",
+            "bytes": 13878,
+            "sha256": "44824a71f6eadc653f3268c72aee5a4042e4d94c75c590b2462bd98e700a02b9",
+            "git_blob_sha1": "0f92c2113005ca9a6b11bf83cd90d117d759f145"
+          }
+        },
+        {
+          "path": "tools/link_retention_events.py",
+          "before": null,
+          "after": {
+            "path": "tools/link_retention_events.py",
+            "mode": "100644",
+            "bytes": 19083,
+            "sha256": "b0e9b1b2750eeba1fc91e4699fd3bcfafade9c26172256c802d109a8ae52a4e4",
+            "git_blob_sha1": "502520a93ccd9ea02269cb7c88f7ba082d2bfaa5"
           }
         }
       ]

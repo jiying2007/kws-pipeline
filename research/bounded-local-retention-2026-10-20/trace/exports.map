@@ -1,0 +1,3 @@
+{ global: kt_create; kt_begin; kt_step_f32; kt_drain; kt_status; kt_summary;
+kt_retention; kt_end; kt_destroy; kt_status_bytes; kt_record_bytes;
+local: *; };

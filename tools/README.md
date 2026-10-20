@@ -182,3 +182,5 @@ make collected measurements auditable and do not substitute for those measuremen
 
 - [inventory_effect_data.py](inventory_effect_data.py): hash-verified recovered audio inventory and development-only split planning; does not run models.
 - [audit_historical_base_metadata.py](audit_historical_base_metadata.py): read-only historical train/calibration lineage audit; never promotes diagnostic-only data.
+
+- [link_retention_events.py](link_retention_events.py): bounded research-only episode/event sidecar linkage; association is not acoustic truth or production qualification.
