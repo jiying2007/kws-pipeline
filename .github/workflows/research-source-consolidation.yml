@@ -76,6 +76,10 @@ jobs:
         run: |
           python3 -B research/decoder_scratch_v1/test_driver_guards.py
           python3 -B research/decoder_scratch_v1/build.py --cc "$CC" --output "$RUNNER_TEMP/decoder-scratch-v1"
+      - name: Test bounded local retention with synthetic state only
+        env:
+          CC: ${{ matrix.cc }}
+        run: python3 -B research/bounded-local-retention-2026-10-20/run_synthetic.py --cc "$CC"
       - name: Retain synthetic scratch receipts
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

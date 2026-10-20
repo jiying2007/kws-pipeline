@@ -42644,15 +42644,45 @@
           }
         }
       ]
+    },
+    {
+      "id": "bounded-local-retention-synthetic-ci-20261020",
+      "date": "2026-10-20",
+      "base_commit": "6f5344373d31470bd32050becd17fd90df5b1cde",
+      "base_tree": "adf4f1d7920a670f956db239c8521e885e270b3a",
+      "workflow_source_changed": true,
+      "scope": "Add one synthetic-state-only bounded local retention test step to the existing gcc/clang research matrix.",
+      "rationale": "Synchronize the current workflow identity after PR #628; preserve all historical source and maintenance evidence. No production defaults, scientific replay, model inference or promotion authority changes.",
+      "source_commit": "89e9d6a78dff15d7569912ac0c9ec775564b4f09",
+      "ci_failure_run": "https://github.com/jiying2007/kws-pipeline/actions/runs/39370720378",
+      "files": [
+        {
+          "path": ".github/workflows/research-source-consolidation.yml",
+          "before": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "bytes": 3719,
+            "sha256": "49681bf1a17017f958bda4f2949cb20d1c724d2add2dc70bc6fc45cff54cfcdb",
+            "git_blob_sha1": "c14276804ed442e73ca7f2e3ad5e906992f30f94"
+          },
+          "after": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "bytes": 3928,
+            "sha256": "b270d70df606b228d8e12ea73e2e42d9e798195bbf57cc2723bd8e5c3c2bf618",
+            "git_blob_sha1": "ead28ca8c537f4d601df5993cd06ddca7936afaf"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
     {
       "path": ".github/workflows/research-source-consolidation.yml",
       "mode": "100644",
-      "bytes": 3719,
-      "sha256": "49681bf1a17017f958bda4f2949cb20d1c724d2add2dc70bc6fc45cff54cfcdb",
-      "git_blob_sha1": "c14276804ed442e73ca7f2e3ad5e906992f30f94"
+      "bytes": 3928,
+      "sha256": "b270d70df606b228d8e12ea73e2e42d9e798195bbf57cc2723bd8e5c3c2bf618",
+      "git_blob_sha1": "ead28ca8c537f4d601df5993cd06ddca7936afaf"
     },
     {
       "path": ".github/workflows/qwen12-native-admission-v1.yml",

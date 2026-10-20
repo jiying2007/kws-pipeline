@@ -1,0 +1,307 @@
+--- a/kws3.c
++++ b/kws3.c
+@@ -4,9 +4,10 @@
+ /* SPDX-License-Identifier: Apache-2.0
+  * Derived from source-pinned WeKws stream_kws_ctc.py, Copyright (c) 2023
+  * Jing Du (thuduj12@163.com), with the reviewed wrapper/three-site patches.
+- * See NOTICE. Preparation only: this version has NOT been compiled or tested.
++ * See NOTICE. Research candidate: compilation and synthetic state tests only.
+  */
+ #include "kws3.h"
++#include "kws3_retention.h"
+ #include <float.h>
+ #include <fenv.h>
+ #include <math.h>
+@@ -36,14 +37,20 @@
+ } hypothesis;
+ typedef struct {
+     int64_t start, stop, last_active_pos;
++    int64_t anchor_row, deadline_row; /* Posterior rows, never fbank frames. */
+     size_t count;
+     hypothesis hyps[KWS3_PATHS];
+ } window;
+ typedef struct { uint32_t keyword_id; int64_t frames[4]; } dedup_key;
+ typedef struct {
++    uint64_t episodes_started, low_repeated, strong_closed, expired;
++    uint64_t window_censored, active_episodes, peak_active_episodes;
++} retention_counts;
++typedef struct {
+     kws3_summary metrics;
+     double threshold; /* Immutable config; reset preserves it. */
+     uint64_t threshold_rejections; /* Transactional, reset clears it. */
++    retention_counts retention; /* Transactional diagnostics; no scoring input. */
+     int64_t last_accepted_end;
+     size_t window_count, seen_count;
+     window windows[KWS3_WINDOWS];
+@@ -60,7 +67,10 @@
+ struct kws3_decoder { state committed, trial; scratch work; };
+ static const uint16_t keywords[2][4] = {{1027,1401,1462,2093},{1462,2093,1462,2093}};
+ 
+-/* The caller must mask FP traps. Portable C cannot verify that trap mask.
++/* KWS_DIAG_BEGIN */
++#include "kws3_diagnostic_ledger_impl.h"
++
++/* KWS_DIAG_END *//* The caller must mask FP traps. Portable C cannot verify that trap mask.
+  * Probes do not change rounding/FTZ/DAZ settings, but may set FP status flags.
+  * Volatile operands prevent folding away the arithmetic/conversion checks. */
+ static int environment_ok(void) {
+@@ -76,7 +86,8 @@
+ }
+ 
+ static kws3_status fail(kws3_decoder *d, kws3_status why) {
+-    if (d && d->committed.metrics.invalid_reason == KWS3_OK) {
++/* KWS_DIAG_BEGIN */    KWS_DIAG_ROW("decoder_failure",d ? (int64_t)d->committed.metrics.rows_decoded : -1,(int)why);
++/* KWS_DIAG_END */    if (d && d->committed.metrics.invalid_reason == KWS3_OK) {
+         d->committed.metrics.invalid_reason = why;
+         d->committed.metrics.valid = 0;
+     }
+@@ -300,7 +311,8 @@
+ static int detect(window *w, int64_t row, kws3_event *e) {
+     size_t i,j;
+     uint32_t key;
+-    for (i=0;i<w->count;++i) for (key=1;key<=2;++key) {
++/* KWS_DIAG_BEGIN */    KWS_DIAG_WINDOW("detect_window_begin");
++/* KWS_DIAG_END */    for (i=0;i<w->count;++i) for (key=1;key<=2;++key) {
+         const hypothesis *h=&w->hyps[i];
+         int off=suffix(h,key);
+         if (off>=0) {
+@@ -311,7 +323,8 @@
+             /* Test-only detect_seed can inspect a rejected attempt's score;
+              * this slot is never emitted unless detect returns one. */
+             e->score=score;
+-            /* The first path/keyword hit blocks further search even when its
++/* KWS_DIAG_BEGIN */            KWS_DIAG_DETECT("detect_attempt");
++/* KWS_DIAG_END */            /* The first path/keyword hit blocks further search even when its
+              * duration is invalid. Local interval=0 still preserves last_active. */
+             if (end-start<5 || end-start>250 ||
+                 (w->last_active_pos!=-1 && end<w->last_active_pos)) return 0;
+@@ -320,12 +333,86 @@
+             e->start_frame=start; e->end_frame=end;
+             e->window_start=w->start; e->decision_row=row; e->decision_frame=3*row;
+             e->diagnostic_candidate=1; e->grid_seconds=.01;
+-            w->last_active_pos=end;
+-            local_reset(w); /* Before deduplication/refractory, unconditionally. */
++/* KWS_DIAG_BEGIN */            KWS_DIAG_DETECT("detect_candidate_before_local_reset");
++/* KWS_DIAG_END */            /* Counterfactual: only local state retention below fixed theta0.7. */
++            if (score >= 0.7) {
++                w->last_active_pos=end;
++                local_reset(w);/* KWS_DIAG_BEGIN */
++                KWS_DIAG_WINDOW("detect_local_reset_done");/* KWS_DIAG_END */
++            } else {/* KWS_DIAG_BEGIN */
++                KWS_DIAG_WINDOW("detect_local_state_retained");/* KWS_DIAG_END */
++            }
+             return 1;
+         }
+     }
+-    return 0;
++/* KWS_DIAG_BEGIN */    KWS_DIAG_WINDOW("detect_no_suffix");
++/* KWS_DIAG_END */    return 0;
++}
++/* The following policy hook runs once after every detect call, including an
++ * illegal first suffix or no suffix. The candidate copy already exists, and
++ * merge remains unchanged. detect itself keeps its original strong-reset order.
++ */
++static void retention_clear(window *w) {
++    w->anchor_row=KWS3_RETENTION_INACTIVE;
++    w->deadline_row=KWS3_RETENTION_INACTIVE;
++}
++static kws3_status retention_clock(const window *w, int64_t row) {
++    if (w->anchor_row==KWS3_RETENTION_INACTIVE)
++        return w->deadline_row==KWS3_RETENTION_INACTIVE ? KWS3_OK : KWS3_INVARIANT;
++    if (w->anchor_row<0 || w->anchor_row>INT64_MAX-KWS3_RETENTION_ROWS)
++        return KWS3_CLOCK;
++    if (w->deadline_row!=w->anchor_row+KWS3_RETENTION_ROWS ||
++        row<w->anchor_row || row>w->deadline_row) return KWS3_INVARIANT;
++    return KWS3_OK;
++}
++static kws3_status retention_increment(uint64_t *n) {
++    if (*n==UINT64_MAX) return KWS3_CLOCK;
++    ++*n; return KWS3_OK;
++}
++static kws3_status retention_close(state *s, window *w, int64_t row,
++                                   uint64_t *counter, const char *kind) {
++    kws3_status rc;
++    if (!s->retention.active_episodes) return KWS3_INVARIANT;
++    if ((rc=retention_increment(counter))!=KWS3_OK) return rc;
++    --s->retention.active_episodes;
++    /* KWS_DIAG_BEGIN */ KWS_DIAG_WINDOW(kind); /* KWS_DIAG_END */
++    retention_clear(w); return KWS3_OK;
++}
++static kws3_status retention_after_detect(state *s, window *w, int64_t row,
++                                          const kws3_event *e, int activated) {
++    kws3_status rc;
++    if ((rc=retention_clock(w,row))!=KWS3_OK) return rc;
++    if (activated) {
++        if (e->score>=0.7) {
++            /* detect has already advanced last_active_pos and reset once,
++             * irrespective of later dedup/threshold/refractory decisions. */
++            if (w->anchor_row!=KWS3_RETENTION_INACTIVE) {
++                rc=retention_close(s,w,row,&s->retention.strong_closed,
++                                   "retention_strong_closed");
++                if (rc!=KWS3_OK) return rc;
++            }
++        } else if (w->anchor_row==KWS3_RETENTION_INACTIVE) {
++            if (row<0 || row>INT64_MAX-KWS3_RETENTION_ROWS) return KWS3_CLOCK;
++            if (s->retention.active_episodes>=KWS3_WINDOWS) return KWS3_INVARIANT;
++            if ((rc=retention_increment(&s->retention.episodes_started))!=KWS3_OK)
++                return rc;
++            w->anchor_row=row; w->deadline_row=row+KWS3_RETENTION_ROWS;
++            ++s->retention.active_episodes; /* bounded above by three */
++            if (s->retention.active_episodes>s->retention.peak_active_episodes)
++                s->retention.peak_active_episodes=s->retention.active_episodes;
++            /* KWS_DIAG_BEGIN */ KWS_DIAG_WINDOW("retention_started"); /* KWS_DIAG_END */
++        } else {
++            if ((rc=retention_increment(&s->retention.low_repeated))!=KWS3_OK)
++                return rc;
++            /* KWS_DIAG_BEGIN */ KWS_DIAG_WINDOW("retention_low_repeated"); /* KWS_DIAG_END */
++        }
++    }
++    if (w->anchor_row!=KWS3_RETENTION_INACTIVE && row==w->deadline_row) {
++        local_reset(w); /* Deliberately preserve last_active_pos. */
++        rc=retention_close(s,w,row,&s->retention.expired,"retention_expired");
++        if (rc!=KWS3_OK) return rc;
++    }
++    return KWS3_OK;
+ }
+ static int before(const kws3_event *a, const kws3_event *b) {
+     size_t j;
+@@ -358,19 +445,23 @@
+     }
+     for (i=0;i<count;++i) {
+         kws3_event *e=&candidates[i];
+-        for (j=0;j<s->seen_count;++j) if (same_key(&s->seen[j],e)) break;
+-        if (j<s->seen_count) { ++s->metrics.duplicate_candidates; continue; }
++/* KWS_DIAG_BEGIN */        KWS_DIAG_EVENT("candidate_before_dedup");
++/* KWS_DIAG_END */        for (j=0;j<s->seen_count;++j) if (same_key(&s->seen[j],e)) break;
++        if (j<s->seen_count) {/* KWS_DIAG_BEGIN */ KWS_DIAG_EVENT("duplicate_rejected");/* KWS_DIAG_END */ ++s->metrics.duplicate_candidates; continue; }
+         if (s->seen_count>=KWS3_DEDUP_KEYS) return KWS3_CAPACITY;
+         s->seen[s->seen_count].keyword_id=e->keyword_id;
+         memcpy(s->seen[s->seen_count++].frames,e->node_frames,sizeof(e->node_frames));
+         /* Same source-pinned order as ThresholdBeforeRefractory: local_reset
+          * already happened, rejected candidates retain their exact seen key,
+          * and do not start or extend shared refractory. Equality is accepted. */
+-        if (e->score<s->threshold) { ++s->threshold_rejections; continue; }
++/* KWS_DIAG_BEGIN */        KWS_DIAG_EVENT("candidate_before_threshold");
++/* KWS_DIAG_END */        if (e->score<s->threshold) {/* KWS_DIAG_BEGIN */ KWS_DIAG_EVENT("threshold_rejected");/* KWS_DIAG_END */ ++s->threshold_rejections; continue; }
+         if (s->last_accepted_end!=-1 && e->end_frame-s->last_accepted_end<50) {
+-            ++s->metrics.refractory_rejections; continue;
+-        }
+-        s->last_accepted_end=e->end_frame;
++/* KWS_DIAG_BEGIN */            KWS_DIAG_EVENT("refractory_rejected");
++/* KWS_DIAG_END */            ++s->metrics.refractory_rejections; continue;
++        }
++/* KWS_DIAG_BEGIN */        KWS_DIAG_EVENT("candidate_accepted");
++/* KWS_DIAG_END */        s->last_accepted_end=e->end_frame;
+         e->event_index=s->metrics.events_emitted++;
+         memcpy(e->recording_id,s->metrics.recording_id,KWS3_ID_BYTES);
+         out[(*emitted)++]=*e;
+@@ -385,19 +476,22 @@
+     size_t i,j,count=0,refs=0,keep=0;
+     const int64_t row=(int64_t)s->metrics.rows_decoded;
+     kws3_status rc;
+-    if (row%KWS3_HOP_ROWS==0) {
++/* KWS_DIAG_BEGIN */    KWS_DIAG_ROW("row_trial_begin",row,KWS3_OK);
++/* KWS_DIAG_END */    if (row%KWS3_HOP_ROWS==0) {
+         window *w;
+         if (s->window_count>=KWS3_WINDOWS) return KWS3_CAPACITY;
+         w=&s->windows[s->window_count++]; memset(w,0,sizeof(*w));
+-        w->start=row; w->stop=row+126; w->last_active_pos=-1; local_reset(w);
++        w->start=row; w->stop=row+126; w->last_active_pos=-1;
++        retention_clear(w); local_reset(w);
+         ++s->metrics.windows_started;
+     }
+     if (s->window_count>s->metrics.max_live_windows) s->metrics.max_live_windows=s->window_count;
+     for (i=0;i<s->window_count;++i) {
+         window *w=&s->windows[i];
+         size_t maxlen=0;
+-        int positive=0;
++        int positive=0, activated;
+         if (!(w->start<=row && row<w->stop)) return KWS3_INVARIANT;
++        if ((rc=retention_clock(w,row))!=KWS3_OK) return rc;
+         rc=beam(work,w->hyps,w->count,3*row,(size_t)(row-w->start+1));
+         if (rc!=KWS3_OK) return rc;
+         ++s->metrics.beam_updates;
+@@ -412,7 +506,10 @@
+         if (!w->count) ++s->metrics.empty_beam_window_rows;
+         if (w->count && !positive) ++s->metrics.zero_mass_window_rows;
+         if (maxlen>s->metrics.max_prefix_seen) s->metrics.max_prefix_seen=maxlen;
+-        if (detect(w,row,&candidates[count])) ++count;
++        activated=detect(w,row,&candidates[count]);
++        rc=retention_after_detect(s,w,row,&candidates[count],activated);
++        if (rc!=KWS3_OK) return rc;
++        if (activated) ++count;
+     }
+     ++s->metrics.topk_computations;
+     for (i=0;i<s->window_count;++i) for (j=0;j<s->windows[i].count;++j)
+@@ -426,7 +523,15 @@
+         if (s->windows[i].stop>(int64_t)s->metrics.rows_decoded) {
+             if (keep!=i) s->windows[keep]=s->windows[i];
+             ++keep;
+-        } else ++s->metrics.windows_retired;
++        } else {
++            window *w=&s->windows[i];
++            if (w->anchor_row!=KWS3_RETENTION_INACTIVE) {
++                rc=retention_close(s,w,row,&s->retention.window_censored,
++                                   "retention_window_censored");
++                if (rc!=KWS3_OK) return rc;
++            }
++            ++s->metrics.windows_retired;
++        }
+     }
+     s->window_count=keep;
+     return KWS3_OK;
+@@ -454,7 +559,8 @@
+     d->trial=d->committed;
+     if ((rc=advance(d,output,&n))!=KWS3_OK) return fail(d,rc);
+     d->committed=d->trial;
+-    memcpy(events,output,n*sizeof(*events)); *count=n;
++/* KWS_DIAG_BEGIN */    KWS_DIAG_ROW("row_committed",(int64_t)d->committed.metrics.rows_decoded-1,KWS3_OK);
++/* KWS_DIAG_END */    memcpy(events,output,n*sizeof(*events)); *count=n;
+     return KWS3_OK;
+ }
+ kws3_status kws3_step_f32(kws3_decoder *d, const float *p, size_t classes,
+@@ -509,6 +615,35 @@
+     out->numerical_support_ok=!out->zero_mass_window_rows && !out->empty_beam_window_rows;
+     return KWS3_OK;
+ }
++size_t kws3_retention_summary_bytes(void) { return sizeof(kws3_retention_summary); }
++size_t kws3_retention_window_bytes(void) { return sizeof(kws3_retention_window); }
++kws3_status kws3_get_retention_summary(const kws3_decoder *d,
++                                       kws3_retention_summary *out) {
++    size_t i;
++    const state *s;
++    if (!d || !out) return KWS3_ARGUMENT;
++    s=&d->committed;
++    if (s->metrics.finished) return KWS3_FINISHED; /* This API never creates EOF. */
++    memset(out,0,sizeof(*out));
++    out->episodes_started=s->retention.episodes_started;
++    out->low_repeated=s->retention.low_repeated;
++    out->strong_closed=s->retention.strong_closed;
++    out->expired=s->retention.expired;
++    out->window_censored=s->retention.window_censored;
++    out->active_episodes=s->retention.active_episodes;
++    out->peak_active_episodes=s->retention.peak_active_episodes;
++    out->rows_committed=s->metrics.rows_decoded;
++    out->live_windows=(uint32_t)s->window_count;
++    out->version=KWS3_RETENTION_VERSION;
++    for (i=0;i<s->window_count;++i) {
++        const window *w=&s->windows[i];
++        kws3_retention_window *r=&out->windows[i];
++        r->start=w->start; r->stop=w->stop; r->last_active_pos=w->last_active_pos;
++        r->anchor_row=w->anchor_row; r->deadline_row=w->deadline_row;
++        r->hypothesis_count=(uint64_t)w->count;
++    }
++    return KWS3_OK;
++}
+ const char *kws3_status_string(kws3_status s) {
+     static const char *const names[]={"ok","invalid argument/identity","invalid full posterior",
+       "explicit capacity exceeded","clock limit exceeded","posterior after EOF",
+@@ -580,7 +715,7 @@
+         row>KWS3_MAX_ROWS || last< -1 || last>3*row) return KWS3_ARGUMENT;
+     for (i=0;i<n;++i) if (!test_hyp_valid(&input[i],3*row)) return KWS3_ARGUMENT;
+     memset(&w,0,sizeof(w)); memset(out,0,sizeof(*out));
+-    w.last_active_pos=last; w.count=n;
++    w.last_active_pos=last; w.count=n; retention_clear(&w);
+     memcpy(w.hyps,input,n*sizeof(*input));
+     *activated=detect(&w,row,out); *new_last=w.last_active_pos; return KWS3_OK;
+ }
