@@ -1,0 +1,267 @@
+{
+  "schema": "fsmn2599-two-session-public-aggregation-v1",
+  "record_date": "2026-10-20",
+  "status": "COMPLETED_UNLABELED_ENGINEERING_SCREEN",
+  "repository": "jiying2007/kws-pipeline",
+  "proposed_repository_directory": "research/fsmn2599-longstream-development-20261020/",
+  "scope": "Aggregate full-session development observation; no numerical qualification, independent-negative certification, accuracy claim, or promotion.",
+  "dataset_source": {
+    "name": "AliMeeting",
+    "provider": "Alibaba Group",
+    "resource": "OpenSLR SLR119",
+    "official_resource_url": "https://www.openslr.org/119/",
+    "official_test_archive_url": "https://speech-lab-share-data.oss-cn-shanghai.aliyuncs.com/AliMeeting/openlr/Test_Ali.tar.gz",
+    "source_license": "CC BY-SA 4.0",
+    "attribution": "Fan Yu et al., M2MeT: The ICASSP 2022 Multi-Channel Multi-Party Meeting Transcription Challenge, ICASSP 2022.",
+    "source_exposure_independence": "unknown",
+    "speaker_independence": "unknown",
+    "pretraining_independence": "unknown"
+  },
+  "frozen_runtime": {
+    "repository_main_commit": "b8e2f4adbfb9e964197276ad82c4fb855d747114",
+    "model": "unchanged default B",
+    "threshold": 0.7,
+    "keywords": [
+      {
+        "id": 1,
+        "text": "你好小窝"
+      },
+      {
+        "id": 2,
+        "text": "小窝小窝"
+      }
+    ],
+    "strict_numeric_compiler_flags": [
+      "-std=c11",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-pedantic",
+      "-fno-fast-math",
+      "-ffp-contract=off",
+      "-fexcess-precision=standard",
+      "-UKWS_AFFINE_BLOCK2",
+      "-UKWS_B_PROFILE"
+    ],
+    "strict_numeric_gate": {
+      "gate": "B76",
+      "status": "FAIL",
+      "changed_by_this_run": false
+    },
+    "rejected_fp64_candidate_used": false,
+    "model_or_default_promotion": false,
+    "public_source_files": [
+      {
+        "path": "research/fsmn2599-stream-c/canonical_pcm.c",
+        "sha256": "9631201666df788d1a40649ca43a0786d91408acea520c1235a25199847df57b"
+      },
+      {
+        "path": "research/fsmn2599-stream-c/canonical_fbank.c",
+        "sha256": "7e84597f4bf55880301a26134a030b090aad4b4e42ca2f43e5ed7970fc954bc9"
+      },
+      {
+        "path": "research/fsmn2599-stream-c/fsmn2599.c",
+        "sha256": "12b237eb78fdccb16658e66f096c32cac60814131e2afcd457af648d3c6c1dd7"
+      },
+      {
+        "path": "research/fsmn2599-stream-c/softmax2599.c",
+        "sha256": "d2cb8ee4891809445bbd3b04912196d847d8f943066b3dd64479b861a863b6e4"
+      },
+      {
+        "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
+        "sha256": "e6d57e167fe85f150517eeb7b54f38eb9ce46a54922bff8897eaa8f7bedca41f"
+      }
+    ],
+    "compiler": {
+      "version": "gcc (Debian 14.2.0-19) 14.2.0",
+      "target": "x86_64-linux-gnu"
+    }
+  },
+  "stream_protocol": {
+    "source_sample_rate_hz": 16000,
+    "source_format": "PCM16LE",
+    "source_channels": 8,
+    "selected_channel_zero_based": 0,
+    "model_input_channels": 1,
+    "channel_operation": "Select raw original channel 0 only.",
+    "mixing": false,
+    "gain_adjustment": false,
+    "resampling": false,
+    "beamforming": false,
+    "session_count": 2,
+    "execution_order": "serial",
+    "passes_per_session": 1,
+    "warmup_runs": 0,
+    "retry_runs": 0,
+    "model_initializations": 2,
+    "create_calls_per_session": 1,
+    "begin_calls_per_session": 1,
+    "generation_per_session": 1,
+    "finish_calls": 0,
+    "appended_padding_samples": 0,
+    "resets": 0,
+    "whole_sessions_preserved": true,
+    "annotation_gaps_and_end_tails_preserved": true,
+    "end_near_detections": "Right-censored when future context is required; no finish or appended samples."
+  },
+  "metric": {
+    "name": "total triggers/full-session hour",
+    "numerator": "Final accepted, deduplicated, refractory-filtered event callbacks.",
+    "denominator": "All consumed original samples / 16000 / 3600; no negative-truth or independence qualification.",
+    "target_truth": "unknown",
+    "expected": null,
+    "true_false_event_labels": null,
+    "accepted_negative_seconds": 0,
+    "false_alarm_rate_per_hour": null,
+    "recall": null,
+    "false_reject_rate": null,
+    "independent_hours_admitted": 0
+  },
+  "sessions": [
+    {
+      "session": "A",
+      "sample_count": 33064320,
+      "full_session_seconds": 2066.52,
+      "full_session_hours": 0.5740333333333333,
+      "feed_calls": 103326,
+      "fbank_frames": 206650,
+      "completed_rows": {
+        "network": 68883,
+        "softmax": 68883,
+        "decoder": 68883,
+        "callback": 68883
+      },
+      "final_events": 0,
+      "final_events_by_keyword": {
+        "你好小窝": 0,
+        "小窝小窝": 0
+      },
+      "final_events_per_full_session_hour": 0.0,
+      "target_truth": "unknown",
+      "expected": null,
+      "accepted_negative_seconds": 0,
+      "false_alarm_rate_per_hour": null,
+      "recall": null,
+      "native_exit_code": 0,
+      "diagnostics": {
+        "support_ok": true,
+        "empty_beam_window_rows": 0,
+        "zero_mass_window_rows": 0,
+        "candidate_threshold_rejections": 0
+      },
+      "resource_observations": {
+        "reaped_child_cpu_seconds": 51.540965,
+        "session_supervision_wall_seconds": 52.745616,
+        "peak_sampled_child_rss_bytes": 4345856
+      },
+      "independent_hours_admitted": 0
+    },
+    {
+      "session": "B",
+      "sample_count": 33488219,
+      "full_session_seconds": 2093.0136875,
+      "full_session_hours": 0.5813926909722221,
+      "feed_calls": 104651,
+      "fbank_frames": 209299,
+      "completed_rows": {
+        "network": 69766,
+        "softmax": 69766,
+        "decoder": 69766,
+        "callback": 69766
+      },
+      "final_events": 0,
+      "final_events_by_keyword": {
+        "你好小窝": 0,
+        "小窝小窝": 0
+      },
+      "final_events_per_full_session_hour": 0.0,
+      "target_truth": "unknown",
+      "expected": null,
+      "accepted_negative_seconds": 0,
+      "false_alarm_rate_per_hour": null,
+      "recall": null,
+      "native_exit_code": 0,
+      "diagnostics": {
+        "support_ok": true,
+        "empty_beam_window_rows": 0,
+        "zero_mass_window_rows": 0,
+        "candidate_threshold_rejections": 0
+      },
+      "resource_observations": {
+        "reaped_child_cpu_seconds": 51.947743,
+        "session_supervision_wall_seconds": 52.596773,
+        "peak_sampled_child_rss_bytes": 4485120
+      },
+      "independent_hours_admitted": 0
+    }
+  ],
+  "totals": {
+    "full_session_samples": 66552539,
+    "full_session_seconds": 4159.5336875,
+    "full_session_hours": 1.1554260243055556,
+    "feed_calls": 207977,
+    "fbank_frames": 415949,
+    "completed_rows": {
+      "network": 138649,
+      "softmax": 138649,
+      "decoder": 138649,
+      "callback": 138649
+    },
+    "final_events": 0,
+    "final_events_by_keyword": {
+      "你好小窝": 0,
+      "小窝小窝": 0
+    },
+    "final_events_per_full_session_hour": 0.0,
+    "candidate_threshold_rejections": 0,
+    "repeated_emitted_event_keys": 0
+  },
+  "resource_limits": {
+    "total_invocation_wall_seconds": 900,
+    "total_invocation_cpu_seconds": 900,
+    "per_session_wall_seconds": 600,
+    "per_session_cpu_seconds": 600,
+    "per_process_address_space_bytes": 536870912,
+    "captured_stdout_plus_stderr_bytes_per_session": 8388608,
+    "controller_storage_bytes": 20971520,
+    "task_new_bytes": 33554432,
+    "disk_free_floor_bytes": 2147483648
+  },
+  "resource_observations": {
+    "sum_reaped_child_cpu_seconds": 103.488708,
+    "sum_session_supervision_wall_seconds": 105.342389,
+    "reported_time_precision": "Six decimal places; child CPU is obtained by reaping children, session wall is per-session supervision.",
+    "exact_supervisor_cpu_seconds": null,
+    "exact_whole_invocation_cpu_seconds": null,
+    "exact_whole_invocation_wall_seconds": null,
+    "peak_sampled_child_rss_bytes": 4485120,
+    "peak_sampled_child_rss_mib": 4.27734375,
+    "outer_invocation_exit_code": 0,
+    "resource_or_clock_failure_observed": false,
+    "resource_guard_evidence": "Successful outer invocation exit and the reviewed final checks support budget compliance; exact supervisor and whole-invocation CPU/wall totals were not persisted.",
+    "rss_limit_note": "RSS is sampled; the enforced address-space limit is separate."
+  },
+  "review": {
+    "status": "PASS_ENGINEERING_RUN_INTEGRITY_AND_BOUNDED_OBSERVATION",
+    "runtime_execution_completed": true,
+    "full_session_inputs_and_counts_independently_verified": true,
+    "aggregate_counts_and_rates_independently_recomputed": true,
+    "native_row_completion_invariants_passed": true,
+    "postflight_review_reran_models": false,
+    "public_aggregation_generation_reran_models": false,
+    "event_clock_observations": 0,
+    "event_clock_check": "Vacuous because no event was emitted; no observed event timing was validated.",
+    "detection_latency_measured": false
+  },
+  "interpretation_limits": [
+    "Zero final events is not evidence of zero posterior values, zero keyword probabilities, or absence of earlier-stage paths or candidates.",
+    "Candidate-level threshold rejections are zero; this provides no evidence that lowering the final threshold alone would help. No threshold sweep or replay was performed.",
+    "support_ok=true, empty-beam-window rows=0, and zero-mass-window rows=0 are diagnostics only; they establish neither numerical qualification nor recognition accuracy.",
+    "No emitted events means event-node and event-clock observations are absent; there is no latency claim.",
+    "No finish call or future padding was used; end-near detections requiring future context are right-censored.",
+    "All target truth and source, speaker, and pretraining independence remain unknown; accepted negative seconds and admitted independent negative hours remain zero.",
+    "The observed zero total-trigger rate is not FAR=0, recall, FRR, an independent-negative test result, or production suitability.",
+    "The B76 strict numeric gate remains FAIL unchanged; the rejected FP64 candidate was not used; no model or default promotion follows."
+  ]
+}
