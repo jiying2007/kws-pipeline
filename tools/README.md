@@ -114,6 +114,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`diagnose_sequence_margin_runtime_gap_decomposition.py`](diagnose_sequence_margin_runtime_gap_decomposition.py)
 - [`plan_far_stream.py`](plan_far_stream.py)
 - [`requalify_decoder_boundary_grid.py`](requalify_decoder_boundary_grid.py)
+- [`report_offline_effect.py`](report_offline_effect.py): compare saved events by evidence tier under frozen identities; no inference, production qualification or shipping approval.
 - [`summarize_frozen_far_context_path.py`](summarize_frozen_far_context_path.py)
 
 ## Product evidence and qualification

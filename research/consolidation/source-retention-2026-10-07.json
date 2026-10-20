@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 63781,
-      "sha256": "dd5aaa7df6158a6e3dcd0766719402bf798800e0e4e805387478193512fdee6c",
-      "git_blob_sha1": "fd0f9ffc3f2fc72aad5d1fca8ab10a400a0b6606"
+      "bytes": 64070,
+      "sha256": "3731beeccf45854c847c022bdd4fe90e12c725bc845a2b1a23020fe11e1c1709",
+      "git_blob_sha1": "acef8ae86fa327058f5ce09171a4a2fdba96cfda"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -42699,6 +42699,56 @@
             "bytes": 4156,
             "sha256": "dd1fa1e7f2f93444321cfb667f83bb56e615ff451739ce2803458fc89765c7ce",
             "git_blob_sha1": "f3edd54c53696171ad17131feb27e69be1edad2b"
+          }
+        }
+      ]
+    },
+    {
+      "id": "offline-effect-report-contracts-20261020",
+      "date": "2026-10-20",
+      "base_commit": "584628f5ddf9fa15f9673b457b9d9c6a41d11b09",
+      "base_tree": "40cbb42ec9380b071514dc96620fd6759b574f9a",
+      "workflow_source_changed": true,
+      "scope": "Run the saved-event offline report adapter regressions in normal, -O and -OO modes in the existing required Python contracts job.",
+      "rationale": "Public source and invented-input tests only. Preserve historical retention identities, numerical admission, production qualification and shipping gates; no model execution or private data.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 63781,
+            "sha256": "dd5aaa7df6158a6e3dcd0766719402bf798800e0e4e805387478193512fdee6c",
+            "git_blob_sha1": "fd0f9ffc3f2fc72aad5d1fca8ab10a400a0b6606"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 64070,
+            "sha256": "3731beeccf45854c847c022bdd4fe90e12c725bc845a2b1a23020fe11e1c1709",
+            "git_blob_sha1": "acef8ae86fa327058f5ce09171a4a2fdba96cfda"
+          }
+        },
+        {
+          "path": "tools/report_offline_effect.py",
+          "before": null,
+          "after": {
+            "path": "tools/report_offline_effect.py",
+            "mode": "100644",
+            "bytes": 14950,
+            "sha256": "5341765088e1cf4fcf28f7cb5a4b82caab7b0db9bc294353c3d9ef98952cfb77",
+            "git_blob_sha1": "296d01f29cca7097c732dedff711f9828ab4c460"
+          }
+        },
+        {
+          "path": "tests/test_report_offline_effect.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_report_offline_effect.py",
+            "mode": "100644",
+            "bytes": 11695,
+            "sha256": "cde21811eea8e4e91d06a5099e14947fd861c3283ae009078f05c1ce79ed1c23",
+            "git_blob_sha1": "b11b7ec30d828e6efb743997461bb7f17e96d5fb"
           }
         }
       ]
