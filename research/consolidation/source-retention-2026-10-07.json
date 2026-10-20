@@ -42674,15 +42674,43 @@
           }
         }
       ]
+    },
+    {
+      "id": "explicit-bounded-research-activation-ci-20261020",
+      "date": "2026-10-20",
+      "base_commit": "d452e90efefa8bde156bb41ed26f5a6d2fe2f567",
+      "base_tree": "f12845debed4554ca7e1f424c770cdec92db5686",
+      "workflow_source_changed": true,
+      "scope": "Add explicit offline research activation facade checks with invented rows to the existing gcc/clang matrix.",
+      "rationale": "Keep workflow identity synchronized in the same commit. No shipping configuration changes or scientific executions.",
+      "files": [
+        {
+          "path": ".github/workflows/research-source-consolidation.yml",
+          "before": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "bytes": 3928,
+            "sha256": "b270d70df606b228d8e12ea73e2e42d9e798195bbf57cc2723bd8e5c3c2bf618",
+            "git_blob_sha1": "ead28ca8c537f4d601df5993cd06ddca7936afaf"
+          },
+          "after": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "bytes": 4156,
+            "sha256": "dd1fa1e7f2f93444321cfb667f83bb56e615ff451739ce2803458fc89765c7ce",
+            "git_blob_sha1": "f3edd54c53696171ad17131feb27e69be1edad2b"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
     {
       "path": ".github/workflows/research-source-consolidation.yml",
       "mode": "100644",
-      "bytes": 3928,
-      "sha256": "b270d70df606b228d8e12ea73e2e42d9e798195bbf57cc2723bd8e5c3c2bf618",
-      "git_blob_sha1": "ead28ca8c537f4d601df5993cd06ddca7936afaf"
+      "bytes": 4156,
+      "sha256": "dd1fa1e7f2f93444321cfb667f83bb56e615ff451739ce2803458fc89765c7ce",
+      "git_blob_sha1": "f3edd54c53696171ad17131feb27e69be1edad2b"
     },
     {
       "path": ".github/workflows/qwen12-native-admission-v1.yml",
