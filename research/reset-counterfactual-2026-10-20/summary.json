@@ -1,0 +1,90 @@
+{
+  "schema": "reset-counterfactual-public-summary-v1",
+  "date": "2026-10-20",
+  "status": "PREREGISTERED_SCREENING_FAIL",
+  "miss_diagnostic": {
+    "rows": 747,
+    "samples": 359040,
+    "duration_seconds": 22.44,
+    "historical_events_exact": 6,
+    "formed_target_candidates": 2,
+    "candidate_row": 697,
+    "maximum_actually_formed_target_score": 0.3847483701042063,
+    "next_row": 698,
+    "next_row_tail_token_posterior": 0.9996832609176636,
+    "next_row_no_suffix_window_count": 3,
+    "interpretation": "Observed reset ordering motivates a counterfactual; the observational diagnostic alone does not establish recovery.",
+    "local_reset_before_downstream_rejection": true,
+    "window_rejection_reasons": {
+      "588": "threshold",
+      "630": "deduplication"
+    }
+  },
+  "counterfactual": {
+    "threshold": 0.7,
+    "streams": 2,
+    "control_replays": 2,
+    "candidate_replays": 2,
+    "decoder_rows_total": 3642,
+    "new_network_frontend_softmax_calls": 0,
+    "finish_calls": 0,
+    "resets_between_clips": 0,
+    "change": "Only skip local_reset and last_active_pos assignment for formed candidates with score below 0.7; preserve downstream dedup, threshold, refractory and acceptance logic. Scores equal to 0.7 retain original behavior.",
+    "controls_exact_all_fields": true,
+    "stream_results": [
+      {
+        "rows": 747,
+        "control_events": 6,
+        "candidate_events": 7,
+        "existing_event_window_start_changes": 2,
+        "control_candidates_seen": 18,
+        "candidate_candidates_seen": 257,
+        "control_duplicate_candidates": 7,
+        "candidate_duplicate_candidates": 244,
+        "original_six_event_scores_nodes_clocks_preserved": true
+      },
+      {
+        "rows": 1074,
+        "control_events": 6,
+        "candidate_events": 6,
+        "existing_event_window_start_changes": 0,
+        "control_candidates_seen": 17,
+        "candidate_candidates_seen": 239,
+        "control_duplicate_candidates": 9,
+        "candidate_duplicate_candidates": 231
+      }
+    ],
+    "count_ratio_interpretation": "Candidate and duplicate counts are internal-work observations, not CPU slowdown ratios; native per-arm CPU timing was not measured."
+  },
+  "strict_scoring": {
+    "target_recovered": false,
+    "new_unmatched_events": 1,
+    "known_regression": true,
+    "new_event_row": 698,
+    "new_event_score": 0.9938043189157924,
+    "last_node_sample": 335040,
+    "source_end_exclusive_sample": 335040,
+    "cross_seam": true,
+    "confirmed_acoustic_false_alarms": "NOT_ESTABLISHED",
+    "interpretation": "The last node equals the source exclusive end, so the frozen source scorer does not count recovery. This unmatched event is not a confirmed acoustic false alarm."
+  },
+  "limits": {
+    "independent_validation": false,
+    "natural_stream_recall_or_FAR_established": false,
+    "candidate_promoted": false,
+    "production_decoder_changed": false,
+    "phase_or_history_causality_isolated": false,
+    "natural_stream_regression_completed": false,
+    "future_timing_changes": "Any future timing semantics change or added waiting mechanism requires separate preregistration; neither is implemented or required for interpreting this result."
+  },
+  "review": {
+    "saved_result_integrity": "PASS",
+    "screening_outcome": "FAIL",
+    "reviewer_model_frontend_decoder_calls": 0
+  },
+  "publication": {
+    "summary_only": true,
+    "new_experiments_for_publication": 0,
+    "private_data_included": false
+  }
+}
