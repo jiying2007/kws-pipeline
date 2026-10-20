@@ -5,6 +5,8 @@ import argparse
 import hashlib
 import json
 import math
+import os
+import tempfile
 from pathlib import Path
 import sys
 
@@ -69,6 +71,107 @@ def validate_plan(plan):
                 and cal['target_far_per_hour'] >= 0, 'invalid declared calibration FAR target')
 
 
+def coverage_contract(plan, row):
+    """Predeclared input contract, not a hash of the future execution receipt."""
+    fields = ('recording', 'pcm_sha256', 'sample_rate_hz', 'sample_count',
+              'source_family', 'root_recording_id', 'session_id', 'continuous_negative')
+    contract = {key: row.get(key) for key in fields}
+    contract['context_policy'] = plan['context_policy']
+    return hashlib.sha256(json.dumps(contract, sort_keys=True, separators=(',', ':'),
+                                    allow_nan=False).encode()).hexdigest()
+
+
+def successful_terminal(item, label):
+    require(item.get('status') == 'completed' and item.get('terminal') is True
+            and type(item.get('exit_code')) is int and item['exit_code'] == 0,
+            label + ' requires successful terminal completion')
+
+
+def validate_execution(plan, rows, receipt):
+    """Validate complete declared execution, never infer success from empty events."""
+    require(isinstance(receipt, dict), 'execution receipt required')
+    require(set(receipt) == {'schema', 'status', 'terminal', 'exit_code', 'plan_sha256',
+                            'references_sha256', 'arms'}, 'unexpected or missing receipt fields')
+    require(receipt['schema'] == 'offline-effect-execution-v2', 'execution v2 required')
+    successful_terminal(receipt, 'execution')
+    require(valid_sha(receipt['plan_sha256']) and valid_sha(receipt['references_sha256']),
+            'execution input identities required')
+    require(receipt['references_sha256'] == plan['references_sha256'], 'execution references mismatch')
+    require(isinstance(receipt['arms'], dict) and set(receipt['arms']) == {'control', 'candidate'},
+            'exactly two executed arms required')
+    expected = {row['recording']: row for row in rows}
+    require(len(expected) == len(rows) and bool(expected), 'unique nonempty references required')
+    for row in rows:
+        rate, count = row.get('sample_rate_hz'), row.get('sample_count')
+        require(type(rate) is int and rate > 0 and rate == plan['context_policy']['sample_rate_hz'],
+                'reference sample rate must match context')
+        require(type(count) is int and count > 0, 'positive integer reference sample_count required')
+        if plan['context_policy']['eof_partial_chunk'] == 'drop':
+            require(count % plan['context_policy']['feed_chunk_samples'] == 0,
+                    'drop-tail policy cannot declare full coverage of a partial chunk')
+        require(math.isclose(row['duration_s'], count / rate, rel_tol=0, abs_tol=1e-9),
+                'reference duration does not match sample count')
+        if row['continuous_negative']:
+            require(row['continuity'].get('coverage_contract_sha256') == coverage_contract(plan, row),
+                    'continuous coverage contract mismatch')
+            require('execution_receipt_sha256' not in row['continuity'],
+                    'legacy circular continuity receipt must migrate to coverage contract')
+    record_fields = {'recording', 'status', 'terminal', 'exit_code', 'pcm_sha256',
+                     'sample_rate_hz', 'input_samples', 'consumed_samples', 'start_sample',
+                     'end_sample', 'dropped_samples', 'padded_samples', 'reset_count',
+                     'coverage_contract_sha256'}
+    for name, arm in receipt['arms'].items():
+        require(isinstance(arm, dict) and set(arm) == {'identity', 'detections_sha256',
+                'status', 'terminal', 'exit_code', 'recordings'}, 'unexpected or missing arm fields')
+        successful_terminal(arm, name)
+        require(arm['identity'] == plan['arms'][name], 'execution identity mismatch')
+        require(valid_sha(arm['detections_sha256']), 'execution detections identity required')
+        require(isinstance(arm['recordings'], list), 'per-recording execution coverage required')
+        seen = set()
+        for item in arm['recordings']:
+            require(isinstance(item, dict) and set(item) == record_fields,
+                    'unexpected or missing recording coverage fields')
+            recording = item['recording']
+            require(isinstance(recording, str) and recording in expected and recording not in seen,
+                    'unknown or duplicate executed recording')
+            seen.add(recording)
+            row = expected[recording]
+            successful_terminal(item, name + '/' + recording)
+            require(item['pcm_sha256'] == row['pcm_sha256'], 'executed PCM mismatch')
+            require(item['coverage_contract_sha256'] == coverage_contract(plan, row),
+                    'executed coverage contract mismatch')
+            wanted = {'sample_rate_hz': row['sample_rate_hz'], 'input_samples': row['sample_count'],
+                      'consumed_samples': row['sample_count'], 'start_sample': 0,
+                      'end_sample': row['sample_count'], 'dropped_samples': 0, 'padded_samples': 0,
+                      'reset_count': 0}
+            require(all(type(item[key]) is int and item[key] == value for key, value in wanted.items()),
+                    'incomplete, padded, reset or mismatched sample coverage')
+        require(seen == set(expected), 'executed recording set does not equal references')
+
+
+def validate_output_path(output, inputs):
+    """Reject direct, symlink, relative and existing hardlink aliases."""
+    for source in inputs:
+        require(output.resolve() != source.resolve(), 'output aliases an evidence input')
+        require(not (output.exists() and source.exists() and os.path.samefile(output, source)),
+                'output aliases an evidence input')
+
+
+def atomic_write(output, text):
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=output.parent,
+                                         prefix='.' + output.name + '.', delete=False) as stream:
+            temporary = Path(stream.name)
+            stream.write(text)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, output)
+    finally:
+        if temporary is not None and temporary.exists():
+            temporary.unlink()
+
+
 def summarize(names, references, detections, metadata, post, keywords):
     refs = {n: references[n] for n in names}
     if not refs:
@@ -77,6 +180,11 @@ def summarize(names, references, detections, metadata, post, keywords):
     continuous = {n for n in names if not refs[n]['expected'] and metadata[n]['continuous_negative']}
     hours = sum(refs[n]['duration_s'] for n in continuous) / 3600
     continuous_fas = [r for r in fas if r['recording'] in continuous]
+    result['matched_latency_samples'] = result['matched']
+    if not result['matched']:
+        for key in result:
+            if key.startswith(('p50_', 'p95_')) and ('latency' in key or 'offset' in key):
+                result[key] = None
     result['frr'] = result['frr'] if result['expected'] else None
     result['frr_upper_95'] = wilson_upper(len(frs), result['expected'], .95) if result['expected'] else None
     for keyword in keywords:
@@ -89,8 +197,8 @@ def summarize(names, references, detections, metadata, post, keywords):
         item['continuous_negative_far_per_hour'] = fa / hours if hours else None
         item['continuous_negative_far_upper_95_per_hour'] = poisson_rate_upper(fa, hours, .95) if hours else None
     # The canonical scorer's all-audio FAR is not continuous-background evidence.
-    result['clip_negative_hours'] = result.pop('negative_recording_audio_hours')
-    result['clip_negative_false_accepts'] = result.pop('negative_recording_false_accepts')
+    result['all_negative_recording_hours'] = result.pop('negative_recording_audio_hours')
+    result['all_negative_recording_false_accepts'] = result.pop('negative_recording_false_accepts')
     for key in list(result):
         if key.startswith('negative_recording_far') or key == 'far_per_hour':
             del result[key]
@@ -156,9 +264,10 @@ def validate_source_split(plan, rows, split):
                     'reference lineage differs from frozen split')
 
 
-def build_report(plan, rows, control_rows, candidate_rows):
+def build_report(plan, rows, control_rows, candidate_rows, execution_receipt):
     validate_plan(plan)
     refs = validate_recordings(rows)
+    validate_execution(plan, rows, execution_receipt)
     metadata = {r['recording']: r for r in rows}
     seen_pcm = set()
     continuous_groups = {field: set() for field in ('root_recording_id', 'session_id')}
@@ -184,7 +293,7 @@ def build_report(plan, rows, control_rows, candidate_rows):
             require(row['continuity']['kind'] == 'original_uninterrupted_recording', 'concatenated/repeated clips are not continuous exposure')
             require(row['continuity']['reset_count'] == 0 and type(row['continuity']['reset_count']) is int,
                     'continuous exposure contains resets')
-            require(valid_sha(row['continuity']['execution_receipt_sha256']), 'continuous execution receipt required')
+            require(valid_sha(row['continuity']['coverage_contract_sha256']), 'continuous coverage contract required')
     observed_keywords = {event['keyword_id'] for row in rows for event in row['expected']}
     observed_keywords.update(event['keyword_id'] for event in control_rows + candidate_rows)
     require(observed_keywords <= set(plan['keyword_ids']), 'undeclared keyword')
@@ -204,10 +313,12 @@ def build_report(plan, rows, control_rows, candidate_rows):
             a, b = (tiers[tier]['arms'][arm] for arm in ('control', 'candidate'))
             tiers[tier]['candidate_minus_control'] = {key: b[key] - a[key]
                 for key in ('matched', 'false_rejects', 'false_accepts')}
-    return {'schema': 'offline-effect-report-v1', 'plan': plan, 'tiers': tiers,
+    return {'schema': 'offline-effect-report-v2', 'plan': plan, 'tiers': tiers,
             'production_qualified': False, 'product_qualification_allowed': False, 'shipping_approved': False,
             'numeric_streaming_gate': 'unchanged; required independently before candidate execution',
+            'execution_coverage': 'complete declared per-arm per-recording coverage verified',
             'limitations': ['Input declarations and receipts are bound, not independently attested.',
+                'all_negative_recording_hours includes continuous_negative.hours; do not add them.',
                 'Evidence tier is declared provenance, not proof of license rights, gold labels, speaker independence or device qualification.',
                 'Null/missing optional session, speaker or room provenance remains unknown; continuous FAR requires known session and root.',
                 'No pooling across evidence tiers; no threshold search or statistical superiority claim.',
@@ -220,6 +331,9 @@ def main():
     for flag in ('plan', 'references', 'source-split', 'control-detections', 'candidate-detections', 'execution-receipt', 'output'):
         p.add_argument('--' + flag, required=True, type=Path)
     args = p.parse_args()
+    input_names = ('plan', 'references', 'source_split', 'control_detections', 'candidate_detections', 'execution_receipt')
+    input_paths = [getattr(args, key) for key in input_names]
+    validate_output_path(args.output, input_paths)
     plan = read_json(args.plan)
     require(digest(args.references) == plan['references_sha256'], 'reference hash mismatch')
     require(digest(args.source_split) == plan['source_split_sha256'], 'source split hash mismatch')
@@ -232,10 +346,11 @@ def main():
     for arm in ('control', 'candidate'):
         require(receipt['arms'][arm]['identity'] == plan['arms'][arm], 'execution identity mismatch')
         require(receipt['arms'][arm]['detections_sha256'] == digest(getattr(args, arm + '_detections')), 'execution detections mismatch')
-    result = build_report(plan, rows, read_rows(args.control_detections), read_rows(args.candidate_detections))
+    result = build_report(plan, rows, read_rows(args.control_detections), read_rows(args.candidate_detections), receipt)
     result['input_sha256'] = {key: digest(getattr(args, key)) for key in
         ('plan', 'references', 'source_split', 'control_detections', 'candidate_detections', 'execution_receipt')}
-    args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + '\n')
+    validate_output_path(args.output, input_paths)
+    atomic_write(args.output, json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + '\n')
     return 0
 
 
