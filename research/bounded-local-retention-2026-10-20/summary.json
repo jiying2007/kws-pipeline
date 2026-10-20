@@ -1,0 +1,86 @@
+{
+  "schema": "bounded-local-retention-public-summary-v1",
+  "date": "2026-10-20",
+  "scientific_status": "SCREENING_REMAINS_FAIL",
+  "promotion": false,
+  "policy": {
+    "threshold": 0.7,
+    "nonrenewable_posterior_row_budget": 5,
+    "nominal_audio_progression_ms": 150,
+    "product_wall_latency_certified": false,
+    "scope": "Local low-score state retention with fixed expiry; original strong reset and downstream acceptance semantics remain. Research-only opt-in patched copy."
+  },
+  "completed_observation": {
+    "candidate_replays": 2,
+    "new_control_replays": 0,
+    "decoder_rows_total": 1821,
+    "new_network_frontend_softmax_calls": 0,
+    "finish_calls": 0,
+    "resets_between_clips": 0,
+    "streams": [
+      {
+        "rows": 747,
+        "original_six_all_16_event_fields_exact": true,
+        "events": 7,
+        "additional_events": 1,
+        "candidates_seen": {
+          "original_control": 18,
+          "without_deadline": 257,
+          "five_row_deadline": 40
+        },
+        "duplicate_candidates": {
+          "original_control": 7,
+          "without_deadline": 244,
+          "five_row_deadline": 27
+        },
+        "episodes_started": 6,
+        "episodes_expired": 4,
+        "episodes_strong_closed": 2
+      },
+      {
+        "rows": 1074,
+        "original_six_all_16_event_fields_exact": true,
+        "events": 6,
+        "additional_events": 0,
+        "candidates_seen": {
+          "original_control": 17,
+          "without_deadline": 239,
+          "five_row_deadline": 32
+        },
+        "duplicate_candidates": {
+          "original_control": 9,
+          "without_deadline": 231,
+          "five_row_deadline": 24
+        },
+        "episodes_started": 3,
+        "episodes_expired": 3,
+        "episodes_strong_closed": 0
+      }
+    ]
+  },
+  "new_boundary_event": {
+    "row": 698,
+    "score": 0.9938043189157924,
+    "last_node_sample": 335040,
+    "source_end_exclusive_sample": 335040,
+    "strict_attribution": "unmatched",
+    "confirmed_acoustic_false_alarm": "NOT_ESTABLISHED",
+    "interpretation": "Last node equals the source exclusive end; no recovery under the frozen strict scorer. Unmatched is not a confirmed acoustic false alarm."
+  },
+  "limits": [
+    "Exposed overlapping development material, not independent validation.",
+    "Internal candidate and duplicate counts are not native CPU slowdown or speedup measurements.",
+    "Five posterior rows give nominal 150 ms audio-coordinate progression, not measured product wall latency or 500 ms certification.",
+    "No independent natural-stream recall or FAR is established.",
+    "Research implementation is opt-in; production defaults and model remain unchanged."
+  ],
+  "review": {
+    "saved_result_integrity": "PASS",
+    "strict_screening": "FAIL",
+    "reviewer_model_frontend_decoder_calls": 0
+  },
+  "publication": {
+    "new_scientific_runs": 0,
+    "private_audio_weights_posteriors_or_delivery_ids_included": false
+  }
+}

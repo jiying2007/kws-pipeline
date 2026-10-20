@@ -1,0 +1,17 @@
+{
+  "base_repo_directory": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018",
+  "base_source_sha256": "e6d57e167fe85f150517eeb7b54f38eb9ce46a54922bff8897eaa8f7bedca41f",
+  "base_header_sha256": "318c43814fa0b096fa87e72d5ae0844dffb84874fd95f0bcae8a0624ddcdd696",
+  "reconstructed_candidate_sha256": "b8452650d1fbdc6ce85a5a087ee8384e26678b270e16dc5333be1727ec0d07b6",
+  "native_state_cases": 33,
+  "native_state_checks": 142,
+  "scientific_inputs_required": false,
+  "production_default_modified": false,
+  "support_sha256": {
+    "candidate.patch": "3bb8dd2467cdbb40d4896ea2f612cfb065f254efa8a0dba0ffc8f76bb17b610c",
+    "native_state_mock.c": "7a0803e8d505f4507996d3a86032aae4cece9b86ad8ba12fd2f0ed4a0dc84b8c",
+    "headers/kws3_diagnostic_ledger.h": "887fb853d96d7ab6ba7fcc4c3d5b8ce0dd5678e77c2a684d38598626e6676bb2",
+    "headers/kws3_diagnostic_ledger_impl.h": "4780c009f2fb609499abf6e3cabcace2e12baaac7d905ad8ca7492d177614ad1",
+    "headers/kws3_retention.h": "6a7b4f9e484d50b1b28982d8fac1cc2b9a941f200703e63db3e3c0546699dd93"
+  }
+}
