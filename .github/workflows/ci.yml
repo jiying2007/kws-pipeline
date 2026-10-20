@@ -285,7 +285,11 @@ jobs:
       - name: Verify tracked worktree after Adaptive domain curriculum
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Adaptive domain curriculum"'
       - name: Statistical qualification bounds
-        run: python3 tests/test_statistical_bounds.py
+        run: |
+          python3 tests/test_statistical_bounds.py
+          python3 -S -B -m unittest discover -s tests -p test_report_offline_effect.py -v
+          python3 -S -B -O -m unittest discover -s tests -p test_report_offline_effect.py -v
+          python3 -S -B -OO -m unittest discover -s tests -p test_report_offline_effect.py -v
       - name: Verify tracked worktree after Statistical qualification bounds
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Statistical qualification bounds"'
       - name: Domain metric scorer
