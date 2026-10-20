@@ -23,6 +23,7 @@ HISTORICAL_NONEXECUTED_DEPENDENCIES = frozenset((
     'research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_hosted.py',
     '.github/workflows/ci.yml',
     'research/consolidation/source_tests/test_source_retention.py',
+    'research/consolidation/source_tests/test_ci_structure.py',
     'research/k1-punctuation6-asr18-v1/claim_consumer_fixtures.py',
     'research/k1-punctuation6-asr18-v1/test_asr18_freeze.py',
     'research/k1-punctuation6-asr18-v1/test_asr18_host.py',
