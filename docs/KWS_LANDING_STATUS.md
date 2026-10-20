@@ -2,9 +2,10 @@
 
 ## Current model and engineering status
 
-Status checked 2026-10-19 against merged main
-`4de34e8f29ed90e02cc11335895459ecb2e4e198`. This is the single current
-summary; dated checkpoints below retain their original evidence scope.
+Current source snapshot: 2026-10-19, merged main
+`b8e2f4adbfb9e964197276ad82c4fb855d747114`. The B-specific saved-network
+update below is limited to that source and the recorded input/environment.
+Dated checkpoints and integration receipts retain their original scope.
 
 1. **Historical five-token SKU:** `model-749187ec1d66` retains its historical
    synthetic qualification, but the frozen-model nightly failed.
@@ -25,8 +26,11 @@ summary; dated checkpoints below retain their original evidence scope.
    [PR #610](https://github.com/jiying2007/kws-pipeline/pull/610) integrates the [full B C research source](../research/fsmn2599-stream-c/README.md)
    with bounded GCC build/mock checks; the OR chain is not integrated.
    Historical canonical-frontend and old-head network `atol=rtol=1e-5` results remain **FAIL**.
-   B v6 remains **EXPORTED_NOT_NUMERICALLY_VALIDATED**: no B-specific strict
-   elementwise validation is established by those historical failures.
+   The exact B identity now has a [completed fixed-76-frame network test](../research/fsmn2599-stream-c/B76-NUMERICAL-RESULT-2026-10-19.md):
+   **STRICT_NUMERICAL_MISMATCH** on the saved input and current CPU environment.
+   Default C has 209 logit and 3,983 cache failures; a first-layer-only FP64 arm
+   has 0 logit but 6,342 cache failures. It is stopped and not promoted.
+   These B-specific results do not reclassify the old-head/frontend evidence.
    SSC305/device qualification has not passed.
    Decoder parity does not establish acoustic accuracy, FAR or shipping approval.
 
@@ -43,7 +47,9 @@ summary; dated checkpoints below retain their original evidence scope.
    人工 decoder/ABI 契约与历史私有 posterior 一致性证据分开。
    #609 增加真实 ARM/QEMU 人工解码检查；#610 已集成完整 B C 研究源码及有界 GCC 构建/mock检查，OR 链未集成。
    历史 canonical frontend 和 old-head network 的 `atol=rtol=1e-5` 仍 **FAIL**；
-   B v6 仍为 **EXPORTED_NOT_NUMERICALLY_VALIDATED**，不能把旧网络失败写成已完成 B 专项严格验证。
+   同一 B 身份现已完成[固定 76 帧网络专项验证](../research/fsmn2599-stream-c/B76-NUMERICAL-RESULT-2026-10-19.md)，
+   仅就该保存输入和当前 CPU 环境为 **STRICT_NUMERICAL_MISMATCH**：默认 C 的 logits/cache
+   超限为 209/3,983；首层 FP64 单臂为 0/6,342，已停止且不晋升。旧头/前端证据身份不变。
    SSC305/设备资格未通过。
    解码器一致性不是声学准确率、FAR 或 shipping 资格。
 

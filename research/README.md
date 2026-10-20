@@ -1,5 +1,7 @@
 # Research map / 研究入口
 
+2026-10-19 research screening: [web preset12 aggregate observation](web-preset12-screening-observation-v1/README.md) retains reviewed request-text consistency counts only. Qwen512 and sherpa QUInt8 do not satisfy the frozen native-v2 identity/observability contract; no acoustic accuracy or training admission is claimed.
+
 This page separates reusable software, retained experimental findings, and product
 qualification. A passing software check never promotes a research model. The
 shipping model registry, runtime ABI, thresholds and `shipping_approved` policy

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 63405,
-      "sha256": "d2fe49911b3c221703cef9f56639eec85478ffd005fb8ee8d5f6e843675faa74",
-      "git_blob_sha1": "dda46af2a6a595c844d694b416aa88725e854705"
+      "bytes": 63781,
+      "sha256": "dd5aaa7df6158a6e3dcd0766719402bf798800e0e4e805387478193512fdee6c",
+      "git_blob_sha1": "fd0f9ffc3f2fc72aad5d1fca8ab10a400a0b6606"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15295,9 +15295,9 @@
     {
       "path": ".github/workflows/experiment-quality-guards.yml",
       "mode": "100644",
-      "bytes": 2555,
-      "sha256": "3c2c64bad335b31a5d22624f84055a8dc52eed83aaaf152698d2d2e60c131920",
-      "git_blob_sha1": "8ed245655eca703543563e6382cb212ea95b6ef8"
+      "bytes": 2931,
+      "sha256": "e27422560fe174cc91af0e1cb76e23d1cca01d0a986e5c092afed4b494378778",
+      "git_blob_sha1": "74985256b9e1eecd77d9def1bb03ef7cf6ccb326"
     },
     {
       "path": ".github/workflows/far-nightly.yml",
@@ -42473,6 +42473,174 @@
             "bytes": 6767,
             "sha256": "d68c61d083c2a3f1156973098ac6b9d099c864b7dda8ec6b0315d11470845c28",
             "git_blob_sha1": "3a4a02e5d743dec94b268a3a9b04ea53dba341a1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "web-preset12-research-observation-20261019",
+      "date": "2026-10-19",
+      "base_commit": "b8e2f4adbfb9e964197276ad82c4fb855d747114",
+      "base_tree": "6f73ab8a7bbb6cbf9e4e8d1dbec3e2c3f934352a",
+      "workflow_source_changed": true,
+      "scope": "Add nine invented-data regressions to existing quality-guard CI in normal/-O/-OO modes and retain a byte-exact reviewed aggregate with research-only limits.",
+      "rationale": "No production normalization, three-family requirement, native-v2 identity, training admission or inference authority changes. Public aggregate is an attestation of prior reviewed request-text consistency, not reproduced audio accuracy. No private transcripts/audio/models or new controller.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 63405,
+            "sha256": "d2fe49911b3c221703cef9f56639eec85478ffd005fb8ee8d5f6e843675faa74",
+            "git_blob_sha1": "dda46af2a6a595c844d694b416aa88725e854705"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 63781,
+            "sha256": "dd5aaa7df6158a6e3dcd0766719402bf798800e0e4e805387478193512fdee6c",
+            "git_blob_sha1": "fd0f9ffc3f2fc72aad5d1fca8ab10a400a0b6606"
+          }
+        },
+        {
+          "path": ".github/workflows/experiment-quality-guards.yml",
+          "before": {
+            "path": ".github/workflows/experiment-quality-guards.yml",
+            "mode": "100644",
+            "bytes": 2555,
+            "sha256": "3c2c64bad335b31a5d22624f84055a8dc52eed83aaaf152698d2d2e60c131920",
+            "git_blob_sha1": "8ed245655eca703543563e6382cb212ea95b6ef8"
+          },
+          "after": {
+            "path": ".github/workflows/experiment-quality-guards.yml",
+            "mode": "100644",
+            "bytes": 2931,
+            "sha256": "e27422560fe174cc91af0e1cb76e23d1cca01d0a986e5c092afed4b494378778",
+            "git_blob_sha1": "74985256b9e1eecd77d9def1bb03ef7cf6ccb326"
+          }
+        },
+        {
+          "path": "research/README.md",
+          "before": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 20311,
+            "sha256": "18fa677f0dcc3419403bdb29c0ad1cbe5999e0baa935d36240c191348ae0075b",
+            "git_blob_sha1": "503663ee8abd0373abf0530bc800b6ec76abb2a5"
+          },
+          "after": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 20634,
+            "sha256": "4eee6db08b69bd245cf5df7e397107a0a24003e61b1ddd1c7e8c9ef71017a63b",
+            "git_blob_sha1": "f96ab566a29f110d5cbd934fd2cce8d3f2f67385"
+          }
+        },
+        {
+          "path": "research/experiment_quality_guards/tests/test_existing_boundaries.py",
+          "before": null,
+          "after": {
+            "path": "research/experiment_quality_guards/tests/test_existing_boundaries.py",
+            "mode": "100644",
+            "bytes": 3039,
+            "sha256": "093e82daaeeee51a4411d5a626ad7cc57cfe148f8a043a5be95151ce1fe2d20d",
+            "git_blob_sha1": "54af88d46bf899a6bf22becdef6a32da8a6a70fb"
+          }
+        },
+        {
+          "path": "research/web-preset12-screening-observation-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/web-preset12-screening-observation-v1/README.md",
+            "mode": "100644",
+            "bytes": 4508,
+            "sha256": "0c2548aafa3c2f0fcb22eb66a2dc31b0fd8796f9645ce40d136c6e6d4443c3e1",
+            "git_blob_sha1": "deeafd29cb6eaeacc9f75c3298c7979355930e62"
+          }
+        },
+        {
+          "path": "research/web-preset12-screening-observation-v1/research-aggregate.json",
+          "before": null,
+          "after": {
+            "path": "research/web-preset12-screening-observation-v1/research-aggregate.json",
+            "mode": "100644",
+            "bytes": 1436,
+            "sha256": "e3ee18e04eccaf0786b372f24a0e9f568d16219cc1732d12a2b00708e5706b4f",
+            "git_blob_sha1": "25024f4f777222bdf608f0255641f461bc2067ab"
+          }
+        }
+      ]
+    },
+    {
+      "id": "web-preset12-ci-inventory-dependency-20261019",
+      "date": "2026-10-19",
+      "base_commit": "b59845818ed727c25f00042cb20160a298669299",
+      "base_tree": "ff80962f564d0af78ee493188c932d023044c895",
+      "workflow_source_changed": false,
+      "scope": "Include the new boundary test in the exact CI inventory; preserve the previous CI-structure test bytes for the frozen offline posterior dependency manifest.",
+      "rationale": "Only the provenance-only nonexecuted test source is archived using the existing exact-path mechanism. The immutable validator manifest, imported live validators, production admission and inference authority remain unchanged.",
+      "files": [
+        {
+          "path": "research/consolidation/source_tests/test_ci_structure.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 64334,
+            "sha256": "c87de80c2ffe1f25e90a218ea5c2ebfe2d69a0d11a6c22de954ff019f6b4fbc7",
+            "git_blob_sha1": "9e632058df60ebaf7da777ed3a0f5da230df95ca"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 64365,
+            "sha256": "355573568f101b4c032d2c68bde673a8e12ef894fc709e573109b43161675704",
+            "git_blob_sha1": "8b6d13106e5b14da2c36caf87d3e888e31e816c5"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/consolidation/source_tests/test_ci_structure.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/sense-runtime-binding-20261017/research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 64334,
+            "sha256": "c87de80c2ffe1f25e90a218ea5c2ebfe2d69a0d11a6c22de954ff019f6b4fbc7",
+            "git_blob_sha1": "9e632058df60ebaf7da777ed3a0f5da230df95ca"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 42510,
+            "sha256": "d1918e432688c326cd85b9115bc63772e8217427d649b6e2d91515de429f2239",
+            "git_blob_sha1": "f3f0982c12f941b2f7ce9bdd1d851ed4eb7a41b9"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
+            "mode": "100644",
+            "bytes": 42574,
+            "sha256": "99f8c04bcbe368728b9cfe9c1ddb0dbb89eac3676e018062c77dfdb2033e27d5",
+            "git_blob_sha1": "a0ec19e63bc5d5381ddcd7971077b35a1d21581a"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40771,
+            "sha256": "4b4d97097a72692f950623f7e8fe98989f4eea5ed6fe0fb448e31d9f66556535",
+            "git_blob_sha1": "1142794fa3e92d8034838146722340d15670ba58"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40771,
+            "sha256": "933cda8b4c79ec106de8f3a2c1c284ea6eea9978159407931d0154af77fe76dd",
+            "git_blob_sha1": "675428f67d0c3264780e40be3cbafe82b0d0d553"
           }
         }
       ]

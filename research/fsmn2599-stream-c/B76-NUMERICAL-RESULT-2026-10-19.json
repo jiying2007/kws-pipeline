@@ -1,0 +1,188 @@
+{
+  "schema": "fsmn2599-b76-saved-numerical-observation-v1",
+  "observation_date": "2026-10-19",
+  "status": "STRICT_NUMERICAL_MISMATCH",
+  "scope": "Network-only comparison on one reused saved 76-by-400 context in the recorded CPU environment; neither audio-frontend parity nor independent acoustic or device qualification.",
+  "model_identity": {
+    "candidate": "Original FSMN2599 seed0 B, final step 220",
+    "checkpoint_sha256": "a366d9f5ebe7027a496e3f119debcf1e19d2f7a79226c96b31a4ddb3a2757f77",
+    "payload_sha256": "2175df1a7f8621a6b6566a9729b63f021c007d93f2c8c17cb54e7c0f496bbfad",
+    "public_identity_record": "../fsmn2599-seed0-b-candidate-v1/model-identity.json",
+    "weight_bytes_included": false
+  },
+  "comparison_contract": {
+    "input_shape": [
+      76,
+      400
+    ],
+    "logits_per_frame": 2599,
+    "cache_values_per_frame": 5632,
+    "reference": "Saved current CPU Torch 2.11.0+cpu B run; not a historical Torch reproduction.",
+    "arithmetic": "binary64 comparison of saved binary32 values",
+    "atol": 1e-05,
+    "rtol": 1e-05,
+    "pass_rule": "abs(C - Torch) <= atol + rtol * abs(Torch)",
+    "warmups": 0,
+    "resets_between_frames": 0,
+    "source_commit": "b8e2f4adbfb9e964197276ad82c4fb855d747114"
+  },
+  "original_execution_accounting": {
+    "baseline_completed_attempt": {
+      "torch_processes": 1,
+      "torch_frames": 76,
+      "c_processes": 1,
+      "c_frames": 76,
+      "successful_compilations": 1,
+      "retries_within_attempt": 0
+    },
+    "earlier_attempt": "An earlier controller-I/O-race attempt was incomplete; its consumed work was retained, not refunded or silently counted as success.",
+    "first_layer_fp64_arm": {
+      "torch_processes": 0,
+      "baseline_c_processes": 0,
+      "c_processes": 1,
+      "c_frames": 76,
+      "successful_preflight_compilations": 1,
+      "successful_execution_compilations": 1,
+      "retries": 0
+    }
+  },
+  "results": {
+    "logits": {
+      "baseline": {
+        "values": 197524,
+        "failures": 209,
+        "failing_frames": 1,
+        "bit_differences": 183390,
+        "max_abs_error": 0.0002899169921875,
+        "max_tolerance_ratio": 3.7013550314826857
+      },
+      "candidate": {
+        "values": 197524,
+        "failures": 0,
+        "failing_frames": 0,
+        "bit_differences": 184731,
+        "max_abs_error": 0.000274658203125,
+        "max_tolerance_ratio": 0.9234447826336513
+      },
+      "transitions": {
+        "added": 0,
+        "removed": 209,
+        "retained": 0
+      },
+      "frames_worsened": {
+        "failures": 0,
+        "max_abs_error": 47,
+        "max_tolerance_ratio": 52
+      }
+    },
+    "cache": {
+      "baseline": {
+        "values": 428032,
+        "failures": 3983,
+        "failing_frames": 76,
+        "bit_differences": 379430,
+        "max_abs_error": 0.000125885009765625,
+        "max_tolerance_ratio": 6.861050742106082
+      },
+      "candidate": {
+        "values": 428032,
+        "failures": 6342,
+        "failing_frames": 76,
+        "bit_differences": 383084,
+        "max_abs_error": 0.000152587890625,
+        "max_tolerance_ratio": 7.688657692172506
+      },
+      "transitions": {
+        "added": 4505,
+        "removed": 2146,
+        "retained": 1837
+      },
+      "frames_worsened": {
+        "failures": 76,
+        "max_abs_error": 37,
+        "max_tolerance_ratio": 60
+      }
+    }
+  },
+  "source_delta": {
+    "status": "Locally evaluated research candidate only; not applied to the repository runtime.",
+    "scope": "First 400-to-140 affine only, opt-in KWS_FIRST_LAYER_FP64=1; other calls unchanged.",
+    "arithmetic": "Four binary64 accumulator lanes over binary32 inputs and weights, pairwise lane reduction, binary64 bias addition, then one binary32 rounding.",
+    "default": "KWS_FIRST_LAYER_FP64=0 preserves original four-lane affine.",
+    "upstream_kernel_sha256": "12b237eb78fdccb16658e66f096c32cac60814131e2afcd457af648d3c6c1dd7",
+    "evaluated_candidate_kernel_sha256": "5de3a49102d70453e84eb41309ffb6c8a1f7dfa20374c65564ff57353d3beb24",
+    "evaluated_first_layer_helper_sha256": "c629aff3e3791cccc10c7af78c08bb9861ab3875556023a8d3d66002fe35663b",
+    "reverse_patch_restores_upstream_bytes": true
+  },
+  "public_source_bindings": [
+    {
+      "path": "research/fsmn2599-stream-c/fsmn2599.c",
+      "source_commit": "b8e2f4adbfb9e964197276ad82c4fb855d747114",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/b8e2f4adbfb9e964197276ad82c4fb855d747114/research/fsmn2599-stream-c/fsmn2599.c",
+      "bytes": 10274,
+      "sha256": "12b237eb78fdccb16658e66f096c32cac60814131e2afcd457af648d3c6c1dd7",
+      "git_blob_sha1": "08288ae8080a641f8ff29d46568acbd72221075f"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/fsmn2599.h",
+      "source_commit": "b8e2f4adbfb9e964197276ad82c4fb855d747114",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/b8e2f4adbfb9e964197276ad82c4fb855d747114/research/fsmn2599-stream-c/fsmn2599.h",
+      "bytes": 3393,
+      "sha256": "a755fc8d58b425064e94ddfeaf60d3126b487588dd858e7c965d60857376f9c3",
+      "git_blob_sha1": "23a44bf10ea0aa1c50cae309ac2830640da66150"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/sha256.c",
+      "source_commit": "b8e2f4adbfb9e964197276ad82c4fb855d747114",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/b8e2f4adbfb9e964197276ad82c4fb855d747114/research/fsmn2599-stream-c/sha256.c",
+      "bytes": 6113,
+      "sha256": "28023c2b965033d60a8db9f65099a0855e1816f7251bfa95109e634cef34e6a1",
+      "git_blob_sha1": "a512f1c3c2913a3d95463f36b666851fa8546934"
+    },
+    {
+      "path": "research/fsmn2599-stream-c/sha256.h",
+      "source_commit": "b8e2f4adbfb9e964197276ad82c4fb855d747114",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/b8e2f4adbfb9e964197276ad82c4fb855d747114/research/fsmn2599-stream-c/sha256.h",
+      "bytes": 222,
+      "sha256": "8272fb003f5ae29a116acc76252f17c02d276a7caea382dd652fa39ab5dd2aea",
+      "git_blob_sha1": "eb0c618ba937153d62eb043114ecf7beb0c9d7a3"
+    }
+  ],
+  "verification": {
+    "saved_output_recheck": "Both logits/cache aggregates, exact added/removed failure masks and per-frame worsening counts independently recomputed from saved bytes; matched the sealed reports.",
+    "new_model_forwards": 0,
+    "new_torch_imports": 0,
+    "new_compilations": 0,
+    "new_decodes": 0,
+    "ci_result": "NOT_RUN_FOR_THIS_TEXT_RECORD"
+  },
+  "decision": {
+    "candidate_promoted": false,
+    "work_status": "STOPPED",
+    "whole_network_pass": false,
+    "production_default_changed": false,
+    "thresholds_changed": false,
+    "shipping_approved_by_this_record": false,
+    "reason": "All candidate logits satisfy the fixed tolerance, but cache failures and worst-case errors increase; this is a tradeoff, not global numerical improvement."
+  },
+  "saved_logit_admissibility": {
+    "status": "STOP_NO_TARGET_TOKEN_ADMISSIBILITY",
+    "method": "Static readback of the three saved logit arrays against pinned decoder rules; not decoder execution.",
+    "assumption": "Fresh empty decoder hypotheses and windows; no incoming prefix state.",
+    "blank_argmax_frames_each": 76,
+    "target_token_softmax_upper_bound_max_approx": 0.001935,
+    "coarse_upper_bound_envelope": 0.002,
+    "fixed_token_probability_floor_exclusive": 0.05,
+    "rounding_caveat": "Floating-point upper-bound calculation, not formally certified interval arithmetic.",
+    "deduction": "No complete target candidate is reachable under these rules and initial state; a final-score threshold sweep on this fixture has no useful sensitivity coverage.",
+    "audio_ground_truth": "UNKNOWN; the deduction does not establish a negative acoustic label.",
+    "decoder_source": {
+      "path": "research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
+      "url": "https://github.com/jiying2007/kws-pipeline/blob/b8e2f4adbfb9e964197276ad82c4fb855d747114/research/fsmn2599-three-window-c/kws-fsmn2599-three-window-c-preparation-20261018/kws3.c",
+      "git_blob_sha1": "26adf5b8e987fbf501cce0c591d01e90741e1235",
+      "bytes": 26838,
+      "sha256": "e6d57e167fe85f150517eeb7b54f38eb9ce46a54922bff8897eaa8f7bedca41f",
+      "git_blob_verified": true
+    }
+  }
+}
