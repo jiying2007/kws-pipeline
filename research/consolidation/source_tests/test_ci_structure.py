@@ -202,7 +202,7 @@ class CIContracts(unittest.TestCase):
         files = {path.name for path in (ROOT / 'research/experiment_quality_guards/tests').glob('test_*.py')}
         self.assertEqual(files, {'test_quality_gates.py', 'test_review_counterexamples.py',
                                 'test_admission_cli.py', 'test_public_report.py',
-                                'test_screen32_human_review.py'})
+                                'test_screen32_human_review.py', 'test_existing_boundaries.py'})
         for name in sorted(files):
             for mode in ('', ' -O', ' -OO'):
                 command = ('python3 -S -B' + mode + ' -m unittest discover -s '
