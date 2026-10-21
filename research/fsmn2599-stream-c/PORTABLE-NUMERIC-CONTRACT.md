@@ -66,3 +66,36 @@ platform/compiler flags, test-set identity, recurrence horizons, decision-margin
 policy and explicit separate fields for frozen_Torch_gate and portable_gate.
 Until those fields are justified and registered, portable_gate stays NOT_RUN.
 This preparation deliberately supplies no guessed numeric limits or new pass.
+
+## Experimental arithmetic tooling (not a registered gate)
+
+`binary32_reference.py` supplies integer-only finite binary32 add/multiply,
+round-to-nearest ties-to-even, gradual underflow and explicit signed-zero rules.
+Exact Python `int` uint32 inputs are required: bool/non-int raises TypeError;
+out-of-range and NaN/Inf encodings raise ValueError; a rounded nonfinite result
+raises OverflowError. Checks remain active under Python optimization.
+
+Run `python3 -S -B tests/test_research_binary32_reference.py` for the small
+hand-derived literal suite. Add `--execute-native` for two bounded compilations
+and two runs comparing those same synthetic affine constants against the default
+and block2 regions extracted from the current `fsmn2599.c`. Ambiguous region
+extraction fails; no cached affine implementation or model data is used. The
+pure-Python phase alone does not test native behavior. The native phase requires
+`cc`, strict binary32 evaluation, RNE and gradual underflow; it is not an ARM or
+compiler-matrix qualification. Four-lane reduction, separate multiply/add,
+tails and bias-after-reduction are covered. The no-bias final +0 is preserved,
+not claimed to be a reachable-output defect in the existing finite graph.
+
+The helper adapts integer decomposition/rounding/packing from the portable affine
+research oracle with explicit domain/overflow checks. Its complete original MIT
+notice is retained verbatim in the module docstring, including the generated
+contributors attribution and preexisting-material exclusion. This does not
+relicense existing Apache-2.0 sources or establish rights to model/audio data.
+The fixture constants are independently hand-derived powers-of-two examples.
+
+This is experimental source-regression tooling only. It adopts no reference,
+model identity or tolerance and performs no trained-model/full-network calls.
+DRAFT_NOT_REGISTERED and portable_gate NOT_RUN remain unchanged; frozen Torch
+FAIL remains FAIL. No acoustic accuracy, decision quality or production claim
+follows from these tests. The helper is not a build.py INPUTS dependency, so the
+existing exact source-binding inventory remains unchanged.

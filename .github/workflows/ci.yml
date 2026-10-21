@@ -680,6 +680,16 @@ jobs:
         run: python3 -S -B tests/test_research_three_window_c.py --sanitizers
       - name: Verify tracked worktree after Three-window research C contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Three-window research C contract"'
+      - name: Finite binary32 research literals and current affine source
+        if: matrix.cc == 'gcc'
+        timeout-minutes: 1
+        run: |
+          python3 -S -B tests/test_research_binary32_reference.py --execute-native
+          python3 -S -B -O tests/test_research_binary32_reference.py
+          python3 -S -B -OO tests/test_research_binary32_reference.py
+      - name: Verify tracked worktree after Finite binary32 research literals
+        if: matrix.cc == 'gcc'
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Finite binary32 research literals"'
       - name: FSMN full-chain research GCC build and synthetic transport contract
         if: matrix.cc == 'gcc'
         timeout-minutes: 3
