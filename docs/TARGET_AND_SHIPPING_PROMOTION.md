@@ -37,6 +37,7 @@ Required fixed bundle files:
 
 ```text
 target-profile.json
+resource-budget.json
 target-evidence.json
 board-summary.json
 board-runner
@@ -49,6 +50,8 @@ raw/power.csv
 raw/audio-continuity.json
 ... any additional raw evidence named by evidence-raw.jsonl
 ```
+
+`resource-budget.json` is required by `commercial/target-qualification.policy.json` (`fixed_bundle_file=resource-budget.json`) and must satisfy `commercial/target-resource-budget.schema.json`: `schema_version=2`, `status=approved`, and `measurement_contract_id=process-cpu-one-core-v1`. `target-profile.json.resource_budget_id` must match `resource-budget.json.budget_id`. The workflow checks the file and these values before downloading Phase-A or deployment assets; missing or mismatched budgets fail closed.
 
 `board-audio.wav` must be `non-human-public-safe`. Human or Phase-A post-AFE recordings are forbidden as a public target benchmark fixture.
 
