@@ -217,7 +217,36 @@ def check_current_status_docs() -> None:
     ))
 
 
+def check_target_bundle_docs() -> None:
+    path = ROOT / "docs/TARGET_AND_SHIPPING_PROMOTION.md"
+    text = path.read_text(encoding="utf-8")
+    policy = json.loads((ROOT / "commercial/target-qualification.policy.json").read_text(encoding="utf-8"))
+    budget = policy["resource_budget"]
+    schema = json.loads((ROOT / budget["schema"]).read_text(encoding="utf-8"))
+    filename = budget["fixed_bundle_file"]
+    bundle_block = re.search(r"Required fixed bundle files:\s*```text\n(.*?)\n```", text, re.S)
+    assert bundle_block is not None, f"{path}: missing fixed bundle list"
+    assert filename in bundle_block[1].splitlines(), f"{path}: fixed bundle list missing {filename}"
+    budget_paragraph = re.search(rf"^`{re.escape(filename)}` is required[^\n]+", text, re.M)
+    assert budget_paragraph is not None, f"{path}: missing resource budget requirements"
+    require_all(budget_paragraph[0], path, (
+        f"`fixed_bundle_file={filename}`",
+        *(f"`{field}={schema['properties'][field]['const']}`" for field in (
+            "schema_version", "status", "measurement_contract_id",
+        )),
+        "`target-profile.json.resource_budget_id` must match `resource-budget.json.budget_id`",
+    ))
+    workflow_path = ROOT / ".github/workflows/target-dut-qualification.yml"
+    pre_download = workflow_path.read_text(encoding="utf-8").split("gh release download", 1)[0]
+    require_all(pre_download, workflow_path, (
+        ".resource_budget.fixed_bundle_file",
+        f'test "$budget_file" = {filename}',
+        'test -f "$bundle/$budget_file"',
+    ))
+
+
 def main() -> int:
+    check_target_bundle_docs()
     check_navigation_indexes()
     check_landing_status_contract()
     check_current_status_docs()
