@@ -255,8 +255,20 @@ int kws_trace_reader_open(kws_trace_reader_t *reader,
   if (reader == NULL || path == NULL) {
     return 0;
   }
+  return kws_trace_reader_open_stream(reader, fopen(path, "rb"), out_header);
+}
+
+int kws_trace_reader_open_stream(kws_trace_reader_t *reader,
+                                 FILE *stream,
+                                 kws_trace_header_t *out_header) {
+  if (reader == NULL) {
+    if (stream != NULL) {
+      fclose(stream);
+    }
+    return 0;
+  }
   memset(reader, 0, sizeof(*reader));
-  reader->stream = fopen(path, "rb");
+  reader->stream = stream;
   if (reader->stream == NULL || !read_header(reader->stream, &reader->header)) {
     if (reader->stream != NULL) {
       fclose(reader->stream);
@@ -318,7 +330,7 @@ int kws_trace_reader_close(kws_trace_reader_t *reader) {
   if (reader->frames_read != reader->header.frame_count) {
     ok = 0;
   }
-  if (fgetc(reader->stream) != EOF) {
+  if (fgetc(reader->stream) != EOF || ferror(reader->stream) != 0) {
     ok = 0;
   }
   if (fclose(reader->stream) != 0) {

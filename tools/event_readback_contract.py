@@ -88,6 +88,68 @@ def bound_file(root: Path, binding: dict) -> Path:
     return path
 
 
+def verify_completion(value: dict, identities: dict, runtime: dict,
+                      source_id: str) -> dict:
+    """Check a native execution record's bindings, not its authenticity.
+
+    Native float values are serialized with nine significant digits; compare
+    binary32 values exactly rather than inventing a numerical tolerance.
+    """
+    require(isinstance(value, dict) and set(value) == {
+        "schema", "execution_kind", "production_qualified", "completion",
+        "identity", "context", "runtime"}, "execution completion fields")
+    require(value["schema"] == "kws-decoder-replay-completion-v1" and
+            value["execution_kind"] == "native-linux-decoder-replay" and
+            value["production_qualified"] is False, "execution completion scope")
+    expected_identity = {"model_sha256", "keyword_pack_sha256", "trace_sha256",
+                         "tool_sha256", "parameter_contract_sha256"}
+    require(isinstance(identities, dict) and set(identities) == expected_identity and
+            isinstance(value["identity"], dict) and
+            value["identity"] == identities, "execution identity mismatch")
+    require(all(isinstance(v, str) and len(v) == 64 and
+                all(c in "0123456789abcdef" for c in v)
+                for v in identities.values()), "execution identity digest")
+    require(canonical(value["context"]) == canonical({
+        "recording_id": source_id, "mode": "per-clip-fresh-engine",
+        "vad": "saved-frame-flags",
+        "reset": "fresh-engine-and-decoder-inactive-boundary",
+        "clock": "saved-end-sample"}), "execution context mismatch")
+    runtime_fields = {"min_speech_dbfs", "token_boost", "state_retention",
+                      "refractory_ms", "external_vad_threshold", "blank_retention",
+                      "fuzzy_child_cost_log", "search_policy_override"}
+    require(isinstance(runtime, dict) and set(runtime) == runtime_fields and
+            isinstance(value["runtime"], dict) and
+            set(value["runtime"]) == runtime_fields, "execution runtime fields")
+    for key, expected in runtime.items():
+        actual = value["runtime"][key]
+        if key == "search_policy_override":
+            require(type(actual) is bool and actual is expected,
+                    "execution runtime override mismatch")
+        elif key == "refractory_ms":
+            require(type(actual) is int and actual == expected,
+                    "execution runtime refractory mismatch")
+        else:
+            require(type(actual) in (int, float) and math.isfinite(actual),
+                    "execution runtime finite numeric value required")
+            try:
+                equal = struct.pack("<f", actual) == struct.pack("<f", expected)
+            except (OverflowError, struct.error):
+                equal = False
+            require(equal, "execution runtime binary32 mismatch")
+    counts = value["completion"]
+    require(isinstance(counts, dict) and set(counts) == {
+        "exit_code", "frames_consumed", "decoder_hits", "detections",
+        "refractory_suppressed"}, "execution completion counts")
+    for key, item in counts.items():
+        integer(item, key)
+    require(counts["exit_code"] == 0 and counts["decoder_hits"] ==
+            counts["detections"] + counts["refractory_suppressed"] and
+            counts["decoder_hits"] <= counts["frames_consumed"] and
+            (counts["detections"] > 0 or counts["refractory_suppressed"] == 0),
+            "execution completion accounting")
+    return counts
+
+
 def verify(path: Path) -> dict:
     path = path.resolve(strict=True)
     receipt = read_json(path)
@@ -150,6 +212,21 @@ def verify(path: Path) -> dict:
         require(len(audio.readframes(samples)) == samples * 2, "source WAV truncated")
     require(frames == max(0, 1 + (samples - 400) // 320), "source/trace complete-frame coverage")
     completion = read_json(files["completion"])
+    if "schema" in completion:
+        def f32(number: float) -> float:
+            return struct.unpack("<f", struct.pack("<f", number))[0]
+        constants = contract["algorithm_constants"]
+        execution_runtime = dict(defaults,
+            blank_retention=f32(math.exp(f32(constants["KWS_SILENCE_RETENTION_LOG"]["default"]))),
+            fuzzy_child_cost_log=constants["KWS_FUZZY_CHILD_RETENTION_COST_LOG"]["default"],
+            search_policy_override=False)
+        completion = verify_completion(completion, {
+            "model_sha256": bindings["model"]["sha256"],
+            "keyword_pack_sha256": bindings["keyword_pack"]["sha256"],
+            "trace_sha256": bindings["trace"]["sha256"],
+            "tool_sha256": bindings["replay_binary"]["sha256"],
+            "parameter_contract_sha256": digest,
+        }, execution_runtime, receipt["source_id"])
     require(set(completion) == {"exit_code", "frames_consumed", "decoder_hits", "detections", "refractory_suppressed"},
             "completion fields")
     for key, value in completion.items():

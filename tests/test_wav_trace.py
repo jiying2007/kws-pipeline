@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Bounded artificial-only CLI contract: 1 model, 3 WAV runs, 2 replays.
+"""Bounded artificial CLI contracts: base WAV fixture plus decoder completion.
+
+The base fixture keeps 1 model, 3 WAV runs and 2 replays. Completion checks
+use separate handcrafted decoder-only traces; they do not run acoustic inference.
 
 No training, Torch, downloaded weights, speech corpus, or quality claims.
 An existing output directory is refused. With --output-root, failures preserve
@@ -11,6 +14,7 @@ import argparse
 import copy
 import hashlib
 import json
+import select
 from pathlib import Path
 import struct
 import subprocess
@@ -234,6 +238,228 @@ def verify_event_readback_contract() -> None:
     print("event_readback_contract: ok (artificial files only)")
 
 
+def verify_replay_completion(runner: Path) -> None:
+    """Bounded decoder-only execution on handcrafted traces; no acoustic model run."""
+    runner = runner.resolve(strict=True)
+    repo = Path(__file__).resolve().parents[1]
+    with tempfile.TemporaryDirectory(prefix="replay-completion-") as directory:
+        root = Path(directory)
+        model, pack = root / "fixture.kwm", root / "fixture.kwk"
+        model.write_bytes(fixture_model())
+        pack_bytes = bytearray(fixture_pack())
+        struct.pack_into("<fH", pack_bytes, 28, .55, 2)
+        struct.pack_into("<2H", pack_bytes, 40, 1, 2)
+        pack.write_bytes(pack_bytes)
+        blank = (8., -8., -8., -8.)
+        first = (-8., 8., -8., -8.)
+        second = (-8., -8., 8., -8.)
+        calls = 0
+
+        def trace(name: str, frames: list[tuple], flags: list[int] | None = None) -> Path:
+            active = flags if flags is not None else [1] * len(frames)
+            path = root / (name + ".kwtr")
+            path.write_bytes(struct.pack("<8sIHHIIIIQQ64s8x", b"KWTRACE1", 1, 4, 0,
+                                        16000, 400, 320, 0, FINGERPRINT, len(frames),
+                                        digest(model).encode()) + b"".join(
+                struct.pack("<QB7x4f", 400 + i * 320, active[i], *frame)
+                for i, frame in enumerate(frames)))
+            return path
+
+        def command(source: Path, dest: Path | None, extra: tuple = ()) -> list[str]:
+            return [str(runner), str(model), str(pack), str(source), "completion-fixture",
+                    *extra, *(["--completion", str(dest)] if dest is not None else [])]
+
+        def invoke(source: Path, dest: Path | None, extra: tuple = (), success: bool = True):
+            nonlocal calls
+            calls += 1
+            require(calls <= 24, "completion fixture invocation budget exceeded")
+            result = subprocess.run(command(source, dest, extra), capture_output=True,
+                                    text=True, timeout=15)
+            require((result.returncode == 0) == success, "completion invocation exit: " + result.stderr)
+            if not success and dest is not None:
+                require(not dest.exists(), "failed replay published completion")
+            return result
+
+        def checked(source: Path, expected: tuple[int, int, int], extra: tuple = ()) -> dict:
+            dest = root / (source.stem + ".json")
+            result = invoke(source, dest, extra)
+            receipt = json.loads(dest.read_text())
+            (root / (source.stem + ".events.jsonl")).write_text(result.stdout)
+            require(receipt["schema"] == "kws-decoder-replay-completion-v1", "completion schema")
+            require(receipt["production_qualified"] is False, "completion is not qualification")
+            require(receipt["execution_kind"] == "native-linux-decoder-replay", "execution kind")
+            c = receipt["completion"]
+            frame_count = struct.unpack_from("<Q", source.read_bytes(), 40)[0]
+            require(c == dict(exit_code=0, frames_consumed=frame_count,
+                              decoder_hits=expected[0], detections=expected[1],
+                              refractory_suppressed=expected[2]), "actual engine completion counts")
+            identity = receipt["identity"]
+            for field, path in (("model_sha256", model), ("keyword_pack_sha256", pack),
+                                ("trace_sha256", source), ("tool_sha256", runner),
+                                ("parameter_contract_sha256", repo / "configs/parameter-contract.json")):
+                require(identity[field] == digest(path), "execution identity: " + field)
+            require(receipt["context"]["recording_id"] == "completion-fixture" and
+                    receipt["context"]["mode"] == "per-clip-fresh-engine", "execution context")
+            require(len(events(result.stdout)) == expected[1], "visible events differ from engine detections")
+            plain = invoke(source, None, extra)
+            require(result.stdout == plain.stdout, "completion option changed event bytes")
+            return receipt
+
+        word = [first, second]
+        cooldown = trace("cooldown", word + [blank] * 2 + word + [blank] * 60 + word)
+        baseline = checked(cooldown, (3, 2, 1))
+        from event_readback_contract import verify_completion
+        # Run the whole saved-file verifier with a real native completion.
+        # WAV/capture bytes here remain artificial identity fixtures: this does
+        # not claim the trace was acoustically produced from that WAV.
+        from event_readback_contract import CONTEXT, SCHEMA, SOURCE_FILES, verify
+        from gen_parameter_limits import load_contract, render_header
+
+        def binding(path: Path) -> dict:
+            return {"path": str(path.relative_to(root)), "bytes": path.stat().st_size,
+                    "sha256": digest(path)}
+
+        def put(name: str, payload: bytes) -> dict:
+            path = root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(payload)
+            return binding(path)
+
+        sources = {name: put("source/" + name, (repo / name).read_bytes()) for name in SOURCE_FILES}
+        contract_path = root / "source/configs/parameter-contract.json"
+        contract, contract_sha = load_contract(contract_path)
+        frame_count = baseline["completion"]["frames_consumed"]
+        wav = root / "identity-fixture.wav"
+        write_wav(wav, 400 + 320 * (frame_count - 1), False)
+        # Copy the actual runner so every binding remains under the receipt root.
+        artifacts = {"source_manifest": put("sources.json", json.dumps(sources).encode()),
+                     "parameter_contract": binding(contract_path),
+                     "generated_header": put("generated.h", render_header(contract, contract_sha).encode()),
+                     "model": binding(model), "keyword_pack": binding(pack),
+                     "trace": binding(cooldown), "source_wav": binding(wav),
+                     "capture_binary": put("capture-fixture", b"artificial identity only"),
+                     "replay_binary": put("replay-binary", runner.read_bytes()),
+                     "events": binding(root / "cooldown.events.jsonl"),
+                     "completion": binding(root / "cooldown.json")}
+        recipe = {"schema": SCHEMA, "scope": "observed-per-clip-diagnostic",
+                  "source_id": "completion-fixture", "data_role": "synthetic-control",
+                  "label_grade": "constructed", "context": copy.deepcopy(CONTEXT),
+                  "runtime": {key: value["default"] for key, value in contract["runtime"].items()},
+                  "keyword_policy": [{"id": 42, "threshold": struct.unpack("<f", struct.pack("<f", .55))[0],
+                                      "tokens": [1, 2], "min_trailing_blanks": 0, "priority": 0,
+                                      "prefix_policy": 0, "grace_frames": 0}], "artifacts": artifacts}
+        complete_receipt = root / "full-receipt.json"
+        complete_receipt.write_text(json.dumps(recipe))
+        verified = verify(complete_receipt)
+        require(verified["status"] == "VERIFIED_BINDINGS_ONLY" and
+                verified["execution_observed"] is False, "native envelope invented authentication")
+        tampered = copy.deepcopy(baseline)
+        tampered["identity"]["trace_sha256"] = "0" * 64
+        changed_recipe = copy.deepcopy(recipe)
+        changed_recipe["artifacts"]["completion"] = put("rehashed-completion.json", json.dumps(tampered).encode())
+        complete_receipt.write_text(json.dumps(changed_recipe))
+        try:
+            verify(complete_receipt)
+        except ValueError as exc:
+            require("identity" in str(exc), "wrong full-envelope tamper rejection")
+        else:
+            raise AssertionError("accepted rehashed but misbound native envelope")
+        identities, runtime = baseline["identity"], baseline["runtime"]
+        require(verify_completion(baseline, identities, runtime, "completion-fixture") ==
+                baseline["completion"], "native envelope verifier rejected execution")
+        for field in identities:
+            damaged = copy.deepcopy(baseline)
+            damaged["identity"][field] = "0" * 64
+            try:
+                verify_completion(damaged, identities, runtime, "completion-fixture")
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("accepted altered completion identity: " + field)
+        for kind in ("runtime", "recording", "production"):
+            damaged = copy.deepcopy(baseline)
+            if kind == "runtime":
+                damaged["runtime"]["refractory_ms"] = 0
+            elif kind == "recording":
+                damaged["context"]["recording_id"] = "another-recording"
+            else:
+                damaged["production_qualified"] = True
+            try:
+                verify_completion(damaged, identities, runtime, "completion-fixture")
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("accepted altered completion " + kind)
+        checked(trace("no-hit", [blank] * 3), (0, 0, 0))
+        checked(trace("empty", []), (0, 0, 0))
+        checked(trace("inactive-reset", [first] + [blank] * 12 + [second],
+                      [1] + [0] * 12 + [1]), (0, 0, 0))
+        checked(trace("fresh-engine", word), (1, 1, 0))
+        override = checked(trace("no-refractory", word + [blank] + word), (2, 2, 0),
+                           ("--refractory-ms", "0"))
+        require(override["runtime"]["refractory_ms"] == 0, "actual runtime override not recorded")
+        truncated = root / "truncated.kwtr"
+        truncated.write_bytes(cooldown.read_bytes()[:-1])
+        invoke(truncated, root / "truncated.json", success=False)
+        corrupt = root / "corrupt.kwtr"
+        corrupt.write_bytes(b"not a trace")
+        invoke(corrupt, root / "corrupt.json", success=False)
+        invoke(root / "missing.kwtr", root / "missing.json", success=False)
+        sentinel = root / "existing.json"
+        sentinel.write_bytes(b"do not replace\n")
+        sentinel_digest = digest(sentinel)
+        result = subprocess.run(command(cooldown, sentinel), capture_output=True, timeout=15)
+        require(result.returncode != 0 and digest(sentinel) == sentinel_digest,
+                "existing completion overwritten")
+        dangling = root / "dangling.json"
+        dangling.symlink_to("absent.json")
+        result = subprocess.run(command(cooldown, dangling), capture_output=True, timeout=15)
+        require(result.returncode != 0 and dangling.is_symlink() and not (root / "absent.json").exists(),
+                "dangling completion symlink followed")
+        # A real output failure must prevent a success sidecar after decoding.
+        if sys.platform.startswith("linux"):
+            failed = root / "stdout-failed.json"
+            with open("/dev/full", "wb") as full:
+                result = subprocess.run(command(cooldown, failed), stdout=full,
+                                        stderr=subprocess.PIPE, timeout=15)
+            require(result.returncode != 0 and not failed.exists(), "stdout failure published success")
+            # Backpressure, not a scheduling sleep, holds a live execution before
+            # its completion boundary. Termination cannot publish success.
+            long_trace = trace("interrupted", (word + [blank]) * 30000)
+            interrupted = root / "interrupted.json"
+            proc = subprocess.Popen(command(long_trace, interrupted, ("--refractory-ms", "0")),
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            try:
+                require(bool(select.select([proc.stdout], [], [], 15)[0]), "interruption fixture produced no output")
+                require(proc.stdout.readline().startswith(b'{"recording":'), "no actual event before interruption")
+                require(proc.poll() is None and not interrupted.exists(), "execution completed before interruption")
+                proc.terminate()
+                proc.communicate(timeout=15)
+                require(proc.returncode != 0 and not interrupted.exists(), "interruption published success")
+            finally:
+                if proc.poll() is None:
+                    proc.kill()
+                    proc.communicate(timeout=15)
+            # Install a destination only after actual execution started. The
+            # no-replace commit must preserve this concurrent writer's bytes.
+            raced = root / "raced.json"
+            proc = subprocess.Popen(command(long_trace, raced, ("--refractory-ms", "0")),
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            try:
+                require(bool(select.select([proc.stdout], [], [], 15)[0]), "race fixture produced no output")
+                require(proc.stdout.readline().startswith(b'{"recording":'), "race fixture did not execute")
+                require(proc.poll() is None and not raced.exists(), "race fixture already completed")
+                raced.write_bytes(b"concurrent owner\n")
+                proc.communicate(timeout=15)
+                require(proc.returncode != 0 and raced.read_bytes() == b"concurrent owner\n",
+                        "atomic completion replaced concurrent destination")
+            finally:
+                if proc.poll() is None:
+                    proc.kill()
+                    proc.communicate(timeout=15)
+        print("replay_completion: ok (handcrafted decoder-only traces; no acoustic inference)")
+
+
 def run(args: argparse.Namespace) -> None:
     out = args.output_root.resolve()
     out.mkdir(parents=False, exist_ok=False)
@@ -400,6 +626,7 @@ if __name__ == "__main__":
         raise SystemExit(0)
     if args.wav_runner is None or args.replay_runner is None:
         parser.error("--wav-runner and --replay-runner are required unless --contract-only")
+    verify_replay_completion(args.replay_runner)
     if args.output_root is not None:
         run(args)
     else:
