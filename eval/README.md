@@ -406,3 +406,38 @@ unknown policies and incomplete identity bindings fail closed. Declared data
 roles/label grades are preserved restrictions, not independently authenticated
 label evidence. Already observed development clips remain observed data; this
 contract does not create event-aligned references or independent test evidence.
+
+### Native decoder replay completion
+
+On native Linux, `kws_decoder_replay MODEL PACK TRACE RECORDING --completion NEW.json`
+adds an optional execution completion sidecar without changing event JSONL on
+stdout or decoder policy. The destination must not exist (including symlinks).
+The tool records engine `processed_frames`, `decoder_hits`, `detections`, and
+`refractory_suppressed`; it does not infer internal hits from visible events.
+
+The sidecar uses `kws-decoder-replay-completion-v1`. It binds the loaded model
+and pack bytes, the exact private trace snapshot consumed (maximum 64 MiB),
+the native executable, compiled parameter-contract digest, actual runtime
+settings, recording ID, saved VAD/clock and fresh-engine/reset policy. Invoke
+the executable by its filesystem path: completion requires that path's bytes
+to match `/proc/self/exe`; emulator/wrapper execution is not supported for this
+option. The old CLI remains available without completion.
+
+Publication happens only after complete trace validation and close, stdout
+flush, and completion-file flush/fsync/close. A same-directory temporary file
+is atomically linked to the new destination without replacing it. Errors or
+interruptions before this commit do not create a final success record; partial
+stdout or an interrupted temporary file may remain and are not completion.
+An interruption after commit cannot undo already completed execution. This is
+atomic publication, not a directory-fsync power-loss durability guarantee.
+
+A controlled invocation plus this record supplies actual execution counts.
+The saved JSON alone is unsigned and can be forged alongside its bindings;
+`event_readback_contract.py` therefore still reports `VERIFIED_BINDINGS_ONLY`,
+not execution authentication or production qualification. Its narrow capture
+contract still rejects empty captures and non-default runtime overrides even
+though standalone decoder replay may successfully process a valid zero-frame
+trace or record an explicit override. No FRR/FAR or historical product-event
+equivalence is created. Artificial completion tests are included in the
+existing `tests/test_wav_trace.py` runner path, separately from its fixed
+single-pass acoustic fixture budget.

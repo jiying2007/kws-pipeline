@@ -51,6 +51,10 @@ int kws_trace_writer_close(kws_trace_writer_t *writer);
 int kws_trace_reader_open(kws_trace_reader_t *reader,
                           const char *path,
                           kws_trace_header_t *out_header);
+/* Takes ownership of stream, including when header validation fails. */
+int kws_trace_reader_open_stream(kws_trace_reader_t *reader,
+                                 FILE *stream,
+                                 kws_trace_header_t *out_header);
 int kws_trace_reader_next(kws_trace_reader_t *reader,
                           uint64_t *out_end_sample,
                           int *out_speech_active,
