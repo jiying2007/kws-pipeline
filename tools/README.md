@@ -113,6 +113,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`diagnose_sequence_margin_runtime_gap.py`](diagnose_sequence_margin_runtime_gap.py)
 - [`diagnose_sequence_margin_runtime_gap_decomposition.py`](diagnose_sequence_margin_runtime_gap_decomposition.py)
 - [`plan_far_stream.py`](plan_far_stream.py)
+- [`event_readback_contract.py`](event_readback_contract.py): validate saved per-clip identity bindings; no execution authentication, acoustic metrics or qualification.
 - [`requalify_decoder_boundary_grid.py`](requalify_decoder_boundary_grid.py)
 - [`report_offline_effect.py`](report_offline_effect.py): compare saved events by evidence tier under frozen identities; no inference, production qualification or shipping approval.
 - [`summarize_frozen_far_context_path.py`](summarize_frozen_far_context_path.py)
