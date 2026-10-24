@@ -240,9 +240,9 @@ int main(int argc, char **argv) {
     fprintf(stderr, "cannot open model/keyword pack\n");
     goto cleanup;
   }
-  kws_sha256_memory_hex(model_blob, model_bytes, model_sha256);
-  kws_sha256_memory_hex(pack_blob, pack_bytes, pack_sha256);
   if (completion_path != NULL) {
+    kws_sha256_memory_hex(model_blob, model_bytes, model_sha256);
+    kws_sha256_memory_hex(pack_blob, pack_bytes, pack_sha256);
 #if defined(__linux__)
     char invocation_sha256[65];
     if (kws_sha256_file_hex("/proc/self/exe", tool_sha256) == 0 ||
@@ -255,6 +255,9 @@ int main(int argc, char **argv) {
     fprintf(stderr, "completion requires native Linux\n");
     goto cleanup;
 #endif
+  } else if (kws_sha256_file_hex(argv[1], model_sha256) == 0) {
+    fprintf(stderr, "cannot hash model\n");
+    goto cleanup;
   }
   if (!(completion_path != NULL
           ? kws_trace_reader_open_stream(&reader, snapshot_trace(argv[3], trace_sha256), &trace)
@@ -332,15 +335,16 @@ int main(int argc, char **argv) {
     fprintf(stderr, "cannot write stdout\n");
     goto cleanup;
   }
+  exit_code = 0;
   if (completion_path != NULL &&
       !publish_completion(completion_path, argv[4], &completion_stats, &config,
                           blank_retention, fuzzy_child_cost_log,
                           search_policy_override, model_sha256, pack_sha256,
                           trace_sha256, tool_sha256)) {
     fprintf(stderr, "cannot publish replay completion (destination must be new)\n");
+    exit_code = 1;
     goto cleanup;
   }
-  exit_code = 0;
 
 cleanup:
   if (reader_open != 0) {
