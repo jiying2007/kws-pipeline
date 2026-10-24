@@ -365,3 +365,44 @@ in a positive clip does not prove a correctly aligned wake event. Frozen model a
 keyword-pack hashes, runner identity, build-receipt hash, exporter receipt and
 consumer-code hashes remain attached to the report. A manual compiler build must
 be identified as such in its build receipt, never as a CMake or full-CI result.
+
+### Saved per-clip event identity contract
+
+`python3 tools/event_readback_contract.py RECEIPT.json` validates the narrow
+`kws-event-readback-identity-v1` saved-file contract without running a model,
+producer or replay. Its only accepted scope is `observed-per-clip-diagnostic`.
+This is an identity and structural consistency check, not a new qualification
+or scoring gate. `tests/test_wav_trace.py` exercises artificial positive and
+negative receipts on its normal CI path; `--contract-only` runs those fixtures
+without invoking C tools.
+
+The receipt binds relative confined paths, byte lengths and SHA-256 digests for
+model, keyword pack, original mono 16-kHz PCM16 WAV, nonempty KWTRACE1 trace,
+capture/replay binaries, complete supported capture/replay source manifest,
+parameter contract, its generated header, event JSONL and completion claim.
+The exact fields and supported source closure are defined in
+`tools/event_readback_contract.py`. Model/pack vocabulary, trace model identity,
+frame coverage, saved VAD flags, finite logits and canonical sample clocks must
+agree. Keyword tokens, thresholds, prefix/grace and trailing-blank policy are
+read from the bound pack. Runtime settings must match the bound parameter
+contract defaults; overrides are rejected.
+
+This first version supports only fresh per-clip engines, zero sample origin,
+no padding/flush/discontinuity or extra resets, unchanged PCM, and capture
+without a keyword pack (`kws_posterior_dump`). Visible events must identify the
+recording/keyword, lie on saved frame clocks, meet the pack threshold and obey
+global refractory spacing. Six-decimal printed times/confidences allow
+`0.500001e-6` rounding error; two events on the same frame are rejected.
+Completion counts must agree with events and consumed frames. These checks
+cannot establish that binary execution occurred, that binaries derive from
+bound sources, or that logits/events were actually computed by those binaries.
+
+Successful output therefore says `VERIFIED_BINDINGS_ONLY`, with
+`execution_observed=false`, `completion_authenticity_verified=false`,
+`historical_event_equivalence=false`, and both `production_qualified` and
+`promotion_allowed` false. FRR, FAR/hour and word-end latency remain null.
+Transcripts alone, extra metric/qualification claims, sealed-test roles,
+unknown policies and incomplete identity bindings fail closed. Declared data
+roles/label grades are preserved restrictions, not independently authenticated
+label evidence. Already observed development clips remain observed data; this
+contract does not create event-aligned references or independent test evidence.

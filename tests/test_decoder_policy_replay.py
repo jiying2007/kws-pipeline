@@ -64,7 +64,10 @@ def verify_path_runner(runner: pathlib.Path) -> None:
         trace = root / "trace.kwtr"
 
         def replay(name: str, tokens: list[int], frames: list[list[float]],
-                   *, threshold: float = 0.1, min_blanks: int = 0) -> dict:
+                   *, threshold: float = 0.1, min_blanks: int = 0,
+                   speech_active: list[int] | None = None) -> dict:
+            active = speech_active if speech_active is not None else [1] * len(frames)
+            assert len(active) == len(frames)
             pack.write_bytes(
                 struct.pack("<4sHHHHIQ", b"KWKP", 3, 24, 1, 5, 72, fingerprint)
                 + struct.pack("<IfHBBBBH16H", 1, threshold, len(tokens),
@@ -75,7 +78,7 @@ def verify_path_runner(runner: pathlib.Path) -> None:
                 struct.pack("<8sIHHIIIIQQ64s8x", b"KWTRACE1", 1, 5, 0,
                             16000, 400, 320, 0, fingerprint, len(frames),
                             model_digest)
-                + b"".join(struct.pack("<QB7x5f", 400 + index * 320, 1, *frame)
+                + b"".join(struct.pack("<QB7x5f", 400 + index * 320, active[index], *frame)
                            for index, frame in enumerate(frames))
             )
             result = subprocess.run([str(runner), str(model), str(pack),
@@ -126,6 +129,43 @@ def verify_path_runner(runner: pathlib.Path) -> None:
                                  [[0.0] * 5] + [blank] * 8,
                                  threshold=0.5, min_blanks=8)
         assert below_threshold["detections"] == 0
+
+        # The second internal hit resets decoder history even though the
+        # engine suppresses its event during the default 1200 ms refractory
+        # window. This used to produce a false shadow divergence at frame 9.
+        fourth = [-8.0, -8.0, -8.0, -8.0, 8.0]
+        word = [root_token, exact_second, exact_third, fourth]
+        suppressed = replay("refractory-hit-frame9", [1, 2, 3, 4],
+                            word + [blank] * 2 + word + [blank] * 2,
+                            threshold=0.55)
+        assert suppressed["detections"] == 1
+        # A later hit outside the window must still emit, without retaining
+        # paths from either the first or the suppressed second hit.
+        later = replay("refractory-then-later-hit", [1, 2, 3, 4],
+                       word + [blank] * 2 + word + [blank] * 60 + word,
+                       threshold=0.55)
+        assert later["detections"] == 2
+        no_hit = replay("no-hit", [1, 2, 3, 4], [blank] * 20,
+                        threshold=0.55)
+        assert no_hit["detections"] == 0
+        # Inactive boundary reset must discard an incomplete prefix, while
+        # allowing a subsequent complete word. Do not invent a reset record
+        # in KWTRACE (the format has none).
+        boundary = replay("inactive-prefix-reset", [1, 2, 3, 4],
+                          word[:2] + [blank] * 12 + word[2:],
+                          threshold=0.55,
+                          speech_active=[1] * 2 + [0] * 12 + [1] * 2)
+        assert boundary["detections"] == 0
+        reset_then_word = replay("inactive-reset-then-word", [1, 2, 3, 4],
+                                 word[:2] + [blank] * 12 + word,
+                                 threshold=0.55,
+                                 speech_active=[1] * 2 + [0] * 12 + [1] * 4)
+        assert reset_then_word["detections"] == 1
+        # Each replay owns a fresh engine; refractory state cannot leak across
+        # recordings, even after the suppressed-hit case above.
+        fresh = replay("fresh-engine-reset", [1, 2, 3, 4], word,
+                       threshold=0.55)
+        assert fresh["detections"] == 1
 
         # Large common offsets must not erase the normalizer in the shadow
         # scorer. All five logits tie, so confidence is 1/5, never 1.

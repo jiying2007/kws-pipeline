@@ -8,11 +8,13 @@ a partial receipt; default workspaces are temporary.
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 from pathlib import Path
 import struct
 import subprocess
+import sys
 import tempfile
 import wave
 
@@ -81,6 +83,155 @@ def events(text: str) -> list[dict]:
 def canonical(rows: list[dict]) -> list[dict]:
     return [{key: row[key] for key in ("recording", "keyword_id", "time_s", "confidence")}
             for row in rows]
+
+
+
+def verify_event_readback_contract() -> None:
+    # Only temporary artificial files and public source snapshots. No runner,
+    # model inference, audio corpus or event scoring occurs in these checks.
+    repo = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(repo / "tools"))
+    from event_readback_contract import (CONTEXT, SCHEMA, SOURCE_FILES, verify)
+    from gen_parameter_limits import load_contract, render_header
+
+    with tempfile.TemporaryDirectory(prefix="event-readback-contract-") as tmp:
+        root = Path(tmp)
+
+        def binding(path: Path) -> dict:
+            return {"path": str(path.relative_to(root)), "bytes": path.stat().st_size,
+                    "sha256": digest(path)}
+
+        def put(name: str, data: bytes) -> dict:
+            path = root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+            return binding(path)
+
+        sources = {}
+        for name in SOURCE_FILES:
+            sources[name] = put("source/" + name, (repo / name).read_bytes())
+        # Bindings in the source manifest are relative to that manifest.
+        artifacts = {"source_manifest": put("sources.json", json.dumps(sources).encode())}
+        artifacts["model"] = put("fixture.kwm", fixture_model())
+        artifacts["keyword_pack"] = put("fixture.kwk", fixture_pack())
+        write_wav(root / "fixture.wav", 720, True)
+        artifacts["source_wav"] = binding(root / "fixture.wav")
+        model_sha = artifacts["model"]["sha256"].encode()
+        trace_bytes = (struct.pack("<8sIHHIIIIQQ64s8x", b"KWTRACE1", 1, 4, 0,
+                                  16000, 400, 320, 0, FINGERPRINT, 2, model_sha)
+                       + b"".join(struct.pack("<QB7x4f", end, 1, *LOGITS)
+                                  for end in (400, 720)))
+        artifacts["trace"] = put("fixture.kwtr", trace_bytes)
+        artifacts["capture_binary"] = put("capture-fixture", b"not executed capture fixture")
+        artifacts["replay_binary"] = put("replay-fixture", b"not executed replay fixture")
+        contract_path = root / "source/configs/parameter-contract.json"
+        artifacts["parameter_contract"] = binding(contract_path)
+        contract, contract_sha = load_contract(contract_path)
+        artifacts["generated_header"] = put("kws_parameter_limits.h", render_header(contract, contract_sha).encode())
+        completion = {"exit_code": 0, "frames_consumed": 2, "decoder_hits": 1,
+                      "detections": 1, "refractory_suppressed": 0}
+        artifacts["completion"] = put("completion.json", json.dumps(completion).encode())
+        event_row = {"recording": "fixture", "keyword_id": 42, "time_s": .025, "confidence": .9}
+        artifacts["events"] = put("events.jsonl", (json.dumps(event_row) + "\n").encode())
+        recipe = {"schema": SCHEMA, "scope": "observed-per-clip-diagnostic",
+                  "source_id": "fixture", "data_role": "synthetic-control",
+                  "label_grade": "constructed", "context": copy.deepcopy(CONTEXT),
+                  "runtime": {key: row["default"] for key, row in contract["runtime"].items()},
+                  "keyword_policy": [{"id": 42, "threshold": struct.unpack("<f", struct.pack("<f", .30))[0],
+                                      "tokens": [1], "min_trailing_blanks": 0, "priority": 0,
+                                      "prefix_policy": 0, "grace_frames": 0}], "artifacts": artifacts}
+        receipt = root / "receipt.json"
+
+        def checked(value: dict) -> dict:
+            receipt.write_text(json.dumps(value))
+            return verify(receipt)
+
+        result = checked(recipe)
+        require(result["status"] == "VERIFIED_BINDINGS_ONLY" and result["execution_observed"] is False,
+                "identity verification must not authenticate execution")
+        require(result["promotion_allowed"] is False and result["far_per_hour"] is None and
+                result["frr"] is None and result["word_end_latency_ms"] is None,
+                "diagnostic receipt must not invent quality metrics")
+
+        def rejected(change, message: str) -> None:
+            value = copy.deepcopy(recipe)
+            change(value)
+            try:
+                checked(value)
+            except (ValueError, KeyError) as exc:
+                require(message in str(exc), f"wrong rejection: {exc}")
+            else:
+                raise AssertionError("accepted invalid event receipt: " + message)
+
+        rejected(lambda v: v.update(frr=0), "receipt fields")
+        rejected(lambda v: v.update(scope="product-qualified-events"), "scope")
+        rejected(lambda v: v.update(data_role="sealed-test"), "data role")
+        rejected(lambda v: v["context"].update(mode="continuous"), "context")
+        rejected(lambda v: v["context"].update(vad="from-target"), "context")
+        rejected(lambda v: v["context"].update(sample_origin=False), "context")
+        rejected(lambda v: v["runtime"].update(refractory_ms=0), "runtime")
+        rejected(lambda v: v["runtime"].update(refractory_ms=True), "runtime")
+        rejected(lambda v: v["keyword_policy"][0].update(threshold=.5), "keyword policy")
+        rejected(lambda v: v["artifacts"]["model"].update(sha256="0" * 64), "hash")
+        rejected(lambda v: v["artifacts"]["trace"].update(bytes=True), "integer")
+        rejected(lambda v: v["artifacts"]["trace"].update(path="../outside"), "outside")
+        # Rehashing corrupted artifacts does not bypass semantic validation.
+        for offset, payload, reason in ((128, bytes([2]), "VAD"),
+                                         (120, struct.pack("<Q", 401), "clock"),
+                                         (48, b"b" * 64, "trace model"),
+                                         (136, struct.pack("<f", float("nan")), "non-finite")):
+            damaged = bytearray(trace_bytes)
+            damaged[offset:offset + len(payload)] = payload
+            new_binding = put("damaged.kwtr", bytes(damaged))
+            rejected(lambda v: v["artifacts"].update(trace=new_binding), reason)
+        raw_binding = put("raw-logits.bin", b"transcript-only")
+        rejected(lambda v: v["artifacts"].update(trace=raw_binding), "trace header")
+        missing = dict(sources)
+        missing.pop("src/decoder.c")
+        new_binding = put("missing-sources.json", json.dumps(missing).encode())
+        rejected(lambda v: v["artifacts"].update(source_manifest=new_binding), "complete supported")
+        bad_completion = dict(completion, exit_code=True)
+        new_binding = put("bad-completion.json", json.dumps(bad_completion).encode())
+        rejected(lambda v: v["artifacts"].update(completion=new_binding), "integer")
+        bad_completion = dict(completion, frames_consumed=1)
+        new_binding = put("short-completion.json", json.dumps(bad_completion).encode())
+        rejected(lambda v: v["artifacts"].update(completion=new_binding), "incomplete")
+        for update, reason in (({"time_s": 0}, "frame clock"),
+                               ({"time_s": .026}, "frame clock"),
+                               ({"confidence": .29}, "below keyword threshold"),
+                               ({"confidence": True}, "numeric field")):
+            changed_event = dict(event_row, **update)
+            new_binding = put("bad-event.jsonl", json.dumps(changed_event).encode())
+            rejected(lambda v: v["artifacts"].update(events=new_binding), reason)
+        # Six-decimal CLI rounding of a float32 threshold is allowed.
+        rounded = put("rounded.jsonl", json.dumps(dict(event_row, confidence=.3)).encode())
+        value = copy.deepcopy(recipe)
+        value["artifacts"]["events"] = rounded
+        checked(value)
+        for second_time in (.025, .045):
+            double = put("double.jsonl", (json.dumps(event_row) + "\n" +
+                         json.dumps(dict(event_row, time_s=second_time))).encode())
+            double_completion = put("double-completion.json", json.dumps(dict(
+                completion, decoder_hits=2, detections=2)).encode())
+            rejected(lambda v: v["artifacts"].update(events=double, completion=double_completion),
+                     "frame uniqueness/refractory")
+        no_events = put("no-events.jsonl", b"")
+        suppressed_only = put("suppressed-only.json", json.dumps(dict(
+            completion, detections=0, refractory_suppressed=1)).encode())
+        rejected(lambda v: v["artifacts"].update(events=no_events, completion=suppressed_only),
+                 "suppress its first hit")
+        empty_trace = bytearray(trace_bytes[:120])
+        struct.pack_into("<Q", empty_trace, 40, 0)
+        empty_binding = put("empty.kwtr", bytes(empty_trace))
+        rejected(lambda v: v["artifacts"].update(trace=empty_binding), "non-empty trace")
+        receipt.write_text('{"schema":"a","schema":"b"}')
+        try:
+            verify(receipt)
+        except ValueError as exc:
+            require("duplicate" in str(exc), "duplicate receipt key rejection")
+        else:
+            raise AssertionError("duplicate receipt key accepted")
+    print("event_readback_contract: ok (artificial files only)")
 
 
 def run(args: argparse.Namespace) -> None:
@@ -237,11 +388,18 @@ def run(args: argparse.Namespace) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--wav-runner", type=Path, required=True)
-    parser.add_argument("--replay-runner", type=Path, required=True)
+    parser.add_argument("--wav-runner", type=Path)
+    parser.add_argument("--replay-runner", type=Path)
+    parser.add_argument("--contract-only", action="store_true",
+                        help="verify artificial receipt fixtures without executing runners")
     parser.add_argument("--output-root", type=Path,
                         help="new persistent evidence directory; default is temporary")
     args = parser.parse_args()
+    verify_event_readback_contract()
+    if args.contract_only:
+        raise SystemExit(0)
+    if args.wav_runner is None or args.replay_runner is None:
+        parser.error("--wav-runner and --replay-runner are required unless --contract-only")
     if args.output_root is not None:
         run(args)
     else:

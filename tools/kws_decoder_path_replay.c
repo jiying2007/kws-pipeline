@@ -470,6 +470,7 @@ int main(int argc, char **argv) {
   shadow_node_t shadow[KWS_MAX_TRIE_NODES];
   uint16_t shadow_inactive_frames = 0u;
   uint64_t frame_count = 0u;
+  uint64_t previous_decoder_hits = 0u;
   int reader_open = 0;
   int exit_code = 1;
 
@@ -572,6 +573,7 @@ int main(int argc, char **argv) {
     int speech_active = 0;
     int detected = 0;
     kws_detection_t hit = {0u, 0.0f, 0u};
+    kws_engine_stats_t stats;
     int status = kws_trace_reader_next(&reader, &end_sample, &speech_active,
                                        logits, KWS_MAX_VOCAB_SIZE);
     if (status == 0) {
@@ -593,13 +595,17 @@ int main(int argc, char **argv) {
                                       speech_active, end_sample, &hit,
                                       &detected) != KWS_OK ||
         kws_engine_debug_copy_decoder_state(
-            engine, &decoder_state, nodes, KWS_MAX_TRIE_NODES) != KWS_OK) {
+            engine, &decoder_state, nodes, KWS_MAX_TRIE_NODES) != KWS_OK ||
+        kws_engine_get_stats(engine, &stats) != KWS_OK) {
       fprintf(stderr, "invalid acoustic trace/debug frame\n");
       goto cleanup;
     }
     frame_count++;
 
-    if (detected != 0) {
+    /* The decoder resets on every internal hit, including hits that the
+     * engine suppresses during the refractory window. Match that transition;
+     * detected remains the authority for emitted-event accounting below. */
+    if (stats.decoder_hits != previous_decoder_hits) {
       shadow_reset(shadow, decoder_state.node_count);
       shadow_inactive_frames = 0u;
     } else if (speech_active == 0 &&
@@ -609,6 +615,7 @@ int main(int argc, char **argv) {
       shadow_inactive_frames =
           (uint16_t)KWS_DECODER_BOUNDARY_RESET_INACTIVE_FRAMES;
     }
+    previous_decoder_hits = stats.decoder_hits;
     if (decoder_state.inactive_frames != shadow_inactive_frames ||
         verify_shadow_nodes(shadow, nodes, decoder_state.node_count) == 0) {
       fprintf(stderr,
