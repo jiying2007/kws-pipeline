@@ -62,6 +62,7 @@ int main(int argc, char **argv) {
   int trace_created = 0;
   FILE *reserved_stats = NULL;
   int stats_created = 0;
+  int block_samples_seen = 0;
   int exit_code = 1;
 
   if (argc < 5 || (argc - 5) % 2 != 0) {
@@ -77,11 +78,12 @@ int main(int argc, char **argv) {
       metadata_path = argv[i + 1];
     } else if (strcmp(argv[i], "--trace-out") == 0 && trace_path == NULL) {
       trace_path = argv[i + 1];
-    } else if (strcmp(argv[i], "--block-samples") == 0) {
+    } else if (strcmp(argv[i], "--block-samples") == 0 && block_samples_seen == 0) {
       uint64_t value;
       if (!timeline_uint(argv[i + 1], &value) || value == 0u ||
           value > KWS_MAX_PCM_BLOCK_SAMPLES) return 2;
       block_samples = (size_t)value;
+      block_samples_seen = 1;
     } else {
       fprintf(stderr, "unknown or duplicate option: %s\n", argv[i]);
       return 2;
