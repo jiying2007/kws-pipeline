@@ -100,6 +100,17 @@ class ArmRunnerTests(unittest.TestCase):
         arm.check_arm_dynamic_symbols(SYMBOLS.replace(
             'FUNC GLOBAL DEFAULT 9 kws3_create',
             'FUNC GLOBAL DEFAULT 9 kws3_create@@API_1', 1))
+        # The second ARM lane checks a larger exact API, with the same table
+        # parser and a separate unchanged 5-second resource budget.
+        full_b_exports = set(PUBLIC_SYMBOLS) | {
+            'bsa_create', 'kcf_pcm_init', 'fsmn2599_step', 'b_profile_get'}
+        arm.check_arm_dynamic_symbols(symbols(sorted(full_b_exports)), full_b_exports)
+        with self.assertRaises(RuntimeError):
+            arm.check_arm_dynamic_symbols(symbols(sorted(full_b_exports - {'bsa_create'})),
+                                          full_b_exports)
+        with self.assertRaises(RuntimeError):
+            arm.check_arm_dynamic_symbols(symbols(sorted(full_b_exports | {'extra_api'})),
+                                          full_b_exports)
 
     def test_timeout_or_subprocess_failure_has_no_fallback(self):
         for error in (subprocess.TimeoutExpired('gcc', 45), RuntimeError('compiler failure')):
