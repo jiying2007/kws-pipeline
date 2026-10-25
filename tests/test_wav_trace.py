@@ -533,6 +533,15 @@ def run(args: argparse.Namespace) -> None:
         require(digest(sentinel) == sentinel_sha, "existing trace overwritten")
         invoke("reject-duplicate", common + ["--trace-out", str(out / "duplicate.kwtr"),
                  "--trace-out", str(out / "duplicate2.kwtr")], "preflight", expected=2)
+        for suffix, second_value in (("same", "160"), ("different", "320")):
+            trace_dest = out / ("duplicate-block-" + suffix + ".kwtr")
+            stats_dest = out / ("duplicate-block-" + suffix + ".stats.json")
+            invoke("reject-duplicate-block-" + suffix,
+                   common + ["--block-samples", "160", "--block-samples", second_value,
+                             "--trace-out", str(trace_dest), "--stats-json", str(stats_dest)],
+                   "preflight", expected=2)
+            require(not trace_dest.exists() and not stats_dest.exists(),
+                    "duplicate --block-samples created an output file")
         collision = out / "collision"
         invoke("reject-collision", common + ["--trace-out", str(collision),
                  "--stats-json", str(collision)], "preflight", expected=2)
@@ -548,7 +557,7 @@ def run(args: argparse.Namespace) -> None:
                  "--stats-json", str(alias)], "preflight", expected=1)
         require(alias.is_symlink() and not (out / "alias-trace.kwtr").exists(),
                 "aliased stats changed output")
-        report["assertions"].append("six pre-inference rejections and no-clobber checks passed")
+        report["assertions"].append("eight pre-inference rejections and no-clobber checks passed")
 
         for name, count, signal, block, ends, speech in specs:
             wav, trace, stats = (out / (name + suffix) for suffix in (".wav", ".kwtr", ".stats.json"))
