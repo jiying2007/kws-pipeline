@@ -18,8 +18,8 @@ FLAGS = ['-std=c11', '-Wall', '-Wextra', '-Werror', '-pedantic',
 
 
 
-def check_arm_dynamic_symbols(text):
-    """Fail closed on ARM ELF32 dynamic exports; preserve the 13-symbol ABI gate."""
+def check_arm_dynamic_symbols(text, expected=PUBLIC_SYMBOLS):
+    """Fail closed on ARM ELF32 dynamic exports; preserve exact public ABI symbols."""
     for pattern in (r'^\s*Class:\s+ELF32\s*$',
                     r'^\s*Machine:\s+ARM\s*$',
                     r'^\s*Type:\s+DYN\s+\(',
@@ -44,15 +44,19 @@ def check_arm_dynamic_symbols(text):
         kind, binding, visibility, section = columns[3:7]
         raw_name = columns[7] if len(columns) >= 8 else ''
         name = raw_name.split('@', 1)[0]
-        if section != 'UND' and ('kws3_test' in name or name.startswith('kws3_')):
-            if (not name.startswith('kws3_') or kind != 'FUNC'
-                    or binding != 'GLOBAL' or visibility != 'DEFAULT'):
-                raise RuntimeError('invalid ARM ELF production symbol attributes')
-            names.append(name)
+        if section != 'UND' and name:
+            # SECTION/LOCAL bookkeeping is not an exported API; every defined
+            # GLOBAL/WEAK dynsym entry must be accounted for, not just kws3_*.
+            if binding in ('GLOBAL', 'WEAK'):
+                if kind != 'FUNC' or binding != 'GLOBAL' or visibility != 'DEFAULT':
+                    raise RuntimeError('invalid ARM ELF production symbol attributes')
+                names.append(name)
+            elif name.startswith('kws3_') or 'kws3_test' in name:
+                raise RuntimeError('nonexported ARM ELF production/test-hook symbol')
     if indices != list(range(int(header.group(1)))):
         raise RuntimeError('incomplete ARM ELF dynamic symbol table')
-    if len(names) != len(PUBLIC_SYMBOLS) or set(names) != PUBLIC_SYMBOLS:
-        raise RuntimeError('production ARM ELF exports differ from the 13-symbol ABI')
+    if len(names) != len(expected) or set(names) != expected:
+        raise RuntimeError('production ARM ELF exports differ from exact ABI')
 
 
 def check_smoke_completion(text):
@@ -62,7 +66,7 @@ def check_smoke_completion(text):
 
 
 def run_arm(output, emulator, sysroot):
-    """Three serial builds, two bounded QEMU runs, one cross-nm audit."""
+    """Three serial builds, two bounded QEMU runs, one ELF dynsym audit."""
     common = [COMPILER] + FLAGS
     prefix = [emulator, '-L', str(sysroot)]
     for source, name, check in (
