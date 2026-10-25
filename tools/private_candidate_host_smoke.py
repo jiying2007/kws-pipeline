@@ -80,7 +80,7 @@ def execute(args):
     started = time.monotonic()
     receipt = {'schema': 'private-candidate-host-smoke-v1', 'status': 'NOT_RUN',
                'production_qualified': False, 'training_runs': 0,
-               'live_runs': 0, 'replay_runs': 0, 'cases': []}
+               'live_runs': 0, 'replay_runs': 0, 'cases': [], 'invocations': []}
 
     def save():
         (out / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
@@ -88,10 +88,24 @@ def execute(args):
     def launch(command, label):
         remaining = 1800 - (time.monotonic() - started)
         require(remaining > 0, 'wall budget exceeded')
-        result = subprocess.run([str(x) for x in command], capture_output=True,
-                                timeout=min(30, remaining))
+        argv = [str(x) for x in command]
+        invocation = {'label': label, 'command': argv, 'status': 'reserved'}
+        receipt['invocations'].append(invocation)
+        save()
+        call_started = time.monotonic()
+        try:
+            result = subprocess.run(argv, capture_output=True, timeout=min(30, remaining))
+        except subprocess.TimeoutExpired as exc:
+            (out / (label + '.stdout')).write_bytes(exc.stdout or b'')
+            (out / (label + '.stderr')).write_bytes(exc.stderr or b'')
+            invocation.update(status='timeout', elapsed_seconds=time.monotonic()-call_started)
+            save()
+            raise
+        invocation.update(status='completed', returncode=result.returncode,
+                          elapsed_seconds=time.monotonic()-call_started)
         (out / (label + '.stdout')).write_bytes(result.stdout)
         (out / (label + '.stderr')).write_bytes(result.stderr)
+        save()
         require(result.returncode == 0, label + ': nonzero exit')
         return result.stdout
 
