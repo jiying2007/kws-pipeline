@@ -61,6 +61,12 @@ def admit(archive, expected_archive, pack, expected_pack, tokens):
         require(digest(provenance) == side['exporter_provenance']['sha256'],
                 'provenance binding mismatch')
         prov = json.loads(provenance)
+        require(prov.get('checkpoint', {}).get('sha256') == digest(checkpoint),
+                'exporter checkpoint binding mismatch')
+        require(prov.get('model', {}).get('sha256') == digest(model),
+                'exporter model binding mismatch')
+        require(type(prov.get('model', {}).get('bytes')) is int and
+                prov['model']['bytes'] == len(model), 'exporter model size mismatch')
         require(digest(tokens) == prov['tokens']['sha256'] == prov['tokens']['checkpoint_sha256'],
                 'token binding mismatch')
         require(len(model) >= 72 and model[:4] == b'KWSP' and
@@ -185,7 +191,9 @@ def self_test():
     model = bytearray(72); model[:4] = b'KWSP'; struct.pack_into('<H', model, 4, 2)
     pack = bytearray(24); pack[:4] = b'KWKP'; struct.pack_into('<H', pack, 4, 3)
     checkpoint = b'artificial checkpoint, never deserialized'
-    prov = json.dumps({'tokens': {'sha256': digest(tokens), 'checkpoint_sha256': digest(tokens)}}).encode()
+    prov = json.dumps({'tokens': {'sha256': digest(tokens), 'checkpoint_sha256': digest(tokens)},
+                       'checkpoint': {'sha256': digest(checkpoint)},
+                       'model': {'sha256': digest(model), 'bytes': len(model)}}).encode()
     side = dict(FLAGS, model={'sha256': digest(model)}, checkpoint={'sha256': digest(checkpoint)},
                 exporter_provenance={'sha256': digest(prov)})
     def bundle(changes=None):
@@ -212,6 +220,18 @@ def self_test():
                     {'candidate.research.pt': b'changed'}, {'candidate.kwm': bytes(bad_model)},
                     {'candidate.kwm.provenance.json': b'{}'}):
         bad = bundle(changes); negatives.append((bad, digest(bad), pack, digest(pack), tokens))
+    # Rebind archive/sidecar hashes so these reject semantic cross-file
+    # contradictions, not merely stale manifest hashes.
+    for section, field, value in (('checkpoint', 'sha256', '0'*64),
+                                  ('model', 'sha256', '0'*64),
+                                  ('model', 'bytes', len(model)+1)):
+        altered = json.loads(prov)
+        altered[section][field] = value
+        altered_bytes = json.dumps(altered).encode()
+        altered_side = dict(side, exporter_provenance={'sha256': digest(altered_bytes)})
+        bad = bundle({'candidate.kwm.provenance.json': altered_bytes,
+                      'candidate.research-sidecar.json': json.dumps(altered_side).encode()})
+        negatives.append((bad, digest(bad), pack, digest(pack), tokens))
     for args in negatives:
         try: admit(*args)
         except (ValueError, KeyError): pass
@@ -237,7 +257,7 @@ def self_test():
         else:
             raise ValueError('existing output accepted')
         require((args.output_root / 'receipt.json').read_bytes() == before, 'receipt overwritten')
-    print('private candidate admission: 11 artificial cases passed; executions=0')
+    print('private candidate admission: 14 artificial cases passed; executions=0')
 
 
 if __name__ == '__main__':
