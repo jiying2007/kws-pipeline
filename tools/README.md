@@ -36,6 +36,8 @@ make collected measurements auditable and do not substitute for those measuremen
 
 ## Keyword and corpus identity
 
+- [`private_candidate_host_smoke.py`](private_candidate_host_smoke.py): explicit local-only research transport checks; default NOT_RUN, no private input in CI. [Usage and limits](../docs/private-candidate-host-smoke.md).
+
 - [`compile_keywords.py`](compile_keywords.py)
 - [`corpus_identity.py`](corpus_identity.py)
 - [`keyword_set_identity.py`](keyword_set_identity.py)
