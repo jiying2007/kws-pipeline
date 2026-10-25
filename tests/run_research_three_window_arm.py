@@ -1,19 +1,62 @@
 """Bounded ARM hard-float decoder smoke; no ctypes or model execution."""
 from __future__ import annotations
 import argparse
+import os
 from pathlib import Path
 import re
 import tempfile
 
 from test_research_three_window_c import (
-    check_production_symbols, check_threshold_completion, run,
+    PUBLIC_SYMBOLS, check_threshold_completion, run,
 )
 
 COMPILER = 'arm-linux-gnueabihf-gcc'
-NM = 'arm-linux-gnueabihf-nm'
+READELF = 'readelf'
 FLAGS = ['-std=c11', '-Wall', '-Wextra', '-Werror', '-pedantic',
          '-fno-fast-math', '-ffp-contract=off', '-fexcess-precision=standard',
          '-mcpu=cortex-a32', '-mfpu=neon-vfpv4', '-mfloat-abi=hard']
+
+
+
+def check_arm_dynamic_symbols(text, expected=PUBLIC_SYMBOLS):
+    """Fail closed on ARM ELF32 dynamic exports; preserve exact public ABI symbols."""
+    for pattern in (r'^\s*Class:\s+ELF32\s*$',
+                    r'^\s*Machine:\s+ARM\s*$',
+                    r'^\s*Type:\s+DYN\s+\(',
+                    r"^\s*Data:\s+2's complement, little endian\s*$"):
+        if re.search(pattern, text, re.MULTILINE) is None:
+            raise RuntimeError('production ARM ELF identity mismatch')
+    header = re.search(r"^Symbol table '\.dynsym' contains (\d+) entries:\s*$",
+                       text, re.MULTILINE)
+    if header is None:
+        raise RuntimeError('ARM ELF dynamic symbol table missing')
+    names, indices = [], []
+    for line in text[header.end():].splitlines():
+        if line.startswith('Symbol table '):
+            break
+        columns = line.split()
+        if not columns or not re.fullmatch(r'\d+:', columns[0]):
+            continue
+        if (len(columns) < 7 or not re.fullmatch(r'[0-9a-fA-F]+', columns[1])
+                or not columns[2].isdigit()):
+            raise RuntimeError('malformed ARM ELF dynamic symbol row')
+        indices.append(int(columns[0][:-1]))
+        kind, binding, visibility, section = columns[3:7]
+        raw_name = columns[7] if len(columns) >= 8 else ''
+        name = raw_name.split('@', 1)[0]
+        if section != 'UND' and name:
+            # SECTION/LOCAL bookkeeping is not an exported API; every defined
+            # GLOBAL/WEAK dynsym entry must be accounted for, not just kws3_*.
+            if binding in ('GLOBAL', 'WEAK'):
+                if kind != 'FUNC' or binding != 'GLOBAL' or visibility != 'DEFAULT':
+                    raise RuntimeError('invalid ARM ELF production symbol attributes')
+                names.append(name)
+            elif name.startswith('kws3_') or 'kws3_test' in name:
+                raise RuntimeError('nonexported ARM ELF production/test-hook symbol')
+    if indices != list(range(int(header.group(1)))):
+        raise RuntimeError('incomplete ARM ELF dynamic symbol table')
+    if len(names) != len(expected) or set(names) != expected:
+        raise RuntimeError('production ARM ELF exports differ from exact ABI')
 
 
 def check_smoke_completion(text):
@@ -23,7 +66,7 @@ def check_smoke_completion(text):
 
 
 def run_arm(output, emulator, sysroot):
-    """Three serial builds, two bounded QEMU runs, one cross-nm audit."""
+    """Three serial builds, two bounded QEMU runs, one ELF dynsym audit."""
     common = [COMPILER] + FLAGS
     prefix = [emulator, '-L', str(sysroot)]
     for source, name, check in (
@@ -35,7 +78,11 @@ def run_arm(output, emulator, sysroot):
     # No KWS3_TESTING: this library is inspected, never loaded into host Python.
     production = output / 'libkws3.so'
     run(common + ['-O2', '-fPIC', '-shared', 'kws3.c', '-lm', '-o', str(production)], timeout=45)
-    check_production_symbols(run([NM, '-D', '--defined-only', str(production)], timeout=10))
+    # Cross-nm timed out in original hosted failures. Read identical dynamic
+    # exports with GNU readelf, retaining the 10-second limit and no fallback.
+    symbols = run([READELF, '-h', '-W', '--dyn-syms', str(production)],
+                  env=dict(os.environ, LC_ALL='C'), timeout=10)
+    check_arm_dynamic_symbols(symbols)
 
 
 def main(argv=None):

@@ -12,13 +12,31 @@ SMOKE = 'synthetic groups=8 storage_bytes=1; no acoustic admission\n'
 COUNTS = dict(status='PASS_DECODER_THRESHOLD_SYNTHETIC_ONLY', fixtures_passed=8,
               completed_rows=569, step_attempts=572, beam_updates=949,
               windows=21, direct_merge_calls=11)
-SYMBOLS = '\n'.join('0000 T ' + name for name in sorted(PUBLIC_SYMBOLS))
+ELF_HEADER = """ELF Header:
+  Class:                             ELF32
+  Data:                              2's complement, little endian
+  Type:                              DYN (Shared object file)
+  Machine:                           ARM
+"""
+
+
+def symbols(names):
+    rows = ["0: 00000000 0 NOTYPE LOCAL DEFAULT UND",
+            "1: 00000000 0 FUNC GLOBAL DEFAULT UND kws3_undefined"]
+    rows += [f"{index}: 00001234 12 FUNC GLOBAL DEFAULT 9 {name}"
+             for index, name in enumerate(names, 2)]
+    return (ELF_HEADER + f"Symbol table '.dynsym' contains {len(rows)} entries:\n"
+            + "   Num: Value Size Type Bind Vis Ndx Name\n"
+            + "\n".join("   " + row for row in rows) + "\n")
+
+
+SYMBOLS = symbols(sorted(PUBLIC_SYMBOLS))
 
 
 class ArmRunnerTests(unittest.TestCase):
     def test_fixed_cross_commands_and_bounds(self):
         self.assertEqual(arm.COMPILER, 'arm-linux-gnueabihf-gcc')
-        self.assertEqual(arm.NM, 'arm-linux-gnueabihf-nm')
+        self.assertEqual(arm.READELF, 'readelf')
         self.assertEqual(arm.FLAGS, [
             '-std=c11', '-Wall', '-Wextra', '-Werror', '-pedantic',
             '-fno-fast-math', '-ffp-contract=off', '-fexcess-precision=standard',
@@ -37,7 +55,9 @@ class ArmRunnerTests(unittest.TestCase):
                              ['/usr/bin/qemu-arm-static', '-L', '/arm', '/tmp/output/' + name])
         self.assertEqual(commands[4], [arm.COMPILER] + arm.FLAGS +
                          ['-O2', '-fPIC', '-shared', 'kws3.c', '-lm', '-o', '/tmp/output/libkws3.so'])
-        self.assertEqual(commands[5], [arm.NM, '-D', '--defined-only', '/tmp/output/libkws3.so'])
+        self.assertEqual(commands[5], [arm.READELF, '-h', '-W', '--dyn-syms',
+                                       '/tmp/output/libkws3.so'])
+        self.assertEqual(run.call_args_list[5].kwargs['env']['LC_ALL'], 'C')
         self.assertNotIn('-DKWS3_TESTING', sum(commands, []))
 
     def test_missing_smoke_completion_stops(self):
@@ -58,10 +78,39 @@ class ArmRunnerTests(unittest.TestCase):
             arm.check_threshold_completion('{"status":"FAIL"}\n' + json.dumps(COUNTS))
 
     def test_missing_extra_duplicate_or_hook_symbol_rejected(self):
-        for text in (SYMBOLS.split('\n', 1)[1], SYMBOLS + '\n0000 T kws3_extra',
-                     SYMBOLS + '\n0000 T kws3_create', SYMBOLS + '\n0000 T kws3_test_top3'):
-            with self.subTest(text=text), self.assertRaises(RuntimeError):
-                arm.check_production_symbols(text)
+        names = sorted(PUBLIC_SYMBOLS)
+        invalid = (symbols(names[:-1]), symbols(names + ['kws3_extra']),
+                   symbols(names + ['kws3_create']),
+                   symbols(names + ['kws3_test_top3']),
+                   SYMBOLS.replace('Machine:                           ARM',
+                                   'Machine:                           X86-64'),
+                   SYMBOLS.replace("'.dynsym'", "'.symtab'"),
+                   SYMBOLS.replace('FUNC GLOBAL DEFAULT 9 kws3_create',
+                                   'FUNC GLOBAL DEFAULT UND kws3_create'),
+                   SYMBOLS.replace('FUNC GLOBAL DEFAULT 9 kws3_create',
+                                   'FUNC GLOBAL HIDDEN 9 kws3_create'),
+                   SYMBOLS.replace('FUNC GLOBAL DEFAULT 9 kws3_create',
+                                   'FUNC LOCAL DEFAULT 9 kws3_create'),
+                   SYMBOLS.rsplit('\n', 1)[0].rsplit('\n', 1)[0] + '\n')
+        for text in invalid:
+            with self.subTest(text=text[-100:]), self.assertRaises(RuntimeError):
+                arm.check_arm_dynamic_symbols(text)
+        arm.check_arm_dynamic_symbols(SYMBOLS)
+        # Exported symbol versions are normalized as in the original nm contract.
+        arm.check_arm_dynamic_symbols(SYMBOLS.replace(
+            'FUNC GLOBAL DEFAULT 9 kws3_create',
+            'FUNC GLOBAL DEFAULT 9 kws3_create@@API_1', 1))
+        # The second ARM lane checks a larger exact API, with the same table
+        # parser and a separate unchanged 5-second resource budget.
+        full_b_exports = set(PUBLIC_SYMBOLS) | {
+            'bsa_create', 'kcf_pcm_init', 'fsmn2599_step', 'b_profile_get'}
+        arm.check_arm_dynamic_symbols(symbols(sorted(full_b_exports)), full_b_exports)
+        with self.assertRaises(RuntimeError):
+            arm.check_arm_dynamic_symbols(symbols(sorted(full_b_exports - {'bsa_create'})),
+                                          full_b_exports)
+        with self.assertRaises(RuntimeError):
+            arm.check_arm_dynamic_symbols(symbols(sorted(full_b_exports | {'extra_api'})),
+                                          full_b_exports)
 
     def test_timeout_or_subprocess_failure_has_no_fallback(self):
         for error in (subprocess.TimeoutExpired('gcc', 45), RuntimeError('compiler failure')):
@@ -69,6 +118,13 @@ class ArmRunnerTests(unittest.TestCase):
                 with self.assertRaises(type(error)):
                     arm.run_arm(Path('/tmp/output'), 'qemu', Path('/arm'))
             self.assertEqual(run.call_count, 1)
+        # Symbol reader timeout still fails under the unchanged 10-second ceiling.
+        replies = ['', SMOKE, '', json.dumps(COUNTS), '',
+                   subprocess.TimeoutExpired(arm.READELF, 10)]
+        with patch.object(arm, 'run', side_effect=replies) as run:
+            with self.assertRaises(subprocess.TimeoutExpired):
+                arm.run_arm(Path('/tmp/output'), 'qemu', Path('/arm'))
+        self.assertEqual(run.call_count, 6)
 
     def test_missing_sysroot_loader_stops_before_build(self):
         with patch.object(Path, 'is_file', return_value=False), patch.object(arm, 'run') as run:
