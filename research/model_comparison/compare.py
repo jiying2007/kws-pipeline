@@ -109,6 +109,16 @@ def compare(plan, receipts):
     for key in common:
         require(isinstance(receipts[0][key], str) and bool(receipts[0][key]), 'missing ' + key)
         require(receipts[0][key] == receipts[1][key], 'unmatched ' + key)
+    # Matching arms are not enough: calibration must not be reused as selection.
+    # Canonical digests prevent placeholders or alternate spellings from hiding
+    # an explicit same-stream contradiction. Different hashes alone do not prove
+    # independent sources; validate_split still checks the supplied lineage.
+    for key in ('calibration_stream_sha256', 'selection_stream_sha256'):
+        value = receipts[0][key]
+        require(len(value) == 64 and all(c in '0123456789abcdef' for c in value),
+                'invalid stream SHA-256: ' + key)
+    require(receipts[0]['calibration_stream_sha256'] != receipts[0]['selection_stream_sha256'],
+            'calibration and selection streams must differ')
     results = {}
     for r in receipts:
         require(r['status'] == 'MEASURED', 'NOT_RUN or synthetic fixture is not measurement')
