@@ -9,6 +9,8 @@ import shutil
 import tempfile
 import time
 
+from run_research_three_window_arm import check_arm_dynamic_symbols
+
 
 def execute(root):
     if any(name in os.environ for name in ("LD_PRELOAD", "LD_LIBRARY_PATH", "LD_AUDIT")):
@@ -20,9 +22,9 @@ def execute(root):
     binding = build.validate_sources(root)
     cc = shutil.which('arm-linux-gnueabihf-gcc', path='/usr/bin:/bin')
     cxx = shutil.which('arm-linux-gnueabihf-g++', path='/usr/bin:/bin')
-    nm = shutil.which('arm-linux-gnueabihf-nm', path='/usr/bin:/bin')
-    if not all((cc, cxx, nm)):
-        raise RuntimeError('ARM hard-float gcc, g++ and nm are required; no skip/pass fallback')
+    readelf = shutil.which('readelf', path='/usr/bin:/bin')
+    if not all((cc, cxx, readelf)):
+        raise RuntimeError('ARM hard-float gcc, g++ and readelf required; no fallback')
     flags = ['-mcpu=cortex-a32', '-mfpu=neon-vfpv4', '-mfloat-abi=hard']
     module, decoder = root / build.MODULE, root / build.DECODER
     with tempfile.TemporaryDirectory(prefix='b-full-arm-build-') as temporary:
@@ -52,14 +54,16 @@ def execute(root):
             for command in commands:
                 _, spent = build.run_bounded(command, temp, 60-(time.monotonic()-started), 60-cpu)
                 cpu += spent
-            output, _ = build.run_bounded([nm, '-D', '--defined-only', str(library)], temp, 5, 5)
-            exports = {line.split()[-1] for line in output.splitlines() if line.strip()}
+            # The prior cross-nm reader exhausted the original 5s wall/CPU
+            # budget. GNU readelf inspects the identical ELF dynamic export
+            # table under those SAME two hard limits, without retry/fallback.
+            output, _ = build.run_bounded(
+                [readelf, '-h', '-W', '--dyn-syms', str(library)], temp, 5, 5)
             expected = build.ADAPTER | build.DECODER_EXPORTS | build.CORE_EXPORTS
             if '-DKWS_B_PROFILE' in defines:
                 expected |= {'b_profile_get', 'b_profile_reset', 'b_profile_size'}
-            if exports != expected:
-                raise RuntimeError('full B ARM opt-in exported symbols differ: ' + name)
-            results[name] = {'cpp_link': True, 'exports': sorted(exports), 'defines': defines}
+            check_arm_dynamic_symbols(output, expected)
+            results[name] = {'cpp_link': True, 'exports': sorted(expected), 'defines': defines}
         if build.validate_sources(root) != binding:
             raise RuntimeError('source binding changed during cross-build')
     return {'schema': 2, 'full_B_ARM_compile_link': True, 'cpp_link': True,
