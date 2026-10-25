@@ -37,7 +37,7 @@ SOURCE_ID_FIELDS = ('source_id', 'source_family', 'source_family_id', 'family_id
 PCM_ID_FIELDS = ('pcm_sha256', 'source_pcm', 'source_pcm_sha256', 'original_pcm_sha256', 'reference_pcm_sha256')
 AUDIO_ID_FIELDS = ('file_sha256', 'source_wav_sha256', 'source_audio_sha256',
                    'original_audio_sha256', 'reference_audio_sha256')
-LINEAGE_FIELDS = SOURCE_ID_FIELDS + PCM_ID_FIELDS + AUDIO_ID_FIELDS
+LINEAGE_FIELDS = SOURCE_ID_FIELDS + PCM_ID_FIELDS + AUDIO_ID_FIELDS + ('preset_voice_id',)
 
 def identity(value, key):
     require(isinstance(value, str) and value.strip().casefold() not in UNKNOWN_IDENTITIES,
@@ -74,7 +74,10 @@ def validate_split(rows):
                 value = identity(record[key], key)
                 # Original PCM and rendered PCM share a namespace. Family aliases
                 # also share a namespace, connecting multi-step augmentations.
-                namespace = ('pcm' if key in PCM_ID_FIELDS else
+                # Match effect_dataset_split: preset voices remain a shared
+                # leakage link even when engines assign different speaker IDs.
+                namespace = ('preset-voice' if key == 'preset_voice_id' else
+                             'pcm' if key in PCM_ID_FIELDS else
                              'audio-file' if key in AUDIO_ID_FIELDS else
                              'source' if key in SOURCE_ID_FIELDS else key)
                 node = (namespace, value)

@@ -39,7 +39,7 @@ def main():
                 wf.writeframes(struct.pack('<'+'h'*400,*[(i+1)*j for j in range(400)]))
             measured.append(inspect_pcm16_wav(path))
         # All of these are literal A fields, not a parallel B-only vocabulary.
-        fields=('source_family_id','derivation_family_id','family_id',
+        fields=('preset_voice_id','source_family_id','derivation_family_id','family_id',
                 'original_pcm_sha256','source_pcm_sha256','reference_audio_sha256')
         for field in fields:
             rows=[]
