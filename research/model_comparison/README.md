@@ -293,3 +293,13 @@ holdouts. A bundle containing only train and calibration remains blocked until a
 legitimately independent selection group is available. Do not duplicate
 calibration, consume protected test/qualification, or fabricate speaker/session
 identity from a voice ID merely to satisfy the pilot contract.
+
+### Receipt stream identity checks
+
+The comparator requires canonical lowercase SHA-256 digests for calibration and
+selection streams. Both arms must match within each role, and the two roles must
+have different digests: explicitly reusing calibration as selection is rejected,
+even when the receipt claims calibration-only thresholds. These checks reject a
+contradictory receipt; different digests do not authenticate measurements or prove
+that the streams have independent sources or no partial overlap. Existing split
+lineage checks and independent evidence admission remain required.

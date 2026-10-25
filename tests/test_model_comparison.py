@@ -29,6 +29,8 @@ def fixture():
     for k in ('source_sha','runner_id','frontend_sha256','tokens_sha256','optimizer_sha256',
               'decoder_sha256','selection_stream_sha256','calibration_stream_sha256'):
         control[k] = 'fixture'
+    control['calibration_stream_sha256'] = 'b' * 64
+    control['selection_stream_sha256'] = 'c' * 64
     treatment = copy.deepcopy(control)
     treatment['arm'] = 'treatment'
     treatment['per_keyword']['你好小窝']['false_rejects'] = 1
@@ -41,6 +43,31 @@ class ComparisonTests(unittest.TestCase):
         result = compare(p,r)
         self.assertTrue(result['treatment_per_word_dominates_at_shared_gate'])
         self.assertFalse(result['shipping_approved'])
+    def test_reject_same_calibration_and_selection_stream(self):
+        p, receipts = fixture()
+        for receipt in receipts:
+            receipt['selection_stream_sha256'] = receipt['calibration_stream_sha256']
+        with self.assertRaisesRegex(ValueError, 'calibration and selection streams must differ'):
+            compare(p, receipts)
+
+    def test_stream_digests_are_canonical_sha256(self):
+        for key in ('calibration_stream_sha256', 'selection_stream_sha256'):
+            for value in ('fixture', '', ' ', 'a' * 63, 'a' * 65,
+                          'g' * 64, 'A' * 64, ' ' + 'a' * 64, None, 123):
+                with self.subTest(key=key, value=value):
+                    p, receipts = fixture()
+                    for receipt in receipts:
+                        receipt[key] = value
+                    with self.assertRaises(ValueError):
+                        compare(p, receipts)
+
+    def test_reject_unmatched_stream_digests(self):
+        for key in ('calibration_stream_sha256', 'selection_stream_sha256'):
+            p, receipts = fixture()
+            receipts[1][key] = 'd' * 64
+            with self.assertRaisesRegex(ValueError, 'unmatched ' + key):
+                compare(p, receipts)
+
     def test_each_leakage_dimension(self):
         for key in ('speaker_id','session_id','source_id','pcm_sha256'):
             p,_=fixture()
