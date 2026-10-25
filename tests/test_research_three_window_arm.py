@@ -99,7 +99,7 @@ class ArmRunnerTests(unittest.TestCase):
         # Exported symbol versions are normalized as in the original nm contract.
         arm.check_arm_dynamic_symbols(SYMBOLS.replace(
             'FUNC GLOBAL DEFAULT 9 kws3_create',
-            'FUNC GLOBAL DEFAULT 9 kws3_create@@API_1'))
+            'FUNC GLOBAL DEFAULT 9 kws3_create@@API_1', 1))
 
     def test_timeout_or_subprocess_failure_has_no_fallback(self):
         for error in (subprocess.TimeoutExpired('gcc', 45), RuntimeError('compiler failure')):
