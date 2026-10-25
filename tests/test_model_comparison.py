@@ -94,6 +94,35 @@ class DecoderTests(unittest.TestCase):
 
 
 class HardeningTests(unittest.TestCase):
+    def test_preset_voice_leakage_survives_projection(self):
+        for location in ('top', 'provenance', 'links'):
+            p,_=fixture(); rows=[]
+            for i,row in enumerate(p['split_inventory']):
+                voice={'preset_voice_id':'shared-voice' if i < 2 else 'other-voice'}
+                raw=(voice if location == 'top' else
+                     {'speech_like_provenance':voice} if location == 'provenance' else
+                     {'lineage_links':[voice]})
+                rows.append(projected_identity(row,raw,row['split']))
+            with self.assertRaisesRegex(ValueError,'leakage'):validate_split(rows)
+    def test_direct_preset_voice_leakage(self):
+        p,_=fixture();rows=p['split_inventory']
+        rows[0]['preset_voice_id']='shared-voice'
+        rows[1]['preset_voice_id']='shared-voice'
+        with self.assertRaisesRegex(ValueError,'leakage'):validate_split(rows)
+    def test_preset_voice_same_split_and_distinct_voices_allowed(self):
+        p,_=fixture();rows=p['split_inventory']
+        for row in rows:row['preset_voice_id']='voice-'+row['split']
+        rows.append(dict(rows[0],source_id='another-train-source',pcm_sha256='f'*64))
+        validate_split(rows)
+    def test_preset_voice_placeholder_rejected(self):
+        for value in ('unknown',' pending_001 ',None,''):
+            p,_=fixture();rows=p['split_inventory']
+            rows[0]=projected_identity(rows[0],{'preset_voice_id':value},'train')
+            with self.assertRaises(ValueError):validate_split(rows)
+    def test_preset_voice_namespace_not_source_identity(self):
+        p,_=fixture();rows=p['split_inventory']
+        rows[0]['preset_voice_id']=rows[1]['source_id']
+        validate_split(rows)
     def test_unknown_identities_rejected(self):
         for key in ('speaker_id','session_id','source_id'):
             for value in ('unknown',' NONE ','pending','null','n/a','Unknown-speaker','pending_001'):
