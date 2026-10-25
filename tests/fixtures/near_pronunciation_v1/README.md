@@ -8,6 +8,7 @@ pinned by `research/near_pronunciation_v1/decoder_overlay.json`:
 - `tools/kws_trace_io.c`: `2f66cf4e8181462dc35e4a5d45a2b3578411b712db1ef22fca048c86232fab96`
 - `tools/kws_trace_io.h`: `b8a28a5257294ebebc44e52bd65f03d8f175ae855e0da4cc8422a363221a1349`
 - `tools/kws_decoder_replay.c`: `86ff25540faa33c54b275ca943bdb8bfc7b96893c4542da2c78fd1340bae8483`
+- `tools/tool_io.c`: `c8aef71ea35ced4b6e1648eb9154420c861d0e4daf8ae2758f930160d295d114`
 
 The decoder and decoder-test copies precede the non-default `longest` / `grace`
 pending-expiry fix. The trace I/O copies precede the exclusive-create writer API
@@ -23,8 +24,13 @@ byte-for-byte from public commit `4b9d5e05f51d73e356f39e80b01fa0e94ab5ee94`.
 Its digest matches the existing overlay pin; current replay changes must not
 rewrite historical source identity.
 
+The tool I/O copy precedes strict PCM byte-rate and block-alignment validation
+and is retained byte-for-byte from public commit
+`fb12f71ea278eaa20d4a6e1c5b90aa39b32aa4c9`. Its digest matches the original
+overlay pin; it is used only by historical closure staging, not shipping tools.
+
 `tests/prepare_frozen_decoder_source.py` stages the entire pinned source closure
-in a fresh temporary directory. Only these five explicitly listed files use
+in a fresh temporary directory. Only these six explicitly listed files use
 retained copies. Every other input comes from the current tree and must still
 match its historical hash; any drift is an error, never an automatic pin update.
 

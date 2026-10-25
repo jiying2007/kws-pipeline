@@ -131,6 +131,15 @@ if(KWS_BUILD_TESTS)
   add_test(NAME kws_decoder_tests COMMAND kws_decoder_tests)
   add_test(NAME kws_decoder_retention_tests COMMAND kws_decoder_retention_tests)
   add_test(NAME kws_trace_io_tests COMMAND kws_trace_io_tests)
+
+  add_executable(kws_tool_io_tests tests/test_tool_io.c tools/tool_io.c)
+  target_include_directories(kws_tool_io_tests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/tools)
+  target_compile_features(kws_tool_io_tests PRIVATE c_std_11)
+  if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(kws_tool_io_tests PRIVATE ${KWS_STRICT_OPTIONS})
+  endif()
+  add_test(NAME kws_tool_io_tests COMMAND kws_tool_io_tests)
 endif()
 
 if(KWS_BUILD_BENCH)

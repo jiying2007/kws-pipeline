@@ -2,7 +2,7 @@
 """Stage the unchanged historical near-pronunciation source closure for tests.
 
 This never updates scientific pins or silently accepts current-source drift.
-Only the five explicitly retained fixtures replace current files. No downloads,
+Only the explicitly retained fixtures replace current files. No downloads,
 model execution, training, or changes to the caller's source tree are performed.
 """
 from __future__ import annotations
@@ -18,6 +18,7 @@ FROZEN_FILES = frozenset({
     'src/decoder.c', 'tests/test_decoder.c',
     'tools/kws_trace_io.c', 'tools/kws_trace_io.h',
     'tools/kws_decoder_replay.c',
+    'tools/tool_io.c',
 })
 OVERLAY = 'research/near_pronunciation_v1/decoder_overlay.json'
 FIXTURES = 'tests/fixtures/near_pronunciation_v1'
