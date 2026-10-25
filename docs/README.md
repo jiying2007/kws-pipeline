@@ -14,6 +14,8 @@
 
 ## Research data preparation
 
+- [Private candidate host smoke](private-candidate-host-smoke.md): explicit opt-in local transport equivalence, private output handling and fixed budgets; artificial CI admission checks are not real candidate execution or acoustic qualification.
+
 - [Causal research incremental assets](../research/causal-kws-increment-2026-10-18/README.md): reusable joint/merge/timing cores, artificial contracts and anonymous bounded evidence; research-only policy tiers.
 
 - [Causal event-head core and scalar oracle](../research/causal-event-head/README.md): artificial CI and bounded historical preflight; exposed tiny-fit remains flush-only risk.

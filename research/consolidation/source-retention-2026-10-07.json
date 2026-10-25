@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 65391,
-      "sha256": "36994a7eba085ce680aaa7439296800e5f759481e3a3d8b0185df2bac7a87716",
-      "git_blob_sha1": "48362499482a0531cfce8d0eca486ff640813d32"
+      "bytes": 65808,
+      "sha256": "17c7bcc373c4bf72809bb3b81363f37a2b190a308d9d3a42c26b3443796712ca",
+      "git_blob_sha1": "4f8448e7823ec8dbb5e8eb92a075a35eb5ee6e01"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -42898,6 +42898,31 @@
             "bytes": 19083,
             "sha256": "b0e9b1b2750eeba1fc91e4699fd3bcfafade9c26172256c802d109a8ae52a4e4",
             "git_blob_sha1": "502520a93ccd9ea02269cb7c88f7ba082d2bfaa5"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "from_commit": "f22afd8a4fe03d759e66c4e65ad81ef740c31bfc",
+      "scope": "Add artificial private-candidate admission self-tests and the default NOT_RUN invocation to existing CI; no private inputs or execution enabled.",
+      "rationale": "Maintain exact active workflow metadata while preserving original historical workflow archives and scientific pins.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 65391,
+            "sha256": "36994a7eba085ce680aaa7439296800e5f759481e3a3d8b0185df2bac7a87716",
+            "git_blob_sha1": "48362499482a0531cfce8d0eca486ff640813d32"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 65808,
+            "sha256": "17c7bcc373c4bf72809bb3b81363f37a2b190a308d9d3a42c26b3443796712ca",
+            "git_blob_sha1": "4f8448e7823ec8dbb5e8eb92a075a35eb5ee6e01"
           }
         }
       ]
