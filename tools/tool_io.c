@@ -84,7 +84,9 @@ int kws_tool_open_wav(FILE *stream,
         return 0;
       }
       if (rd16(fmt + 0u) != 1u || rd16(fmt + 2u) != 1u ||
-          rd32(fmt + 4u) != KWS_SAMPLE_RATE_HZ || rd16(fmt + 14u) != 16u) {
+          rd32(fmt + 4u) != KWS_SAMPLE_RATE_HZ ||
+          rd32(fmt + 8u) != KWS_SAMPLE_RATE_HZ * 2u ||
+          rd16(fmt + 12u) != 2u || rd16(fmt + 14u) != 16u) {
         return 0;
       }
       have_fmt = 1;
