@@ -31,6 +31,13 @@ For every row, `run_corpus.py` reopens the referenced WAV and records:
 - stable recording/path identity;
 - speaker/session/source/room/device metadata when supplied.
 
+PCM identity hashing reads at most 65,536 frames (128 KiB of mono PCM16) per
+call instead of retaining an entire recording. The PCM/file digests, frame count
+and duration are unchanged for the same bytes; empty or truncated declared PCM
+still fails. This bounds identity PCM buffers, not the full evaluation process,
+and does not provide a snapshot against concurrent file mutation or change the
+existing RIFF/header parsing policy.
+
 The declared `duration_s` must match the real WAV duration. This prevents FAR exposure from being inflated by declaring a short file as many hours of audio.
 
 Keep speakers, sessions, source recordings and device sessions disjoint across train/calibration/test/qualification. Final human qualification should require speaker/session/source metadata through `training/audit_dataset.py`.
