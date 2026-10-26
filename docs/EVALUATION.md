@@ -97,6 +97,15 @@ Evaluation provenance schema v2 binds:
 - detections;
 - canonical evaluation-corpus identity containing every real WAV hash/PCM hash/frame count.
 
+Each corpus invocation retains its initial keyword-pack SHA256 and checks it
+immediately before and after each runner/decoder call, and before publishing
+detections, corpus identity or provenance. Observed pack drift or a pack read
+error aborts without creating or overwriting those outputs. Cache preparation
+may already have produced reusable traces. Same-byte replacements and pack
+changes between independent invocations remain allowed. This check does not
+freeze other inputs or provide an atomic filesystem snapshot: transient
+A-to-B-to-A replacement and changes after the final check are outside its scope.
+
 The scorer reports FAR/hour, FRR, per-keyword counts and p50/p95 post-end latency. Matching is monotonic per keyword: maximize valid matches first, then minimize total distance to annotated keyword end. NaN/Inf and out-of-range values are rejected.
 
 ### Posterior replay cache identity
