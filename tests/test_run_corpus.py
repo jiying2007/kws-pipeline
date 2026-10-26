@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import argparse
 import json
 import os
 import pathlib
@@ -10,9 +11,12 @@ import subprocess
 import sys
 import tempfile
 import wave
+import unittest
+from unittest.mock import patch
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "eval"))
+import run_corpus
 from run_corpus import cached_trace_valid, ensure_cached_trace, trace_cache_paths  # noqa: E402
 
 
@@ -26,6 +30,95 @@ def write_wav(path: pathlib.Path, seconds: int = 2) -> None:
         writer.setsampwidth(2)
         writer.setframerate(16000)
         writer.writeframes(b"\x00\x00" * 16000 * seconds)
+
+
+
+class OutputPathTests(unittest.TestCase):
+    def exercise_alias(self, output_name, target_name, alias_kind='direct', cache=False):
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            files = {name: root / name for name in
+                     ('runner', 'model', 'keywords', 'references', 'audio', 'metadata',
+                      'detections', 'provenance', 'corpus-identity', 'posterior-dump', 'decoder-replay')}
+            for name, path in files.items():
+                path.write_bytes((name + '-original').encode())
+            write_wav(files['audio'])
+            files['references'].write_text(json.dumps({
+                'recording': 'fixture', 'path': 'audio', 'duration_s': 2.0,
+                'speaker_id': 's', 'session_id': 't', 'source_id': 'u', 'expected': [],
+                **({'metadata_path': 'metadata'} if target_name == 'metadata' else {})
+            }) + '\n')
+            outputs = {name: files[name] for name in ('detections', 'provenance', 'corpus-identity')}
+            target = files[target_name]
+            if alias_kind == 'direct':
+                outputs[output_name] = target
+            else:
+                alias = root / 'alias'
+                if alias_kind == 'symlink':
+                    alias.symlink_to(target)
+                elif alias_kind == 'hardlink':
+                    os.link(target, alias)
+                elif alias_kind == 'normalized':
+                    (root / 'sub').mkdir()
+                    alias = root / 'sub' / '..' / target.name
+                outputs[output_name] = alias
+            argv = ['run_corpus', '--runner', str(files['runner']), '--model', str(files['model']),
+                    '--keywords', str(files['keywords']), '--references', str(files['references']),
+                    '--audio-root', str(root)]
+            for name, path in outputs.items():
+                argv += ['--' + name, str(path)]
+            if cache:
+                argv += ['--posterior-dump', str(files['posterior-dump']),
+                         '--decoder-replay', str(files['decoder-replay']),
+                         '--posterior-cache', str(root / 'cache')]
+            before = {name: path.read_bytes() for name, path in files.items()}
+            with patch.object(sys, 'argv', argv), patch.object(run_corpus.subprocess, 'run') as run:
+                run.return_value.stdout = ''
+                with self.assertRaisesRegex(ValueError, 'output path'):
+                    run_corpus.main()
+                run.assert_not_called()
+            for name, path in files.items():
+                self.assertEqual(path.read_bytes(), before[name], name)
+
+    def test_outputs_cannot_alias_inputs(self):
+        for output in ('detections', 'provenance', 'corpus-identity'):
+            for target in ('references', 'model', 'keywords', 'runner', 'audio', 'metadata'):
+                with self.subTest(output=output, target=target):
+                    self.exercise_alias(output, target)
+
+    def test_outputs_cannot_alias_each_other(self):
+        for a, b in (('detections', 'provenance'), ('detections', 'corpus-identity'),
+                     ('provenance', 'corpus-identity')):
+            with self.subTest(a=a, b=b):
+                self.exercise_alias(a, b)
+
+    def test_filesystem_aliases(self):
+        for kind in ('normalized', 'symlink', 'hardlink'):
+            for target in ('references', 'audio', 'provenance'):
+                with self.subTest(kind=kind, target=target):
+                    self.exercise_alias('detections', target, kind)
+
+    def test_cache_tree_outputs_rejected_before_work(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            cache = root / 'cache'
+            cache.mkdir()
+            link = root / 'cache-link'
+            link.symlink_to(cache, target_is_directory=True)
+            args = argparse.Namespace(references=root/'refs', model=root/'model',
+                keywords=root/'kw', runner=root/'runner', posterior_dump=root/'dump',
+                decoder_replay=root/'replay', posterior_cache=cache,
+                provenance=None, corpus_identity=None)
+            for path in (cache, cache/'new.bin', link/'new.bin'):
+                args.detections = path
+                with self.subTest(path=path), self.assertRaisesRegex(ValueError, 'output path'):
+                    run_corpus.validate_output_paths(args, [], True)
+            self.assertEqual(list(cache.iterdir()), [])
+
+    def test_cache_executables_are_protected(self):
+        for target in ('posterior-dump', 'decoder-replay'):
+            with self.subTest(target=target):
+                self.exercise_alias('detections', target, cache=True)
 
 
 def main() -> int:
@@ -432,4 +525,7 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(OutputPathTests))
+    if not result.wasSuccessful():
+        raise SystemExit(1)
     raise SystemExit(main())
