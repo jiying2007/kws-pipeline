@@ -101,6 +101,13 @@ thresholds only. Calibrate on calibration streams; save/hash the resulting file
 before opening selection labels. Inference reads WAV incrementally, preserves
 frontend overlap/model history/decoder state across chunks, resets only at the
 recording boundary, and does not pad/flush EOF. Model source hashes are verified.
+Preflight inspects RIFF chunk sizes without loading PCM, rejecting odd declared
+PCM16 data sizes and payloads outside the file or RIFF extent. The stream reader
+also checks actual PCM byte coverage against the WAV header, rejecting truncation
+after preflight and incomplete PCM16 samples. A complete short
+tail without a full feature window is still valid and is not padded. A failed
+stream may leave partial detection output, but no completion receipt is written;
+do not score that partial output as a completed evaluation.
 
 ```sh
 timeout 3600s python research/model_comparison/runner.py --repo "$REPO" infer \
