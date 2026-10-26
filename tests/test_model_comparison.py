@@ -1,5 +1,7 @@
 """Stdlib-only contracts. Fixtures are invented, never model measurements."""
 import copy
+import hashlib
+import io
 import importlib.util
 from pathlib import Path
 import sys
@@ -207,6 +209,8 @@ class HardeningTests(unittest.TestCase):
             for path in SOURCE_PATHS:
                 target=root/path;target.parent.mkdir(parents=True,exist_ok=True);target.write_text(path)
             valid=source_hashes(root)
+            for path in SOURCE_PATHS:
+                self.assertEqual(valid[path], hashlib.sha256(path.encode()).hexdigest())
             verify_source_hashes(valid,root)
             missing=dict(valid);missing.pop(SOURCE_PATHS[0])
             extra=dict(valid,unexpected='a'*64)
@@ -354,5 +358,59 @@ class StreamCompletenessTests(unittest.TestCase):
             model.forward_chunk.assert_not_called()
             self.assertFalse(Path(str(output) + '.receipt.json').exists())
 
+
+
+class StreamingHashTests(unittest.TestCase):
+    LIMIT = 64 * 1024
+
+    def test_digest_matches_whole_file_at_boundaries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'bytes.bin'
+            for size in (0, 1, self.LIMIT - 1, self.LIMIT,
+                         self.LIMIT + 1, 3 * self.LIMIT + 17):
+                with self.subTest(size=size):
+                    payload = bytes(range(256)) * (size // 256) + bytes(range(size % 256))
+                    path.write_bytes(payload)
+                    for argument in (path, str(path)):
+                        self.assertEqual(runner.sha(argument), hashlib.sha256(payload).hexdigest())
+
+    def test_reads_are_bounded_and_short_reads_are_not_eof(self):
+        payload = bytes(range(256)) * 800
+        calls = []
+        limit = self.LIMIT
+
+        class ShortReader(io.BytesIO):
+            def read(self, size=-1):
+                calls.append(size)
+                if not 0 < size <= limit:
+                    raise AssertionError('hash must use bounded positive reads')
+                return super().read(min(size, 997))
+
+        stream = ShortReader(payload)
+        with patch.object(Path, 'open', return_value=stream) as opened:
+            self.assertEqual(runner.sha('fixture.bin'), hashlib.sha256(payload).hexdigest())
+        opened.assert_called_once_with('rb')
+        self.assertGreater(len(calls), 2)
+        self.assertTrue(stream.closed)
+
+    def test_read_failure_propagates_and_closes_stream(self):
+        class BrokenReader(io.BytesIO):
+            calls = 0
+            def read(self, size=-1):
+                self.calls += 1
+                if self.calls == 2:
+                    raise OSError('injected read failure')
+                return super().read(min(size, 3) if size > 0 else 3)
+
+        stream = BrokenReader(b'abcdefgh')
+        with patch.object(Path, 'open', return_value=stream):
+            with self.assertRaisesRegex(OSError, 'injected read failure'):
+                runner.sha('fixture.bin')
+        self.assertTrue(stream.closed)
+
+    def test_missing_file_still_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(FileNotFoundError):
+                runner.sha(Path(tmp) / 'missing.bin')
 
 if __name__=='__main__':unittest.main()

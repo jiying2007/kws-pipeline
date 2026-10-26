@@ -310,3 +310,15 @@ even when the receipt claims calibration-only thresholds. These checks reject a
 contradictory receipt; different digests do not authenticate measurements or prove
 that the streams have independent sources or no partial overlap. Existing split
 lineage checks and independent evidence admission remain required.
+
+### Bounded receipt file hashing
+
+The shared runner SHA-256 helper reads binary files in at most 64 KiB chunks,
+including long continuous WAV inputs, checkpoints and source identity files.
+The resulting digest is unchanged for the same bytes; empty files and short
+final blocks are supported, short nonempty reads continue, and I/O failures
+propagate without returning a partial digest. This bounds hash input buffers,
+not total inference memory or runtime, and does not provide a snapshot against
+concurrent file mutation. Existing source/checkpoint identity checks remain.
+The stdlib tests cover digest boundaries, bounded/short reads, and read failures
+without large audio files, Torch, training or private inputs.
