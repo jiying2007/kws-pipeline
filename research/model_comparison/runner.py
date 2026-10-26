@@ -85,12 +85,44 @@ def projected_identity(measured, raw, split):
         result['lineage_links'].append({k: record[k] for k in LINEAGE_FIELDS if k in record})
     return result
 
+def check_wav_payload(path):
+    """Inspect RIFF chunk extents without loading PCM or using wave internals."""
+    with Path(path).open('rb') as stream:
+        file_end = stream.seek(0, 2)
+        stream.seek(0)
+        header = stream.read(12)
+        if len(header) != 12 or header[:4] != b'RIFF' or header[8:] != b'WAVE':
+            raise ValueError('expected RIFF WAVE')
+        limit = min(file_end, 8 + int.from_bytes(header[4:8], 'little'))
+        position = 12
+        while position + 8 <= limit:
+            stream.seek(position)
+            chunk = stream.read(8)
+            if len(chunk) != 8:
+                raise ValueError('truncated WAV chunk header')
+            size = int.from_bytes(chunk[4:], 'little')
+            end = position + 8 + size
+            if chunk[:4] == b'data':
+                # wave.getnframes() rounds an odd PCM byte count down, so frame
+                # coverage alone cannot validate this declared payload length.
+                if size % 2:
+                    raise ValueError('invalid PCM16 data size: incomplete sample')
+                if end > limit:
+                    raise ValueError('truncated PCM payload')
+                return
+            position = end + size % 2  # RIFF unknown chunks include word padding.
+            if position > limit:
+                raise ValueError('truncated WAV chunk payload')
+        raise ValueError('missing or truncated WAV data chunk')
+
+
 def check_wav_bound(path, seconds):
     with wave.open(str(path), 'rb') as wf:
         if (wf.getnchannels(), wf.getframerate(), wf.getsampwidth(), wf.getcomptype()) != (1,16000,2,'NONE'):
             raise ValueError('expected mono 16kHz PCM16')
         if wf.getnframes() > seconds * 16000:
             raise ValueError('audio duration exceeds bounded research limit')
+    check_wav_payload(path)
 
 
 def sha(path):
@@ -303,10 +335,17 @@ def iter_wav_features(rt, wf, chunk_frames):
     torch, _, _, features, frontend, _, _ = rt
     bounded_integer(chunk_frames, 'chunk frames', 1, MAX_CHUNK_FRAMES)
     pending = bytearray()
+    expected_bytes = wf.getnframes() * 2  # Caller requires mono PCM16.
+    received_bytes = 0
     while True:
         raw = wf.readframes(chunk_frames * 320)
         if not raw:
+            if received_bytes != expected_bytes:
+                raise ValueError('truncated PCM payload')
             return
+        received_bytes += len(raw)
+        if len(raw) % 2:
+            raise ValueError('truncated PCM payload: incomplete PCM16 sample')
         pending.extend(raw)
         if len(pending) < 800:
             continue

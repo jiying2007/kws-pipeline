@@ -5,12 +5,19 @@ from pathlib import Path
 import sys
 import unittest
 import tempfile
+import wave
+import struct
+from contextlib import nullcontext
+from types import SimpleNamespace
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'research/model_comparison'))
+import runner
 from compare import compare, validate_split
 from runner import (GreedyKeywordDecoder, projected_identity, SOURCE_PATHS, source_hashes,
-                    verify_source_hashes, sample_order, bounded_integer, MAX_CHUNK_FRAMES, check_wav_bound)
+                    verify_source_hashes, sample_order, bounded_integer, MAX_CHUNK_FRAMES, check_wav_bound,
+                    iter_wav_features)
 
 
 def fixture():
@@ -225,5 +232,127 @@ class HardeningTests(unittest.TestCase):
     def test_chunk_bounds(self):
         for value in (0,-1,MAX_CHUNK_FRAMES+1,True,1.5):
             with self.assertRaises(ValueError):bounded_integer(value,'chunk',1,MAX_CHUNK_FRAMES)
+
+class StreamCompletenessTests(unittest.TestCase):
+    """Invented PCM and shape-only doubles; no Torch or model execution."""
+    @staticmethod
+    def wav(path, samples):
+        with wave.open(str(path), 'wb') as wf:
+            wf.setnchannels(1); wf.setsampwidth(2); wf.setframerate(16000)
+            wf.writeframes(b'\0\0' * samples)
+
+    @staticmethod
+    def runtime():
+        buffers = []
+        class PCM:
+            def __init__(self, size): self.size = size
+            def float(self): return self
+            def __truediv__(self, value): return self
+        def frombuffer(raw, dtype):
+            buffers.append(len(raw))
+            return PCM(len(raw) // 2)
+        def features(pcm, bins, frontend):
+            return SimpleNamespace(shape=(max(0, (pcm.size - 400) // 320 + 1), bins))
+        torch = SimpleNamespace(frombuffer=frombuffer, int16='fixture-int16')
+        return (torch, None, None, features, 'fixture', None, None), buffers
+
+    def test_complete_short_tail_and_chunk_bounds(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.wav'
+            for samples in (0, 1, 399, 400, 401, 720, 721, 9999):
+                self.wav(path, samples)
+                for chunk in (1, 2, 25, MAX_CHUNK_FRAMES):
+                    with self.subTest(samples=samples, chunk=chunk):
+                        rt, buffers = self.runtime()
+                        with wave.open(str(path), 'rb') as wf:
+                            frames = sum(x.shape[0] for x in iter_wav_features(rt, wf, chunk))
+                        self.assertEqual(frames, max(0, (samples - 400) // 320 + 1))
+                        self.assertTrue(all(size <= (chunk * 320 + 399) * 2 for size in buffers))
+
+    def test_truncated_payload_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.wav'
+            for samples in (400, 4000):
+                self.wav(path, samples)
+                complete = path.read_bytes()
+                for removed in (1, 2, samples * 2):
+                    path.write_bytes(complete[:-removed])
+                    for chunk in (1, 2, 25, MAX_CHUNK_FRAMES):
+                        with self.subTest(samples=samples, removed=removed, chunk=chunk):
+                            rt, _ = self.runtime()
+                            with wave.open(str(path), 'rb') as wf:
+                                with self.assertRaisesRegex(ValueError, 'truncated PCM payload'):
+                                    list(iter_wav_features(rt, wf, chunk))
+
+    def test_odd_declared_data_size_rejected_before_frame_rounding(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.wav'
+            self.wav(path, 400)
+            header = path.read_bytes()[:40]
+            for actual in (800, 801, 802):
+                with self.subTest(actual_bytes=actual):
+                    raw = bytearray(header + struct.pack('<I', 801) + b'\0' * actual)
+                    raw[4:8] = struct.pack('<I', len(raw) - 8)
+                    path.write_bytes(raw)
+                    with self.assertRaisesRegex(ValueError, 'PCM16 data size'):
+                        check_wav_bound(path, 1)
+
+    def test_preflight_allows_unknown_chunks_and_riff_padding(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.wav'
+            self.wav(path, 399)
+            original = path.read_bytes()
+            def chunk(tag, payload):
+                return tag + struct.pack('<I', len(payload)) + payload + b'\0' * (len(payload) % 2)
+            for prefix in (b'', chunk(b'JUNK', b'abc'),
+                           chunk(b'JUNK', b'abc') + chunk(b'LIST', b'abcd')):
+                body = b'WAVE' + prefix + original[12:36] + chunk(b'JUNK', b'x') + original[36:]
+                path.write_bytes(b'RIFF' + struct.pack('<I', len(body)) + body)
+                check_wav_bound(path, 1)
+                with wave.open(str(path), 'rb') as wf:
+                    self.assertEqual(list(iter_wav_features((None,) * 7, wf, 25)), [])
+
+    def test_preflight_rejects_data_outside_file_or_riff_extent(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.wav'
+            self.wav(path, 400)
+            complete = path.read_bytes()
+            short_riff = bytearray(complete)
+            short_riff[4:8] = struct.pack('<I', len(complete) - 10)
+            for raw in (complete[:-2], short_riff):
+                path.write_bytes(raw)
+                with self.assertRaisesRegex(ValueError, 'truncated PCM payload'):
+                    check_wav_bound(path, 1)
+
+    def test_truncated_inference_does_not_emit_completion_receipt(self):
+        # Stub checkpoint/model setup only. Truncation happens before any feature
+        # or model forward call; this checks orchestration, not model numerics.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            audio, checkpoint, keywords, output = (root / name for name in
+                ('fixture.wav', 'fixture.pt', 'keywords.json', 'events.jsonl'))
+            self.wav(audio, 400)
+            checkpoint.write_bytes(b'invented checkpoint')
+            keywords.write_text('[{"id":1,"tokens":[1],"threshold":0.5}]')
+            rt, _ = self.runtime()
+            rt[0].float32 = 'fixture-float32'
+            rt[0].no_grad = nullcontext
+            rt[0].load = lambda *a, **kw: dict(schema='research-paired-ctc-v1',
+                frontend='logmel', source_hashes={}, spec={}, state_dict={},
+                synthetic_diagnostic_only=True)
+            model = unittest.mock.Mock()
+            args = SimpleNamespace(chunk_frames=25, wav=audio, checkpoint=checkpoint,
+                keywords=keywords, output=output, repo=ROOT, recording='fixture')
+            def truncate_after_preflight(repo):
+                audio.write_bytes(audio.read_bytes()[:-2])
+                return rt
+            with patch.object(runner, 'runtime', side_effect=truncate_after_preflight), \
+                 patch.object(runner, 'build', return_value=model), \
+                 patch.object(runner, 'verify_source_hashes'):
+                with self.assertRaisesRegex(ValueError, 'truncated PCM payload'):
+                    runner.infer(args)
+            model.forward_chunk.assert_not_called()
+            self.assertFalse(Path(str(output) + '.receipt.json').exists())
+
 
 if __name__=='__main__':unittest.main()
