@@ -12,6 +12,16 @@ Reference JSONL owns the expected events and declared duration of each recording
 
 Negative-only recordings use `"expected": []`.
 
+Domain metadata may be sparse. Domain reports include only supplied dimensions:
+for example, `{"distance_band":"far"}` contributes to `all` and `distance:far`,
+not an invented 0.5 m, front, critical-SNR or dry-room bucket. Pair/triple slices
+require all their constituent numeric axes; composite slices require all of their
+fields. Missing playback metadata is unknown, while explicit `playback_sir_db: null`
+means no playback. Explicit numeric zero remains a measurement, and invalid supplied
+numeric values still fail validation. Missing slices cannot satisfy robustness
+coverage. This changes newly generated reports only; retain historical reports
+and their code/input versions rather than rewriting prior evidence.
+
 For every row, `run_corpus.py` reopens the referenced WAV and records:
 
 - file SHA256;
