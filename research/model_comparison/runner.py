@@ -34,6 +34,7 @@ MAX_TRAIN_AUDIO_SECONDS = 30
 MAX_SOURCE_AUDIO_SECONDS = 300
 MAX_CHUNK_FRAMES = 256
 MAX_STREAM_SECONDS = 24 * 3600
+HASH_CHUNK_BYTES = 64 * 1024
 
 def bounded_integer(value, name, low, high):
     if type(value) is not int or not low <= value <= high:
@@ -126,7 +127,14 @@ def check_wav_bound(path, seconds):
 
 
 def sha(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    digest = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        while True:
+            block = stream.read(HASH_CHUNK_BYTES)
+            if not block:
+                break
+            digest.update(block)
+    return digest.hexdigest()
 
 
 class GreedyKeywordDecoder:
