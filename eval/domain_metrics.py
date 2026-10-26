@@ -95,42 +95,49 @@ def domain_keys(row: dict) -> list[str]:
     domain = row.get("domain")
     if not isinstance(domain, dict):
         return ["all"]
-    distance = str(domain.get("distance_band", "unknown"))
-    distance_m = finite(domain.get("distance_m", 0.0), "domain.distance_m")
-    azimuth = finite(domain.get("azimuth_deg", 0.0), "domain.azimuth_deg")
-    rt60 = finite(domain.get("rt60_s", 0.0), "domain.rt60_s")
-    snr_db = finite(domain.get("snr_db", 0.0), "domain.snr_db")
-    noise = str(domain.get("noise_profile", "unknown"))
-    playback = "playback" if domain.get("playback_sir_db") is not None else "no-playback"
-    distance_value = distance_bin(distance_m)
-    az_band = azimuth_band(azimuth)
-    snr_value = snr_band(snr_db)
-    if rt60 < 0.30:
-        rt_band = "dry"
-    elif rt60 < 0.55:
-        rt_band = "medium"
-    else:
-        rt_band = "reverb"
-    composite = f"distance={distance}|az={az_band}|rt60={rt_band}|noise={noise}|{playback}"
-    return [
-        "all",
-        f"distance:{distance}",
-        f"distance_bin:{distance_value}",
-        f"azimuth:{az_band}",
-        f"azimuth_deg:{azimuth_point(azimuth)}",
-        f"snr:{snr_value}",
-        f"distance_azimuth:distance_bin={distance_value}|azimuth={az_band}",
-        f"distance_snr:distance_bin={distance_value}|snr={snr_value}",
-        f"azimuth_snr:azimuth={az_band}|snr={snr_value}",
-        (
-            f"distance_azimuth_snr:distance_bin={distance_value}|"
-            f"azimuth={az_band}|snr={snr_value}"
-        ),
-        f"rt60:{rt_band}",
-        f"noise:{noise}",
-        f"playback:{playback}",
-        f"composite:{composite}",
-    ]
+    # Sparse metadata is valid. Absence is not a measured zero and must not
+    # contribute support to a known robustness/curriculum slice.
+    values = {name: finite(domain[name], f"domain.{name}")
+              for name in ('distance_m', 'azimuth_deg', 'rt60_s', 'snr_db')
+              if name in domain}
+    keys = ["all"]
+    distance = str(domain['distance_band']) if 'distance_band' in domain else None
+    noise = str(domain['noise_profile']) if 'noise_profile' in domain else None
+    distance_value = distance_bin(values['distance_m']) if 'distance_m' in values else None
+    az_band = azimuth_band(values['azimuth_deg']) if 'azimuth_deg' in values else None
+    snr_value = snr_band(values['snr_db']) if 'snr_db' in values else None
+    rt_band = None
+    if 'rt60_s' in values:
+        rt60 = values['rt60_s']
+        rt_band = 'dry' if rt60 < 0.30 else 'medium' if rt60 < 0.55 else 'reverb'
+    playback = None
+    if 'playback_sir_db' in domain:
+        playback = 'playback' if domain['playback_sir_db'] is not None else 'no-playback'
+    if distance is not None:
+        keys.append(f"distance:{distance}")
+    if distance_value is not None:
+        keys.append(f"distance_bin:{distance_value}")
+    if az_band is not None:
+        keys.extend((f"azimuth:{az_band}", f"azimuth_deg:{azimuth_point(values['azimuth_deg'])}"))
+    if snr_value is not None:
+        keys.append(f"snr:{snr_value}")
+    if distance_value is not None and az_band is not None:
+        keys.append(f"distance_azimuth:distance_bin={distance_value}|azimuth={az_band}")
+    if distance_value is not None and snr_value is not None:
+        keys.append(f"distance_snr:distance_bin={distance_value}|snr={snr_value}")
+    if az_band is not None and snr_value is not None:
+        keys.append(f"azimuth_snr:azimuth={az_band}|snr={snr_value}")
+    if distance_value is not None and az_band is not None and snr_value is not None:
+        keys.append(f"distance_azimuth_snr:distance_bin={distance_value}|azimuth={az_band}|snr={snr_value}")
+    if rt_band is not None:
+        keys.append(f"rt60:{rt_band}")
+    if noise is not None:
+        keys.append(f"noise:{noise}")
+    if playback is not None:
+        keys.append(f"playback:{playback}")
+    if all(value is not None for value in (distance, az_band, rt_band, noise, playback)):
+        keys.append(f"composite:distance={distance}|az={az_band}|rt60={rt_band}|noise={noise}|{playback}")
+    return keys
 
 
 def exposure_stats(names: list[str], recordings: dict[str, dict]) -> dict[str, float | int]:

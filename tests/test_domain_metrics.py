@@ -2,6 +2,11 @@
 from __future__ import annotations
 
 import json
+import io
+import itertools
+import unittest
+from contextlib import redirect_stdout
+from unittest.mock import patch
 import pathlib
 import random
 import subprocess
@@ -9,7 +14,10 @@ import sys
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "training"))
+sys.path[:0] = [str(ROOT / "training"), str(ROOT / "eval")]
+import domain_metrics
+import gate_robustness
+from domain_curriculum import update_curriculum
 
 from render_domains import (  # noqa: E402
     _deterministic_eval_scene,
@@ -147,6 +155,98 @@ def assert_formal_triple_stress_support() -> None:
     assert positive_count >= int(gates["min_expected_wakes"])
     assert negative_count >= int(gates["min_negative_recordings"])
     assert {-150.0, -120.0, 150.0, 180.0}.issubset(positive_azimuths)
+
+
+
+class MissingAxisTests(unittest.TestCase):
+    def test_sparse_domain_does_not_invent_axes(self):
+        self.assertEqual(domain_metrics.domain_keys({'domain': {'distance_band': 'far'}}),
+                         ['all', 'distance:far'])
+        self.assertEqual(domain_metrics.domain_keys({'domain': {}}), ['all'])
+        self.assertEqual(domain_metrics.domain_keys({}), ['all'])
+
+    def test_explicit_zero_is_not_missing(self):
+        keys = domain_metrics.domain_keys({'domain': {'distance_m': 0, 'azimuth_deg': 0,
+            'snr_db': 0, 'rt60_s': 0, 'playback_sir_db': None}})
+        for key in ('distance_bin:0.5m', 'azimuth:front', 'azimuth_deg:0',
+                    'snr:critical', 'rt60:dry', 'playback:no-playback',
+                    'distance_azimuth_snr:distance_bin=0.5m|azimuth=front|snr=critical'):
+            self.assertIn(key, keys)
+        self.assertFalse(any(key.startswith('composite:') for key in keys))
+
+    def test_joint_slices_need_all_constituent_axes(self):
+        keys = domain_metrics.domain_keys({'domain': {'distance_m': 5, 'snr_db': 2}})
+        self.assertIn('distance_snr:distance_bin=5m|snr=critical', keys)
+        for prefix in ('distance_azimuth:', 'azimuth_snr:', 'distance_azimuth_snr:', 'composite:'):
+            self.assertFalse(any(key.startswith(prefix) for key in keys), prefix)
+
+    def test_present_invalid_numeric_values_still_rejected(self):
+        for axis in ('distance_m', 'azimuth_deg', 'rt60_s', 'snr_db'):
+            for value in (None, True, '0', float('nan'), float('inf')):
+                with self.subTest(axis=axis, value=value), self.assertRaises(ValueError):
+                    domain_metrics.domain_keys({'domain': {axis: value}})
+
+    def test_full_metadata_key_contract_is_unchanged(self):
+        self.assertEqual(domain_metrics.domain_keys(row('full', 'near', [])), [
+            'all', 'distance:near', 'distance_bin:0.5m', 'azimuth:front', 'azimuth_deg:0',
+            'snr:mid', 'distance_azimuth:distance_bin=0.5m|azimuth=front',
+            'distance_snr:distance_bin=0.5m|snr=mid', 'azimuth_snr:azimuth=front|snr=mid',
+            'distance_azimuth_snr:distance_bin=0.5m|azimuth=front|snr=mid',
+            'rt60:dry', 'noise:fan', 'playback:no-playback',
+            'composite:distance=near|az=front|rt60=dry|noise=fan|no-playback'])
+
+    def test_every_partial_field_set_preserves_only_supported_slices(self):
+        full = row('full', 'near', [])['domain']
+        requirements = [
+            ('all', set()), ('distance:near', {'distance_band'}),
+            ('distance_bin:0.5m', {'distance_m'}), ('azimuth:front', {'azimuth_deg'}),
+            ('azimuth_deg:0', {'azimuth_deg'}), ('snr:mid', {'snr_db'}),
+            ('distance_azimuth:distance_bin=0.5m|azimuth=front', {'distance_m', 'azimuth_deg'}),
+            ('distance_snr:distance_bin=0.5m|snr=mid', {'distance_m', 'snr_db'}),
+            ('azimuth_snr:azimuth=front|snr=mid', {'azimuth_deg', 'snr_db'}),
+            ('distance_azimuth_snr:distance_bin=0.5m|azimuth=front|snr=mid',
+             {'distance_m', 'azimuth_deg', 'snr_db'}),
+            ('rt60:dry', {'rt60_s'}), ('noise:fan', {'noise_profile'}),
+            ('playback:no-playback', {'playback_sir_db'}),
+            ('composite:distance=near|az=front|rt60=dry|noise=fan|no-playback',
+             {'distance_band', 'azimuth_deg', 'rt60_s', 'noise_profile', 'playback_sir_db'})]
+        for count in range(len(full) + 1):
+            for fields in itertools.combinations(full, count):
+                with self.subTest(fields=fields):
+                    domain = {name: full[name] for name in fields}
+                    expected = [key for key, needed in requirements if needed <= set(fields)]
+                    self.assertEqual(domain_metrics.domain_keys({'domain': domain}), expected)
+
+    def test_sparse_report_cannot_satisfy_unknown_coverage(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            refs, dets, out = root/'refs.jsonl', root/'dets.jsonl', root/'out.json'
+            rows = [row('p', 'far', [{'keyword_id': 1, 'start_s': 1., 'end_s': 2.}]),
+                    row('n', 'far', [])]
+            for item in rows:
+                item['domain'] = {'distance_band': 'far'}
+            refs.write_text(''.join(json.dumps(item)+'\n' for item in rows))
+            dets.write_text(json.dumps({'recording': 'p', 'keyword_id': 1,
+                                       'time_s': 2., 'confidence': .9})+'\n')
+            with patch.object(sys, 'argv', ['domain_metrics', '--references', str(refs),
+                    '--detections', str(dets), '--output', str(out)]), redirect_stdout(io.StringIO()):
+                self.assertEqual(domain_metrics.main(), 0)
+            result = json.loads(out.read_text())
+            self.assertEqual(set(result['domains']), {'all', 'distance:far'})
+            self.assertEqual(set(result['keyword_domains']['1']['domains']), {'all', 'distance:far'})
+            self.assertEqual(result['overall']['expected'], 1)
+            self.assertEqual(result['overall']['negative_recordings'], 1)
+            self.assertEqual(result['overall']['frr'], 0.)
+            self.assertEqual(result['overall']['far_per_hour'], 0.)
+            config = {'robustness_gates': {'required_distance_bins': ['0.5m'],
+                'required_azimuth_deg': [0], 'required_snr_bands': ['critical'],
+                'required_rt60_bands': ['dry']}}
+            gate = gate_robustness.evaluate({'qualification_domains': result}, config)
+            self.assertFalse(gate['qualified'])
+            self.assertEqual({item['reason'] for item in gate['failures']}, {'missing-slice'})
+            curriculum = update_curriculum(result)
+            self.assertNotIn('azimuth', curriculum['dimension_weights'])
+            self.assertNotIn('snr', curriculum['dimension_weights'])
 
 
 def main() -> int:
@@ -313,4 +413,7 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(MissingAxisTests))
+    if not result.wasSuccessful():
+        raise SystemExit(1)
     raise SystemExit(main())
