@@ -234,6 +234,46 @@ def validate_constant_afe_timeline(path: pathlib.Path | None, row: dict, frames:
         raise ValueError("AFE timeline coverage does not match output WAV")
 
 
+
+def validate_output_paths(args, rows: list[dict], cache_enabled: bool) -> None:
+    """Reject accidental destructive aliases before any runner/cache/output work.
+
+    This is a preflight for a stable local filesystem, not protection against
+    concurrent path replacement. Distinct existing outputs remain reusable.
+    """
+    outputs = [(name, getattr(args, name)) for name in
+               ('detections', 'provenance', 'corpus_identity')
+               if getattr(args, name) is not None]
+    inputs = [args.references, args.model, args.keywords, args.runner]
+    if cache_enabled:
+        inputs.extend((args.posterior_dump, args.decoder_replay))
+    for row in rows:
+        inputs.append(resolve_audio_path(row, args.audio_root, str(row['recording'])))
+        metadata = row.get('metadata_path')
+        if isinstance(metadata, str) and metadata:
+            path = pathlib.Path(metadata)
+            inputs.append(path if path.is_absolute() else args.audio_root / path)
+
+    def aliases(a: pathlib.Path, b: pathlib.Path) -> bool:
+        if a.resolve() == b.resolve():
+            return True
+        try:
+            return a.samefile(b)
+        except FileNotFoundError:
+            return False
+
+    for index, (name, output) in enumerate(outputs):
+        if cache_enabled:
+            cache = args.posterior_cache.resolve()
+            resolved = output.resolve()
+            if resolved == cache or cache in resolved.parents:
+                raise ValueError(f'output path {name} overlaps posterior cache')
+        if any(aliases(output, path) for path in inputs):
+            raise ValueError(f'output path {name} aliases an input')
+        if any(aliases(output, previous) for _, previous in outputs[:index]):
+            raise ValueError(f'output path {name} aliases another output')
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", required=True, type=pathlib.Path)
@@ -291,6 +331,7 @@ def main() -> int:
         raise ValueError("--decoder-fuzzy-child-cost-log must be finite and in [-16,0]")
 
     rows = load_references(args.references)
+    validate_output_paths(args, rows, cache_enabled)
     output_lines: list[str] = []
     identities: list[dict] = []
     posterior_traces: list[dict] = []
