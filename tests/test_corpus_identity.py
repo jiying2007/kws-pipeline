@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+from unittest.mock import patch
 import itertools
 import json
 import pathlib
@@ -280,6 +282,79 @@ class CorpusIdentityTests(unittest.TestCase):
         wav.write_bytes((self.root / "eval.wav").read_bytes()[:-2])
         with self.assertRaisesRegex(ValueError, "truncated PCM"):
             inspect_pcm16_wav(wav)
+
+
+
+class StreamingPCMIdentityTests(unittest.TestCase):
+    LIMIT = 65536
+
+    def make_wav(self, path, frames):
+        payload = (bytes(range(256)) * ((frames * 2 + 255) // 256))[:frames * 2]
+        with wave.open(str(path), 'wb') as writer:
+            writer.setparams((1, 2, 16000, 0, 'NONE', 'not compressed'))
+            writer.writeframes(payload)
+        return payload
+
+    def test_exact_identity_at_chunk_boundaries(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = pathlib.Path(td) / 'fixture.wav'
+            for frames in (1, self.LIMIT - 1, self.LIMIT, self.LIMIT + 1, 2*self.LIMIT + 1):
+                with self.subTest(frames=frames):
+                    pcm = self.make_wav(path, frames)
+                    expected = {'file_sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+                        'pcm_sha256': hashlib.sha256(pcm).hexdigest(),
+                        'frames': frames, 'duration_s': frames / 16000.0}
+                    self.assertEqual(inspect_pcm16_wav(path), expected)
+
+    def test_pcm_read_requests_are_bounded(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = pathlib.Path(td) / 'fixture.wav'
+            pcm = self.make_wav(path, 2*self.LIMIT + 1)
+            original = wave.Wave_read.readframes
+            calls = []
+            limit = self.LIMIT
+            def bounded(reader, count):
+                calls.append(count)
+                if not 0 < count <= limit:
+                    raise AssertionError('PCM identity read exceeds fixed frame bound')
+                return original(reader, count)
+            with patch.object(wave.Wave_read, 'readframes', bounded):
+                result = inspect_pcm16_wav(path)
+            self.assertEqual(result['pcm_sha256'], hashlib.sha256(pcm).hexdigest())
+            self.assertEqual(sum(calls), 2*self.LIMIT + 1)
+            self.assertGreater(len(calls), 1)
+
+    def test_truncation_after_multiple_chunks_still_fails(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = pathlib.Path(td) / 'fixture.wav'
+            self.make_wav(path, 2*self.LIMIT + 1)
+            complete = path.read_bytes()
+            for cut in (1, 2, self.LIMIT * 2 + 1):
+                path.write_bytes(complete[:-cut])
+                with self.subTest(cut=cut), self.assertRaisesRegex(ValueError, 'truncated PCM payload'):
+                    inspect_pcm16_wav(path)
+
+    def test_late_read_error_is_not_a_partial_identity(self):
+        class Reader:
+            closed = False
+            calls = 0
+            def __enter__(self): return self
+            def __exit__(self, *_): self.closed = True
+            def getnchannels(self): return 1
+            def getframerate(self): return 16000
+            def getsampwidth(self): return 2
+            def getcomptype(self): return 'NONE'
+            def getnframes(self): return 2 * 65536 + 1
+            def readframes(self, count):
+                self.calls += 1
+                if self.calls > 1:
+                    raise OSError('injected PCM read error')
+                return b'\x00' * (2 * count)
+        reader = Reader()
+        with patch.object(wave, 'open', return_value=reader):
+            with self.assertRaisesRegex(OSError, 'injected PCM read error'):
+                inspect_pcm16_wav(pathlib.Path('unused-fixture.wav'))
+        self.assertTrue(reader.closed)
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ import re
 import wave
 
 SAMPLE_RATE_HZ = 16000
+PCM_HASH_CHUNK_FRAMES = 65536
 IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
 AUDIO_PATH_FIELDS = ("audio", "audio_path", "path")
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
@@ -80,12 +81,18 @@ def inspect_pcm16_wav(path: pathlib.Path) -> dict:
         frames = reader.getnframes()
         if frames <= 0:
             raise ValueError(f"{path}: empty PCM payload")
-        pcm = reader.readframes(frames)
-        if len(pcm) != frames * 2:
-            raise ValueError(f"{path}: truncated PCM payload")
+        pcm_digest = hashlib.sha256()
+        remaining = frames
+        while remaining:
+            requested = min(remaining, PCM_HASH_CHUNK_FRAMES)
+            pcm = reader.readframes(requested)
+            if len(pcm) != requested * 2:
+                raise ValueError(f"{path}: truncated PCM payload")
+            pcm_digest.update(pcm)
+            remaining -= requested
     return {
         "file_sha256": sha256_file(path),
-        "pcm_sha256": hashlib.sha256(pcm).hexdigest(),
+        "pcm_sha256": pcm_digest.hexdigest(),
         "frames": frames,
         "duration_s": frames / float(SAMPLE_RATE_HZ),
     }
