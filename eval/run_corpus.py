@@ -339,7 +339,13 @@ def main() -> int:
     posterior_cache_hits = 0
     posterior_cache_misses = 0
     model_sha256 = sha256_file(args.model)
+    keyword_pack_sha256 = sha256_file(args.keywords)
     posterior_dump_sha256 = sha256_file(args.posterior_dump) if cache_enabled else None
+
+    def require_keyword_pack_unchanged() -> None:
+        if sha256_file(args.keywords) != keyword_pack_sha256:
+            raise ValueError("keyword pack changed during corpus evaluation")
+
     for row in rows:
         recording = str(row["recording"])
         audio = resolve_audio_path(row, args.audio_root, recording)
@@ -417,12 +423,14 @@ def main() -> int:
             ]
         if metadata is not None:
             command.extend(["--metadata-tsv", str(metadata)])
+        require_keyword_pack_unchanged()
         completed = subprocess.run(
             command,
             check=True,
             text=True,
             stdout=subprocess.PIPE,
         )
+        require_keyword_pack_unchanged()
         if metadata is not None and sha256_file(metadata) != row["metadata_sha256"]:
             raise ValueError("AFE metadata changed during replay")
         for line_no, raw in enumerate(completed.stdout.splitlines(), 1):
@@ -449,6 +457,7 @@ def main() -> int:
         "corpus_sha256": corpus_digest(identities),
         "recordings": identities,
     }
+    require_keyword_pack_unchanged()
     args.detections.parent.mkdir(parents=True, exist_ok=True)
     args.detections.write_text(
         "\n".join(output_lines) + ("\n" if output_lines else ""), encoding="utf-8"
@@ -473,7 +482,7 @@ def main() -> int:
                 else "direct-runner-v1"
             ),
             "model_sha256": model_sha256,
-            "keyword_pack_sha256": sha256_file(args.keywords),
+            "keyword_pack_sha256": keyword_pack_sha256,
             "references_sha256": sha256_file(args.references),
             "detections_sha256": sha256_file(args.detections),
             "audio_corpus_sha256": corpus_identity["corpus_sha256"],

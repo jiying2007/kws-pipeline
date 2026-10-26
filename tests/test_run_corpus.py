@@ -121,6 +121,198 @@ class OutputPathTests(unittest.TestCase):
                 self.exercise_alias('detections', target, cache=True)
 
 
+class KeywordPackConsistencyTests(unittest.TestCase):
+    """Artificial stdlib fixtures only; no model execution or qualification."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = pathlib.Path(self.temp.name)
+        self.files = {name: self.root / name for name in
+                      ('runner', 'model', 'keywords', 'references', 'posterior-dump',
+                       'decoder-replay', 'detections', 'provenance', 'corpus-identity', 'trace')}
+        for name, path in self.files.items():
+            path.write_bytes(('fixture-' + name).encode())
+        self.files['keywords'].write_bytes(b'fixture-pack-v1')
+        self.original_pack_sha = sha256_file(self.files['keywords'])
+        for index in range(2):
+            write_wav(self.root / f'{index}.wav')
+        self.files['references'].write_text(''.join(json.dumps({
+            'recording': f'r{index}', 'path': f'{index}.wav', 'duration_s': 2.0,
+            'expected': []}) + '\n' for index in range(2)))
+        self.before = {name: self.files[name].read_bytes() for name in
+                       ('detections', 'provenance', 'corpus-identity')}
+        self.calls = []
+        self.executions = 0
+
+    def invoke(self, *, cache=False, cache_hit=True, mutate=None, cache_mutate=None, provenance=True):
+        self.executions = 0
+        argv = ['run_corpus', '--audio-root', str(self.root)]
+        names = ['runner', 'model', 'keywords', 'references', 'detections', 'corpus-identity']
+        if provenance:
+            names.append('provenance')
+        if cache:
+            names += ['posterior-dump', 'decoder-replay']
+            argv += ['--posterior-cache', str(self.root / 'cache')]
+        for name in names:
+            argv += ['--' + name, str(self.files[name])]
+
+        def execute(command, **kwargs):
+            self.executions += 1
+            pack = self.files['keywords'].read_bytes()
+            self.calls.append(pack)
+            if mutate:
+                mutate(len(self.calls))
+            return subprocess.CompletedProcess(command, 0, stdout=json.dumps({
+                'recording': command[4], 'keyword_id': 1 if pack.endswith(b'v1') else 2,
+                'time_s': 1.0, 'confidence': 0.8}) + '\n')
+
+        def cached(**kwargs):
+            if cache_mutate:
+                cache_mutate()
+            return self.files['trace'], {'posterior_dump_sha256': kwargs['posterior_dump_sha256'],
+                'trace_sha256': sha256_file(self.files['trace']), 'frames': 3}, cache_hit
+
+        with patch.object(sys, 'argv', argv), \
+                patch.object(run_corpus.subprocess, 'run', side_effect=execute), \
+                patch.object(run_corpus, 'ensure_cached_trace', side_effect=cached):
+            return run_corpus.main()
+
+    def assert_outputs_preserved(self, present=True):
+        for name, original in self.before.items():
+            if present:
+                self.assertEqual(self.files[name].read_bytes(), original, name)
+            else:
+                self.assertFalse(self.files[name].exists(), name)
+
+    def test_stable_direct_and_cache_bind_original_pack(self):
+        for cache, hit in ((False, False), (True, False), (True, True)):
+            with self.subTest(cache=cache, hit=hit):
+                self.calls.clear()
+                self.assertEqual(self.invoke(cache=cache, cache_hit=hit), 0)
+                self.assertEqual(self.calls, [b'fixture-pack-v1'] * 2)
+                receipt = json.loads(self.files['provenance'].read_text())
+                self.assertEqual(receipt['keyword_pack_sha256'], self.original_pack_sha)
+                if cache:
+                    self.assertEqual(receipt['posterior_cache_hits'], 2 if hit else 0)
+                    self.assertEqual(receipt['posterior_cache_misses'], 0 if hit else 2)
+                rows = [json.loads(line) for line in self.files['detections'].read_text().splitlines()]
+                self.assertEqual([row['keyword_id'] for row in rows], [1, 1])
+
+    def test_pack_may_change_between_independent_cached_runs(self):
+        self.assertEqual(self.invoke(cache=True), 0)
+        trace_sha = sha256_file(self.files['trace'])
+        self.files['keywords'].write_bytes(b'fixture-pack-v2')
+        self.calls.clear()
+        self.assertEqual(self.invoke(cache=True), 0)
+        self.assertEqual(self.calls, [b'fixture-pack-v2'] * 2)
+        receipt = json.loads(self.files['provenance'].read_text())
+        self.assertEqual(receipt['keyword_pack_sha256'], sha256_file(self.files['keywords']))
+        self.assertNotEqual(receipt['keyword_pack_sha256'], self.original_pack_sha)
+        self.assertEqual(receipt['posterior_cache_hits'], 2)
+        self.assertEqual([trace['trace_sha256'] for trace in receipt['posterior_traces']], [trace_sha] * 2)
+
+    def test_first_or_later_replay_pack_replacement_preserves_outputs(self):
+        for cache in (False, True):
+            for replace_at in (1, 2):
+                for present in (False, True):
+                    with self.subTest(cache=cache, replace_at=replace_at, present=present):
+                        self.calls.clear()
+                        self.files['keywords'].write_bytes(b'fixture-pack-v1')
+                        for name, original in self.before.items():
+                            if present:
+                                self.files[name].write_bytes(original)
+                            else:
+                                self.files[name].unlink(missing_ok=True)
+                        def mutate(call):
+                            if call == replace_at:
+                                self.files['keywords'].write_bytes(b'fixture-pack-v2')
+                        with self.assertRaisesRegex(ValueError, 'keyword pack changed'):
+                            self.invoke(cache=cache, mutate=mutate)
+                        self.assertEqual(len(self.calls), replace_at)
+                        self.assert_outputs_preserved(present)
+
+    def test_same_bytes_replacement_is_allowed(self):
+        def replace(call):
+            replacement = self.root / 'same-pack'
+            replacement.write_bytes(b'fixture-pack-v1')
+            replacement.replace(self.files['keywords'])
+        self.assertEqual(self.invoke(mutate=replace), 0)
+        self.assertEqual(self.calls, [b'fixture-pack-v1'] * 2)
+        receipt = json.loads(self.files['provenance'].read_text())
+        self.assertEqual(receipt['keyword_pack_sha256'], self.original_pack_sha)
+
+    def test_pack_change_before_replay_is_rejected(self):
+        original = run_corpus.audio_identity
+        def measure(*args):
+            result = original(*args)
+            self.files['keywords'].write_bytes(b'fixture-pack-v2')
+            return result
+        with patch.object(run_corpus, 'audio_identity', side_effect=measure):
+            with self.assertRaisesRegex(ValueError, 'keyword pack changed'):
+                self.invoke()
+        self.assertEqual(self.calls, [])
+        self.assert_outputs_preserved()
+
+    def test_pack_change_during_cache_lookup_is_rejected_before_replay(self):
+        with self.assertRaisesRegex(ValueError, 'keyword pack changed'):
+            self.invoke(cache=True, cache_mutate=lambda:
+                        self.files['keywords'].write_bytes(b'fixture-pack-v2'))
+        self.assertEqual(self.calls, [])
+        self.assert_outputs_preserved()
+
+    def test_pack_change_before_publication_preserves_outputs(self):
+        original = run_corpus.corpus_digest
+        def digest(rows):
+            result = original(rows)
+            self.files['keywords'].write_bytes(b'fixture-pack-v2')
+            return result
+        with patch.object(run_corpus, 'corpus_digest', side_effect=digest):
+            with self.assertRaisesRegex(ValueError, 'keyword pack changed'):
+                self.invoke()
+        self.assertEqual(len(self.calls), 2)
+        self.assert_outputs_preserved()
+
+    def test_missing_pack_fails_before_replay(self):
+        self.files['keywords'].unlink()
+        with self.assertRaises(OSError):
+            self.invoke()
+        self.assertEqual(self.executions, 0)
+        self.assertEqual(self.calls, [])
+        self.assert_outputs_preserved()
+
+    def test_removed_pack_during_replay_preserves_outputs(self):
+        with self.assertRaises(OSError):
+            self.invoke(mutate=lambda call: self.files['keywords'].unlink())
+        self.assertEqual(self.executions, 1)
+        self.assertEqual(len(self.calls), 1)
+        self.assert_outputs_preserved()
+
+    def test_pack_read_failure_preserves_outputs(self):
+        original = run_corpus.sha256_file
+        fail = [False]
+        def unreadable(path):
+            if path == self.files['keywords'] and fail[0]:
+                raise PermissionError('fixture pack I/O failure')
+            return original(path)
+        for initial in (True, False):
+            with self.subTest(initial=initial):
+                self.calls.clear()
+                fail[0] = initial
+                with patch.object(run_corpus, 'sha256_file', side_effect=unreadable):
+                    with self.assertRaisesRegex(OSError, 'fixture pack I/O failure'):
+                        self.invoke(mutate=lambda call: fail.__setitem__(0, True))
+                self.assertEqual(self.executions, 0 if initial else 1)
+                self.assert_outputs_preserved()
+
+    def test_pack_drift_is_rejected_without_provenance_output(self):
+        with self.assertRaisesRegex(ValueError, 'keyword pack changed'):
+            self.invoke(provenance=False, mutate=lambda call:
+                        self.files['keywords'].write_bytes(b'fixture-pack-v2'))
+        self.assertEqual(len(self.calls), 1)
+        self.assert_outputs_preserved()
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
@@ -525,7 +717,7 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(OutputPathTests))
+    result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__]))
     if not result.wasSuccessful():
         raise SystemExit(1)
     raise SystemExit(main())
