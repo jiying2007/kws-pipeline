@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import pathlib
 import random
@@ -356,6 +357,7 @@ def _rt60_point(domains: dict, name: str) -> float:
 
 
 def _azimuth_band(value: float) -> str:
+    value = math.remainder(value, 360.0)
     if abs(value) <= 30.0:
         return "front"
     if abs(value) <= 90.0:

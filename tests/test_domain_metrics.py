@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 import io
 import itertools
+import math
+import copy
 import unittest
 from contextlib import redirect_stdout
 from unittest.mock import patch
@@ -17,6 +19,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "training"), str(ROOT / "eval")]
 import domain_metrics
 import gate_robustness
+import development_stress
+import hard_negative_replay
+import render_domains
 from domain_curriculum import update_curriculum
 
 from render_domains import (  # noqa: E402
@@ -159,6 +164,61 @@ def assert_formal_triple_stress_support() -> None:
 
 
 class MissingAxisTests(unittest.TestCase):
+    def test_periodic_scene_bands_match_across_consumers(self):
+        classifiers = (domain_metrics.azimuth_band, render_domains._azimuth_band,
+                       development_stress._azimuth_band, hard_negative_replay._azimuth_band)
+        for canonical in range(-150, 181, 30):
+            expected = 'front' if abs(canonical) <= 30 else 'side' if abs(canonical) <= 90 else 'rear'
+            for turns in range(-3, 4):
+                for classify in classifiers:
+                    with self.subTest(angle=canonical + 360*turns, consumer=classify.__module__):
+                        self.assertEqual(classify(canonical + 360*turns), expected)
+
+    def test_canonical_nextafter_boundaries_are_unchanged(self):
+        classifiers = (domain_metrics.azimuth_band, render_domains._azimuth_band,
+                       development_stress._azimuth_band, hard_negative_replay._azimuth_band)
+        for boundary in (-90., -30., 30., 90.):
+            for angle in (math.nextafter(boundary, -math.inf), boundary,
+                          math.nextafter(boundary, math.inf)):
+                expected = 'front' if abs(angle) <= 30 else 'side' if abs(angle) <= 90 else 'rear'
+                for classify in classifiers:
+                    with self.subTest(angle=angle, consumer=classify.__module__):
+                        self.assertEqual(classify(angle), expected)
+        # Avoid cancellation from adding180 before modulo at wrapped thresholds.
+        for classify in classifiers:
+            self.assertEqual(classify(math.nextafter(390., math.inf)), 'side')
+            self.assertEqual(classify(math.nextafter(450., math.inf)), 'rear')
+
+    def test_wrapped_scene_keys_keep_raw_metadata_and_canonical_gates(self):
+        for canonical, wrapped in ((0., 360.), (-90., 270.), (30., -330.)):
+            reference = row('angle', 'near', [], azimuth=canonical)
+            candidate = copy.deepcopy(reference)
+            candidate['domain']['azimuth_deg'] = wrapped
+            before = copy.deepcopy(candidate)
+            self.assertEqual(domain_metrics.domain_keys(candidate), domain_metrics.domain_keys(reference))
+            self.assertEqual(candidate, before)
+        self.assertEqual(gate_robustness.required_keys({'robustness_gates': {
+            'required_azimuth_deg': [0, -90, 180]}}),
+            ['azimuth_deg:0', 'azimuth_deg:-90', 'azimuth_deg:180'])
+        # This patch intentionally does not introduce periodic gate requirements.
+        self.assertEqual(gate_robustness.required_keys({'robustness_gates': {
+            'required_azimuth_deg': [360]}}), ['azimuth_deg:360'])
+
+    def test_wrapped_valid_scene_axes_satisfy_front_and_side_support(self):
+        config = {'domains': {
+            'distance_bands': {'near': {'distance_m': [.5, .7]},
+                               'mid': {'distance_m': [1., 2.]}, 'far': {'distance_m': [3., 5.]}},
+            'azimuth_deg': [360., 270., 180.], 'rt60_s': [.2, .7], 'snr_db': [2., 30.]},
+            'robustness_gates': {'required_distance_bins': ['0.5m'],
+                                'required_azimuth_deg': [0, -90, 180],
+                                'required_snr_bands': ['critical']}}
+        before = copy.deepcopy(config)
+        axes = _evaluation_axes(config, validate_domains(config))
+        self.assertEqual(axes['azimuth_deg'], [360., 270., 180.])
+        development_stress._validate_axes([{'selectors': {'azimuth': band}}
+                                          for band in ('front', 'side', 'rear')], axes)
+        self.assertEqual(config, before)
+
     def test_sparse_domain_does_not_invent_axes(self):
         self.assertEqual(domain_metrics.domain_keys({'domain': {'distance_band': 'far'}}),
                          ['all', 'distance:far'])

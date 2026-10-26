@@ -74,6 +74,7 @@ def azimuth_point(azimuth_deg: float) -> str:
 
 
 def azimuth_band(azimuth_deg: float) -> str:
+    azimuth_deg = math.remainder(azimuth_deg, 360.0)
     if abs(azimuth_deg) <= 30.0:
         return "front"
     if abs(azimuth_deg) <= 90.0:

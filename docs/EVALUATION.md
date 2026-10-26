@@ -22,6 +22,14 @@ numeric values still fail validation. Missing slices cannot satisfy robustness
 coverage. This changes newly generated reports only; retain historical reports
 and their code/input versions rather than rewriting prior evidence.
 
+Finite synthetic scene azimuths are periodic: for band classification, 360° is
+front like 0°, and 270° is side like -90°. Metrics, scene sampling, development
+stress and replay use the same band semantics without rewriting raw metadata.
+Canonical threshold boundaries remain unchanged. Robustness gate requirements
+still use the existing canonical 30° metric labels (-150 through 180, with 180
+not -180); this change does not add periodic gate requirement syntax or relax
+measured-RIR angle validation. Historical report values are not recomputed.
+
 For every row, `run_corpus.py` reopens the referenced WAV and records:
 
 - file SHA256;
