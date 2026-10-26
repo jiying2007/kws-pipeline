@@ -155,7 +155,29 @@ The collector emits target evidence schema v3 with `evidence_class=product-board
 
 The manifest independently re-hashes those files and verifies that the external attestation, canonical raw manifest, collector output and selected release artifacts all describe the same SKU/source tuple.
 
+The standalone `qualification_gate.py` also replays runtime-soak measurements
+instead of trusting a persisted manifest's CPU/RSS/thermal/duration summaries.
+The qualification manifest retains the exact UTF-8 text in
+`evidence.runtime_soak_raw` and `evidence.raw_evidence_manifest_raw`. The gate
+checks the original raw-index hash and byte length, rejects duplicate names or
+missing/extra raw tuples, and binds the soak bytes to that index and its existing
+attestation subject cross-link before recomputing all soak-derived metrics.
+Changing a summary alone, or changing soak bytes and their tuple while keeping
+the original index, is malformed evidence (exit 2), not a new measurement.
+
+This remains manifest schema v3 and does not add a CLI argument. Older v3
+manifests missing either retained text field fail closed: regenerate them with
+`qualification_manifest.py` from the original evidence and raw files. Do not
+fill the fields from reconstructed summaries, change historical hashes, or
+silently reuse an old gate result. Complete manifests containing raw soak
+metadata belong in controlled evidence storage, not automatic public metadata
+publication.
+
 The Phase-B `target-dut-qualification` scorer adds a stricter product binding on top: it requires the externally attested `audio_frontend_identity_sha256` to equal the immutable Phase-A `final_afe_identity_sha256` before any physical DUT can qualify.
+That scorer already replays the retained runtime soak; the standalone-gate
+consistency repair is not evidence of a shipping-approval bypass. It adds no
+manifest signature or attestor-identity verification and does not establish
+the authenticity of stack/power summaries.
 
 ## Trust boundary
 

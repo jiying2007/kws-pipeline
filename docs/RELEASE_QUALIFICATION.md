@@ -296,6 +296,16 @@ python3 tools/qualification_gate.py \
 
 Policy schema v3 must identify the same SKU, set `shipping_approved=true` and bind `measurement_contract_id=process-cpu-one-core-v1`. It gates FAR/FRR point estimates and one-sided confidence bounds plus latency, p99 process time, RTF/headroom, soak, CPU, RSS, stack, temperature and power.
 
+The standalone gate independently recomputes soak-derived metrics from the
+manifest's retained `evidence.runtime_soak_raw`, bound through the exact
+`evidence.raw_evidence_manifest_raw` index bytes. Summary-only changes and
+inconsistent raw/index tuples are rejected. Older schema-v3 manifests lacking
+either field must be regenerated from the original evidence/raw files; there is
+no summary-only fallback. This integrity check does not verify manifest
+signatures or the authenticity of stack/power measurements. See
+[`TARGET_EVIDENCE.md`](TARGET_EVIDENCE.md#qualification-binding) for the scope
+and storage boundary.
+
 Exit codes:
 
 - `0`: structurally valid evidence and all policy gates passed;
