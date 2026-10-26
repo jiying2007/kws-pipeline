@@ -306,6 +306,7 @@ def _weighted_choice(rng: random.Random, values: list, weights: list[float]):
 
 
 def _azimuth_band(value: float) -> str:
+    value = math.remainder(value, 360.0)
     if abs(value) <= 30.0:
         return "front"
     if abs(value) <= 90.0:
