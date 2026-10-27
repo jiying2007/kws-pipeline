@@ -92,6 +92,29 @@ def validate_shard(row: dict, path: pathlib.Path) -> dict:
     return validated
 
 
+def validate_output_path(output: pathlib.Path, summaries: list[pathlib.Path]) -> None:
+    # Stable-filesystem preflight, not a lock against concurrent path changes.
+    # Reject all aliases conservatively, even when replace would only unlink
+    # an output symlink/hardlink rather than modify the input's inode.
+    def resolve(path: pathlib.Path) -> pathlib.Path:
+        try:
+            return path.resolve()
+        except RuntimeError as exc:
+            # Some Python versions report symlink loops as RuntimeError.
+            raise ValueError(f"cannot resolve FAR path {path}: {exc}") from exc
+
+    resolved_output = resolve(output)
+    for path in summaries:
+        aliases = resolved_output == resolve(path)
+        if not aliases:
+            try:
+                aliases = output.samefile(path)
+            except FileNotFoundError:
+                pass
+        if aliases:
+            raise ValueError(f"output {output} aliases an input summary: {path}")
+
+
 def write_result(path: pathlib.Path, text: str) -> None:
     # Replace only after serialization and writing succeed. Invalid invocations
     # preserve existing files; their nonzero exit and stderr identify stale output.
@@ -120,6 +143,7 @@ def main() -> int:
     args = parser.parse_args()
     if len(args.summary) < 2:
         raise ValueError("FAR aggregation requires at least two independent shards")
+    validate_output_path(args.output, args.summary)
     args.max_far_per_hour = finite(args.max_far_per_hour, "maximum FAR/hour")
     args.max_upper_bound_per_hour = finite(
         args.max_upper_bound_per_hour, "maximum FAR upper bound/hour"

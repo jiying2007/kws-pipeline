@@ -333,6 +333,21 @@ Retain:
 - shipping-approved SKU policy, qualification manifest and gate result;
 - final distribution checksums/SBOM/signing/attestation artifacts.
 
+## Synthetic FAR aggregate output safety
+
+`eval/aggregate_far.py --output` must be distinct from every `--summary` input;
+in-place aggregation is not supported. Preflight rejects the same normalized
+path, symlink aliases (including parent directories), and existing hardlinks
+with exit 2, before writing anything. Rejection preserves the input and any
+existing output; stderr identifies that output as stale for this invocation.
+Hardlinks and output symlinks are rejected conservatively: atomic replacement
+would otherwise unlink the output entry, not overwrite its linked target.
+Paths that cannot be resolved, including symlink loops, are also rejected with
+exit 2 without writing. Distinct resolvable outputs remain replaceable, as do
+dangling output symlinks. This check assumes a stable local filesystem; it does
+not lock paths or protect against concurrent changes.
+These JSON aggregation checks do not establish real acoustic qualification.
+
 ## Software baseline vs shipping qualification
 
 A green `v0.3.0` repository and signed release can be a mature software/evidence-engineering baseline without being an acoustically qualified Mandarin SKU. CI proves parser/runtime contracts, deterministic/synthetic regressions, corpus/evidence integrity mechanisms, cross-build compatibility, coverage/static-analysis gates and reproducible SDK output.
