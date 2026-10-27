@@ -78,6 +78,14 @@ jobs:
         run: python3 -B tests/test_research_ci_changes.py
       - name: Verify tracked worktree after Research change selection contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Research change selection contract"'
+      - name: ARM dependency wall-clock budget contracts with fake APT only
+        timeout-minutes: 2
+        run: |
+          python3 -I -S -B tests/test_arm_dependency_budget.py
+          python3 -I -S -B -O tests/test_arm_dependency_budget.py
+          python3 -I -S -B -OO tests/test_arm_dependency_budget.py
+      - name: Verify tracked worktree after ARM dependency budget contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "ARM dependency budget contracts"'
       - name: K1 punctuation6 ASR18 offline source contracts
         id: asr18_contracts
         timeout-minutes: 5
@@ -1015,9 +1023,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Install cross compiler and ARM user-mode emulator
-        run: >-
-          sudo apt-get update && sudo apt-get install -y
-          gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf qemu-user-static
+        timeout-minutes: 8
+        # Root supervisor can clean up root APT children; install is never retried.
+        run: sudo python3 -I -S -B tools/install_arm_dependencies.py
       - name: Locate ARM sysroot for the emulator
         run: |
           set -euo pipefail
