@@ -126,6 +126,31 @@ def require_board_raw_binding(summary_artifact: dict, raw_artifacts: list[dict])
         raise ValueError("board summary must be retained in the attested raw evidence tuple")
 
 
+def validate_raw_evidence_manifest(raw: str, artifact: dict, raw_artifacts: list[dict]) -> None:
+    """Bind retained raw tuples to the original, attestation-addressed index."""
+    if not isinstance(raw, str) or not raw.strip():
+        raise ValueError("evidence.raw_evidence_manifest_raw must retain original evidence-raw JSONL text")
+    encoded = raw.encode("utf-8")
+    if hashlib.sha256(encoded).hexdigest() != artifact["sha256"]:
+        raise ValueError("canonical raw evidence manifest hash does not match selected artifact")
+    if len(encoded) != artifact["bytes"]:
+        raise ValueError("canonical raw evidence manifest bytes do not match selected artifact")
+    rows = _jsonl_text(raw, "canonical raw evidence manifest")
+    identities = set()
+    names = set()
+    for index, row in enumerate(rows):
+        label = f"canonical raw evidence manifest[{index}]"
+        name = required_text(row, "name", label)
+        if name in names:
+            raise ValueError("canonical raw evidence manifest artifact names must be unique")
+        names.add(name)
+        identities.add((name, sha256_value(row.get("sha256"), f"{label}.sha256"),
+                        json_int(row.get("bytes"), f"{label}.bytes", 1)))
+    expected = {(item["name"], item["sha256"], item["bytes"]) for item in raw_artifacts}
+    if not identities or identities != expected:
+        raise ValueError("canonical raw evidence manifest does not match retained raw evidence tuples")
+
+
 def validate_eval(
     summary: dict,
     provenance: dict,
@@ -368,6 +393,8 @@ def validate_evidence(
         raise ValueError("target evidence power raw identity is missing from raw evidence")
 
     raw_metrics = _runtime_soak_metrics(evidence, runtime_soak_sha256)
+    if raw_by_name[runtime_soak_name]["bytes"] != len(evidence["runtime_soak_raw"].encode("utf-8")):
+        raise ValueError("embedded runtime soak bytes do not match retained raw evidence size")
     result = {
         "schema_version": TARGET_EVIDENCE_SCHEMA_VERSION,
         "evidence_class": "product-board",
@@ -397,6 +424,7 @@ def validate_evidence(
         "average_power_mw": finite(evidence["average_power_mw"], "evidence.average_power_mw", 0.0),
         "runtime_soak_name": runtime_soak_name,
         "runtime_soak_sha256": runtime_soak_sha256,
+        "runtime_soak_raw": evidence["runtime_soak_raw"],
         "power_raw_name": power_raw_name,
         "power_raw_sha256": power_raw_sha256,
         "instrument_id": required_text(evidence, "instrument_id", "evidence"),

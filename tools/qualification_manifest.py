@@ -447,6 +447,7 @@ def main() -> int:
         "evidence": {
             "sha256": hashes["evidence"],
             "attestation": attestation,
+            "raw_evidence_manifest_raw": args.evidence_raw.read_bytes().decode("utf-8"),
             **evidence,
         },
     }

@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import copy
 import argparse
+import hashlib
 import pathlib
 import subprocess
 import sys
@@ -28,6 +29,150 @@ from runtime_soak_contract import CPU_MEASUREMENT_CONTRACT_ID
 from qualification_metrics import (validate_event_metrics, score, validate_recordings,
                                    validate_detections, EVENT_SCORING_CONTRACT)
 from test_board_bench import board_summary_fixture
+
+PYTHON = [sys.executable] + (["-" + "O" * sys.flags.optimize] if sys.flags.optimize else [])
+
+def require(condition: bool, message: str) -> None:
+    """Keep the standalone-gate regression checks active under -O/-OO."""
+    if not condition:
+        raise AssertionError(message)
+
+
+def verify_standalone_soak_replay(manifest, policy, gate_command, runtime_soak,
+                                  evidence_raw, valid_policy) -> None:
+    original = manifest.read_text(encoding="utf-8")
+    baseline = json.loads(original)
+
+    def run(value, expected, diagnostic=""):
+        write_json(manifest, value)
+        checked = subprocess.run(gate_command, capture_output=True, text=True, check=False)
+        require(checked.returncode == expected,
+                f"standalone soak gate expected exit {expected}, got {checked.returncode}: "
+                + checked.stdout + checked.stderr)
+        require(diagnostic in checked.stderr, checked.stderr)
+        if expected in (0, 1):
+            result = json.loads(checked.stdout)
+            require(result["qualified"] is (expected == 0), checked.stdout)
+        return checked
+
+    # The same fixed policy must not turn a measured thermal FAIL into PASS
+    # when only the persisted manifest summary is changed.
+    write_json(policy, dict(valid_policy, max_temp_c=54.0))
+    failed = run(baseline, 1)
+    require(json.loads(failed.stdout)["violations"] == ["evidence.max_temp_c above maximum"],
+            failed.stdout)
+    changed = copy.deepcopy(baseline)
+    changed["evidence"]["max_temp_c"] = 53.0
+    run(changed, 2, "evidence.max_temp_c")
+    write_json(policy, valid_policy)
+    run(baseline, 0)
+    require(baseline["evidence"].get("runtime_soak_raw") == runtime_soak.read_bytes().decode("utf-8"),
+            "manifest must retain exact runtime-soak bytes")
+    require(baseline["evidence"].get("raw_evidence_manifest_raw") == evidence_raw.read_bytes().decode("utf-8"),
+            "manifest must retain exact canonical raw-evidence index bytes")
+
+    updates = (
+        {"cpu_percent": 1.0, "process_cpu_seconds": baseline["evidence"]["wall_seconds"] / 100.0},
+        {"rss_kib": 128.0}, {"soak_hours": 9.0}, {"max_thread_count": 2},
+        {"cpu_capacity_count": 3},
+        {"wall_seconds": 14400.0, "process_cpu_seconds": 720.0},
+        {"measurement_contract_id": "legacy-online-capacity"},
+        {"cpu_percent_semantics": "process_cpu_time / elapsed / online_cpu_capacity * 100"},
+    )
+    for update in updates:
+        changed = copy.deepcopy(baseline)
+        changed["evidence"].update(update)
+        run(changed, 2)
+
+    def bind_index(value, raw):
+        encoded = raw.encode("utf-8")
+        digest = hashlib.sha256(encoded).hexdigest()
+        value["evidence"]["raw_evidence_manifest_raw"] = raw
+        value["evidence"]["raw_evidence_sha256"] = digest
+        value["evidence"]["attestation"]["subject_sha256"] = digest
+        value["artifacts"]["evidence_raw"].update(sha256=digest, bytes=len(encoded))
+
+    def bind_soak(value, raw, *, update_index):
+        encoded = raw.encode("utf-8")
+        digest = hashlib.sha256(encoded).hexdigest()
+        value["evidence"].update(runtime_soak_raw=raw, runtime_soak_sha256=digest)
+        for rows in (value["evidence"]["raw_evidence"], value["artifacts"]["raw_evidence"]):
+            for row in rows:
+                if row["name"] == value["evidence"]["runtime_soak_name"]:
+                    row.update(sha256=digest, bytes=len(encoded))
+        if update_index:
+            bind_index(value, "".join(json.dumps(row, ensure_ascii=False) + "\n"
+                       for row in value["evidence"]["raw_evidence"]))
+
+    for key in ("runtime_soak_raw", "raw_evidence_manifest_raw"):
+        changed = copy.deepcopy(baseline)
+        del changed["evidence"][key]
+        run(changed, 2, key)
+        changed = copy.deepcopy(baseline)
+        changed["evidence"][key] += "\n"
+        run(changed, 2)
+        for invalid in (None, "", [], {}):
+            changed = copy.deepcopy(baseline)
+            changed["evidence"][key] = invalid
+            run(changed, 2, key)
+
+    # A coordinated soak + tuple substitution must still conflict with the
+    # unchanged canonical index bound by the attestation subject hash.
+    changed = copy.deepcopy(baseline)
+    raw = json.loads(changed["evidence"]["runtime_soak_raw"])
+    raw["max_temp_c"] = 53.0
+    for sample in raw["samples"]:
+        sample["temp_c"] = min(sample["temp_c"], 53.0)
+    changed["evidence"]["max_temp_c"] = 53.0
+    bind_soak(changed, json.dumps(raw), update_index=False)
+    run(changed, 2, "raw evidence")
+
+    for raw, diagnostic in (("{", "not valid JSON"), ("[]", "JSON object")):
+        changed = copy.deepcopy(baseline)
+        bind_soak(changed, raw, update_index=True)
+        run(changed, 2, diagnostic)
+    changed = copy.deepcopy(baseline)
+    raw = json.loads(changed["evidence"]["runtime_soak_raw"])
+    raw["samples"][-1]["thread_count"] = 0
+    bind_soak(changed, json.dumps(raw), update_index=True)
+    run(changed, 2, "thread_count")
+    changed = copy.deepcopy(baseline)
+    for artifacts in (changed["evidence"]["raw_evidence"], changed["artifacts"]["raw_evidence"]):
+        for item in artifacts:
+            if item["name"] == changed["evidence"]["runtime_soak_name"]:
+                item["bytes"] += 1
+    bind_index(changed, "".join(json.dumps(row) + "\n" for row in changed["evidence"]["raw_evidence"]))
+    run(changed, 2, "runtime soak bytes")
+
+    rows = baseline["evidence"]["raw_evidence"]
+    duplicate_name = dict(rows[0], sha256="f" * 64)
+    for malformed in ("{", "[]\n", "", json.dumps(rows[0]) + "\n" + json.dumps(rows[0]),
+                      "\n".join(json.dumps(row) for row in [*rows, duplicate_name]),
+                      "\n".join(json.dumps(row) for row in rows[:-1]),
+                      "\n".join(json.dumps(row) for row in [*rows, dict(name="extra", sha256="f" * 64, bytes=1)])):
+        changed = copy.deepcopy(baseline)
+        bind_index(changed, malformed)
+        run(changed, 2)
+    for field, invalid in (("name", ""), ("name", None), ("sha256", "BAD"),
+                           ("bytes", True), ("bytes", 0), ("bytes", 1.5)):
+        changed = copy.deepcopy(baseline)
+        invalid_rows = copy.deepcopy(rows)
+        invalid_rows[0][field] = invalid
+        bind_index(changed, "\n".join(json.dumps(row) for row in invalid_rows))
+        run(changed, 2)
+    changed = copy.deepcopy(baseline)
+    changed["artifacts"]["evidence_raw"]["bytes"] += 1
+    run(changed, 2, "bytes")
+    # UTF-8 byte length, not Python character count, is the artifact contract.
+    changed = copy.deepcopy(baseline)
+    bind_index(changed, "# 人工索引注释\n" + changed["evidence"]["raw_evidence_manifest_raw"])
+    run(changed, 0)
+    changed["artifacts"]["evidence_raw"]["bytes"] = len(changed["evidence"]["raw_evidence_manifest_raw"])
+    run(changed, 2, "bytes")
+    changed = copy.deepcopy(baseline)
+    bind_index(changed, changed["evidence"]["raw_evidence_manifest_raw"].replace("\n", "\r\n"))
+    run(changed, 0)
+    manifest.write_text(original, encoding="utf-8")
 
 
 
@@ -85,6 +230,7 @@ def verify_event_metadata() -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--event-metadata-only", action="store_true")
+    parser.add_argument("--standalone-soak-only", action="store_true")
     args = parser.parse_args()
     verify_event_metadata()
     if args.event_metadata_only:
@@ -299,9 +445,8 @@ def main() -> int:
                 "keyword_pack_sha256": pack_hash,
             },
         )
-        subprocess.check_call(
-            [
-                sys.executable,
+        collector_command = [
+                *PYTHON,
                 str(collector),
                 "--output", str(evidence),
                 "--target", "fixture-board",
@@ -330,11 +475,11 @@ def main() -> int:
                 "--instrument-id", "fixture-meter",
                 "--calibration-id", "fixture-cal",
             ]
-        )
+        subprocess.check_call(collector_command)
 
         subprocess.check_call(
             [
-                sys.executable,
+                *PYTHON,
                 str(ROOT / "training" / "audit_dataset.py"),
                 "--split", f"train={training_manifest}",
                 "--split", f"qualification={references}",
@@ -374,7 +519,7 @@ def main() -> int:
         write_json(policy, valid_policy)
 
         command = [
-            sys.executable,
+            *PYTHON,
             str(ROOT / "tools" / "qualification_manifest.py"),
             "--model", str(model),
             "--model-provenance", str(model_provenance),
@@ -422,7 +567,7 @@ def main() -> int:
 
         subprocess.check_call(
             [
-                sys.executable,
+                *PYTHON,
                 str(ROOT / "tools" / "qualification_gate.py"),
                 "--manifest", str(manifest),
                 "--references", str(references), "--detections", str(detections),
@@ -436,15 +581,17 @@ def main() -> int:
         assert gate_result["qualified"] is True
         assert gate_result["training_corpus_sha256"] == result["model_lineage"]["training_corpus_sha256"]
         assert gate_result["evaluation_corpus_sha256"] == eval_corpus["corpus_sha256"]
-        gate_command = [sys.executable, str(ROOT / "tools" / "qualification_gate.py"),
+        gate_command = [*PYTHON, str(ROOT / "tools" / "qualification_gate.py"),
                         "--manifest", str(manifest),
                 "--references", str(references), "--detections", str(detections),
                 "--board-audio", str(board_audio), "--policy", str(policy)]
         def gate_exit(expected: int) -> None:
             checked = subprocess.run(gate_command, capture_output=True, text=True, check=False)
-            assert checked.returncode == expected, checked.stdout + checked.stderr
+            require(checked.returncode == expected, checked.stdout + checked.stderr)
 
         original_manifest = manifest.read_text(encoding="utf-8")
+        verify_standalone_soak_replay(manifest, policy, gate_command, runtime_soak,
+                                      evidence_raw, valid_policy)
         for updates in ({"matched": 10, "false_rejects": 0, "false_accepts": 0,
                          "frr": 0.0, "far_per_hour": 0.0},
                         {"p95_post_end_latency_ms": 0.0},
@@ -474,19 +621,33 @@ def main() -> int:
             gate_exit(2)
         write_json(policy, valid_policy)
 
-        # Gate-only synthetic summaries test the one-core boundaries, including
-        # legal >100% observations and a corresponding >100% explicit budget.
+        # Synthetic one-core boundaries must be rebuilt through the real
+        # collector + manifest path, never by changing only a gate summary.
+        saved = {path: path.read_bytes() for path in
+                 (runtime_soak, evidence_raw, attestation_verification, evidence, manifest)}
         for percent, threads, expected in ((10.0, 1, 0), (20.0, 1, 1), (150.0, 2, 1)):
-            changed = json.loads(original_manifest)
-            changed["evidence"].update(cpu_percent=percent, max_thread_count=threads,
-                process_cpu_seconds=changed["evidence"]["wall_seconds"] * percent / 100.0)
-            write_json(manifest, changed)
+            write_json(runtime_soak, runtime_soak_fixture(8.0, cpu_percent=percent, threads=threads))
+            evidence_raw.write_text("".join(json.dumps(
+                {"name": path.name, "sha256": sha256_file(path), "bytes": path.stat().st_size},
+                sort_keys=True) + "\n" for path in raw_paths), encoding="utf-8")
+            attestation = json.loads(saved[attestation_verification])
+            attestation["subject_sha256"] = sha256_file(evidence_raw)
+            write_json(attestation_verification, attestation)
+            subprocess.check_call(collector_command)
+            subprocess.check_call(command)
+            rebuilt = json.loads(manifest.read_text(encoding="utf-8"))
+            require(rebuilt["evidence"]["cpu_percent"] == percent, "synthetic CPU fixture was not rebuilt")
             gate_exit(expected)
         generous = dict(valid_policy, max_cpu_percent=150.0)
         write_json(policy, generous)
         gate_exit(0)
         write_json(policy, valid_policy)
-        manifest.write_text(original_manifest, encoding="utf-8")
+        for path, content in saved.items():
+            path.write_bytes(content)
+        gate_exit(0)
+        if args.standalone_soak_only:
+            print("test_release_qualification: standalone soak replay contracts ok (synthetic metadata only)")
+            return 0
 
 
         original_evidence = evidence.read_text(encoding="utf-8")
@@ -526,7 +687,7 @@ def main() -> int:
         write_json(policy, failing_policy)
         assert subprocess.run(
             [
-                sys.executable,
+                *PYTHON,
                 str(ROOT / "tools" / "qualification_gate.py"),
                 "--manifest", str(manifest),
                 "--references", str(references), "--detections", str(detections),

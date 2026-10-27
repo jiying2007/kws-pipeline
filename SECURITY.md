@@ -70,7 +70,17 @@ A self-consistent manually typed JSON is not proof that a physical measurement o
 - every selected `--raw-evidence` file;
 - exact `--sku` and `--source-sha` identity.
 
-`qualification_gate.py` independently replays the selected hash-bound reference/detection files, checks decoded board-audio workload and the attested board summary, validates cross-links, requires the matching SKU policy with `shipping_approved=true`, applies acoustic/statistical/resource thresholds and binds its schema-v4 result to the exact manifest/policy. Private event rows remain in the controlled input files, outside the public release manifest.
+`qualification_gate.py` independently replays the selected hash-bound reference/detection files, checks decoded board-audio workload and the attested board summary, validates cross-links, requires the matching SKU policy with `shipping_approved=true`, applies acoustic/statistical/resource thresholds and binds its schema-v4 result to the exact manifest/policy. Private event rows remain in the controlled input files, outside the qualification manifest.
+
+For standalone gating, the complete qualification manifest also retains the
+runtime-soak text and canonical raw-evidence index text. Their hashes, byte
+lengths and raw tuples are checked before all soak-derived metrics are
+recomputed. Missing original text fails closed; regenerate older v3 manifests
+from retained evidence rather than reconstructing measurements. Complete
+manifests with raw soak metadata are controlled evidence, not automatically
+public release metadata. This does not add manifest-signature validation,
+attestor authentication or stack/power-summary authenticity checks, and does
+not change the separate target-DUT or shipping-approval process.
 
 These SHA256 relationships provide **integrity and internal consistency**. External authenticity still depends on the approved attestation issuer/policy, controlled DUT/qualification infrastructure, authenticated release signing and OTA/update trust roots. A party able to replace every artifact and the trust policy can construct a new internally consistent bundle; cryptographic identity does not replace organizational trust management.
 

@@ -19,7 +19,8 @@ from runtime_soak_contract import require_cpu_contract, validate_cpu_metrics
 
 from corpus_identity import corpus_digest, require_audited_corpora
 from qualification_metrics import (validate_event_metrics, validate_board, board_wav_stats,
-                                   require_board_raw_binding, EVENT_SCORING_CONTRACT)
+                                   require_board_raw_binding, EVENT_SCORING_CONTRACT,
+                                   validate_evidence, validate_raw_evidence_manifest)
 from statistical_bounds import qualification_bounds
 
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
@@ -363,6 +364,16 @@ def validate_manifest(manifest: dict, *, references: pathlib.Path | None = None,
     for key, artifact_name in attestation_links.items():
         if validate_sha(attestation.get(key), f"attestation.{key}") != hashes[artifact_name]:
             raise ValueError(f"manifest attestation {key} cross-link is inconsistent")
+
+    # Do not trust a persisted resource summary merely because its hash fields
+    # look consistent. Replay the soak through the producer's validator, after
+    # anchoring its raw tuple in the original attestation-addressed JSONL index.
+    validate_raw_evidence_manifest(evidence.get("raw_evidence_manifest_raw"),
+                                   artifacts["evidence_raw"], declared_raw)
+    evidence = validate_evidence(
+        evidence, sku=sku, source_sha=source_sha,
+        actual_hashes={key: hashes[name] for key, name in evidence_links.items()},
+    )
 
     expected = integer(evaluation.get("expected"), "evaluation.expected", 1)
     matched = integer(evaluation.get("matched"), "evaluation.matched", 0)
