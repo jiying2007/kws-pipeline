@@ -788,6 +788,9 @@ def main() -> int:
     from effect_regression_cases import run as run_effect_regression_cases
     run_effect_regression_cases()
 
+    from hard_negative_regression_cases import run as run_hard_negative_regression_cases
+    run_hard_negative_regression_cases()
+
     print("test_eval: ok")
     return 0
 
