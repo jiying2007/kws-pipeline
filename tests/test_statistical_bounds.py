@@ -8,11 +8,197 @@ import pathlib
 import subprocess
 import sys
 import tempfile
+import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
 from statistical_bounds import poisson_rate_upper, qualification_bounds, wilson_upper  # noqa: E402
+
+
+class FarOutputPaths(unittest.TestCase):
+    """JSON-only CLI checks, including under -O/-OO; no removable assertions."""
+
+    def setUp(self) -> None:
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = pathlib.Path(temporary.name)
+        self.sources = [self.root / f"shard-{seed}.json" for seed in (1, 2)]
+        for seed, path in enumerate(self.sources, 1):
+            path.write_text(json.dumps({
+                "schema_version": 1,
+                "runner_sha256": "a" * 64,
+                "model_sha256": "b" * 64,
+                "keyword_pack_sha256": "c" * 64,
+                "seed": seed,
+                "false_accepts": seed,
+                "audio_hours": 12.0,
+            }) + "\n", encoding="utf-8")
+
+    @staticmethod
+    def snapshot(path: pathlib.Path):
+        if not path.exists() and not path.is_symlink():
+            return None
+        stat = path.lstat()
+        try:
+            content = path.read_bytes()
+        except OSError as exc:
+            content = ("unreadable", exc.errno)
+        return (content, stat.st_dev, stat.st_ino, stat.st_mode,
+                str(path.readlink()) if path.is_symlink() else None)
+
+    def run_cli(self, output, *, sources=None, code=2, error="aliases an input summary"):
+        sources = self.sources if sources is None else sources
+        before = {path: self.snapshot(path) for path in [*self.sources, *sources, output]}
+        entries = set(self.root.rglob("*"))
+        command = [sys.executable, "-S", "-B"]
+        if sys.flags.optimize:
+            command.append("-" + "O" * sys.flags.optimize)
+        command.append(str(ROOT / "eval" / "aggregate_far.py"))
+        for source in sources:
+            command.extend(["--summary", str(source)])
+        command.extend(["--output", str(output), "--max-far-per-hour", "1",
+                        "--max-upper-bound-per-hour", "1"])
+        completed = subprocess.run(command, capture_output=True, text=True, check=False)
+        self.assertEqual(completed.returncode, code, completed.stdout + completed.stderr)
+        self.assertNotIn("Traceback", completed.stderr)
+        for path in [*self.sources, *sources]:
+            self.assertEqual(self.snapshot(path), before[path], str(path))
+        if code == 2:
+            self.assertIn(error, completed.stderr)
+            self.assertIn("no aggregate written", completed.stderr)
+            self.assertIn("stale for this invocation", completed.stderr)
+            self.assertEqual(completed.stdout, "")
+            self.assertEqual(self.snapshot(output), before[output])
+            self.assertEqual(set(self.root.rglob("*")), entries)
+            return None
+        self.assertEqual(completed.stderr, "")
+        result = json.loads(output.read_text(encoding="utf-8"))
+        self.assertEqual(json.loads(completed.stdout), result)
+        self.assertEqual(result["inputs"], [
+            {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+            for path in sources
+        ])
+        self.assertEqual(result["audio_hours"], 24.0)
+        self.assertEqual(result["false_accepts"], 3)
+        self.assertEqual(result["far_per_hour"], 3.0 / 24.0)
+        self.assertEqual(result["far_upper_bound_per_hour"], poisson_rate_upper(3, 24.0, 0.95))
+        self.assertIs(result["qualified"], True)
+        self.assertFalse(list(output.parent.glob(f".{output.name}.*")))
+        return result
+
+    def test_direct_first_input(self):
+        self.run_cli(self.sources[0])
+
+    def test_direct_later_input(self):
+        self.run_cli(self.sources[1])
+
+    def test_normalized_output(self):
+        nested = self.root / "nested"
+        nested.mkdir()
+        self.run_cli(nested / ".." / self.sources[0].name)
+
+    def test_relative_input_absolute_output(self):
+        # subprocess inherits the repository cwd; the temporary path can be
+        # represented relative to it without changing the test runner's cwd.
+        import os
+        sources = [pathlib.Path(os.path.relpath(path)) for path in self.sources]
+        self.run_cli(self.sources[0], sources=sources)
+
+    def test_input_symlink_to_output(self):
+        alias = self.root / "input-link.json"
+        alias.symlink_to(self.sources[0].name)
+        self.run_cli(self.sources[0], sources=[alias, self.sources[1]])
+
+    def test_output_symlink_to_input_is_conservatively_rejected(self):
+        alias = self.root / "output-link.json"
+        alias.symlink_to(self.sources[0].name)
+        self.run_cli(alias)
+
+    def test_output_parent_symlink(self):
+        alias = self.root / "directory-link"
+        alias.symlink_to(self.root, target_is_directory=True)
+        self.run_cli(alias / self.sources[0].name)
+
+    def test_input_parent_symlink(self):
+        alias = self.root / "directory-link"
+        alias.symlink_to(self.root, target_is_directory=True)
+        self.run_cli(self.sources[0], sources=[alias / self.sources[0].name, self.sources[1]])
+
+    def test_hardlink_to_input_is_conservatively_rejected(self):
+        alias = self.root / "output-hardlink.json"
+        alias.hardlink_to(self.sources[0])
+        self.run_cli(alias)
+
+    def test_output_self_symlink_loop_is_rejected_cleanly(self):
+        output = self.root / "aggregate.json"
+        output.symlink_to(output.name)
+        self.run_cli(output, error="")
+
+    def test_output_two_symlink_loop_is_rejected_cleanly(self):
+        output = self.root / "aggregate.json"
+        peer = self.root / "loop-peer.json"
+        output.symlink_to(peer.name)
+        peer.symlink_to(output.name)
+        before = self.snapshot(peer)
+        self.run_cli(output, error="")
+        self.assertEqual(self.snapshot(peer), before)
+
+    def test_input_symlink_loop_is_rejected_cleanly(self):
+        alias = self.root / "input-loop.json"
+        alias.symlink_to(alias.name)
+        output = self.root / "aggregate.json"
+        output.write_text('{"old": true}\n', encoding="utf-8")
+        self.run_cli(output, sources=[alias, self.sources[1]], error="")
+
+    def test_distinct_new_output(self):
+        self.run_cli(self.root / "new" / "aggregate.json", code=0)
+
+    def test_distinct_dangling_output_symlink_is_replaced(self):
+        output = self.root / "aggregate.json"
+        target = self.root / "absent.json"
+        output.symlink_to(target.name)
+        self.run_cli(output, code=0)
+        self.assertFalse(output.is_symlink())
+        self.assertFalse(target.exists())
+
+    def test_distinct_existing_output_is_replaced(self):
+        output = self.root / "aggregate.json"
+        output.write_text('{"old": true}\n', encoding="utf-8")
+        self.run_cli(output, code=0)
+
+    def test_distinct_symlink_is_replaced_not_followed(self):
+        target = self.root / "unrelated.json"
+        target.write_text('{"keep": true}\n', encoding="utf-8")
+        before = self.snapshot(target)
+        output = self.root / "aggregate.json"
+        output.symlink_to(target.name)
+        self.run_cli(output, code=0)
+        self.assertFalse(output.is_symlink())
+        self.assertEqual(self.snapshot(target), before)
+
+    def test_distinct_hardlink_is_replaced_without_changing_peer(self):
+        target = self.root / "unrelated.json"
+        target.write_text('{"keep": true}\n', encoding="utf-8")
+        output = self.root / "aggregate.json"
+        output.hardlink_to(target)
+        before = self.snapshot(target)
+        self.run_cli(output, code=0)
+        self.assertFalse(output.samefile(target))
+        self.assertEqual(self.snapshot(target), before)
+
+    def test_invalid_input_preserves_existing_distinct_output(self):
+        output = self.root / "aggregate.json"
+        output.write_text('{"old": true}\n', encoding="utf-8")
+        self.sources[1].write_text("not JSON\n", encoding="utf-8")
+        self.run_cli(output, error="Expecting value")
+
+
+def test_aggregate_far_output_paths() -> None:
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(FarOutputPaths)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    if result.testsRun != 18 or not result.wasSuccessful() or result.skipped:
+        raise AssertionError("FAR output-path regression suite did not pass all 18 cases")
 
 
 def test_aggregate_far_cli() -> None:
@@ -221,6 +407,7 @@ def main() -> int:
     else:
         raise AssertionError("zero exposure must fail")
 
+    test_aggregate_far_output_paths()
     test_aggregate_far_cli()
     print("test_statistical_bounds: ok")
     return 0
