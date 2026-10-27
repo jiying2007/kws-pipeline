@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 65808,
-      "sha256": "17c7bcc373c4bf72809bb3b81363f37a2b190a308d9d3a42c26b3443796712ca",
-      "git_blob_sha1": "4f8448e7823ec8dbb5e8eb92a075a35eb5ee6e01"
+      "bytes": 66320,
+      "sha256": "f5bcc75509d5e6e836a7241376aae439fac8dffe1c1f3a2a9c67710bebe104b5",
+      "git_blob_sha1": "48c7c83e48ff761e96d2abc7ff052333e201c325"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -42923,6 +42923,56 @@
             "bytes": 65808,
             "sha256": "17c7bcc373c4bf72809bb3b81363f37a2b190a308d9d3a42c26b3443796712ca",
             "git_blob_sha1": "4f8448e7823ec8dbb5e8eb92a075a35eb5ee6e01"
+          }
+        }
+      ]
+    },
+    {
+      "id": "arm-dependency-wall-clock-budget-20261026",
+      "date": "2026-10-26",
+      "base_commit": "3aea7fe38432d8a68b6425a171c759e9f3f26be1",
+      "base_tree": "9ee3cb2b6f10862c8a42c710b1244b4371f9cf41",
+      "workflow_source_changed": true,
+      "scope": "Bound ARM CI APT index and download acquisition, retry download-only at most once, then attempt no-download installation once; add offline fake-APT contracts in normal, -O and -OO modes.",
+      "rationale": "Public source metadata only. Preserve the 30-minute ARM job and every compilation, QEMU, parity, snapshot and quality gate. No private inputs, model execution, mirror changes, cache service, CI execution claim or faster-network claim.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 65808,
+            "sha256": "17c7bcc373c4bf72809bb3b81363f37a2b190a308d9d3a42c26b3443796712ca",
+            "git_blob_sha1": "4f8448e7823ec8dbb5e8eb92a075a35eb5ee6e01"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 66320,
+            "sha256": "f5bcc75509d5e6e836a7241376aae439fac8dffe1c1f3a2a9c67710bebe104b5",
+            "git_blob_sha1": "48c7c83e48ff761e96d2abc7ff052333e201c325"
+          }
+        },
+        {
+          "path": "tools/install_arm_dependencies.py",
+          "before": null,
+          "after": {
+            "path": "tools/install_arm_dependencies.py",
+            "mode": "100644",
+            "bytes": 9385,
+            "sha256": "87c7d0af0c10b9f610ea0bde9a7be4d3f741c74b33703e67f647634c60f062f5",
+            "git_blob_sha1": "abf85c73f6884f47707ee7552a3437e4e8f10e85"
+          }
+        },
+        {
+          "path": "tests/test_arm_dependency_budget.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_arm_dependency_budget.py",
+            "mode": "100644",
+            "bytes": 18333,
+            "sha256": "a7e03dd2f46f4721038e77cac92d3de988f6299f9d82b9da1e9daffee2c6d380",
+            "git_blob_sha1": "5a1c54ee46ab0724d5c0cdcec3f541376a29783c"
           }
         }
       ]
