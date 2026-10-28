@@ -9,6 +9,11 @@ import hashlib
 import json
 import math
 from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools"))
+from source_identity import SOURCE_ID_FIELDS, source_identity_namespace
 
 WORDS = ('你好小窝', '小窝小窝')
 SPLITS = ('train', 'calibration', 'selection')
@@ -32,8 +37,6 @@ def count(value, name):
 
 UNKNOWN_IDENTITIES = frozenset(('', 'unknown', 'none', 'null', 'pending', 'n/a', 'na',
                                 'unset', 'unspecified', 'missing', 'tbd', '-', '?'))
-SOURCE_ID_FIELDS = ('source_id', 'source_family', 'source_family_id', 'family_id',
-                    'derivation_family', 'derivation_family_id')
 PCM_ID_FIELDS = ('pcm_sha256', 'source_pcm', 'source_pcm_sha256', 'original_pcm_sha256', 'reference_pcm_sha256')
 AUDIO_ID_FIELDS = ('file_sha256', 'source_wav_sha256', 'source_audio_sha256',
                    'original_audio_sha256', 'reference_audio_sha256')
@@ -79,7 +82,7 @@ def validate_split(rows):
                 namespace = ('preset-voice' if key == 'preset_voice_id' else
                              'pcm' if key in PCM_ID_FIELDS else
                              'audio-file' if key in AUDIO_ID_FIELDS else
-                             'source' if key in SOURCE_ID_FIELDS else key)
+                             source_identity_namespace(key))
                 node = (namespace, value)
                 if node in seen:
                     parent[find(i)] = find(seen[node])

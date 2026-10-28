@@ -10,6 +10,8 @@ import hashlib
 import json
 import re
 
+from source_identity import SOURCE_FAMILY_FIELDS
+
 REAL_MODE = "reviewed-real-v1"
 FIXTURE_MODE = "synthetic-fixture-v1"
 HISTORICAL_MODE = "historical-frozen-diagnostic-v1"
@@ -18,7 +20,7 @@ REVIEW_CLASS = "speech-like-audio-review-v2"
 TRANSCRIPT_POLICY = "xiaowo-four-syllable-transcript-v1"
 CHAR_TOKENS = {"你": "ni3", "好": "hao3", "小": "xiao3", "窝": "wo1"}
 PUNCTUATION = frozenset("。，！？、；：…,.!?;: \t\n\r")
-LINEAGE_FIELDS = ("source_family_id", "speaker_id", "reference_audio_sha256", "session_id", "derivation_family_id")
+LINEAGE_FIELDS = (*SOURCE_FAMILY_FIELDS, "speaker_id", "reference_audio_sha256", "session_id")
 WAKE_TOKENS = {1: ["ni3", "hao3", "xiao3", "wo1"], 2: ["xiao3", "wo1", "xiao3", "wo1"]}
 SHA = re.compile(r"[0-9a-f]{64}\Z")
 

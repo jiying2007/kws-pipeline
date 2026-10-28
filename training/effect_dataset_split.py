@@ -13,12 +13,11 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT / 'training'), str(ROOT / 'eval')]
+sys.path[:0] = [str(ROOT / 'tools'), str(ROOT / 'training'), str(ROOT / 'eval')]
 from audit_dataset import inspect_wav, sha256_file
 from effect_evidence import normalize, separation
+from source_identity import SOURCE_ID_FIELDS, source_identity_namespace
 
-SOURCE_ID_FIELDS = ('source_id', 'source_family', 'source_family_id', 'family_id',
-                    'derivation_family', 'derivation_family_id')
 PCM_FIELDS = ('pcm_sha256', 'source_pcm', 'source_pcm_sha256', 'original_pcm_sha256', 'reference_pcm_sha256')
 AUDIO_ID_FIELDS = ('file_sha256', 'source_wav_sha256', 'source_audio_sha256',
                    'original_audio_sha256', 'reference_audio_sha256')
@@ -116,7 +115,7 @@ def plan(rows, seed='effect-split-v1'):
                     len(value) != 64 or any(c not in '0123456789abcdef' for c in value)):
                 raise ValueError(f'invalid audio identity digest: {field}')
             namespace = ('pcm' if field in PCM_FIELDS else 'audio-file' if field in AUDIO_ID_FIELDS
-                         else 'source' if field in SOURCE_ID_FIELDS else field)
+                         else source_identity_namespace(field))
             identities.append((namespace, value))
         # Preset voices are conservative leakage links, never real speaker IDs.
         # Do not namespace by engine: two engines may share the same preset.

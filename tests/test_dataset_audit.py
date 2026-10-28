@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import json
+import importlib.util
 import pathlib
 import struct
 import subprocess
@@ -238,8 +239,108 @@ class CrossFieldPCMTests(unittest.TestCase):
             self.assertTrue(audit_splits([("train", train)])["clean"])
 
 
+class SourceFamilyAliasTests(unittest.TestCase):
+    """Recording identities share a namespace; unrelated identity domains do not."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = pathlib.Path(self.temp.name)
+        self.rows = []
+        for index, split in enumerate(("train", "selection", "calibration")):
+            path = self.root / (split + ".wav")
+            with wave.open(str(path), "wb") as output:
+                output.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+                output.writeframes(struct.pack("<4h", 1, 2, 3, index + 10))
+            self.rows.append({
+                **metadata_row(str(path), speaker=split + "-person",
+                               session=split + "-session", source=split + "-source"),
+                "split": split, "record_id": split,
+                "pcm_sha256": inspect_wav(path)[2],
+            })
+
+    def audit(self, rows):
+        specs = []
+        for row in rows:
+            path = self.root / (row["split"] + ".jsonl")
+            path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+            specs.append((row["split"], path))
+        return audit_splits(specs)
+
+    def test_all_source_alias_pairs_fail_in_audit_planner_and_comparison(self):
+        from source_identity import SOURCE_ID_FIELDS
+        sys.path.insert(0, str(ROOT / "eval"))
+        from effect_dataset_split import plan
+        spec = importlib.util.spec_from_file_location(
+            "audit_source_comparison", ROOT / "research/model_comparison/compare.py"
+        )
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.loader)
+        comparison = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(comparison)
+        self.assertTrue(self.audit(self.rows)["clean"])
+        comparison.validate_split(self.rows)
+        for left in SOURCE_ID_FIELDS:
+            for right in SOURCE_ID_FIELDS:
+                with self.subTest(left=left, right=right):
+                    rows = copy.deepcopy(self.rows)
+                    rows[0][left] = rows[1][right] = "shared-recording-family"
+                    report = self.audit(rows)
+                    self.assertFalse(report["clean"])
+                    leaks = [leak for leak in report["identity_violations"]
+                             if leak["value"] == "shared-recording-family"]
+                    self.assertEqual({leak["field"] for leak in leaks}, {left, right})
+                    for leak in leaks:
+                        self.assertEqual(leak["namespace"], "source")
+                        self.assertEqual(leak["observed_fields"], sorted({left, right}))
+                        self.assertEqual(leak["splits"], ["selection", "train"])
+                    with self.assertRaisesRegex(ValueError, "cross-split leakage"):
+                        comparison.validate_split(rows)
+                    with self.assertRaisesRegex(ValueError, "historical partitions"):
+                        plan(rows)
+        self.assertEqual(report["identity_policy"]["shared_source_identity_fields"], list(SOURCE_ID_FIELDS))
+
+    def test_cross_alias_tsv_sidecar_is_checked(self):
+        first, second = copy.deepcopy(self.rows[:2])
+        first["source_family"] = second["family_id"] = "sidecar-family"
+        specs = []
+        for row in (first, second):
+            path = self.root / (row["split"] + ".tsv")
+            path.write_text(row["audio"] + "\t1 2\n", encoding="utf-8")
+            write_lineage_sidecar(path, [{**row, "path": row["audio"]}])
+            specs.append((row["split"], path))
+        report = audit_splits(specs)
+        self.assertFalse(report["clean"])
+        self.assertEqual({leak["field"] for leak in report["identity_violations"]},
+                         {"source_family", "family_id"})
+
+    def test_source_domains_do_not_swallow_people_devices_pcm_or_provider_metadata(self):
+        for field in ("speaker_id", "session_id", "room_id", "device_id",
+                      "reference_audio_sha256", "original_pcm_sha256"):
+            with self.subTest(field=field):
+                rows = copy.deepcopy(self.rows)
+                value = "a" * 64 if field.endswith("sha256") else "same-text-different-domain"
+                rows[0][field] = rows[1]["source_family_id"] = value
+                self.assertTrue(self.audit(rows)["clean"])
+        rows = copy.deepcopy(self.rows)
+        rows[0]["speech_like_provenance"] = {"source_id": "provider-engine"}
+        rows[1]["source_family_id"] = "provider-engine"
+        self.assertTrue(self.audit(rows)["clean"])
+
+    def test_related_recordings_within_one_split_remain_allowed(self):
+        rows = copy.deepcopy(self.rows[:2])
+        rows[0]["family_id"] = rows[1]["derivation_family"] = "within-family"
+        path = self.root / "same-split.jsonl"
+        path.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+        self.assertTrue(audit_splits([("train", path)])["clean"])
+
+
+
 def main() -> int:
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(CrossFieldPCMTests)
+    suite = unittest.TestSuite(
+        unittest.defaultTestLoader.loadTestsFromTestCase(case)
+        for case in (CrossFieldPCMTests, SourceFamilyAliasTests)
+    )
     if not unittest.TextTestRunner().run(suite).wasSuccessful():
         return 1
     test_bound_lineage_sidecars()

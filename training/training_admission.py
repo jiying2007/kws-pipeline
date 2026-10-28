@@ -74,7 +74,12 @@ def verify_training_manifests(paths: list[pathlib.Path], token_map: dict[str, in
                     if [token_map[token] for token in tokens] != targets or any(item <= 0 for item in targets):
                         raise ValueError("training targets differ from reviewed transcript")
                     for field in LINEAGE_FIELDS:
-                        if row.get(field) != provenance.get(field):
+                        expected = provenance.get(field)
+                        if field == "family_id" and expected is None and row.get(field) is not None:
+                            # A derived grouping key may equal source_family_id
+                            # without adding a separate field to the receipt.
+                            expected = provenance.get("source_family_id")
+                        if row.get(field) != expected:
                             raise ValueError(f"training lineage {field} differs from reviewed source")
                     if "source_id" in row and row["source_id"] != provenance.get("source_id"):
                         raise ValueError("training lineage source_id differs from reviewed source")

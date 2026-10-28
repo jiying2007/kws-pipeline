@@ -218,7 +218,7 @@ def materialize(
         rows.append({
             "split": split,
             "kind": kind,
-            "family_id": provenance.get("source_family_id", f"speech-like-{split}-{index-1:06d}"),
+            "family_id": provenance.get("family_id", provenance.get("source_family_id", f"speech-like-{split}-{index-1:06d}")),
             "variant": 0,
             "keyword_id": keyword_id,
             "tokens": list(tokens),

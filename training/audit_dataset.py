@@ -12,13 +12,16 @@ from collections import defaultdict
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from corpus_identity import audio_identity, canonical_audio_path, resolve_audio_path  # noqa: E402
+from corpus_identity import (audio_identity, canonical_audio_path, resolve_audio_path,
+                             validate_pcm16_wav_payload)  # noqa: E402
+
+from source_identity import SOURCE_ID_FIELDS, SOURCE_FAMILY_FIELDS, source_identity_namespace  # noqa: E402
 
 SAMPLE_RATE_HZ = 16000
 PCM_IDENTITY_FIELDS = ("pcm_sha256", "source_pcm_sha256", "original_pcm_sha256")
 LINEAGE_IDENTITY_FIELDS = (
-    "source_pcm_sha256", "original_pcm_sha256", "source_family_id", "family_id",
-    "reference_audio_sha256", "derivation_family_id",
+    "source_pcm_sha256", "original_pcm_sha256", "reference_audio_sha256",
+    *SOURCE_FAMILY_FIELDS,
 )
 IDENTITY_FIELDS = (
     "speaker_id", "session_id", "source_id", "room_id", "device_id",
@@ -53,6 +56,7 @@ def sha256_file(path: pathlib.Path) -> str:
 
 
 def inspect_wav(path: pathlib.Path) -> tuple[int, float, str]:
+    payload_frames = validate_pcm16_wav_payload(path)
     try:
         with wave.open(str(path), "rb") as wf:
             if (
@@ -63,6 +67,8 @@ def inspect_wav(path: pathlib.Path) -> tuple[int, float, str]:
             ):
                 raise ValueError(f"{path}: expected mono 16-kHz PCM16 WAV")
             frames = wf.getnframes()
+            if frames != payload_frames:
+                raise ValueError(f"{path}: WAV frame count differs from data payload")
             if frames <= 0:
                 raise ValueError(f"{path}: empty PCM payload")
             pcm = wf.readframes(frames)
@@ -176,22 +182,30 @@ def manifest_rows(path: pathlib.Path) -> list[dict]:
 
 
 def metadata_leaks(by_identity: dict[str, dict[str, list[dict]]]) -> list[dict]:
-    result: list[dict] = []
+    grouped: dict[tuple[str, str], list[tuple[str, dict]]] = defaultdict(list)
     for field in IDENTITY_FIELDS:
-        for value, entries in sorted(by_identity[field].items()):
-            splits = sorted({entry["split"] for entry in entries})
-            if len(splits) <= 1:
-                continue
-            result.append(
-                {
-                    "field": field,
-                    "value": value,
-                    "splits": splits,
-                    "paths": sorted({entry["path"] for entry in entries}),
-                }
+        for value, entries in by_identity[field].items():
+            grouped[(source_identity_namespace(field), value)].extend(
+                (field, entry) for entry in entries
             )
+    result: list[dict] = []
+    for (namespace, value), observations in sorted(grouped.items()):
+        splits = sorted({entry["split"] for _, entry in observations})
+        if len(splits) <= 1:
+            continue
+        fields = sorted({field for field, _ in observations})
+        # Keep the field-level report contract and coverage status, while
+        # retaining the combined evidence that makes an alias crossing a leak.
+        for field in fields:
+            result.append({
+                "field": field,
+                "value": value,
+                "splits": splits,
+                "paths": sorted({entry["path"] for _, entry in observations}),
+                "namespace": namespace,
+                "observed_fields": fields,
+            })
     return result
-
 
 def audit_splits(
     split_specs: list[tuple[str, pathlib.Path]], *,
@@ -366,6 +380,7 @@ def audit_splits(
         "identity_policy": {
             "hard_cross_split_fields": sorted(HARD_IDENTITY_FIELDS),
             "shared_pcm_identity_fields": list(PCM_IDENTITY_FIELDS),
+            "shared_source_identity_fields": list(SOURCE_ID_FIELDS),
             "fail_room_overlap": bool(fail_room_overlap),
             "fail_device_overlap": bool(fail_device_overlap),
             "required_metadata": sorted(set(require_metadata)),

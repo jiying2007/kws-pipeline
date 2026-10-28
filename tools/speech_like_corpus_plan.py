@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from attach_speech_like_labels import normalize_label  # noqa: E402
 from corpus_identity import inspect_pcm16_wav, rebind_audio_path  # noqa: E402
+from source_identity import source_identity_namespace  # noqa: E402
 from speech_label_admission import (REAL_MODE, FIXTURE_MODE, LINEAGE_FIELDS, admission_from_reviews,
                                     fixture_admission, latest_review, validate_review_record,
                                     validate_admission)  # noqa: E402
@@ -575,9 +576,9 @@ def _admitted_recordings(intents_path, intent_map, generated, manifests, *, audi
         admission = admissions[(source_id, row["file_sha256"])]
         receipt = (admission["consensus_record"] if has_machine_consensus(admission)
                    else latest_review(admission["review_history"]))
-        for field in LINEAGE_FIELDS:
+        for field in ("source_id", *LINEAGE_FIELDS):
             if field in receipt:
-                identity = (field, receipt[field])
+                identity = (source_identity_namespace(field), receipt[field])
                 previous = lineage_owners.get(identity)
                 if previous is not None and previous != split:
                     raise ValueError(f"{field} crosses splits")

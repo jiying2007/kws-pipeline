@@ -13,6 +13,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from kws_vocab import load_tokens  # noqa: E402
 from corpus_identity import canonical_audio_path, inspect_pcm16_wav, rebind_audio_path  # noqa: E402
+from source_identity import source_identity_namespace  # noqa: E402
 from speech_label_admission import (REAL_MODE, HISTORICAL_MODE, MODES,
                                     LINEAGE_FIELDS, validate_admission, require_text)  # noqa: E402
 from speech_asr_consensus import require_training_label_authority
@@ -196,7 +197,7 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict, *, eviden
     voice_owner: dict[str, str] = {}
     source_owner: dict[str, str] = {}
     pcm_owner: dict[str, str] = {}
-    lineage_owners: dict[str, dict[str, str]] = {field: {} for field in LINEAGE_FIELDS}
+    lineage_owners: dict[tuple[str, str], str] = {}
 
     for split in SPLITS:
         item = spec[split]
@@ -293,14 +294,15 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict, *, eviden
                                    evidence_dir=evidence_dir, verification_session=verification_session)
             elif "admission" in row:
                 raise ValueError("historical frozen rows cannot claim new review admission")
-            for field in LINEAGE_FIELDS:
+            for field in ("source_id", *LINEAGE_FIELDS):
                 if field in provenance:
                     value = provenance[field]
                     expected_sha(value, field) if field.endswith("sha256") else require_text(value, field)
-                    previous = lineage_owners[field].get(value)
+                    identity = (source_identity_namespace(field), value)
+                    previous = lineage_owners.get(identity)
                     if previous is not None and previous != split:
                         raise ValueError(f"external base cross-split {field} overlap: {value} in {previous}/{split}")
-                    lineage_owners[field][value] = split
+                    lineage_owners[identity] = split
             previous = pcm_owner.get(pcm_sha)
             if previous is not None and previous != split:
                 raise ValueError(f"external base cross-split decoded PCM overlap: {pcm_sha} in {previous}/{split}")
