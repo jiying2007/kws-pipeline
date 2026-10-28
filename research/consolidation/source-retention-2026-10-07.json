@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 66320,
-      "sha256": "f5bcc75509d5e6e836a7241376aae439fac8dffe1c1f3a2a9c67710bebe104b5",
-      "git_blob_sha1": "48c7c83e48ff761e96d2abc7ff052333e201c325"
+      "bytes": 67257,
+      "sha256": "7e29ead60239b0c36b5361b2652bd3e71f8cc74c81c02809894ed7ac92680a22",
+      "git_blob_sha1": "5256235482a4bdd7e534d314c4cd34439fc0c3b5"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -42973,6 +42973,34 @@
             "bytes": 18333,
             "sha256": "a7e03dd2f46f4721038e77cac92d3de988f6299f9d82b9da1e9daffee2c6d380",
             "git_blob_sha1": "5a1c54ee46ab0724d5c0cdcec3f541376a29783c"
+          }
+        }
+      ]
+    },
+    {
+      "id": "asr18-optimization-fixture-isolation-20261028",
+      "date": "2026-10-28",
+      "base_commit": "bea17d06c044bfa57ff2d53f4a42497d3cfc31cb",
+      "base_tree": "d43758729bca2b6a83ac432f5a4b69f175d703bf",
+      "workflow_source_changed": true,
+      "scope": "Give normal, -O and -OO ASR18 source suites separate detached checkouts of the same commit, preserving all 504 tests per mode and the five-minute limit.",
+      "rationale": "Maintain exact current workflow identities after reviewed source changes. Historical archives, scientific validator pins, original retained files/provenance, all assertions and time budgets remain unchanged. These identities make no local, model, board or acoustic acceptance claim.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 66320,
+            "sha256": "f5bcc75509d5e6e836a7241376aae439fac8dffe1c1f3a2a9c67710bebe104b5",
+            "git_blob_sha1": "48c7c83e48ff761e96d2abc7ff052333e201c325"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 67257,
+            "sha256": "7e29ead60239b0c36b5361b2652bd3e71f8cc74c81c02809894ed7ac92680a22",
+            "git_blob_sha1": "5256235482a4bdd7e534d314c4cd34439fc0c3b5"
           }
         }
       ]
