@@ -163,6 +163,7 @@ def main() -> int:
     rows = []
     identity = None
     seeds: set[int] = set()
+    background_seeds: set[int] = set()
     for path in args.summary:
         row = validate_shard(load(path), path)
         current = (
@@ -181,6 +182,13 @@ def main() -> int:
         seed = row["seed"]
         if seed in seeds:
             raise ValueError("FAR shard seeds must be unique")
+        # CPython Random(int_seed) uses abs(seed). Opposite signs therefore
+        # share the producer's background RNG even if injection order differs.
+        # Retain signed seeds in the receipt; only independence uses this key.
+        background_seed = abs(seed)
+        if background_seed in background_seeds:
+            raise ValueError("FAR shard seed absolute values must be unique (background RNG aliases)")
+        background_seeds.add(background_seed)
         seeds.add(seed)
         rows.append((path, row))
 
