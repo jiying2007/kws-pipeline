@@ -82,6 +82,13 @@ def bounded_float(value: float, label: str, entry: dict) -> float:
     return value
 
 
+def as_float32(value: float, label: str) -> float:
+    try:
+        return struct.unpack("<f", struct.pack("<f", value))[0]
+    except (OverflowError, struct.error) as exc:
+        raise ValueError(f"{label} cannot be represented as float32") from exc
+
+
 def declared_default(entry: dict, label: str) -> int:
     value = entry.get("default")
     if value is None:
@@ -125,6 +132,12 @@ def parse_keywords(
         text = cols[1].strip()
         threshold = bounded_float(
             float(cols[2]), f"{text}: threshold", pack["threshold"]
+        )
+        # Validate the value the C runtime will actually receive. Keep the
+        # parsed source value in JSON for compatibility; never clamp it.
+        bounded_float(
+            as_float32(threshold, f"{text}: threshold"),
+            f"{text}: threshold after float32 conversion", pack["threshold"],
         )
         tokens = (
             cols[3].split()
@@ -224,11 +237,15 @@ def emit_header(items: list[dict], fingerprint: int, out: pathlib.Path) -> None:
         lines.append(f"static const uint16_t kws_kw_{n}_tokens[] = {{{values}}};")
     lines += ["", "static const kws_keyword_t kws_generated_keywords[] = {"]
     for n, item in enumerate(items):
+        # Nine significant decimal digits round-trip a finite binary32 value.
+        literal = f"{as_float32(item['threshold'], 'threshold'):.9g}"
+        if "." not in literal and "e" not in literal.lower():
+            literal += ".0"
         lines.append(
             "  {"
             f"{item['id']}u, kws_kw_{n}_tokens, "
             f"(uint16_t)(sizeof(kws_kw_{n}_tokens) / sizeof(kws_kw_{n}_tokens[0])), "
-            f"{item['threshold']:.6f}f, {item['min_trailing_blanks']}u, "
+            f"{literal}f, {item['min_trailing_blanks']}u, "
             f"{item['priority']}u, {item['prefix_policy_id']}u, {item['grace_frames']}u"
             f"}}, /* {item['text']} */"
         )
