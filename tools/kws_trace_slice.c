@@ -32,6 +32,7 @@ static int slice_trace(const char *input,
   int speech_active = 0;
   int reader_open = 0;
   int writer_open = 0;
+  int output_owned = 0;
   int ok = 0;
 
   if (input == NULL || output == NULL || out_frames == NULL ||
@@ -47,6 +48,7 @@ static int slice_trace(const char *input,
     goto cleanup;
   }
   writer_open = 1;
+  output_owned = 1;
 
   for (;;) {
     int status = kws_trace_reader_next(&reader, &end_sample, &speech_active,
@@ -72,7 +74,10 @@ static int slice_trace(const char *input,
     goto cleanup;
   }
   reader_open = 0;
-  if (selected == 0u || !kws_trace_writer_close(&writer)) {
+  if (selected == 0u) {
+    goto cleanup;
+  }
+  if (!kws_trace_writer_close(&writer)) {
     writer_open = 0;
     goto cleanup;
   }
@@ -87,7 +92,11 @@ cleanup:
   if (writer_open != 0) {
     (void)kws_trace_writer_close(&writer);
   }
-  if (ok == 0) {
+  /* A rejected input or failed open must not unlink an unowned destination.
+   * If open truncated the file but failed while writing its header, the writer
+   * API reports no ownership: partial bytes may remain. This is not atomic
+   * overwrite or general input/output-alias protection. */
+  if (ok == 0 && output_owned != 0) {
     (void)remove(output);
   }
   return ok;
