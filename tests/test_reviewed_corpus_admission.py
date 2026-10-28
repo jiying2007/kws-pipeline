@@ -341,10 +341,22 @@ class AdmissionTests(unittest.TestCase):
         from source_identity import SOURCE_FAMILY_FIELDS
         from render_domains import source_lineage, domain_reference_row
         from training_admission import verify_training_manifests
-        for index, (row, review) in enumerate(zip(self.rows, self.reviews)):
-            for field in SOURCE_FAMILY_FIELDS:
-                row[field] = review[field] = f"fixture-{index}-{field}"
-        self.write()
+        intents, reviews, groups = self.four_splits()
+        expected = {}
+        for rows in groups.values():
+            for row in rows:
+                aliases = {field: f"{row['source_id']}-{field}" for field in SOURCE_FAMILY_FIELDS}
+                row.update(aliases)
+                expected[row["source_id"]] = aliases
+        for rows in (intents, reviews):
+            for row in rows:
+                row.update(expected[row["source_id"]])
+        for group, rows in groups.items():
+            (self.generated / group / "manifest.jsonl").write_text(
+                "".join(json.dumps(row) + "\n" for row in rows)
+            )
+        self.intents_path.write_text("".join(json.dumps(row) + "\n" for row in intents))
+        self.review_path.write_text("".join(json.dumps(row) + "\n" for row in reviews))
         labeled = self.root / "aliases"
         plan.materialize_labels(self.intents_path, self.generated, labeled, audio_review=self.review_path)
         manifest = labeled / "train" / "labeled-manifest.jsonl"
@@ -354,7 +366,7 @@ class AdmissionTests(unittest.TestCase):
         row = rows[0]
         provenance = row["speech_like_provenance"]
         for field in SOURCE_FAMILY_FIELDS:
-            self.assertEqual(provenance[field], self.rows[0][field])
+            self.assertEqual(provenance[field], expected[provenance["source_id"]][field])
         self.assertEqual(row["family_id"], provenance["family_id"])
         lineage = source_lineage(row)
         for field in SOURCE_FAMILY_FIELDS:
