@@ -133,12 +133,6 @@ def parse_keywords(
         threshold = bounded_float(
             float(cols[2]), f"{text}: threshold", pack["threshold"]
         )
-        # Validate the value the C runtime will actually receive. Keep the
-        # parsed source value in JSON for compatibility; never clamp it.
-        bounded_float(
-            as_float32(threshold, f"{text}: threshold"),
-            f"{text}: threshold after float32 conversion", pack["threshold"],
-        )
         tokens = (
             cols[3].split()
             if len(cols) >= 4 and cols[3].strip()
@@ -323,6 +317,14 @@ def main() -> int:
     contract = load_contract(args.contract)
     token_map = load_tokens(args.tokens)
     items = parse_keywords(args.keywords, token_map, contract)
+    # The shared parser also supplies source identities, not binary admission.
+    # Validate wire values only at this compilation boundary, before any output.
+    for item in items:
+        label = f"{item['text']}: threshold"
+        bounded_float(
+            as_float32(item["threshold"], label),
+            f"{label} after float32 conversion", contract["keyword_pack"]["threshold"],
+        )
     fingerprint = vocab_fingerprint(token_map)
     if args.out_header:
         emit_header(items, fingerprint, args.out_header)
