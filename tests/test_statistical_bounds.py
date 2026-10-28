@@ -194,6 +194,118 @@ class FarOutputPaths(unittest.TestCase):
         self.run_cli(output, error="Expecting value")
 
 
+class FarSeedIdentity(unittest.TestCase):
+    """Seed aliases must not multiply independent exposure, even under -O/-OO."""
+
+    def check_seeds(self, seeds, *, code=0, error="", version=2,
+                    manifest=False, existing=None, negative_zero=False):
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            sources = [root / f"shard-{index}.json" for index in range(2)]
+            for index, (path, seed) in enumerate(zip(sources, seeds)):
+                row = {
+                    "schema_version": version,
+                    "runner_sha256": "a" * 64,
+                    "model_sha256": "b" * 64,
+                    "keyword_pack_sha256": "c" * 64,
+                    "seed": seed,
+                    "false_accepts": index + 1,
+                    "audio_hours": 12.0,
+                }
+                if version == 2:
+                    row.update(full_negative_manifest_coverage=True,
+                               negative_manifest_sha256="d" * 64 if manifest else None,
+                               hard_negative_injections=1 if manifest else 0,
+                               hard_negative_rate_per_minute=1.0 if manifest else 0.0,
+                               hard_negative_audio_seconds=1.0 if manifest else 0.0)
+                text = json.dumps(row) + "\n"
+                if negative_zero and index == 1:
+                    self.assertEqual(seed, 0)
+                    text = text.replace('"seed": 0', '"seed": -0')
+                    self.assertIn('"seed": -0', text)
+                path.write_text(text, encoding="utf-8")
+            before = [path.read_bytes() for path in sources]
+            output = root / "aggregate.json"
+            if existing is not None:
+                output.write_bytes(existing)
+            entries = set(root.iterdir())
+            command = [sys.executable, "-S", "-B"]
+            if sys.flags.optimize:
+                command.append("-" + "O" * sys.flags.optimize)
+            command.append(str(ROOT / "eval" / "aggregate_far.py"))
+            for source in sources:
+                command.extend(["--summary", str(source)])
+            command.extend(["--output", str(output), "--max-far-per-hour", "1",
+                            "--max-upper-bound-per-hour", "1"])
+            completed = subprocess.run(command, capture_output=True, text=True, check=False)
+            self.assertEqual(completed.returncode, code, completed.stdout + completed.stderr)
+            self.assertEqual([path.read_bytes() for path in sources], before)
+            self.assertNotIn("Traceback", completed.stderr)
+            if code == 2:
+                self.assertEqual(completed.stdout, "")
+                self.assertIn(error, completed.stderr)
+                self.assertIn("no aggregate written", completed.stderr)
+                self.assertIn("stale for this invocation", completed.stderr)
+                self.assertEqual(set(root.iterdir()), entries)
+                self.assertEqual(output.read_bytes() if output.exists() else None, existing)
+                return
+            self.assertEqual(completed.stderr, "")
+            result = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(json.loads(completed.stdout), result)
+            self.assertEqual(result["seeds"], sorted(seeds))
+            self.assertEqual(result["shards"], 2)
+            self.assertEqual(result["audio_hours"], 24.0)
+            self.assertEqual(result["false_accepts"], 3)
+            self.assertEqual(result["far_per_hour"], 3.0 / 24.0)
+            self.assertEqual(result["far_upper_bound_per_hour"], poisson_rate_upper(3, 24.0, 0.95))
+            self.assertEqual(result["inputs"], [
+                {"path": str(path), "sha256": hashlib.sha256(content).hexdigest()}
+                for path, content in zip(sources, before)
+            ])
+            self.assertIs(result["qualified"], True)
+
+    def test_opposite_signs_rejected(self):
+        for seeds in ((1, -1), (-1, 1)):
+            for version in (1, 2):
+                for existing in (None, b'{"previous": true}\n'):
+                    with self.subTest(seeds=seeds, version=version, existing=existing):
+                        self.check_seeds(seeds, version=version, existing=existing, code=2,
+                                         error="seed absolute values must be unique")
+
+    def test_same_signed_seed_still_rejected(self):
+        for seeds in ((1, 1), (-1, -1)):
+            with self.subTest(seeds=seeds):
+                self.check_seeds(seeds, code=2, error="seeds must be unique")
+
+    def test_zero_and_negative_zero_rejected(self):
+        self.check_seeds((0, 0), negative_zero=True, code=2, error="seeds must be unique")
+
+    def test_large_integer_sign_alias_rejected(self):
+        seed = (1 << 4096) + 1
+        self.check_seeds((seed, -seed), code=2, error="seed absolute values must be unique")
+
+    def test_negative_seed_and_distinct_magnitude_preserved(self):
+        large = (1 << 4096) + 1
+        for seeds in ((-1, 2), (-2, -1), (0, -1), (-large, large + 1)):
+            for version in (1, 2):
+                with self.subTest(seeds=seeds, version=version):
+                    self.check_seeds(seeds, version=version)
+
+    def test_manifest_does_not_make_background_alias_independent(self):
+        self.check_seeds((17, -17), manifest=True, code=2,
+                         error="seed absolute values must be unique")
+
+    def test_distinct_positive_seeds_preserved(self):
+        self.check_seeds((1103, 2207), manifest=True)
+
+
+def test_aggregate_far_seed_identity() -> None:
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(FarSeedIdentity)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    if result.testsRun != 7 or not result.wasSuccessful() or result.skipped:
+        raise AssertionError("FAR seed-identity regression suite did not pass all 7 cases")
+
+
 def test_aggregate_far_output_paths() -> None:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(FarOutputPaths)
     result = unittest.TextTestRunner(verbosity=2).run(suite)
@@ -408,6 +520,7 @@ def main() -> int:
         raise AssertionError("zero exposure must fail")
 
     test_aggregate_far_output_paths()
+    test_aggregate_far_seed_identity()
     test_aggregate_far_cli()
     print("test_statistical_bounds: ok")
     return 0
