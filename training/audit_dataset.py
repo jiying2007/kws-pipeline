@@ -207,6 +207,7 @@ def metadata_leaks(by_identity: dict[str, dict[str, list[dict]]]) -> list[dict]:
             })
     return result
 
+
 def audit_splits(
     split_specs: list[tuple[str, pathlib.Path]], *,
     roots: dict[str, pathlib.Path] | None = None,

@@ -14,8 +14,8 @@ sys.path.insert(0, str(ROOT / "tools"))
 from kws_vocab import load_tokens  # noqa: E402
 from corpus_identity import canonical_audio_path, inspect_pcm16_wav, rebind_audio_path  # noqa: E402
 from source_identity import source_identity_namespace  # noqa: E402
-from speech_label_admission import (REAL_MODE, HISTORICAL_MODE, MODES,
-                                    LINEAGE_FIELDS, validate_admission, require_text)  # noqa: E402
+from speech_label_admission import REAL_MODE, HISTORICAL_MODE, MODES, require_text  # noqa: E402
+from source_lineage_admission import LINEAGE_FIELDS, validate_admission  # noqa: E402
 from speech_asr_consensus import require_training_label_authority
 from asr_source_resolver import source_verification_session
 from materialize_speech_like_base_index import corpus_sha  # noqa: E402

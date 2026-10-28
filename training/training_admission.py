@@ -14,7 +14,8 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from speech_label_admission import LINEAGE_FIELDS, REAL_MODE, validate_admission, require_sha
+from speech_label_admission import REAL_MODE, require_sha
+from source_lineage_admission import LINEAGE_FIELDS, validate_admission
 from speech_asr_consensus import require_training_label_authority, has_machine_consensus
 from asr_source_resolver import source_verification_session
 from audit_dataset import verify_manifest_lineage, lineage_path

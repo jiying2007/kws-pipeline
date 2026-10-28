@@ -327,6 +327,16 @@ class AdmissionTests(unittest.TestCase):
                     self.admit()
                 self.rows[0].pop(field)
 
+    def test_optional_family_alias_values_are_canonical(self):
+        for field in ("source_family", "family_id", "derivation_family"):
+            for value in (None, [], 7, "", " padded "):
+                with self.subTest(field=field, value=value):
+                    self.rows[0][field] = self.reviews[0][field] = value
+                    with self.assertRaisesRegex(ValueError, "canonical non-empty text"):
+                        self.admit()
+                    self.rows[0].pop(field)
+                    self.reviews[0].pop(field)
+
     def test_family_aliases_survive_materialization_render_lineage_and_training_admission(self):
         from source_identity import SOURCE_FAMILY_FIELDS
         from render_domains import source_lineage, domain_reference_row

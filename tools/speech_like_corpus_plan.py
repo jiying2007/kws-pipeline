@@ -15,9 +15,9 @@ sys.path.insert(0, str(ROOT / "tools"))
 from attach_speech_like_labels import normalize_label  # noqa: E402
 from corpus_identity import inspect_pcm16_wav, rebind_audio_path  # noqa: E402
 from source_identity import source_identity_namespace  # noqa: E402
-from speech_label_admission import (REAL_MODE, FIXTURE_MODE, LINEAGE_FIELDS, admission_from_reviews,
-                                    fixture_admission, latest_review, validate_review_record,
-                                    validate_admission)  # noqa: E402
+from speech_label_admission import (REAL_MODE, FIXTURE_MODE, admission_from_reviews,
+                                    fixture_admission, latest_review)  # noqa: E402
+from source_lineage_admission import LINEAGE_FIELDS, validate_review_record, validate_admission  # noqa: E402
 
 from speech_asr_consensus import (admission_from_consensus, validate_consensus_admission,
                                   validate_consensus_record, require_training_label_authority,

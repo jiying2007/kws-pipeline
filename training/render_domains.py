@@ -12,7 +12,7 @@ import wave
 from acoustic_scene import render_scene, sha256_file
 from audit_dataset import audit_splits, inspect_wav, write_lineage_sidecar
 from corpus_identity import canonical_audio_path, rebind_audio_path
-from speech_label_admission import LINEAGE_FIELDS
+from source_identity import LINEAGE_FIELDS
 from development_stress import (
     apply_development_stress_scene,
     build_development_stress_plan,

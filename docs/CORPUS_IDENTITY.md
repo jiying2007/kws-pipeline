@@ -56,8 +56,10 @@ evidence, plus the shared namespace. Missing metadata remains unknown; this
 change does not turn an observed-clean audit into proof of complete lineage,
 speaker independence or qualification.
 
-Optional family aliases supplied for reviewed speech must match their retained
-review/provenance fields. They survive materialization, rendering, references
+`tools/source_lineage_admission.py` applies the current alias binding after the
+existing speech receipt validator succeeds. The historical offline ASR reader
+keeps its original validator bytes and pinned manifest. Optional family aliases
+supplied for reviewed speech must match their retained review/provenance fields. They survive materialization, rendering, references
 and training admission. The materializer uses an explicit reviewed `family_id`
 when present; otherwise its existing grouping key derives from
 `source_family_id`. That derived key must still match the reviewed family.
