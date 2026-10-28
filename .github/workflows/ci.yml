@@ -91,8 +91,23 @@ jobs:
         timeout-minutes: 5
         run: |
           set -euo pipefail
-          asr18_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-asr18-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_asr18_binding", "test_asr18_contract", "test_asr18_prerequisite", "test_asr18_entrypoints", "test_asr18_freeze", "test_asr18_failure_observer", "test_publisher_observation", "test_publisher_checkpoint", "test_transfer_recovery", "test_asr18_host", "test_asr18_metadata", "test_asr18_raw_data_reader", "test_asr18_receipts", "test_asr18_resources", "test_asr18_transport", "test_asr18_worker", "test_bound_claim_contract", "test_claim_admission_host", "test_claim_consumer_integration")); sys.path.insert(0,str(Path("tools").resolve())); from checked_unittest import run_checked_suite; raise SystemExit(run_checked_suite(suite, "asr18"))'
+          asr18_tests='import os,sys,unittest; from pathlib import Path; os.chdir(sys.argv[1]); sys.path.insert(0,str(Path("research/k1-punctuation6-asr18-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_asr18_binding", "test_asr18_contract", "test_asr18_prerequisite", "test_asr18_entrypoints", "test_asr18_freeze", "test_asr18_failure_observer", "test_publisher_observation", "test_publisher_checkpoint", "test_transfer_recovery", "test_asr18_host", "test_asr18_metadata", "test_asr18_raw_data_reader", "test_asr18_receipts", "test_asr18_resources", "test_asr18_transport", "test_asr18_worker", "test_bound_claim_contract", "test_claim_admission_host", "test_claim_consumer_integration")); sys.path.insert(0,str(Path("tools").resolve())); from checked_unittest import run_checked_suite; raise SystemExit(run_checked_suite(suite, "asr18"))'
           mode_logs="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/k1-asr18-contracts.XXXXXX")"
+          # Frozen fixture helpers may create temporary children beside their
+          # source. Give each optimization mode an exact independent checkout
+          # so one mode cannot copy a directory another mode is removing.
+          cleanup_mode_worktrees() {
+            for mode in normal O OO; do
+              checkout="$mode_logs/source-$mode"
+              if [ -f "$checkout/.git" ]; then
+                git worktree remove --force "$checkout" || return 1
+              fi
+            done
+          }
+          trap cleanup_mode_worktrees EXIT
+          for mode in normal O OO; do
+            git worktree add --quiet --detach "$mode_logs/source-$mode" HEAD
+          done
           stop_contracts() {
             running="$(jobs -pr)"
             if [ -n "$running" ]; then kill $running 2>/dev/null || true; fi
@@ -100,9 +115,9 @@ jobs:
             exit 2
           }
           trap stop_contracts INT TERM
-          python3 -I -S -B -c "$asr18_tests" > "$mode_logs/normal.log" 2>&1 & normal_pid=$!
-          python3 -I -S -B -O -c "$asr18_tests" > "$mode_logs/O.log" 2>&1 & optimized_pid=$!
-          python3 -I -S -B -OO -c "$asr18_tests" > "$mode_logs/OO.log" 2>&1 & double_optimized_pid=$!
+          python3 -I -S -B -c "$asr18_tests" "$mode_logs/source-normal" > "$mode_logs/normal.log" 2>&1 & normal_pid=$!
+          python3 -I -S -B -O -c "$asr18_tests" "$mode_logs/source-O" > "$mode_logs/O.log" 2>&1 & optimized_pid=$!
+          python3 -I -S -B -OO -c "$asr18_tests" "$mode_logs/source-OO" > "$mode_logs/OO.log" 2>&1 & double_optimized_pid=$!
           failed=0
           for test_pid in "$normal_pid" "$optimized_pid" "$double_optimized_pid"; do
             wait "$test_pid" || failed=1
@@ -111,7 +126,10 @@ jobs:
           for mode in normal O OO; do
             printf 'ASR18_CONTRACT_MODE=%s\n' "$mode"
             cat "$mode_logs/$mode.log"
+            git -C "$mode_logs/source-$mode" diff --exit-code HEAD -- || failed=1
           done
+          cleanup_mode_worktrees || failed=1
+          trap - EXIT
           exit "$failed"
       - name: Verify tracked worktree after K1 punctuation6 ASR18 contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "K1 punctuation6 ASR18 contracts"'
