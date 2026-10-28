@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 66320,
-      "sha256": "f5bcc75509d5e6e836a7241376aae439fac8dffe1c1f3a2a9c67710bebe104b5",
-      "git_blob_sha1": "48c7c83e48ff761e96d2abc7ff052333e201c325"
+      "bytes": 67567,
+      "sha256": "02586d7db3d56610900b2bd97b38a213f856f30cd27ef186d7fe39de6dd21643",
+      "git_blob_sha1": "f736ea3f86ce2d113d8fcb75975c5279402d53df"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15400,9 +15400,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "bytes": 92655,
-      "sha256": "a89558f67655b8fb7547fcd933a4a013684fa95d401e00864df517ccec189c30",
-      "git_blob_sha1": "3a52932ff21c6c34c9f6089354a156e954c1399b"
+      "bytes": 92885,
+      "sha256": "00f066f9e6626f9d57d8acd83336d04c5396f087ee994a62991477c2d55abd73",
+      "git_blob_sha1": "6a3c727b89288d5e537774aa713722a0fd194267"
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
@@ -42973,6 +42973,51 @@
             "bytes": 18333,
             "sha256": "a7e03dd2f46f4721038e77cac92d3de988f6299f9d82b9da1e9daffee2c6d380",
             "git_blob_sha1": "5a1c54ee46ab0724d5c0cdcec3f541376a29783c"
+          }
+        }
+      ]
+    },
+    {
+      "id": "audit-closure-contracts-and-asr18-isolation-20261028",
+      "date": "2026-10-28",
+      "base_commit": "bea17d06c044bfa57ff2d53f4a42497d3cfc31cb",
+      "base_tree": "d43758729bca2b6a83ac432f5a4b69f175d703bf",
+      "workflow_source_changed": true,
+      "scope": "Add strict-mode reviewed-lineage and exporter regressions, include shared lineage/export helpers in numeric CI selection, and isolate concurrent ASR18 modes in separate detached checkouts.",
+      "rationale": "Maintain exact current workflow identities after reviewed source changes. Historical archives, scientific validator pins, original retained files/provenance, all assertions and time budgets remain unchanged. These identities make no local, model, board or acoustic acceptance claim.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 66320,
+            "sha256": "f5bcc75509d5e6e836a7241376aae439fac8dffe1c1f3a2a9c67710bebe104b5",
+            "git_blob_sha1": "48c7c83e48ff761e96d2abc7ff052333e201c325"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 67567,
+            "sha256": "02586d7db3d56610900b2bd97b38a213f856f30cd27ef186d7fe39de6dd21643",
+            "git_blob_sha1": "f736ea3f86ce2d113d8fcb75975c5279402d53df"
+          }
+        },
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 92655,
+            "sha256": "a89558f67655b8fb7547fcd933a4a013684fa95d401e00864df517ccec189c30",
+            "git_blob_sha1": "3a52932ff21c6c34c9f6089354a156e954c1399b"
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 92885,
+            "sha256": "00f066f9e6626f9d57d8acd83336d04c5396f087ee994a62991477c2d55abd73",
+            "git_blob_sha1": "6a3c727b89288d5e537774aa713722a0fd194267"
           }
         }
       ]
