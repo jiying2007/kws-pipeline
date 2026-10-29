@@ -17,9 +17,9 @@
 | C WAV RIFF 声明边界与填充检查 | #662 已合入 | [PR #662](https://github.com/jiying2007/kws-pipeline/pull/662) |
 | WAV CLI 统计输出覆盖输入保护 | #663 已合入 | [PR #663](https://github.com/jiying2007/kws-pipeline/pull/663) |
 | 硬负例裁剪保留人工正例约束 | #655 已合入；主干 CI 成功 | [PR #655](https://github.com/jiying2007/kws-pipeline/pull/655)、[main CI 40826759240](https://github.com/jiying2007/kws-pipeline/actions/runs/40826759240) |
-| PCM 身份、导出、源谱系准入 | #657 已与上述主干整合至 `c945b45d11eaa5334babefd4b0309be7ab2e0f11`；新集成 CI 与本地验收分别记录 | [PR #657](https://github.com/jiying2007/kws-pipeline/pull/657) |
+| PCM 身份、导出、源谱系准入 | #657 已与 #644 后主干整合至 `de243888aea27e81909f2f1d4201baea4cdd7dbc`；新集成 CI 与本地验收分别记录 | [PR #657](https://github.com/jiying2007/kws-pipeline/pull/657) |
 | 训练 JSON 严格类型、关键词输出别名 | #664 初始实现 `93de8021b269e09ceb88be0ace17ccab08dd5817` | [PR #664](https://github.com/jiying2007/kws-pipeline/pull/664) |
-| Actions 依赖身份维护 | #644 已补当前 workflow 身份记录；以 PR 当前检查为准 | [PR #644](https://github.com/jiying2007/kws-pipeline/pull/644) |
+| Actions 依赖身份维护 | #644 的依赖与当前 workflow 身份维护已合入 `6a38552d35bf6c48e407f489c93f6382477b300d`；PR CI 成功 | [PR #644](https://github.com/jiying2007/kws-pipeline/pull/644) |
 
 #664 初始实现的实际执行证据：
 
@@ -27,7 +27,7 @@
 - [训练/数据契约 40835793124](https://github.com/jiying2007/kws-pipeline/actions/runs/40835793124)：严格训练证据 JSON 类型 466 项检查通过；有效收据、非法类型、缺失字段、命名空间数组和错误时的 continuation 输出保护均通过实际验证器执行。
 - 这些结论绑定上述初始实现。后续提交需要其自身的 required checks；此前成功不能替代最新提交验收。
 
-#657 的整合保留全部 718 条原始保留源记录、provenance、科学验收固定身份以及先前 136 条 workflow 维护记录，并保留原 #657 记录和新增整合记录。当前两个 workflow 的内容等于此前已审查的 #657 文件。原始实验失败和验收标准继续保留。
+#657 的整合保留全部 718 条原始保留源记录、provenance、科学验收固定身份以及先前 137 条 workflow 维护记录（含 #644），并保留原 #657 记录和新增整合记录。当前两个 workflow 的内容等于此前已审查的 #657 文件。原始实验失败和验收标准继续保留。
 
 ## 本地与主干验收
 
