@@ -169,10 +169,128 @@ int main(int argc, char **argv) {
         raise AssertionError("keyword threshold wire contract: " + "; ".join(failures))
 
 
+
+def verify_output_aliases(root: pathlib.Path) -> None:
+    """Real CLI fixtures: all aliases fail before any input or output changes."""
+    root.mkdir()
+    contract_bytes = (ROOT / "configs/parameter-contract.json").read_bytes()
+    baseline_outputs = None
+    checked = 0
+
+    def fixture(name: str):
+        case = root / name
+        case.mkdir()
+        inputs = {"tokens": case / "tokens.txt", "keywords": case / "keywords.tsv",
+                  "contract": case / "contract.json"}
+        inputs["tokens"].write_bytes(b"<blk> 0\ntest 1\n")
+        inputs["keywords"].write_bytes(b"1\ttest\t0.55\ttest\n")
+        inputs["contract"].write_bytes(contract_bytes)
+        outputs = {"out-header": case / "keywords.h", "out-pack": case / "keywords.kwk",
+                   "out-json": case / "keywords.json"}
+        for path in outputs.values():
+            path.write_bytes(b"pre-existing artifact\n")
+        return case, inputs, outputs
+
+    def alias(case: pathlib.Path, target: pathlib.Path, form: str) -> pathlib.Path:
+        if form == "same":
+            return target
+        if form == "normalized":
+            (case / "child").mkdir()
+            return case / "child" / ".." / target.name
+        result = case / "alias"
+        if form == "symlink":
+            result.symlink_to(target)
+        else:
+            result.hardlink_to(target)
+        return result
+
+    def run(inputs, outputs):
+        command = [sys.executable, "-S", "-B", str(ROOT / "tools/compile_keywords.py")]
+        for key, value in {**inputs, **outputs}.items():
+            command.extend(["--" + key, str(value)])
+        return subprocess.run(command, capture_output=True, timeout=30)
+
+    def rejected(inputs, outputs, watched, label: str, diagnostic: bytes = b"alias"):
+        nonlocal checked
+        before = {path: path.read_bytes() for path in watched}
+        completed = run(inputs, outputs)
+        if completed.returncode == 0 or diagnostic not in completed.stderr.lower():
+            raise AssertionError(f"{label}: alias/identity error accepted: {completed.stderr!r}")
+        if completed.stdout:
+            raise AssertionError(f"{label}: rejection emitted success output")
+        for path, data in before.items():
+            if path.read_bytes() != data:
+                raise AssertionError(f"{label}: rejected compilation changed {path.name}")
+        checked += 1
+
+    for output_key in ("out-header", "out-pack", "out-json"):
+        for input_key in ("tokens", "keywords", "contract"):
+            for form in ("same", "normalized", "symlink", "hardlink"):
+                label = f"{output_key}-{input_key}-{form}"
+                case, inputs, outputs = fixture(label)
+                watched = list(inputs.values()) + list(outputs.values())
+                outputs[output_key] = alias(case, inputs[input_key], form)
+                rejected(inputs, outputs, watched, label)
+
+    keys = ("out-header", "out-pack", "out-json")
+    for index, first in enumerate(keys):
+        for second in keys[index + 1:]:
+            for form in ("same", "normalized", "symlink", "hardlink"):
+                label = f"{first}-{second}-{form}"
+                case, inputs, outputs = fixture(label)
+                watched = list(inputs.values()) + list(outputs.values())
+                outputs[second] = alias(case, outputs[first], form)
+                rejected(inputs, outputs, watched, label)
+            label = f"{first}-{second}-absent"
+            case, inputs, outputs = fixture(label)
+            watched = list(inputs.values()) + list(outputs.values())
+            shared = case / "new-artifact"
+            outputs[first] = shared
+            outputs[second] = shared
+            rejected(inputs, outputs, watched, label)
+            if shared.exists():
+                raise AssertionError(f"{label}: rejected compile created shared output")
+
+    for form in ("loop", "not-directory"):
+        case, inputs, outputs = fixture("identity-error-" + form)
+        watched = list(inputs.values()) + list(outputs.values())
+        if form == "loop":
+            (case / "loop").symlink_to("loop")
+            outputs["out-json"] = case / "loop"
+        else:
+            outputs["out-json"] = inputs["tokens"] / "child"
+        rejected(inputs, outputs, watched, form, diagnostic=b"error:")
+
+    for form in ("new", "existing", "symlink", "hardlink"):
+        case, inputs, outputs = fixture("valid-" + form)
+        before = {path: path.read_bytes() for path in inputs.values()}
+        if form == "new":
+            for path in outputs.values():
+                path.unlink()
+        elif form in ("symlink", "hardlink"):
+            target = case / "unrelated-artifact"
+            target.write_bytes(b"replaceable unrelated output\n")
+            outputs["out-json"] = alias(case, target, form)
+        completed = run(inputs, outputs)
+        if completed.returncode != 0:
+            raise AssertionError(f"non-alias {form} rejected: {completed.stderr!r}")
+        for path, data in before.items():
+            if path.read_bytes() != data:
+                raise AssertionError(f"non-alias {form} changed an input")
+        actual = {key: path.read_bytes() for key, path in outputs.items()}
+        if baseline_outputs is None:
+            baseline_outputs = actual
+        elif actual != baseline_outputs:
+            raise AssertionError(f"non-alias {form} changed compiled artifact bytes")
+        checked += 1
+    print(f"keyword output alias protection: {checked} cases passed")
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         verify_threshold_wire(root / "threshold-wire")
+        verify_output_aliases(root / "output-aliases")
         token_file = ROOT / "keywords" / "tokens.example.txt"
         header, manifest, pack = compile_one(
             token_file, ROOT / "keywords" / "zh_cn_example.tsv", root

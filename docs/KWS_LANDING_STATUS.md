@@ -2,7 +2,28 @@
 
 ## Current model and engineering status
 
-Current source snapshot: 2026-10-19, merged main
+Current engineering checkpoint: **2026-10-29**, main
+`d09a6c55241d7f903e3c9e6e766d878454bbd321`.
+The WAV/JSONL/hard-negative repairs (#660–#663 and #655) are merged and
+[that main CI passed](https://github.com/jiying2007/kws-pipeline/actions/runs/40826759240).
+Audit closure #657 is integrated with that main for fresh acceptance;
+#664 adds strict training-evidence JSON types and keyword output alias protection.
+The first #664 implementation passed 466 typed-evidence checks and 57 real CLI
+alias cases. Both code changes still require their final local/integrated acceptance.
+
+**A new production model is not yet qualified.** The governed training entry
+rejects the historical frozen base for new product training. Retained FSMN B/OR
+evidence does not establish a deployable replacement, and real-human final-AFE
+plus physical-board qualification remain outstanding.
+
+See the [2026-10-29 implementation and production closure record](KWS_PRODUCTION_CLOSURE_2026-10-29.md)
+for source/run identities, the next data gate, integration receipts and exact
+Phase A/Phase B completion requirements. Shipping/recalibration authority stays
+in `configs/shipping.xiaowo.json` and `commercial/*.policy.json`.
+
+### Retained model snapshot: 2026-10-19
+
+Retained source snapshot: 2026-10-19, merged main
 `b8e2f4adbfb9e964197276ad82c4fb855d747114`. The B-specific saved-network
 update below is limited to that source and the recorded input/environment.
 Dated checkpoints and integration receipts retain their original scope.

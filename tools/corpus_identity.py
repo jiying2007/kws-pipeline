@@ -69,7 +69,62 @@ def sha256_file(path: pathlib.Path) -> str:
     return digest.hexdigest()
 
 
+def validate_pcm16_wav_payload(path: pathlib.Path) -> int:
+    """Validate RIFF extents and complete PCM16 samples without reading PCM.
+
+    wave.getnframes() rounds an odd data size down. Check the original chunk
+    length first, including fmt byte rate/block alignment used by the C reader.
+    This is a stable-file check, not a snapshot against concurrent replacement.
+    """
+    with path.open("rb") as stream:
+        file_end = stream.seek(0, 2)
+        stream.seek(0)
+        header = stream.read(12)
+        if len(header) != 12 or header[:4] != b"RIFF" or header[8:] != b"WAVE":
+            raise ValueError(f"{path}: expected RIFF WAVE")
+        limit = min(file_end, 8 + int.from_bytes(header[4:8], "little"))
+        position = 12
+        have_fmt = False
+        while position + 8 <= limit:
+            stream.seek(position)
+            chunk = stream.read(8)
+            if len(chunk) != 8:
+                raise ValueError(f"{path}: truncated WAV chunk header")
+            size = int.from_bytes(chunk[4:], "little")
+            end = position + 8 + size
+            if chunk[:4] == b"data":
+                if not have_fmt:
+                    raise ValueError(f"{path}: PCM data precedes fmt")
+                if size % 2:
+                    raise ValueError(f"{path}: incomplete PCM16 sample")
+                if end > limit:
+                    raise ValueError(f"{path}: truncated PCM payload")
+                return size // 2
+            if end > limit:
+                raise ValueError(f"{path}: truncated WAV chunk payload")
+            if chunk[:4] == b"fmt ":
+                if size < 16:
+                    raise ValueError(f"{path}: truncated WAV fmt")
+                fmt = stream.read(16)
+                fields = (
+                    int.from_bytes(fmt[0:2], "little"),
+                    int.from_bytes(fmt[2:4], "little"),
+                    int.from_bytes(fmt[4:8], "little"),
+                    int.from_bytes(fmt[8:12], "little"),
+                    int.from_bytes(fmt[12:14], "little"),
+                    int.from_bytes(fmt[14:16], "little"),
+                )
+                if fields != (1, 1, SAMPLE_RATE_HZ, SAMPLE_RATE_HZ * 2, 2, 16):
+                    raise ValueError(f"{path}: expected mono 16-kHz PCM16 WAV")
+                have_fmt = True
+            position = end + size % 2
+            if position > limit:
+                raise ValueError(f"{path}: truncated WAV chunk padding")
+    raise ValueError(f"{path}: missing or truncated WAV data chunk")
+
+
 def inspect_pcm16_wav(path: pathlib.Path) -> dict:
+    payload_frames = validate_pcm16_wav_payload(path)
     with wave.open(str(path), "rb") as reader:
         if (
             reader.getnchannels() != 1
@@ -79,6 +134,8 @@ def inspect_pcm16_wav(path: pathlib.Path) -> dict:
         ):
             raise ValueError(f"{path}: expected mono 16-kHz PCM16 WAV")
         frames = reader.getnframes()
+        if frames != payload_frames:
+            raise ValueError(f"{path}: WAV frame count differs from data payload")
         if frames <= 0:
             raise ValueError(f"{path}: empty PCM payload")
         pcm_digest = hashlib.sha256()

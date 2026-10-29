@@ -16,6 +16,54 @@ Training checkpoints must capture the corpus identity at training time. Qualific
 
 The final held-out qualification corpus must remain independent from hard-negative and false-reject replay sources.
 
+## PCM16 container validation
+
+Before hashing decoded samples, the Python corpus identity and dataset audit
+readers inspect the original RIFF chunk lengths. A PCM16 data chunk must have an
+even byte count and fit both the file and the declared RIFF bounds. The standard
+PCM format must declare mono 16 kHz, 16-bit samples, block alignment 2 and byte
+rate 32000. This prevents a trailing half-sample from being silently discarded
+by `wave.getnframes()`. Valid odd-sized non-audio chunks retain their external
+RIFF padding, and metadata does not change the decoded-PCM hash.
+
+The chunk preflight reads headers, not a second copy of the PCM. The corpus
+identity reader continues to hash PCM in bounded blocks. These checks assume
+stable input files; they do not create a snapshot against concurrent mutation.
+
+## Recording and family identity namespace
+
+`tools/source_identity.py` defines the recording lineage fields shared by
+dataset audit, effect-data split planning, model comparison and speech-base
+admission:
+
+| Namespace | Fields |
+| --- | --- |
+| Recording/source family | `source_id`, `source_family`, `source_family_id`, `family_id`, `derivation_family`, `derivation_family_id` |
+| Person | `speaker_id` |
+| Session | `session_id` |
+| Reference audio file | `reference_audio_sha256` |
+| Acoustic payload | Decoded PCM and the separately checked source/original PCM hashes |
+
+Equal values in any two recording/source-family fields connect the recordings,
+including when the field names differ. A row may name several different source
+and ancestor identities; those values need not be identical within that row.
+A connected family must not cross data partitions. Reusing one family within
+one partition remains permitted. Nested provider/engine IDs are not promoted
+to person or recording identity, and a hash-shaped family ID is not a PCM hash.
+
+Audit reports retain the contributing field names and combined split/path
+evidence, plus the shared namespace. Missing metadata remains unknown; this
+change does not turn an observed-clean audit into proof of complete lineage,
+speaker independence or qualification.
+
+`tools/source_lineage_admission.py` applies the current alias binding after the
+existing speech receipt validator succeeds. The historical offline ASR reader
+keeps its original validator bytes and pinned manifest. Optional family aliases
+supplied for reviewed speech must match their retained review/provenance fields. They survive materialization, rendering, references
+and training admission. The materializer uses an explicit reviewed `family_id`
+when present; otherwise its existing grouping key derives from
+`source_family_id`. That derived key must still match the reviewed family.
+
 ## Restored human-reviewed synthetic batches
 
 `tools/speech_like_corpus_plan.py admit-reviewed` is a read-only admission check

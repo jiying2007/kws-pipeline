@@ -12,6 +12,7 @@ import wave
 from acoustic_scene import render_scene, sha256_file
 from audit_dataset import audit_splits, inspect_wav, write_lineage_sidecar
 from corpus_identity import canonical_audio_path, rebind_audio_path
+from source_identity import LINEAGE_FIELDS
 from development_stress import (
     apply_development_stress_scene,
     build_development_stress_plan,
@@ -628,8 +629,7 @@ def source_lineage(row: dict) -> dict:
         if provenance["pcm_sha256"] != pcm_sha256:
             raise ValueError(f"{source}: original source PCM identity mismatch")
         result["original_pcm_sha256"] = provenance["pcm_sha256"]
-    for field in ("source_family_id", "speaker_id", "reference_audio_sha256",
-                  "session_id", "derivation_family_id"):
+    for field in LINEAGE_FIELDS:
         if field in row and field in provenance and row[field] != provenance[field]:
             raise ValueError(f"{source}: conflicting {field} lineage")
         if field in provenance:
@@ -672,8 +672,7 @@ def domain_reference_row(row: dict, *, recording: str, frames: int) -> dict:
                          "start_s": start / SAMPLE_RATE_HZ, "end_s": end / SAMPLE_RATE_HZ})
     return {
         **{key: row[key] for key in (
-            "speaker_id", "session_id", "source_id", "family_id",
-            "source_family_id", "reference_audio_sha256", "derivation_family_id",
+            "source_id", *LINEAGE_FIELDS,
             "original_pcm_sha256", "source_path", "source_wav_sha256",
             "source_pcm_sha256", "wav_sha256", "speech_like_provenance", "admission",
             "evidence_class", "label_origin", "label_source", "status", "consensus_record", "source_provenance",

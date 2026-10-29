@@ -40,6 +40,7 @@ make collected measurements auditable and do not substitute for those measuremen
 
 - [`compile_keywords.py`](compile_keywords.py)
 - [`corpus_identity.py`](corpus_identity.py)
+- [`source_identity.py`](source_identity.py) — Shared recording/source-family namespace; unrelated identity domains remain separate.
 - [`keyword_set_identity.py`](keyword_set_identity.py)
 - [`kws_vocab.py`](kws_vocab.py)
 - [`validate_shipping_keywords.py`](validate_shipping_keywords.py)
@@ -57,6 +58,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`run_speech_like_corpus_generation.py`](run_speech_like_corpus_generation.py)
 - [`speech_like_corpus_plan.py`](speech_like_corpus_plan.py)
 - [`speech_label_admission.py`](speech_label_admission.py) — Validate supplied actual-label review receipts; it does not authenticate a listener.
+- [`source_lineage_admission.py`](source_lineage_admission.py) — Current source-alias binding on top of the existing receipt checks, preserving historical validator pins.
 - [`speech_asr_consensus.py`](speech_asr_consensus.py) — Check prospective three-ASR machine-label consistency; pending external authentication is never training admission or qualification gold.
 - [`speech_like_vits_resample_adapter.py`](speech_like_vits_resample_adapter.py)
 - [`validate_speech_like_synthetic.py`](validate_speech_like_synthetic.py)
@@ -140,6 +142,8 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`validate_real_human_development_corpus.py`](validate_real_human_development_corpus.py)
 
 ## Model and training provenance
+
+- [`export_artifacts.py`](export_artifacts.py) — Reject input/output aliases and stage model/provenance writes before per-file replacement.
 
 - [`kws_landing_status.py`](kws_landing_status.py)
 - [`materialize_model_registry.py`](materialize_model_registry.py)

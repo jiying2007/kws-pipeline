@@ -6,6 +6,13 @@ import json
 import os
 import pathlib
 import subprocess
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
+
+from model_provenance import boolean  # noqa: E402
+from qualification_common import json_int  # noqa: E402
 
 POLICY = "staged-domain-base-handoff-v1"
 
@@ -34,6 +41,7 @@ def load_json(path: pathlib.Path, label: str) -> dict:
 def write_receipt(
     *, config_path: pathlib.Path, work: pathlib.Path, output: pathlib.Path, iteration_exit_code: int
 ) -> dict:
+    iteration_exit_code = json_int(iteration_exit_code, "iteration_exit_code")
     if iteration_exit_code not in (0, 1):
         raise ValueError(f"base domain iteration failed with infrastructure exit code {iteration_exit_code}")
     config = load_json(config_path, "training config")
@@ -53,7 +61,7 @@ def write_receipt(
         "training_config_sha256": sha256_file(config_path),
         "domain_manifest_sha256": sha256_file(manifest_path),
         "iteration_exit_code": iteration_exit_code,
-        "qualification_holdout_seed": int(config["qualification_holdout_seed"]),
+        "qualification_holdout_seed": json_int(config.get("qualification_holdout_seed"), "qualification_holdout_seed"),
         "formal_seed_consumed": False,
         "record_count": len(manifest["records"]),
     }
@@ -69,7 +77,7 @@ def verify_receipt(
     manifest_path = work / "domain-loop-manifest.json"
     load_json(manifest_path, "base domain manifest")
     receipt = load_json(receipt_path, "base stage receipt")
-    if int(receipt.get("schema_version", 0)) != 1 or str(receipt.get("policy")) != POLICY:
+    if json_int(receipt.get("schema_version"), "receipt schema_version") != 1 or receipt.get("policy") != POLICY:
         raise ValueError("base stage receipt policy/schema drifted")
     workflow_sha = str(os.environ.get("GITHUB_SHA") or "")
     if str(receipt.get("workflow_sha")) != workflow_sha:
@@ -80,11 +88,11 @@ def verify_receipt(
         raise ValueError("base stage training config SHA differs from continuation config")
     if str(receipt.get("domain_manifest_sha256")) != sha256_file(manifest_path):
         raise ValueError("base stage domain manifest SHA differs from downloaded state")
-    if int(receipt.get("qualification_holdout_seed", -1)) != int(config["qualification_holdout_seed"]):
+    if json_int(receipt.get("qualification_holdout_seed"), "receipt qualification_holdout_seed") != json_int(config.get("qualification_holdout_seed"), "config qualification_holdout_seed"):
         raise ValueError("base stage formal seed differs from continuation config")
-    if bool(receipt.get("formal_seed_consumed", True)):
+    if boolean(receipt.get("formal_seed_consumed"), "receipt formal_seed_consumed"):
         raise ValueError("base stage receipt claims formal seed consumption")
-    exit_code = int(receipt.get("iteration_exit_code", -1))
+    exit_code = json_int(receipt.get("iteration_exit_code"), "receipt iteration_exit_code")
     if exit_code not in (0, 1):
         raise ValueError("base stage iteration exit code is invalid")
     if github_output is not None:

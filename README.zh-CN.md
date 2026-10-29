@@ -4,7 +4,7 @@
 
 研究入口：[可复用模块、保留的实验结论与资格边界](research/README.md)
 
-当前状态：[模型与工程摘要](docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status)，核对日期 2026-10-18。历史 SKU、保留的 FSMN B/OR、不晋升决定与 posterior-only C 分属不同证据范围；软件 CI 成功不代表声学或设备资格。
+当前状态：[模型与工程摘要](docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status)，核对日期 2026-10-29。[审查修复与生产闭环记录](docs/KWS_PRODUCTION_CLOSURE_2026-10-29.md) 列出已合入修复、新增回归、待完成的本地验收，以及新训练数据、候选部署、真人 AFE 和目标板资格的下一关。历史 SKU、FSMN B/OR 与 posterior-only C 的证据范围保留；新生产模型尚未放行。
 
 当前归档交付：[完整公开归档、索引与可验证恢复](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md)。旧展开副本目标已取消；历史状态仍为 NOT_PUSHED。D20 数值失败、D90 尚未执行数值验证、fixed50 支持不足、旧模型 nightly 失败分别保留；真人与实机验证暂缓。
 

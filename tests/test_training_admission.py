@@ -109,6 +109,28 @@ class AdmissionTests(unittest.TestCase):
                                                 "source_family_id": "fixture-family"},
                         admission=admission_from_reviews([review], canonical_sha256([review])))
 
+    def test_derived_family_group_must_match_the_reviewed_source_family(self):
+        row = copy.deepcopy(self.row)
+        row["family_id"] = row["speech_like_provenance"]["source_family_id"]
+        self.assertEqual(self.validate(row)["reviewed_rows"], 1)
+        row["family_id"] = "unrelated-family"
+        with self.assertRaisesRegex(ValueError, "training lineage family_id"):
+            self.validate(row)
+
+    def test_optional_alias_cannot_be_added_or_erased_after_review(self):
+        for field in ("source_family", "family_id", "derivation_family"):
+            with self.subTest(field=field):
+                row = copy.deepcopy(self.row)
+                value = "bound-" + field
+                row[field] = row["speech_like_provenance"][field] = value
+                review = row["admission"]["review_history"][0]
+                review[field] = value
+                row["admission"] = admission_from_reviews([review], canonical_sha256([review]))
+                self.assertEqual(self.validate(row)["reviewed_rows"], 1)
+                row.pop(field)
+                with self.assertRaisesRegex(ValueError, "training lineage " + field):
+                    self.validate(row)
+
     def validate(self, row=None):
         write_lineage_sidecar(self.manifest, [self.row if row is None else row])
         return verify_training_manifests([self.manifest], self.tokens)

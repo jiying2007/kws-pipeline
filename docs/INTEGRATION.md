@@ -16,30 +16,65 @@ The current promoted model is `model-749187ec1d66`. `configs/shipping.xiaowo.jso
 
 ## Field-updatable initialization
 
-```c
-kws_model_t model;
-kws_keyword_pack_t pack;
-kws_engine_t *kws;
-kws_config_t cfg = kws_default_config();
+The caller supplies a separate candidate arena aligned to
+`kws_engine_required_alignment()`. Keep the active engine and its arena intact
+until all candidate initialization steps succeed. This helper leaves the output
+pointer unchanged on failure:
 
-kws_model_open(model_blob, model_blob_bytes, &model);
-kws_keyword_pack_open(pack_blob, pack_blob_bytes, &model, &pack);
-size_t bytes = kws_engine_required_bytes(&model);
-size_t alignment = kws_engine_required_alignment();
-/* Allocate/provide `arena` with at least `bytes` and `alignment`. */
-kws_engine_init(arena, bytes, &model, &cfg, &kws);
-kws_engine_set_keyword_pack(kws, &pack);
+```c
+kws_status_t prepare_kws_candidate(const void *model_blob, size_t model_blob_bytes,
+                                  const void *pack_blob, size_t pack_blob_bytes,
+                                  void *arena, size_t arena_bytes,
+                                  kws_engine_t **out_candidate) {
+  kws_model_t model = {0};
+  kws_keyword_pack_t pack = {0};
+  kws_engine_t *candidate = NULL;
+  kws_config_t cfg = kws_default_config();
+  kws_status_t status;
+
+  if (out_candidate == NULL) {
+    return KWS_EINVAL;
+  }
+  status = kws_model_open(model_blob, model_blob_bytes, &model);
+  if (status != KWS_OK) {
+    return status;
+  }
+  status = kws_keyword_pack_open(pack_blob, pack_blob_bytes, &model, &pack);
+  if (status != KWS_OK) {
+    return status;
+  }
+  if (arena_bytes < kws_engine_required_bytes(&model)) {
+    return KWS_ENOMEM;
+  }
+  status = kws_engine_init(arena, arena_bytes, &model, &cfg, &candidate);
+  if (status != KWS_OK) {
+    return status;
+  }
+  status = kws_engine_set_keyword_pack(candidate, &pack);
+  if (status != KWS_OK) {
+    return status;
+  }
+  *out_candidate = candidate;
+  return KWS_OK;
+}
 ```
+
+After `KWS_OK`, publish the candidate under the caller's existing single-owner
+synchronization. On failure, keep the active engine and reject the candidate;
+zero-initializing the temporary structures does not replace checking statuses.
 
 The deployable runtime artifact contract remains **KWSP model ABI v2 + KWKP keyword-pack ABI v3**. Their vocabulary fingerprints must match exactly. The keyword-pack object may be discarded after the setter returns; the model blob must remain alive because model tensors are zero-copy views into it and must satisfy the documented alignment requirement.
 
 For a firmware-linked generated C table use:
 
 ```c
-kws_engine_set_keywords(kws,
-                        kws_generated_keywords,
-                        kws_generated_keyword_count,
-                        kws_generated_vocab_fingerprint);
+kws_status_t status = kws_engine_set_keywords(
+    kws, kws_generated_keywords, kws_generated_keyword_count,
+    kws_generated_vocab_fingerprint);
+if (status != KWS_OK) {
+  /* Report the rejected update; the previous valid keyword configuration remains. */
+  return status;
+}
 ```
 
 The generated-table path performs the same vocabulary identity check as `.kwk`.

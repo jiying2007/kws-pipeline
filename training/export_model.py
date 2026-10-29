@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 from training_admission import require_current_dataset
 from feature_cached_trainer import normalize_feature_cache
 from corpus_identity import corpus_digest  # noqa: E402
+from export_artifacts import validate_export_paths, write_export_artifacts  # noqa: E402
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
 from ctc_primary import normalize_label_prior_contract
@@ -604,6 +605,9 @@ def main() -> None:
     parser.add_argument("--provenance", type=pathlib.Path, help="default: OUTPUT.provenance.json")
     args = parser.parse_args()
 
+    provenance_path = args.provenance or pathlib.Path(str(args.output) + ".provenance.json")
+    validate_export_paths(checkpoint=args.checkpoint, tokens=args.tokens,
+                          output=args.output, provenance=provenance_path)
     checkpoint, source_checkpoint_sha256 = load_checkpoint_snapshot(args.checkpoint)
     if (checkpoint.get("product_export_compatible") is False
             or checkpoint.get("model_family") == "direct-kws"):
@@ -692,15 +696,11 @@ def main() -> None:
     )
     assert len(header) == MODEL_HEADER_BYTES
     buffer[:MODEL_HEADER_BYTES] = header
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_bytes(buffer)
-
-    provenance_path = args.provenance or pathlib.Path(str(args.output) + ".provenance.json")
     provenance = {
         "schema_version": 3,
         "model": {
             "name": args.output.name,
-            "sha256": sha256_file(args.output),
+            "sha256": hashlib.sha256(buffer).hexdigest(),
             "bytes": total,
             "abi": MODEL_VERSION,
             "feature_dim": feature_dim,
@@ -726,11 +726,10 @@ def main() -> None:
             "out_proj": wo_stats,
         },
     }
-    provenance_path.parent.mkdir(parents=True, exist_ok=True)
-    provenance_path.write_text(
-        json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
-        encoding="utf-8",
-    )
+    provenance_bytes = (
+        json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    ).encode("utf-8")
+    write_export_artifacts({args.output: bytes(buffer), provenance_path: provenance_bytes})
     print(
         f"wrote {args.output}: {total} bytes, frontend={frontend_name}, "
         f"vocab_fingerprint=0x{fingerprint:016x}; corpus={training['corpus_identity']['corpus_sha256']}; provenance={provenance_path}"

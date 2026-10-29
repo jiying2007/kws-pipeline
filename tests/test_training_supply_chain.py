@@ -1,14 +1,168 @@
 from __future__ import annotations
 
+import argparse
+import ast
 import importlib.util
+import os
+import sys
+import unittest
+from unittest.mock import Mock, patch
 import json
 import pathlib
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
+from export_artifacts import validate_export_paths, write_export_artifacts
+
+
+class ExportArtifactTests(unittest.TestCase):
+    """Filesystem-only regressions; never deserialize a checkpoint or import Torch."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = pathlib.Path(self.temp.name)
+        self.paths = {name: self.root / name for name in ("checkpoint", "tokens", "output", "provenance")}
+        for name, path in self.paths.items():
+            path.write_bytes(("original-" + name).encode())
+
+    def validate(self, **changes):
+        validate_export_paths(**{**self.paths, **changes})
+
+    def snapshot(self):
+        return {path.name: path.read_bytes() for path in self.root.iterdir() if path.is_file()}
+
+    def test_distinct_destinations_pass_without_writing(self):
+        before = self.snapshot()
+        self.validate()
+        self.validate(output=self.root / "new" / "model.kwm",
+                      provenance=self.root / "new" / "model.json")
+        self.assertEqual(self.snapshot(), before)
+        self.assertFalse((self.root / "new").exists())
+
+    def test_direct_aliases_reject_without_touching_inputs(self):
+        before = self.snapshot()
+        for output in ("output", "provenance"):
+            for input_name in ("checkpoint", "tokens"):
+                with self.subTest(output=output, input=input_name), self.assertRaisesRegex(ValueError, "aliases"):
+                    self.validate(**{output: self.paths[input_name]})
+        with self.assertRaisesRegex(ValueError, "output aliases provenance"):
+            self.validate(provenance=self.paths["output"])
+        self.assertEqual(self.snapshot(), before)
+
+    def test_parent_resolution_and_symlink_aliases_reject(self):
+        nested = self.root / "nested"
+        nested.mkdir()
+        with self.assertRaisesRegex(ValueError, "aliases checkpoint"):
+            self.validate(output=nested / ".." / "checkpoint")
+        link = self.root / "alias"
+        link.symlink_to(self.paths["tokens"])
+        with self.assertRaisesRegex(ValueError, "aliases tokens"):
+            self.validate(provenance=link)
+        link.unlink()
+        link.symlink_to(self.paths["output"])
+        with self.assertRaisesRegex(ValueError, "output aliases provenance"):
+            self.validate(provenance=link)
+
+    def test_hardlink_aliases_reject(self):
+        link = self.root / "hardlink"
+        os.link(self.paths["checkpoint"], link)
+        with self.assertRaisesRegex(ValueError, "aliases checkpoint"):
+            self.validate(output=link)
+        link.unlink()
+        os.link(self.paths["output"], link)
+        with self.assertRaisesRegex(ValueError, "output aliases provenance"):
+            self.validate(provenance=link)
+
+    def test_cli_preflight_precedes_checkpoint_loading(self):
+        # Execute the actual CLI function with a loader sentinel. Importing the
+        # numerical exporter would require Torch; only its stdlib CLI boundary
+        # is under test here. Valid exports remain the numerical export suite's job.
+        module = ast.parse((ROOT / "training/export_model.py").read_text(encoding="utf-8"))
+        main = next(node for node in module.body if isinstance(node, ast.FunctionDef) and node.name == "main")
+        loader = Mock(side_effect=RuntimeError("checkpoint loader reached"))
+        namespace = {"argparse": argparse, "pathlib": pathlib,
+                     "validate_export_paths": validate_export_paths, "load_checkpoint_snapshot": loader}
+        exec(compile(ast.Module(body=[main], type_ignores=[]), "export_model.py", "exec"), namespace)
+        for output, provenance in (
+            (self.paths["checkpoint"], self.paths["provenance"]),
+            (self.paths["tokens"], self.paths["provenance"]),
+            (self.paths["output"], self.paths["checkpoint"]),
+            (self.paths["output"], self.paths["tokens"]),
+            (self.paths["output"], self.paths["output"]),
+        ):
+            argv = ["export_model.py", "--checkpoint", str(self.paths["checkpoint"]),
+                    "--tokens", str(self.paths["tokens"]), "--output", str(output),
+                    "--provenance", str(provenance)]
+            with self.subTest(output=output, provenance=provenance), patch.object(sys, "argv", argv):
+                with self.assertRaisesRegex(ValueError, "aliases"):
+                    namespace["main"]()
+        # The implicit sidecar path is guarded too.
+        implicit_model = self.root / "implicit"
+        implicit_checkpoint = pathlib.Path(str(implicit_model) + ".provenance.json")
+        implicit_checkpoint.write_bytes(b"checkpoint")
+        argv = ["export_model.py", "--checkpoint", str(implicit_checkpoint),
+                "--tokens", str(self.paths["tokens"]), "--output", str(implicit_model)]
+        with patch.object(sys, "argv", argv), self.assertRaisesRegex(ValueError, "aliases checkpoint"):
+            namespace["main"]()
+        loader.assert_not_called()
+        argv = ["export_model.py", "--checkpoint", str(self.paths["checkpoint"]),
+                "--tokens", str(self.paths["tokens"]), "--output", str(self.paths["output"])]
+        with patch.object(sys, "argv", argv), self.assertRaisesRegex(RuntimeError, "loader reached"):
+            namespace["main"]()
+        loader.assert_called_once_with(self.paths["checkpoint"])
+
+    def test_staged_write_preserves_exact_bytes_and_cleans_temporary_files(self):
+        before_inputs = {name: self.paths[name].read_bytes() for name in ("checkpoint", "tokens")}
+        payloads = {self.paths["output"]: b"KWSP\x00\x01", self.paths["provenance"]: b'{"sha256":"fixture"}\n'}
+        write_export_artifacts(payloads)
+        for path, payload in payloads.items():
+            self.assertEqual(path.read_bytes(), payload)
+        for name, payload in before_inputs.items():
+            self.assertEqual(self.paths[name].read_bytes(), payload)
+        self.assertEqual({p.name for p in self.root.iterdir()}, set(self.paths))
+
+    def test_staging_failure_keeps_existing_pair_and_cleans_up(self):
+        before = self.snapshot()
+        original = tempfile.NamedTemporaryFile
+        calls = 0
+
+        def fail_second(*args, **kwargs):
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                raise OSError("injected staging failure")
+            return original(*args, **kwargs)
+
+        with patch("export_artifacts.tempfile.NamedTemporaryFile", side_effect=fail_second):
+            with self.assertRaisesRegex(OSError, "staging failure"):
+                write_export_artifacts({self.paths["output"]: b"new-model",
+                                        self.paths["provenance"]: b"new-provenance"})
+        self.assertEqual(self.snapshot(), before)
+
+    def test_replace_failure_is_reported_and_never_claims_pair_transaction(self):
+        original = os.replace
+
+        def fail_sidecar(source, destination):
+            if destination == self.paths["provenance"]:
+                raise OSError("injected replace failure")
+            return original(source, destination)
+
+        with patch("export_artifacts.os.replace", side_effect=fail_sidecar):
+            with self.assertRaisesRegex(OSError, "replace failure"):
+                write_export_artifacts({self.paths["output"]: b"new-model",
+                                        self.paths["provenance"]: b"new-provenance"})
+        self.assertEqual(self.paths["output"].read_bytes(), b"new-model")
+        self.assertEqual(self.paths["provenance"].read_bytes(), b"original-provenance")
+        self.assertEqual({p.name for p in self.root.iterdir()}, set(self.paths))
+
 
 
 def main() -> int:
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(ExportArtifactTests)
+    if not unittest.TextTestRunner().run(suite).wasSuccessful():
+        return 1
     dockerfile = (ROOT / "training" / "Dockerfile").read_text(encoding="utf-8")
     lock = (ROOT / "training" / "requirements.lock").read_text(encoding="utf-8")
     model_source = (ROOT / "training" / "model.py").read_text(encoding="utf-8")

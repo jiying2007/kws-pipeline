@@ -16,7 +16,8 @@ sys.path.insert(0, str(ROOT / "training"))
 from kws_vocab import load_tokens  # noqa: E402
 from synthetic_audio import SPLITS, activity_bounds, parse_keywords, sha256_file, contains_subsequence  # noqa: E402
 
-from speech_label_admission import (REAL_MODE, FIXTURE_MODE, LINEAGE_FIELDS, fixture_admission, validate_admission)
+from speech_label_admission import REAL_MODE, FIXTURE_MODE, fixture_admission
+from source_lineage_admission import LINEAGE_FIELDS, validate_admission
 from speech_asr_consensus import require_training_label_authority, has_machine_consensus, LABEL_SOURCE
 from asr_source_resolver import source_verification_session
 
@@ -218,7 +219,7 @@ def materialize(
         rows.append({
             "split": split,
             "kind": kind,
-            "family_id": provenance.get("source_family_id", f"speech-like-{split}-{index-1:06d}"),
+            "family_id": provenance.get("family_id", provenance.get("source_family_id", f"speech-like-{split}-{index-1:06d}")),
             "variant": 0,
             "keyword_id": keyword_id,
             "tokens": list(tokens),

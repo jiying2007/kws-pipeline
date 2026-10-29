@@ -26,7 +26,8 @@ SOURCE_PATHS = (
     "research/model_comparison/runner.py", "research/model_comparison/compare.py",
     "training/model.py", "training/frontend.py", "training/frontend_spec.py",
     "training/train_ctc.py", "training/training_state.py", "training/training_admission.py",
-    "tools/corpus_identity.py", "tools/kws_vocab.py", "training/audit_dataset.py",
+    "tools/corpus_identity.py", "tools/source_identity.py", "tools/source_lineage_admission.py",
+    "tools/kws_vocab.py", "training/audit_dataset.py",
     "tools/speech_label_admission.py", "tools/speech_asr_consensus.py",
     "tools/asr_source_resolver.py", "tools/asr_native_contracts.py", "eval/score_events.py",
 )

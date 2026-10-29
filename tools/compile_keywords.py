@@ -7,6 +7,7 @@ import json
 import math
 import pathlib
 import re
+import stat
 import struct
 import sys
 
@@ -297,6 +298,33 @@ def emit_pack(
     out.write_bytes(blob)
 
 
+def validate_output_paths(inputs: dict[str, pathlib.Path], outputs: dict[str, pathlib.Path | None]) -> None:
+    """Reject stable-filesystem aliases before writing any artifact."""
+    identities: list[tuple[str, pathlib.Path, tuple[int, int] | None]] = []
+    for label, path in inputs.items():
+        resolved = path.resolve(strict=True)
+        info = resolved.stat()
+        if not stat.S_ISREG(info.st_mode):
+            raise ValueError(f"{label} must be a regular file: {path}")
+        identities.append((label, resolved, (info.st_dev, info.st_ino)))
+    for label, path in outputs.items():
+        if path is None:
+            continue
+        resolved = path.resolve()
+        try:
+            info = path.stat()
+        except FileNotFoundError:
+            identity = None
+        else:
+            if not stat.S_ISREG(info.st_mode):
+                raise ValueError(f"{label} must be a regular file destination: {path}")
+            identity = (info.st_dev, info.st_ino)
+        for other_label, other_path, other_identity in identities:
+            if resolved == other_path or (identity is not None and identity == other_identity):
+                raise ValueError(f"{label} aliases {other_label}: {path}")
+        identities.append((label, resolved, identity))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--tokens", required=True, type=pathlib.Path)
@@ -314,7 +342,12 @@ def main() -> int:
     if not (args.out_header or args.out_pack or args.out_json):
         parser.error("at least one of --out-header, --out-pack or --out-json is required")
 
+    validate_output_paths(
+        {"tokens": args.tokens, "keywords": args.keywords, "contract": args.contract},
+        {"out-header": args.out_header, "out-pack": args.out_pack, "out-json": args.out_json},
+    )
     contract = load_contract(args.contract)
+    contract_sha256 = contract_digest(args.contract)
     token_map = load_tokens(args.tokens)
     items = parse_keywords(args.keywords, token_map, contract)
     # The shared parser also supplies source identities, not binary admission.
@@ -338,7 +371,7 @@ def main() -> int:
                     "vocab_size": vocab_size(token_map),
                     "vocab_fingerprint": f"0x{fingerprint:016x}",
                     "parameter_contract": contract.get("contract_id"),
-                    "parameter_contract_sha256": contract_digest(args.contract),
+                    "parameter_contract_sha256": contract_sha256,
                     "keywords": items,
                 },
                 ensure_ascii=False,
@@ -357,6 +390,6 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (ValueError, RuntimeError) as exc:
+    except (OSError, ValueError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2)

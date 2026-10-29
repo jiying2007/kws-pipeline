@@ -24,6 +24,7 @@ except ImportError:
 
 SOURCE_PATHS = ('training/model.py', 'training/frontend.py', 'training/frontend_spec.py',
                 'training/train_ctc.py', 'training/training_admission.py', 'tools/corpus_identity.py',
+                'tools/source_identity.py', 'tools/source_lineage_admission.py',
                 'research/candidate_encoders/contract.py', 'research/candidate_encoders/torch_models.py')
 SOURCE_KEYS = frozenset((*SOURCE_PATHS, 'research_runner', 'comparison_contract'))
 MAX_EPOCHS = 100

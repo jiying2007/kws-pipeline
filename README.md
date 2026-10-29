@@ -4,7 +4,7 @@
 
 Research: [reusable modules, retained results and qualification boundaries](research/README.md)
 
-Current status: [model and engineering summary](docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status), checked 2026-10-18. Historical SKU, retained FSMN B/OR, the no-promotion decision and posterior-only C are separate evidence scopes; successful software CI does not establish acoustic or device qualification.
+Current status: [model and engineering summary](docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status), checked 2026-10-29. The [audit implementation and production closure record](docs/KWS_PRODUCTION_CLOSURE_2026-10-29.md) binds merged repairs, new regressions, pending local acceptance and the remaining data, candidate, final-AFE and physical-board gates. Historical SKU, retained FSMN B/OR and posterior-only C keep their separate evidence scopes; a new production model is not yet qualified.
 
 Current archive delivery: [complete public archive, index and verified restoration](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md). The old expanded-copy target is cancelled; its historical status remains NOT_PUSHED. D20 numerical failure and D90 not yet tested, fixed50 inconclusive support and the old-model nightly failure remain separate; human/device qualification is deferred.
 

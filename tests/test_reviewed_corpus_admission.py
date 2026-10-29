@@ -306,6 +306,108 @@ class AdmissionTests(unittest.TestCase):
         second.update(kind='negative', keyword_id=None)
         with self.assertRaisesRegex(ValueError, 'canonical wake path'): self.admit()
 
+    def test_cross_field_source_family_leaks(self):
+        from source_identity import SOURCE_ID_FIELDS
+        original = copy.deepcopy((self.rows, self.reviews, self.intents))
+        for left in SOURCE_ID_FIELDS:
+            for right in SOURCE_ID_FIELDS:
+                with self.subTest(left=left, right=right):
+                    self.rows, self.reviews, self.intents = copy.deepcopy(original)
+                    for index, field in ((0, left), (1, right)):
+                        for collection in (self.rows, self.reviews, self.intents):
+                            collection[index][field] = "cross-field-family"
+                    with self.assertRaisesRegex(ValueError, "crosses splits|duplicate source_id"):
+                        self.admit()
+
+    def test_optional_family_alias_requires_matching_review(self):
+        for field in ("source_family", "family_id", "derivation_family"):
+            with self.subTest(field=field):
+                self.rows[0][field] = "unreviewed-lineage"
+                with self.assertRaisesRegex(ValueError, field + " differs from source"):
+                    self.admit()
+                self.rows[0].pop(field)
+
+    def test_optional_family_alias_values_are_canonical(self):
+        for field in ("source_family", "family_id", "derivation_family"):
+            for value in (None, [], 7, "", " padded "):
+                with self.subTest(field=field, value=value):
+                    self.rows[0][field] = self.reviews[0][field] = value
+                    with self.assertRaisesRegex(ValueError, "canonical non-empty text"):
+                        self.admit()
+                    self.rows[0].pop(field)
+                    self.reviews[0].pop(field)
+
+    def test_family_aliases_survive_materialization_render_lineage_and_training_admission(self):
+        from source_identity import SOURCE_FAMILY_FIELDS
+        from render_domains import source_lineage, domain_reference_row
+        from training_admission import verify_training_manifests
+        intents, reviews, groups = self.four_splits()
+        expected = {}
+        for rows in groups.values():
+            for row in rows:
+                aliases = {field: f"{row['source_id']}-{field}" for field in SOURCE_FAMILY_FIELDS}
+                row.update(aliases)
+                expected[row["source_id"]] = aliases
+        for rows in (intents, reviews):
+            for row in rows:
+                row.update(expected[row["source_id"]])
+        for group, rows in groups.items():
+            (self.generated / group / "manifest.jsonl").write_text(
+                "".join(json.dumps(row) + "\n" for row in rows)
+            )
+        self.intents_path.write_text("".join(json.dumps(row) + "\n" for row in intents))
+        self.review_path.write_text("".join(json.dumps(row) + "\n" for row in reviews))
+        labeled = self.root / "aliases"
+        plan.materialize_labels(self.intents_path, self.generated, labeled, audio_review=self.review_path)
+        manifest = labeled / "train" / "labeled-manifest.jsonl"
+        rows, _ = materialize(manifest=manifest, split="train",
+                              tokens_path=ROOT / "keywords/tokens.example.txt",
+                              keywords_path=ROOT / "keywords/zh_cn_example.tsv")
+        row = rows[0]
+        provenance = row["speech_like_provenance"]
+        for field in SOURCE_FAMILY_FIELDS:
+            self.assertEqual(provenance[field], expected[provenance["source_id"]][field])
+        self.assertEqual(row["family_id"], provenance["family_id"])
+        lineage = source_lineage(row)
+        for field in SOURCE_FAMILY_FIELDS:
+            self.assertEqual(lineage[field], provenance[field])
+        training_row = {**row, **lineage}
+        training_manifest = self.root / "alias-training.jsonl"
+        training_manifest.write_text(json.dumps(training_row) + "\n")
+        admitted = verify_training_manifests(
+            [training_manifest], {"<blk>": 0, "ni3": 1, "hao3": 2, "xiao3": 3, "wo1": 4}
+        )
+        self.assertEqual(admitted["reviewed_rows"], 1)
+        reference = domain_reference_row(
+            {**training_row, "scene": {"direct_delay_samples": 0, "afe_latency_samples": 0},
+             "domain_id": "invented"}, recording="invented", frames=row["frames"]
+        )
+        for field in SOURCE_FAMILY_FIELDS:
+            self.assertEqual(reference[field], provenance[field])
+
+    def test_external_bundle_rejects_cross_field_source_aliases(self):
+        config = self.bundle()
+        original = {}
+        for split in ("train", "test"):
+            spec = config["generator"]["external_base_dataset"][split]
+            original[split] = json.loads(pathlib.Path(spec["index"]).read_text())
+        for left, right in (("source_id", "family_id"),
+                            ("source_family_id", "derivation_family_id"),
+                            ("source_family", "derivation_family"),
+                            ("family_id", "source_family_id")):
+            with self.subTest(left=left, right=right):
+                for split, field in (("train", left), ("test", right)):
+                    def update(row, split=split, field=field):
+                        row.clear()
+                        row.update(copy.deepcopy(original[split]))
+                        row["speech_like_provenance"][field] = "cross-field-family"
+                        review = row["admission"]["review_history"][0]
+                        review[field] = "cross-field-family"
+                        row["admission"]["review_record_sha256"] = canonical_sha256(review)
+                    self.rewrite_split(config, split, update)
+                with self.assertRaisesRegex(ValueError, "cross-split .* overlap"):
+                    load_external_base_bundle(self.root / "config.json", config)
+
     def test_source_family_leak(self):
         self.rows[1]['source_family_id'] = self.rows[0]['source_family_id']
         self.reviews[1]['source_family_id'] = self.rows[0]['source_family_id']
