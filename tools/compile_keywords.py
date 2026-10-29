@@ -82,6 +82,13 @@ def bounded_float(value: float, label: str, entry: dict) -> float:
     return value
 
 
+def as_float32(value: float, label: str) -> float:
+    try:
+        return struct.unpack("<f", struct.pack("<f", value))[0]
+    except (OverflowError, struct.error) as exc:
+        raise ValueError(f"{label} cannot be represented as float32") from exc
+
+
 def declared_default(entry: dict, label: str) -> int:
     value = entry.get("default")
     if value is None:
@@ -224,11 +231,15 @@ def emit_header(items: list[dict], fingerprint: int, out: pathlib.Path) -> None:
         lines.append(f"static const uint16_t kws_kw_{n}_tokens[] = {{{values}}};")
     lines += ["", "static const kws_keyword_t kws_generated_keywords[] = {"]
     for n, item in enumerate(items):
+        # Nine significant decimal digits round-trip a finite binary32 value.
+        literal = f"{as_float32(item['threshold'], 'threshold'):.9g}"
+        if "." not in literal and "e" not in literal.lower():
+            literal += ".0"
         lines.append(
             "  {"
             f"{item['id']}u, kws_kw_{n}_tokens, "
             f"(uint16_t)(sizeof(kws_kw_{n}_tokens) / sizeof(kws_kw_{n}_tokens[0])), "
-            f"{item['threshold']:.6f}f, {item['min_trailing_blanks']}u, "
+            f"{literal}f, {item['min_trailing_blanks']}u, "
             f"{item['priority']}u, {item['prefix_policy_id']}u, {item['grace_frames']}u"
             f"}}, /* {item['text']} */"
         )
@@ -306,6 +317,14 @@ def main() -> int:
     contract = load_contract(args.contract)
     token_map = load_tokens(args.tokens)
     items = parse_keywords(args.keywords, token_map, contract)
+    # The shared parser also supplies source identities, not binary admission.
+    # Validate wire values only at this compilation boundary, before any output.
+    for item in items:
+        label = f"{item['text']}: threshold"
+        bounded_float(
+            as_float32(item["threshold"], label),
+            f"{label} after float32 conversion", contract["keyword_pack"]["threshold"],
+        )
     fingerprint = vocab_fingerprint(token_map)
     if args.out_header:
         emit_header(items, fingerprint, args.out_header)
