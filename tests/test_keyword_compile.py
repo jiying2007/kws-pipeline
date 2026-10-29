@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import os
+import shlex
 import pathlib
 import struct
 import subprocess
@@ -37,9 +39,140 @@ def compile_one(tokens: pathlib.Path, keywords: pathlib.Path, root: pathlib.Path
     return header, manifest, pack
 
 
+def verify_threshold_wire(root: pathlib.Path) -> None:
+    """Strict compiler/loader checks; only a vocabulary descriptor, no model."""
+    root.mkdir(parents=True)
+    tokens = root / "tokens.txt"
+    token_bytes = b"<blk> 0\ntest 1\n"
+    tokens.write_bytes(token_bytes)
+    generated = root / "generated"
+    subprocess.run(
+        [sys.executable, "-S", "-B", str(ROOT / "tools/gen_parameter_limits.py"),
+         str(ROOT / "configs/parameter-contract.json"), str(generated)],
+        check=True, timeout=30, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    harness = root / "threshold.c"
+    harness.write_text(r'''#include "kws_pipeline/kws.h"
+#include "kws_parameter_limits.h"
+#include "keywords.h"
+#include <inttypes.h>
+#include <stdio.h>
+#include <string.h>
+int main(int argc, char **argv) {
+  unsigned char blob[72];
+  kws_model_t vocabulary = {0};
+  kws_keyword_pack_t pack;
+  uint32_t header_bits = 0u, pack_bits = 0u;
+  FILE *stream;
+  kws_status_t status;
+  if (argc != 2 || (stream = fopen(argv[1], "rb")) == NULL) return 20;
+  if (fread(blob, 1u, sizeof(blob), stream) != sizeof(blob) ||
+      fgetc(stream) != EOF || ferror(stream)) { fclose(stream); return 21; }
+  if (fclose(stream) != 0) return 22;
+  vocabulary.vocab_size = 2u;
+  vocabulary.vocab_fingerprint = kws_generated_vocab_fingerprint;
+  status = kws_keyword_pack_open(blob, sizeof(blob), &vocabulary, &pack);
+  memcpy(&header_bits, &kws_generated_keywords[0].threshold, sizeof(header_bits));
+  if (status == KWS_OK) memcpy(&pack_bits, &pack.keywords[0].threshold, sizeof(pack_bits));
+  printf("%d %" PRIu32 " %" PRIu32 " %d\n", (int)status,
+         header_bits, pack_bits,
+         KWS_PARAM_THRESHOLD_VALID(kws_generated_keywords[0].threshold) ? 1 : 0);
+  return 0;
+}
+''', encoding="utf-8")
+    failures: list[str] = []
+    cases: list[dict] = []
+
+    def check(condition: bool, message: str) -> None:
+        if not condition:
+            failures.append(message)
+
+    values = [("usual", "0.55", True), ("decimal", "0.1", True),
+              ("precision", "0.12345678", True),
+              ("header_high", "0.9999999", True),
+              ("header_low", "1e-7", True),
+              ("max_below_one", "0.999999940395355224609375", True),
+              ("min_subnormal", "1.401298464324817e-45", True),
+              ("rounds_to_one", "0.99999999", False),
+              ("rounds_to_zero", "1e-50", False),
+              ("zero", "0", False), ("one", "1", False),
+              ("nan", "nan", False), ("infinity", "inf", False),
+              ("preserve_outputs", "1e-50", False)]
+    for name, raw, accepted in values:
+        directory = root / name
+        directory.mkdir()
+        keyword_bytes = f"1\ttest\t{raw}\ttest\n".encode()
+        keywords = directory / "keywords.tsv"
+        keywords.write_bytes(keyword_bytes)
+        header, pack, manifest = [directory / f"keywords.{suffix}"
+                                  for suffix in ("h", "kwk", "json")]
+        sentinel = b"existing output must survive rejected input\n"
+        if name == "preserve_outputs":
+            for output in (header, pack, manifest):
+                output.write_bytes(sentinel)
+        command = [sys.executable, "-S", "-B", str(ROOT / "tools/compile_keywords.py"),
+                   "--tokens", str(tokens), "--keywords", str(keywords),
+                   "--out-header", str(header), "--out-pack", str(pack),
+                   "--out-json", str(manifest)]
+        completed = subprocess.run(command, capture_output=True, timeout=30)
+        record = {"case": name, "threshold": raw, "expected_accepted": accepted,
+                  "compiler_command": command, "compiler_exit": completed.returncode}
+        (directory / "compiler.stdout").write_bytes(completed.stdout)
+        (directory / "compiler.stderr").write_bytes(completed.stderr)
+        check(tokens.read_bytes() == token_bytes and keywords.read_bytes() == keyword_bytes,
+              f"{name}: compiler modified input")
+        if not accepted:
+            check(completed.returncode != 0, f"{name}: invalid wire threshold accepted")
+            check(b"threshold" in completed.stderr.lower(), f"{name}: missing diagnostic")
+            for output in (header, pack, manifest):
+                if name == "preserve_outputs":
+                    check(output.read_bytes() == sentinel, f"{name}: existing {output.name} changed")
+                else:
+                    check(not output.exists(), f"{name}: invalid input wrote {output.name}")
+        elif completed.returncode != 0:
+            check(False, f"{name}: valid threshold rejected")
+        else:
+            expected_bits = struct.unpack("<I", struct.pack("<f", float(raw)))[0]
+            wire = pack.read_bytes()
+            check(len(wire) == 72, f"{name}: unexpected pack length")
+            actual_bits = struct.unpack_from("<I", wire, 28)[0]
+            check(actual_bits == expected_bits, f"{name}: pack threshold changed")
+            metadata = json.loads(manifest.read_text(encoding="utf-8"))
+            check(metadata["keywords"][0]["threshold"] == float(raw),
+                  f"{name}: JSON input-value compatibility changed")
+            compiler = shlex.split(os.environ.get("CC", "cc"))
+            build = compiler + ["-std=c11", "-Wall", "-Wextra", "-Werror",
+                                "-I", str(ROOT / "include"), "-I", str(generated),
+                                "-I", str(directory), str(harness),
+                                str(ROOT / "src/keyword_pack.c"), "-lm",
+                                "-o", str(directory / "probe")]
+            compiled = subprocess.run(build, capture_output=True, timeout=30)
+            record.update(build_command=build, build_exit=compiled.returncode)
+            (directory / "build.stdout").write_bytes(compiled.stdout)
+            (directory / "build.stderr").write_bytes(compiled.stderr)
+            check(compiled.returncode == 0, f"{name}: generated header failed compilation")
+            if compiled.returncode == 0:
+                probe = subprocess.run([str(directory / "probe"), str(pack)],
+                                       capture_output=True, text=True, timeout=30)
+                record.update(probe_exit=probe.returncode, probe_stdout=probe.stdout,
+                              probe_stderr=probe.stderr, expected_bits=expected_bits)
+                check(probe.returncode == 0, f"{name}: probe failed")
+                fields = probe.stdout.strip().split()
+                check(fields == ["0", str(expected_bits), str(expected_bits), "1"],
+                      f"{name}: loader/header must match binary32 bits, got {fields}")
+        cases.append(record)
+    report = {"cases": cases, "failures": failures, "model_execution": False,
+              "scope": "compiler, real pack parser and C-header validation; no engine/inference"}
+    (root / "results.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    print(f"keyword threshold wire: {len(cases)} cases, {len(failures)} failed checks")
+    if failures:
+        raise AssertionError("keyword threshold wire contract: " + "; ".join(failures))
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
+        verify_threshold_wire(root / "threshold-wire")
         token_file = ROOT / "keywords" / "tokens.example.txt"
         header, manifest, pack = compile_one(
             token_file, ROOT / "keywords" / "zh_cn_example.tsv", root

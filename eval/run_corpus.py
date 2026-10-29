@@ -433,7 +433,7 @@ def main() -> int:
         require_keyword_pack_unchanged()
         if metadata is not None and sha256_file(metadata) != row["metadata_sha256"]:
             raise ValueError("AFE metadata changed during replay")
-        for line_no, raw in enumerate(completed.stdout.splitlines(), 1):
+        for line_no, raw in enumerate(completed.stdout.split("\n"), 1):
             if not raw.strip():
                 continue
             try:
@@ -450,7 +450,12 @@ def main() -> int:
                 raise ValueError(
                     f"runner recording mismatch: expected {recording}, got {detection.get('recording')}"
                 )
-            output_lines.append(json.dumps(detection, ensure_ascii=False, allow_nan=False))
+            # JSONL records are LF-delimited. Keep decoded text unchanged, but
+            # protect downstream readers that also split on Unicode separators.
+            encoded = json.dumps(detection, ensure_ascii=False, allow_nan=False)
+            for separator in ("\u0085", "\u2028", "\u2029"):
+                encoded = encoded.replace(separator, f"\\u{ord(separator):04x}")
+            output_lines.append(encoded)
 
     corpus_identity = {
         "schema_version": 1,
