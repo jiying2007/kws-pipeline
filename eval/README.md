@@ -278,12 +278,40 @@ remain diagnostic only. See the fixture provenance in
 ```bash
 python3 eval/mine_hard_negatives.py \
   --false-positives build/false-positives.jsonl \
+  --references data/eval/references.jsonl \
   --audio-root data/eval \
   --output-dir build/hard-negative-wav \
   --manifest build/hard-negatives.tsv
 ```
 
-The generated manifest contains empty CTC targets intentionally. Add it as another `--manifest` to `training/train_ctc.py`, using the **same `--tokens` vocabulary** as the base checkpoint:
+`--references` is required: supply the original trusted, complete event-reference
+JSONL used for scoring, with `recording`, a source `path` (or consistent
+`audio`/`audio_path` aliases), `duration_s`, and explicit `expected` intervals.
+An empty `expected: []` means an annotated negative recording; missing, partial,
+clip-presence-only, or degenerate point annotations cannot establish negative
+crop labels. Reference completeness/accuracy remains an external trust boundary:
+never derive these labels from predictions. Paths are resolved under `--audio-root`,
+and event times must use the source WAV's coordinates (AFE output references
+belong to the corresponding AFE output WAV, not raw capture).
+
+The miner skips each crop whose actual rounded/clamped sample interval overlaps
+**any** annotated keyword, not just the predicted keyword. Exact adjacent
+half-open intervals are allowed; sub-sample positive intervals are conservatively
+protected. Unknown recordings, ambiguous source identities, conflicting paths or
+durations, and invalid candidate/reference metadata fail closed. Far-away
+non-overlapping crops from positive recordings and explicitly annotated negative
+recordings remain eligible. The final count reports skipped overlaps; predictions
+and original references are not relabeled or rewritten. Planned manifest/clip
+outputs may not alias the reference JSONL, FP JSONL, referenced WAVs, or each
+other (including existing symlinks/hard links). This is a stable-filesystem
+preflight, not a concurrent modification or atomic multi-output guarantee.
+Use fresh output locations; an error does not certify any pre-existing output.
+
+The generated TSV contains empty CTC targets for **review candidates only**. It is
+not training admission: the normal training CLI separately requires reviewed
+label, source, and lineage provenance. After that review/admission, the manifest
+can be supplied with the **same `--tokens` vocabulary** as the base checkpoint
+(the abbreviated command below does not replace admission requirements):
 
 ```bash
 python3 training/train_ctc.py \

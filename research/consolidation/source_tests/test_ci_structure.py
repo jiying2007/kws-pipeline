@@ -262,6 +262,9 @@ ASR18_MODULES = (
     'test_bound_claim_contract', 'test_claim_admission_host', 'test_claim_consumer_integration',
 )
 ASR18_PARALLEL_MODES = 'mode_logs="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/k1-asr18-contracts.XXXXXX")"\nstop_contracts() {\n  running="$(jobs -pr)"\n  if [ -n "$running" ]; then kill $running 2>/dev/null || true; fi\n  wait || true\n  exit 2\n}\ntrap stop_contracts INT TERM\npython3 -I -S -B -c "$asr18_tests" > "$mode_logs/normal.log" 2>&1 & normal_pid=$!\npython3 -I -S -B -O -c "$asr18_tests" > "$mode_logs/O.log" 2>&1 & optimized_pid=$!\npython3 -I -S -B -OO -c "$asr18_tests" > "$mode_logs/OO.log" 2>&1 & double_optimized_pid=$!\nfailed=0\nfor test_pid in "$normal_pid" "$optimized_pid" "$double_optimized_pid"; do\n  wait "$test_pid" || failed=1\ndone\ntrap - INT TERM\nfor mode in normal O OO; do\n  printf \'ASR18_CONTRACT_MODE=%s\\n\' "$mode"\n  cat "$mode_logs/$mode.log"\ndone\nexit "$failed"\n'
+
+# The maintained CI command is pinned separately from the frozen execution workflow.
+ASR18_ISOLATED_MODES = "mode_logs=\"$(mktemp -d \"${RUNNER_TEMP:-${TMPDIR:-/tmp}}/k1-asr18-contracts.XXXXXX\")\"\n# Frozen fixture helpers may create temporary children beside their\n# source. Give each optimization mode an exact independent checkout\n# so one mode cannot copy a directory another mode is removing.\ncleanup_mode_worktrees() {\n  for mode in normal O OO; do\n    checkout=\"$mode_logs/source-$mode\"\n    if [ -f \"$checkout/.git\" ]; then\n      git worktree remove --force \"$checkout\" || return 1\n    fi\n  done\n}\ntrap cleanup_mode_worktrees EXIT\nfor mode in normal O OO; do\n  git worktree add --quiet --detach \"$mode_logs/source-$mode\" HEAD\ndone\nstop_contracts() {\n  running=\"$(jobs -pr)\"\n  if [ -n \"$running\" ]; then kill $running 2>/dev/null || true; fi\n  wait || true\n  exit 2\n}\ntrap stop_contracts INT TERM\npython3 -I -S -B -c \"$asr18_tests\" \"$mode_logs/source-normal\" > \"$mode_logs/normal.log\" 2>&1 & normal_pid=$!\npython3 -I -S -B -O -c \"$asr18_tests\" \"$mode_logs/source-O\" > \"$mode_logs/O.log\" 2>&1 & optimized_pid=$!\npython3 -I -S -B -OO -c \"$asr18_tests\" \"$mode_logs/source-OO\" > \"$mode_logs/OO.log\" 2>&1 & double_optimized_pid=$!\nfailed=0\nfor test_pid in \"$normal_pid\" \"$optimized_pid\" \"$double_optimized_pid\"; do\n  wait \"$test_pid\" || failed=1\ndone\ntrap - INT TERM\nfor mode in normal O OO; do\n  printf 'ASR18_CONTRACT_MODE=%s\\n' \"$mode\"\n  cat \"$mode_logs/$mode.log\"\n  git -C \"$mode_logs/source-$mode\" diff --exit-code HEAD -- || failed=1\ndone\ncleanup_mode_worktrees || failed=1\ntrap - EXIT\nexit \"$failed\"\n"
 ASR18_JOB_IF = "${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-asr18-r5' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}"
 ASR18_CLAIM_IF = "${{ success() && steps.asr18_contracts.outcome == 'success' && github.run_number == 1 && github.run_attempt == 1 }}"
 ASR18_HOST_IF = "${{ success() && steps.asr18_contracts.outcome == 'success' && steps.campaign_claim.outcome == 'success' && steps.campaign_claim.outputs.ready == 'true' }}"
@@ -343,11 +346,14 @@ class ASR18CIContracts(unittest.TestCase):
                    'result=unittest.TextTestRunner(verbosity=2).run(suite); '
                    'raise SystemExit(not result.wasSuccessful())')
         if checked:
+            program = program.replace('import sys,unittest; from pathlib import Path; ',
+                                      'import os,sys,unittest; from pathlib import Path; os.chdir(sys.argv[1]); ')
             program = program.replace('result=unittest.TextTestRunner(verbosity=2).run(suite); '
                 'raise SystemExit(not result.wasSuccessful())',
                 'sys.path.insert(0,str(Path("tools").resolve())); from checked_unittest import run_checked_suite; '
                 'raise SystemExit(run_checked_suite(suite, "asr18"))')
-        return ("set -euo pipefail\nasr18_tests='" + program + "'\n" + ASR18_PARALLEL_MODES)
+        modes = ASR18_ISOLATED_MODES if checked else ASR18_PARALLEL_MODES
+        return ("set -euo pipefail\nasr18_tests='" + program + "'\n" + modes)
 
     def check_wiring(self, ci, workflow, template):
         self.assertEqual(workflow, template)
@@ -369,6 +375,8 @@ class ASR18CIContracts(unittest.TestCase):
             self.assertNotIn('continue-on-error:', step)
             self.assertNotIn('        env:', step)
             self.assertEqual(contract_command(step), self.expected_command(checked=name == 'ci'), name)
+            if name == 'ci':
+                self.assertIn('        timeout-minutes: 5\n', step)
         claim = named_step(execution, 'Reserve fixed campaign owner without models')
         self.assertEqual(step_if(claim), ASR18_CLAIM_IF)
         self.assertIn('        id: campaign_claim\n', claim)
@@ -411,6 +419,16 @@ class ASR18CIContracts(unittest.TestCase):
     def test_rejects_missing_modes_discovery_skips_and_bypassed_routes(self):
         mutations = (
             ('ci', 'python3 -I -S -B -OO -c "$asr18_tests"', 'true'),
+            ('ci', 'os.chdir(sys.argv[1]); ', ''),
+            ('ci', '"$mode_logs/source-O"', '"$mode_logs/source-normal"'),
+            ('ci', 'git worktree add --quiet --detach "$mode_logs/source-$mode" HEAD',
+             'git worktree add --quiet --detach "$mode_logs/source-$mode" HEAD^'),
+            ('ci', 'git -C "$mode_logs/source-$mode" diff --exit-code HEAD -- || failed=1', 'true'),
+            ('ci', 'cleanup_mode_worktrees || failed=1', 'cleanup_mode_worktrees || true'),
+            ('ci', 'trap cleanup_mode_worktrees EXIT', 'trap true EXIT'),
+            ('ci', 'wait "$test_pid" || failed=1', 'wait "$test_pid" || true'),
+            ('ci', 'id: asr18_contracts\n        timeout-minutes: 5',
+             'id: asr18_contracts\n        timeout-minutes: 6'),
             ('ci', 'loadTestsFromNames', 'discover'),
             ('ci', 'test_asr18_worker', 'test_asr18_not_reviewed'),
             ('ci', '        id: asr18_contracts\n', '        id: asr18_contracts\n        if: false\n'),
