@@ -181,6 +181,151 @@ def aggregate_far(
     return completed.returncode, json.loads(target.read_text(encoding="utf-8"))
 
 
+def check_raw_pcm_contract(root: pathlib.Path) -> None:
+    """Test only raw CLI byte transport; stub every model/runtime operation."""
+    import shutil
+
+    compiler = shutil.which("cc")
+    if compiler is None:
+        raise RuntimeError("C compiler required for raw PCM input contract")
+    root.mkdir()
+    stub = root / "runtime_stub.c"
+    stub.write_text(r'''#include "kws_pipeline/kws.h"
+#include <stdio.h>
+#include <string.h>
+static uint64_t accepted = 0;
+kws_status_t kws_model_open(const void *b, size_t n, kws_model_t *m) {
+  (void)b; (void)n; memset(m, 0, sizeof(*m)); return KWS_OK;
+}
+kws_status_t kws_keyword_pack_open(const void *b, size_t n,
+                                  const kws_model_t *m, kws_keyword_pack_t *p) {
+  (void)b; (void)n; (void)m; memset(p, 0, sizeof(*p)); return KWS_OK;
+}
+size_t kws_engine_required_bytes(const kws_model_t *m) { (void)m; return 1u; }
+kws_status_t kws_engine_init(void *a, size_t n, const kws_model_t *m,
+                            const kws_config_t *c, kws_engine_t **e) {
+  (void)n; (void)m; (void)c; *e = (kws_engine_t *)a; return KWS_OK;
+}
+kws_status_t kws_engine_set_keyword_pack(kws_engine_t *e,
+                                        const kws_keyword_pack_t *p) {
+  (void)e; (void)p; return KWS_OK;
+}
+kws_status_t kws_engine_accept_pcm16(kws_engine_t *e, const int16_t *s, size_t n,
+                                    kws_detection_t *d, int *hit) {
+  const unsigned char *bytes = (const unsigned char *)(const void *)s;
+  (void)e; accepted += n; *hit = 1;
+  d->keyword_id = 7u; d->end_sample = accepted; d->confidence = 0.75f;
+  fputs("TEST_ONLY_PCM ", stderr);
+  for (size_t i = 0; i < n * sizeof(*s); ++i) fprintf(stderr, "%02x", bytes[i]);
+  fputc('\n', stderr); return KWS_OK;
+}
+''', encoding="utf-8")
+    fault = root / "read_error.c"
+    fault.write_text(r'''#include <stdio.h>
+static int failed = 0;
+static int calls = 0;
+static size_t input_read(void *p, size_t size, size_t count, FILE *stream) {
+  if (stream == stdin && ++calls == FAIL_CALL) { failed = 1; return 0u; }
+  return fread(p, size, count, stream);
+}
+static int input_error(FILE *stream) {
+  return stream == stdin && failed ? 1 : ferror(stream);
+}
+#define fread input_read
+#define ferror input_error
+''' + '#include ' + json.dumps(str(ROOT / "tools/kws_raw_stream.c")) + '\n',
+                     encoding="utf-8")
+    binaries = {}
+    for name, fail_call in (("normal", 0), ("early-error", 1), ("late-error", 2)):
+        binary = root / name
+        source = ROOT / "tools/kws_raw_stream.c" if fail_call == 0 else fault
+        command = [compiler, "-std=c11", "-O2", "-Wall", "-Wextra", "-Wpedantic", "-Werror",
+                   "-I", str(ROOT / "include"), "-I", str(ROOT / "tools"),
+                   f"-DFAIL_CALL={fail_call}", str(source), str(ROOT / "tools/tool_io.c"),
+                   str(stub), "-o", str(binary)]
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                timeout=30, check=False)
+        (root / (name + "-compile.json")).write_text(json.dumps({
+            "command": command, "exitcode": result.returncode,
+            "stdout": result.stdout.decode(), "stderr": result.stderr.decode()}, indent=2))
+        if result.returncode != 0:
+            raise RuntimeError("raw PCM contract fixture compile failed: " + result.stderr.decode())
+        binaries[name] = binary
+    # These arbitrary bytes are accepted only by the test stubs, never a model loader.
+    for name in ("model-stub-argument", "pack-stub-argument"):
+        (root / name).write_bytes(b"test argument, not a model\n")
+    cases = [(f"bytes-{n}", n, "normal", False) for n in
+             (0, 1, 2, 3, 638, 639, 640, 641, 642, 643, 1280, 1281, 1282)]
+    cases += [("fragmented-even", 642, "normal", True),
+              ("fragmented-odd", 641, "normal", True),
+              ("early-error", 640, "early-error", False),
+              ("late-error", 1280, "late-error", False)]
+    records, failures = [], []
+    for name, size, variant, fragmented in cases:
+        data = bytes(i % 251 for i in range(size))
+        (root / (name + ".raw")).write_bytes(data)
+        command = [str(binaries[variant]), str(root / "model-stub-argument"),
+                   str(root / "pack-stub-argument"), "stdio-contract"]
+        if fragmented:
+            process = subprocess.Popen(command, stdin=subprocess.PIPE,
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            try:
+                for start, end in ((0, 1), (1, 3), (3, 319), (319, size)):
+                    process.stdin.write(data[start:end])
+                    process.stdin.flush()
+                process.stdin.close()
+                process.stdin = None
+                stdout, stderr = process.communicate(timeout=5)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+            code = process.returncode
+        else:
+            result = subprocess.run(command, input=data, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, timeout=5, check=False)
+            code, stdout, stderr = result.returncode, result.stdout, result.stderr
+        record = {"case": name, "command": command, "input_bytes": size,
+                  "input_sha256": hashlib.sha256(data).hexdigest(), "exitcode": code,
+                  "stdout": stdout.decode(), "stderr": stderr.decode()}
+        records.append(record)
+        try:
+            valid = size % 2 == 0 and variant == "normal"
+            if (code == 0) != valid:
+                raise RuntimeError("incorrect success/failure exit status")
+            pcm = [bytes.fromhex(line.split(" ", 1)[1]) for line in stderr.decode().splitlines()
+                   if line.startswith("TEST_ONLY_PCM ")]
+            events = [json.loads(line) for line in stdout.splitlines()]
+            if variant == "early-error":
+                expected_chunks = []
+            elif variant == "late-error":
+                expected_chunks = [data[:640]]
+            else:
+                accepted_bytes = size if valid else size // 640 * 640
+                expected_chunks = [data[i:i + 640] for i in range(0, accepted_bytes, 640)]
+            # Reject the current malformed block before feeding any of its bytes;
+            # previously completed blocks and their streamed events are not rolled back.
+            if pcm != expected_chunks:
+                raise RuntimeError("accepted PCM bytes/chunk sizes changed or malformed tail was fed")
+            if not valid and not any(message in stderr for message in
+                                     (b"raw PCM input error", b"partial PCM16 sample")):
+                raise RuntimeError("missing malformed-input/read-error diagnostic")
+            if len(events) != len(pcm):
+                raise RuntimeError("test-only streaming detection count changed")
+            samples = 0
+            for event, block in zip(events, pcm):
+                samples += len(block) // 2
+                if event != {"recording": "stdio-contract", "keyword_id": 7,
+                             "time_s": float(f"{samples / SAMPLE_RATE_HZ:.6f}"), "confidence": 0.75}:
+                    raise RuntimeError("streaming detection receipt changed")
+        except (ValueError, RuntimeError) as exc:
+            failures.append(name + ": " + str(exc))
+    (root / "results.json").write_text(json.dumps({"cases": records, "failures": failures}, indent=2))
+    print(f"raw PCM input contract: {len(cases)} cases; failures={failures}")
+    if failures:
+        raise RuntimeError("raw PCM input contract failed")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", required=True, type=pathlib.Path)
@@ -233,6 +378,7 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
+        check_raw_pcm_contract(root / "raw-pcm-contract")
         tokens = root / "tokens.txt"
         _, fingerprint = write_tokens(tokens)
         model = root / "model.kwm"
