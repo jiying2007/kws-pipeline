@@ -63,6 +63,84 @@ def fixtures(root):
         wav.writeframes(b'\0' * 800)
 
 
+def check_stats_input_alias(executable, root):
+    """Actual CLI I/O with synthetic compute; never overwrite any input alias."""
+    root.mkdir()
+    inputs = ('model.kwm', 'one.kwk', 'audio.wav', 'timeline.tsv')
+    cases = [(name, form, False) for name in inputs
+             for form in ('same', 'normalized', 'symlink', 'hardlink')]
+    cases += [('separate', form, False)
+              for form in ('new', 'existing', 'symlink', 'hardlink')]
+    cases += [('audio.wav', 'same', True), ('error', 'loop', False),
+              ('error', 'not-directory', False)]
+    failures = []
+    expected_stdout = None
+    for index, (target, form, trace) in enumerate(cases):
+        case = root / f'{index:02d}-{target}-{form}'
+        case.mkdir()
+        fixtures(case)
+        (case / 'timeline.tsv').write_text(
+            'kws-afe-timeline-v1\n0\t400\t0\t0\t16\t0\t1\t0\t'
+            + 'a' * 64 + '\n', encoding='ascii')
+        before = {name: (case / name).read_bytes() for name in inputs}
+        allowed = target == 'separate'
+        if allowed:
+            stats = case / 'stats.json'
+            if form == 'existing':
+                stats.write_bytes(b'old non-input stats\n')
+            elif form in ('symlink', 'hardlink'):
+                (case / 'unrelated.json').write_bytes(b'old unrelated stats\n')
+                if form == 'symlink':
+                    stats.symlink_to('unrelated.json')
+                else:
+                    stats.hardlink_to(case / 'unrelated.json')
+        elif target == 'error':
+            if form == 'loop':
+                stats = case / 'loop'
+                stats.symlink_to('loop')
+            else:
+                stats = case / 'audio.wav' / 'not-a-directory'
+        elif form == 'same':
+            stats = case / target
+        elif form == 'normalized':
+            (case / 'child').mkdir()
+            stats = case / 'child' / '..' / target
+        elif form == 'symlink':
+            stats = case / 'stats-link'
+            stats.symlink_to(target)
+        else:
+            stats = case / 'stats-link'
+            stats.hardlink_to(case / target)
+        command = [executable, case / 'model.kwm', case / 'one.kwk',
+                   case / 'audio.wav', 'stats-alias-fixture', '--metadata-tsv',
+                   case / 'timeline.tsv', '--stats-json', stats]
+        if trace:
+            command += ['--trace-out', case / 'trace.kwtr']
+        result = subprocess.run(list(map(str, command)), stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, timeout=10)
+        changed = [name for name, data in before.items()
+                   if (case / name).read_bytes() != data]
+        try:
+            require(not changed, f'input bytes changed: {changed}')
+            require((result.returncode == 0) == allowed,
+                    f'unexpected exit {result.returncode}: {result.stderr!r}')
+            if allowed:
+                require(json.loads(stats.read_bytes())['schema_version'] == 1,
+                        'stats output missing or invalid')
+                if expected_stdout is None:
+                    expected_stdout = result.stdout
+                require(result.stdout == expected_stdout, 'non-alias event bytes changed')
+            else:
+                require(result.stdout == b'', 'alias/error was rejected after PCM output')
+                require(not (case / 'trace.kwtr').exists(), 'rejection left a trace')
+                if trace:
+                    require(result.returncode == 1, 'trace exclusive-open behavior changed')
+        except RuntimeError as exc:
+            failures.append(f'{index}:{target}:{form}: {exc}')
+    print(f'stats-input alias cases: {len(cases)} checked; failures={failures}')
+    require(not failures, 'stats/input alias contract failed')
+
+
 def check_historical_source_contracts(temp):
     """Test the helper on isolated copies; never mutate current or frozen input."""
     source = temp / 'historical-contract-input'
@@ -290,6 +368,8 @@ def main():
                      for mode in ('strict_children', 'single_fuzzy_wo'))
         for name, source, research in cases:
             executable = compile_tool(name, source, research=research)
+            if name == 'kws_wav':
+                check_stats_input_alias(executable, root / 'stats-input-alias')
             argv = command(name, executable)
             normal = run(argv, cwd=root)
             require(normal.stdout and not normal.stderr, f'{name}: missing normal output or unexpected stderr')
