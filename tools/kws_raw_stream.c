@@ -56,7 +56,14 @@ int main(int argc, char **argv) {
   }
 
   for (;;) {
-    size_t got = fread(pcm, sizeof(pcm[0]), BLOCK_SAMPLES, stdin);
+    /* Element-sized fread would hide a trailing half-sample at EOF. */
+    size_t got_bytes = fread(pcm, 1u, sizeof(pcm), stdin);
+    size_t got;
+    if (got_bytes % sizeof(pcm[0]) != 0u) {
+      fprintf(stderr, "raw PCM input ends with partial PCM16 sample\n");
+      goto cleanup;
+    }
+    got = got_bytes / sizeof(pcm[0]);
     if (got == 0u) {
       if (ferror(stdin) != 0) {
         fprintf(stderr, "raw PCM input error\n");

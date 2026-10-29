@@ -76,7 +76,7 @@ Keep model weights fixed and tune keyword thresholds using development/calibrati
  -> false-positive / false-reject replay
 ```
 
-`eval/mine_hard_negatives.py` produces empty-target clips from false accepts. `eval/mine_false_rejects.py` replays missed positives with the configured token target. Neither may consume the final untouched qualification set if that set will remain unbiased release evidence.
+`eval/mine_hard_negatives.py` requires the original complete `--references` and produces empty-target review candidates only when the exported crop overlaps no annotated keyword; predictions never supply truth. Normal training admission still requires reviewed labels, source rights and lineage. `eval/mine_false_rejects.py` replays missed positives with the configured token target. Neither may consume the final untouched qualification set if that set will remain unbiased release evidence.
 
 The accepted model's qualification seed `271838` is already exposed and frozen. It may not be used for L1 calibration/replay or any future re-qualification. Use the active seed and retired-seed list in `configs/training/xiaowo.torch-domain.json` for a genuinely new formal candidate; routine maintenance does not consume one.
 

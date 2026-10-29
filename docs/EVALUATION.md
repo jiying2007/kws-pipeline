@@ -197,15 +197,24 @@ Positive coverage should be bucketed by speaker, session, distance, angle, SPL/S
 
 ## Failure replay
 
-False accepts can feed training:
+False accepts can nominate hard-negative review candidates:
 
 ```bash
 python3 eval/mine_hard_negatives.py \
   --false-positives build/false-positives.jsonl \
+  --references data/calibration/references.jsonl \
   --audio-root data/calibration \
   --output-dir build/hard-negatives \
   --manifest build/hard-negatives.tsv
 ```
+
+The original complete event references are required; predictions are not label
+truth. Crops overlapping any annotated keyword are skipped using actual exported
+sample bounds. Missing/invalid annotations or mismatched source identities are
+rejected; `expected: []` explicitly labels a negative source. Source WAVs and
+reference intervals must use the same time coordinates. The TSV is only a review
+candidate list: normal training still requires reviewed label/source/lineage
+admission. See [the miner contract](../eval/README.md#mine-hard-negatives).
 
 False rejects may be replayed with `eval/mine_false_rejects.py`. Retraining must use the exact token vocabulary and a compatible warm start when `--head-only` is selected.
 

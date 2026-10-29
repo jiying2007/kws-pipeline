@@ -2,6 +2,7 @@
 
 #include "kws_pipeline/kws.h"
 
+#include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -59,6 +60,7 @@ int kws_tool_open_wav(FILE *stream,
                       uint32_t *out_data_bytes,
                       long *out_data_offset) {
   uint8_t header[12];
+  uint64_t remaining;
   int have_fmt = 0;
 
   if (stream == NULL || out_data_bytes == NULL || out_data_offset == NULL) {
@@ -69,15 +71,27 @@ int kws_tool_open_wav(FILE *stream,
     return 0;
   }
 
+  /* Limit chunk headers and padded payloads to this RIFF container. Physical
+   * bytes after it are not audio; retain the first-data-chunk return policy. */
+  remaining = rd32(header + 4u);
+  if (remaining < 4u) return 0;
+  remaining -= 4u; /* WAVE form type was already read. */
+
   for (;;) {
     uint8_t chunk[8];
     uint32_t size;
+    uint64_t padded_size;
     long skip;
 
-    if (fread(chunk, 1u, sizeof(chunk), stream) != sizeof(chunk)) {
+    if (remaining < sizeof(chunk) ||
+        fread(chunk, 1u, sizeof(chunk), stream) != sizeof(chunk)) {
       return 0;
     }
+    remaining -= sizeof(chunk);
     size = rd32(chunk + 4u);
+    padded_size = (uint64_t)size + (uint64_t)(size & 1u);
+    if (padded_size > remaining) return 0;
+    remaining -= padded_size;
     if (memcmp(chunk, "fmt ", 4u) == 0) {
       uint8_t fmt[16];
       if (size < sizeof(fmt) || fread(fmt, 1u, sizeof(fmt), stream) != sizeof(fmt)) {
@@ -90,10 +104,8 @@ int kws_tool_open_wav(FILE *stream,
         return 0;
       }
       have_fmt = 1;
-      skip = (long)(size - (uint32_t)sizeof(fmt));
-      if ((size & 1u) != 0u) {
-        skip += 1L;
-      }
+      if (padded_size - sizeof(fmt) > (uint64_t)LONG_MAX) return 0;
+      skip = (long)(padded_size - sizeof(fmt));
       if (skip > 0L && fseek(stream, skip, SEEK_CUR) != 0) {
         return 0;
       }
@@ -110,7 +122,8 @@ int kws_tool_open_wav(FILE *stream,
       *out_data_offset = offset;
       return 1;
     } else {
-      skip = (long)size + (((size & 1u) != 0u) ? 1L : 0L);
+      if (padded_size > (uint64_t)LONG_MAX) return 0;
+      skip = (long)padded_size;
       if (skip > 0L && fseek(stream, skip, SEEK_CUR) != 0) {
         return 0;
       }
