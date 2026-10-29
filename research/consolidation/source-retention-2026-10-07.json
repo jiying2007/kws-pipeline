@@ -15450,15 +15450,15 @@
       "path": ".github/workflows/research-donor-fbank.yml",
       "mode": "100644",
       "bytes": 3696,
-      "sha256": "27267a2658bc1c1ed7c36782f99a108a6e9733589b559531d02839c0e8358c69",
-      "git_blob_sha1": "f672261c99f8a16c7abef085d8872f03254176d9"
+      "sha256": "bc493caee3e50a1be03f7d684c435cec7a1a7dfd996e8850869cca4553d890a5",
+      "git_blob_sha1": "ccfa145ad90a9c5fe4f0002d684953729034f630"
     },
     {
       "path": ".github/workflows/research-donor-fsmn.yml",
       "mode": "100644",
       "bytes": 1705,
-      "sha256": "79ebc9c2f9935fbb06bf59d80e72d1bccd49edbc3ac0a4fcdd55fe3e0b2dbf80",
-      "git_blob_sha1": "cc54faaf2c12b6b9d2570abc1e9ae2b357fa94eb"
+      "sha256": "462ee1a899be236ba6bbe413d8d9866ee4381f839d0447a88ea3951d6f8ddf73",
+      "git_blob_sha1": "7fc010ad1a6590e2b2475334ce824102104cae77"
     },
     {
       "path": ".github/workflows/research-native-a20.yml",
@@ -43006,6 +43006,76 @@
       ]
     },
     {
+      "id": "dependabot-setup-python-v7.1.0-current-identities-20261029",
+      "date": "2026-10-29",
+      "base_commit": "d09a6c55241d7f903e3c9e6e766d878454bbd321",
+      "base_tree": "6bc0ada10f08d62685330d373c6e900cba3cfd48",
+      "source_commit": "c94e02e98253a2426dae1adb1847dc395dc6f366",
+      "source_tree": "5fef56fe28c75e641068ad3f7ca455323050c75a",
+      "source_pr": 644,
+      "workflow_source_changed": true,
+      "scope": "Synchronize the three current active-workflow identities after the existing Dependabot actions/setup-python v7.0.0 to v7.1.0 pin update. No commands, inputs, triggers, permissions, validators or historical source changes.",
+      "action": "actions/setup-python",
+      "previous_action_commit": "5fda3b95a4ea91299a34e894583c3862153e4b97",
+      "action_commit": "6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+      "release": "https://github.com/actions/setup-python/releases/tag/v7.1.0",
+      "ci_failure_run": "https://github.com/jiying2007/kws-pipeline/actions/runs/40827137692",
+      "rationale": "Bind actual public current workflow bytes while preserving all 718 original retained files, provenance, archived workflows, scientific pins and previous maintenance records, including the ASR18 isolation record. These metadata identities do not grant execution authority or claim successful CI, model, board or acoustic validation.",
+      "files": [
+        {
+          "path": ".github/workflows/research-donor-fbank.yml",
+          "before": {
+            "path": ".github/workflows/research-donor-fbank.yml",
+            "mode": "100644",
+            "bytes": 3696,
+            "sha256": "27267a2658bc1c1ed7c36782f99a108a6e9733589b559531d02839c0e8358c69",
+            "git_blob_sha1": "f672261c99f8a16c7abef085d8872f03254176d9"
+          },
+          "after": {
+            "path": ".github/workflows/research-donor-fbank.yml",
+            "mode": "100644",
+            "bytes": 3696,
+            "sha256": "bc493caee3e50a1be03f7d684c435cec7a1a7dfd996e8850869cca4553d890a5",
+            "git_blob_sha1": "ccfa145ad90a9c5fe4f0002d684953729034f630"
+          }
+        },
+        {
+          "path": ".github/workflows/research-donor-fsmn.yml",
+          "before": {
+            "path": ".github/workflows/research-donor-fsmn.yml",
+            "mode": "100644",
+            "bytes": 1705,
+            "sha256": "79ebc9c2f9935fbb06bf59d80e72d1bccd49edbc3ac0a4fcdd55fe3e0b2dbf80",
+            "git_blob_sha1": "cc54faaf2c12b6b9d2570abc1e9ae2b357fa94eb"
+          },
+          "after": {
+            "path": ".github/workflows/research-donor-fsmn.yml",
+            "mode": "100644",
+            "bytes": 1705,
+            "sha256": "462ee1a899be236ba6bbe413d8d9866ee4381f839d0447a88ea3951d6f8ddf73",
+            "git_blob_sha1": "7fc010ad1a6590e2b2475334ce824102104cae77"
+          }
+        },
+        {
+          "path": ".github/workflows/research-source-consolidation.yml",
+          "before": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "bytes": 4156,
+            "sha256": "dd1fa1e7f2f93444321cfb667f83bb56e615ff451739ce2803458fc89765c7ce",
+            "git_blob_sha1": "f3edd54c53696171ad17131feb27e69be1edad2b"
+          },
+          "after": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "bytes": 4156,
+            "sha256": "e7590960080b5f79f9acb8189282bc1377a11b8fe69a4d3dfb08960fb521e80e",
+            "git_blob_sha1": "5bdebb8922969da5038e491292cdec5ac9fee48e"
+          }
+        }
+      ]
+    },
+    {
       "id": "audit-closure-contracts-and-asr18-isolation-20261028",
       "date": "2026-10-28",
       "base_commit": "bea17d06c044bfa57ff2d53f4a42497d3cfc31cb",
@@ -43103,8 +43173,8 @@
       "path": ".github/workflows/research-source-consolidation.yml",
       "mode": "100644",
       "bytes": 4156,
-      "sha256": "dd1fa1e7f2f93444321cfb667f83bb56e615ff451739ce2803458fc89765c7ce",
-      "git_blob_sha1": "f3edd54c53696171ad17131feb27e69be1edad2b"
+      "sha256": "e7590960080b5f79f9acb8189282bc1377a11b8fe69a4d3dfb08960fb521e80e",
+      "git_blob_sha1": "5bdebb8922969da5038e491292cdec5ac9fee48e"
     },
     {
       "path": ".github/workflows/qwen12-native-admission-v1.yml",
