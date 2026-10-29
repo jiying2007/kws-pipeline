@@ -10,9 +10,70 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <errno.h>
+#include <sys/stat.h>
+#endif
+
 #include "kws_timeline.h"
 
 #define BLOCK_SAMPLES 160u
+
+/* Hosted stable-filesystem preflight only; not a concurrent rename/TOCTOU
+ * guarantee. Keep ordinary non-input stats replacement and trace-mode x opens. */
+#if defined(_WIN32)
+typedef BY_HANDLE_FILE_INFORMATION stats_file_identity_t;
+static int stats_file_identity(const char *path, stats_file_identity_t *identity) {
+  HANDLE handle = CreateFileA(path, FILE_READ_ATTRIBUTES,
+      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
+      OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+  int available;
+  int closed;
+  if (handle == INVALID_HANDLE_VALUE) {
+    DWORD error = GetLastError();
+    return error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND ? 0 : -1;
+  }
+  available = GetFileInformationByHandle(handle, identity) != 0;
+  closed = CloseHandle(handle) != 0;
+  return available != 0 && closed != 0 ? 1 : -1;
+}
+static int stats_same_file(const stats_file_identity_t *a,
+                            const stats_file_identity_t *b) {
+  return a->dwVolumeSerialNumber == b->dwVolumeSerialNumber &&
+      a->nFileIndexHigh == b->nFileIndexHigh && a->nFileIndexLow == b->nFileIndexLow;
+}
+#else
+typedef struct stat stats_file_identity_t;
+static int stats_file_identity(const char *path, stats_file_identity_t *identity) {
+  if (stat(path, identity) == 0) return 1;
+  return errno == ENOENT ? 0 : -1;
+}
+static int stats_same_file(const stats_file_identity_t *a,
+                            const stats_file_identity_t *b) {
+  return a->st_dev == b->st_dev && a->st_ino == b->st_ino;
+}
+#endif
+
+static int stats_destination_safe(const char *stats_path,
+                                   const char *model_path,
+                                   const char *pack_path,
+                                   const char *wav_path,
+                                   const char *metadata_path) {
+  const char *inputs[] = {model_path, pack_path, wav_path, metadata_path};
+  stats_file_identity_t output;
+  int status = stats_file_identity(stats_path, &output);
+  if (status == 0) return 1; /* Only a genuinely absent target is new. */
+  if (status < 0) return 0;
+  for (size_t i = 0u; i < sizeof(inputs) / sizeof(inputs[0]); ++i) {
+    stats_file_identity_t input;
+    if (inputs[i] == NULL) continue;
+    if (stats_file_identity(inputs[i], &input) != 1 ||
+        stats_same_file(&output, &input)) return 0;
+  }
+  return 1;
+}
 
 /* KWTRACE1 stores acoustic frames, not discontinuity/reset events. Reject an
  * unsupported timeline before inference; preserve the legacy no-trace path. */
@@ -92,6 +153,11 @@ int main(int argc, char **argv) {
   if (trace_path != NULL && stats_path != NULL &&
       strcmp(trace_path, stats_path) == 0) {
     fprintf(stderr, "trace and stats must use separate new destinations\n");
+    return 2;
+  }
+  if (stats_path != NULL && trace_path == NULL &&
+      !stats_destination_safe(stats_path, argv[1], argv[2], argv[3], metadata_path)) {
+    fprintf(stderr, "stats output aliases an input or file identity is unavailable\n");
     return 2;
   }
   if (kws_tool_read_file(argv[1], &model_blob, &model_bytes) == 0 ||
