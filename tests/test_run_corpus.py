@@ -5,6 +5,7 @@ import hashlib
 import argparse
 import json
 import os
+import shlex
 import pathlib
 import stat
 import subprocess
@@ -311,6 +312,170 @@ class KeywordPackConsistencyTests(unittest.TestCase):
                         self.files['keywords'].write_bytes(b'fixture-pack-v2'))
         self.assertEqual(len(self.calls), 1)
         self.assert_outputs_preserved()
+
+
+class RecordingJsonlTests(unittest.TestCase):
+    """Real C string helper and Python consumers; no model or inference."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.build = tempfile.TemporaryDirectory()
+        cls.addClassCleanup(cls.build.cleanup)
+        root = pathlib.Path(cls.build.name)
+        source = root / 'runner.c'
+        cls.runner = root / 'runner'
+        source.write_text(r'''#include "tool_io.h"
+#include <stdio.h>
+int main(int argc, char **argv) {
+  if (argc != 5) return 2;
+  fputs("{\"recording\":", stdout);
+  kws_tool_print_json_string(stdout, argv[4]);
+  fputs(",\"keyword_id\":1,\"time_s\":0.5,\"confidence\":0.8}\n", stdout);
+  return fflush(stdout) != 0;
+}
+''', encoding='utf-8')
+        compiler = shlex.split(os.environ.get('CC', 'cc'))
+        subprocess.run(compiler + ['-std=c11', '-Wall', '-Wextra', '-Werror',
+            '-I', str(ROOT / 'tools'), '-I', str(ROOT / 'include'), str(source),
+            str(ROOT / 'tools/tool_io.c'), '-o', str(cls.runner)],
+            check=True, capture_output=True, timeout=30)
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = pathlib.Path(temporary.name)
+        self.files = {name: self.root / name for name in
+            ('model', 'keywords', 'references', 'posterior-dump', 'trace',
+             'detections', 'provenance', 'corpus-identity')}
+        for name, path in self.files.items():
+            path.write_bytes(('synthetic-not-a-model-' + name).encode())
+        write_wav(self.root / 'audio.wav', seconds=1)
+
+    def prepare(self, recording, *, cache=False):
+        reference = {'recording': recording, 'path': 'audio.wav',
+                     'duration_s': 1.0, 'expected': []}
+        self.reference_bytes = (json.dumps(reference) + '\n').encode()
+        self.files['references'].write_bytes(self.reference_bytes)
+        self.sentinels = {}
+        for name in ('detections', 'provenance', 'corpus-identity'):
+            self.sentinels[name] = ('preserve-' + name).encode()
+            self.files[name].write_bytes(self.sentinels[name])
+        argv = ['run_corpus', '--runner', str(self.runner), '--audio-root', str(self.root)]
+        for name in ('model', 'keywords', 'references', 'detections', 'provenance', 'corpus-identity'):
+            argv += ['--' + name, str(self.files[name])]
+        if cache:
+            argv += ['--posterior-dump', str(self.files['posterior-dump']),
+                     '--decoder-replay', str(self.runner),
+                     '--posterior-cache', str(self.root / 'cache')]
+        return argv
+
+    def invoke(self, recording, *, cache=False, hit=False, transform=lambda value: value):
+        argv = self.prepare(recording, cache=cache)
+        real_run = subprocess.run
+
+        def execute(command, **kwargs):
+            self.assertEqual(command[4], recording)
+            completed = real_run(command, **kwargs, timeout=30)
+            completed.stdout = transform(completed.stdout)
+            return completed
+
+        def cached(**kwargs):
+            return self.files['trace'], {
+                'posterior_dump_sha256': kwargs['posterior_dump_sha256'],
+                'trace_sha256': sha256_file(self.files['trace']), 'frames': 1}, hit
+
+        with patch.object(sys, 'argv', argv), \
+                patch.object(run_corpus.subprocess, 'run', side_effect=execute), \
+                patch.object(run_corpus, 'ensure_cached_trace', side_effect=cached) as cache_call:
+            self.assertEqual(run_corpus.main(), 0)
+            self.assertEqual(cache_call.call_count, int(cache))
+        self.assertEqual(self.files['references'].read_bytes(), self.reference_bytes)
+
+    def verify_outputs(self, recording, count, *, cache=False, hit=False):
+        import score_events
+        data = self.files['detections'].read_bytes()
+        # This actual downstream reader still uses splitlines; persisted JSONL
+        # must remain safe for it without changing the decoded recording ID.
+        rows = score_events.load_jsonl(self.files['detections'])
+        self.assertEqual(len(rows), count)
+        self.assertEqual([row['recording'] for row in rows], [recording] * count)
+        expected = json.dumps({'recording': recording, 'keyword_id': 1,
+                               'time_s': 0.5, 'confidence': 0.8}, ensure_ascii=False)
+        for separator in ('\u0085', '\u2028', '\u2029'):
+            expected = expected.replace(separator, f'\\u{ord(separator):04x}')
+        self.assertEqual(data, ((expected + '\n') * count).encode())
+        receipt = json.loads(self.files['provenance'].read_text())
+        self.assertEqual(receipt['detections_sha256'], hashlib.sha256(data).hexdigest())
+        self.assertEqual(receipt['references_sha256'], hashlib.sha256(self.reference_bytes).hexdigest())
+        self.assertEqual(receipt['detections'], count)
+        self.assertEqual(receipt['audio_files'][0]['recording'], recording)
+        if cache:
+            self.assertEqual(receipt['posterior_cache_hits'], int(hit))
+            self.assertEqual(receipt['posterior_cache_misses'], int(not hit))
+        summary = self.root / 'score.json'
+        scored = subprocess.run([sys.executable, '-S', '-B', str(ROOT / 'eval/score_events.py'),
+            '--references', str(self.files['references']), '--detections', str(self.files['detections']),
+            '--summary', str(summary)], capture_output=True, text=True, timeout=30)
+        self.assertEqual(scored.returncode, 0, scored.stderr)
+        self.assertEqual(json.loads(summary.read_text())['false_accepts'], count)
+        self.assertEqual(self.files['references'].read_bytes(), self.reference_bytes)
+
+    def test_helper_recording_roundtrip_direct_and_cache(self):
+        values = ['plain', '普通中文', 'a"\\\b\f\n\r\t\x1cb', r'a\u2028b',
+                  'a\u0085b', 'a\u2028b', 'a\u2029b', '中\u0085\u2028\u2029文']
+        for recording in values:
+            for cache, hit in ((False, False), (True, False), (True, True)):
+                with self.subTest(recording=recording, cache=cache, hit=hit):
+                    self.invoke(recording, cache=cache, hit=hit)
+                    self.verify_outputs(recording, 1, cache=cache, hit=hit)
+
+    def test_lf_crlf_blank_empty_and_multiple_records(self):
+        transforms = [('lf', lambda value: value, 1),
+                      ('no_final_lf', lambda value: value.rstrip('\n'), 1),
+                      ('crlf', lambda value: value.replace('\n', '\r\n'), 1),
+                      ('blank_lines', lambda value: '\r\n \t\n' + value + '\n', 1),
+                      ('multiple', lambda value: value + value, 2),
+                      ('empty', lambda value: '', 0)]
+        recording = '中\u2028文'
+        for name, transform, count in transforms:
+            for cache in (False, True):
+                with self.subTest(framing=name, cache=cache):
+                    self.invoke(recording, cache=cache, hit=True, transform=transform)
+                    self.verify_outputs(recording, count, cache=cache, hit=True)
+
+    def test_invalid_output_preserves_existing_artifacts(self):
+        bad = ['not-json\n', '[]\n', '{}\n',
+               json.dumps({'recording': 'wrong'}) + '\n',
+               '{"recording":"a\nb"}\n',
+               json.dumps({'recording': 'expected'}) + '\nnot-json\n']
+        for output in bad:
+            for cache in (False, True):
+                with self.subTest(output=output, cache=cache):
+                    with self.assertRaisesRegex(ValueError, 'runner'):
+                        self.invoke('expected', cache=cache, transform=lambda value: output)
+                    for name, original in self.sentinels.items():
+                        self.assertEqual(self.files[name].read_bytes(), original)
+                    self.assertEqual(self.files['references'].read_bytes(), self.reference_bytes)
+
+    def test_reference_source_boundary_is_not_broadened(self):
+        for separator in ('\u0085', '\u2028', '\u2029'):
+            with self.subTest(separator=separator):
+                self.prepare('a' + separator + 'b')
+                self.assertEqual(run_corpus.load_references(self.files['references'])[0]['recording'],
+                                 'a' + separator + 'b')
+                raw = json.dumps({'recording': 'a' + separator + 'b', 'path': 'audio.wav'},
+                                 ensure_ascii=False) + '\n'
+                self.files['references'].write_text(raw, encoding='utf-8')
+                with self.assertRaises(ValueError):
+                    run_corpus.load_references(self.files['references'])
+
+    def test_full_cli_helper_to_scorer(self):
+        recording = '中\u0085\u2028\u2029文'
+        argv = self.prepare(recording)
+        completed = subprocess.run([sys.executable, '-S', '-B', str(ROOT / 'eval/run_corpus.py'),
+                                    *argv[1:]], capture_output=True, text=True, timeout=30)
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.verify_outputs(recording, 1)
 
 
 def main() -> int:
