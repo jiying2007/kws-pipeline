@@ -20,7 +20,7 @@ from corpus_identity import (  # noqa: E402
     require_audited_audio, sha256_file, training_corpus_identity,
     training_manifest_audio_bindings, validate_audio_identity, rebind_audio_path,
 )
-from audit_dataset import audit_splits, parse_jsonl  # noqa: E402
+from audit_dataset import audit_splits, inspect_wav, parse_jsonl  # noqa: E402
 from run_corpus import audio_identity as execution_audio_identity, load_references  # noqa: E402
 from diagnose_decoder_policy_replay import boundary_reference_contract  # noqa: E402
 from render_domains import domain_reference_row  # noqa: E402
@@ -285,6 +285,78 @@ class CorpusIdentityTests(unittest.TestCase):
 
 
 
+class PCM16PayloadTests(unittest.TestCase):
+    """Synthetic containers; no model or private recordings."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = pathlib.Path(self.temp.name)
+        self.pcm = struct.pack("<400h", *range(400))
+
+    @staticmethod
+    def chunk(tag, data):
+        return tag + struct.pack("<I", len(data)) + data + (bytes(1) if len(data) % 2 else b"")
+
+    def write_container(self, name, *, pcm=None, before=b"", after=b"", fmt=None):
+        fmt = fmt if fmt is not None else struct.pack("<HHIIHH", 1, 1, 16000, 32000, 2, 16)
+        chunks = self.chunk(b"fmt ", fmt) + before + self.chunk(b"data", self.pcm if pcm is None else pcm) + after
+        path = self.root / name
+        path.write_bytes(b"RIFF" + struct.pack("<I", 4 + len(chunks)) + b"WAVE" + chunks)
+        return path
+
+    def reject_both(self, path, message):
+        for inspect in (inspect_pcm16_wav, inspect_wav):
+            with self.subTest(reader=inspect.__name__), self.assertRaisesRegex(ValueError, message):
+                inspect(path)
+
+    def test_valid_payload_identity_unchanged(self):
+        path = self.write_container("valid.wav")
+        expected = hashlib.sha256(self.pcm).hexdigest()
+        self.assertEqual(inspect_pcm16_wav(path)["pcm_sha256"], expected)
+        self.assertEqual(inspect_wav(path), (400, 400 / 16000, expected))
+
+    def test_odd_data_is_rejected_even_with_external_padding(self):
+        path = self.write_container("half-sample.wav", pcm=self.pcm + b"X")
+        self.reject_both(path, "incomplete PCM16 sample")
+
+    def test_data_extent_must_fit_file(self):
+        path = self.write_container("truncated.wav")
+        path.write_bytes(path.read_bytes()[:-2])
+        self.reject_both(path, "truncated PCM payload")
+
+    def test_data_extent_must_fit_declared_riff(self):
+        path = self.write_container("short-riff.wav")
+        data = bytearray(path.read_bytes())
+        struct.pack_into("<I", data, 4, len(data) - 10)
+        path.write_bytes(data)
+        self.reject_both(path, "truncated PCM payload")
+
+    def test_odd_unknown_chunk_padding_is_valid(self):
+        path = self.write_container("padded.wav", before=self.chunk(b"JUNK", b"x"))
+        self.assertEqual(inspect_pcm16_wav(path)["pcm_sha256"], hashlib.sha256(self.pcm).hexdigest())
+        self.assertEqual(inspect_wav(path)[0], 400)
+
+    def test_missing_unknown_chunk_padding_is_rejected(self):
+        path = self.write_container("unpadded.wav", before=b"JUNK" + struct.pack("<I", 1) + b"x")
+        self.reject_both(path, "WAV|PCM")
+
+    def test_fmt_matches_c_pcm16_contract(self):
+        for name, fields in (
+            ("align", (1, 1, 16000, 32000, 1, 16)),
+            ("byte-rate", (1, 1, 16000, 16000, 2, 16)),
+            ("format-tag", (3, 1, 16000, 32000, 2, 16)),
+        ):
+            with self.subTest(case=name):
+                path = self.write_container(name + ".wav", fmt=struct.pack("<HHIIHH", *fields))
+                self.reject_both(path, "expected mono 16-kHz PCM16 WAV")
+
+    def test_metadata_after_data_does_not_change_pcm(self):
+        path = self.write_container("metadata.wav", after=self.chunk(b"JUNK", b"metadata"))
+        self.assertEqual(inspect_pcm16_wav(path)["pcm_sha256"], hashlib.sha256(self.pcm).hexdigest())
+        self.assertEqual(inspect_wav(path)[0], 400)
+
+
 class StreamingPCMIdentityTests(unittest.TestCase):
     LIMIT = 65536
 
@@ -351,9 +423,12 @@ class StreamingPCMIdentityTests(unittest.TestCase):
                     raise OSError('injected PCM read error')
                 return b'\x00' * (2 * count)
         reader = Reader()
-        with patch.object(wave, 'open', return_value=reader):
-            with self.assertRaisesRegex(OSError, 'injected PCM read error'):
-                inspect_pcm16_wav(pathlib.Path('unused-fixture.wav'))
+        with tempfile.TemporaryDirectory() as td:
+            path = pathlib.Path(td) / 'fixture.wav'
+            self.make_wav(path, 2 * self.LIMIT + 1)
+            with patch.object(wave, 'open', return_value=reader):
+                with self.assertRaisesRegex(OSError, 'injected PCM read error'):
+                    inspect_pcm16_wav(path)
         self.assertTrue(reader.closed)
 
 

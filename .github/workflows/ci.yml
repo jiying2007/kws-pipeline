@@ -299,6 +299,8 @@ jobs:
           python3 -S -B -O tests/test_corpus_identity.py
           python3 -S -B -OO tests/test_corpus_identity.py
           python3 tests/test_reviewed_corpus_admission.py
+          python3 -S -B -O tests/test_reviewed_corpus_admission.py AdmissionTests
+          python3 -S -B -OO tests/test_reviewed_corpus_admission.py AdmissionTests
           python3 tests/test_training_admission.py
           python3 -S -B -O tests/test_training_admission.py
           python3 -S -B -OO tests/test_training_admission.py
@@ -818,7 +820,10 @@ jobs:
       - name: Verify tracked worktree after Audio discontinuity contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Audio discontinuity contract"'
       - name: Training supply-chain contract
-        run: python3 tests/test_training_supply_chain.py
+        run: |
+          python3 -S -B tests/test_training_supply_chain.py
+          python3 -S -B -O tests/test_training_supply_chain.py
+          python3 -S -B -OO tests/test_training_supply_chain.py
       - name: Verify tracked worktree after Training supply-chain contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Training supply-chain contract"'
       - name: Model family resource dimension contracts

@@ -319,6 +319,23 @@ class SourceResolverMetadataTests(unittest.TestCase):
             f.archive.write_bytes(f.archive.read_bytes() + b"changed")
             with self.assertRaises(ValueError): resolver.verify_source_context(context, f.record)
 
+    def test_optional_source_aliases_are_bound_to_trusted_source_policy(self):
+        for field in ("source_family", "family_id", "derivation_family"):
+            with self.subTest(field=field), trusted_fixture() as f:
+                f.record[field] = "invented-bound-family"
+                with self.assertRaisesRegex(ValueError, "source policy"):
+                    self.resolve(f)
+                f.documents["source-policy.json"][field] = f.record[field]
+                f.rebuild()
+                self.resolve(f)
+                f.record[field] = "different-family"
+                with self.assertRaisesRegex(ValueError, "source policy"):
+                    self.resolve(f)
+                f.record[field] = f.documents["source-policy.json"][field] = None
+                f.rebuild()
+                with self.assertRaisesRegex(ValueError, "canonical non-empty text"):
+                    self.resolve(f)
+
     def test_trusted_policy_cannot_launder_restricted_role_or_nested_bool_int(self):
         for field, value in (("split", "test"), ("role", "source_screen_only"),
                              ("source_screen_only", True), ("training_use_allowed", False),

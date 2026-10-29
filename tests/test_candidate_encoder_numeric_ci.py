@@ -47,7 +47,9 @@ class CandidateNumericCIContracts(unittest.TestCase):
                      "research/kws-candidate-registry-v1/build_registry.py", "research/kws-candidate-registry-v1/input-pins.json"):
             self.assertEqual(changes.scopes([path]), (False, True))
         for path in ("training/export_model.py", "training/training_state.py", "training/training_admission.py",
-                     "training/frontend.py", "tools/asr_source_resolver.py"):
+                     "training/frontend.py", "tools/asr_source_resolver.py",
+                     "tools/source_identity.py", "tools/export_artifacts.py",
+                     "tools/source_lineage_admission.py"):
             self.assertEqual(changes.scopes([path]), (True, True))
         self.assertEqual(changes.scopes(["research/direct_fit-lookalike/x.py"]), (False, False))
         filters = [path for _, path in exact_path_filters(ROOT / changes.WORKFLOW)]

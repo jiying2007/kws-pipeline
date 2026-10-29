@@ -114,6 +114,23 @@ python3 training/export_model.py \
 
 The warm start must match vocabulary, feature/hidden geometry, frontend identity and frontend-spec contract. A vocabulary expansion is a new acoustic-model lineage and must not be disguised as an L0 keyword-pack change.
 
+### Export output safety
+
+The exporter requires distinct checkpoint, token input, model output and
+provenance output destinations wherever an output is involved. It rejects
+relative-path, symbolic-link and existing hard-link aliases before loading the
+checkpoint. The default provenance path is `OUTPUT.provenance.json` and is
+checked by the same rule.
+
+The full model and serialized provenance are prepared before writing output.
+Both payloads are staged in their destination directories before replacement;
+each file replacement is atomic. This is not a transaction across the pair.
+Any staging/replacement error fails the command, and a failure during the
+second replacement may leave the first file updated. Treat that result as a
+failed export and verify the sidecar's model hash before using either artifact.
+Do not concurrently mutate export paths or their inputs.
+
+
 ## Domain-aware adaptation
 
 For deterministic software/domain iteration:

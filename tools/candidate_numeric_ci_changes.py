@@ -37,7 +37,9 @@ CANDIDATE_SHARED = frozenset({WORKFLOW, "training/model.py", "training/sitecusto
                               "training/frontend.py", "training/frontend_spec.py", "training/train_ctc.py",
                               "training/training_admission.py", "training/training_state.py",
                               "training/export_model.py", "training/audit_dataset.py",
-                              "tools/corpus_identity.py", "tools/kws_vocab.py", "tools/speech_label_admission.py",
+                              "tools/corpus_identity.py", "tools/source_identity.py", "tools/export_artifacts.py",
+                              "tools/source_lineage_admission.py",
+                              "tools/kws_vocab.py", "tools/speech_label_admission.py",
                               "tools/speech_asr_consensus.py", "tools/asr_source_resolver.py",
                               "tools/asr_native_contracts.py", "research/model_comparison/runner.py",
                               "research/model_comparison/compare.py"})

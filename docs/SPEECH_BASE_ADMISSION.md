@@ -48,6 +48,14 @@ Optional known `speaker_id`, `reference_audio_sha256`, `session_id`, and
 `derivation_family_id` are retained and must match supplied source metadata.
 Missing identity is unknown. It is not proof of speaker/model independence.
 
+Optional `source_family`, `family_id` and `derivation_family` fields are also
+retained and bound to the supplied review/provenance. All recording/source
+family fields, including `source_id`, share one leakage namespace: the same
+value in different family fields cannot cross splits. Speaker, session,
+reference-file and PCM identities retain separate namespaces. See
+[the corpus identity contract](CORPUS_IDENTITY.md#recording-and-family-identity-namespace).
+
+
 All known revisions must be supplied. The latest supplied rejected, uncertain or acoustically
 incomplete review stops admission. A previously rejected OOV observation can be
 retained and superseded by a valid corrected review. Historical receipts are

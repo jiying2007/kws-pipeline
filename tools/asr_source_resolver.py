@@ -18,7 +18,8 @@ import weakref
 import wave
 import zipfile
 
-from speech_label_admission import canonical_sha256, require_sha, LINEAGE_FIELDS
+from speech_label_admission import canonical_sha256, require_sha
+from source_identity import LINEAGE_FIELDS, validate_source_identity_values
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 RESOLVER_POLICY = "immutable-asr-source-resolver-v1"
@@ -321,6 +322,8 @@ def _resolve(record: dict, store: Path, session=None) -> dict:
             or policy.get("allowed_roles") != ["train"] or policy.get("human_gold") is not False
             or not _same(policy.get("source_provenance"), record["source_provenance"])):
         raise ValueError("retained source policy is not eligible train-only machine evidence")
+    validate_source_identity_values(policy, "source policy")
+    validate_source_identity_values(record, "source record")
     _equal_fields(policy, record, ("source_id", "intended_text", *LINEAGE_FIELDS), "source policy")
     if (not _same(policy.get("human_review_history"), record["human_review_history"])
             or policy.get("human_review_history_sha256") != canonical_sha256(record["human_review_history"])):
