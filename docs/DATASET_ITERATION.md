@@ -64,6 +64,37 @@ Treat the bound, not the point estimate, as the measurement. A dataset too small
 to support the product's false-accept budget cannot demonstrate that budget --
 that is a property of the dataset, not of the model.
 
+## FAR populations and scorecard compatibility
+
+New scorecards use schema 2, default protocol `dataset-iteration-v2`, and the
+fixed identity policy `negative-only-recordings-iteration-approx95-v1`.
+The policy is part of `run_id` even with a custom `--protocol` label.
+
+`far_rate` uses only complete recordings with `expected: []`: its
+`observed_false_accepts`, `point_estimate_per_hour` and upper bound all use that
+population and `exposure.exposure_hours`. Missing negative metrics or zero
+negative exposure are errors, not zero FAR. The upper-bound calculation is
+unchanged: `2.9957 / T` for zero events, otherwise
+`(N + 1.959964 * sqrt(N)) / T`, labelled as a normal approximation. It does not
+switch to the scorer's separate exact-Poisson upper bound. Schema-2 comparison
+checks that the point and bound exactly match this count/exposure calculation;
+do not round stored values. A non-finite computed bound is rejected, including
+when a finite positive exposure is too small to represent its bound.
+
+`metrics.false_accepts` and `metrics.far_per_hour` remain the scorer's global
+all-recording diagnostics, including unmatched detections in positive
+recordings. The comparison's `deltas.far_per_hour` remains that global
+diagnostic; its FAR budget and improvement decision use the negative-only
+upper bound. This lane still does not qualify or promote a model.
+
+The current comparator can still compare two schema-1 legacy cards (including
+matching custom protocol labels), without relabelling their old mixed-population
+measurement. It refuses a legacy/new pair, unknown policies, and schema-2 cards
+missing their fixed policy, even when protocol labels match. Re-run both sides
+on the same current code and policy rather than editing historical cards.
+Keep archived scorecards unchanged; the new identity gives new runs new paths.
+An old comparator does not implement these checks: use the current comparator.
+
 ## Running it
 
 Dispatch `.github/workflows/dataset-driven-iteration.yml` from the exact
