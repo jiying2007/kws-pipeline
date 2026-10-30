@@ -4,14 +4,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import pathlib
 import struct
 import subprocess
 import sys
 import tempfile
 import wave
-
-from qualification_fixture import write_model, write_pack, write_tokens
+import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SAMPLE_RATE_HZ = 16000
@@ -326,10 +326,148 @@ static int input_error(FILE *stream) {
         raise RuntimeError("raw PCM input contract failed")
 
 
+class AttributionEndpointTests(unittest.TestCase):
+    """Strict JSON metadata CLI checks; no audio, runner, model or training."""
+
+    def run_metadata(self, intervals, times, *, error=None, raw_detections=None):
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            domains, injections = [], []
+            for index, (start, duration) in enumerate(intervals):
+                source = str(root / f"metadata-only-{index}.wav")
+                digest = hashlib.sha256(f"metadata-only-{index}".encode()).hexdigest()
+                domains.append({"path": source, "wav_sha256": digest})
+                injections.append({"start_second": start, "source_seconds": duration,
+                                   "source_path": source, "source_sha256": digest,
+                                   "gain": 0.9, "coverage_required": False})
+            detections = [{"time_s": t, "keyword_id": 2, "confidence": 0.5} for t in times]
+            for name, rows in (("domains", domains), ("injections", injections),
+                               ("detections", detections)):
+                text = "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows)
+                if name == "detections" and raw_detections is not None:
+                    text = raw_detections
+                (root / f"{name}.jsonl").write_text(text, encoding="utf-8")
+            inputs = [root / f"{name}.jsonl" for name in ("domains", "injections", "detections")]
+            before = [path.read_bytes() for path in inputs]
+            output = root / "attributed.jsonl"
+            optimization = ["-" + "O" * sys.flags.optimize] if sys.flags.optimize else []
+            command = [sys.executable, "-S", "-B", *optimization,
+                       str(ROOT / "eval/annotate_far_detections.py"),
+                       "--domain-index", str(inputs[0]), "--injections", str(inputs[1]),
+                       "--detections", str(inputs[2]), "--output", str(output)]
+            result = subprocess.run(command, capture_output=True, text=True,
+                                    timeout=10, check=False)
+            self.assertEqual([path.read_bytes() for path in inputs], before)
+            self.assertEqual(result.returncode, 2 if error else 0, result.stderr)
+            if error:
+                self.assertIn(error, result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+                self.assertEqual(result.stdout, "")
+                self.assertFalse(output.exists())
+                return [], None
+            self.assertEqual(result.stderr, "")
+            rows = [json.loads(line) for line in output.read_text().splitlines()]
+            summary = json.loads(output.with_suffix(".summary.json").read_text())
+            self.assertEqual(json.loads(result.stdout), summary)
+            self.assertEqual([row["detection"] for row in rows], detections)
+            self.assertEqual(summary["detections"], len(times))
+            return rows, summary
+
+    def check_sources(self, rows, active, previous, following):
+        for field, expected in (("active_injection", active),
+                                ("previous_injection", previous),
+                                ("next_injection", following)):
+            self.assertEqual([None if row[field] is None else row[field]["index"]
+                              for row in rows], expected, field)
+
+    def test_strict_half_open_ulp_and_microsecond_neighbors(self):
+        end = 1.265
+        times = [math.nextafter(end, -math.inf), end, math.nextafter(end, math.inf),
+                 end - 0.000001, end + 0.000001]
+        rows, summary = self.run_metadata([(1, 0.265)], times)
+        self.check_sources(rows, [0, None, None, 0, None],
+                           [None, 0, 0, None, 0], [None] * 5)
+        self.assertEqual(rows[1]["seconds_since_previous_end"], 0.0)
+        self.assertEqual(summary["active_source_attributions"], 2)
+        self.assertEqual(summary["unattributed_detections"], 3)
+
+    def test_non_six_decimal_non_sample_grid_inputs(self):
+        start, duration, end = 0.123456789012, 0.0000001234567, 0.1234569124687
+        times = [math.nextafter(start, -math.inf), start,
+                 math.nextafter(end, -math.inf), end, math.nextafter(end, math.inf)]
+        rows, _ = self.run_metadata([(start, duration)], times)
+        self.check_sources(rows, [None, 0, 0, None, None],
+                           [None, None, None, 0, 0], [0, None, None, None, None])
+        self.assertEqual(rows[1]["active_injection"]["start_second"], start)
+        self.assertEqual(rows[1]["active_injection"]["source_seconds"], duration)
+        self.assertEqual(rows[1]["active_injection"]["end_second"], end)
+
+    def test_adjacent_sources_keep_boundary_order(self):
+        end = 1.265
+        rows, _ = self.run_metadata([(1, 0.265), (end, 0.5)],
+                                    [math.nextafter(end, -math.inf), end,
+                                     math.nextafter(end, math.inf), 1.765])
+        self.check_sources(rows, [0, 1, 1, None], [None, 0, 0, 1], [1, None, None, None])
+        self.assertEqual(rows[1]["seconds_since_previous_end"], 0.0)
+
+    def test_existing_overlap_policy_and_ambiguity(self):
+        self.run_metadata([(1, 0.265), (1.2649, 0.5)], [1.3],
+                          error="hard-negative injection intervals overlap")
+        # Existing normalization tolerates <1e-9 overlap, but membership remains
+        # strictly half-open and still rejects a detection in both intervals.
+        intervals = [(1, 0.265), (1.265 - 5e-10, 0.5)]
+        rows, _ = self.run_metadata(intervals, [1.3])
+        self.check_sources(rows, [1], [0], [None])
+        self.run_metadata(intervals, [1.265 - 2e-10],
+                          error="maps to overlapping active injections")
+
+    def test_integer_legacy_control(self):
+        rows, summary = self.run_metadata([(1, 1)], [0.5, 1, 1.5, 2, 2.5])
+        self.check_sources(rows, [None, 0, 0, None, None],
+                           [None, None, None, 0, 0], [0, None, None, None, None])
+        self.assertEqual(rows[3]["seconds_since_previous_end"], 0.0)
+        self.assertEqual(summary["active_source_attributions"], 2)
+
+    def test_positive_finite_overflow_legacy_branches(self):
+        rows, summary = self.run_metadata([(1e308, 1e308)], [])
+        self.assertEqual(rows, [])
+        self.assertEqual(summary["injections"], 1)
+        self.assertEqual(summary["active_source_attributions"], 0)
+        self.run_metadata([(1e308, 1e308)], [1e308],
+                          error="Out of range float values are not JSON compliant")
+
+    def test_generator_seconds_and_raw_cli_time_format(self):
+        source_frames, start, rate = 4240, 1, 16000
+        end_sample = start * rate + source_frames
+        self.assertEqual((end_sample - 400) % 320, 0)
+        # Match the public generator's duration ratio and raw CLI's %.6f wire
+        # format; this test does not execute the generator or model runtime.
+        wire_time = format(end_sample / rate, ".6f")
+        raw = '{"keyword_id":2,"confidence":0.5,"time_s":' + wire_time + '}\n'
+        rows, summary = self.run_metadata([(start, source_frames / rate)],
+                                          [float(wire_time)], raw_detections=raw)
+        self.check_sources(rows, [None], [0], [None])
+        self.assertEqual(rows[0]["seconds_since_previous_end"], 0.0)
+        self.assertEqual(summary["unattributed_detections"], 1)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--runner", required=True, type=pathlib.Path)
+    parser.add_argument("--runner", type=pathlib.Path)
+    parser.add_argument("--attribution-metadata-only", action="store_true")
     args = parser.parse_args()
+    if not args.attribution_metadata_only and args.runner is None:
+        parser.error("--runner is required unless --attribution-metadata-only is set")
+
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(AttributionEndpointTests)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    if result.testsRun != 7 or result.skipped or not result.wasSuccessful():
+        raise RuntimeError("attribution endpoint metadata regression failed")
+    if args.attribution_metadata_only:
+        print("test_long_far: attribution metadata only; full FAR/runtime not run")
+        return 0
+
+    from qualification_fixture import write_model, write_pack, write_tokens
 
     workflow = (ROOT / ".github" / "workflows" / "model-training.yml").read_text(encoding="utf-8")
     far_gate = (ROOT / "eval" / "run_continuous_far_gate.py").read_text(encoding="utf-8")

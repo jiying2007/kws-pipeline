@@ -5,6 +5,7 @@ import argparse
 import json
 import math
 import pathlib
+from fractions import Fraction
 
 
 def load_jsonl(path: pathlib.Path) -> list[dict]:
@@ -87,11 +88,17 @@ def normalize_injections(rows: list[dict], domain_by_path: dict[str, dict]) -> l
                 f"injection/domain SHA mismatch for {source_path}: "
                 f"{source_sha} != {domain.get('wav_sha256')}"
             )
+        # Add the declared decimal seconds before one final binary conversion;
+        # intermediate float rounding must not move a half-open endpoint.
+        try:
+            end = float(Fraction(str(start)) + Fraction(str(seconds)))
+        except OverflowError:
+            end = start + seconds  # Preserve the existing overflow behavior.
         result.append(
             {
                 "index": index,
                 "start_second": start,
-                "end_second": start + seconds,
+                "end_second": end,
                 "source_path": source_path,
                 "source_sha256": source_sha,
                 "source_seconds": seconds,
