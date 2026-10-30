@@ -30,6 +30,8 @@ import subprocess
 import sys
 import wave
 
+from corpus_identity import canonical_audio_path
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 EVAL = ROOT / "eval"
 PROTOCOL = "dataset-iteration-v1"
@@ -95,7 +97,7 @@ def dataset_identity(references: pathlib.Path, audio_root: pathlib.Path) -> tupl
         name = str(row.get("recording", ""))
         if not name:
             raise ValueError("reference row is missing 'recording'")
-        relative = str(row.get("path") or "")
+        relative = canonical_audio_path(row, name)
         audio = pathlib.Path(relative)
         if not audio.is_absolute():
             audio = audio_root / audio
