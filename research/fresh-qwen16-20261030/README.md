@@ -1,0 +1,13 @@
+# Fresh Qwen16 development batch — 2026-10-30
+
+This is a new, bounded audio-generation campaign, not a replay or relabeling of a closed historical campaign. It uses the pinned Qwen3-TTS 0.6B CustomVoice model and locked public CPU runtime from pipeline commit `983e8082f712bd5099feb32bfb099e9f6df22d3a`.
+
+The fixed plan contains 16 new attempts: Vivian, Uncle_Fu, Dylan and Serena × 你好小窝 / 小窝小窝 × two new seeds. Existing voice-group exposure is preserved: Vivian/Uncle_Fu/Dylan are training candidates; Serena remains observed development A and must not enter training or be called unseen. All clips remain unadmitted until actual-audio label evidence passes the existing independent admission path. No human review, three-ASR vote, model quality, FAR or production approval is fabricated.
+
+Source checks run without Torch, model downloads or inference on the PR. Actual synthesis is restricted to the first creation of `exec-data/fresh-qwen16-20261030-v1` after protected integration. Do not delete/recreate that branch, rerun a consumed execution, or automatically retry a failed slot. The execution ref is outside automatic cleanup prefixes.
+
+Only the public standard ubuntu-24.04 runner is allowed. The retained unprivileged Docker boundary enforces 4 CPUs, 12 GiB RAM, no swap, 256 PIDs, read-only code/root, dropped capabilities and network-none inference. Setup uses the original exact package/model locks and bounded downloader. Current host memory and disk headroom are measured before acquisition; unavailable capacity stops without a paid fallback. At most 16 TTS calls, zero ASR calls, zero KWS training calls and zero Codex/Work calls. Per-cell timeout is 300 seconds; setup is bounded to 1200 seconds; synthesis stage to 4800 seconds; whole launcher to 7200 seconds.
+
+Retain native 24 kHz float WAV, independently derived 16 kHz PCM16 WAV, exact bytes/PCM/frame hashes, native decoder termination, plan/source identity, voice family, intended role, actual attempt denominator and failure evidence. Preserve raw outputs without trimming, gain repair or retry selection. Public artifacts contain only authorized preset synthesis and allowlisted receipts, never weights, package trees, private audio or credentials. Artifacts are temporary recovery storage, not a claim of durable model delivery.
+
+Next stages are independent: archive the exact generated evidence to kws-data, capture genuine three-family ASR outputs or actual human reviews, admit eligible rows, run bounded KWS development comparisons, preserve the candidate weights, then complete numerical/deployment and real-AFE/SSC305 qualification. This campaign does not alter shipping_approved=false or recalibration_required=true.

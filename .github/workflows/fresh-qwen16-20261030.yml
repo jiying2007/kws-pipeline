@@ -1,0 +1,61 @@
+name: Fresh Qwen16 source and bounded generation
+on:
+  pull_request:
+    paths:
+      - 'research/fresh-qwen16-20261030/**'
+      - '.github/workflows/fresh-qwen16-20261030.yml'
+  push:
+    branches: [main, exec-data/fresh-qwen16-20261030-v1]
+permissions:
+  contents: read
+concurrency:
+  group: fresh-qwen16-20261030-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  fresh-data-contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Pure contracts in normal and optimized modes; zero model calls
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover -s research/fresh-qwen16-20261030 -p 'test_*.py' -v
+          python3 -B -O -m unittest discover -s research/fresh-qwen16-20261030 -p 'test_*.py' -v
+          python3 -B -OO -m unittest discover -s research/fresh-qwen16-20261030 -p 'test_*.py' -v
+          git diff --exit-code
+  generate:
+    needs: fresh-data-contracts
+    if: >-
+      github.repository == 'jiying2007/kws-pipeline' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/exec-data/fresh-qwen16-20261030-v1' &&
+      github.event.created == true &&
+      github.event.repository.private == false &&
+      github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 125
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: jiying2007/kws-pipeline
+          ref: 983e8082f712bd5099feb32bfb099e9f6df22d3a
+          path: _retained
+          persist-credentials: false
+      - name: Generate at most sixteen fresh unadmitted clips without retry
+        id: generation
+        run: python3 -B research/fresh-qwen16-20261030/run.py --retained-root _retained
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.generation.outputs.evidence_root != ''
+        with:
+          name: fresh-qwen16-20261030-${{ github.run_id }}
+          path: ${{ steps.generation.outputs.evidence_root }}
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
