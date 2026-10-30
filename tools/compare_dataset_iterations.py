@@ -69,7 +69,9 @@ def number(value: object, label: str) -> float:
 
 
 def metric(row: dict, field: str) -> float:
-    return number(row["metrics"].get(field, 0.0), f"metrics.{field}")
+    if field not in row["metrics"]:
+        raise ValueError(f"metrics is missing required '{field}'")
+    return number(row["metrics"][field], f"metrics.{field}")
 
 
 def far_bound(row: dict, label: str) -> float:
@@ -169,7 +171,9 @@ def compare(before: dict, after: dict, far_budget: float, frr_tolerance: float,
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(
+        description="Compare two dataset-iteration scorecards as a paired A/B result."
+    )
     parser.add_argument("--baseline", required=True, type=pathlib.Path)
     parser.add_argument("--candidate", required=True, type=pathlib.Path)
     parser.add_argument("--far-budget", type=float, default=1.0,
