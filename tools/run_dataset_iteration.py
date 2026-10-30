@@ -30,9 +30,12 @@ import subprocess
 import sys
 import wave
 
+from corpus_identity import canonical_audio_path
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 EVAL = ROOT / "eval"
-PROTOCOL = "dataset-iteration-v1"
+PROTOCOL = "dataset-iteration-v2"
+FAR_POLICY = "negative-only-recordings-iteration-approx95-v1"
 VARIABLES = ("dataset", "model")
 
 # chi-square with 2 degrees of freedom at 95% is 5.991, and the Poisson upper
@@ -95,7 +98,7 @@ def dataset_identity(references: pathlib.Path, audio_root: pathlib.Path) -> tupl
         name = str(row.get("recording", ""))
         if not name:
             raise ValueError("reference row is missing 'recording'")
-        relative = str(row.get("path") or "")
+        relative = canonical_audio_path(row, name)
         audio = pathlib.Path(relative)
         if not audio.is_absolute():
             audio = audio_root / audio
@@ -127,8 +130,8 @@ def model_identity(model: pathlib.Path, keywords: pathlib.Path) -> str:
 def exposure_hours(references: pathlib.Path) -> tuple[float, int]:
     """Negative exposure: recordings with no expected keyword.
 
-    False accepts can only happen where no wake is expected, so this -- not the
-    total corpus duration -- is the denominator of FAR/hour.
+    This population excludes entire positive recordings, including unmatched
+    detections there. Global false accepts remain separate diagnostics.
     """
     rows = load_jsonl(references)
     total = 0.0
@@ -151,6 +154,38 @@ def far_upper_bound_95(false_accepts: float, hours: float) -> float:
     if false_accepts <= 0.0:
         return ZERO_COUNT_UPPER_BOUND / hours
     return (false_accepts + NORMAL_Z95 * math.sqrt(false_accepts)) / hours
+
+
+def negative_far_rate(summary: dict) -> tuple[float, dict]:
+    """Use one scorer population, retaining this lane's existing approximation."""
+    fields = ("negative_recording_false_accepts", "negative_recording_audio_hours",
+              "negative_recording_far_per_hour")
+    for field in fields:
+        if field not in summary:
+            raise ValueError(f"summary is missing required '{field}'")
+    count, raw_hours, raw_point = (summary[field] for field in fields)
+    if type(count) is not int or count < 0:
+        raise ValueError("negative false accepts must be a non-negative integer")
+    if isinstance(raw_hours, bool) or isinstance(raw_point, bool):
+        raise ValueError("negative FAR hours and point must be numbers, not booleans")
+    try:
+        hours, point = float(raw_hours), float(raw_point)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("negative FAR requires positive exposure and a finite point") from exc
+    if not math.isfinite(hours) or hours <= 0.0:
+        raise ValueError("negative exposure must be finite and positive")
+    if not math.isfinite(point) or point < 0.0 or point != count / hours:
+        raise ValueError("negative FAR point must equal negative count / exposure")
+    bound = far_upper_bound_95(count, hours)
+    if not math.isfinite(bound):
+        raise ValueError("negative FAR upper bound must be finite")
+    return hours, {
+        "observed_false_accepts": count,
+        "point_estimate_per_hour": point,
+        "upper_bound_95_per_hour": bound,
+        "basis": ("zero observed: chi-square(2) 95% / (2T)" if count == 0
+                  else "non-zero count: normal approximation to Poisson"),
+    }
 
 
 def run(argv: list[str]) -> None:
@@ -244,14 +279,18 @@ def main() -> int:
 
     dataset_id, dataset_info = dataset_identity(args.references, args.audio_root)
     model_id = model_identity(args.model, args.keywords)
-    hours, negatives = exposure_hours(args.references)
+    reference_hours, negatives = exposure_hours(args.references)
     base = json.loads(summary.read_text(encoding="utf-8"))
     domain_rows = json.loads(domains.read_text(encoding="utf-8"))
+    hours, far_rate = negative_far_rate(base)
+    if not math.isclose(hours, reference_hours, rel_tol=1e-12, abs_tol=0.0):
+        raise ValueError("negative scorer exposure differs from references")
 
     false_accepts = float(base.get("false_accepts", 0.0) or 0.0)
     point_far = float(base.get("far_per_hour", 0.0) or 0.0)
     identity = {
         "protocol": args.protocol,
+        "far_policy": FAR_POLICY,
         "dataset_id": dataset_id,
         "model_id": model_id,
         "code_sha": args.code_sha or git_head(),
@@ -259,7 +298,7 @@ def main() -> int:
         "variable": args.variable,
     }
     scorecard = {
-        "schema_version": 1,
+        "schema_version": 2,
         "protocol": args.protocol,
         "run_id": canonical_hash(identity)[:16],
         "identity": identity,
@@ -278,15 +317,7 @@ def main() -> int:
             "far_per_hour": point_far,
             "p95_post_end_latency_ms": base.get("p95_post_end_latency_ms"),
         },
-        "far_rate": {
-            "point_estimate_per_hour": point_far,
-            "upper_bound_95_per_hour": far_upper_bound_95(false_accepts, hours),
-            "basis": (
-                "zero observed: chi-square(2) 95% / (2T)"
-                if false_accepts <= 0.0
-                else "non-zero count: normal approximation to Poisson"
-            ),
-        },
+        "far_rate": far_rate,
         "domains": domain_rows,
         "artifacts": {
             "detections_sha256": sha256_file(detections),

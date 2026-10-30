@@ -1,16 +1,29 @@
 from __future__ import annotations
 
+import copy
+import contextlib
 import hashlib
+import io
+import math
+import itertools
 import json
 import pathlib
+import struct
 import subprocess
 import sys
 import tempfile
 import unittest
+import wave
+from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 COMPARE = ROOT / "tools" / "compare_dataset_iterations.py"
 RUN = ROOT / "tools" / "run_dataset_iteration.py"
+sys.path.insert(0, str(ROOT / "tools"))
+from run_dataset_iteration import dataset_identity  # noqa: E402
+import run_dataset_iteration as iteration  # noqa: E402
+sys.path.insert(0, str(ROOT / "eval"))
+import score_events  # noqa: E402
 
 PROTOCOL = "dataset-iteration-v1"
 
@@ -148,11 +161,370 @@ class RequiredMetricTests(unittest.TestCase):
             self.assertEqual(output.read_bytes(), sentinel)
 
 
+class DatasetIdentityAliasTests(unittest.TestCase):
+    """Real metadata/WAV helper checks, not execution of the model/eval CLI."""
+
+    FIELDS = ("audio", "audio_path", "path")
+    # Frozen output from the original path-only implementation and eight literal
+    # PCM samples. Alias normalization must not silently change existing IDs.
+    PATH_ONLY_ID = "47be6a9d292ea745056a302e773906a725c5b2eb366535c33fb07df35d2534d1"
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = pathlib.Path(self.temp.name)
+        self.audio = self.root / "sample.wav"
+        self.write_audio((0, 1, -1, 2, -2, 3, -3, 0))
+        self.reference = {"recording": "alias-fixture", "duration_s": 8 / 16000,
+                          "expected": []}
+
+    def write_audio(self, samples):
+        with wave.open(str(self.audio), "wb") as output:
+            output.setnchannels(1)
+            output.setsampwidth(2)
+            output.setframerate(16000)
+            output.writeframes(struct.pack("<" + "h" * len(samples), *samples))
+
+    def identity(self, fields, *, expected=None, audio_root=None):
+        row = {**self.reference, **fields}
+        if expected is not None:
+            row["expected"] = expected
+        refs = self.root / "references.jsonl"
+        refs.write_text(json.dumps(row, sort_keys=True) + "\n", encoding="utf-8")
+        before = {path: path.read_bytes() for path in (refs, self.audio)}
+        try:
+            return dataset_identity(refs, self.root if audio_root is None else audio_root)
+        finally:
+            for path, raw in before.items():
+                self.assertEqual(path.read_bytes(), raw)
+
+    def test_all_agreeing_aliases_and_whitespace_keep_path_identity(self):
+        for count in range(1, 4):
+            for fields in itertools.combinations(self.FIELDS, count):
+                for whitespace in (False, True):
+                    with self.subTest(fields=fields, whitespace=whitespace):
+                        value = " \tsample.wav \n" if whitespace else "sample.wav"
+                        actual = self.identity({field: value for field in fields})
+                        self.assertEqual(actual, (self.PATH_ONLY_ID, {"recordings": 1}))
+        # Distinct surrounding whitespace must not create a conflict.
+        actual = self.identity({"audio": " sample.wav", "audio_path": "sample.wav\t",
+                                "path": "sample.wav"})
+        self.assertEqual(actual[0], self.PATH_ONLY_ID)
+
+    def test_absolute_aliases_and_relative_audio_root(self):
+        for field in self.FIELDS:
+            with self.subTest(field=field):
+                self.assertEqual(self.identity({field: str(self.audio)},
+                                               audio_root=self.root / "unused-root")[0],
+                                 self.PATH_ONLY_ID)
+        nested = self.root / "nested"
+        nested.mkdir()
+        self.assertEqual(self.identity({"path": "../sample.wav"}, audio_root=nested)[0],
+                         self.PATH_ONLY_ID)
+
+    def test_conflicting_and_invalid_present_aliases_stay_invalid(self):
+        for left, right in itertools.combinations(self.FIELDS, 2):
+            with self.subTest(left=left, right=right):
+                with self.assertRaisesRegex(ValueError, "aliases disagree"):
+                    self.identity({left: "sample.wav", right: "other.wav"})
+        for field in self.FIELDS:
+            other = next(name for name in self.FIELDS if name != field)
+            for value in (None, "", "  ", 1, True, []):
+                with self.subTest(field=field, invalid=value):
+                    with self.assertRaisesRegex(ValueError, "must be non-empty text"):
+                        self.identity({other: "sample.wav", field: value})
+        with self.assertRaisesRegex(ValueError, "expected non-empty audio/audio_path/path"):
+            self.identity({})
+
+    def test_stale_execution_path_is_not_an_identity_alias(self):
+        for field in self.FIELDS:
+            with self.subTest(field=field):
+                actual = self.identity({field: "sample.wav", "_execution_path": "obsolete.wav"})
+                self.assertEqual(actual[0], self.PATH_ONLY_ID)
+
+    def test_original_path_golden_and_content_sensitivity(self):
+        baseline = self.identity({"path": "sample.wav"})
+        self.assertEqual(baseline, (self.PATH_ONLY_ID, {"recordings": 1}))
+        changed_expected = self.identity(
+            {"path": "sample.wav"},
+            expected=[{"keyword_id": 1, "start_s": 0, "end_s": 4 / 16000}],
+        )
+        self.assertNotEqual(changed_expected[0], baseline[0])
+        self.write_audio((0, 1, -1, 2, -2, 3, -3, 1))
+        self.assertNotEqual(self.identity({"path": "sample.wav"})[0], baseline[0])
+
+
+
+
+def far_summary(*, negative_hours=1.0, positive_hours=1.0, negative_count=0,
+                positive_unmatched=2, include_positive=True):
+    """Artificial metadata only: these durations are not measured exposure."""
+    rows = [{"recording": "n", "duration_s": negative_hours * 3600, "expected": []}]
+    dets = [{"recording": "n", "keyword_id": 1, "time_s": 1.0 + i,
+             "confidence": 0.9} for i in range(negative_count)]
+    if include_positive:
+        rows.append({"recording": "p", "duration_s": positive_hours * 3600,
+                     "expected": [{"keyword_id": 1, "start_s": 1.0, "end_s": 2.0}]})
+        dets.append({"recording": "p", "keyword_id": 1, "time_s": 2.0, "confidence": 0.9})
+        dets.extend({"recording": "p", "keyword_id": 2, "time_s": 4.0 + i,
+                     "confidence": 0.9} for i in range(positive_unmatched))
+    recordings = score_events.validate_recordings(rows)
+    detections = score_events.validate_detections(dets, recordings)
+    return score_events.score(recordings, detections, 0.15, 0.5)[0]
+
+
+def iteration_assembly_fixture(protocol=None, missing=False, invalid_bound=False):
+    """Normal-interpreter main with three backend commands mocked, never a model."""
+    with tempfile.TemporaryDirectory() as td:
+        root = pathlib.Path(td)
+        audio = root / "tiny.wav"
+        with wave.open(str(audio), "wb") as output:
+            output.setnchannels(1)
+            output.setsampwidth(2)
+            output.setframerate(16000)
+            output.writeframes(b"\0\0" * 800)
+        rows = [{"recording": "n", "path": "tiny.wav", "duration_s": 0.05, "expected": []},
+                {"recording": "p", "path": "tiny.wav", "duration_s": 0.05,
+                 "expected": [{"keyword_id": 1, "start_s": 0.01, "end_s": 0.02}]}]
+        dets = [{"recording": "p", "keyword_id": k, "time_s": t, "confidence": 0.9}
+                for k, t in ((1, 0.02), (2, 0.03), (3, 0.04))]
+        refs = root / "refs.jsonl"
+        refs.write_text("".join(json.dumps(r) + "\n" for r in rows))
+        inputs = [refs, audio]
+        for name in ("runner", "model", "keywords"):
+            path = root / name
+            path.write_bytes(b"inert software fixture, never executed\n")
+            inputs.append(path)
+        before = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}
+        target = root / "card.json"
+        sentinel = b"existing scorecard sentinel\n"
+        if missing or invalid_bound:
+            target.write_bytes(sentinel)
+        calls = []
+        summaries = []
+        def fake_run(argv):
+            name = pathlib.Path(argv[1]).name
+            calls.append(name)
+            option = lambda key: pathlib.Path(argv[argv.index(key) + 1])
+            if name == "run_corpus.py":
+                option("--detections").write_text("".join(json.dumps(d) + "\n" for d in dets))
+                option("--provenance").write_text("{}\n")
+            elif name == "score_events.py":
+                recordings = score_events.validate_recordings(score_events.load_jsonl(option("--references")))
+                detections = score_events.validate_detections(score_events.load_jsonl(option("--detections")), recordings)
+                summary = score_events.score(recordings, detections, 0.15, 0.5)[0]
+                summaries.append(copy.deepcopy(summary))
+                if missing:
+                    del summary["negative_recording_false_accepts"]
+                if invalid_bound:
+                    summary["negative_recording_audio_hours"] = 1e-309
+                option("--summary").write_text(json.dumps(summary))
+                option("--false-positives").write_text("")
+                option("--false-rejects").write_text("")
+            elif name == "domain_metrics.py":
+                option("--output").write_text("{}\n")
+            else:
+                raise AssertionError("unexpected backend command: " + name)
+        argv = [str(RUN), "--runner", str(root / "runner"), "--model", str(root / "model"),
+                "--keywords", str(root / "keywords"), "--references", str(refs),
+                "--audio-root", str(root), "--work-dir", str(root / "work"),
+                "--output", str(target), "--variable", "model", "--code-sha", "fixture-code"]
+        if protocol is not None:
+            argv += ["--protocol", protocol]
+        error = None
+        with mock.patch.object(sys, "argv", argv), mock.patch.object(iteration, "run", fake_run), contextlib.redirect_stdout(io.StringIO()):
+            try:
+                exit_code = iteration.main()
+            except ValueError as exc:
+                error, exit_code = str(exc), 2
+        after = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}
+        return {"exit": exit_code, "error": error, "calls": calls, "input_unchanged": before == after,
+                "card": json.loads(target.read_text()) if error is None else None,
+                "summary": summaries[0], "sentinel_preserved": (missing or invalid_bound) and target.read_bytes() == sentinel,
+                "earlier_work_remains": (root / "work/detections.jsonl").is_file()}
+
+
+class FarPopulationPolicyTests(unittest.TestCase):
+    POLICY = "negative-only-recordings-iteration-approx95-v1"
+
+    def new_card(self, **kwargs):
+        card = scorecard(**kwargs)
+        card["schema_version"] = 2
+        card["identity"]["far_policy"] = self.POLICY
+        card["far_rate"]["observed_false_accepts"] = 0
+        card["far_rate"]["upper_bound_95_per_hour"] = 2.9957 / card["exposure"]["exposure_hours"]
+        return card
+
+    def test_mixed_global_diagnostics_and_positive_invariance(self):
+        summary = far_summary()
+        hours, rate = iteration.negative_far_rate(summary)
+        self.assertEqual(summary["false_accepts"], 2)
+        self.assertEqual(summary["far_per_hour"], 1.0)
+        self.assertEqual((hours, rate["observed_false_accepts"], rate["point_estimate_per_hour"]), (1.0, 0, 0.0))
+        self.assertEqual(rate["upper_bound_95_per_hour"], 2.9957)
+        for kwargs in ({"positive_unmatched": 0}, {"positive_unmatched": 4}, {"positive_hours": 2.0}):
+            with self.subTest(kwargs=kwargs):
+                changed = far_summary(**kwargs)
+                self.assertEqual(iteration.negative_far_rate(changed), (hours, rate))
+
+    def test_negative_sensitivity_and_pure_negative_compatibility(self):
+        for count in (0, 1, 2):
+            with self.subTest(count=count):
+                summary = far_summary(negative_count=count, include_positive=False)
+                hours, rate = iteration.negative_far_rate(summary)
+                self.assertEqual(rate["point_estimate_per_hour"], summary["far_per_hour"])
+                self.assertEqual(rate["upper_bound_95_per_hour"], iteration.far_upper_bound_95(summary["false_accepts"], hours))
+                longer_hours, longer = iteration.negative_far_rate(far_summary(negative_count=count, negative_hours=2.0, include_positive=False))
+                self.assertEqual(longer_hours, 2.0)
+                self.assertEqual(longer["point_estimate_per_hour"], rate["point_estimate_per_hour"] / 2)
+                self.assertEqual(longer["upper_bound_95_per_hour"], rate["upper_bound_95_per_hour"] / 2)
+
+    def test_missing_and_invalid_producer_tuple(self):
+        fields = ("negative_recording_false_accepts", "negative_recording_audio_hours", "negative_recording_far_per_hour")
+        good = far_summary()
+        for field in fields:
+            with self.subTest(missing=field):
+                value = dict(good)
+                del value[field]
+                with self.assertRaisesRegex(ValueError, "missing required"):
+                    iteration.negative_far_rate(value)
+        recordings = score_events.validate_recordings([{"recording": "only-positive", "duration_s": 10,
+                     "expected": [{"keyword_id": 1, "start_s": 1, "end_s": 2}]}])
+        no_negative = score_events.score(recordings, {}, 0.15, 0.5)[0]
+        self.assertIsNone(no_negative[fields[2]])
+        with self.assertRaises(ValueError):
+            iteration.negative_far_rate(no_negative)
+        invalid = [(fields[0], x) for x in (True, -1, 0.0)] + [(fields[1], x) for x in (0, -1, float("inf"), True)] + [(fields[2], x) for x in (None, float("nan"), 1.0, True)]
+        for field, value in invalid:
+            with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                iteration.negative_far_rate({**good, field: value})
+
+        # A finite positive exposure can still overflow the computed bound.
+        for count, hours in ((0, 1e-309), (1, 1e-308)):
+            with self.subTest(count=count, hours=hours), self.assertRaisesRegex(ValueError, "bound must be finite"):
+                iteration.negative_far_rate({fields[0]: count, fields[1]: hours,
+                                             fields[2]: count / hours})
+
+    def test_policy_schema_compatibility_and_output_preservation(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            for protocol in ("dataset-iteration-v1", "custom-label"):
+                before = scorecard(protocol=protocol)
+                after = scorecard(protocol=protocol, model="m2")
+                self.assertEqual(run(root, before, after).returncode, 0)
+                output = root / "comparison.json"
+                output.write_bytes(b"sentinel\n")
+                done = run(root, before, self.new_card(protocol=protocol, model="m2"), "--output", str(output))
+                self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
+                self.assertIn("FAR policy mismatch", done.stderr)
+                self.assertEqual(output.read_bytes(), b"sentinel\n")
+            for kind in ("missing", "unknown", "legacy-with-policy", "unknown-schema"):
+                before = self.new_card(protocol="custom-label")
+                after = self.new_card(protocol="custom-label", model="m2")
+                if kind == "missing":
+                    del after["identity"]["far_policy"]
+                elif kind == "unknown":
+                    after["identity"]["far_policy"] = "other"
+                elif kind == "legacy-with-policy":
+                    after["schema_version"] = 1
+                else:
+                    after["schema_version"] = 3
+                done = run(root, before, after)
+                self.assertEqual(done.returncode, 2, kind + done.stdout + done.stderr)
+
+    def test_new_comparator_rejects_incomplete_tuple(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            for side in ("before", "after"):
+                for group, key in (("far_rate", "observed_false_accepts"), ("far_rate", "point_estimate_per_hour"), ("far_rate", "upper_bound_95_per_hour"), ("exposure", "exposure_hours")):
+                    before, after = self.new_card(), self.new_card(model="m2")
+                    del (before if side == "before" else after)[group][key]
+                    done = run(root, before, after)
+                    self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
+            for group in ("far_rate", "exposure"):
+                after = self.new_card(model="m2")
+                after[group] = []
+                done = run(root, self.new_card(), after)
+                self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
+                self.assertIn("must be objects", done.stderr)
+            for group, key, value in (("far_rate", "observed_false_accepts", True), ("exposure", "exposure_hours", 0), ("far_rate", "point_estimate_per_hour", 1.0), ("far_rate", "upper_bound_95_per_hour", -1)):
+                after = self.new_card(model="m2")
+                after[group][key] = value
+                self.assertEqual(run(root, self.new_card(), after).returncode, 2)
+
+            output = root / "comparison.json"
+            for count in (0, 1, 2):
+                for hours in (0.25, 2.0):
+                    before, after = self.new_card(exposure_hours=hours), self.new_card(model="m2", exposure_hours=hours)
+                    expected = iteration.far_upper_bound_95(count, hours)
+                    for card in (before, after):
+                        card["far_rate"].update(observed_false_accepts=count,
+                                                point_estimate_per_hour=count / hours,
+                                                upper_bound_95_per_hour=expected)
+                    done = run(root, before, after, "--far-budget", "100")
+                    self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+                    for side in ("before", "after"):
+                        for bound in (0.0, expected / 2, expected * 2):
+                            with self.subTest(count=count, hours=hours, side=side, bound=bound):
+                                left, right = copy.deepcopy(before), copy.deepcopy(after)
+                                (left if side == "before" else right)["far_rate"]["upper_bound_95_per_hour"] = bound
+                                output.write_bytes(b"sentinel bound validation\n")
+                                done = run(root, left, right, "--output", str(output))
+                                self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
+                                self.assertIn("inconsistent negative FAR bound", done.stderr)
+                                self.assertEqual(output.read_bytes(), b"sentinel bound validation\n")
+            # Legacy cards retain their historical permissive bound behavior.
+            done = run(root, scorecard(bound=0), scorecard(model="m2", bound=0))
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_new_cards_keep_verdicts(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            for frr, code, verdict in ((0.05, 0, "improved"), (0.1, 0, "neutral"), (0.2, 1, "regressed")):
+                done = run(root, self.new_card(), self.new_card(model="m2", frr=frr))
+                self.assertEqual(done.returncode, code, done.stdout + done.stderr)
+                self.assertEqual(json.loads(done.stdout)["verdict"], verdict)
+
+    def test_actual_main_assembly_and_run_identity(self):
+        # The normal-interpreter child isolates the known RUN --OO docstring
+        # limitation. It mocks backend commands, not scorer arithmetic; helper
+        # and comparator tests above really use the parent optimization mode.
+        for protocol, missing, invalid_bound in ((None, False, False), ("custom-label", False, False), ("custom-label", True, False), ("custom-label", False, True)):
+            command = [sys.executable, "-S", "-B", "-c",
+                       "import sys,json;sys.path.insert(0," + repr(str(ROOT / "tests")) + ");import test_dataset_iteration as t;print(json.dumps(t.iteration_assembly_fixture(" + repr(protocol) + "," + repr(missing) + "," + repr(invalid_bound) + ")))"]
+            done = subprocess.run(command, capture_output=True, text=True, check=False)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+            result = json.loads(done.stdout)
+            self.assertTrue(result["input_unchanged"])
+            self.assertEqual(result["calls"], ["run_corpus.py", "score_events.py", "domain_metrics.py"])
+            if missing or invalid_bound:
+                self.assertEqual(result["exit"], 2)
+                self.assertTrue(result["sentinel_preserved"])
+                self.assertTrue(result["earlier_work_remains"])
+                continue
+            card = result["card"]
+            self.assertEqual(card["schema_version"], 2)
+            self.assertEqual(card["identity"]["far_policy"], self.POLICY)
+            self.assertEqual(card["protocol"], "dataset-iteration-v2" if protocol is None else protocol)
+            self.assertEqual(card["metrics"]["false_accepts"], result["summary"]["false_accepts"])
+            self.assertEqual(card["metrics"]["far_per_hour"], result["summary"]["far_per_hour"])
+            self.assertEqual(card["far_rate"]["point_estimate_per_hour"], 0.0)
+            self.assertEqual(card["far_rate"]["upper_bound_95_per_hour"], iteration.far_upper_bound_95(0, card["exposure"]["exposure_hours"]))
+            self.assertEqual(card["run_id"], iteration.canonical_hash(card["identity"])[:16])
+            legacy_identity = dict(card["identity"])
+            del legacy_identity["far_policy"]
+            self.assertNotEqual(card["run_id"], iteration.canonical_hash(legacy_identity)[:16])
+
+
 def main() -> int:
     strict = unittest.TextTestRunner(verbosity=2).run(
-        unittest.defaultTestLoader.loadTestsFromTestCase(RequiredMetricTests)
+        unittest.TestSuite([
+            unittest.defaultTestLoader.loadTestsFromTestCase(RequiredMetricTests),
+            unittest.defaultTestLoader.loadTestsFromTestCase(DatasetIdentityAliasTests),
+            unittest.defaultTestLoader.loadTestsFromTestCase(FarPopulationPolicyTests),
+        ])
     )
-    if strict.testsRun != 4 or strict.skipped or not strict.wasSuccessful():
+    if strict.testsRun != 16 or strict.skipped or not strict.wasSuccessful():
         return 1
 
     with tempfile.TemporaryDirectory() as td:
