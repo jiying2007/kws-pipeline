@@ -1,18 +1,129 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import hashlib
 import json
 import pathlib
+import subprocess
 import sys
 import tempfile
+import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
-from build_training_diagnostics import build, refinement_outcome  # noqa: E402
+from build_training_diagnostics import build, file_entry, load_json, refinement_outcome  # noqa: E402
+
+
+class OptionalJsonEncodingTests(unittest.TestCase):
+    def invoke(self, root: pathlib.Path, payload: bytes | None, *,
+               config_bytes: bytes | None = None, sentinel: bytes | None = None):
+        work = root / "work"
+        progress = work / "adversarial-refinement/progress.json"
+        progress.parent.mkdir(parents=True)
+        progress.write_text('{"current_phase": "calibration"}\n', encoding="utf-8")
+        config = root / "config.json"
+        config.write_bytes(config_bytes if config_bytes is not None else
+                           b'{"qualification_holdout_seed":42,"retired_qualification_holdout_seeds":[]}\n')
+        paths = [config, progress]
+        if payload is not None:
+            accessory = work / "robustness-summary.json"
+            accessory.write_bytes(payload)
+            paths.append(accessory)
+        before = {path: hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
+        output = root / "compact.json"
+        if sentinel is not None:
+            output.write_bytes(sentinel)
+        done = subprocess.run(
+            [sys.executable, "-S", "-B",
+             *(["-" + "O" * sys.flags.optimize] if sys.flags.optimize else []),
+             str(ROOT / "tools/build_training_diagnostics.py"),
+             "--config", str(config), "--work-dir", str(work), "--output", str(output)],
+            capture_output=True, text=True, timeout=5, check=False,
+        )
+        self.assertEqual({path: hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}, before)
+        return done, output
+
+    def check_unrelated_evidence(self, report: dict) -> None:
+        self.assertEqual(report["adversarial_refinement_progress"], {"current_phase": "calibration"})
+        self.assertEqual(report["adversarial_refinement_outcome"], {
+            "classification": "no-summary", "last_active_phase": "calibration", "cause_verified": False,
+        })
+        self.assertIsNone(report["development"]["qualified"])
+        self.assertIsNone(report["development"]["qualification_qualified"])
+        self.assertFalse(report["formal_seed"]["consumed_by_this_run"])
+
+    def test_invalid_optional_artifacts_keep_other_diagnostics(self) -> None:
+        cases = ((b'{"text":', "invalid:JSONDecodeError"),
+                 (b'\xff', "invalid:UnicodeDecodeError"),
+                 (b'{"text":"\xe4\xb8', "invalid:UnicodeDecodeError"),
+                 (b'[]\n', "not-object"), (b'', "missing"))
+        for payload, error in cases:
+            with self.subTest(payload=payload, error=error), tempfile.TemporaryDirectory() as td:
+                done, output = self.invoke(pathlib.Path(td), payload)
+                self.assertEqual(done.returncode, 0, done.stderr)
+                report = json.loads(output.read_text(encoding="utf-8"))
+                self.check_unrelated_evidence(report)
+                self.assertIsNone(report["robustness"])
+                self.assertEqual(report["diagnostic_errors"], {} if error == "missing" else {"robustness": error})
+                entry = next(row for row in report["files"] if row["path"] == "robustness-summary.json")
+                self.assertIs(entry["present"], False)
+                self.assertEqual(entry["error"], error)
+                self.assertEqual(entry["bytes"], len(payload))
+                self.assertEqual(entry["sha256"], hashlib.sha256(payload).hexdigest())
+
+    def test_valid_non_ascii_and_absent_optional_artifacts(self) -> None:
+        value = {"text": "中"}
+        encoded = (json.dumps(value, ensure_ascii=False) + "\n").encode("utf-8")
+        for payload in (encoded, None):
+            with self.subTest(present=payload is not None), tempfile.TemporaryDirectory() as td:
+                done, output = self.invoke(pathlib.Path(td), payload)
+                self.assertEqual(done.returncode, 0, done.stderr)
+                report = json.loads(output.read_text(encoding="utf-8"))
+                self.check_unrelated_evidence(report)
+                self.assertEqual(report["robustness"], value if payload is not None else None)
+                self.assertEqual(report["diagnostic_errors"], {})
+                entry = next(row for row in report["files"] if row["path"] == "robustness-summary.json")
+                self.assertIs(entry["present"], payload is not None)
+                if payload is not None:
+                    self.assertNotIn("error", entry)
+                    self.assertEqual(entry["bytes"], len(payload))
+                    self.assertEqual(entry["sha256"], hashlib.sha256(payload).hexdigest())
+                else:
+                    self.assertEqual(entry["error"], "missing")
+                    self.assertNotIn("bytes", entry)
+                    self.assertNotIn("sha256", entry)
+
+    def test_reader_and_file_entry_preserve_invalid_bytes(self) -> None:
+        for payload in (b'\xff', b'{"text":"\xe4\xb8'):
+            with self.subTest(payload=payload), tempfile.TemporaryDirectory() as td:
+                root = pathlib.Path(td)
+                path = root / "optional.json"
+                path.write_bytes(payload)
+                self.assertEqual(load_json(path), (None, "invalid:UnicodeDecodeError"))
+                self.assertEqual(file_entry(root, "optional.json"), {
+                    "path": "optional.json", "present": False, "bytes": len(payload),
+                    "sha256": hashlib.sha256(payload).hexdigest(), "error": "invalid:UnicodeDecodeError",
+                })
+                self.assertEqual(path.read_bytes(), payload)
+
+    def test_invalid_required_config_remains_fatal(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            sentinel = b"prior compact report\n"
+            done, output = self.invoke(pathlib.Path(td), b'{}\n', config_bytes=b'\xff', sentinel=sentinel)
+            self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+            self.assertIn("UnicodeDecodeError", done.stderr)
+            self.assertEqual(done.stdout, "")
+            self.assertEqual(output.read_bytes(), sentinel)
 
 
 def main() -> int:
+    strict = unittest.TextTestRunner(verbosity=2).run(
+        unittest.defaultTestLoader.loadTestsFromTestCase(OptionalJsonEncodingTests)
+    )
+    if strict.testsRun != 4 or strict.skipped or not strict.wasSuccessful():
+        return 1
+
     assert refinement_outcome(None, {"current_phase": "train-export"}) == {
         "classification": "no-summary",
         "last_active_phase": "train-export",
