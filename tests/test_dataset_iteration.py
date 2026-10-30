@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import pathlib
 import subprocess
 import sys
 import tempfile
+import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 COMPARE = ROOT / "tools" / "compare_dataset_iterations.py"
@@ -59,13 +61,100 @@ def run(root: pathlib.Path, baseline: dict, candidate: dict, *extra: str) -> sub
     # default budget has to be realistic for the fixture. A later --far-budget
     # in `extra` overrides this one, which is how the exposure test tightens it.
     return subprocess.run(
-        [sys.executable, str(COMPARE), "--baseline", str(before),
+        [sys.executable, "-S", "-B",
+         *(["-" + "O" * sys.flags.optimize] if sys.flags.optimize else []),
+         str(COMPARE), "--baseline", str(before),
          "--candidate", str(after), "--far-budget", "20.0", *extra],
         check=False, capture_output=True, text=True,
     )
 
 
+class RequiredMetricTests(unittest.TestCase):
+    FIELDS = ("frr", "far_per_hour", "p95_post_end_latency_ms")
+
+    def compare(self, root: pathlib.Path, baseline: dict, candidate: dict,
+                *extra: str) -> subprocess.CompletedProcess:
+        expected = {
+            name: hashlib.sha256((json.dumps(payload, ensure_ascii=False, indent=2,
+                                             sort_keys=True) + "\n").encode("utf-8")).hexdigest()
+            for name, payload in (("before.json", baseline), ("after.json", candidate))
+        }
+        done = run(root, baseline, candidate, *extra)
+        for name, digest in expected.items():
+            self.assertEqual(hashlib.sha256((root / name).read_bytes()).hexdigest(), digest)
+        return done
+
+    def test_missing_required_metrics_on_either_scorecard(self) -> None:
+        for side in ("baseline", "candidate"):
+            for field in self.FIELDS:
+                with self.subTest(side=side, field=field), tempfile.TemporaryDirectory() as td:
+                    root = pathlib.Path(td)
+                    before = scorecard(run_id="base", frr=0.20)
+                    after = scorecard(run_id="cand", model="m2", frr=0.10)
+                    del (before if side == "baseline" else after)["metrics"][field]
+                    output = root / "comparison.json"
+                    done = self.compare(root, before, after, "--output", str(output))
+                    self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
+                    self.assertIn(f"metrics is missing required '{field}'", done.stderr)
+                    self.assertEqual(done.stdout, "")
+                    self.assertFalse(output.exists())
+
+    def test_explicit_zero_metrics_are_valid(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            before = scorecard(run_id="base", frr=0.0, far=0.0, latency=0.0)
+            after = scorecard(run_id="cand", model="m2", frr=0.0, far=0.0, latency=0.0)
+            done = self.compare(root, before, after)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            report = json.loads(done.stdout)
+            self.assertEqual(report["verdict"], "neutral")
+            for field in self.FIELDS:
+                self.assertEqual(report["deltas"][field], 0.0)
+
+    def test_complete_scorecards_keep_all_three_verdicts(self) -> None:
+        for frr, exit_code, verdict in ((0.10, 0, "improved"),
+                                       (0.20, 0, "neutral"),
+                                       (0.30, 1, "regressed")):
+            with self.subTest(verdict=verdict), tempfile.TemporaryDirectory() as td:
+                root = pathlib.Path(td)
+                output = root / "comparison.json"
+                done = self.compare(root, scorecard(run_id="base", frr=0.20),
+                                    scorecard(run_id="cand", model="m2", frr=frr),
+                                    "--output", str(output))
+                self.assertEqual(done.returncode, exit_code, done.stdout + done.stderr)
+                report = json.loads(done.stdout)
+                self.assertEqual(report["verdict"], verdict)
+                self.assertEqual(json.loads(output.read_text()), report)
+                self.assertEqual(report["deltas"]["frr"], frr - 0.20)
+                self.assertEqual(report["budgets"], {
+                    "far_upper_bound_95_per_hour": 20.0,
+                    "frr_tolerance": 0.0,
+                    "p95_latency_ms": 800.0,
+                })
+
+    def test_missing_metric_preserves_existing_output(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            output = root / "comparison.json"
+            sentinel = b"existing report sentinel\n"
+            output.write_bytes(sentinel)
+            after = scorecard(run_id="cand", model="m2", frr=0.30)
+            del after["metrics"]["frr"]
+            done = self.compare(root, scorecard(run_id="base", frr=0.20), after,
+                                "--output", str(output))
+            self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
+            self.assertEqual(done.stdout, "")
+            self.assertIn("metrics is missing required 'frr'", done.stderr)
+            self.assertEqual(output.read_bytes(), sentinel)
+
+
 def main() -> int:
+    strict = unittest.TextTestRunner(verbosity=2).run(
+        unittest.defaultTestLoader.loadTestsFromTestCase(RequiredMetricTests)
+    )
+    if strict.testsRun != 4 or strict.skipped or not strict.wasSuccessful():
+        return 1
+
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
 
