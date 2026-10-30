@@ -141,6 +141,73 @@ def check_stats_input_alias(executable, root):
     require(not failures, 'stats/input alias contract failed')
 
 
+def check_replay_uint_arguments(executable, probe, root):
+    """Current real CLI, artificial containers; no acoustic model execution.
+
+    The separate init probe observes whether the real CLI reaches the engine
+    boundary, but never invokes that engine. Historical replay sources are not
+    subject to this new argument contract. All textual minus signs, including
+    -0, are rejected; valid leading C whitespace and plus signs remain legal.
+    """
+    root.mkdir()
+    fixtures(root)
+    inputs = [root / name for name in ('model.kwm', 'one.kwk', 'one.kwtr')]
+    before = {path: path.read_bytes() for path in inputs}
+    whitespace = (' ', '\t', '\n', '\r', '\v', '\f')
+    negative = ['-0', '-1', '-18446744073709551615', '-4294967295']
+    negative += [space + '-18446744073709551615' for space in whitespace]
+    invalid = negative + ['', '+', '1 ', '1x', '4294967296', '18446744073709551616']
+    valid = [('0', 0), ('1', 1), ('+1', 1), ('10000', 10000)]
+    valid += [(space + '+1', 1) for space in whitespace]
+    failures = []
+    checked = 0
+    expected_stdout = None
+
+    def invoke(binary, value, completion=None):
+        command = [binary, *inputs, 'uint-argument-fixture', '--refractory-ms', value]
+        if completion is not None:
+            command += ['--completion', completion]
+        return subprocess.run(list(map(str, command)), stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE, timeout=10)
+
+    def check(label, condition):
+        if not condition:
+            failures.append(label)
+
+    for index, value in enumerate(invalid):
+        completion = root / f'rejected-{index}.json'
+        result = invoke(executable, value, completion)
+        check(f'{value!r}: early CLI rejection', result.returncode == 2 and
+              b'invalid --refractory-ms' in result.stderr and not result.stdout)
+        check(f'{value!r}: no completion', not completion.exists())
+        observed = invoke(probe, value)
+        check(f'{value!r}: rejected before engine init', observed.returncode == 2 and
+              b'invalid --refractory-ms' in observed.stderr and
+              b'UINT_ARGUMENT_ENGINE_INIT=' not in observed.stderr and not observed.stdout)
+        checked += 1
+    for value, expected in valid:
+        result = invoke(executable, value)
+        check(f'{value!r}: valid CLI', result.returncode == 0 and not result.stderr and bool(result.stdout))
+        if expected_stdout is None:
+            expected_stdout = result.stdout
+        check(f'{value!r}: unchanged event bytes', result.stdout == expected_stdout)
+        observed = invoke(probe, value)
+        marker = f'UINT_ARGUMENT_ENGINE_INIT={expected}\n'.encode('ascii')
+        check(f'{value!r}: exact parsed value', observed.returncode == 1 and
+              observed.stderr.count(marker) == 1 and not observed.stdout)
+        checked += 1
+    # uint32 parsing is distinct from the engine's 0..10000 range check.
+    # This check uses the actual engine, not the boundary probe.
+    for value in ('10001', '4294967295'):
+        result = invoke(executable, value)
+        check(f'{value}: engine range', result.returncode == 1 and
+              b'cannot initialize replay engine' in result.stderr and not result.stdout)
+        checked += 1
+    check('input preservation', all(path.read_bytes() == data for path, data in before.items()))
+    print(f'replay unsigned argument cases: {checked} checked; failures={failures}')
+    require(not failures, 'replay unsigned argument contract failed')
+
+
 def check_historical_source_contracts(temp):
     """Test the helper on isolated copies; never mutate current or frozen input."""
     source = temp / 'historical-contract-input'
@@ -335,19 +402,29 @@ def main():
         from prepare_decoder import materialize
         derived = root / 'derived'
         materialize(historical, derived)
-        def compile_tool(name, source, *, research=False):
+        def compile_tool(name, source, *, research=False, engine_probe=False):
             executable = root / name
             selected = ([derived / 'src/kws.c', derived / 'src/decoder.c', *historical_support[2:]]
                         if research else support)
             selected_root = historical if research else ROOT
             flags = ['-DKWS_RESEARCH_CHILD_ADMISSION=1'] if research else []
+            wrapper = ROOT / 'tests/cli_stdout_wrapper.c'
+            if engine_probe:
+                wrapper = root / (name + '-wrapper.c')
+                wrapper.write_text('#define kws_engine_init kws_test_uint_engine_init\n'
+                    + '#include ' + json.dumps(str(ROOT / 'tests/cli_stdout_wrapper.c')) + '\n'
+                    + 'kws_status_t kws_test_uint_engine_init(void *arena, size_t bytes, '
+                    'const kws_model_t *model, const kws_config_t *config, kws_engine_t **out) {\n'
+                    '  (void)arena; (void)bytes; (void)model; (void)out;\n'
+                    '  fprintf(stderr, "UINT_ARGUMENT_ENGINE_INIT=%" PRIu32 "\\n", config->refractory_ms);\n'
+                    '  return KWS_EINVAL;\n}\n')
             if name.startswith('kws_bench'): flags.append('-DKWS_STDOUT_TEST_BENCH=1')
             run([compiler, '-std=c11', '-O2', '-Wall', '-Wextra', '-Wpedantic', '-Werror',
                  '-Wconversion', '-Wshadow', '-Wcast-qual', *flags,
                  f'-DKWS_STDOUT_TEST_TOOL="{source}"', f'-I{derived / "src"}' if research else f'-I{ROOT / "src"}',
                  f'-I{selected_root / "include"}', f'-I{selected_root / "src"}',
                  f'-I{selected_root / "tools"}', f'-I{generated}',
-                 ROOT / 'tests/cli_stdout_wrapper.c', *selected, '-lm', '-o', executable])
+                 wrapper, *selected, '-lm', '-o', executable])
             return executable
         def command(name, executable):
             model, pack, audio = root / 'model.kwm', root / 'one.kwk', root / 'audio.wav'
@@ -370,6 +447,9 @@ def main():
             executable = compile_tool(name, source, research=research)
             if name == 'kws_wav':
                 check_stats_input_alias(executable, root / 'stats-input-alias')
+            if name == 'kws_decoder_replay':
+                probe = compile_tool(name + '-uint-probe', source, engine_probe=True)
+                check_replay_uint_arguments(executable, probe, root / 'replay-uint-arguments')
             argv = command(name, executable)
             normal = run(argv, cwd=root)
             require(normal.stdout and not normal.stderr, f'{name}: missing normal output or unexpected stderr')
