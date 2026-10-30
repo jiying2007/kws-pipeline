@@ -432,5 +432,77 @@ class StreamingPCMIdentityTests(unittest.TestCase):
         self.assertTrue(reader.closed)
 
 
+class DomainReferenceWindowTests(unittest.TestCase):
+    """Artificial metadata only; no renderer, AFE backend, model or training."""
+
+    @staticmethod
+    def row(start: int, end: int, delay: int = 0, *, kind: str = "positive") -> dict:
+        return {
+            "path": "artificial-not-opened.wav", "kind": kind, "keyword_id": 1,
+            "event_start_frame": start, "event_end_frame": end,
+            "scene": {"direct_delay_samples": 0, "afe_latency_samples": delay},
+            "domain_id": "fixture",
+        }
+
+    def test_intersecting_windows_preserve_clipping(self) -> None:
+        from score_events import validate_recordings
+
+        cases = (
+            ("in-range", 2, 4, 2, 10, (4, 6)),
+            ("left-partial", -3, 2, 0, 10, (0, 2)),
+            ("right-partial", 6, 9, 2, 10, (8, 10)),
+            ("covers-output", -2, 12, 0, 10, (0, 10)),
+            ("last-sample", 9, 10, 0, 10, (9, 10)),
+            ("ends-at-output", 6, 8, 2, 10, (8, 10)),
+            ("one-frame-output", 0, 1, 0, 1, (0, 1)),
+        )
+        for name, start, end, delay, frames, expected in cases:
+            with self.subTest(case=name):
+                row = self.row(start, end, delay)
+                before = copy.deepcopy(row)
+                reference = domain_reference_row(row, recording=name, frames=frames)
+                self.assertEqual(reference["expected"], [{
+                    "keyword_id": 1, "start_s": expected[0] / 16000,
+                    "end_s": expected[1] / 16000,
+                }])
+                self.assertEqual(validate_recordings([reference])[name]["expected"],
+                                 reference["expected"])
+                self.assertEqual(row, before)
+
+    def test_windows_without_positive_intersection_are_rejected(self) -> None:
+        cases = (
+            ("starts-at-output", 2, 4, 8),
+            ("after-output", 4, 6, 8),
+            ("ends-at-zero", -3, 0, 0),
+            ("before-output", -5, -2, 0),
+            ("zero-length", 4, 4, 0),
+            ("reversed", 6, 4, 0),
+        )
+        for name, start, end, delay in cases:
+            with self.subTest(case=name):
+                row = self.row(start, end, delay)
+                before = copy.deepcopy(row)
+                with self.assertRaisesRegex(ValueError, "positive event has no overlap"):
+                    domain_reference_row(row, recording=name, frames=10)
+                self.assertEqual(row, before)
+
+    def test_background_does_not_require_a_positive_window(self) -> None:
+        row = self.row(4, 6, 8, kind="background")
+        before = copy.deepcopy(row)
+        reference = domain_reference_row(row, recording="background", frames=10)
+        self.assertEqual(reference["expected"], [])
+        self.assertEqual(row, before)
+
+    def test_reference_batch_rejects_an_absent_positive(self) -> None:
+        # The producer collects rows before writing a split's references. This
+        # checks fail-closed construction, not rollback of earlier WAV/TSV files.
+        rows = [self.row(2, 4, 2), self.row(4, 6, 8)]
+        before = copy.deepcopy(rows)
+        with self.assertRaisesRegex(ValueError, "positive event has no overlap"):
+            [domain_reference_row(row, recording=f"batch-{i}", frames=10)
+             for i, row in enumerate(rows)]
+        self.assertEqual(rows, before)
+
+
 if __name__ == "__main__":
     unittest.main()

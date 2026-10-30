@@ -666,8 +666,10 @@ def domain_reference_row(row: dict, *, recording: str, frames: int) -> dict:
     expected: list[dict] = []
     if row["kind"] == "positive":
         delay = int(row["scene"]["direct_delay_samples"]) + int(row["scene"]["afe_latency_samples"])
-        start = max(0, min(int(row["event_start_frame"]) + delay, frames - 1))
-        end = max(start + 1, min(int(row["event_end_frame"]) + delay, frames))
+        start = max(0, int(row["event_start_frame"]) + delay)
+        end = min(int(row["event_end_frame"]) + delay, frames)
+        if start >= end:
+            raise ValueError(f"{recording}: positive event has no overlap with output audio")
         expected.append({"keyword_id": int(row["keyword_id"]),
                          "start_s": start / SAMPLE_RATE_HZ, "end_s": end / SAMPLE_RATE_HZ})
     return {
