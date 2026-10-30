@@ -33,6 +33,11 @@ def read_rir(path: pathlib.Path) -> list[float]:
                 f"{path}: measured RIR length must be 1..{MAX_RIR_SAMPLES} samples"
             )
         raw = reader.readframes(frames)
+    if len(raw) != frames * 2:
+        raise ValueError(
+            f"{path}: truncated measured RIR PCM payload "
+            f"(expected {frames * 2} bytes, got {len(raw)})"
+        )
     values = struct.unpack("<" + "h" * (len(raw) // 2), raw)
     rir = [float(value) / 32768.0 for value in values]
     if max(abs(value) for value in rir) < 1.0e-7:
