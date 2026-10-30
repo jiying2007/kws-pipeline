@@ -33,6 +33,8 @@ import sys
 
 IDENTITY_FIELDS = ("protocol", "dataset_id", "model_id", "code_sha", "seed")
 METRIC_FIELDS = ("frr", "far_per_hour", "p95_post_end_latency_ms")
+FAR_POLICY = "negative-only-recordings-iteration-approx95-v1"
+LEGACY_FAR_POLICY = "legacy-mixed-recordings-iteration-approx95-v1"
 
 
 def load(path: pathlib.Path) -> dict:
@@ -78,8 +80,44 @@ def far_bound(row: dict, label: str) -> float:
     return number(row["far_rate"].get("upper_bound_95_per_hour"), f"{label}.far_rate.upper_bound_95_per_hour")
 
 
+def far_policy(row: dict, label: str) -> str:
+    """Schema identifies legacy cards even when their protocol label is custom."""
+    schema = row.get("schema_version")
+    identity = row["identity"]
+    if type(schema) is int and schema == 1 and "far_policy" not in identity:
+        return LEGACY_FAR_POLICY
+    if type(schema) is not int or schema != 2:
+        raise ValueError(f"{label}: unsupported scorecard schema/FAR policy combination")
+    if identity.get("far_policy") != FAR_POLICY:
+        raise ValueError(f"{label}: schema 2 requires the known FAR policy")
+    if not isinstance(row["far_rate"], dict) or not isinstance(row["exposure"], dict):
+        raise ValueError(f"{label}: schema 2 FAR rate and exposure must be objects")
+    count = row["far_rate"].get("observed_false_accepts")
+    if type(count) is not int or count < 0:
+        raise ValueError(f"{label}: negative false accepts must be a non-negative integer")
+    raw_hours = row["exposure"].get("exposure_hours")
+    raw_point = row["far_rate"].get("point_estimate_per_hour")
+    raw_bound = row["far_rate"].get("upper_bound_95_per_hour")
+    if any(isinstance(value, bool) for value in (raw_hours, raw_point, raw_bound)):
+        raise ValueError(f"{label}: FAR tuple must not contain booleans")
+    hours = number(raw_hours, f"{label}.exposure_hours")
+    point = number(raw_point, f"{label}.far_rate.point_estimate_per_hour")
+    bound = far_bound(row, label)
+    if hours <= 0.0 or point < 0.0 or bound < 0.0 or point != count / hours:
+        raise ValueError(f"{label}: inconsistent negative FAR tuple")
+    # Keep schema-2 bounds tied to the producer's declared approximation.
+    # Legacy cards return above and retain their historical interpretation.
+    expected_bound = (2.9957 / hours if count == 0 else
+                      (count + 1.959964 * math.sqrt(count)) / hours)
+    if not math.isfinite(expected_bound) or bound != expected_bound:
+        raise ValueError(f"{label}: inconsistent negative FAR bound")
+    return FAR_POLICY
+
+
 def framing(before: dict, after: dict) -> dict:
     """Check that the two scorecards form a valid paired comparison."""
+    if far_policy(before, "before") != far_policy(after, "after"):
+        raise ValueError("FAR policy mismatch: re-run the baseline under the same measurement policy")
     left, right = before["identity"], after["identity"]
     if left["protocol"] != right["protocol"]:
         raise ValueError(
