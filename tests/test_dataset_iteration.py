@@ -1,16 +1,21 @@
 from __future__ import annotations
 
 import hashlib
+import itertools
 import json
 import pathlib
+import struct
 import subprocess
 import sys
 import tempfile
 import unittest
+import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 COMPARE = ROOT / "tools" / "compare_dataset_iterations.py"
 RUN = ROOT / "tools" / "run_dataset_iteration.py"
+sys.path.insert(0, str(ROOT / "tools"))
+from run_dataset_iteration import dataset_identity  # noqa: E402
 
 PROTOCOL = "dataset-iteration-v1"
 
@@ -148,11 +153,107 @@ class RequiredMetricTests(unittest.TestCase):
             self.assertEqual(output.read_bytes(), sentinel)
 
 
+class DatasetIdentityAliasTests(unittest.TestCase):
+    """Real metadata/WAV helper checks, not execution of the model/eval CLI."""
+
+    FIELDS = ("audio", "audio_path", "path")
+    # Frozen output from the original path-only implementation and eight literal
+    # PCM samples. Alias normalization must not silently change existing IDs.
+    PATH_ONLY_ID = "47be6a9d292ea745056a302e773906a725c5b2eb366535c33fb07df35d2534d1"
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = pathlib.Path(self.temp.name)
+        self.audio = self.root / "sample.wav"
+        self.write_audio((0, 1, -1, 2, -2, 3, -3, 0))
+        self.reference = {"recording": "alias-fixture", "duration_s": 8 / 16000,
+                          "expected": []}
+
+    def write_audio(self, samples):
+        with wave.open(str(self.audio), "wb") as output:
+            output.setnchannels(1)
+            output.setsampwidth(2)
+            output.setframerate(16000)
+            output.writeframes(struct.pack("<" + "h" * len(samples), *samples))
+
+    def identity(self, fields, *, expected=None, audio_root=None):
+        row = {**self.reference, **fields}
+        if expected is not None:
+            row["expected"] = expected
+        refs = self.root / "references.jsonl"
+        refs.write_text(json.dumps(row, sort_keys=True) + "\n", encoding="utf-8")
+        before = {path: path.read_bytes() for path in (refs, self.audio)}
+        try:
+            return dataset_identity(refs, self.root if audio_root is None else audio_root)
+        finally:
+            for path, raw in before.items():
+                self.assertEqual(path.read_bytes(), raw)
+
+    def test_all_agreeing_aliases_and_whitespace_keep_path_identity(self):
+        for count in range(1, 4):
+            for fields in itertools.combinations(self.FIELDS, count):
+                for whitespace in (False, True):
+                    with self.subTest(fields=fields, whitespace=whitespace):
+                        value = " \tsample.wav \n" if whitespace else "sample.wav"
+                        actual = self.identity({field: value for field in fields})
+                        self.assertEqual(actual, (self.PATH_ONLY_ID, {"recordings": 1}))
+        # Distinct surrounding whitespace must not create a conflict.
+        actual = self.identity({"audio": " sample.wav", "audio_path": "sample.wav\t",
+                                "path": "sample.wav"})
+        self.assertEqual(actual[0], self.PATH_ONLY_ID)
+
+    def test_absolute_aliases_and_relative_audio_root(self):
+        for field in self.FIELDS:
+            with self.subTest(field=field):
+                self.assertEqual(self.identity({field: str(self.audio)},
+                                               audio_root=self.root / "unused-root")[0],
+                                 self.PATH_ONLY_ID)
+        nested = self.root / "nested"
+        nested.mkdir()
+        self.assertEqual(self.identity({"path": "../sample.wav"}, audio_root=nested)[0],
+                         self.PATH_ONLY_ID)
+
+    def test_conflicting_and_invalid_present_aliases_stay_invalid(self):
+        for left, right in itertools.combinations(self.FIELDS, 2):
+            with self.subTest(left=left, right=right):
+                with self.assertRaisesRegex(ValueError, "aliases disagree"):
+                    self.identity({left: "sample.wav", right: "other.wav"})
+        for field in self.FIELDS:
+            other = next(name for name in self.FIELDS if name != field)
+            for value in (None, "", "  ", 1, True, []):
+                with self.subTest(field=field, invalid=value):
+                    with self.assertRaisesRegex(ValueError, "must be non-empty text"):
+                        self.identity({other: "sample.wav", field: value})
+        with self.assertRaisesRegex(ValueError, "expected non-empty audio/audio_path/path"):
+            self.identity({})
+
+    def test_stale_execution_path_is_not_an_identity_alias(self):
+        for field in self.FIELDS:
+            with self.subTest(field=field):
+                actual = self.identity({field: "sample.wav", "_execution_path": "obsolete.wav"})
+                self.assertEqual(actual[0], self.PATH_ONLY_ID)
+
+    def test_original_path_golden_and_content_sensitivity(self):
+        baseline = self.identity({"path": "sample.wav"})
+        self.assertEqual(baseline, (self.PATH_ONLY_ID, {"recordings": 1}))
+        changed_expected = self.identity(
+            {"path": "sample.wav"},
+            expected=[{"keyword_id": 1, "start_s": 0, "end_s": 4 / 16000}],
+        )
+        self.assertNotEqual(changed_expected[0], baseline[0])
+        self.write_audio((0, 1, -1, 2, -2, 3, -3, 1))
+        self.assertNotEqual(self.identity({"path": "sample.wav"})[0], baseline[0])
+
+
 def main() -> int:
     strict = unittest.TextTestRunner(verbosity=2).run(
-        unittest.defaultTestLoader.loadTestsFromTestCase(RequiredMetricTests)
+        unittest.TestSuite([
+            unittest.defaultTestLoader.loadTestsFromTestCase(RequiredMetricTests),
+            unittest.defaultTestLoader.loadTestsFromTestCase(DatasetIdentityAliasTests),
+        ])
     )
-    if strict.testsRun != 4 or strict.skipped or not strict.wasSuccessful():
+    if strict.testsRun != 9 or strict.skipped or not strict.wasSuccessful():
         return 1
 
     with tempfile.TemporaryDirectory() as td:
