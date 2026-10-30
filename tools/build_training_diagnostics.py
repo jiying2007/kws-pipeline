@@ -22,7 +22,7 @@ def load_json(path: pathlib.Path) -> tuple[dict | None, str | None]:
         return None, "missing"
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         return None, f"invalid:{type(exc).__name__}"
     if not isinstance(value, dict):
         return None, "not-object"
