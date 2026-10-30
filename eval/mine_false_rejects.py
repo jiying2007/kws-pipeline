@@ -112,6 +112,12 @@ def extract_event(
             raise ValueError(f"{source}: empty false-reject replay clip")
         reader.setpos(start)
         frames = reader.readframes(end - start)
+        expected_bytes = (end - start) * 2
+        if len(frames) != expected_bytes:
+            raise ValueError(
+                f"{source}: truncated false-reject replay PCM payload "
+                f"(expected {expected_bytes} bytes, got {len(frames)})"
+            )
         params = reader.getparams()
 
     target.parent.mkdir(parents=True, exist_ok=True)
