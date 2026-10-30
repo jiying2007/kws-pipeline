@@ -9,6 +9,7 @@
 #include "sha256.h"
 #include "tool_io.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <inttypes.h>
 #if defined(__linux__)
@@ -155,6 +156,13 @@ static int parse_float(const char *text, float *out) {
 static int parse_u32(const char *text, uint32_t *out) {
   char *end = NULL;
   unsigned long value;
+  const char *first = text;
+  while (isspace((unsigned char)*first)) {
+    ++first;
+  }
+  if (*first == '-') {
+    return 0;
+  }
   errno = 0;
   value = strtoul(text, &end, 10);
   if (errno != 0 || end == text || *end != '\0' || value > UINT32_MAX) {
