@@ -460,7 +460,72 @@ def test_external_speech_like_base_renderer() -> None:
             raise AssertionError("duplicate domain render split was accepted")
 
 
+def test_measured_rir_payload_integrity() -> None:
+    """Reject physical short reads without changing valid PCM/chunk semantics."""
+    import pathlib
+    import struct
+    import tempfile
+    from measured_rir import MAX_RIR_SAMPLES, read_rir
+
+    samples = [16384, 0, 8192, 0, 4096, 0, 2048, 1024]
+    payload = struct.pack("<8h", *samples)
+    expected = [value / 32768.0 for value in samples]
+
+    def chunk(name: bytes, data: bytes) -> bytes:
+        return name + struct.pack("<I", len(data)) + data + b"\0" * (len(data) % 2)
+
+    def wav(data: bytes, *, declared: int | None = None,
+            before: bytes = b"", after: bytes = b"", trailing: bytes = b"") -> bytes:
+        fmt = chunk(b"fmt ", struct.pack("<HHIIHH", 1, 1, 16000, 32000, 2, 16))
+        size = len(data) if declared is None else declared
+        body = b"WAVE" + fmt + before + b"data" + struct.pack("<I", size) + data + after
+        # For truncated fixtures, retain the original declared RIFF/data lengths.
+        riff_size = len(body) + size - len(data)
+        return b"RIFF" + struct.pack("<I", riff_size) + body + trailing
+
+    maximum = struct.pack("<h", 16384) + b"\0\0" * (MAX_RIR_SAMPLES - 1)
+    truncated = "truncated measured RIR PCM payload"
+    cases = [
+        ("complete", wav(payload), expected, None),
+        ("one-frame", wav(payload[:2]), [0.5], None),
+        ("maximum-frames", wav(maximum), [0.5] + [0.0] * (MAX_RIR_SAMPLES - 1), None),
+        ("unknown-padded-chunk", wav(payload, before=chunk(b"JUNK", b"abc")), expected, None),
+        ("metadata-after-data", wav(payload, after=chunk(b"JUNK", b"xyz")), expected, None),
+        ("trailing-outside-riff", wav(payload, trailing=b"trailing bytes"), expected, None),
+        ("even-short", wav(payload[:-2], declared=len(payload)), None, truncated),
+        ("odd-short", wav(payload[:-1], declared=len(payload)), None, truncated),
+        ("missing-data", wav(b"", declared=len(payload)), None, truncated),
+        ("silent", wav(b"\0" * len(payload)), None, "effectively silent"),
+        ("empty", wav(b""), None, "length must be"),
+        ("over-limit", wav(payload[:2], declared=2 * (MAX_RIR_SAMPLES + 1)), None,
+         "length must be"),
+    ]
+    failures = []
+    with tempfile.TemporaryDirectory(prefix="measured-rir-input-") as td:
+        for name, raw, values, error in cases:
+            path = pathlib.Path(td) / (name + ".wav")
+            path.write_bytes(raw)
+            try:
+                actual = read_rir(path)
+            except ValueError as exc:
+                if error is None or error not in str(exc):
+                    failures.append(f"{name}: unexpected ValueError: {exc}")
+            except Exception as exc:
+                failures.append(f"{name}: unexpected {type(exc).__name__}: {exc}")
+            else:
+                if error is not None:
+                    failures.append(f"{name}: malformed input was accepted")
+                elif actual != values:
+                    failures.append(f"{name}: valid decoded samples changed")
+            if path.read_bytes() != raw:
+                failures.append(f"{name}: input bytes changed")
+    print(f"measured RIR payload integrity: {len(cases)} cases; failures={failures}")
+    if failures:
+        raise RuntimeError("measured RIR payload integrity failed: " + "; ".join(failures))
+
+
 def main() -> int:
+    test_measured_rir_payload_integrity()
     test_deterministic_robustness_axes()
     test_external_speech_like_base_renderer()
 
