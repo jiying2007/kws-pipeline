@@ -468,6 +468,7 @@ jobs:
           --suite promotion-admission --suite promotion-source
           --suite campaign-capsule --suite execution-guards
       - name: Retain actual compiler-independent execution evidence
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: checked-unittest-python-contracts
@@ -581,6 +582,7 @@ jobs:
       - name: Verify actual posterior suite execution
         run: python3 -I -S -B tools/checked_unittest.py --verify-reports "$KWS_TEST_REPORT_DIR" --suite posterior
       - name: Retain actual posterior execution evidence
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: checked-unittest-posterior

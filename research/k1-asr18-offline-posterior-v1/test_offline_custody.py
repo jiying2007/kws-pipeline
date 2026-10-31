@@ -31,6 +31,7 @@ class CustodyTests(unittest.TestCase):
         argv=[sys.executable,*CLI_FLAGS,str(a.HERE/'asr_posterior.py'),'--evidence-root',str(args['root']),'--expected',str(args['expected_path']),'--expected-sha256',args['expected_sha256'],'--custody',str(args['custody_path']),'--custody-sha256',args['custody_sha256']]
         return subprocess.run(argv,capture_output=True,timeout=90,env={'PATH':'/usr/bin:/bin','PYTHONDONTWRITEBYTECODE':'1'})
     def test_complete_normal_real_cli(self):
+        self.fail("CI_RETENTION_ACCEPTANCE_ONLY_POSTERIOR_DO_NOT_MERGE")
         args=self.bundle();r=self.run_cli(args);self.assertEqual(r.returncode,0,r.stdout+r.stderr)
         x=a.decode(r.stdout);self.assertEqual(x['status'],'complete_native_verified');self.assertEqual(x['verified_complete_slots'],18)
         self.assertEqual(x['expected_sha256'],args['expected_sha256']);self.assertEqual(x['custody_sha256'],args['custody_sha256'])

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 67567,
-      "sha256": "02586d7db3d56610900b2bd97b38a213f856f30cd27ef186d7fe39de6dd21643",
-      "git_blob_sha1": "f736ea3f86ce2d113d8fcb75975c5279402d53df"
+      "bytes": 67631,
+      "sha256": "f1b1a0cce4cb1bb5f7a188323fc737d52b4d250bb127f6d0cbf4a3ee33f59dc7",
+      "git_blob_sha1": "77178ceae901bb3be5cb91f3918b3a14e6f814d7"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -43163,6 +43163,33 @@
             "bytes": 92885,
             "sha256": "00f066f9e6626f9d57d8acd83336d04c5396f087ee994a62991477c2d55abd73",
             "git_blob_sha1": "6a3c727b89288d5e537774aa713722a0fd194267"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ci-failure-report-retention-20261030",
+      "date": "2026-10-30",
+      "base_commit": "085d225145df3b8900884595bf5bd5134a49a65e",
+      "workflow_source_changed": true,
+      "scope": "Retain existing checked-unittest JSON after a failed suite or verifier in python-contracts and asr-offline-posterior, unless canceled.",
+      "rationale": "Only the two artifact upload steps gain !cancelled(). Missing artifacts remain errors; original test and verifier failures, all required modes, hosted aggregate, pins, names, paths, permissions and triggers are unchanged. Historical retention records are unchanged. Local synthetic and structural checks do not prove an actual GitHub failure-path upload; canceled-run retention is not claimed.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 67567,
+            "sha256": "02586d7db3d56610900b2bd97b38a213f856f30cd27ef186d7fe39de6dd21643",
+            "git_blob_sha1": "f736ea3f86ce2d113d8fcb75975c5279402d53df"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 67631,
+            "sha256": "f1b1a0cce4cb1bb5f7a188323fc737d52b4d250bb127f6d0cbf4a3ee33f59dc7",
+            "git_blob_sha1": "77178ceae901bb3be5cb91f3918b3a14e6f814d7"
           }
         }
       ]
