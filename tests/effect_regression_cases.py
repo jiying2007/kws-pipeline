@@ -9,6 +9,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -154,6 +155,65 @@ class EffectEvidenceTests(unittest.TestCase):
         self.assertEqual(report['speaker_id']['status'], 'overlap')
 
 
+class RegressionHashTests(unittest.TestCase):
+    """Bounded hashing only; no model, network or large artifact fixture."""
+
+    def test_digest_matches_binary_chunk_boundaries(self):
+        block = 1024 * 1024
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'binary.dat'
+            for size in (0, 1, block - 1, block, block + 1, 2 * block + 17):
+                with self.subTest(size=size):
+                    data = (bytes(range(256)) * ((size + 255) // 256))[:size]
+                    path.write_bytes(data)
+                    expected = hashlib.sha256(data).hexdigest()
+                    with mock.patch.object(Path, 'read_bytes', side_effect=AssertionError('unbounded read')):
+                        self.assertEqual(gate.sha(path), expected)
+                        self.assertEqual(gate.sha(str(path)), expected)
+
+    def test_reads_are_bounded_and_stream_is_closed(self):
+        block = 1024 * 1024
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'binary.dat'
+            data = b'x' * (2 * block + 17)
+            path.write_bytes(data)
+            with path.open('rb') as stream:
+                calls = []
+                def read(size):
+                    self.assertGreater(size, 0)
+                    self.assertLessEqual(size, block)
+                    calls.append(size)
+                    return stream.read(size)
+                wrapped = mock.MagicMock()
+                wrapped.__enter__.return_value = wrapped
+                wrapped.read.side_effect = read
+                wrapped.__exit__.side_effect = lambda *args: stream.close()
+                with mock.patch.object(Path, 'open', return_value=wrapped) as opened:
+                    self.assertEqual(gate.sha(path), hashlib.sha256(data).hexdigest())
+                opened.assert_called_once_with('rb')
+                self.assertGreaterEqual(len(calls), 4)
+                self.assertTrue(stream.closed)
+
+    def test_missing_file_and_directory_errors_propagate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaises(FileNotFoundError):
+                gate.sha(Path(directory) / 'absent')
+            with self.assertRaises(IsADirectoryError):
+                gate.sha(Path(directory))
+
+    def test_read_error_propagates_and_closes_stream(self):
+        error = OSError('fixture read failure')
+        stream = mock.MagicMock()
+        stream.__enter__.return_value = stream
+        stream.__exit__.return_value = False
+        stream.read.side_effect = error
+        with mock.patch.object(Path, 'open', return_value=stream):
+            with self.assertRaises(OSError) as raised:
+                gate.sha('fixture-only')
+        self.assertIs(raised.exception, error)
+        stream.__exit__.assert_called_once()
+
+
 class RegressionGateTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
@@ -224,7 +284,7 @@ class RegressionGateTests(unittest.TestCase):
 
 
 def run():
-    suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(cls) for cls in (EffectEvidenceTests, RegressionGateTests))
+    suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(cls) for cls in (EffectEvidenceTests, RegressionHashTests, RegressionGateTests))
     result = unittest.TextTestRunner(verbosity=1).run(suite)
     if not result.wasSuccessful():
         raise AssertionError('effect/regression contract tests failed')
