@@ -43246,6 +43246,51 @@
           }
         }
       ]
+    },
+    {
+      "id": "far-receipt-bounded-hash-20261031",
+      "date": "2026-10-31",
+      "base_commit": "0705eb749a03bc89095093d6e28467ee24ccf3ba",
+      "base_tree": "0570d070dc2bc0a02f9419f7d43914e738e79074",
+      "workflow_source_changed": false,
+      "scope": "Bound FAR receipt SHA256 helper reads to 1 MiB chunks and add no-model digest/bounded-read/error regression coverage.",
+      "rationale": "Preserve exact digests, existing failure behavior, qualification policy and historical source identities. Hash-helper memory no longer scales with complete artifact size; this does not qualify any model or field deployment.",
+      "files": [
+        {
+          "path": "tools/far_regression_receipt.py",
+          "before": {
+            "path": "tools/far_regression_receipt.py",
+            "mode": "100644",
+            "bytes": 18084,
+            "sha256": "467b859c4170c9e6a70075e7bd4fdfda9d851a5f388369318d46e5dd329e3573",
+            "git_blob_sha1": "66bb94846347f709efb9ce1d1b22ca058ebb590e"
+          },
+          "after": {
+            "path": "tools/far_regression_receipt.py",
+            "mode": "100644",
+            "bytes": 18222,
+            "sha256": "4f3b0a540bd52cb81009bfedaafd90e01b1dd54e54111b4561f90353cae8d4b9",
+            "git_blob_sha1": "6888e92bc2ac585bab599a144b4b87ae48bace36"
+          }
+        },
+        {
+          "path": "tests/effect_regression_cases.py",
+          "before": {
+            "path": "tests/effect_regression_cases.py",
+            "mode": "100644",
+            "bytes": 14298,
+            "sha256": "8afa13a84048ce0b3b516ea3e6fe26a136f6d8cf5f0aa6db5e3a478547303908",
+            "git_blob_sha1": "e7c33f3a8ef5ecc81d9dcf4d2b75a16a623d5899"
+          },
+          "after": {
+            "path": "tests/effect_regression_cases.py",
+            "mode": "100644",
+            "bytes": 17193,
+            "sha256": "258ecd40436787732c86d27e2e06ce228e1b3a3f94b67cdc7375c934d906764e",
+            "git_blob_sha1": "bef38a6dbaf5ab6e664e9aa510302be09433b413"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
