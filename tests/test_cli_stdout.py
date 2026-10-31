@@ -376,6 +376,59 @@ static int test_close(FILE *stream) {
     require(not failures, 'trace-slice cleanup contract failed')
 
 
+def check_trace_slice_boundaries(compiler, root):
+    """Unsigned CLI bounds fail before output acquisition; no model or replay."""
+    root.mkdir()
+    executable = root / 'slice'
+    run([compiler, '-std=c11', '-O2', '-Wall', '-Wextra', '-Wpedantic', '-Werror',
+         ROOT / 'tools/kws_trace_slice.c', ROOT / 'tools/kws_trace_io.c',
+         '-lm', '-o', executable])
+    source = root / 'input.kwtr'
+    original = struct.pack('<8sIHHIIIIQQ64s8x', b'KWTRACE1', 1, 2, 0,
+                           16000, 400, 320, 0, FINGERPRINT, 2, SHA)
+    for end in (400, 720):
+        original += struct.pack('<QB7x2f', end, 1, 1., -1.)
+    source.write_bytes(original)
+    invalid = ('-1', '-0', '-18446744073709551615', ' -1', '\t-0',
+               '', ' ', '18446744073709551616', '400x', '400 ', '--1')
+    checked = 0
+    for argument in (0, 1):
+        for token in invalid:
+            for existing in (False, True):
+                output = root / ('rejected-' + str(checked) + '.kwtr')
+                sentinel = b'existing output must survive argument rejection\n'
+                if existing:
+                    output.write_bytes(sentinel)
+                bounds = ['0', '720']
+                bounds[argument] = token
+                result = subprocess.run([str(executable), str(source), str(output), *bounds],
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                require(result.returncode == 2 and result.stdout == b'' and
+                        result.stderr.startswith(b'usage:'),
+                        f'trace-slice invalid bound accepted: {bounds!r}')
+                require(output.read_bytes() == sentinel if existing else not output.exists(),
+                        f'trace-slice argument rejection altered output: {bounds!r}')
+                require(source.read_bytes() == original, 'trace-slice input changed')
+                checked += 1
+    valid = (('0', '400', 0, 400, 1), ('0', '18446744073709551615', 0, 2**64 - 1, 2),
+             ('+0', '+720', 0, 720, 2), (' \t0', ' \t+400', 0, 400, 1),
+             ('400', '720', 400, 720, 1), ('0000', '00720', 0, 720, 2))
+    for index, (start, end, parsed_start, parsed_end, frames) in enumerate(valid):
+        output = root / f'valid-{index}.kwtr'
+        result = run([executable, source, output, start, end])
+        require(json.loads(result.stdout) == {'frames': frames,
+                    'start_sample_exclusive': parsed_start, 'end_sample_inclusive': parsed_end},
+                'trace-slice valid boundary receipt changed')
+        expected_records = b''.join(original[120 + i * 24:120 + (i + 1) * 24]
+                                   for i, sample in enumerate((400, 720))
+                                   if parsed_start < sample <= parsed_end)
+        expected_header = bytearray(original[:120])
+        struct.pack_into('<Q', expected_header, 40, frames)
+        require(output.read_bytes() == bytes(expected_header) + expected_records,
+                'trace-slice valid output bytes changed')
+    print(f'trace-slice unsigned boundaries: {checked} rejected + {len(valid)} valid checked')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cc', default='cc')
@@ -385,6 +438,7 @@ def main():
     require(Path('/dev/full').is_char_device(), 'Linux /dev/full is required for this hosted contract')
     with tempfile.TemporaryDirectory(prefix='kws-stdout-contract-') as temp:
         root = Path(temp)
+        check_trace_slice_boundaries(compiler, root / 'trace-slice-boundaries')
         check_trace_slice_cleanup(compiler, root / 'trace-slice-cleanup')
         generated = root / 'generated'
         run([sys.executable, ROOT / 'tools/gen_parameter_limits.py',

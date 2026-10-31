@@ -1,5 +1,6 @@
 #include "kws_trace_io.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -9,6 +10,15 @@
 static int parse_u64(const char *text, uint64_t *out) {
   char *end = NULL;
   unsigned long long value;
+  /* strtoull accepts a minus sign by unsigned negation, not a sample index.
+   * Preserve its existing leading-whitespace and plus-sign syntax. */
+  const unsigned char *first = (const unsigned char *)text;
+  while (isspace(*first)) {
+    ++first;
+  }
+  if (*first == (unsigned char)'-') {
+    return 0;
+  }
   errno = 0;
   value = strtoull(text, &end, 10);
   if (errno != 0 || end == text || *end != '\0') {

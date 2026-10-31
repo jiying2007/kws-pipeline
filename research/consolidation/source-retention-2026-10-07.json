@@ -43336,6 +43336,51 @@
           }
         }
       ]
+    },
+    {
+      "id": "trace-slice-unsigned-boundary-20261031",
+      "date": "2026-10-31",
+      "base_commit": "11c183cee049ea019602c4f8d3602394f2d4e687",
+      "base_tree": "eb8470670778f33c8a115b1895c4f423cbfaff3d",
+      "workflow_source_changed": false,
+      "scope": "Reject negative sample-bound CLI arguments, including negative zero and leading whitespace, before trace-slice output acquisition; preserve valid unsigned decimal plus-sign and whitespace compatibility.",
+      "rationale": "Prevent unsigned conversion of negative sample bounds into unintended large positive intervals. Synthetic byte-slicing regressions cover rejected output preservation and unchanged valid receipts/bytes. No model execution, historical dependency edits or production qualification.",
+      "files": [
+        {
+          "path": "tools/kws_trace_slice.c",
+          "before": {
+            "path": "tools/kws_trace_slice.c",
+            "mode": "100644",
+            "bytes": 6482,
+            "sha256": "c3f8931316b81cffe3ca188968b7b2b0830cf44d736fbdabcda3d0353078c921",
+            "git_blob_sha1": "86b4757860813639da944bed4c55a013f291ecc2"
+          },
+          "after": {
+            "path": "tools/kws_trace_slice.c",
+            "mode": "100644",
+            "bytes": 6810,
+            "sha256": "eadd25613b9050e4b1fce500ec2af01fa5136499dcb9619437b7fd144d0bc934",
+            "git_blob_sha1": "b7bbbcd5c470275499b171c1f5abd5311123717e"
+          }
+        },
+        {
+          "path": "tests/test_cli_stdout.py",
+          "before": {
+            "path": "tests/test_cli_stdout.py",
+            "mode": "100644",
+            "bytes": 26578,
+            "sha256": "ed730da7ebfde00fb6f84a010c0a50e633d6c9f37f8f4cb49129725c006954d2",
+            "git_blob_sha1": "8f9395f4349e3bc5370aea650c154bd979c1c2f7"
+          },
+          "after": {
+            "path": "tests/test_cli_stdout.py",
+            "mode": "100644",
+            "bytes": 29795,
+            "sha256": "bbfbd9f8aa905aff28da15c720962f7952c6a30ea7ae452920996a247fbea917",
+            "git_blob_sha1": "0fb4d4df955424c84587caf7c1b3bf5f6538ff6b"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
