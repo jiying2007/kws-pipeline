@@ -114,8 +114,8 @@
         "test_checked_unittest",
         "test_test_inventory"
       ],
-      "count": 25,
-      "ids_sha256": "6c5d31c6e3a790b09e13be64541c1ce5f26d950771b3c7c16e6a8989b97543cd",
+      "count": 23,
+      "ids_sha256": "0f1fb77dc4c813fc95e77e962e5d9f659db7c2faf3f7a5ce3233cac999d07206",
       "modes": [
         "normal",
         "O",

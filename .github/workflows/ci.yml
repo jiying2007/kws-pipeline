@@ -460,6 +460,12 @@ jobs:
           python3 -S -B tools/checked_unittest.py --suite execution-guards
           python3 -S -B -O tools/checked_unittest.py --suite execution-guards
           python3 -S -B -OO tools/checked_unittest.py --suite execution-guards
+      - name: Isolated CI failure-report retention regressions
+        run: |
+          python3 -S -B tests/test_ci_failure_retention.py
+          python3 -S -B -O tests/test_ci_failure_retention.py
+          python3 -S -B -OO tests/test_ci_failure_retention.py
+          python3 -S -B tests/test_ci_failure_retention.py --verify-reports "$KWS_TEST_REPORT_DIR"
       - name: Verify actual compiler-independent suite execution
         run: >-
           python3 -I -S -B tools/checked_unittest.py

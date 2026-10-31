@@ -18,11 +18,51 @@ def jobs(text):
     return {part.split(':', 1)[0]: part for part in entries if part.strip()}
 
 
+def without_exact_failure_report_upload_condition(shared):
+    """Only the unique, byte-exact failure evidence uploader may be conditional."""
+    expected = """      - name: Retain actual compiler-independent execution evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: checked-unittest-python-contracts
+          path: ${{ env.KWS_TEST_REPORT_DIR }}/*.json
+          if-no-files-found: error
+"""
+    steps = re.findall(r'^      - .*?(?=^      - |\Z)', shared, re.M | re.S)
+    selected = [step for step in steps if step.splitlines()[0] == expected.splitlines()[0]]
+    if len(selected) != 1 or selected[0].rstrip() != expected.rstrip():
+        raise ValueError('failure report upload must be unique and exact')
+    step = selected[0]
+    unconditional = step.replace('        if: ${{ !cancelled() }}\n', '', 1)
+    return shared.replace(step, unconditional, 1)
+
+
 class CIContracts(unittest.TestCase):
     def setUp(self):
         self.ci = (ROOT / '.github/workflows/ci.yml').read_text()
         self.source = (ROOT / '.github/workflows/research-source-consolidation.yml').read_text()
         self.quality = (ROOT / '.github/workflows/experiment-quality-guards.yml').read_text()
+
+    def test_failure_upload_condition_is_the_only_exact_exception(self):
+        shared = jobs(self.ci)['python-contracts']
+        clean = without_exact_failure_report_upload_condition(shared)
+        self.assertNotIn('    if:', clean)
+        upload = re.search(r'^      - name: Retain actual compiler-independent execution evidence\n.*?(?=^      - |\Z)', shared, re.M | re.S).group()
+        condition = '        if: ${{ !cancelled() }}\n'
+        variants = (
+            shared.replace('      - name: Checked unittest runner regressions\n',
+                           '      - name: Checked unittest runner regressions\n        if: ${{ success() }}\n', 1),
+            shared.replace(condition, '        if: ${{ always() }}\n', 1),
+            shared.replace(condition, condition + condition, 1),
+            shared.replace(upload, upload + upload, 1),
+            shared.replace('    runs-on: ubuntu-24.04\n', '    if: ${{ success() }}\n    runs-on: ubuntu-24.04\n', 1),
+            shared.replace('actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9', 'actions/upload-artifact@0000000000000000000000000000000000000000', 1),
+            shared.replace('          path: ${{ env.KWS_TEST_REPORT_DIR }}/*.json\n', '          path: wrong/*.json\n', 1),
+        )
+        for changed in variants:
+            with self.subTest(mutation=variants.index(changed)):
+                with self.assertRaises((ValueError, AssertionError)):
+                    self.assertNotIn('    if:', without_exact_failure_report_upload_condition(changed))
 
     def test_required_hosted_checks_fail_when_shared_checks_fail(self):
         job = jobs(self.ci)['hosted']
@@ -105,7 +145,7 @@ class CIContracts(unittest.TestCase):
         for forbidden in ('paths:', 'paths-ignore:', 'branches-ignore:'):
             self.assertNotIn(forbidden, triggers)
         shared = jobs(self.ci)['python-contracts']
-        self.assertNotIn('    if:', shared)
+        self.assertNotIn('    if:', without_exact_failure_report_upload_condition(shared))
         for command in ('tools/verify_research_sources.py',
                         'source_tests/test_source_retention.py',
                         'source_tests/test_publication_index.py',
@@ -193,7 +233,7 @@ class CIContracts(unittest.TestCase):
         self.assertIn('    branches: ["consolidate/**"]', trigger)
         self.assertNotRegex(trigger, r'branches:.*\bmain\b')
         self.assertNotIn('"consolidate/**"', self.ci.split('permissions:', 1)[0])
-        self.assertNotIn('    if:', shared)
+        self.assertNotIn('    if:', without_exact_failure_report_upload_condition(shared))
         self.assertNotIn('continue-on-error:', shared)
 
     def test_all_quality_review_files_run_in_required_chain_in_all_python_modes(self):
@@ -213,7 +253,7 @@ class CIContracts(unittest.TestCase):
             self.assertEqual(self.ci.count(name), 3)
         self.assertIn('tools/test_inventory.py --root research/experiment_quality_guards/tests '
                       '--workflow .github/workflows/ci.yml', shared)
-        self.assertNotIn('    if:', shared)
+        self.assertNotIn('    if:', without_exact_failure_report_upload_condition(shared))
         self.assertNotIn('continue-on-error:', shared)
         self.assertIn('"$RUNNER_TEMP/check-tracked-worktree.sh" "Saved review and dataset quality guards"', shared)
 
@@ -363,7 +403,7 @@ class ASR18CIContracts(unittest.TestCase):
             'on:\n  push:\n    branches:\n      - research/k1-punctuation6-asr18-r5\n')
         self.assertNotIn("refs/heads/research/k1-punctuation6-asr18-v1", workflow)
         shared = jobs(ci)['python-contracts']
-        self.assertNotIn('    if:', shared)
+        self.assertNotIn('    if:', without_exact_failure_report_upload_condition(shared))
         self.assertEqual(set(jobs(workflow)), {'asr18'})
         execution = jobs(workflow)['asr18']
         self.assertIn('    if: ' + ASR18_JOB_IF + '\n', execution)
@@ -596,7 +636,7 @@ class PrepareDiagnosticCIContracts(unittest.TestCase):
         self.assertIn('    if: ' + PREPARE_JOB_IF + '\n', execution)
         self.assertIn('concurrency:\n  group: k1-punctuation6-prepare-diagnostic-r2\n  cancel-in-progress: false\n', workflow)
         shared = jobs(ci)['python-contracts']
-        self.assertNotIn('    if:', shared)
+        self.assertNotIn('    if:', without_exact_failure_report_upload_condition(shared))
         self.assertIn('    runs-on: ubuntu-24.04\n', shared)
         launch = named_step(shared, 'K1 prepare Docker create inspect remove regression')
         self.assertEqual(launch,

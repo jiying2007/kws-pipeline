@@ -591,6 +591,7 @@ print(json.dumps({'status':'synthetic guarded acceptance passed', **observed,
                           'qualification.py', 'hosted_run.py', 'transfer_recovery.py'):
             self.assertNotIn(forbidden, job)
         report_upload = """      - name: Retain actual posterior execution evidence
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: checked-unittest-posterior
