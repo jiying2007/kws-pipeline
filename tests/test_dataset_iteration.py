@@ -168,8 +168,9 @@ class DatasetIdentityAliasTests(unittest.TestCase):
     # Preserve the pre-domain-policy golden as historical evidence, not a current ID.
     LEGACY_PATH_ONLY_ID = "47be6a9d292ea745056a302e773906a725c5b2eb366535c33fb07df35d2534d1"
 
-    # Deliberately version-migrated: tagged envelope plus effective ["all"] slice.
-    PATH_ONLY_ID = "9a440389f273044a474f2873a3e77ddd8c0398ff468b6cd30be2b72a48d6c030"
+    # Preserve schema-3 domain-only identity; schema 4 also binds AFE absence.
+    DOMAIN_ONLY_PATH_ID = "9a440389f273044a474f2873a3e77ddd8c0398ff468b6cd30be2b72a48d6c030"
+    PATH_ONLY_ID = "ca9680a375cbd57fa87956e9d38762b20efbedcd1ec59881762d23b9ab74daee"
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -505,10 +506,10 @@ class FarPopulationPolicyTests(unittest.TestCase):
                 self.assertTrue(result["earlier_work_remains"])
                 continue
             card = result["card"]
-            self.assertEqual(card["schema_version"], 3)
-            self.assertEqual(card["identity"]["dataset_identity_policy"], "effective-domain-keys-v1")
+            self.assertEqual(card["schema_version"], 4)
+            self.assertEqual(card["identity"]["dataset_identity_policy"], "effective-domain-keys-verified-afe-v2")
             self.assertEqual(card["identity"]["far_policy"], self.POLICY)
-            self.assertEqual(card["protocol"], "dataset-iteration-v3" if protocol is None else protocol)
+            self.assertEqual(card["protocol"], "dataset-iteration-v4" if protocol is None else protocol)
             self.assertEqual(card["metrics"]["false_accepts"], result["summary"]["false_accepts"])
             self.assertEqual(card["metrics"]["far_per_hour"], result["summary"]["far_per_hour"])
             self.assertEqual(card["far_rate"]["point_estimate_per_hour"], 0.0)
@@ -549,8 +550,9 @@ class EffectiveDomainIdentityTests(unittest.TestCase):
             "recording": "alias-fixture",
             "wav_sha256": hashlib.sha256(self.audio.read_bytes()).hexdigest(),
             "duration_s": 0.0005, "expected": [], "domains": sorted(expected),
+            "afe_metadata": {"present": False},
         }]
-        encoded = json.dumps({"dataset_identity_policy": "effective-domain-keys-v1",
+        encoded = json.dumps({"dataset_identity_policy": "effective-domain-keys-verified-afe-v2",
                               "entries": entries}, ensure_ascii=False, sort_keys=True,
                              separators=(",", ":"), allow_nan=False).encode("utf-8")
         self.assertEqual(actual, hashlib.sha256(encoded).hexdigest())
@@ -721,6 +723,7 @@ class EffectiveDomainIdentityTests(unittest.TestCase):
         baseline = self.identity({})
         self.assertEqual(baseline, DatasetIdentityAliasTests.PATH_ONLY_ID)
         self.assertNotEqual(baseline, DatasetIdentityAliasTests.LEGACY_PATH_ONLY_ID)
+        self.assertNotEqual(baseline, DatasetIdentityAliasTests.DOMAIN_ONLY_PATH_ID)
         # A policy tag change must change the envelope even for all-only data.
         with mock.patch.object(iteration, "DATASET_IDENTITY_POLICY", "test-other-policy"):
             self.assertNotEqual(self.identity({}), baseline)
@@ -837,6 +840,311 @@ class DomainPolicyCompatibilityTests(unittest.TestCase):
                         "protocol mismatch")
 
 
+
+def afe_pipeline_fixture():
+    """Normal-interpreter only: actual Python stages, solely external runner mocked.
+
+    Literal PCM/TSV and nonexecutable placeholders are not model evidence. The
+    parent tests exercise helpers/comparator under their actual optimization mode.
+    """
+    import run_corpus
+    import domain_metrics
+    from types import SimpleNamespace
+    with tempfile.TemporaryDirectory() as td:
+        root = pathlib.Path(td)
+        with wave.open(str(root / "sample.wav"), "wb") as out:
+            out.setnchannels(1)
+            out.setsampwidth(2)
+            out.setframerate(16000)
+            out.writeframes(struct.pack("<8h", 0, 1, -1, 2, -2, 3, -3, 0))
+        low = "kws-afe-timeline-v1\n0 8 0 0 16 0 0.1 0 " + "0" * 64 + "\n"
+        high = low.replace("0.1", "0.9")
+        for name, raw in (("low.tsv", low), ("same.tsv", low), ("high.tsv", high)):
+            (root / name).write_text(raw)
+        for name in ("runner", "model-a", "model-b", "pack"):
+            (root / name).write_text("NONEXECUTABLE ARTIFICIAL PLACEHOLDER " + name)
+        base = {"recording": "literal-eight", "path": "sample.wav",
+                "duration_s": 8 / 16000, "expected": []}
+        def binding(name):
+            return dict(base, metadata_path=name,
+                        metadata_sha256=hashlib.sha256((root / name).read_bytes()).hexdigest())
+        cases = [("low", binding("low.tsv"), "model-a"),
+                 ("high", binding("high.tsv"), "model-a"),
+                 ("high-model", binding("high.tsv"), "model-b"),
+                 ("same", binding("same.tsv"), "model-a"),
+                 ("same-model", binding("same.tsv"), "model-b"),
+                 ("equivalent-binding", binding("low.tsv"), "model-a"),
+                 ("absent", dict(base), "model-a")]
+        for name, fields in (("wrong-sha", {"metadata_sha256": "0" * 64}),
+                             ("missing-file", {"metadata_path": "missing.tsv"}),
+                             ("empty-path", {"metadata_path": ""})):
+            cases.append((name, {**binding("low.tsv"), **fields}, "model-a"))
+        cases.append(("missing-sha", dict(base, metadata_path="low.tsv"), "model-a"))
+        cases.append(("only-sha", dict(base, metadata_sha256=binding("low.tsv")["metadata_sha256"]), "model-a"))
+        for name in ("during-runner", "after-corpus", "effective-binding", "original-binding"):
+            cases.append((name, binding("low.tsv"), "model-a"))
+        results = {}
+        for name, row, model in cases:
+            (root / "low.tsv").write_text(low)
+            refs = root / (name + ".jsonl")
+            refs.write_text(json.dumps(row) + "\n")
+            output = root / (name + ".card.json")
+            sentinel = b"existing scorecard sentinel\n"
+            output.write_bytes(sentinel)
+            calls, stages = [], []
+            inputs = [refs, *[root / item for item in
+                      ("sample.wav", "low.tsv", "high.tsv", "same.tsv", "runner", "model-a", "model-b", "pack")]]
+            before = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}
+            def runner(command, **kwargs):
+                if command[0] != str(root / "runner"):
+                    raise RuntimeError("unexpected subprocess: " + repr(command))
+                calls.append(list(map(str, command)))
+                if name == "during-runner":
+                    (root / "low.tsv").write_text(high)
+                return SimpleNamespace(returncode=0, stdout="", stderr="")
+            def stage(command):
+                script = pathlib.Path(command[1]).name
+                stages.append(script)
+                with mock.patch.object(sys, "argv", command[1:]):
+                    if script == "run_corpus.py":
+                        with mock.patch.object(run_corpus.subprocess, "run", runner):
+                            code = run_corpus.main()
+                    elif script == "score_events.py":
+                        code = score_events.main()
+                    elif script == "domain_metrics.py":
+                        code = domain_metrics.main()
+                    else:
+                        raise RuntimeError("unexpected stage: " + script)
+                if code != 0:
+                    raise RuntimeError("Python stage failed: " + script)
+                if script == "run_corpus.py" and name == "after-corpus":
+                    (root / "low.tsv").write_text(high)
+                if script == "domain_metrics.py" and name in ("effective-binding", "original-binding", "equivalent-binding"):
+                    target = (root / (name + ".work") / "references.effective.jsonl"
+                              if name != "original-binding" else refs)
+                    target.write_text(json.dumps(binding("same.tsv" if name == "equivalent-binding" else "high.tsv")) + "\n")
+            argv = [str(RUN), "--runner", str(root / "runner"), "--model", str(root / model),
+                    "--keywords", str(root / "pack"), "--references", str(refs),
+                    "--audio-root", str(root), "--work-dir", str(root / (name + ".work")),
+                    "--output", str(output), "--variable", "model", "--seed", "fixture",
+                    "--code-sha", "fixture-code", "--protocol", "custom-label"]
+            error = None
+            with mock.patch.object(sys, "argv", argv), mock.patch.object(iteration, "run", stage), contextlib.redirect_stdout(io.StringIO()):
+                try:
+                    code = iteration.main()
+                except (OSError, ValueError) as exc:
+                    code, error = 2, str(exc)
+            after = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}
+            unchanged = before == after
+            results[name] = {"code": code, "error": error, "calls": calls, "stages": stages,
+                             "unchanged": unchanged, "input_before": before, "input_after": after,
+                             "sentinel_preserved": output.read_bytes() == sentinel}
+            if code == 0:
+                results[name]["card"] = json.loads(output.read_text())
+        return results
+
+
+class VerifiedAfeIdentityTests(unittest.TestCase):
+    POLICY = FarPopulationPolicyTests.POLICY
+    setUp = DatasetIdentityAliasTests.setUp
+    write_audio = DatasetIdentityAliasTests.write_audio
+    identity = EffectiveDomainIdentityTests.identity
+    reject = DomainPolicyCompatibilityTests.reject
+
+    def new_card(self, **kwargs):
+        card = FarPopulationPolicyTests.new_card(self, **kwargs)
+        card["schema_version"] = 4
+        card["identity"]["dataset_identity_policy"] = "effective-domain-keys-verified-afe-v2"
+        return card
+
+    def sidecar(self, name="sidecar.tsv", value="0.1"):
+        path = self.root / name
+        path.write_text("kws-afe-timeline-v1\n0 8 0 0 16 0 " + value + " 0 " + "0" * 64 + "\n")
+        return {"metadata_path": name, "metadata_sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+
+    def test_presence_content_and_path_equivalence(self):
+        absent = self.identity({})
+        fields = self.sidecar()
+        present = self.identity(fields)
+        self.assertNotEqual(absent, present)
+        self.assertEqual(present, self.identity(self.sidecar("relocated.tsv")))
+        self.assertEqual(present, self.identity({**fields, "metadata_path": str(self.root / fields["metadata_path"])}))
+        self.assertNotEqual(present, self.identity(self.sidecar("changed.tsv", "0.9")))
+        # The literal envelope oracle does not call either implementation hash helper.
+        entries = [{"recording": "alias-fixture", "wav_sha256": hashlib.sha256(self.audio.read_bytes()).hexdigest(),
+                    "duration_s": 0.0005, "expected": [], "domains": ["all"],
+                    "afe_metadata": {"present": True, "sha256": fields["metadata_sha256"]}}]
+        encoded = json.dumps({"dataset_identity_policy": "effective-domain-keys-verified-afe-v2", "entries": entries},
+                             ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+        self.assertEqual(present, hashlib.sha256(encoded).hexdigest())
+
+    def test_invalid_declarations_cannot_be_absence_or_trusted_digest(self):
+        good = self.sidecar()
+        invalid = [{"metadata_path": value, "metadata_sha256": good["metadata_sha256"]}
+                   for value in (None, "", 12, [], {})]
+        invalid += [{"metadata_path": "missing.tsv", "metadata_sha256": good["metadata_sha256"]},
+                    {"metadata_path": good["metadata_path"]}, {"metadata_sha256": good["metadata_sha256"]}]
+        invalid += [{**good, "metadata_sha256": value} for value in (None, "", "0" * 64, True, [], {}, good["metadata_sha256"].upper())]
+        for fields in invalid:
+            with self.subTest(fields=fields), self.assertRaises((OSError, ValueError)):
+                self.identity(fields)
+        self.assertNotEqual(self.identity(good), self.identity({}))
+        (self.root / good["metadata_path"]).write_text("changed bytes")
+        with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):
+            self.identity(good)
+
+
+    def test_shared_corpus_preflight_timing_and_cache_contracts(self):
+        import run_corpus
+        for name in ("runner", "model", "pack", "dump", "replay"):
+            (self.root / name).write_text("NONEXECUTABLE PLACEHOLDER " + name)
+        good = self.sidecar()
+        rows = [(good, None), ({}, None),
+                ({**good, "metadata_path": str(self.root / good["metadata_path"])}, None),
+                ({**good, "timing_contract": "afe-output-sample-v1", "afe_latency_samples": 0}, None),
+                ({**good, "metadata_sha256": "0" * 64}, "SHA-256 mismatch"),
+                ({"metadata_path": good["metadata_path"]}, "SHA-256 mismatch"),
+                ({"metadata_sha256": good["metadata_sha256"]}, "metadata_path"),
+                ({**good, "metadata_path": ""}, "metadata_path"),
+                ({**good, "metadata_path": "missing.tsv"}, "missing.tsv"),
+                ({**good, "duration_s": 10}, "duration"),
+                ({**good, "timing_contract": "afe-output-sample-v1", "afe_latency_samples": 1}, "AFE")]
+        calls = []
+        def runner(command, **kwargs):
+            self.assertEqual(command[0], str(self.root / "runner"))
+            calls.append(command)
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+        for fields, error in rows:
+            with self.subTest(fields=fields):
+                refs = self.root / "corpus.jsonl"
+                refs.write_text(json.dumps({**self.reference, "path": "sample.wav", **fields}) + "\n")
+                out = self.root / "corpus-detections.jsonl"
+                out.write_bytes(b"sentinel\n")
+                argv = ["run_corpus.py", "--runner", str(self.root / "runner"),
+                        "--model", str(self.root / "model"), "--keywords", str(self.root / "pack"),
+                        "--references", str(refs), "--audio-root", str(self.root), "--detections", str(out)]
+                before = len(calls)
+                with mock.patch.object(sys, "argv", argv), mock.patch.object(run_corpus.subprocess, "run", runner), contextlib.redirect_stdout(io.StringIO()):
+                    if error:
+                        with self.assertRaisesRegex((OSError, ValueError), error):
+                            run_corpus.main()
+                        self.assertEqual(len(calls), before)
+                        self.assertEqual(out.read_bytes(), b"sentinel\n")
+                    else:
+                        self.assertEqual(run_corpus.main(), 0)
+                        self.assertEqual(len(calls), before + 1)
+                        self.assertEqual("--metadata-tsv" in calls[-1], "metadata_path" in fields)
+        refs.write_text(json.dumps({**self.reference, "path": "sample.wav", **good}) + "\n")
+        argv += ["--posterior-dump", str(self.root / "dump"), "--decoder-replay", str(self.root / "replay"),
+                 "--posterior-cache", str(self.root / "cache")]
+        before = len(calls)
+        with mock.patch.object(sys, "argv", argv), mock.patch.object(run_corpus.subprocess, "run", runner):
+            with self.assertRaisesRegex(ValueError, "AFE metadata replay is not supported by the posterior cache"):
+                run_corpus.main()
+        self.assertEqual(len(calls), before)
+
+    def test_four_way_framing_and_declared_variable(self):
+        low = self.identity(self.sidecar())
+        high = self.identity(self.sidecar("high.tsv", "0.9"))
+        same = self.identity(self.sidecar("same.tsv"))
+        before = self.new_card(dataset=low)
+        for after, expected in ((self.new_card(dataset=high, variable="dataset"), "dataset"),
+                                (self.new_card(dataset=same, model="m2"), "model")):
+            done = run(self.root, before, after)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+            self.assertEqual(json.loads(done.stdout)["variable"], expected)
+        self.reject(self.root, before, self.new_card(dataset=high, model="m2"), "both dataset and model changed")
+        self.reject(self.root, before, self.new_card(dataset=same), "nothing moved")
+        self.reject(self.root, before, self.new_card(dataset=high), "dataset_id is what actually changed")
+
+    def test_historical_policy_matrix_cannot_use_custom_protocol_to_bypass(self):
+        factories = [scorecard, lambda **kw: FarPopulationPolicyTests.new_card(self, **kw),
+                     lambda **kw: DomainPolicyCompatibilityTests.new_card(self, **kw), self.new_card]
+        for protocol in ("custom-label", "dataset-iteration-v4"):
+            for factory in factories:
+                done = run(self.root, factory(protocol=protocol), factory(protocol=protocol, model="m2"))
+                self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+            for older in factories[:-1]:
+                old = older(protocol=protocol)
+                new = self.new_card(protocol=protocol, model="m2")
+                for before, after in ((old, new), (new, old)):
+                    self.reject(self.root, before, after, "dataset identity policy mismatch")
+
+    def test_schema4_rejects_missing_unknown_and_relabelled_policies(self):
+        bad = []
+        for policy in (None, "", "unknown", True, [], {}, "effective-domain-keys-v1"):
+            card = self.new_card(model="m2", protocol="custom-label")
+            card["identity"]["dataset_identity_policy"] = policy
+            bad.append(card)
+        card = self.new_card(model="m2", protocol="custom-label")
+        del card["identity"]["dataset_identity_policy"]
+        bad.append(card)
+        for schema in (None, True, False, 0, 1, 2, 3, 5, "4", 4.0):
+            card = self.new_card(model="m2", protocol="custom-label")
+            card["schema_version"] = schema
+            bad.append(card)
+        for card in bad:
+            good = self.new_card(protocol="custom-label")
+            for before, after in ((good, card), (card, good)):
+                self.reject(self.root, before, after, "policy")
+
+    def test_schema4_preserves_far_tuple_and_verdict_matrix(self):
+        FarPopulationPolicyTests.test_new_comparator_rejects_incomplete_tuple(self)
+        FarPopulationPolicyTests.test_new_cards_keep_verdicts(self)
+
+    def test_actual_python_pipeline_preflight_mutations_and_identity(self):
+        # Normal child by design: no claim that producer/corpus CLI supports -OO.
+        command = [sys.executable, "-S", "-B", "-c",
+                   "import sys,json;sys.path.insert(0," + repr(str(ROOT / "tests")) +
+                   ");import test_dataset_iteration as t;print(json.dumps(t.afe_pipeline_fixture()))"]
+        done = subprocess.run(command, capture_output=True, text=True, check=False)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        result = json.loads(done.stdout)
+        for name in ("low", "high", "high-model", "same", "same-model", "equivalent-binding", "absent"):
+            item = result[name]
+            self.assertEqual(item["code"], 0, item)
+            self.assertEqual(len(item["calls"]), 1)
+            self.assertEqual(item["stages"], ["run_corpus.py", "score_events.py", "domain_metrics.py"])
+            self.assertTrue(item["unchanged"])
+            card = item["card"]
+            self.assertEqual(card["schema_version"], 4)
+            self.assertEqual(card["identity"]["dataset_identity_policy"], "effective-domain-keys-verified-afe-v2")
+            self.assertEqual(card["identity"]["protocol"], "custom-label")
+            self.assertEqual(card["run_id"], iteration.canonical_hash(card["identity"])[:16])
+        cards = {key: result[key]["card"] for key in ("low", "high", "high-model", "same", "same-model", "equivalent-binding", "absent")}
+        self.assertEqual(cards["low"]["run_id"], cards["same"]["run_id"])
+        self.assertEqual(cards["low"]["run_id"], cards["equivalent-binding"]["run_id"])
+        self.assertNotEqual(cards["low"]["run_id"], cards["high"]["run_id"])
+        self.assertNotEqual(cards["low"]["run_id"], cards["absent"]["run_id"])
+        self.assertIn("--metadata-tsv", result["low"]["calls"][0])
+        self.assertNotIn("--metadata-tsv", result["absent"]["calls"][0])
+        for name in ("wrong-sha", "missing-file", "empty-path", "missing-sha", "only-sha"):
+            item = result[name]
+            self.assertEqual(item["code"], 2, item)
+            self.assertEqual(item["stages"], [])
+            self.assertEqual(item["calls"], [])
+            self.assertTrue(item["sentinel_preserved"])
+            self.assertTrue(item["unchanged"])
+        for name in ("during-runner", "after-corpus", "effective-binding", "original-binding"):
+            item = result[name]
+            self.assertEqual(item["code"], 2, item)
+            self.assertEqual(len(item["calls"]), 1)
+            self.assertTrue(item["sentinel_preserved"])
+            self.assertIn("changed" if name != "after-corpus" else "SHA-256 mismatch", item["error"])
+        self.assertEqual(result["during-runner"]["stages"], ["run_corpus.py"])
+        self.assertEqual(len(result["after-corpus"]["stages"]), 3)
+        # Compare real assembled cards with actual scorer/domain results, not fake metrics.
+        cards["high"]["identity"]["variable"] = "dataset"
+        good = run(self.root, cards["low"], cards["high"], "--far-budget", "1e9")
+        self.assertEqual(good.returncode, 0, good.stdout + good.stderr)
+        self.assertEqual(json.loads(good.stdout)["variable"], "dataset")
+        model_only = run(self.root, cards["low"], cards["same-model"], "--far-budget", "1e9")
+        self.assertEqual(model_only.returncode, 0, model_only.stdout + model_only.stderr)
+        self.assertEqual(json.loads(model_only.stdout)["variable"], "model")
+        self.reject(self.root, cards["low"], cards["high-model"], "both dataset and model changed")
+        self.reject(self.root, cards["low"], cards["same"], "nothing moved")
+
+
 def main() -> int:
     strict = unittest.TextTestRunner(verbosity=2).run(
         unittest.TestSuite([
@@ -845,9 +1153,10 @@ def main() -> int:
             unittest.defaultTestLoader.loadTestsFromTestCase(FarPopulationPolicyTests),
             unittest.defaultTestLoader.loadTestsFromTestCase(EffectiveDomainIdentityTests),
             unittest.defaultTestLoader.loadTestsFromTestCase(DomainPolicyCompatibilityTests),
+            unittest.defaultTestLoader.loadTestsFromTestCase(VerifiedAfeIdentityTests),
         ])
     )
-    if strict.testsRun != 28 or strict.skipped or not strict.wasSuccessful():
+    if strict.testsRun != 36 or strict.skipped or not strict.wasSuccessful():
         return 1
 
     with tempfile.TemporaryDirectory() as td:

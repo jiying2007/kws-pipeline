@@ -34,7 +34,7 @@ Every run declares exactly two things and which of them is under test:
 
 | Variable | Identity | Meaning |
 | --- | --- | --- |
-| `dataset` | `dataset_id` | Content hash over audio bytes + expected events + domain bins |
+| `dataset` | `dataset_id` | Content hash over audio bytes + expected events + domain bins + verified AFE sidecar presence/content |
 | `model` | `model_id` | Hash over the model **and** the keyword pack (the pack carries the threshold, so it is part of the operating point) |
 
 A run also records `code_sha`, `seed` and `protocol`.
@@ -66,7 +66,7 @@ that is a property of the dataset, not of the model.
 
 ## FAR populations and scorecard compatibility
 
-New scorecards use schema 3, default protocol `dataset-iteration-v3`, and the
+New scorecards use schema 4, default protocol `dataset-iteration-v4`, and the
 fixed FAR identity policy `negative-only-recordings-iteration-approx95-v1`.
 The policy is part of `run_id` even with a custom `--protocol` label.
 
@@ -76,7 +76,7 @@ population and `exposure.exposure_hours`. Missing negative metrics or zero
 negative exposure are errors, not zero FAR. The upper-bound calculation is
 unchanged: `2.9957 / T` for zero events, otherwise
 `(N + 1.959964 * sqrt(N)) / T`, labelled as a normal approximation. It does not
-switch to the scorer's separate exact-Poisson upper bound. Schema-2/3 comparison
+switch to the scorer's separate exact-Poisson upper bound. Schema-2/3/4 comparison
 checks that the point and bound exactly match this count/exposure calculation;
 do not round stored values. A non-finite computed bound is rejected, including
 when a finite positive exposure is too small to represent its bound.
@@ -89,11 +89,13 @@ upper bound. This lane still does not qualify or promote a model.
 
 ## Effective-domain dataset identity
 
-Schema 3 fixes `identity.dataset_identity_policy` to
-`effective-domain-keys-v1`, including with a custom `--protocol`. Each dataset
+Schema 3 introduced `identity.dataset_identity_policy`
+`effective-domain-keys-v1`. Schema 4 retains the same effective-domain semantics
+under its new AFE-aware policy described below. Each dataset
 hash entry contains `sorted(domain_keys(row))` from `eval/domain_metrics.py`,
 the same helper used to group scoring slices. The dataset hash is over a tagged
-envelope `{"dataset_identity_policy": "effective-domain-keys-v1", "entries": [...]}`.
+envelope `{"dataset_identity_policy": "effective-domain-keys-verified-afe-v2", "entries": [...]}`
+for schema 4 (schema 3 used `effective-domain-keys-v1`).
 The policy also participates in `run_id` through the identity block. Even
 all-only datasets therefore receive new IDs; historical IDs are not rewritten.
 
@@ -114,29 +116,60 @@ expectations, recording sorting and canonical audio-path aliases retain their
 existing contracts. This change does not claim that every other reference
 metadata, declared exposure or timing field is bound by `dataset_id`.
 
-The current comparator supports schema-1/schema-1 historical mixed-population
-FAR cards and schema-2/schema-2 fixed-FAR cards under their original contracts,
-including matching custom protocols. Both are classified as legacy
-top-level-distance dataset identity, not silently promoted. Schema-3/schema-3
-requires the exact effective-domain policy and the same fixed negative-only FAR
-policy as schema 2; all schema-2 FAR tuple and bound checks also apply to schema 3.
+## Verified AFE sidecar dataset identity
 
-Mixed legacy/new domain policies, unknown/missing schema-3 policies, unexpected
-domain-policy fields on schemas 1/2, and unknown or boolean schemas are refused
-before interpreting moved dataset/model IDs, even with matching custom protocol
-labels. Schema-1/schema-2 pairs still fail FAR-policy compatibility. Re-run both
-sides from the original inputs under the same current code and policies; do not
-relabel or re-hash historical scorecards. Keep archived cards unchanged. An old
-comparator does not implement these checks: use the current comparator.
+Schema 4 fixes `identity.dataset_identity_policy` to
+`effective-domain-keys-verified-afe-v2`, even with a custom `--protocol`. Each
+entry also contains `afe_metadata: {"present": false}` when both metadata keys
+are absent, or `afe_metadata: {"present": true, "sha256": "..."}` for a present
+sidecar. The SHA is computed from the actual file and verified against the
+reference's `metadata_sha256`, not merely copied from that declaration.
+`metadata_path` resolves against `--audio-root` unless absolute, using the
+corpus runner's existing semantics. Missing files, malformed paths, incomplete
+pairs and mismatched digests fail before evaluation starts; none means absence.
+
+Different verified bytes, or presence versus absence, change dataset and run
+IDs. Relocating identical bytes preserves both, given the same other identity
+fields. Thus a sidecar-only change is a dataset experiment; a sidecar plus model
+change is rejected as two variables moving. No-metadata datasets also migrate
+to new IDs because both the policy tag and explicit absence marker are new.
+Historical golden IDs/cards remain archived, not rewritten or relabelled.
+
+The producer binds inputs before evaluation, retains corpus per-file pre/post
+checks, and rechecks both effective and original reference bindings after the
+Python evaluation stages before emitting the scorecard. A persistent sidecar
+or relevant binding change fails closed and preserves an existing scorecard.
+This is bounded persistent-change detection, **not** immutable staging, an
+atomic snapshot, an automatic lock, or proof of exact bytes consumed. Changes
+restored between checks and broader reference/WAV/model races remain outside
+this guarantee. Corpus timing validation and posterior-cache sidecar rejection
+are unchanged; the identity helper does not replace runtime timeline validation.
+
+The comparator retains schema-1/schema-1 historical mixed-population FAR,
+schema-2/schema-2 fixed-FAR, and schema-3/schema-3 effective-domain contracts,
+including matching custom protocols. Schemas 1/2 retain legacy top-level-distance
+identity; schema 3 requires exactly `effective-domain-keys-v1`. Schema 4 requires
+its exact AFE-aware policy. Schemas 2/3/4 share all fixed negative-only FAR tuple
+and bound checks. Schema-1/schema-2 pairs still fail FAR-policy compatibility.
+
+Mixed dataset policies, unknown/missing policies, unexpected policy fields on
+schemas 1/2, and unknown or boolean schemas fail before interpreting moved IDs,
+even with matching custom protocol labels. Old cards never imply verified AFE
+absence. Re-run both sides from original inputs under the same current code and
+policies; do not relabel or re-hash archived cards. An old comparator does not
+implement these checks: use the current comparator.
 
 ### Software regression scope
 
 `tests/test_dataset_iteration.py` retains required-metric, alias and FAR checks,
-and adds literal-metadata effective-domain, compatibility and framing checks.
+and adds literal-metadata effective-domain, verified-sidecar, historical
+compatibility, persistent-mutation and four-way framing checks.
 Strict unittest assertions and comparator children run in normal, `-O` and
 `-OO` modes. The main-assembly fixture always uses a normal-interpreter child
-with all three backend commands mocked; it is not optimized-main or acoustic
-evidence. The existing RUN CLI `-OO` startup/docstring limitation is not changed.
+with all three backend commands mocked. A second normal-child fixture invokes
+the actual corpus, scorer and domain Python mains, mocking only the external
+runner on literal tiny PCM/TSV inputs. Neither is optimized-main or acoustic
+evidence; no model or C timeline-parser execution is established. The existing RUN CLI `-OO` startup/docstring limitation is not changed.
 These focused checks do not replace the repository's full required checks or
 hosted/product qualification.
 
