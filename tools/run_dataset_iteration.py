@@ -34,7 +34,11 @@ from corpus_identity import canonical_audio_path
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 EVAL = ROOT / "eval"
-PROTOCOL = "dataset-iteration-v2"
+sys.path.insert(0, str(EVAL))
+from domain_metrics import domain_keys  # noqa: E402
+
+PROTOCOL = "dataset-iteration-v3"
+DATASET_IDENTITY_POLICY = "effective-domain-keys-v1"
 FAR_POLICY = "negative-only-recordings-iteration-approx95-v1"
 VARIABLES = ("dataset", "model")
 
@@ -90,7 +94,8 @@ def dataset_identity(references: pathlib.Path, audio_root: pathlib.Path) -> tupl
 
     Two datasets that differ only in expectations are different datasets, and so
     are two that share expectations but differ in audio. Both halves are in the
-    hash on purpose.
+    hash on purpose. Effective scoring slices come from domain_keys verbatim;
+    ignored metadata and within-slice changes do not change this identity.
     """
     rows = load_jsonl(references)
     entries = []
@@ -110,13 +115,14 @@ def dataset_identity(references: pathlib.Path, audio_root: pathlib.Path) -> tupl
                 "wav_sha256": sha256_file(audio),
                 "duration_s": round(wav_duration_s(audio), 6),
                 "expected": row.get("expected", []),
-                "domains": {key: row[key] for key in sorted(row) if key.startswith("distance")},
+                "domains": sorted(domain_keys(row)),
             }
         )
     if not entries:
         raise ValueError("reference file contains no recordings")
     entries.sort(key=lambda item: item["recording"])
-    return canonical_hash(entries), {"recordings": len(entries)}
+    return canonical_hash({"dataset_identity_policy": DATASET_IDENTITY_POLICY,
+                           "entries": entries}), {"recordings": len(entries)}
 
 
 def model_identity(model: pathlib.Path, keywords: pathlib.Path) -> str:
@@ -291,6 +297,7 @@ def main() -> int:
     identity = {
         "protocol": args.protocol,
         "far_policy": FAR_POLICY,
+        "dataset_identity_policy": DATASET_IDENTITY_POLICY,
         "dataset_id": dataset_id,
         "model_id": model_id,
         "code_sha": args.code_sha or git_head(),
@@ -298,7 +305,7 @@ def main() -> int:
         "variable": args.variable,
     }
     scorecard = {
-        "schema_version": 2,
+        "schema_version": 3,
         "protocol": args.protocol,
         "run_id": canonical_hash(identity)[:16],
         "identity": identity,

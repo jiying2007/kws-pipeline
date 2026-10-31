@@ -34,6 +34,8 @@ import sys
 IDENTITY_FIELDS = ("protocol", "dataset_id", "model_id", "code_sha", "seed")
 METRIC_FIELDS = ("frr", "far_per_hour", "p95_post_end_latency_ms")
 FAR_POLICY = "negative-only-recordings-iteration-approx95-v1"
+DATASET_IDENTITY_POLICY = "effective-domain-keys-v1"
+LEGACY_DATASET_IDENTITY_POLICY = "legacy-top-level-distance-v1"
 LEGACY_FAR_POLICY = "legacy-mixed-recordings-iteration-approx95-v1"
 
 
@@ -80,18 +82,33 @@ def far_bound(row: dict, label: str) -> float:
     return number(row["far_rate"].get("upper_bound_95_per_hour"), f"{label}.far_rate.upper_bound_95_per_hour")
 
 
+def dataset_identity_policy(row: dict, label: str) -> str:
+    """Classify semantics independently of caller-selected protocol labels."""
+    schema = row.get("schema_version")
+    identity = row["identity"]
+    if type(schema) is not int or schema not in (1, 2, 3):
+        raise ValueError(f"{label}: unsupported scorecard schema/dataset identity policy combination")
+    if schema in (1, 2):
+        if "dataset_identity_policy" in identity:
+            raise ValueError(f"{label}: legacy schema must not declare a dataset identity policy")
+        return LEGACY_DATASET_IDENTITY_POLICY
+    if identity.get("dataset_identity_policy") != DATASET_IDENTITY_POLICY:
+        raise ValueError(f"{label}: schema 3 requires the known dataset identity policy")
+    return DATASET_IDENTITY_POLICY
+
+
 def far_policy(row: dict, label: str) -> str:
     """Schema identifies legacy cards even when their protocol label is custom."""
     schema = row.get("schema_version")
     identity = row["identity"]
     if type(schema) is int and schema == 1 and "far_policy" not in identity:
         return LEGACY_FAR_POLICY
-    if type(schema) is not int or schema != 2:
+    if type(schema) is not int or schema not in (2, 3):
         raise ValueError(f"{label}: unsupported scorecard schema/FAR policy combination")
     if identity.get("far_policy") != FAR_POLICY:
-        raise ValueError(f"{label}: schema 2 requires the known FAR policy")
+        raise ValueError(f"{label}: schema {schema} requires the known FAR policy")
     if not isinstance(row["far_rate"], dict) or not isinstance(row["exposure"], dict):
-        raise ValueError(f"{label}: schema 2 FAR rate and exposure must be objects")
+        raise ValueError(f"{label}: schema {schema} FAR rate and exposure must be objects")
     count = row["far_rate"].get("observed_false_accepts")
     if type(count) is not int or count < 0:
         raise ValueError(f"{label}: negative false accepts must be a non-negative integer")
@@ -105,7 +122,7 @@ def far_policy(row: dict, label: str) -> str:
     bound = far_bound(row, label)
     if hours <= 0.0 or point < 0.0 or bound < 0.0 or point != count / hours:
         raise ValueError(f"{label}: inconsistent negative FAR tuple")
-    # Keep schema-2 bounds tied to the producer's declared approximation.
+    # Keep schema-2/3 bounds tied to the producer's declared approximation.
     # Legacy cards return above and retain their historical interpretation.
     expected_bound = (2.9957 / hours if count == 0 else
                       (count + 1.959964 * math.sqrt(count)) / hours)
@@ -116,6 +133,8 @@ def far_policy(row: dict, label: str) -> str:
 
 def framing(before: dict, after: dict) -> dict:
     """Check that the two scorecards form a valid paired comparison."""
+    if dataset_identity_policy(before, "before") != dataset_identity_policy(after, "after"):
+        raise ValueError("dataset identity policy mismatch: re-run both sides under the same policy")
     if far_policy(before, "before") != far_policy(after, "after"):
         raise ValueError("FAR policy mismatch: re-run the baseline under the same measurement policy")
     left, right = before["identity"], after["identity"]
