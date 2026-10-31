@@ -165,9 +165,11 @@ class DatasetIdentityAliasTests(unittest.TestCase):
     """Real metadata/WAV helper checks, not execution of the model/eval CLI."""
 
     FIELDS = ("audio", "audio_path", "path")
-    # Frozen output from the original path-only implementation and eight literal
-    # PCM samples. Alias normalization must not silently change existing IDs.
-    PATH_ONLY_ID = "47be6a9d292ea745056a302e773906a725c5b2eb366535c33fb07df35d2534d1"
+    # Preserve the pre-domain-policy golden as historical evidence, not a current ID.
+    LEGACY_PATH_ONLY_ID = "47be6a9d292ea745056a302e773906a725c5b2eb366535c33fb07df35d2534d1"
+
+    # Deliberately version-migrated: tagged envelope plus effective ["all"] slice.
+    PATH_ONLY_ID = "9a440389f273044a474f2873a3e77ddd8c0398ff468b6cd30be2b72a48d6c030"
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -428,7 +430,7 @@ class FarPopulationPolicyTests(unittest.TestCase):
                 elif kind == "legacy-with-policy":
                     after["schema_version"] = 1
                 else:
-                    after["schema_version"] = 3
+                    after["schema_version"] = 4
                 done = run(root, before, after)
                 self.assertEqual(done.returncode, 2, kind + done.stdout + done.stderr)
 
@@ -503,9 +505,10 @@ class FarPopulationPolicyTests(unittest.TestCase):
                 self.assertTrue(result["earlier_work_remains"])
                 continue
             card = result["card"]
-            self.assertEqual(card["schema_version"], 2)
+            self.assertEqual(card["schema_version"], 3)
+            self.assertEqual(card["identity"]["dataset_identity_policy"], "effective-domain-keys-v1")
             self.assertEqual(card["identity"]["far_policy"], self.POLICY)
-            self.assertEqual(card["protocol"], "dataset-iteration-v2" if protocol is None else protocol)
+            self.assertEqual(card["protocol"], "dataset-iteration-v3" if protocol is None else protocol)
             self.assertEqual(card["metrics"]["false_accepts"], result["summary"]["false_accepts"])
             self.assertEqual(card["metrics"]["far_per_hour"], result["summary"]["far_per_hour"])
             self.assertEqual(card["far_rate"]["point_estimate_per_hour"], 0.0)
@@ -514,6 +517,324 @@ class FarPopulationPolicyTests(unittest.TestCase):
             legacy_identity = dict(card["identity"])
             del legacy_identity["far_policy"]
             self.assertNotEqual(card["run_id"], iteration.canonical_hash(legacy_identity)[:16])
+            domain_untagged = dict(card["identity"])
+            del domain_untagged["dataset_identity_policy"]
+            self.assertNotEqual(card["run_id"], iteration.canonical_hash(domain_untagged)[:16])
+
+
+class EffectiveDomainIdentityTests(unittest.TestCase):
+    """Literal metadata oracle plus tiny inert WAVs; no backend/model runs."""
+
+    setUp = DatasetIdentityAliasTests.setUp
+    write_audio = DatasetIdentityAliasTests.write_audio
+
+    def identity(self, fields, *, rows=None):
+        row = {**self.reference, "path": "sample.wav", **fields}
+        refs = self.root / "domain-references.jsonl"
+        # Preserve category-container insertion order: domain_keys uses str().
+        refs.write_text("".join(json.dumps(r) + "\n" for r in
+                                ([row] if rows is None else rows)), encoding="utf-8")
+        before = {p: p.read_bytes() for p in (refs, self.audio)}
+        result = dataset_identity(refs, self.root)
+        for path, raw in before.items():
+            self.assertEqual(path.read_bytes(), raw)
+        return result[0]
+
+    def check_domain(self, domain, expected):
+        fields = {"domain": domain}
+        self.assertEqual(sorted(iteration.domain_keys(fields)), sorted(expected))
+        actual = self.identity(fields)
+        # Independent literal envelope oracle, not the producer's hashing helper.
+        entries = [{
+            "recording": "alias-fixture",
+            "wav_sha256": hashlib.sha256(self.audio.read_bytes()).hexdigest(),
+            "duration_s": 0.0005, "expected": [], "domains": sorted(expected),
+        }]
+        encoded = json.dumps({"dataset_identity_policy": "effective-domain-keys-v1",
+                              "entries": entries}, ensure_ascii=False, sort_keys=True,
+                             separators=(",", ":"), allow_nan=False).encode("utf-8")
+        self.assertEqual(actual, hashlib.sha256(encoded).hexdigest())
+        return actual
+
+    def test_nested_collision_and_ignored_top_level(self):
+        near = self.check_domain({"distance_m": 0.75}, ["all", "distance_bin:0.5m"])
+        far = self.check_domain({"distance_m": 0.76}, ["all", "distance_bin:1m"])
+        self.assertNotEqual(near, far)
+        baseline = self.identity({})
+        for fields in ({"distance_m": 0.75}, {"distance_m": 4.1},
+                       {"distance_band": "near", "domain_id": "x",
+                        "scene": {"distance_m": 2}}, {"domain": {"unknown": 9}}):
+            self.assertEqual(self.identity(fields), baseline)
+        self.assertEqual(self.identity({"domain": {"distance_m": 0.75},
+                                        "distance_m": 99}), near)
+
+    def test_axes_and_sparse_precedence(self):
+        baseline = self.check_domain({}, ["all"])
+        self.assertEqual(self.identity({}), baseline)
+        for domain in (None, [], "ignored", 0):
+            self.assertEqual(self.check_domain(domain, ["all"]), baseline)
+        cases = [
+            ({"distance_band": "near"}, ["distance:near"]),
+            ({"distance_m": 0}, ["distance_bin:0.5m"]),
+            ({"azimuth_deg": 0}, ["azimuth:front", "azimuth_deg:0"]),
+            ({"snr_db": 0}, ["snr:critical"]),
+            ({"rt60_s": 0}, ["rt60:dry"]),
+            ({"noise_profile": "fan"}, ["noise:fan"]),
+            ({"playback_sir_db": None}, ["playback:no-playback"]),
+            ({"playback_sir_db": 0}, ["playback:playback"]),
+            ({"distance_band": "far", "distance_m": 0.5},
+             ["distance:far", "distance_bin:0.5m"]),
+        ]
+        for domain, keys in cases:
+            with self.subTest(domain=domain):
+                self.assertNotEqual(self.check_domain(domain, ["all", *keys]), baseline)
+        for axis, a, b in (("distance_band", "near", "far"),
+                           ("noise_profile", "fan", "street"),
+                           ("playback_sir_db", None, 0)):
+            self.assertNotEqual(self.identity({"domain": {axis: a}}),
+                                self.identity({"domain": {axis: b}}))
+
+    def test_pairwise_triple_and_composite_creation(self):
+        cases = [
+            ({"distance_m": 1, "azimuth_deg": 0},
+             ["all", "distance_bin:1m", "azimuth:front", "azimuth_deg:0",
+              "distance_azimuth:distance_bin=1m|azimuth=front"]),
+            ({"distance_m": 1, "snr_db": 6},
+             ["all", "distance_bin:1m", "snr:critical",
+              "distance_snr:distance_bin=1m|snr=critical"]),
+            ({"azimuth_deg": 0, "snr_db": 6},
+             ["all", "azimuth:front", "azimuth_deg:0", "snr:critical",
+              "azimuth_snr:azimuth=front|snr=critical"]),
+            ({"distance_m": 1, "azimuth_deg": 0, "snr_db": 6},
+             ["all", "distance_bin:1m", "azimuth:front", "azimuth_deg:0",
+              "snr:critical", "distance_azimuth:distance_bin=1m|azimuth=front",
+              "distance_snr:distance_bin=1m|snr=critical",
+              "azimuth_snr:azimuth=front|snr=critical",
+              "distance_azimuth_snr:distance_bin=1m|azimuth=front|snr=critical"]),
+            ({"distance_band": "near", "azimuth_deg": 0, "rt60_s": 0.1,
+              "noise_profile": "fan", "playback_sir_db": None},
+             ["all", "distance:near", "azimuth:front", "azimuth_deg:0",
+              "rt60:dry", "noise:fan", "playback:no-playback",
+              "composite:distance=near|az=front|rt60=dry|noise=fan|no-playback"]),
+        ]
+        for domain, expected in cases:
+            with self.subTest(domain=domain):
+                full = self.check_domain(domain, expected)
+                for final in domain:
+                    sparse = {k: v for k, v in domain.items() if k != final}
+                    self.assertNotEqual(self.identity({"domain": sparse}), full)
+                    self.assertFalse(any(k.startswith("composite:")
+                                         for k in iteration.domain_keys({"domain": sparse})))
+
+    def test_canonical_equivalences(self):
+        pairs = [
+            ({"distance_m": 1}, {"distance_m": 1.0}),
+            ({"distance_m": 0.8}, {"distance_m": 1.5}),
+            ({"azimuth_deg": 20}, {"azimuth_deg": 380}),
+            ({"azimuth_deg": -180}, {"azimuth_deg": 180}),
+            ({"azimuth_deg": 0}, {"azimuth_deg": -0.0}),
+            ({"snr_db": 7}, {"snr_db": 12}),
+            ({"rt60_s": 0.3}, {"rt60_s": 0.54}),
+            ({"playback_sir_db": 0}, {"playback_sir_db": 90}),
+            ({"noise_profile": 1}, {"noise_profile": "1"}),
+        ]
+        for left, right in pairs:
+            with self.subTest(left=left, right=right):
+                self.assertEqual(sorted(iteration.domain_keys({"domain": left})),
+                                 sorted(iteration.domain_keys({"domain": right})))
+                self.assertEqual(self.identity({"domain": left}),
+                                 self.identity({"domain": right}))
+        domain = {"distance_m": 1, "azimuth_deg": 0, "snr_db": 6}
+        self.assertEqual(self.identity({"domain": domain}),
+                         self.identity({"domain": dict(reversed(list(domain.items())))}))
+
+    def test_numeric_cutoffs(self):
+        for axis, prefix, cases in (
+            ("distance_m", "distance_bin", [(0.75, "0.5m", "1m"),
+                (1.5, "1m", "2m"), (2.5, "2m", "3m"), (4.0, "3m", "5m")]),
+            ("snr_db", "snr", [(6.0, "critical", "low"),
+                (12.0, "low", "mid"), (20.0, "mid", "high")]),
+        ):
+            for edge, lower, upper in cases:
+                with self.subTest(axis=axis, edge=edge):
+                    a = self.check_domain({axis: edge}, ["all", prefix + ":" + lower])
+                    self.assertEqual(self.check_domain({axis: math.nextafter(edge, -math.inf)},
+                                                       ["all", prefix + ":" + lower]), a)
+                    b = self.check_domain({axis: math.nextafter(edge, math.inf)},
+                                          ["all", prefix + ":" + upper])
+                    self.assertNotEqual(a, b)
+        for edge, lower, upper in ((0.30, "dry", "medium"), (0.55, "medium", "reverb")):
+            a = self.check_domain({"rt60_s": math.nextafter(edge, -math.inf)},
+                                  ["all", "rt60:" + lower])
+            b = self.check_domain({"rt60_s": edge}, ["all", "rt60:" + upper])
+            self.assertNotEqual(a, b)
+            self.assertEqual(self.check_domain({"rt60_s": math.nextafter(edge, math.inf)},
+                                               ["all", "rt60:" + upper]), b)
+
+    def test_azimuth_boundaries_and_ties(self):
+        # Values comfortably straddle modulo rounding as well as 30/90 bands.
+        cases = [(15, "front", "0"), (15.000001, "front", "30"),
+                 (14.999999, "front", "0"), (45, "side", "60"),
+                 (44.999999, "side", "30"), (-15, "front", "0"),
+                 (-15.000001, "front", "-30"), (30, "front", "30"),
+                 (30.000001, "side", "30"), (90, "side", "90"),
+                 (90.000001, "rear", "90"), (-90, "side", "-90"),
+                 (-90.000001, "rear", "-90"), (180, "rear", "180"),
+                 (-180, "rear", "180")]
+        for value, band, point in cases:
+            with self.subTest(value=value):
+                self.check_domain({"azimuth_deg": value},
+                                  ["all", "azimuth:" + band, "azimuth_deg:" + point])
+        for a, b in ((15, 15.000001), (45, 44.999999), (30, 30.000001),
+                     (90, 90.000001)):
+            self.assertNotEqual(self.identity({"domain": {"azimuth_deg": a}}),
+                                self.identity({"domain": {"azimuth_deg": b}}))
+
+    def test_validation_and_categorical_playback_semantics(self):
+        for axis in ("distance_m", "azimuth_deg", "rt60_s", "snr_db"):
+            for value in (True, False, "1", None, float("nan"), float("inf"), -float("inf")):
+                with self.subTest(axis=axis, value=value):
+                    domain = {axis: value}
+                    with self.assertRaises(ValueError) as helper:
+                        iteration.domain_keys({"domain": domain})
+                    with self.assertRaises(ValueError) as producer:
+                        self.identity({"domain": domain})
+                    self.assertEqual(str(producer.exception), str(helper.exception))
+        self.check_domain({"distance_band": None, "noise_profile": None},
+                          ["all", "distance:None", "noise:None"])
+        self.check_domain({"distance_band": ["near"], "noise_profile": True},
+                          ["all", "distance:['near']", "noise:True"])
+        a = self.check_domain({"noise_profile": {"a": 1, "b": 2}},
+                              ["all", "noise:{'a': 1, 'b': 2}"])
+        b = self.check_domain({"noise_profile": {"b": 2, "a": 1}},
+                              ["all", "noise:{'b': 2, 'a': 1}"])
+        self.assertNotEqual(a, b)  # Do not invent categorical normalization.
+        for value in ("arbitrary", [], {}, False):
+            self.check_domain({"playback_sir_db": value}, ["all", "playback:playback"])
+
+    def test_row_order_and_policy_tagged_envelope(self):
+        rows = [{**self.reference, "recording": name, "path": "sample.wav",
+                 "domain": {"distance_m": distance}}
+                for name, distance in (("b", 2), ("a", 1))]
+        self.assertEqual(self.identity({}, rows=rows),
+                         self.identity({}, rows=list(reversed(rows))))
+        baseline = self.identity({})
+        self.assertEqual(baseline, DatasetIdentityAliasTests.PATH_ONLY_ID)
+        self.assertNotEqual(baseline, DatasetIdentityAliasTests.LEGACY_PATH_ONLY_ID)
+        # A policy tag change must change the envelope even for all-only data.
+        with mock.patch.object(iteration, "DATASET_IDENTITY_POLICY", "test-other-policy"):
+            self.assertNotEqual(self.identity({}), baseline)
+
+
+class DomainPolicyCompatibilityTests(unittest.TestCase):
+    POLICY = FarPopulationPolicyTests.POLICY
+
+    def new_card(self, **kwargs):
+        card = FarPopulationPolicyTests.new_card(self, **kwargs)
+        card["schema_version"] = 3
+        card["identity"]["dataset_identity_policy"] = "effective-domain-keys-v1"
+        return card
+
+    def reject(self, root, before, after, message):
+        target = root / "policy-output.json"
+        target.write_bytes(b"existing report sentinel\n")
+        done = run(root, before, after, "--output", str(target))
+        self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
+        self.assertEqual(done.stdout, "")
+        self.assertNotIn("Traceback", done.stderr)
+        self.assertIn(message, done.stderr)
+        self.assertEqual(target.read_bytes(), b"existing report sentinel\n")
+
+    def test_legacy_and_new_controls_and_mixed_rejection(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            for protocol in ("dataset-iteration-v3", "custom-label"):
+                factories = [scorecard,
+                             lambda **kw: FarPopulationPolicyTests.new_card(self, **kw),
+                             self.new_card]
+                for factory in factories:
+                    before, after = factory(protocol=protocol), factory(protocol=protocol, model="m2")
+                    done = run(root, before, after)
+                    self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+                for left, right in itertools.permutations(range(3), 2):
+                    before = factories[left](protocol=protocol)
+                    after = factories[right](protocol=protocol, model="m2")
+                    self.reject(root, before, after,
+                                "dataset identity policy mismatch" if 2 in (left, right)
+                                else "FAR policy mismatch")
+
+    def test_unknown_missing_forged_policies_and_schemas(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            invalid = []
+            for policy in (None, "", "unknown", True, [], {}):
+                card = self.new_card(model="m2", protocol="custom-label")
+                card["identity"]["dataset_identity_policy"] = policy
+                invalid.append(card)
+            card = self.new_card(model="m2", protocol="custom-label")
+            del card["identity"]["dataset_identity_policy"]
+            invalid.append(card)
+            for schema in (None, True, False, 0, 4, "3", 3.0):
+                card = self.new_card(model="m2", protocol="custom-label")
+                card["schema_version"] = schema
+                invalid.append(card)
+            card = self.new_card(model="m2", protocol="custom-label")
+            del card["schema_version"]
+            invalid.append(card)
+            for schema in (1, 2):
+                for policy in (None, "effective-domain-keys-v1", "legacy-top-level-distance-v1"):
+                    card = scorecard(model="m2", protocol="custom-label")
+                    card["schema_version"] = schema
+                    if schema == 2:
+                        card = FarPopulationPolicyTests.new_card(self, model="m2", protocol="custom-label")
+                    card["identity"]["dataset_identity_policy"] = policy
+                    invalid.append(card)
+            for card in invalid:
+                for reverse in (False, True):
+                    good = self.new_card(protocol="custom-label")
+                    before, after = (card, good) if reverse else (good, card)
+                    self.reject(root, before, after, "policy")
+            for policy in (None, "unknown"):
+                card = self.new_card(model="m2")
+                if policy is None:
+                    del card["identity"]["far_policy"]
+                else:
+                    card["identity"]["far_policy"] = policy
+                for before, after in ((self.new_card(), card), (card, self.new_card())):
+                    self.reject(root, before, after, "requires the known FAR policy")
+
+    def test_schema3_keeps_all_far_tuple_validation(self):
+        # Run the unchanged schema-2 strict matrix against schema 3 too.
+        FarPopulationPolicyTests.test_new_comparator_rejects_incomplete_tuple(self)
+        FarPopulationPolicyTests.test_new_cards_keep_verdicts(self)
+
+    def test_framing_uses_effective_domains(self):
+        fixture = EffectiveDomainIdentityTests()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        base = fixture.identity({"domain": {"distance_m": 1}})
+        changed = fixture.identity({"domain": {"distance_m": 2}})
+        equivalent = fixture.identity({"domain": {"distance_m": 1.4}})
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            before = self.new_card(dataset=base, variable="dataset")
+            after = self.new_card(dataset=changed, variable="dataset")
+            done = run(root, before, after)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(done.stdout)["variable"], "dataset")
+            after = self.new_card(dataset=equivalent, model="m2")
+            done = run(root, self.new_card(dataset=base), after)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(done.stdout)["variable"], "model")
+            self.reject(root, before, self.new_card(dataset=changed, model="m2"),
+                        "both dataset and model changed")
+            self.reject(root, self.new_card(dataset=base),
+                        self.new_card(dataset=equivalent), "nothing moved")
+            self.reject(root, before, self.new_card(dataset=changed), "dataset_id is what actually changed")
+            self.reject(root, before, self.new_card(dataset=changed, variable="dataset", code="c2"),
+                        "code_sha differs")
+            self.reject(root, before, self.new_card(dataset=changed, variable="dataset", protocol="other"),
+                        "protocol mismatch")
 
 
 def main() -> int:
@@ -522,9 +843,11 @@ def main() -> int:
             unittest.defaultTestLoader.loadTestsFromTestCase(RequiredMetricTests),
             unittest.defaultTestLoader.loadTestsFromTestCase(DatasetIdentityAliasTests),
             unittest.defaultTestLoader.loadTestsFromTestCase(FarPopulationPolicyTests),
+            unittest.defaultTestLoader.loadTestsFromTestCase(EffectiveDomainIdentityTests),
+            unittest.defaultTestLoader.loadTestsFromTestCase(DomainPolicyCompatibilityTests),
         ])
     )
-    if strict.testsRun != 16 or strict.skipped or not strict.wasSuccessful():
+    if strict.testsRun != 28 or strict.skipped or not strict.wasSuccessful():
         return 1
 
     with tempfile.TemporaryDirectory() as td:

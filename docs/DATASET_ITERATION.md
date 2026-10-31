@@ -66,8 +66,8 @@ that is a property of the dataset, not of the model.
 
 ## FAR populations and scorecard compatibility
 
-New scorecards use schema 2, default protocol `dataset-iteration-v2`, and the
-fixed identity policy `negative-only-recordings-iteration-approx95-v1`.
+New scorecards use schema 3, default protocol `dataset-iteration-v3`, and the
+fixed FAR identity policy `negative-only-recordings-iteration-approx95-v1`.
 The policy is part of `run_id` even with a custom `--protocol` label.
 
 `far_rate` uses only complete recordings with `expected: []`: its
@@ -76,7 +76,7 @@ population and `exposure.exposure_hours`. Missing negative metrics or zero
 negative exposure are errors, not zero FAR. The upper-bound calculation is
 unchanged: `2.9957 / T` for zero events, otherwise
 `(N + 1.959964 * sqrt(N)) / T`, labelled as a normal approximation. It does not
-switch to the scorer's separate exact-Poisson upper bound. Schema-2 comparison
+switch to the scorer's separate exact-Poisson upper bound. Schema-2/3 comparison
 checks that the point and bound exactly match this count/exposure calculation;
 do not round stored values. A non-finite computed bound is rejected, including
 when a finite positive exposure is too small to represent its bound.
@@ -87,13 +87,58 @@ recordings. The comparison's `deltas.far_per_hour` remains that global
 diagnostic; its FAR budget and improvement decision use the negative-only
 upper bound. This lane still does not qualify or promote a model.
 
-The current comparator can still compare two schema-1 legacy cards (including
-matching custom protocol labels), without relabelling their old mixed-population
-measurement. It refuses a legacy/new pair, unknown policies, and schema-2 cards
-missing their fixed policy, even when protocol labels match. Re-run both sides
-on the same current code and policy rather than editing historical cards.
-Keep archived scorecards unchanged; the new identity gives new runs new paths.
-An old comparator does not implement these checks: use the current comparator.
+## Effective-domain dataset identity
+
+Schema 3 fixes `identity.dataset_identity_policy` to
+`effective-domain-keys-v1`, including with a custom `--protocol`. Each dataset
+hash entry contains `sorted(domain_keys(row))` from `eval/domain_metrics.py`,
+the same helper used to group scoring slices. The dataset hash is over a tagged
+envelope `{"dataset_identity_policy": "effective-domain-keys-v1", "entries": [...]}`.
+The policy also participates in `run_id` through the identity block. Even
+all-only datasets therefore receive new IDs; historical IDs are not rewritten.
+
+Only a dictionary in nested `domain` contributes slices. Missing, non-dictionary
+or empty `domain` means `all` only. Top-level distance fields, `scene`,
+`domain_id`, and unknown nested fields do not contribute or fill sparse axes.
+Named `distance_band` and numeric `distance_m` contribute independently.
+All effective distance, azimuth band/point, SNR, RT60, noise, playback,
+pairwise/triple and composite slices are bound without a second normalization.
+
+This is effective-slice identity, not raw-metadata identity: within-bin changes,
+equivalent azimuth wraps and non-null playback magnitude changes intentionally
+retain an ID when their effective keys are identical. Numeric validation,
+categorical `str()` labels (including null/container behavior), and playback
+presence semantics remain those of the scoring helper. Raw input provenance
+continues to be retained in `artifacts.references_sha256`. Audio bytes,
+expectations, recording sorting and canonical audio-path aliases retain their
+existing contracts. This change does not claim that every other reference
+metadata, declared exposure or timing field is bound by `dataset_id`.
+
+The current comparator supports schema-1/schema-1 historical mixed-population
+FAR cards and schema-2/schema-2 fixed-FAR cards under their original contracts,
+including matching custom protocols. Both are classified as legacy
+top-level-distance dataset identity, not silently promoted. Schema-3/schema-3
+requires the exact effective-domain policy and the same fixed negative-only FAR
+policy as schema 2; all schema-2 FAR tuple and bound checks also apply to schema 3.
+
+Mixed legacy/new domain policies, unknown/missing schema-3 policies, unexpected
+domain-policy fields on schemas 1/2, and unknown or boolean schemas are refused
+before interpreting moved dataset/model IDs, even with matching custom protocol
+labels. Schema-1/schema-2 pairs still fail FAR-policy compatibility. Re-run both
+sides from the original inputs under the same current code and policies; do not
+relabel or re-hash historical scorecards. Keep archived cards unchanged. An old
+comparator does not implement these checks: use the current comparator.
+
+### Software regression scope
+
+`tests/test_dataset_iteration.py` retains required-metric, alias and FAR checks,
+and adds literal-metadata effective-domain, compatibility and framing checks.
+Strict unittest assertions and comparator children run in normal, `-O` and
+`-OO` modes. The main-assembly fixture always uses a normal-interpreter child
+with all three backend commands mocked; it is not optimized-main or acoustic
+evidence. The existing RUN CLI `-OO` startup/docstring limitation is not changed.
+These focused checks do not replace the repository's full required checks or
+hosted/product qualification.
 
 ## Running it
 
