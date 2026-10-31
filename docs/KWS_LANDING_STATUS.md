@@ -2,14 +2,25 @@
 
 ## Current model and engineering status
 
-Current engineering checkpoint: **2026-10-29**, main
-`d09a6c55241d7f903e3c9e6e766d878454bbd321`.
-The WAV/JSONL/hard-negative repairs (#660–#663 and #655) are merged and
-[that main CI passed](https://github.com/jiying2007/kws-pipeline/actions/runs/40826759240).
-Audit closure #657 is integrated with that main for fresh acceptance;
-#664 adds strict training-evidence JSON types and keyword output alias protection.
-The first #664 implementation passed 466 typed-evidence checks and 57 real CLI
-alias cases. Both code changes still require their final local/integrated acceptance.
+Current engineering checkpoint: **2026-10-31**, verified main
+`1e21c5e737b0edd77a609b90e52aa4ef155b0c8f`.
+The WAV/JSONL/hard-negative repairs (#660–#663 and #655) remain integrated.
+[PR #664](https://github.com/jiying2007/kws-pipeline/pull/664) completed the
+combined audit and strict training-evidence/keyword-output repairs at
+`983e8082f712bd5099feb32bfb099e9f6df22d3a`;
+its [fresh main CI](https://github.com/jiying2007/kws-pipeline/actions/runs/40880782931)
+and [product/data contracts](https://github.com/jiying2007/kws-pipeline/actions/runs/40880783019)
+passed. [PR #657](https://github.com/jiying2007/kws-pipeline/pull/657) is closed
+as superseded and integrated through #664, not independently merged or abandoned.
+The #664 receipt records actual hosted Actions acceptance, not a Dot-local run.
+
+The later [PR #678](https://github.com/jiying2007/kws-pipeline/pull/678) binds
+verified AFE-sidecar presence/content to dataset identity; its
+[fresh main CI](https://github.com/jiying2007/kws-pipeline/actions/runs/41157228893)
+passed on the current checkpoint above. These are software integration results,
+not new model training, acoustic gains or final-AFE/physical-board qualification.
+Earlier failed or inconclusive evidence remains retained; later CI success does
+not rewrite those observations.
 
 **A new production model is not yet qualified.** The governed training entry
 rejects the historical frozen base for new product training. Retained FSMN B/OR
