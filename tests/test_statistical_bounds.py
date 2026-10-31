@@ -16,6 +16,70 @@ sys.path.insert(0, str(ROOT / "tools"))
 from statistical_bounds import poisson_rate_upper, qualification_bounds, wilson_upper  # noqa: E402
 
 
+class StatisticalCountTypes(unittest.TestCase):
+    """Strict discrete counts; these checks also execute under -O/-OO."""
+
+    def test_canonical_integer_results_unchanged(self):
+        self.assertEqual(poisson_rate_upper(1, 24.0, .95), 0.1976610215996074)
+        self.assertEqual(wilson_upper(1, 10, .95), 0.3477186673358582)
+        self.assertAlmostEqual(poisson_rate_upper(0, 24.0, .95), -math.log(.05) / 24)
+        self.assertEqual(wilson_upper(10, 10, .95), 1.0)
+
+    def test_integer_subclasses_preserved(self):
+        class Count(int):
+            pass
+        self.assertEqual(poisson_rate_upper(Count(1), 24, .95),
+                         poisson_rate_upper(1, 24, .95))
+        self.assertEqual(wilson_upper(Count(1), Count(10), .95),
+                         wilson_upper(1, 10, .95))
+
+    def test_poisson_rejects_coercible_nonintegers(self):
+        for value in (1.9, -0.1, 1.0, "1", True, False, None, float("nan"), float("inf")):
+            with self.subTest(value=repr(value)), self.assertRaises(ValueError):
+                poisson_rate_upper(value, 24.0, .95)
+
+    def test_wilson_rejects_noninteger_each_count(self):
+        for value in (1.9, -0.1, 1.0, "1", True, False, None, float("nan"), float("inf")):
+            for position in (0, 1):
+                args = [1, 10, .95]
+                args[position] = value
+                with self.subTest(value=repr(value), position=position), self.assertRaises(ValueError):
+                    wilson_upper(*args)
+
+    def test_conversion_hook_is_not_count_authority(self):
+        class Coercible:
+            def __int__(self):
+                return 1
+        with self.assertRaises(ValueError):
+            poisson_rate_upper(Coercible(), 24, .95)
+        with self.assertRaises(ValueError):
+            wilson_upper(Coercible(), 10, .95)
+
+    def test_existing_invalid_domains_stay_rejected(self):
+        for args in ((-1, 24, .95), (1, 0, .95), (1, 24, .5), (1, 24, 1.0)):
+            with self.subTest(args=args), self.assertRaises(ValueError):
+                poisson_rate_upper(*args)
+        for args in ((-1, 10, .95), (11, 10, .95), (0, 0, .95)):
+            with self.subTest(args=args), self.assertRaises(ValueError):
+                wilson_upper(*args)
+
+    def test_qualification_wrapper_keeps_count_contract(self):
+        valid = dict(false_rejects=1, expected_wakes=10, false_accepts=1,
+                     audio_hours=24.0, confidence=.95)
+        for key in ("false_rejects", "expected_wakes", "false_accepts"):
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                qualification_bounds(**{**valid, key: 1.9})
+        result = qualification_bounds(**valid)
+        self.assertEqual(result["far_upper_bound_per_hour"], poisson_rate_upper(1, 24, .95))
+
+
+def test_statistical_count_types() -> None:
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(StatisticalCountTypes)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    if not result.wasSuccessful():
+        raise AssertionError("statistical count type regressions failed")
+
+
 class FarOutputPaths(unittest.TestCase):
     """JSON-only CLI checks, including under -O/-OO; no removable assertions."""
 
@@ -519,6 +583,7 @@ def main() -> int:
     else:
         raise AssertionError("zero exposure must fail")
 
+    test_statistical_count_types()
     test_aggregate_far_output_paths()
     test_aggregate_far_seed_identity()
     test_aggregate_far_cli()

@@ -43291,6 +43291,51 @@
           }
         }
       ]
+    },
+    {
+      "id": "statistical-count-integral-contract-20261031",
+      "date": "2026-10-31",
+      "base_commit": "a5b91391d27c0886251acf71bccc77dd1be90cbc",
+      "base_tree": "e8c3f58799df7dc52f6041c95934abb0ba6d0e11",
+      "workflow_source_changed": false,
+      "scope": "Require discrete Integral counts in statistical helpers; reject bool, fractional and integral-valued floats, numeric text and coercion-only values; retain integer scalar compatibility.",
+      "rationale": "Avoid silent count truncation while preserving valid integer numerical results. This deliberately tightens helper input types, does not fix upstream explicit int conversions, and does not qualify a model or production deployment. Historical source records and fixed dependencies remain unchanged.",
+      "files": [
+        {
+          "path": "tools/statistical_bounds.py",
+          "before": {
+            "path": "tools/statistical_bounds.py",
+            "mode": "100644",
+            "bytes": 3571,
+            "sha256": "4220e6371cb6c697d120053b6f5625b4d693a4587cbcbad8af31a894e995416c",
+            "git_blob_sha1": "8c8535c1422497b781e5697ccf639e367f2cda58"
+          },
+          "after": {
+            "path": "tools/statistical_bounds.py",
+            "mode": "100644",
+            "bytes": 3907,
+            "sha256": "8b210fe16aebff10eb7e77c2697d95a59cfa1e2aeb3dec42947316f2e10d9b7a",
+            "git_blob_sha1": "f5464b221a898d6b1434e40ceccb07a98548301c"
+          }
+        },
+        {
+          "path": "tests/test_statistical_bounds.py",
+          "before": {
+            "path": "tests/test_statistical_bounds.py",
+            "mode": "100644",
+            "bytes": 24983,
+            "sha256": "5db43a719f11f278ae09829fbd3abcb517e0ba0612981c2198cb29dde02a353b",
+            "git_blob_sha1": "3024d5cf2e28918fb7d40b36f00de86810062b44"
+          },
+          "after": {
+            "path": "tests/test_statistical_bounds.py",
+            "mode": "100644",
+            "bytes": 28102,
+            "sha256": "4371f63648d14ca0d0ab7f7d539d353f9f44a95c67d15e5a1d9bef059722779c",
+            "git_blob_sha1": "4e3a10a1b9c80311a92cc809ddee21403d98da21"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

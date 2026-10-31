@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from numbers import Integral
 from statistics import NormalDist
 
 
@@ -11,12 +12,19 @@ def _validate_confidence(confidence: float) -> float:
     return value
 
 
+def _integer_count(value: int, label: str) -> int:
+    # Counts are discrete, not coercible measurements. In particular, do not
+    # truncate fractional counts or accept numeric text/integral-valued floats.
+    # Integral preserves integer scalar implementations without a NumPy import.
+    if isinstance(value, bool) or not isinstance(value, Integral):
+        raise ValueError(f"{label} must be an integer")
+    return int(value)
+
+
 def wilson_upper(successes: int, trials: int, confidence: float) -> float:
     """One-sided Wilson upper confidence bound for a binomial rate."""
-    if isinstance(successes, bool) or isinstance(trials, bool):
-        raise ValueError("binomial counts must be integers")
-    successes = int(successes)
-    trials = int(trials)
+    successes = _integer_count(successes, "binomial successes")
+    trials = _integer_count(trials, "binomial trials")
     if trials <= 0 or successes < 0 or successes > trials:
         raise ValueError("invalid binomial counts")
     confidence = _validate_confidence(confidence)
@@ -55,9 +63,7 @@ def _poisson_cdf(count: int, mean: float) -> float:
 
 def poisson_rate_upper(events: int, exposure_hours: float, confidence: float) -> float:
     """Exact one-sided Poisson upper bound divided by exposure hours."""
-    if isinstance(events, bool):
-        raise ValueError("Poisson event count must be an integer")
-    events = int(events)
+    events = _integer_count(events, "Poisson event count")
     exposure_hours = float(exposure_hours)
     confidence = _validate_confidence(confidence)
     if events < 0 or not math.isfinite(exposure_hours) or exposure_hours <= 0.0:
