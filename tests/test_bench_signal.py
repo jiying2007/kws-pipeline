@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pathlib
+import runpy
 import subprocess
 import sys
 import tempfile
@@ -93,6 +94,64 @@ def main() -> int:
                 "a lower count floor must not waive required names")
         require(run(root, BASELINE, "--min-cases", "7") == 1,
                 "the additional count floor still applies")
+
+        # A row is a field map, not a last-value-wins update stream. Reject
+        # duplicates even when values agree; keep unique extension fields legal.
+        original_parts = lines[0].split()
+        for key in ("case", "frontend", "keywords", "trie_nodes", "geometry",
+                    "gate", "model_bytes", "engine_bytes",
+                    "estimated_macs_per_frame", "audio_s", "cpu_s", "rtf",
+                    "us_per_audio_s"):
+            index = next(i for i, item in enumerate(original_parts)
+                         if item.startswith(key + "="))
+            same = original_parts[index]
+            # Require the duplicate diagnostic even if an alternative also
+            # violates a separate numeric or required-case check.
+            alternative = ("rtf=0.003000" if key == "rtf" else same + "_other")
+            for token in (same, alternative):
+                for position in (0, index + 1, len(original_parts)):
+                    parts = list(original_parts)
+                    parts.insert(position, token)
+                    payload = "\n".join([" ".join(parts), *lines[1:]]) + "\n"
+                    result = run_result(root, payload)
+                    require(result.returncode == 1, f"duplicate {key} must fail")
+                    require(result.stdout == "", "duplicate must never print success")
+                    require(f"duplicate field {key!r}\n" in result.stderr,
+                            "duplicate diagnostic must name the field")
+
+        extension = "extra_metric=42"
+        extended = "\n".join([lines[0] + " " + extension, *lines[1:]]) + "\n"
+        require(run(root, extended) == 0, "unique extension fields remain compatible")
+        for first, second in (("42", "42"), ("42", "43"), ("43", "42")):
+            payload = "\n".join([lines[0] + f" extra_metric={first} extra_metric={second}",
+                                  *lines[1:]]) + "\n"
+            result = run_result(root, payload)
+            require(result.returncode == 1 and result.stdout == "")
+            require(result.stderr == "baseline: duplicate field 'extra_metric'\n")
+        triple = "\n".join([lines[0] + " extra_metric=1 extra_metric=2 extra_metric=3",
+                              *lines[1:]]) + "\n"
+        result = run_result(root, triple)
+        require(result.returncode == 1 and result.stdout == "")
+        require(result.stderr == "baseline: duplicate field 'extra_metric'\n" * 2)
+        # Reusing a key in separate rows is normal, including extension keys.
+        require(run(root, "\n".join(line + " extra_metric=42" for line in lines) + "\n") == 0)
+
+        # The parser continues returning raw malformed tokens to its callers.
+        parse_rows = runpy.run_path(str(CHECKER))["parse_rows"]
+        require(parse_rows("case=baseline bad-token another-bad-token\n") ==
+                [(1, {"case": "baseline"}, ["bad-token", "another-bad-token"])])
+
+        # Existing malformed-token grouping remains unchanged without repeats.
+        malformed = "\n".join([lines[0] + " bad-token another-bad-token", *lines[1:]]) + "\n"
+        result = run_result(root, malformed)
+        require(result.returncode == 1 and result.stdout == "")
+        require(result.stderr == "baseline: not key=value: bad-token, another-bad-token\n")
+        mixed = "\n".join([lines[0] + " bad-token rtf=0.003376 another-bad-token",
+                             *lines[1:]]) + "\n"
+        result = run_result(root, mixed)
+        require(result.returncode == 1 and result.stdout == "")
+        require(result.stderr == "baseline: not key=value: bad-token, another-bad-token\n"
+                "baseline: duplicate field 'rtf'\n")
 
         # Timing must be measured, not zeroed: a bench that stops measuring
         # would otherwise stay green.
