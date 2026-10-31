@@ -6,6 +6,10 @@ printed is accepted. That is a smoke test, not a gate. A change that made the
 bench print zeros, silently drop its worst case, or drift by an order of
 magnitude would stay green.
 
+Every case emitted by ``kws_bench`` is required exactly once, in any order.
+Additional uniquely named cases are allowed if they pass the same checks.
+``--min-cases`` adds a count floor; it cannot waive required case names.
+
 The checker separates two things the raw output mixes together:
 
 * **structural invariants** -- geometry, model/engine size, MACs per frame,
@@ -25,6 +29,16 @@ import argparse
 import math
 import pathlib
 import sys
+
+# Keep in sync with the cases emitted by bench/bench_kws.c.
+REQUIRED_CASES = frozenset({
+    "baseline",
+    "baseline-gated",
+    "product",
+    "pcen-product",
+    "worst-case",
+    "worst-case-gated",
+})
 
 REQUIRED_FIELDS = (
     "case",
@@ -91,11 +105,11 @@ def main() -> int:
     parser.add_argument("--max-rtf", type=float, default=0.1,
                         help="ceiling on real-time factor (default 0.1)")
     parser.add_argument("--min-cases", type=int, default=2,
-                        help="minimum number of bench cases (default 2)")
+                        help="additional case-count floor (default 2); all six named cases are always required")
     args = parser.parse_args()
 
-    if args.max_rtf <= 0.0:
-        raise ValueError("--max-rtf must be positive")
+    if not math.isfinite(args.max_rtf) or args.max_rtf <= 0.0:
+        raise ValueError("--max-rtf must be positive and finite")
     if args.min_cases < 1:
         raise ValueError("--min-cases must be at least 1")
 
@@ -110,6 +124,9 @@ def main() -> int:
     duplicates = sorted({name for name in names if names.count(name) > 1})
     if duplicates:
         errors.append("duplicate case names: " + ", ".join(duplicates))
+    missing_cases = sorted(REQUIRED_CASES.difference(names))
+    if missing_cases:
+        errors.append("missing required case names: " + ", ".join(missing_cases))
     if len(rows) < args.min_cases:
         errors.append(f"expected at least {args.min_cases} cases, got {len(rows)}")
 
