@@ -1036,7 +1036,99 @@ static void test_expired_pending_does_not_block_fresh_shorter_keyword(void) {
   }
 }
 
+/* Full-capacity topology with live terminals, not an end-to-end workload or
+ * timing claim. Distinct roots prevent prefix sharing even though the suffix
+ * tokens coincide. Both insertion orders must retain and arbitrate all waits. */
+static void test_full_capacity_immediate_waits_and_speech_retention(void) {
+  const float expected_acoustic = -logf(16.0f);
+  const float expected_confidence = expf(expected_acoustic / 16.0f);
+  const float tolerance = 1.0e-5f;
+
+  for (unsigned reverse = 0u; reverse < 2u; ++reverse) {
+    kws_decoder_t decoder;
+    uint16_t tokens[16][16];
+    kws_keyword_t items[16];
+    float logits[512];
+    uint32_t id = 0u;
+    float confidence = 0.0f;
+
+    for (uint16_t k = 0u; k < 16u; ++k) {
+      uint16_t root = reverse != 0u ? (uint16_t)(16u - k)
+                                    : (uint16_t)(k + 1u);
+      tokens[k][0] = root;
+      for (uint16_t t = 1u; t < 16u; ++t) {
+        tokens[k][t] = t % 2u != 0u ? 17u : 18u;
+      }
+      items[k] = keyword(root, tokens[k], 16u, 0.50f);
+      items[k].min_trailing_blanks = 1u;
+      items[k].priority = (uint8_t)(root - 1u);
+    }
+    kws_decoder_init(&decoder, 0.0f, 0.94f);
+    CHECK(kws_decoder_set_keywords(&decoder, items, 16u, 512u) == KWS_OK);
+    CHECK(decoder.keyword_count == 16u);
+    CHECK(decoder.node_count == 257u);
+    CHECK(decoder.node_count == KWS_MAX_TRIE_NODES);
+    for (uint16_t k = 0u; k < 16u; ++k) {
+      CHECK(decoder.nodes[decoder.terminal_nodes[k]].depth == 16u);
+    }
+
+    for (unsigned frame = 1u; frame <= 17u; ++frame) {
+      for (uint16_t t = 0u; t < 512u; ++t) {
+        logits[t] = -16.0f;
+      }
+      if (frame == 1u) {
+        /* All roots seed together with acoustic probability 1/16. */
+        for (uint16_t t = 1u; t <= 16u; ++t) {
+          logits[t] = 0.0f;
+        }
+      } else {
+        /* Frame 17 repeats the final token, taking speech retention rather
+         * than a child advance or the blank-dominant silence branch. */
+        logits[frame == 17u || frame % 2u == 0u ? 17u : 18u] = 0.0f;
+      }
+      CHECK(kws_decoder_step(&decoder, logits, 512u, 1,
+                             &id, &confidence) == 0);
+      CHECK(id == 0u && confidence == 0.0f);
+      CHECK(decoder.pending_keyword == -1);
+      if (frame >= 16u) {
+        float expected_retention = frame == 16u ? 0.0f : logf(0.94f);
+        for (uint16_t k = 0u; k < 16u; ++k) {
+          const kws_trie_node_t *terminal =
+              &decoder.nodes[decoder.terminal_nodes[k]];
+          CHECK(fabsf(terminal->acoustic_score - expected_acoustic) < tolerance);
+          CHECK(fabsf((terminal->score - terminal->acoustic_score) -
+                      expected_retention) < tolerance);
+          CHECK(fabsf(decoder.immediate_confidences[k] -
+                      expected_confidence) < tolerance);
+          CHECK(decoder.immediate_blank_frames[k] == 0u);
+        }
+      }
+    }
+
+    /* Frame 18 releases all 16 waits; highest priority wins, then every
+     * path and wait resets. Acoustic confidence excludes retention costs. */
+    for (uint16_t t = 0u; t < 512u; ++t) {
+      logits[t] = -16.0f;
+    }
+    logits[0] = 0.0f;
+    CHECK(kws_decoder_step(&decoder, logits, 512u, 1, &id, &confidence) == 1);
+    CHECK(id == 16u);
+    CHECK(fabsf(confidence - expected_confidence) < tolerance);
+    CHECK(decoder.pending_keyword == -1);
+    for (uint16_t k = 0u; k < 16u; ++k) {
+      CHECK(decoder.immediate_confidences[k] == 0.0f);
+      CHECK(decoder.immediate_blank_frames[k] == 0u);
+    }
+    for (uint16_t n = 1u; n < decoder.node_count; ++n) {
+      CHECK(decoder.nodes[n].score < -1.0e20f);
+      CHECK(decoder.nodes[n].blank_score < -1.0e20f);
+    }
+    CHECK(kws_decoder_step(&decoder, logits, 512u, 1, &id, &confidence) == 0);
+  }
+}
+
 int main(void) {
+  test_full_capacity_immediate_waits_and_speech_retention();
   test_pending_wait_expires_after_unrelated_speech();
   test_grace_without_blank_gate_cannot_release_dead_candidate();
   test_pending_wait_obeys_path_retention_budget();
