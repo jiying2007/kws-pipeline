@@ -12,7 +12,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from corpus_identity import canonical_audio_path, corpus_digest, inspect_pcm16_wav, resolve_audio_path  # noqa: E402
+from corpus_identity import canonical_audio_path, corpus_digest, inspect_pcm16_wav, resolve_audio_path, verified_afe_metadata  # noqa: E402
 
 IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
 
@@ -353,15 +353,9 @@ def main() -> int:
         if "metadata_path" in row or "metadata_sha256" in row:
             if cache_enabled:
                 raise ValueError("AFE metadata replay is not supported by the posterior cache")
-            if not isinstance(row.get("metadata_path"), str) or not row["metadata_path"]:
-                raise ValueError("AFE metadata_path must be non-empty text")
-            metadata = pathlib.Path(row["metadata_path"])
-            if not metadata.is_absolute():
-                metadata = args.audio_root / metadata
-            if sha256_file(metadata) != row.get("metadata_sha256"):
-                raise ValueError("AFE metadata SHA-256 mismatch")
+            metadata, metadata_sha256 = verified_afe_metadata(row, args.audio_root)
             metadata_files.append({"recording": recording, "path": row["metadata_path"],
-                                   "sha256": row["metadata_sha256"]})
+                                   "sha256": metadata_sha256})
         identity = audio_identity(row, audio)
         validate_constant_afe_timeline(metadata, row, identity["frames"])
         identities.append(identity)

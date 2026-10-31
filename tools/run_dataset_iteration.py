@@ -30,15 +30,15 @@ import subprocess
 import sys
 import wave
 
-from corpus_identity import canonical_audio_path
+from corpus_identity import canonical_audio_path, verified_afe_metadata
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 EVAL = ROOT / "eval"
 sys.path.insert(0, str(EVAL))
 from domain_metrics import domain_keys  # noqa: E402
 
-PROTOCOL = "dataset-iteration-v3"
-DATASET_IDENTITY_POLICY = "effective-domain-keys-v1"
+PROTOCOL = "dataset-iteration-v4"
+DATASET_IDENTITY_POLICY = "effective-domain-keys-verified-afe-v2"
 FAR_POLICY = "negative-only-recordings-iteration-approx95-v1"
 VARIABLES = ("dataset", "model")
 
@@ -96,6 +96,7 @@ def dataset_identity(references: pathlib.Path, audio_root: pathlib.Path) -> tupl
     are two that share expectations but differ in audio. Both halves are in the
     hash on purpose. Effective scoring slices come from domain_keys verbatim;
     ignored metadata and within-slice changes do not change this identity.
+    AFE sidecar presence and verified bytes are execution inputs; paths are not.
     """
     rows = load_jsonl(references)
     entries = []
@@ -109,6 +110,7 @@ def dataset_identity(references: pathlib.Path, audio_root: pathlib.Path) -> tupl
             audio = audio_root / audio
         if not audio.is_file():
             raise ValueError(f"{name}: audio file is missing: {audio}")
+        metadata, metadata_sha256 = verified_afe_metadata(row, audio_root)
         entries.append(
             {
                 "recording": name,
@@ -116,6 +118,8 @@ def dataset_identity(references: pathlib.Path, audio_root: pathlib.Path) -> tupl
                 "duration_s": round(wav_duration_s(audio), 6),
                 "expected": row.get("expected", []),
                 "domains": sorted(domain_keys(row)),
+                "afe_metadata": ({"present": False} if metadata is None else
+                                 {"present": True, "sha256": metadata_sha256}),
             }
         )
     if not entries:
@@ -264,6 +268,11 @@ def main() -> int:
     false_positives = work / "false-positives.jsonl"
     false_rejects = work / "false-rejects.jsonl"
 
+    # Bind verified inputs before execution. Recheck the effective and original
+    # references after evaluation before issuing a card. Corpus retains its own
+    # per-file pre/post hash checks; none of these checks is an atomic snapshot.
+    dataset_id, dataset_info = dataset_identity(effective_references, args.audio_root)
+
     run([sys.executable, str(EVAL / "run_corpus.py"),
          "--runner", str(args.runner.resolve()),
          "--model", str(args.model.resolve()),
@@ -283,7 +292,9 @@ def main() -> int:
          "--detections", str(detections),
          "--output", str(domains)])
 
-    dataset_id, dataset_info = dataset_identity(args.references, args.audio_root)
+    for reference in (effective_references, args.references):
+        if dataset_identity(reference, args.audio_root)[0] != dataset_id:
+            raise ValueError("dataset inputs changed during iteration evaluation")
     model_id = model_identity(args.model, args.keywords)
     reference_hours, negatives = exposure_hours(args.references)
     base = json.loads(summary.read_text(encoding="utf-8"))
@@ -305,7 +316,7 @@ def main() -> int:
         "variable": args.variable,
     }
     scorecard = {
-        "schema_version": 3,
+        "schema_version": 4,
         "protocol": args.protocol,
         "run_id": canonical_hash(identity)[:16],
         "identity": identity,

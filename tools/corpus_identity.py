@@ -69,6 +69,26 @@ def sha256_file(path: pathlib.Path) -> str:
     return digest.hexdigest()
 
 
+def verified_afe_metadata(row: dict, root: pathlib.Path) -> tuple[pathlib.Path | None, str | None]:
+    """Resolve optional AFE sidecar and bind its actual, verified bytes.
+
+    Preserve the corpus runner's declaration/path semantics. Both keys absent
+    means absence; an incomplete or malformed declaration must not become absent.
+    This is a streaming file check, not an immutable snapshot or input lock.
+    """
+    if "metadata_path" not in row and "metadata_sha256" not in row:
+        return None, None
+    if not isinstance(row.get("metadata_path"), str) or not row["metadata_path"]:
+        raise ValueError("AFE metadata_path must be non-empty text")
+    path = pathlib.Path(row["metadata_path"])
+    if not path.is_absolute():
+        path = root / path
+    digest = sha256_file(path)
+    if digest != row.get("metadata_sha256"):
+        raise ValueError("AFE metadata SHA-256 mismatch")
+    return path, digest
+
+
 def validate_pcm16_wav_payload(path: pathlib.Path) -> int:
     """Validate RIFF extents and complete PCM16 samples without reading PCM.
 
