@@ -19,7 +19,6 @@ class FailureRetention(unittest.TestCase):
     execute = original.CheckedExecution.execute
 
     def test_failed_report_retains_actual_ids_without_becoming_passing_evidence(self):
-        self.fail("CI_RETENTION_ACCEPTANCE_ONLY_PYTHON_CONTRACTS_DO_NOT_MERGE")
         rc, report = self.execute(fixture('fail'))
         self.assertEqual(rc, 1)
         self.assertFalse(report['successful'])
