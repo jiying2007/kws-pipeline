@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "suites": {
+    "ci-failure-retention": {
+      "root": "tests",
+      "modules": [
+        "test_ci_failure_retention"
+      ],
+      "count": 2,
+      "ids_sha256": "9b5c79d647eca5eefdc5c990e39b76a5f438aff8a27e4b96985a176cbb4156c0",
+      "modes": [
+        "normal",
+        "O",
+        "OO"
+      ],
+      "allowed_skips": {}
+    }
+  }
+}

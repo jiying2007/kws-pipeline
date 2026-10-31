@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 67567,
-      "sha256": "02586d7db3d56610900b2bd97b38a213f856f30cd27ef186d7fe39de6dd21643",
-      "git_blob_sha1": "f736ea3f86ce2d113d8fcb75975c5279402d53df"
+      "bytes": 67992,
+      "sha256": "4c9581b3b6a24698e31cdaa7e191016a1c65f6a62576ccf75ee82f9dd1e69feb",
+      "git_blob_sha1": "a1f288293c3be5ab0b9677d2de1cf484fa06f779"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -43163,6 +43163,86 @@
             "bytes": 92885,
             "sha256": "00f066f9e6626f9d57d8acd83336d04c5396f087ee994a62991477c2d55abd73",
             "git_blob_sha1": "6a3c727b89288d5e537774aa713722a0fd194267"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-31",
+      "reason": "Retain genuine failed checked-suite JSON; independently contracted two-case regression module leaves immutable validator closure unchanged. Prior four-file candidate rejected before acceptance; no production or model authority.",
+      "base_commit": "895700b43d1d5bad2e86ee6a8e469928b2c4f87e",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 67567,
+            "sha256": "02586d7db3d56610900b2bd97b38a213f856f30cd27ef186d7fe39de6dd21643",
+            "git_blob_sha1": "f736ea3f86ce2d113d8fcb75975c5279402d53df"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 67992,
+            "sha256": "4c9581b3b6a24698e31cdaa7e191016a1c65f6a62576ccf75ee82f9dd1e69feb",
+            "git_blob_sha1": "a1f288293c3be5ab0b9677d2de1cf484fa06f779"
+          }
+        },
+        {
+          "path": "tests/test_ci_failure_retention.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_ci_failure_retention.py",
+            "mode": "100644",
+            "bytes": 3505,
+            "sha256": "0dd6dbd813fac22c3683054f8a7bf2cddc75201322080d73b597885270e689ec",
+            "git_blob_sha1": "d48650adde4c8d71064df03aaba9a566dd3247e3"
+          }
+        },
+        {
+          "path": "tools/ci_failure_retention_contracts.json",
+          "before": null,
+          "after": {
+            "path": "tools/ci_failure_retention_contracts.json",
+            "mode": "100644",
+            "bytes": 362,
+            "sha256": "983e791af55a86978ecd31b39d11da6c9710d49a220b695ad54273b3f9cb35fc",
+            "git_blob_sha1": "e2a8dac92cc38491739b0bb34507ac6855710ef0"
+          }
+        },
+        {
+          "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+          "before": {
+            "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40771,
+            "sha256": "933cda8b4c79ec106de8f3a2c1c284ea6eea9978159407931d0154af77fe76dd",
+            "git_blob_sha1": "675428f67d0c3264780e40be3cbafe82b0d0d553"
+          },
+          "after": {
+            "path": "research/k1-asr18-offline-posterior-v1/test_asr_posterior.py",
+            "mode": "100644",
+            "bytes": 40803,
+            "sha256": "7c271f2c1c04add5f92ce342ca3c446b9deb8f3c1cef7d7570c3e8543a894cd5",
+            "git_blob_sha1": "620b05476e359dcc7cf4339c0786cafa1d327b41"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_ci_structure.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 67200,
+            "sha256": "614e86b0376b32a9101443b365994957c909ed0ca93bfeb4158080139a0e4bf6",
+            "git_blob_sha1": "8bb831eaac9385445f23464a1100d4a30de8e49e"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 69960,
+            "sha256": "6c294a68734007ae817e172125321a32b5145f89e30230b5c5c096255a1ea304",
+            "git_blob_sha1": "cd6e24a6248ee7d41a3367f37e5ddab6d7a96206"
           }
         }
       ]
