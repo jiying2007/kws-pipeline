@@ -43336,6 +43336,51 @@
           }
         }
       ]
+    },
+    {
+      "id": "bench-signal-duplicate-fields-20261031",
+      "date": "2026-10-31",
+      "base_commit": "11c183cee049ea019602c4f8d3602394f2d4e687",
+      "base_tree": "eb8470670778f33c8a115b1895c4f423cbfaff3d",
+      "workflow_source_changed": false,
+      "scope": "Reject repeated field names in each benchmark output row, including repeated extension fields; preserve unique extension fields, case roster and timing budgets.",
+      "rationale": "Tighten ambiguous benchmark text semantics instead of silently overwriting earlier field values. Preserve existing malformed-token parser and grouped diagnostics. This is validation hardening, not a measured performance gain or model/production qualification. Fixed dependencies and prior source records remain unchanged.",
+      "files": [
+        {
+          "path": "tools/check_bench_signal.py",
+          "before": {
+            "path": "tools/check_bench_signal.py",
+            "mode": "100644",
+            "bytes": 6464,
+            "sha256": "4b8a3f3590da6d1042371c1faff99409bbf98542fccb4fadd1f42729efd8e4b8",
+            "git_blob_sha1": "14058eb8fdcad8236c9df25db81dac8cfd883892"
+          },
+          "after": {
+            "path": "tools/check_bench_signal.py",
+            "mode": "100644",
+            "bytes": 7026,
+            "sha256": "23f47f64bb54d3250c8c0fa7c339adfedd3b4ad153e1b8c65df195ada7b65c09",
+            "git_blob_sha1": "2ff4dc00e5f5bcd35f2cdc16da13a1dc1483097d"
+          }
+        },
+        {
+          "path": "tests/test_bench_signal.py",
+          "before": {
+            "path": "tests/test_bench_signal.py",
+            "mode": "100644",
+            "bytes": 9407,
+            "sha256": "68e40eef9d01d7d9b62f8961c3cdf0ee30601b67de0e1dbcafc0531a7677db3b",
+            "git_blob_sha1": "940453072c1c3b2a08fff3e2b6186f32461f1794"
+          },
+          "after": {
+            "path": "tests/test_bench_signal.py",
+            "mode": "100644",
+            "bytes": 13098,
+            "sha256": "8d7db4d051107a3e6ab7923103ce975b15346bc554a47dbfcd6e2db5e96a09ce",
+            "git_blob_sha1": "d7ec3eed1c7207aa8867f63f03ef97cac8e1f1b3"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
