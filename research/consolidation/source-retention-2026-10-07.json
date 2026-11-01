@@ -43426,6 +43426,51 @@
           }
         }
       ]
+    },
+    {
+      "id": "far-attribution-stable-output-alias-20261101",
+      "date": "2026-11-01",
+      "base_commit": "99756f582590b6c5a51e1977ebac8a5b16c8cb34",
+      "base_tree": "2d3f51c4e50156afecba965f88dc6625ce4ba4a6",
+      "workflow_source_changed": false,
+      "scope": "Reject stable aliases between attribution outputs and input evidence before writes; retain independent output overwrite behavior.",
+      "rationale": "Synthetic regression covers direct, relative, symlink and hardlink misconfiguration; not concurrent-path locking or model qualification. Existing CI test_long_far strict metadata suite expands from 7 to 12 methods with 58 new CLI subcases.",
+      "files": [
+        {
+          "path": "eval/annotate_far_detections.py",
+          "before": {
+            "path": "eval/annotate_far_detections.py",
+            "mode": "100644",
+            "bytes": 8044,
+            "sha256": "1b2ca5a2692d47e6e1c5f79abc56d7a081282c7dd626a79e4710c0ef09dc0c3f",
+            "git_blob_sha1": "8b16e8d0e59a395efea62f080b92152da9adcf52"
+          },
+          "after": {
+            "path": "eval/annotate_far_detections.py",
+            "mode": "100644",
+            "bytes": 9166,
+            "sha256": "883ea1a9b5eba4412558ffb4fae088f4e2e874080f51152624b3052bf8d303a5",
+            "git_blob_sha1": "b52c1a8db2de18b3dec43c83e0bb216080c82be5"
+          }
+        },
+        {
+          "path": "tests/test_long_far.py",
+          "before": {
+            "path": "tests/test_long_far.py",
+            "mode": "100644",
+            "bytes": 35997,
+            "sha256": "781775fd2cb609671623847ce6a9e78bf26bac51fe71e6c40b2a3b09e3ffc846",
+            "git_blob_sha1": "055e17ffe1df8debb4bfea92deea42d6ac645cd4"
+          },
+          "after": {
+            "path": "tests/test_long_far.py",
+            "mode": "100644",
+            "bytes": 41647,
+            "sha256": "02d77d0a7b18527658fea541543f03ffd97c3ce7f93d62ad815dedd296b5ccd8",
+            "git_blob_sha1": "96f23ebcd7938baf7393e19f0d57168041e88dc7"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
