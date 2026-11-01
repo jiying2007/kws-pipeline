@@ -43471,6 +43471,51 @@
           }
         }
       ]
+    },
+    {
+      "id": "far-capture-context-finite-preflight-20261101",
+      "date": "2026-11-01",
+      "base_commit": "b12f3b7e30c4000c06eb0852f016a3f8c2c5a40d",
+      "base_tree": "3d14e802c310594bb97d9ff99b0c2a9830349c4f",
+      "workflow_source_changed": false,
+      "scope": "Reject non-finite capture-context seconds before output directory creation or runner launch; preserve legal finite boundaries.",
+      "rationale": "Two mock-only preflight tests add 16 invalid and 4 valid cases to the existing 12 metadata tests; original NaN behavior reached launch boundary. No actual runner executes in these new tests.",
+      "files": [
+        {
+          "path": "eval/long_far_stream.py",
+          "before": {
+            "path": "eval/long_far_stream.py",
+            "mode": "100644",
+            "bytes": 20229,
+            "sha256": "d9bce889a3c85480aaf170f06b867b13cf8b5472a1b5d21b861bae804dd716cf",
+            "git_blob_sha1": "09781e383493f244013a61d6c42fc32e78f40c29"
+          },
+          "after": {
+            "path": "eval/long_far_stream.py",
+            "mode": "100644",
+            "bytes": 20294,
+            "sha256": "e13d1ee6bf2a92d8076a8e6cc1366a0f3d5398f7e74534fe23f5622a9e882652",
+            "git_blob_sha1": "9f122c17128c177a6cd889869040c1450df63ddd"
+          }
+        },
+        {
+          "path": "tests/test_long_far.py",
+          "before": {
+            "path": "tests/test_long_far.py",
+            "mode": "100644",
+            "bytes": 41647,
+            "sha256": "02d77d0a7b18527658fea541543f03ffd97c3ce7f93d62ad815dedd296b5ccd8",
+            "git_blob_sha1": "96f23ebcd7938baf7393e19f0d57168041e88dc7"
+          },
+          "after": {
+            "path": "tests/test_long_far.py",
+            "mode": "100644",
+            "bytes": 44813,
+            "sha256": "3bbb983d98b214c85913c31193715fd1d93ea8661522e3fa75163c9b9063b0d7",
+            "git_blob_sha1": "156bf3277f4ed9c0a438c2927bd0be000cfeacac"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

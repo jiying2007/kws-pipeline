@@ -12,6 +12,10 @@ import sys
 import tempfile
 import wave
 import unittest
+from unittest import mock
+import importlib.util
+import contextlib
+import io
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SAMPLE_RATE_HZ = 16000
@@ -554,6 +558,61 @@ class AttributionEndpointTests(unittest.TestCase):
                 self.run_path_case(source_index=index, missing=True, existing=True)
 
 
+class CaptureContextPreflightTests(unittest.TestCase):
+    """CLI preflight only: Popen is always replaced; no runner or model executes."""
+
+    def run_preflight(self, value, *, existing=False):
+        spec = importlib.util.spec_from_file_location(
+            "far_context_preflight", ROOT / "eval" / "long_far_stream.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as td:
+            output = pathlib.Path(td) / "output"
+            if existing:
+                output.mkdir()
+                (output / "retained.txt").write_bytes(b"existing evidence\n")
+            argv = ["long_far_stream.py", "--runner", "unused-runner",
+                    "--model", "unused-model", "--keywords", "unused-pack",
+                    "--seconds", "1", "--output-dir", str(output),
+                    "--capture-context-seconds=" + value]
+            with mock.patch.object(sys, "argv", argv), \
+                    mock.patch.object(module.subprocess, "Popen",
+                                      side_effect=RuntimeError("mock launch boundary")) as launch, \
+                    contextlib.redirect_stderr(io.StringIO()) as error:
+                try:
+                    module.main()
+                except SystemExit as exc:
+                    outcome = ("exit", exc.code)
+                except RuntimeError as exc:
+                    outcome = ("boundary", str(exc))
+                else:
+                    self.fail("preflight unexpectedly returned")
+            if existing:
+                self.assertEqual((output / "retained.txt").read_bytes(), b"existing evidence\n")
+                self.assertEqual(sorted(p.name for p in output.iterdir()), ["retained.txt"])
+            return outcome, launch.call_count, output.exists(), error.getvalue()
+
+    def test_invalid_capture_context_rejected_before_output_or_runner(self):
+        for value in ("nan", "NaN", "+nan", "-nan", "inf", "-inf", "-0.1", "10.1"):
+            for existing in (False, True):
+                with self.subTest(value=value, existing=existing):
+                    outcome, calls, exists, error = self.run_preflight(value, existing=existing)
+                    self.assertEqual(outcome, ("exit", 2))
+                    self.assertEqual(calls, 0)
+                    self.assertEqual(exists, existing)
+                    self.assertIn("--capture-context-seconds must be in [0,10]", error)
+
+    def test_valid_capture_context_preserves_launch_boundary(self):
+        for value in ("0", "-0", "2", "10"):
+            with self.subTest(value=value):
+                outcome, calls, exists, error = self.run_preflight(value)
+                self.assertEqual(outcome, ("boundary", "mock launch boundary"))
+                self.assertEqual(calls, 1)
+                self.assertTrue(exists)
+                self.assertEqual(error, "")
+        print("capture-context preflight: 16 rejected + 4 valid mock cases passed")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", type=pathlib.Path)
@@ -563,8 +622,9 @@ def main() -> int:
         parser.error("--runner is required unless --attribution-metadata-only is set")
 
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(AttributionEndpointTests)
+    suite.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(CaptureContextPreflightTests))
     result = unittest.TextTestRunner(verbosity=2).run(suite)
-    if result.testsRun != 12 or result.skipped or not result.wasSuccessful():
+    if result.testsRun != 14 or result.skipped or not result.wasSuccessful():
         raise RuntimeError("attribution endpoint metadata regression failed")
     if args.attribution_metadata_only:
         print("test_long_far: attribution metadata only; full FAR/runtime not run")
