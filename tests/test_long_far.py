@@ -451,6 +451,109 @@ class AttributionEndpointTests(unittest.TestCase):
         self.assertEqual(summary["unattributed_detections"], 1)
 
 
+    def run_path_case(self, *, target=None, source_index=0, kind="direct",
+                      existing=False, missing=False):
+        # JSON metadata only: no WAV, runtime, model or training is invoked.
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            (root / "sub").mkdir()
+            output = root / "out.jsonl"
+            if kind == "relative":
+                output = root / "sub" / ".." / "out.jsonl"
+            summary = output.with_suffix(".summary.json")
+            inputs = [root / name for name in
+                      ("domains.jsonl", "detections.jsonl", "injections.jsonl")]
+            if target in ("output", "summary") and kind in ("direct", "relative"):
+                inputs[source_index] = (output if target == "output" else summary).resolve()
+            source = str(root / "metadata-only.wav")
+            values = [{"path": source, "wav_sha256": "0" * 64},
+                      {"time_s": 0.2, "keyword_id": 2},
+                      {"start_second": 0, "source_seconds": 1,
+                       "source_path": source, "source_sha256": "0" * 64, "gain": 1}]
+            for path, value in zip(inputs, values):
+                path.write_text(json.dumps(value) + "\n", encoding="utf-8")
+            if target in ("output", "summary") and kind in ("symlink", "hardlink"):
+                link = output if target == "output" else summary
+                if kind == "symlink":
+                    link.symlink_to(inputs[source_index])
+                else:
+                    link.hardlink_to(inputs[source_index])
+            if target == "each-other":
+                if kind != "dangling":
+                    summary.write_text("summary sentinel\n", encoding="utf-8")
+                if kind in ("symlink", "dangling"):
+                    output.symlink_to(summary)
+                else:
+                    output.hardlink_to(summary)
+            if existing:
+                for path in (output, summary):
+                    if not path.exists():
+                        path.write_text("independent output sentinel\n", encoding="utf-8")
+            if missing:
+                inputs[source_index].unlink()
+            paths = list(dict.fromkeys([*inputs, output, summary]))
+            before = {path: path.read_bytes() if path.exists() else None for path in paths}
+            optimization = ["-" + "O" * sys.flags.optimize] if sys.flags.optimize else []
+            command = [sys.executable, "-S", "-B", *optimization,
+                       str(ROOT / "eval/annotate_far_detections.py"),
+                       "--domain-index", str(inputs[0]), "--detections", str(inputs[1]),
+                       "--injections", str(inputs[2]), "--output", str(output)]
+            result = subprocess.run(command, capture_output=True, text=True,
+                                    timeout=10, check=False)
+            rejected = target is not None or missing
+            self.assertEqual(result.returncode, 2 if rejected else 0, result.stderr)
+            if rejected:
+                self.assertEqual(result.stdout, "")
+                self.assertNotIn("Traceback", result.stderr)
+                if target is not None:
+                    self.assertIn("alias", result.stderr)
+                self.assertEqual(
+                    {path: path.read_bytes() if path.exists() else None for path in paths},
+                    before,
+                )
+            else:
+                self.assertEqual(result.stderr, "")
+                self.assertEqual([path.read_bytes() for path in inputs],
+                                 [before[path] for path in inputs])
+                rows = [json.loads(line) for line in output.read_text().splitlines()]
+                report = json.loads(summary.read_text())
+                self.assertEqual(rows[0]["detection"], values[1])
+                self.assertEqual(report["active_source_attributions"], 1)
+                self.assertEqual(json.loads(result.stdout), report)
+
+    def test_output_input_aliases_preserve_all_existing_bytes(self):
+        for index in range(3):
+            for kind in ("direct", "relative", "symlink", "hardlink"):
+                for existing in (False, True):
+                    with self.subTest(index=index, kind=kind, existing=existing):
+                        self.run_path_case(target="output", source_index=index,
+                                           kind=kind, existing=existing)
+
+    def test_summary_input_aliases_preserve_all_existing_bytes(self):
+        for index in range(3):
+            for kind in ("direct", "relative", "symlink", "hardlink"):
+                for existing in (False, True):
+                    with self.subTest(index=index, kind=kind, existing=existing):
+                        self.run_path_case(target="summary", source_index=index,
+                                           kind=kind, existing=existing)
+
+    def test_outputs_cannot_alias_each_other(self):
+        for kind in ("symlink", "hardlink", "dangling"):
+            with self.subTest(kind=kind):
+                self.run_path_case(target="each-other", kind=kind)
+
+    def test_independent_new_and_existing_outputs_keep_legacy_success(self):
+        for existing in (False, True):
+            for kind in ("direct", "relative"):
+                with self.subTest(existing=existing, kind=kind):
+                    self.run_path_case(existing=existing, kind=kind)
+
+    def test_missing_input_preserves_existing_outputs(self):
+        for index in range(3):
+            with self.subTest(index=index):
+                self.run_path_case(source_index=index, missing=True, existing=True)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", type=pathlib.Path)
@@ -461,7 +564,7 @@ def main() -> int:
 
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(AttributionEndpointTests)
     result = unittest.TextTestRunner(verbosity=2).run(suite)
-    if result.testsRun != 7 or result.skipped or not result.wasSuccessful():
+    if result.testsRun != 12 or result.skipped or not result.wasSuccessful():
         raise RuntimeError("attribution endpoint metadata regression failed")
     if args.attribution_metadata_only:
         print("test_long_far: attribution metadata only; full FAR/runtime not run")

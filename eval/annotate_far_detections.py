@@ -166,6 +166,31 @@ def annotate(
     return output
 
 
+def validate_output_paths(output: pathlib.Path, summary: pathlib.Path,
+                          inputs: list[pathlib.Path]) -> None:
+    # Stable-filesystem preflight only: not a lock against concurrent path changes.
+    def resolve(path: pathlib.Path) -> pathlib.Path:
+        try:
+            return path.resolve()
+        except RuntimeError as exc:
+            raise ValueError(f"cannot resolve attribution path {path}: {exc}") from exc
+
+    def aliases(left: pathlib.Path, right: pathlib.Path) -> bool:
+        if resolve(left) == resolve(right):
+            return True
+        try:
+            return left.samefile(right)
+        except FileNotFoundError:
+            return False
+
+    for target in (output, summary):
+        for source in inputs:
+            if aliases(target, source):
+                raise ValueError(f"output {target} aliases an input: {source}")
+    if aliases(output, summary):
+        raise ValueError("attribution output and summary alias each other")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--domain-index", required=True, type=pathlib.Path)
@@ -173,6 +198,9 @@ def main() -> int:
     parser.add_argument("--injections", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     args = parser.parse_args()
+    summary_path = args.output.with_suffix(".summary.json")
+    validate_output_paths(args.output, summary_path,
+                          [args.domain_index, args.detections, args.injections])
 
     domains = load_jsonl(args.domain_index)
     detections = load_jsonl(args.detections)
@@ -203,7 +231,6 @@ def main() -> int:
         "domain_rows": len(domains),
         "injections": len(injections),
     }
-    summary_path = args.output.with_suffix(".summary.json")
     summary_path.write_text(
         json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
