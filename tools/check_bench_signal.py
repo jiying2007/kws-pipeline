@@ -8,6 +8,7 @@ magnitude would stay green.
 
 Every case emitted by ``kws_bench`` is required exactly once, in any order.
 Additional uniquely named cases are allowed if they pass the same checks.
+Each row must use each field name at most once, including extension fields.
 ``--min-cases`` adds a count floor; it cannot waive required case names.
 
 The checker separates two things the raw output mixes together:
@@ -83,6 +84,9 @@ def parse_rows(text: str) -> list[tuple[int, dict[str, str], list[str]]]:
             if not sep:
                 malformed.append(item)
                 continue
+            if key in row:
+                malformed.append(item)
+                continue
             row[key] = value
         rows.append((lineno, row, malformed))
     return rows
@@ -132,8 +136,15 @@ def main() -> int:
 
     for lineno, row, malformed in rows:
         label = row.get("case") or f"line {lineno}"
-        if malformed:
-            errors.append(f"{label}: not key=value: {', '.join(malformed)}")
+        # Raw tokens without = retain the original parser/diagnostic contract.
+        # Tokens with = here are repeats, recorded without replacing first values.
+        invalid = [item for item in malformed if "=" not in item]
+        if invalid:
+            errors.append(f"{label}: not key=value: {', '.join(invalid)}")
+        for item in malformed:
+            if "=" in item:
+                key = item.partition("=")[0]
+                errors.append(f"{label}: duplicate field {key!r}")
         missing = [field for field in REQUIRED_FIELDS if field not in row]
         if missing:
             errors.append(f"{label}: missing fields: {', '.join(missing)}")
