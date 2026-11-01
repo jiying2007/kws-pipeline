@@ -286,9 +286,58 @@ def verify_output_aliases(root: pathlib.Path) -> None:
     print(f"keyword output alias protection: {checked} cases passed")
 
 
+
+def verify_header_display_comments(root: pathlib.Path) -> None:
+    """Display punctuation changes neither pack data nor JSON labels."""
+    from compile_keywords import emit_header
+    root.mkdir(parents=True)
+    tokens = root / "tokens.txt"
+    tokens.write_text("<blk> 0\ntest 1\n", encoding="utf-8")
+    labels = ["wake phrase", "唤醒词", "wake */ phrase", "wake /* phrase",
+              "wake /* middle */ phrase", "wake // phrase", 'wake "phrase"', "wake \\ phrase"]
+    baseline_pack = None
+
+    def syntax(header: pathlib.Path) -> None:
+        source = header.parent / "check.c"
+        source.write_text('#include "keywords.h"\n', encoding="utf-8")
+        subprocess.run(
+            [*shlex.split(os.environ.get("CC", "cc")), "-std=c11", "-Wall",
+             "-Wextra", "-Werror", "-fsyntax-only", "-I", str(ROOT / "include"),
+             str(source)], check=True, timeout=30, capture_output=True,
+        )
+
+    for index, label in enumerate(labels):
+        case = root / str(index)
+        case.mkdir()
+        keywords = case / "keywords.tsv"
+        keywords.write_text(f"1\t{label}\t0.55\ttest\n", encoding="utf-8")
+        header, manifest, pack = compile_one(tokens, keywords, case)
+        if json.loads(manifest.read_text(encoding="utf-8"))["keywords"][0]["text"] != label:
+            raise AssertionError("display text changed in JSON")
+        if baseline_pack is None:
+            baseline_pack = pack.read_bytes()
+        if pack.read_bytes() != baseline_pack:
+            raise AssertionError("display text changed binary pack")
+        syntax(header)
+    item = json.loads(manifest.read_text(encoding="utf-8"))["keywords"][0]
+    for index, label in enumerate(["wake\nphrase", "wake\rphrase", "wake\r\nphrase"]):
+        case = root / f"newline-{index}"
+        case.mkdir()
+        item["text"] = label
+        header = case / "keywords.h"
+        emit_header([item], 0, header)
+        text = header.read_text(encoding="utf-8")
+        expected = label.replace("\r", " ").replace("\n", " ")
+        if f"/* {expected} */" not in text:
+            raise AssertionError("display newline was not flattened")
+        syntax(header)
+    print("keyword header display comments: 8 CLI + 3 direct cases passed")
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
+        verify_header_display_comments(root / "header-display")
         verify_threshold_wire(root / "threshold-wire")
         verify_output_aliases(root / "output-aliases")
         token_file = ROOT / "keywords" / "tokens.example.txt"
