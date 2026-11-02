@@ -51,6 +51,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`authorized_voice_clone_batch.py`](authorized_voice_clone_batch.py) — Offline, rights-scoped bounded multi-speaker cloning intents; no automatic training or qualification. [Private-generation guide](../docs/AUTHORIZED_VOICE_CLONING.md).
 - [`voice_clone_effect_audit.py`](voice_clone_effect_audit.py) — Verify actual private clone WAV/PCM and source-family yield; optional 3-ASR *screen* is never a training or shipping admission. [Effect-driven data redesign](../docs/DATA_EFFECTIVENESS_REDESIGN_2026-11-02.md).
 - [`kws_data_bulk_effect_boundary.py`](kws_data_bulk_effect_boundary.py) — Independent, non-admitting PCM readback of canonical `kws-data` bulk Qwen clone/ASR screens; no duplicate model execution. [Cross-repo runbook](../docs/KWS_DATA_BULK_EFFECT_BOUNDARY.md).
+- [`prioritize_kws_data_feedback.py`](prioritize_kws_data_feedback.py) — Turn genuine independent bulk-source screening gaps into ranked, non-authorizing development work; no TTS/ASR/training run. [Feedback runbook](../docs/KWS_DATA_FEEDBACK_PRIORITIES.md).
 - [`asr_native_contracts.py`](asr_native_contracts.py) — Validate frozen native-ASR configuration and capture metadata without running recognition.
 - [`asr_source_resolver.py`](asr_source_resolver.py) — Verify retained evidence against code-owned source roots; production train roots are currently empty.
 - [`attach_speech_like_labels.py`](attach_speech_like_labels.py)
