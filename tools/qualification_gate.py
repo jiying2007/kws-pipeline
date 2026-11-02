@@ -22,6 +22,7 @@ from qualification_metrics import (validate_event_metrics, validate_board, board
                                    require_board_raw_binding, EVENT_SCORING_CONTRACT,
                                    validate_evidence, validate_raw_evidence_manifest)
 from statistical_bounds import qualification_bounds
+from qualification_common import require_default_qualification_runtime
 
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
 SOURCE_SHA_RE = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64})")
@@ -166,6 +167,7 @@ def validate_manifest(manifest: dict, *, references: pathlib.Path | None = None,
         integer(runtime.get("frame_hop_samples"), "runtime.frame_hop_samples"),
     ) != (16000, 400, 320):
         raise ValueError("manifest runtime geometry is unsupported")
+    require_default_qualification_runtime(runtime)
 
     source_sha = manifest.get("source_sha")
     sku = manifest.get("sku")

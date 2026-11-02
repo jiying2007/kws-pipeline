@@ -34,6 +34,7 @@ from qualification_common import (
     sha256_file,
     sha256_value,
     validate_runtime_config,
+    require_default_qualification_runtime,
 )
 from qualification_metrics import (validate_board, validate_evidence, validate_eval,
                                    board_wav_stats, require_board_raw_binding)
@@ -254,6 +255,7 @@ def main() -> int:
     if training_vocabulary["size"] != vocabulary["size"] or training_vocabulary["fingerprint"] != vocabulary["fingerprint"]:
         raise ValueError("training token vocabulary mapping differs from release token vocabulary")
     runtime = validate_runtime_config(args.config, model)
+    require_default_qualification_runtime(runtime)
 
     paths = {
         "model": args.model,
