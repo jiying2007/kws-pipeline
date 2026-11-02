@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import authorized_voice_clone_batch as clone  # noqa: E402
 import voice_clone_effect_audit as effect  # noqa: E402
+import kws_data_bulk_effect_boundary as bulk_boundary  # noqa: E402
 
 
 def sha(path: Path) -> str:
@@ -353,6 +354,140 @@ class AuthorizedCloningTests(unittest.TestCase):
             "observations": [{"model_family": "same", "raw_text": row["text_requested"]}] * 3}) + "\n")
         with self.assertRaisesRegex(ValueError, "families must be named and distinct"):
             effect.audit(self.output, screen)
+
+
+    def make_bulk_data_fixture(self) -> tuple[dict, dict, Path]:
+        root = self.root / "bulk-generated"
+        root.mkdir(exist_ok=True)
+        ref = {"reference_id": "ref-one", "speaker_group_id": "speaker-one",
+               "source_family_id": "family-one", "role": "train-candidate"}
+        cells = []
+        phrases = (("bulk-a111", "你好小窝", "positive-intent", 1),
+                   ("bulk-b222", "你好小屋", "hard-negative-intent", None))
+        for cell_id, text, kind, keyword in phrases:
+            cells.append({"cell_id": cell_id, "reference_id": ref["reference_id"],
+                          "speaker_group_id": ref["speaker_group_id"],
+                          "source_family_id": ref["source_family_id"],
+                          "role": ref["role"], "prompt": text, "intended_kind": kind,
+                          "intended_keyword_id": keyword, "label_authority": "intended_only",
+                          "synthetic": True, "training_admitted": False,
+                          "qualification_allowed": False})
+        plan = {"schema": bulk_boundary.PLAN_SCHEMA, "model_id": bulk_boundary.MODEL,
+                "references": [ref], "cells": cells,
+                "budgets": {"max_total_calls": 2, "max_calls_per_invocation": 64,
+                            "max_retries": 0, "max_paid_usd": 0},
+                "source_rights_authenticated": False,
+                "actual_spoken_labels_verified": False, "training_admitted": False,
+                "qualification_allowed": False, "shipping_approved": False}
+        dump(root / "plan-lock.json", {"schema": "kws-bulk-clone-execution-lock-v1",
+            "plan_sha256": bulk_boundary.canonical_sha(plan),
+            "model_id": bulk_boundary.MODEL, "training_admitted": False})
+        statuses = ("MACHINE_POSITIVE_CANDIDATE", "NEGATIVE_SPOKE_WAKE_OR_ASR_CONFLICT")
+        rows = []
+        for idx, (cell, status) in enumerate(zip(cells, statuses)):
+            folder = root / "cells" / cell["cell_id"]
+            folder.mkdir(parents=True, exist_ok=True)
+            wav = folder / "audio-16k.wav"
+            with wave.open(str(wav), "wb") as stream:
+                stream.setnchannels(1)
+                stream.setsampwidth(2)
+                stream.setframerate(16000)
+                stream.writeframes(bytes((idx+1, 24)) * 16000)
+            from corpus_identity import inspect_pcm16_wav
+            meta = inspect_pcm16_wav(wav)
+            dump(folder / "completed.json", {
+                "schema": bulk_boundary.TTS_RECEIPT, "cell_id": cell["cell_id"],
+                "status": "GENERATED_PENDING_ASR",
+                "source_family_id": cell["source_family_id"],
+                "intended_kind": cell["intended_kind"],
+                "audio": {"wav_sha256": meta["file_sha256"],
+                          "pcm_sha256": meta["pcm_sha256"], "audio_frames": meta["frames"],
+                          "wav_bytes": wav.stat().st_size},
+                "training_admitted": False, "qualification_allowed": False,
+                "shipping_approved": False})
+            rows.append({"cell_id": cell["cell_id"],
+                         "reference_id": cell["reference_id"],
+                         "source_family_id": cell["source_family_id"],
+                         "role": cell["role"],
+                         "intended_kind": cell["intended_kind"],
+                         "asr_completed": 3, "status": status,
+                         "training_admitted": False})
+        screen = {"schema": bulk_boundary.SCREEN_SCHEMA,
+                  "plan_sha256": bulk_boundary.canonical_sha(plan),
+                  "adapter_lock_sha256": "a" * 64, "rows": rows,
+                  "counts": {status: 1 for status in statuses},
+                  "human_gold": False, "rights_authenticated": False,
+                  "training_admitted": False, "qualification_allowed": False,
+                  "shipping_approved": False}
+        return plan, screen, root
+
+    def test_bulk_effect_bridge_measures_real_pcm_and_actual_data_gaps(self) -> None:
+        plan, screen, root = self.make_bulk_data_fixture()
+        report = bulk_boundary.measure(plan, screen, root)
+        self.assertEqual(report["total_planned"], 2)
+        self.assertEqual(report["total_generated_audio_verified"], 2)
+        self.assertEqual(report["unique_pcm_verified"], 2)
+        self.assertEqual(report["screen_by_keyword"]["1"]["MACHINE_POSITIVE_CANDIDATE"], 1)
+        self.assertEqual(report["screen_by_challenge"][
+            "near_miss:homophone_wu_requested"]["NEGATIVE_SPOKE_WAKE_OR_ASR_CONFLICT"], 1)
+        self.assertIn("HARD_NEGATIVE_WAKE_CONFUSION_NEEDS_DEVELOPMENT_REVIEW", report["gaps"])
+        self.assertFalse(report["training_admitted"])
+        self.assertFalse(report["asr_source_authenticated"])
+        self.assertFalse(report["shipping_approved"])
+        self.assertTrue(all(row["generated_audio"]["pcm_sha256"] for row in report["rows"]))
+        plan_path, screen_path = self.root / "bulk-plan.json", self.root / "bulk-screen.json"
+        dump(plan_path, plan)
+        dump(screen_path, screen)
+        output = self.root / "bulk-report-private.json"
+        self.assertEqual(bulk_boundary.main(["--plan", str(plan_path),
+            "--screen", str(screen_path), "--generated-root", str(root),
+            "--output", str(output)]), 0)
+        self.assertEqual(output.stat().st_mode & 0o777, 0o600)
+        with self.assertRaises(FileExistsError):
+            bulk_boundary.main(["--plan", str(plan_path), "--screen", str(screen_path),
+                "--generated-root", str(root), "--output", str(output)])
+
+    def test_bulk_effect_bridge_rejects_forged_machine_positive_and_counts(self) -> None:
+        plan, screen, root = self.make_bulk_data_fixture()
+        screen["rows"][0]["status"] = "MACHINE_NEGATIVE_CANDIDATE"
+        screen["counts"] = {"MACHINE_NEGATIVE_CANDIDATE": 1,
+                            "NEGATIVE_SPOKE_WAKE_OR_ASR_CONFLICT": 1}
+        with self.assertRaisesRegex(ValueError, "MACHINE_NEGATIVE_KIND"):
+            bulk_boundary.measure(plan, screen, root)
+        screen["rows"][0]["status"] = "MACHINE_POSITIVE_CANDIDATE"
+        with self.assertRaisesRegex(ValueError, "SCREEN_COUNTS_OR_MEMBERSHIP_DRIFT"):
+            bulk_boundary.measure(plan, screen, root)
+
+    def test_bulk_effect_bridge_rejects_changed_source_wav_and_plan_drift(self) -> None:
+        plan, screen, root = self.make_bulk_data_fixture()
+        wav = root / "cells" / "bulk-a111" / "audio-16k.wav"
+        wav.write_bytes(wav.read_bytes() + b"drift")
+        with self.assertRaisesRegex(ValueError, "GENERATION_WAV_OR_PCM_CHANGED"):
+            bulk_boundary.measure(plan, screen, root)
+        plan, screen, root = self.make_bulk_data_fixture()
+        plan["cells"][0]["prompt"] = "你好小屋"
+        with self.assertRaisesRegex(ValueError, "BULK_CELL_INTENT_OR_LINEAGE"):
+            bulk_boundary.measure(plan, screen, root)
+
+    def test_bulk_effect_bridge_preserves_source_family_split(self) -> None:
+        plan, screen, root = self.make_bulk_data_fixture()
+        ref = dict(plan["references"][0], reference_id="ref-other",
+                   role="development-only")
+        plan["references"].append(ref)
+        with self.assertRaisesRegex(ValueError, "SPEAKER_FAMILY_ROLE_LEAKAGE"):
+            bulk_boundary.measure(plan, screen, root)
+
+    def test_bulk_effect_bridge_rejects_hidden_generation_and_false_authority(self) -> None:
+        plan, screen, root = self.make_bulk_data_fixture()
+        screen["rows"][1] = {"cell_id": "bulk-b222", "status": "NO_GENERATION",
+                             "training_admitted": False}
+        screen["counts"] = {"MACHINE_POSITIVE_CANDIDATE": 1, "NO_GENERATION": 1}
+        with self.assertRaisesRegex(ValueError, "UNREPORTED_GENERATED_WAV"):
+            bulk_boundary.measure(plan, screen, root)
+        plan, screen, root = self.make_bulk_data_fixture()
+        screen["training_admitted"] = True
+        with self.assertRaisesRegex(ValueError, "UNTRUSTED_BULK_SCREEN"):
+            bulk_boundary.measure(plan, screen, root)
 
 
 if __name__ == "__main__":
