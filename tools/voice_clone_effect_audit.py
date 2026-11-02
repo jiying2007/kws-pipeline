@@ -18,7 +18,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from authorized_voice_clone_batch import KINDS, POLICY, WAKE_TEXTS  # noqa: E402
+from authorized_voice_clone_batch import CHALLENGE_FAMILIES, KINDS, POLICY, WAKE_TEXTS  # noqa: E402
 from corpus_identity import inspect_pcm16_wav, sha256_file  # noqa: E402
 from speech_asr_consensus import normalized_transcript  # noqa: E402
 
@@ -135,7 +135,8 @@ def audit(campaign_root: Path, screen_path: Path | None = None) -> dict:
     screens = load_screen(screen_path)
     ids, paths, reference_owner, speaker_family, source_groups = set(), set(), {}, {}, defaultdict(set)
     pcm_owner, all_counts, per_intent = {}, Counter(), defaultdict(Counter)
-    per_family, per_text = defaultdict(Counter), defaultdict(Counter)
+    per_family, per_text, per_challenge = (defaultdict(Counter), defaultdict(Counter),
+                                           defaultdict(Counter))
     gaps = []
     for row in rows:
         require(row.get("schema_version") == 1 and
@@ -154,6 +155,13 @@ def audit(campaign_root: Path, screen_path: Path | None = None) -> dict:
                 "invalid/duplicate source and speaker identities")
         ids.add(item)
         require(row.get("requested_intent") in KINDS, "unknown requested intent")
+        challenge = row.get("challenge_family", "unclassified_legacy")
+        if challenge != "unclassified_legacy":
+            require(isinstance(challenge, str) and challenge in CHALLENGE_FAMILIES[row["requested_intent"]],
+                    "challenge family conflicts with declared intent")
+        require("challenge_family" not in row or challenge != "unclassified_legacy",
+                "reserved legacy challenge family cannot be supplied as provenance")
+        challenge_key = row["requested_intent"] + ":" + challenge
         requested = clean_text(row.get("text_requested"))
         if row["requested_intent"] == "wake":
             require(requested in WAKE_TEXTS, "wake text does not match either product keyword")
@@ -198,6 +206,7 @@ def audit(campaign_root: Path, screen_path: Path | None = None) -> dict:
         per_intent[row["requested_intent"]][state] += 1
         per_family[family][state] += 1
         per_text[requested][state] += 1
+        per_challenge[challenge_key][state] += 1
     require(set(screens) <= ids, "ASR screen contains non-campaign item")
     wake_coverage = {wake: sum(1 for row in rows if row["requested_intent"] == "wake"
                               and clean_text(row["text_requested"]) == wake)
@@ -230,6 +239,8 @@ def audit(campaign_root: Path, screen_path: Path | None = None) -> dict:
                                     for key, value in sorted(per_family.items())},
         "screen_by_requested_text": {key: dict(sorted(value.items()))
                                      for key, value in sorted(per_text.items())},
+        "screen_by_challenge_family": {key: dict(sorted(value.items()))
+                                       for key, value in sorted(per_challenge.items())},
         "gaps": sorted(set(gaps)),
         "label_authentication_verified": False,
         "training_admitted": False, "independent_real_speakers_verified": False,
