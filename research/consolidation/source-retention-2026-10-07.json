@@ -43471,6 +43471,51 @@
           }
         }
       ]
+    },
+    {
+      "id": "keyword-header-display-comment-20261101",
+      "date": "2026-11-01",
+      "base_commit": "b12f3b7e30c4000c06eb0852f016a3f8c2c5a40d",
+      "base_tree": "3d14e802c310594bb97d9ff99b0c2a9830349c4f",
+      "workflow_source_changed": false,
+      "scope": "Keep display-only keyword labels inside generated C comments; preserve binary pack and JSON label semantics.",
+      "rationale": "Defensive display punctuation and line-break regression checks use C syntax-only compilation. Existing keyword compiler test entry gains 8 CLI and 3 direct cases; no runtime model or production defaults change.",
+      "files": [
+        {
+          "path": "tools/compile_keywords.py",
+          "before": {
+            "path": "tools/compile_keywords.py",
+            "mode": "100644",
+            "bytes": 14800,
+            "sha256": "633228ebacddeccd7cf6654d59a2d7728c820273bb7afd3cbaa277e05487b212",
+            "git_blob_sha1": "d9d59d81439d0f6315a42019f86a991933c53956"
+          },
+          "after": {
+            "path": "tools/compile_keywords.py",
+            "mode": "100644",
+            "bytes": 15050,
+            "sha256": "7e8c434ae174d08ea2549cfdbd75d9500f5be784bc1b266ae38a4d629526622d",
+            "git_blob_sha1": "3ca5d29363fa4af8fb86b2b5652762aa483d5073"
+          }
+        },
+        {
+          "path": "tests/test_keyword_compile.py",
+          "before": {
+            "path": "tests/test_keyword_compile.py",
+            "mode": "100644",
+            "bytes": 19346,
+            "sha256": "2ac30dba7438846a1f9ca354c88ea4c09a676756b038e8e1145a1a355f0981a9",
+            "git_blob_sha1": "b6351840a26d31e51d069a7ccf7e5b899682054a"
+          },
+          "after": {
+            "path": "tests/test_keyword_compile.py",
+            "mode": "100644",
+            "bytes": 21655,
+            "sha256": "027ff78adb2b65231d2acb7715f1573775802fdb580fb376e4d237a9df26f4c0",
+            "git_blob_sha1": "a20140d7610f10511f8b4f7cada88e8a1389e91d"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
