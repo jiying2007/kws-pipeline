@@ -148,6 +148,7 @@ def test_phase_a_field_plan_preflight() -> None:
     assert joint["source_shard_plan_sha256s"] == hashes
     assert joint["declared_sealed_speakers"] == 40
     assert joint["declared_sealed_sessions"] == 80
+    assert joint["declared_sealed_source_family_groups"] == 40
     assert joint["sealed_requested_wakes_by_keyword"] == {"1": 960, "2": 960}
     assert not joint["aggregate_source_identity_authenticated"]
     assert joint["verified_negative_audio_hours"] == 0
@@ -166,6 +167,31 @@ def test_phase_a_field_plan_preflight() -> None:
         assert "FIELD_SPEAKER_OR_FAMILY_CROSSES_SPLITS" in str(exc)
     else:
         raise AssertionError("cross-shard source split leakage accepted")
+    # A pseudonymous speaker cannot silently switch source family between
+    # sessions, and sharing one family across different "speakers" must not
+    # inflate independent planned source-family breadth.
+    drift = json.loads(json.dumps(shard_two))
+    for row in drift["slots"]:
+        if row["speaker_id"] == "speaker-000":
+            row["source_family_id"] = "family-renamed"
+    try:
+        preflight.assess_many(
+            [shard_one, drift], policy,
+            [hashes[0], preflight.canonical_sha(drift)])
+    except ValueError as exc:
+        assert "SPEAKER_SOURCE_FAMILY_DRIFT_BETWEEN_SESSIONS" in str(exc)
+    else:
+        raise AssertionError("same speaker's family changed between sessions")
+    shared = json.loads(json.dumps(full))
+    for row in shared["slots"]:
+        if row["speaker_id"] == "speaker-001":
+            row["source_family_id"] = "family-000"
+    shared_report = preflight.assess(shared, policy, preflight.canonical_sha(shared))
+    assert shared_report["declared_sealed_speakers"] == 40
+    assert shared_report["declared_sealed_source_family_groups"] == 39
+    assert shared_report["planned_quota_gaps"]["declared_source_family_groups_missing"] == 1
+    assert shared_report["verified_real_speakers"] == 0
+
     try:
         preflight.assess_many([shard_one, shard_one], policy, [hashes[0], hashes[0]])
     except ValueError as exc:
