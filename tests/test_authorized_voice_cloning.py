@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import authorized_voice_clone_batch as clone  # noqa: E402
 import voice_clone_effect_audit as effect  # noqa: E402
+import voice_clone_three_asr_batch as batch_asr  # noqa: E402
 
 
 def sha(path: Path) -> str:
@@ -419,6 +420,115 @@ class AuthorizedCloningTests(unittest.TestCase):
         self.assertFalse(report["label_authentication_verified"])
         self.assertFalse(report["training_admitted"])
         self.assertFalse(report["qualification_allowed"])
+
+
+    def make_offline_asr_plan(self, *, drop_second: bool = False) -> Path:
+        stub = self.root / "batch-asr-stub.py"
+        stub.write_text(
+            "import json, pathlib, sys\n"
+            "source, target, model = map(pathlib.Path, sys.argv[1:4])\n"
+            "rows = [json.loads(x) for x in source.read_text().splitlines()]\n"
+            "assert rows and all(set(x) == {'item_id','file_sha256','pcm_sha256','audio'} for x in rows)\n"
+            "if model.read_text().strip() == 'drop-last': rows = rows[:-1]\n"
+            "target.write_text(''.join(json.dumps({'item_id': x['item_id'],\n"
+            "  'file_sha256': x['file_sha256'], 'raw_text': '你好小窝',\n"
+            "  'status': 'complete'}, ensure_ascii=False) + '\\n' for x in rows))\n",
+            encoding="utf-8")
+        providers = []
+        for i in range(3):
+            model = self.root / f"asr-model-{i}.bin"
+            model.write_text("drop-last" if i == 1 and drop_second else f"model-{i}")
+            providers.append({
+                "model_family": f"independent-{i}", "model_id": f"model-{i}",
+                "model_revision": "v1",
+                "decode_config": dict(batch_asr.DEFAULT_CONFIG),
+                "executable": {"path": sys.executable, "sha256": sha(Path(sys.executable))},
+                "assets": [{"role": "model", "path": model.name, "sha256": sha(model)},
+                           {"role": "adapter", "path": stub.name, "sha256": sha(stub)}],
+                "argv_template": ["{executable}", "{asset:adapter}",
+                                  "{input}", "{output}", "{asset:model}"],
+                "timeout_seconds": 30,
+            })
+        plan = self.root / "three-asr-plan.json"
+        dump(plan, {"schema_version": 1, "policy": batch_asr.POLICY,
+                    "max_recordings": 6, "recognizers": providers})
+        return plan
+
+    def test_batch_asr_requires_opt_in_and_omits_requested_text_from_input(self) -> None:
+        clone.execute(self.loaded(), self.output, workers=1)
+        asr_plan = self.make_offline_asr_plan()
+        destination = self.root / "private-asr-output"
+        batch_asr.main(["--plan", str(asr_plan), "--campaign-root", str(self.output),
+                        "--output-root", str(destination)])
+        self.assertFalse(destination.exists())
+        report = batch_asr.execute(batch_asr.parse_plan(asr_plan), self.output, destination)
+        self.assertEqual(report["screened_recordings"], 6)
+        self.assertEqual(len(report["recognizers"]), 3)
+        self.assertFalse(report["asr_source_authenticated"])
+        self.assertFalse(report["training_admitted"])
+        self.assertFalse(report["qualification_allowed"])
+        self.assertFalse(report["shipping_approved"])
+        inputs = [json.loads(row) for row in
+                  (destination / "audio-only-batch.jsonl").read_text().splitlines()]
+        self.assertTrue(all(set(row) == {"item_id", "audio", "file_sha256", "pcm_sha256"}
+                            for row in inputs))
+        self.assertNotIn("你好小窝", (destination / "audio-only-batch.jsonl").read_text())
+        self.assertNotIn("text_requested", (destination / "audio-only-batch.jsonl").read_text())
+        self.assertEqual(len((destination / "screen.jsonl").read_text().splitlines()), 6)
+        self.assertEqual(report, batch_asr.execute(batch_asr.parse_plan(asr_plan),
+                                                   self.output, destination))
+
+    def test_batch_asr_fails_closed_on_duplicate_models_prompt_and_unbounded_run(self) -> None:
+        self.make_offline_asr_plan()
+        plan_file = self.root / "three-asr-plan.json"
+        original = json.loads(plan_file.read_text(encoding="utf-8"))
+        def bad(patch, pattern):
+            plan = json.loads(json.dumps(original))
+            patch(plan)
+            dump(plan_file, plan)
+            with self.assertRaisesRegex(ValueError, pattern):
+                batch_asr.parse_plan(plan_file)
+        bad(lambda plan: plan["recognizers"][1].update(model_family="independent-0"),
+            "repeated ASR family")
+        bad(lambda plan: plan["recognizers"][1]["assets"].__setitem__(
+            0, plan["recognizers"][0]["assets"][0]), "distinct pinned model")
+        bad(lambda plan: plan["recognizers"][0]["decode_config"].update(prompt="你好小窝"),
+            "without prompt/hotwords")
+        bad(lambda plan: plan.update(max_recordings=100000), "explicit bound")
+        dump(plan_file, original)
+
+    def test_batch_asr_missing_output_consumes_attempt_without_replay(self) -> None:
+        clone.execute(self.loaded(), self.output, workers=1)
+        plan = self.make_offline_asr_plan(drop_second=True)
+        destination = self.root / "incomplete-asr-output"
+        with self.assertRaisesRegex(ValueError, "does not cover every WAV"):
+            batch_asr.execute(batch_asr.parse_plan(plan), self.output, destination)
+        with self.assertRaisesRegex(ValueError, "unknown and consumed"):
+            batch_asr.execute(batch_asr.parse_plan(plan), self.output, destination)
+        self.assertFalse((destination / "screen.jsonl").exists())
+        self.assertFalse((destination / "summary.json").exists())
+
+    def test_batch_asr_readback_detects_tamper_and_forged_authority(self) -> None:
+        clone.execute(self.loaded(), self.output, workers=1)
+        plan = self.make_offline_asr_plan()
+        dest = self.root / "screen-results"
+        batch_asr.execute(batch_asr.parse_plan(plan), self.output, dest)
+        receipt = dest / "attempts" / "independent-0.receipt.json"
+        item = json.loads(receipt.read_text())
+        item["training_admitted"] = True
+        dump(receipt, item)
+        with self.assertRaisesRegex(ValueError, "readback receipt mismatch"):
+            batch_asr.execute(batch_asr.parse_plan(plan), self.output, dest)
+
+    def test_batch_asr_frozen_sources_cannot_change_after_screen(self) -> None:
+        clone.execute(self.loaded(), self.output, workers=1)
+        plan = self.make_offline_asr_plan()
+        destination = self.root / "asr-drift-results"
+        batch_asr.execute(batch_asr.parse_plan(plan), self.output, destination)
+        wav = sorted((self.output / "audio").rglob("*.wav"))[0]
+        wav.write_bytes(wav.read_bytes() + b"changed")
+        with self.assertRaisesRegex(ValueError, "generated PCM/file identity mismatch"):
+            batch_asr.execute(batch_asr.parse_plan(plan), self.output, destination)
 
 
 if __name__ == "__main__":
