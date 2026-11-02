@@ -128,6 +128,7 @@ def assess(plan: dict, policy: dict, expected_plan_sha256: str) -> dict:
     expected = expected_tasks()
     session_tasks: dict[tuple[str, str], set] = defaultdict(set)
     session_details, family_role, speaker_role, session_owner = {}, {}, {}, {}
+    speaker_family = {}
     ids = set()
     counts = {role: Counter() for role in ROLES}
     planned_kw = Counter()
@@ -175,6 +176,9 @@ def assess(plan: dict, policy: dict, expected_plan_sha256: str) -> dict:
         need(session not in session_owner or session_owner[session] == speaker,
              "SESSION_SHARED_BY_DIFFERENT_SPEAKERS")
         session_owner[session] = speaker
+        need(speaker not in speaker_family or speaker_family[speaker] == family,
+             "SPEAKER_SOURCE_FAMILY_DRIFT_BETWEEN_SESSIONS")
+        speaker_family[speaker] = family
         for index, value, owners in (("source", family, family_role),
                                      ("speaker", speaker, speaker_role)):
             need(value not in owners or owners[value] == role,
@@ -194,12 +198,14 @@ def assess(plan: dict, policy: dict, expected_plan_sha256: str) -> dict:
          "FIELD_SESSION_TASK_MATRIX_DRIFT")
     # "Sealed" is a plan role, not proof of a fresh independent sealed corpus.
     eligible = len(sealed_sessions)
+    sealed_group_count = len({speaker_family[speaker] for speaker in sealed_sessions})
     missing_second_sessions = sum(len(session_ids) < minimums["sessions_per_speaker"]
                                   for session_ids in sealed_sessions.values())
     min_kw = minimums["expected_wakes_per_keyword"]
     total_wakes = sum(planned_kw.values())
     planned_gaps = {
         "declared_sealed_speakers_missing": max(0, minimums["speakers"] - eligible),
+        "declared_source_family_groups_missing": max(0, minimums["speakers"] - sealed_group_count),
         "declared_sealed_speakers_short_of_session_min": missing_second_sessions,
         "planned_wakes_total_missing": max(0, minimums["expected_wakes_total"] - total_wakes),
         "planned_wakes_per_keyword_missing": {
@@ -243,6 +249,7 @@ def assess(plan: dict, policy: dict, expected_plan_sha256: str) -> dict:
         "declared_session_participants": plan["participants"],
         "declared_role_slot_counts": {k: dict(v) for k, v in sorted(counts.items())},
         "declared_sealed_speakers": eligible,
+        "declared_sealed_source_family_groups": sealed_group_count,
         "declared_sealed_sessions": sum(len(x) for x in sealed_sessions.values()),
         "sealed_requested_wakes_by_keyword": {
             str(k): planned_kw[k] for k in (1, 2)},
