@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import authorized_voice_clone_batch as clone  # noqa: E402
 import voice_clone_effect_audit as effect  # noqa: E402
 import kws_data_bulk_effect_boundary as bulk_boundary  # noqa: E402
+import prioritize_kws_data_feedback as feedback  # noqa: E402
 
 
 def sha(path: Path) -> str:
@@ -528,6 +529,63 @@ class AuthorizedCloningTests(unittest.TestCase):
         start.unlink()
         with self.assertRaises((FileNotFoundError, ValueError)):
             bulk_boundary.measure(plan, screen, root)
+
+
+    def test_data_feedback_targets_actual_negative_confusion_and_missing_kw2(self) -> None:
+        plan, screen, root = self.make_bulk_data_fixture()
+        report = bulk_boundary.measure(plan, screen, root)
+        result = feedback.derive(report)
+        codes = [item["code"] for item in result["ranked_actions"]]
+        self.assertIn("QUARANTINE_POSSIBLE_WAKE_IN_NEGATIVE", codes)
+        self.assertIn("NO_MACHINE_SCREENED_KEYWORD_POSITIVE", codes)
+        self.assertIn("VERIFY_POSITIVE_SOURCE_LABELS", codes)
+        self.assertIn("EXTERNAL_PRODUCT_DATA_AND_AUTHORITY_MISSING", codes)
+        self.assertEqual(result["source_families_declared"], 1)
+        self.assertFalse(result["next_campaign_authorized"])
+        self.assertFalse(result["training_admitted"])
+        self.assertTrue(all(x["new_model_or_generator_calls_authorized"] == 0
+                            for x in result["ranked_actions"]))
+
+    def test_data_feedback_rejects_forged_counts_authorities_and_pcm(self) -> None:
+        plan, screen, root = self.make_bulk_data_fixture()
+        report = bulk_boundary.measure(plan, screen, root)
+        for field, bad, error in (
+            ("training_admitted", True, "UNEXPECTED_EFFECT_AUTHORITY"),
+            ("screen_counts", {"MACHINE_POSITIVE_CANDIDATE": 2}, "EFFECT_COUNTS_DRIFT"),
+            ("unique_pcm_verified", 1, "EFFECT_DUPLICATE_OR_AUDIO_COUNT_DRIFT")):
+            mutated = json.loads(json.dumps(report))
+            mutated[field] = bad
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, error):
+                feedback.derive(mutated)
+        modified = json.loads(json.dumps(report))
+        modified["screen_by_challenge"]["near_miss:homophone_wu_requested"] = {}
+        with self.assertRaisesRegex(ValueError, "EFFECT_STRATUM_COUNTS_DRIFT"):
+            feedback.derive(modified)
+        # K2 may legitimately be unsampled, but its explicit empty bucket is
+        # part of the upstream report contract and must not be omitted/forged.
+        modified = json.loads(json.dumps(report))
+        self.assertEqual(modified["screen_by_keyword"]["2"], {})
+        modified["screen_by_keyword"].pop("2")
+        with self.assertRaisesRegex(ValueError, "EFFECT_STRATUM_COUNTS_DRIFT"):
+            feedback.derive(modified)
+
+    def test_data_feedback_does_not_create_campaign_or_overwrite_report(self) -> None:
+        plan, screen, root = self.make_bulk_data_fixture()
+        report = bulk_boundary.measure(plan, screen, root)
+        source = self.root / "private-effect.json"
+        output = self.root / "private-priority.json"
+        dump(source, report)
+        self.assertEqual(feedback.main(["--effect", str(source), "--output", str(output)]), 0)
+        self.assertTrue(output.is_file())
+        self.assertEqual(output.stat().st_mode & 0o777, 0o600)
+        rows = json.loads(output.read_text(encoding="utf-8"))
+        self.assertEqual(rows["input_effect_sha256"], feedback.canonical_sha(report))
+        self.assertFalse(rows["shipping_approved"])
+        with self.assertRaises(FileExistsError):
+            feedback.main(["--effect", str(source), "--output", str(output)])
+        with self.assertRaisesRegex(ValueError, "PRIVATE_OUTPUT_ONLY"):
+            feedback.main(["--effect", str(source), "--output",
+                           str(ROOT / "do-not-write-this-priority.json")])
 
 
 if __name__ == "__main__":

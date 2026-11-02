@@ -17,6 +17,8 @@ against actual 16-kHz PCM16 WAV file bytes plus generation receipts, then
 aggregates counts by both wake words, exact fixed requested negative text
 classes, and source family.
 
+Follow the independent [bounded feedback priority plan](KWS_DATA_FEEDBACK_PRIORITIES.md) after producing the private effect inventory; it never authorizes another model call or training row.
+
 The output is a **development-only** effect inventory. It cannot re-run native
 ASR, authenticate external source rights, prove a synthetic utterance was
 spoken exactly, infer true FAR/FRR, or substitute for real-human qualification.
