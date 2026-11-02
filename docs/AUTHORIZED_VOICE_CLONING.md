@@ -182,3 +182,8 @@ text to normalize to one complete product keyword and will not silently
 treat partial keyword phrases as positive. Contextual positives, acoustic
 pause assertions and actual error labels need their own reviewed source
 contracts before extending this taxonomy.
+
+Empty ASR transcripts are allowed as *screen observations* and produce
+`ASR_ALL_EMPTY_UNVERIFIED` or `ASR_PARTIAL_EMPTY_OR_DISAGREEMENT` diagnostic
+outcomes; three empty transcripts cannot prove that a WAV is truly silent.
+They never authenticate labels or qualify a negative source for training.
