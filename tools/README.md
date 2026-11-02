@@ -50,6 +50,7 @@ make collected measurements auditable and do not substitute for those measuremen
 
 - [`authorized_voice_clone_batch.py`](authorized_voice_clone_batch.py) — Offline, rights-scoped bounded multi-speaker cloning intents; no automatic training or qualification. [Private-generation guide](../docs/AUTHORIZED_VOICE_CLONING.md).
 - [`voice_clone_effect_audit.py`](voice_clone_effect_audit.py) — Verify actual private clone WAV/PCM and source-family yield; optional 3-ASR *screen* is never a training or shipping admission. [Effect-driven data redesign](../docs/DATA_EFFECTIVENESS_REDESIGN_2026-11-02.md).
+- [`voice_clone_three_asr_batch.py`](voice_clone_three_asr_batch.py) — Bounded, explicitly opted-in three-model offline batch screen on *actual* clone WAVs; never authenticated training labels. [Private ASR runbook](../docs/VOICE_CLONE_THREE_ASR_SCREEN.md).
 - [`asr_native_contracts.py`](asr_native_contracts.py) — Validate frozen native-ASR configuration and capture metadata without running recognition.
 - [`asr_source_resolver.py`](asr_source_resolver.py) — Verify retained evidence against code-owned source roots; production train roots are currently empty.
 - [`attach_speech_like_labels.py`](attach_speech_like_labels.py)
