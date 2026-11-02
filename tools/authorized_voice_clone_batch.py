@@ -24,6 +24,16 @@ SHA = re.compile(r"[0-9a-f]{64}\Z")
 IDENT = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}\Z")
 PLACEHOLDER = re.compile(r"\{([^{}]+)\}")
 KINDS = ("wake", "near_miss", "ordinary_negative")
+# User-declared generation challenges, not verified acoustic or training labels.
+CHALLENGE_FAMILIES = {
+    "wake": frozenset(("exact_requested",)),
+    "near_miss": frozenset(("homophone_requested", "partial_prefix_requested",
+                            "partial_suffix_requested", "cross_sentence_requested",
+                            "reordered_requested", "other_near_miss_requested")),
+    "ordinary_negative": frozenset(("ordinary_conversation_requested",
+                                     "media_script_requested", "other_nonwake_requested")),
+}
+
 WAKE_TEXTS = {"你好小窝", "小窝小窝"}
 MAX_SPEAKERS = 512
 MAX_RECORDINGS = 32768
@@ -113,9 +123,13 @@ def load_campaign(plan_path: Path) -> dict:
         phrase_id = identifier(row.get("id"), f"phrases[{i}].id")
         text = row.get("text")
         kind = row.get("intent")
+        family = row.get("challenge_family")
         need(isinstance(text, str) and bool(text.strip()) and len(text) <= 120,
              f"phrases[{i}].text: invalid text")
         need(kind in KINDS, f"phrases[{i}].intent: invalid kind")
+        if family is not None:
+            need(isinstance(family, str) and family in CHALLENGE_FAMILIES[kind],
+                 f"phrases[{i}].challenge_family: not allowed for intent")
         normalized = re.sub(r"[\W_]+", "", text, flags=re.UNICODE)
         need(phrase_id not in seen_phrase_ids and normalized not in seen_text, "phrases: duplicate id/text")
         if kind == "wake":
@@ -126,7 +140,10 @@ def load_campaign(plan_path: Path) -> dict:
         seen_phrase_ids.add(phrase_id)
         seen_text.add(normalized)
         kinds.add(kind)
-        parsed_phrases.append({"id": phrase_id, "text": text.strip(), "intent": kind})
+        phrase = {"id": phrase_id, "text": text.strip(), "intent": kind}
+        if family is not None:
+            phrase["challenge_family"] = family
+        parsed_phrases.append(phrase)
     need(kinds == set(KINDS), "phrases: require wake, near_miss and ordinary_negative")
     seeds = raw.get("seeds")
     need(isinstance(seeds, list) and 1 <= len(seeds) <= 8 and
@@ -248,6 +265,8 @@ def run_speaker(campaign: dict, speaker: dict, output_root: Path) -> list[dict]:
     records = []
     for phrase in campaign["phrases"]:
         for seed in campaign["seeds"]:
+            challenge_fields = ({"challenge_family": phrase["challenge_family"]}
+                                if "challenge_family" in phrase else {})
             item_id = f"{ident}-{phrase['id']}-s{seed}"
             audio = output_root / "audio" / ident / (item_id + ".wav")
             marker = output_root / "attempts" / ident / (item_id + ".intent.json")
@@ -255,7 +274,8 @@ def run_speaker(campaign: dict, speaker: dict, output_root: Path) -> list[dict]:
             intent = {"schema_version": 1, "campaign_sha256": campaign["sha256"],
                       "item_id": item_id, "reference_audio_sha256": speaker["reference_sha256"],
                       "rights_evidence_sha256": speaker["rights_sha256"],
-                      "requested_intent": phrase["intent"], "seed": seed}
+                      "requested_intent": phrase["intent"], "seed": seed,
+                      **challenge_fields}
             intent_text = json.dumps(intent, ensure_ascii=False, sort_keys=True) + "\n"
             if marker.exists():
                 need(marker.read_text(encoding="utf-8") == intent_text, "attempt marker identity mismatch")
@@ -272,6 +292,7 @@ def run_speaker(campaign: dict, speaker: dict, output_root: Path) -> list[dict]:
                     "provider_identity_sha256": canonical_hash(provider["identity"]),
                     "source_id": item_id, "text_requested": phrase["text"],
                     "requested_intent": phrase["intent"], "seed": seed,
+                    **challenge_fields,
                     "synthetic": True, "training_admitted": False,
                     "qualification_allowed": False,
                 }
@@ -305,6 +326,7 @@ def run_speaker(campaign: dict, speaker: dict, output_root: Path) -> list[dict]:
                        "provider_identity_sha256": canonical_hash(provider["identity"]),
                        "source_id": item_id, "text_requested": phrase["text"],
                        "requested_intent": phrase["intent"], "seed": seed,
+                       **challenge_fields,
                        "file_sha256": checked["file_sha256"],
                        "pcm_sha256": checked["pcm_sha256"], "frames": checked["frames"],
                        "duration_s": checked["duration_s"], "synthetic": True,
