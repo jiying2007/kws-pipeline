@@ -40,10 +40,10 @@ def need(ok: bool, label: str) -> None:
         raise ValueError(label)
 
 
-def source_json(path: Path) -> dict:
+def source_json(path: Path, *, max_bytes: int = 8 * 1024 * 1024) -> dict:
     need(not path.is_symlink() and path.is_file() and
          stat.S_ISREG(path.stat().st_mode) and path.stat().st_nlink == 1 and
-         0 < path.stat().st_size <= 8 * 1024 * 1024,
+         0 < path.stat().st_size <= max_bytes,
          "INPUT_NOT_BOUNDED_REGULAR_FILE")
     def pairs(items):
         result = {}
@@ -264,17 +264,46 @@ def assess(plan: dict, policy: dict, expected_plan_sha256: str) -> dict:
     }
 
 
+
+def assess_many(plans: list[dict], policy: dict, expected_hashes: list[str]) -> dict:
+    """Audit independently frozen pilot shards, then recompute global coverage.
+
+    One large full Phase-A plan can exceed the producer's 1-MiB JSON reader.
+    Two smaller shards sharing a *sealed* speaker across different sessions
+    must be evaluated as ONE group for leakage/session quotas. Never count
+    a speaker twice, or each shard as an independent qualification run.
+    """
+    need(type(plans) is list and type(expected_hashes) is list and
+         1 <= len(plans) <= 8 and len(plans) == len(expected_hashes),
+         "FIELD_SHARD_PLAN_AND_HASH_COUNT")
+    for plan, expected in zip(plans, expected_hashes):
+        assess(plan, policy, expected)  # original exact source plan, no trust upgrades
+    combined = dict(plans[0])
+    combined["participants"] = sum(plan["participants"] for plan in plans)
+    combined["slots"] = [row for plan in plans for row in plan["slots"]]
+    result = assess(combined, policy, canonical_sha(combined))
+    # All source references are the separately frozen source hashes. The
+    # aggregate digest is a derived comparison key, never source attestation.
+    result["source_shard_count"] = len(plans)
+    result["source_shard_plan_sha256s"] = list(expected_hashes)
+    result["aggregate_source_identity_authenticated"] = False
+    return result
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--field-plan", type=Path, required=True)
+    p.add_argument("--field-plan", type=Path, action="append", required=True)
     p.add_argument("--phase-a-policy", type=Path, required=True)
-    p.add_argument("--expected-plan-sha256", required=True)
+    p.add_argument("--expected-plan-sha256", action="append", required=True)
     p.add_argument("--output", type=Path, required=True)
     args = p.parse_args(argv)
-    result = assess(source_json(args.field_plan), source_json(args.phase_a_policy),
-                    args.expected_plan_sha256)
+    need(len(args.field_plan) == len(args.expected_plan_sha256) and
+         1 <= len(args.field_plan) <= 8, "FIELD_SHARD_PLAN_AND_HASH_COUNT")
+    plans = [source_json(path, max_bytes=1024 * 1024) for path in args.field_plan]
+    result = assess_many(plans, source_json(args.phase_a_policy),
+                         args.expected_plan_sha256)
     output = args.output.resolve()
-    need(output != args.field_plan.resolve() and
+    need(all(output != path.resolve() for path in args.field_plan) and
          output != args.phase_a_policy.resolve() and
          output != ROOT and ROOT not in output.parents and
          output.parent.is_dir(), "PRIVATE_CREATE_ONLY_OUTPUT_REQUIRED")
