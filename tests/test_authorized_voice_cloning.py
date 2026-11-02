@@ -99,7 +99,7 @@ class AuthorizedCloningTests(unittest.TestCase):
         self.assertEqual(row["bytes"], len(raw))
         self.assertEqual(row["sha256"], hashlib.sha256(raw).hexdigest())
         self.assertEqual(row["git_blob_sha1"], hashlib.sha1(
-            b"blob " + str(len(raw)).encode() + b"\\0" + raw).hexdigest())
+            b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest())
 
     def test_dry_run_does_not_invoke_or_write(self) -> None:
         self.assertEqual(clone.main(["--plan", str(self.plan), "--output-root", str(self.output)]), 0)
