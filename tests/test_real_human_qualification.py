@@ -139,8 +139,9 @@ def test_phase_a_field_plan_preflight() -> None:
          f"family-{i:03d}", "sealed-evaluation") for i in range(40)
     ])
     for shard in (shard_one, shard_two):
+        # Mirror the upstream _publish() serialization, not just compact JSON.
         assert len(json.dumps(shard, ensure_ascii=False, sort_keys=True,
-                              separators=(",", ":")).encode()) < 1024 * 1024
+                              indent=2).encode()) < 1024 * 1024
     hashes = [preflight.canonical_sha(shard_one), preflight.canonical_sha(shard_two)]
     joint = preflight.assess_many([shard_one, shard_two], policy, hashes)
     assert joint["source_shard_count"] == 2
@@ -177,7 +178,8 @@ def test_phase_a_field_plan_preflight() -> None:
         policy_file = shard_root / "policy.json"
         output = shard_root / "aggregated-private-coverage.json"
         for target, shard in zip(inputs, (shard_one, shard_two)):
-            target.write_text(json.dumps(shard, ensure_ascii=False), encoding="utf-8")
+            target.write_text(json.dumps(shard, ensure_ascii=False, sort_keys=True,
+                                         indent=2), encoding="utf-8")
         policy_file.write_text(json.dumps(policy), encoding="utf-8")
         assert preflight.main([
             "--field-plan", str(inputs[0]), "--field-plan", str(inputs[1]),
