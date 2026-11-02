@@ -298,6 +298,8 @@ def main(argv: list[str] | None = None) -> int:
     plan, screen = read_json(args.plan), read_json(args.screen)
     report = measure(plan, screen, args.generated_root)
     output = args.output
+    require(output.resolve() != ROOT and ROOT not in output.resolve().parents,
+            "PRIVATE_REPORT_MUST_NOT_BE_IN_PUBLIC_REPOSITORY")
     require(output.resolve() != args.plan.resolve() and
             output.resolve() != args.screen.resolve() and
             output.resolve() != args.generated_root.resolve() and
