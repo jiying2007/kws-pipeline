@@ -52,8 +52,11 @@ plans, e.g. 40 session-1 records and 40 session-2 records for the same
 consistent, but use distinct real session IDs. Each shard remains under
 the v1 manifest byte cap and must pass its own \`kws-data\` source/rights/audio
 verification. The new consumer audits up to eight such shards **together**:
-a duplicate session, cross-shard train/dev/sealed family leakage or repeated
-source slot is rejected. Each supplied freeze digest must be independently
+a duplicate session, cross-shard train/dev/sealed family leakage, a single
+speaker silently changing source family between sessions, or a repeated source
+slot is rejected. If multiple declared speakers share one source family, the
+planner reports **both counts** and keeps the source-family quota short; it
+cannot authenticate them as independent persons. Each supplied freeze digest must be independently
 recorded at plan creation, not generated from an edited input later.
 
 The aggregate digest is a derived comparison key; it is **not** a new
