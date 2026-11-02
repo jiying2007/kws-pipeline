@@ -133,6 +133,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`qualification_gate.py`](qualification_gate.py) (requires original `--references`, `--detections`, and `--board-audio` for independent replay)
 - [`qualification_manifest.py`](qualification_manifest.py)
 - [`qualification_metrics.py`](qualification_metrics.py)
+- [`qualification_latency_contract.py`](qualification_latency_contract.py) — Preserve unmeasured callback status and reject terminal shipping without supported measured end-to-end evidence.
 - [`run_dataset_iteration.py`](run_dataset_iteration.py)
 - [`run_final_afe_corpus.py`](run_final_afe_corpus.py)
 - [`runtime_soak_contract.py`](runtime_soak_contract.py) — Versioned single-core CPU evidence validation.

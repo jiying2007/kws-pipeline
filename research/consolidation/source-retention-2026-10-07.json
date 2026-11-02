@@ -43850,6 +43850,34 @@
           }
         }
       ]
+    },
+    {
+      "id": "qualification-latency-tool-index-sync-20261102",
+      "date": "2026-11-02",
+      "base_commit": "1fe78bd309fff09d4afdc066c9802347514507a1",
+      "base_tree": "6a6fa0c76a4b431d8e2ff528e5288b1ae7bf3162",
+      "workflow_source_changed": false,
+      "scope": "Add the new latency-contract helper to the complete engineering-tool navigation index without changing tests or qualification gates.",
+      "rationale": "Preserve failed CI41471783822: both hosted builds rejected an incomplete tool index before reaching the new qualification suites. Keep all existing tool entries, including #690. Pure-data full-tree navigation verification is separate from execution of the complete terminal-docs suite.",
+      "files": [
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 14178,
+            "sha256": "76415d5d00e428f42f0774b644787b462b8b5e18fd0e2b0451a2f81f81addb87",
+            "git_blob_sha1": "815ae30327eae9181df0b72fb04259dc27f4fc22"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 14370,
+            "sha256": "dcb454b6273206df581fe7ba455ba59a72a2ca3aac1c946b89b22abf8bb703b5",
+            "git_blob_sha1": "e115a278b9a0b0e855c5d590e3b3490c18630356"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
