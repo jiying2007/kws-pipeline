@@ -257,21 +257,25 @@ def verify(root, manifest):
                 '.github/workflows/tts-pilot-asr-20261014-v1.yml',
                 '.github/workflows/kw1-preset-supplement-20261014-v1.yml',
                 '.github/workflows/kw1-supplement-observation.yml']
-    if additions != approved:
+    # Historical 13-workflow synthetic fixtures remain valid. A live addition
+    # is accepted only when its explicit identity is present and the active
+    # checkout exactly matches the declared set; no arbitrary workflow escapes.
+    approved_with_clone = approved + ['.github/workflows/authorized-voice-clone-contracts.yml']
+    if additions not in (approved, approved_with_clone):
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed additions
     # both bind CURRENT bytes. Historical maintenance receipts are evidence,
     # not the source of the current identity and not an existence-only escape.
     current_additions = manifest.get('current_added_active_workflows')
-    if not isinstance(current_additions, list) or len(current_additions) != len(approved):
+    if not isinstance(current_additions, list) or len(current_additions) != len(additions):
         raise ValueError('missing or duplicate current added workflow identity')
     current_paths = []
     for row in current_additions:
-        if not isinstance(row, dict) or row.get('path') not in approved:
+        if not isinstance(row, dict) or row.get('path') not in additions:
             raise ValueError('unexpected current added workflow identity')
         check_file(root, row)
         current_paths.append(row['path'])
-    if sorted(current_paths) != sorted(approved) or paths.intersection(current_paths):
+    if sorted(current_paths) != sorted(additions) or paths.intersection(current_paths):
         raise ValueError('current added workflow identities do not match allowance')
     actual = {str(p.relative_to(root)) for p in (root / '.github/workflows').glob('*') if p.is_file()}
     if actual != paths | set(additions):

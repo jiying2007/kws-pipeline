@@ -85,6 +85,22 @@ class AuthorizedCloningTests(unittest.TestCase):
     def loaded(self) -> dict:
         return clone.load_campaign(self.plan)
 
+    def test_new_active_workflow_is_exactly_retained(self) -> None:
+        manifest = json.loads((ROOT / "research/consolidation/source-retention-2026-10-07.json")
+                              .read_text(encoding="utf-8"))
+        workflow = ROOT / ".github/workflows/authorized-voice-clone-contracts.yml"
+        path = str(workflow.relative_to(ROOT))
+        self.assertIn(path, manifest["allowed_new_active_workflows"])
+        records = [r for r in manifest["current_added_active_workflows"] if r["path"] == path]
+        self.assertEqual(len(records), 1)
+        raw = workflow.read_bytes()
+        row = records[0]
+        self.assertEqual(row["mode"], "100644")
+        self.assertEqual(row["bytes"], len(raw))
+        self.assertEqual(row["sha256"], hashlib.sha256(raw).hexdigest())
+        self.assertEqual(row["git_blob_sha1"], hashlib.sha1(
+            b"blob " + str(len(raw)).encode() + b"\\0" + raw).hexdigest())
+
     def test_dry_run_does_not_invoke_or_write(self) -> None:
         self.assertEqual(clone.main(["--plan", str(self.plan), "--output-root", str(self.output)]), 0)
         self.assertFalse(self.output.exists())

@@ -15642,7 +15642,8 @@
     ".github/workflows/tts-quality-remaining-20261014-v1.yml",
     ".github/workflows/tts-pilot-asr-20261014-v1.yml",
     ".github/workflows/kw1-preset-supplement-20261014-v1.yml",
-    ".github/workflows/kw1-supplement-observation.yml"
+    ".github/workflows/kw1-supplement-observation.yml",
+    ".github/workflows/authorized-voice-clone-contracts.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -43609,6 +43610,13 @@
       "bytes": 964,
       "sha256": "3882b9b5498c3479086c354eb393142339c1466ce468a25ad5efd19ec1dd0731",
       "git_blob_sha1": "68472c1bc2837fb7243a2552d25060f7da270adc"
+    },
+    {
+      "path": ".github/workflows/authorized-voice-clone-contracts.yml",
+      "mode": "100644",
+      "bytes": 1271,
+      "sha256": "b44acb0d9a4b448a4578afaca4eabd49162603438dbd5a76b7fae7a0bae017ca",
+      "git_blob_sha1": "f98d751fea32576585a465012113ecae82ce9922"
     }
   ],
   "current_source_revision": {
