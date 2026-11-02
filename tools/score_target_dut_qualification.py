@@ -12,6 +12,7 @@ import wave
 
 from qualification_metrics import (validate_board, validate_evidence, board_wav_stats,
                                    require_board_raw_binding)
+from qualification_latency_contract import require_receipt_projection
 from runtime_soak_contract import require_cpu_contract, validate_cpu_metrics
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -192,6 +193,8 @@ def main() -> int:
     policy = load_json(args.policy)
     phase_a_receipt = load_json(args.phase_a_receipt)
     phase_a = load_json(args.phase_a_summary)
+    phase_a_end_to_end = require_receipt_projection(
+        phase_a, phase_a_receipt, sha256_file(args.phase_a_summary))
     deployment = load_json(args.deployment_manifest)
     target_raw = load_json(require_bundle_file(bundle, "target-evidence.json"))
     board_raw = load_json(require_bundle_file(bundle, "board-summary.json"))
@@ -409,6 +412,8 @@ def main() -> int:
         "phase": "physical-target-dut-qualification",
         "qualified": not failures,
         "shipping_approved": False,
+        "qualification_scope": "physical-dut-resources-only; not-product-end-to-end",
+        "end_to_end_latency": phase_a_end_to_end,
         "deployment_tag": deployment_tag,
         "deployment_target": source_sha,
         "human_qualification_tag": human_tag,

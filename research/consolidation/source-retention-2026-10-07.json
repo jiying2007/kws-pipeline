@@ -15407,9 +15407,9 @@
     {
       "path": ".github/workflows/real-human-qualification.yml",
       "mode": "100644",
-      "bytes": 14973,
-      "sha256": "82a1b7de2b9837240f0564eb22274a7e8cdc9e6ffdcd123724c15d3489d5f33d",
-      "git_blob_sha1": "409fa360592fe7e6d6865287063f80b6bbf449f7"
+      "bytes": 15144,
+      "git_blob_sha1": "3e72ea510246cd4dc01c281e064657d0ffb94d90",
+      "sha256": "58f8bc7f03ff83d41145041e8676754abaaa73f6b41137a13eda38df64219a54"
     },
     {
       "path": ".github/workflows/release.yml",
@@ -15533,9 +15533,9 @@
     {
       "path": ".github/workflows/shipping-approval.yml",
       "mode": "100644",
-      "bytes": 17906,
-      "sha256": "0607732659ffab51a5827288039db7719ceb72429ca0513c93fef23fd1cffc9c",
-      "git_blob_sha1": "6102e35b0c94a5b825240ecd457d0f8ac69d9f7e"
+      "bytes": 19310,
+      "git_blob_sha1": "ac2a430de734106feb22654295a16d96a0e23d6d",
+      "sha256": "7bef8e09c657149b7b630408260b1064861851f2c2229bc595ed621d3c71566e"
     },
     {
       "path": ".github/workflows/speech-like-base-index-contract.yml",
@@ -15603,16 +15603,16 @@
     {
       "path": ".github/workflows/target-cohort-promotion.yml",
       "mode": "100644",
-      "bytes": 10505,
-      "sha256": "6d83eace1ed35937d9073677de8da100e8d2ae3b56a1c36cd4da3910de6af18d",
-      "git_blob_sha1": "f5474e96339b3a0a996dd96c86c79eceb2878522"
+      "bytes": 10632,
+      "git_blob_sha1": "707bf647758f79c40d926795cfcbb554ce3c03b7",
+      "sha256": "8ccdfb862e91091e8d182c830d11c57bfadf5aea2b8112b2da41dfdcca03ab92"
     },
     {
       "path": ".github/workflows/target-dut-qualification.yml",
       "mode": "100644",
-      "bytes": 11666,
-      "sha256": "c4ce46581d6681856ce72e3b7bf629db9ed9a6af65f66accca7bc1890f58855b",
-      "git_blob_sha1": "bbf3b8ad4c349873e3e623aca41d5244dfc0e696"
+      "bytes": 11793,
+      "git_blob_sha1": "fb62971a7b0f4b2ee1eb1d697d6879f106db3f28",
+      "sha256": "a76f7538f64e5c9bc5a2aba821e5c9d00769719ad0bf3a916e307f6b205e2751"
     },
     {
       "path": ".github/workflows/training-audit-closure.yml",
@@ -43621,6 +43621,232 @@
             "bytes": 64717,
             "sha256": "6af9c7c3c4dcb3ed0a069596abe443d98bc83054f6381c0e8ade7fedcf2e24f9",
             "git_blob_sha1": "0066e5b9d1c9a810f8eb8ab86a478a7ba7c82b1c"
+          }
+        }
+      ]
+    },
+    {
+      "id": "qualification-end-to-end-fail-closed-20261102",
+      "date": "2026-11-02",
+      "base_commit": "38fc04146abfb0ac095f1281ca1c8fda1524e1f9",
+      "base_tree": "f0c779af9e033af4e512883b089f2fb77593a77c",
+      "workflow_source_changed": true,
+      "scope": "Preserve legacy acoustic and resource qualification while propagating explicit unmeasured end-to-end status and refusing terminal shipping without supported measured callback evidence.",
+      "rationale": "Raw sample-coordinate latency remains diagnostic, not wall-clock callback qualification. Synthetic 600/500/501 ms counterexamples and actual shipping guard fragments passed both complete normal fixture suites; no real callback, model, hardware, or optimized-mode qualification is claimed. Preserve the initial fixture failure and all prior source history.",
+      "files": [
+        {
+          "path": "tools/qualification_latency_contract.py",
+          "before": null,
+          "after": {
+            "path": "tools/qualification_latency_contract.py",
+            "mode": "100644",
+            "bytes": 3694,
+            "git_blob_sha1": "8ed99ab23af8078ea5738e37142abd4584bbe6ae",
+            "sha256": "86fd5ca551ef77dfc769a29ceb93a21777dff9435e0cb4cb53d82c793327b4c7"
+          }
+        },
+        {
+          "path": "tools/score_real_human_qualification.py",
+          "before": {
+            "path": "tools/score_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 17166,
+            "sha256": "f66858fabd1956d72d6f926dbb5cd05ada636b49be8498c5ecea99e3b1e1a348",
+            "git_blob_sha1": "eb9a1e6681abd5c1b996f6a70421a8bdabdd5eca"
+          },
+          "after": {
+            "path": "tools/score_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 17488,
+            "git_blob_sha1": "d803cec34461d3e965b7d9841c910d9a18a1f466",
+            "sha256": "8d46d47de4807c45ba29d153258c3612ab9f0c47ec17fdea5241ca05cabf3c5c"
+          }
+        },
+        {
+          "path": "tools/score_target_dut_qualification.py",
+          "before": {
+            "path": "tools/score_target_dut_qualification.py",
+            "mode": "100644",
+            "bytes": 21668,
+            "sha256": "1e1d366f16487f6f8354434318bf348002a8cb8e8b0cd8519cb4be4ccca83f61",
+            "git_blob_sha1": "e4d1ab705e5e2633b113ca935df270222b2fafb2"
+          },
+          "after": {
+            "path": "tools/score_target_dut_qualification.py",
+            "mode": "100644",
+            "bytes": 21996,
+            "git_blob_sha1": "10dee6c425e925967ad2cfceab79debde6484939",
+            "sha256": "dfa80f016a112679bc4f9c8fff053f984c85c25077824a0ab0e700148524ace8"
+          }
+        },
+        {
+          "path": "tools/score_target_cohort.py",
+          "before": {
+            "path": "tools/score_target_cohort.py",
+            "mode": "100644",
+            "bytes": 10288,
+            "sha256": "78655fd0f83abb7b2c0d0dff5b5ec204ed722c94190ce54ca5eba55b789e7bda",
+            "git_blob_sha1": "45ec7bf90d45b8a6bed7962c64d034af1b7eeb8e"
+          },
+          "after": {
+            "path": "tools/score_target_cohort.py",
+            "mode": "100644",
+            "bytes": 10605,
+            "git_blob_sha1": "78399c1aad15e1bfb4fee121552fcee08ad14bf5",
+            "sha256": "e3144af21eb7812a7acc7b7691e1c79f6211808ecadb9b1c3178e54b41a3617e"
+          }
+        },
+        {
+          "path": "commercial/real-human-qualification-summary.schema.json",
+          "before": {
+            "path": "commercial/real-human-qualification-summary.schema.json",
+            "mode": "100644",
+            "bytes": 2654,
+            "sha256": "1b6d9efee7ad9d3b577a67ce6168723731b7baca3b5417fdf822737d2a0c332d",
+            "git_blob_sha1": "0eecca53f1eadd0a6c8af95f82a45b37956e88b0"
+          },
+          "after": {
+            "path": "commercial/real-human-qualification-summary.schema.json",
+            "mode": "100644",
+            "bytes": 5407,
+            "git_blob_sha1": "e356d57f1b61ff49abab21d5a920ac89afe4e378",
+            "sha256": "df60a85fabf3bfe430bab3426d49f64ef22db056d2c306891447ddb87c4a985e"
+          }
+        },
+        {
+          "path": ".github/workflows/real-human-qualification.yml",
+          "before": {
+            "path": ".github/workflows/real-human-qualification.yml",
+            "mode": "100644",
+            "bytes": 14973,
+            "sha256": "82a1b7de2b9837240f0564eb22274a7e8cdc9e6ffdcd123724c15d3489d5f33d",
+            "git_blob_sha1": "409fa360592fe7e6d6865287063f80b6bbf449f7"
+          },
+          "after": {
+            "path": ".github/workflows/real-human-qualification.yml",
+            "mode": "100644",
+            "bytes": 15144,
+            "git_blob_sha1": "3e72ea510246cd4dc01c281e064657d0ffb94d90",
+            "sha256": "58f8bc7f03ff83d41145041e8676754abaaa73f6b41137a13eda38df64219a54"
+          }
+        },
+        {
+          "path": ".github/workflows/target-dut-qualification.yml",
+          "before": {
+            "path": ".github/workflows/target-dut-qualification.yml",
+            "mode": "100644",
+            "bytes": 11666,
+            "sha256": "c4ce46581d6681856ce72e3b7bf629db9ed9a6af65f66accca7bc1890f58855b",
+            "git_blob_sha1": "bbf3b8ad4c349873e3e623aca41d5244dfc0e696"
+          },
+          "after": {
+            "path": ".github/workflows/target-dut-qualification.yml",
+            "mode": "100644",
+            "bytes": 11793,
+            "git_blob_sha1": "fb62971a7b0f4b2ee1eb1d697d6879f106db3f28",
+            "sha256": "a76f7538f64e5c9bc5a2aba821e5c9d00769719ad0bf3a916e307f6b205e2751"
+          }
+        },
+        {
+          "path": ".github/workflows/target-cohort-promotion.yml",
+          "before": {
+            "path": ".github/workflows/target-cohort-promotion.yml",
+            "mode": "100644",
+            "bytes": 10505,
+            "sha256": "6d83eace1ed35937d9073677de8da100e8d2ae3b56a1c36cd4da3910de6af18d",
+            "git_blob_sha1": "f5474e96339b3a0a996dd96c86c79eceb2878522"
+          },
+          "after": {
+            "path": ".github/workflows/target-cohort-promotion.yml",
+            "mode": "100644",
+            "bytes": 10632,
+            "git_blob_sha1": "707bf647758f79c40d926795cfcbb554ce3c03b7",
+            "sha256": "8ccdfb862e91091e8d182c830d11c57bfadf5aea2b8112b2da41dfdcca03ab92"
+          }
+        },
+        {
+          "path": ".github/workflows/shipping-approval.yml",
+          "before": {
+            "path": ".github/workflows/shipping-approval.yml",
+            "mode": "100644",
+            "bytes": 17906,
+            "sha256": "0607732659ffab51a5827288039db7719ceb72429ca0513c93fef23fd1cffc9c",
+            "git_blob_sha1": "6102e35b0c94a5b825240ecd457d0f8ac69d9f7e"
+          },
+          "after": {
+            "path": ".github/workflows/shipping-approval.yml",
+            "mode": "100644",
+            "bytes": 19310,
+            "git_blob_sha1": "ac2a430de734106feb22654295a16d96a0e23d6d",
+            "sha256": "7bef8e09c657149b7b630408260b1064861851f2c2229bc595ed621d3c71566e"
+          }
+        },
+        {
+          "path": "tests/test_real_human_qualification.py",
+          "before": {
+            "path": "tests/test_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 20733,
+            "sha256": "2e128b65bd690c2151d8896660ecd6b342b3e36ba53ecfc69e8847ed11db2038",
+            "git_blob_sha1": "86ac4b902b693b71bb7e21ed2dcc4b146b5631c0"
+          },
+          "after": {
+            "path": "tests/test_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 24743,
+            "git_blob_sha1": "6004dc59a4fb5b502108b8d15ebb222486b73759",
+            "sha256": "52214465d8c448d119eab497feb09e2517b16bf6a46d82c6eb151d88bc454cef"
+          }
+        },
+        {
+          "path": "tests/test_target_shipping_contract.py",
+          "before": {
+            "path": "tests/test_target_shipping_contract.py",
+            "mode": "100644",
+            "bytes": 24899,
+            "sha256": "c7c6623e1460ba838d76cd7070489a2d26742f170dc0318d373b06843216b510",
+            "git_blob_sha1": "e5031bf2ca948861414134eeb4b22ae1832fb555"
+          },
+          "after": {
+            "path": "tests/test_target_shipping_contract.py",
+            "mode": "100644",
+            "bytes": 37288,
+            "git_blob_sha1": "ba34fcf711aae110a88de9a48fd1ef23fc8959ab",
+            "sha256": "bb9a94c52241fdab4700e1c461df534a11b635559f7171bb8c98ce4177003348"
+          }
+        },
+        {
+          "path": "README.md",
+          "before": {
+            "path": "README.md",
+            "mode": "100644",
+            "bytes": 19336,
+            "sha256": "34ad915dff658fdadbf07fd1bfd5ab25f2782363038f05a1ee162c30bcf9e016",
+            "git_blob_sha1": "9a2eecba2119a1df19c6e90ec445ef1fbee54d2c"
+          },
+          "after": {
+            "path": "README.md",
+            "mode": "100644",
+            "bytes": 20289,
+            "git_blob_sha1": "c56f3d02b7208489b7c0770199fc28290083a86f",
+            "sha256": "309e8237c2c28101f47e2385589b184b9ba415f5971733eb622de85a9064b4f9"
+          }
+        },
+        {
+          "path": "README.zh-CN.md",
+          "before": {
+            "path": "README.zh-CN.md",
+            "mode": "100644",
+            "bytes": 18248,
+            "sha256": "3556d1ee45d2ad7ba49d1403ff384fb1fab671c223e328e8b49554a04650cfec",
+            "git_blob_sha1": "8a01b1020867be09796e60e391a5593de4d36d03"
+          },
+          "after": {
+            "path": "README.zh-CN.md",
+            "mode": "100644",
+            "bytes": 18957,
+            "git_blob_sha1": "c9476196e5d8fcc109abc6eb3b674464cc1397f0",
+            "sha256": "d7222b35e00fdab9ced026e2c947154b7897c43f7fd04e0a3971212b3ba485e4"
           }
         }
       ]

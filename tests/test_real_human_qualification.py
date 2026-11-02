@@ -7,6 +7,7 @@ import pathlib
 import struct
 import subprocess
 import tempfile
+import sys
 import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -29,6 +30,8 @@ def write_wav(path: pathlib.Path, marker: int, seconds: float = 1.0) -> None:
 
 
 def run(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
+    if args and args[0] in ("python3", sys.executable):
+        args = (sys.executable, "-S", "-B", *args[1:])
     completed = subprocess.run(
         args,
         cwd=ROOT,
@@ -36,6 +39,7 @@ def run(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         check=False,
+        timeout=30,
     )
     if completed.returncode != expect:
         raise AssertionError(
@@ -277,8 +281,8 @@ def main() -> int:
 
         fake_afe = tmp / "fake_afe.py"
         fake_afe.write_text(
-            "#!/usr/bin/env python3\n"
-            "import json, shutil, sys\n"
+            ("#!" + sys.executable + " -S\n")
+            + "import json, shutil, sys\n"
             "_, src, dst, result, config = sys.argv\n"
             "shutil.copyfile(src, dst)\n"
             "open(result, 'w', encoding='utf-8').write(json.dumps({'latency_samples': 0}) + '\\n')\n",
@@ -427,6 +431,62 @@ def main() -> int:
             - 1.0 / 3600.0
         ) < 1e-12
         assert result["next_gate"] == "physical-target-board-performance-and-soak"
+
+
+        # Artificial timing-coordinate cases are not callback measurements.
+        # Exercise the real event scorer and the real Phase-A consumer.
+        snapshot_paths = (references, detections, score_summary, false_accepts,
+                          false_rejects, afe_root / "afe-corpus-summary.json", final)
+        latency_snapshot = {path: path.read_bytes() for path in snapshot_paths}
+        try:
+            rows = [json.loads(line) for line in references.read_text().splitlines() if line.strip()]
+            for row in rows:
+                # This new synthetic case explicitly declares both coordinates;
+                # the legacy zero-delay fake does not emit an aligned contract.
+                row["timing_contract"] = "afe-output-sample-v1"
+                row["sample_rate_hz"] = 16000
+                row["afe_latency_samples"] = 4800
+                for event in row.get("expected", []):
+                    event["raw_start_s"] = event["start_s"]
+                    event["raw_end_s"] = event["end_s"]
+                    event["start_s"] = event["raw_start_s"] + 0.3
+                    event["end_s"] = event["raw_end_s"] + 0.3
+                    if "match_not_before_s" in event:
+                        event["match_not_before_s"] += 0.3
+            references.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+            changed_afe = json.loads(latency_snapshot[afe_root / "afe-corpus-summary.json"])
+            changed_afe["references_sha256"] = sha(references)
+            changed_afe["latency_samples"] = {"min": 4800, "max": 4800}
+            (afe_root / "afe-corpus-summary.json").write_text(json.dumps(changed_afe), encoding="utf-8")
+            for decision, expected_raw, expected_post, expected_status in (
+                (0.900, 600.0, 300.0, "FAIL"),
+                (0.800, 500.0, 200.0, "PASS"),
+                (0.801, 501.0, 201.0, "FAIL"),
+            ):
+                detections.write_text("".join(json.dumps({
+                    "recording": "k" + str(keyword), "keyword_id": keyword,
+                    "time_s": decision, "confidence": 0.9}) + "\n"
+                    for keyword in (1, 2)), encoding="utf-8")
+                run("python3", "eval/score_events.py",
+                    "--references", str(references), "--detections", str(detections),
+                    "--pre-tolerance-ms", "0", "--post-tolerance-ms", "500",
+                    "--summary", str(score_summary), "--false-positives", str(false_accepts),
+                    "--false-rejects", str(false_rejects))
+                run("python3", "tools/score_real_human_qualification.py", *gate_args)
+                observed = json.loads(final.read_text())
+                diagnostic = observed["raw_sample_latency_diagnostic"]
+                if observed["qualified"] is not True or observed["shipping_approved"] is not False:
+                    raise AssertionError("legacy acoustic scope unexpectedly changed")
+                if observed["end_to_end_latency"]["status"] != "NOT_RUN" or observed["end_to_end_latency"]["qualified"] is not False:
+                    raise AssertionError("sample offsets were promoted to callback qualification")
+                if diagnostic["status"] != expected_status or not diagnostic["complete_timing_coverage"]:
+                    raise AssertionError("raw sample-coordinate boundary/coverage differs")
+                if abs(diagnostic["p95_raw_signed_end_offset_ms"] - expected_raw) > 1e-9 or abs(diagnostic["p95_post_afe_signed_end_offset_ms"] - expected_post) > 1e-9:
+                    raise AssertionError("AFE delay was omitted or counted twice")
+        finally:
+            for path, body in latency_snapshot.items():
+                path.write_bytes(body)
+        print("raw latency producer counterexamples: 3 synthetic cases; callback NOT_RUN")
 
         afe_summary_path = afe_root / "afe-corpus-summary.json"
         valid_afe_summary = afe_summary_path.read_text(encoding="utf-8")

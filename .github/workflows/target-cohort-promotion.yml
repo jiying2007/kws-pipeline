@@ -128,6 +128,7 @@ jobs:
           cp "$budget_source" build/cohort/resource-budget.json
           cp commercial/target-resource-budget.schema.json build/cohort/
           jq -n \
+            --argjson end_to_end_latency "$(jq -ce '.end_to_end_latency' "$summary")" \
             --arg tag "$TAG" \
             --arg deployment_tag "$(jq -r '.deployment_tag' "$summary")" \
             --arg deployment_target "$(jq -r '.deployment_target' "$summary")" \
@@ -138,7 +139,7 @@ jobs:
             --arg budget_sha "$budget_sha" \
             --arg measurement_contract_id "$(jq -r '.measurement_contract_id' "$summary")" \
             --arg summary_sha "$(sha256sum "$summary" | awk '{print $1}')" \
-            '{schema_version:2,phase:"physical-target-cohort-qualification",qualified:true,shipping_approved:false,release_tag:$tag,deployment_tag:$deployment_tag,deployment_target:$deployment_target,human_qualification_tag:$human_tag,human_corpus_sha256:$human_corpus,final_afe_identity_sha256:$afe_identity,resource_budget_id:$budget_id,resource_budget_sha256:$budget_sha,measurement_contract_id:$measurement_contract_id,qualification_summary_sha256:$summary_sha,next_gate:"shipping-approval-promotion"}' \
+            '{schema_version:2,phase:"physical-target-cohort-qualification",qualified:true,shipping_approved:false,end_to_end_latency:$end_to_end_latency,release_tag:$tag,deployment_tag:$deployment_tag,deployment_target:$deployment_target,human_qualification_tag:$human_tag,human_corpus_sha256:$human_corpus,final_afe_identity_sha256:$afe_identity,resource_budget_id:$budget_id,resource_budget_sha256:$budget_sha,measurement_contract_id:$measurement_contract_id,qualification_summary_sha256:$summary_sha,next_gate:"shipping-approval-promotion"}' \
             > build/cohort/public-target-cohort-receipt.json
           cp commercial/target-qualification.policy.json build/cohort/
           (cd build/cohort && sha256sum \

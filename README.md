@@ -9,16 +9,20 @@ Current status: [model and engineering summary](docs/KWS_LANDING_STATUS.md#curre
 Current archive delivery: [complete public archive, index and verified restoration](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md). The old expanded-copy target is cancelled; its historical status remains NOT_PUSHED. D20 numerical failure and D90 not yet tested, fixed50 inconclusive support and the old-model nightly failure remain separate; human/device qualification is deferred.
 
 > **Evidence boundary — read this before quoting any number below.**
-> The qualification recorded in this repository was produced on a **synthetic
-> corpus**. It is engineering evidence, not a commercial acoustic claim. Two
-> product-evidence items are deliberately **not executable in this repository**:
-> real human speech through the final microphone/enclosure/AFE, and physical
-> target-board performance/soak. They need hardware and human subjects. The
-> workflows that would consume them (`real-human-qualification.yml`,
-> `target-dut-qualification.yml`) are `workflow_dispatch`-only and need a
-> self-hosted runner, so they never fire on `push` or in a fork.
-> `configs/shipping.xiaowo.json` keeps `shipping_approved=false` until both
-> exist. See [Validation boundary](#validation-boundary).
+> Historical synthetic qualification is engineering evidence, not a commercial acoustic claim.
+> Product evidence is not reduced to two remaining checks. A new production model
+> still needs authorized and acoustically checked sources, an independently frozen
+> train/development/calibration/test split, calibration-only threshold selection,
+> a real candidate and export/quantization/runtime-consistency evidence, final
+> microphone/enclosure/AFE human evaluation, and physical target-board performance/soak.
+> The product raw-word-end-to-application-callback limit is 500 ms, including AFE,
+> processing and delivery. Post-AFE offsets or raw sample-coordinate p95 are
+> diagnostics, not a measured per-event callback maximum. Without a supported,
+> clock/tuple/event-bound measurement the status is NOT_RUN and product shipping
+> is blocked. Manual self-hosted qualification workflows are repository entry
+> points, but require separately authorized real inputs and hardware; ordinary CI
+> does not supply them or confer product qualification.
+> `configs/shipping.xiaowo.json` keeps `shipping_approved=false`. See [Validation boundary](#validation-boundary).
 
 `kws-pipeline` is a low-compute, always-on keyword spotting engine for embedded Linux/RTOS-class products. The **historically synthetic-qualified product SKU** is deliberately narrow and ships exactly two four-character Mandarin wake phrases:
 
@@ -316,13 +320,13 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-The shipping gate requires model ABI v2, keyword-pack ABI v3, frontend-spec v2, exact corpus identity, dataset-audit coverage, product-board evidence identity and a policy with `shipping_approved=true`. The repository keeps that last state false until the deferred real-human/final-AFE and physical-board evidence actually passes.
+The shipping gate requires model ABI v2, keyword-pack ABI v3, frontend-spec v2, exact corpus identity, dataset-audit coverage, product-board evidence identity and an explicitly approved policy. Those requirements alone are insufficient: a real candidate, independent split/evaluation and calibration-only thresholds, export/quantization/runtime consistency, final human/AFE and physical-board evidence, and supported raw-word-end-to-application-callback measurements within 500 ms must all be established. The current callback collector is unsupported, so final shipping remains fail-closed NOT_RUN rather than inferring approval from legacy acoustic/resource qualification.
 
 ## Validation boundary
 
 CI proves software contracts and deterministic/synthetic regressions: GCC/Clang, CTest, static analysis, coverage, ASan/UBSan, libFuzzer, a Cortex-A32 cross-build **whose CTest suite is actually executed under `qemu-arm-static`** alongside a hosted-vs-Cortex-A32 numerical parity gate on the int8 kernel, frontend/decoder contracts, corpus identity, self-training, robustness/FAR regression, runtime-soak/target-evidence schema validation, SDK reproducibility, model supply-chain integrity and a model-release contract pin.
 
-It does **not** claim final commercial acoustic or physical-board qualification. After the non-real-data engineering closure, the only product-evidence phase intentionally left is: (1) real Mandarin through the final microphones/enclosure/AFE, then (2) physical target-board performance/soak and final tuple approval. Neither phase can run here: both need hardware, human subjects and a self-hosted runner, which is why `real-human-qualification.yml` and `target-dut-qualification.yml` are `workflow_dispatch`-only.
+It does **not** claim final commercial acoustic, callback-latency or physical-board qualification. Engineering closure does not establish source rights, real-candidate quality, split independence, calibration-only threshold selection or export/runtime consistency. Human/final-AFE and target-board workflows are manual, separately authorized self-hosted entry points. Legacy acoustic/resource `qualified` fields retain their narrower scopes; new `end_to_end_latency.status=NOT_RUN` is propagated and final shipping rejects missing, unmeasured or unsupported callback evidence. A real measured callback contract and its independent acceptance remain future work, not a fabricated fixture result.
 
 See `docs/README.md`, `docs/CUSTOMIZATION.md`, `docs/RELEASE_QUALIFICATION.md`, `docs/TARGET_EVIDENCE.md`, `docs/CORPUS_IDENTITY.md`, `docs/AUDIO_DISCONTINUITY.md` and Issue #2.
 

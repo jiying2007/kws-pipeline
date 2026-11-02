@@ -261,6 +261,7 @@ jobs:
           set -euo pipefail
           tag="human-qualified-${CORPUS_SHA:0:16}"
           jq -n \
+            --argjson end_to_end_latency "$(jq -ce '.end_to_end_latency' build/real-human/real-human-qualification-summary.json)" \
             --arg corpus_sha256 "$CORPUS_SHA" \
             --arg exposure_tag "$EXPOSURE_TAG" \
             --arg deployment_tag "${{ inputs.deployment_tag }}" \
@@ -270,7 +271,7 @@ jobs:
             --arg final_afe_identity_sha256 "$(jq -r '.identity_sha256' build/real-human/final-afe-identity.json)" \
             --arg evidence_checksums_sha256 "$(sha256sum build/real-human/REAL_HUMAN_EVIDENCE_SHA256SUMS | awk '{print $1}')" \
             --arg summary_sha256 "$(sha256sum build/real-human/real-human-qualification-summary.json | awk '{print $1}')" \
-            '{schema_version:1,phase:"real-human-final-afe-acoustic-qualification",qualified:true,shipping_approved:false,corpus_sha256:$corpus_sha256,exposure_tag:$exposure_tag,deployment_tag:$deployment_tag,deployment_target:$deployment_target,final_afe_identity_sha256:$final_afe_identity_sha256,evidence_artifact_id:$artifact_id,evidence_artifact_digest:$artifact_digest,evidence_checksums_sha256:$evidence_checksums_sha256,qualification_summary_sha256:$summary_sha256,next_gate:"physical-target-board-performance-and-soak"}' \
+            '{schema_version:1,phase:"real-human-final-afe-acoustic-qualification",qualified:true,shipping_approved:false,end_to_end_latency:$end_to_end_latency,corpus_sha256:$corpus_sha256,exposure_tag:$exposure_tag,deployment_tag:$deployment_tag,deployment_target:$deployment_target,final_afe_identity_sha256:$final_afe_identity_sha256,evidence_artifact_id:$artifact_id,evidence_artifact_digest:$artifact_digest,evidence_checksums_sha256:$evidence_checksums_sha256,qualification_summary_sha256:$summary_sha256,next_gate:"physical-target-board-performance-and-soak"}' \
             > build/real-human/public-phase-a-receipt.json
           gh release create "$tag" \
             build/real-human/public-phase-a-receipt.json \

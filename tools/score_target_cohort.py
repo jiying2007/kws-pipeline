@@ -8,6 +8,7 @@ import pathlib
 import sys
 
 from qualification_common import finite
+from qualification_latency_contract import normalize_end_to_end, unmeasured_end_to_end
 from runtime_soak_contract import require_cpu_contract, validate_cpu_metrics
 
 
@@ -91,6 +92,7 @@ def main() -> int:
     if not summaries:
         raise ValueError("target cohort is empty")
     for index, item in enumerate(summaries):
+        normalize_end_to_end(item.get("end_to_end_latency", unmeasured_end_to_end()))
         if item.get("schema_version") != 2 or item.get("phase") != "physical-target-dut-qualification":
             raise ValueError(f"summary[{index}] is not a target-DUT summary")
         if item.get("qualified") is not True or item.get("shipping_approved") is not False:
@@ -168,6 +170,8 @@ def main() -> int:
         "phase": "physical-target-cohort-qualification",
         "qualified": not failures,
         "shipping_approved": False,
+        "qualification_scope": "physical-cohort-resources-only; not-product-end-to-end",
+        "end_to_end_latency": unmeasured_end_to_end(),
         "deployment_tag": first["deployment_tag"],
         "deployment_target": first["deployment_target"],
         "human_qualification_tag": first["human_qualification_tag"],

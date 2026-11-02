@@ -152,6 +152,9 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           import hashlib, json, os, pathlib
+          import sys
+          sys.path.insert(0, 'tools')
+          from qualification_latency_contract import require_receipt_projection, require_measured_end_to_end
           root = pathlib.Path('build/approval')
           def load(path): return json.loads(path.read_text(encoding='utf-8'))
           def sha(path): return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -184,6 +187,9 @@ jobs:
           budget_sha = sha(root/'phase-b/resource-budget.json')
           if cohort_receipt['resource_budget_sha256'] != budget_sha or cohort['resource_budget_sha256'] != budget_sha:
               raise SystemExit('Phase B resource budget identity mismatch')
+          human_e2e = require_receipt_projection(human, human_receipt, sha(root/'phase-a/real-human-qualification-summary.json'))
+          cohort_e2e = require_receipt_projection(cohort, cohort_receipt, sha(root/'phase-b/target-cohort-qualification-summary.json'))
+          require_measured_end_to_end(human_e2e, cohort_e2e)
           manifest = {
               'schema_version': 1,
               'status': 'shipping-approved',
@@ -267,6 +273,22 @@ jobs:
             echo "shipping approval already exists: $TAG" >&2
             exit 2
           fi
+          python3 - <<'PY'
+          import hashlib, json, pathlib, sys
+          sys.path.insert(0, 'tools')
+          from qualification_latency_contract import require_receipt_projection, require_measured_end_to_end
+          root = pathlib.Path('build/approval')
+          values = []
+          for folder, receipt_name, summary_name in (
+              ('phase-a', 'public-phase-a-receipt.json', 'real-human-qualification-summary.json'),
+              ('phase-b', 'public-target-cohort-receipt.json', 'target-cohort-qualification-summary.json'),
+          ):
+              body = (root/folder/summary_name).read_bytes()
+              summary = json.loads(body)
+              receipt = json.loads((root/folder/receipt_name).read_bytes())
+              values.append(require_receipt_projection(summary, receipt, hashlib.sha256(body).hexdigest()))
+          require_measured_end_to_end(*values)
+          PY
           python3 tools/far_regression_receipt.py recheck --record build/approval/regression/verification.json
           gh release create "$TAG" \
             build/approval/shipping-approval-manifest.json \

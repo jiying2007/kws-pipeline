@@ -130,6 +130,7 @@ jobs:
           evidence_sha="$(jq -r '.evidence_sha256.target_evidence' "$summary")"
           tag="target-qualified-${evidence_sha:0:16}"
           jq -n \
+            --argjson end_to_end_latency "$(jq -ce '.end_to_end_latency' "$summary")" \
             --arg tag "$tag" \
             --arg deployment_tag "$(jq -r '.deployment_tag' "$summary")" \
             --arg deployment_target "$(jq -r '.deployment_target' "$summary")" \
@@ -144,7 +145,7 @@ jobs:
             --arg measurement_contract_id "$(jq -r '.resource_budget.measurement_contract_id' "$summary")" \
             --arg summary_sha "$summary_sha" \
             --arg evidence_sha "$evidence_sha" \
-            '{schema_version:2,phase:"physical-target-dut-qualification",qualified:true,shipping_approved:false,release_tag:$tag,deployment_tag:$deployment_tag,deployment_target:$deployment_target,human_qualification_tag:$human_tag,human_corpus_sha256:$human_corpus,final_afe_identity_sha256:$afe_identity,sku:$sku,board_revision:$board_revision,dut_id:$dut_id,resource_budget_id:$budget_id,resource_budget_sha256:$budget_sha,measurement_contract_id:$measurement_contract_id,qualification_summary_sha256:$summary_sha,target_evidence_sha256:$evidence_sha,next_gate:"physical-target-cohort-qualification"}' \
+            '{schema_version:2,phase:"physical-target-dut-qualification",qualified:true,shipping_approved:false,end_to_end_latency:$end_to_end_latency,release_tag:$tag,deployment_tag:$deployment_tag,deployment_target:$deployment_target,human_qualification_tag:$human_tag,human_corpus_sha256:$human_corpus,final_afe_identity_sha256:$afe_identity,sku:$sku,board_revision:$board_revision,dut_id:$dut_id,resource_budget_id:$budget_id,resource_budget_sha256:$budget_sha,measurement_contract_id:$measurement_contract_id,qualification_summary_sha256:$summary_sha,target_evidence_sha256:$evidence_sha,next_gate:"physical-target-cohort-qualification"}' \
             > build/target/public-target-dut-receipt.json
           cp commercial/target-qualification.policy.json build/target/
           cp commercial/target-resource-budget.schema.json build/target/

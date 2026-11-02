@@ -16,6 +16,7 @@ from score_events import (  # noqa: E402
     validate_detections,
     validate_recordings,
 )
+from qualification_latency_contract import unmeasured_end_to_end, raw_sample_latency_diagnostic
 from statistical_bounds import poisson_rate_upper, wilson_upper  # noqa: E402
 from speech_asr_consensus import require_independent_reference_labels  # noqa: E402
 
@@ -343,6 +344,9 @@ def main() -> int:
         "phase": "real-human-final-afe-acoustic-qualification",
         "qualified": not failures,
         "shipping_approved": False,
+        "qualification_scope": "final-afe-acoustic-only; not-product-end-to-end",
+        "end_to_end_latency": unmeasured_end_to_end(),
+        "raw_sample_latency_diagnostic": raw_sample_latency_diagnostic(canonical_score),
         "deployment_tag": deployment_tag,
         "qualification_id": manifest["qualification_id"],
         "corpus_sha256": intake["corpus_sha256"],

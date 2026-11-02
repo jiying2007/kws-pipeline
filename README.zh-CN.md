@@ -10,7 +10,7 @@
 
 > **证据边界 —— 引用下方任何数字前请先读这一段。**
 > 本仓库记录的 qualification 全部产生于**合成语料**，属于工程证据，不是商用声学结论。
-> 有两项产品证据被刻意**排除在本仓库可执行范围之外**：真实人声经过最终麦克风/结构/AFE，以及物理目标板 performance/soak —— 它们需要硬件和真人受试者。消费这两项证据的 workflow（`real-human-qualification.yml`、`target-dut-qualification.yml`）均为 `workflow_dispatch` only 且需要 self-hosted runner，因此不会在 `push` 或 fork 中触发。`configs/shipping.xiaowo.json` 在两者齐备前始终保留 `shipping_approved=false`。详见「验证边界」。
+> 产品证据不能概括为“只剩真人和板端两步”。新生产模型仍需有权使用且经过声学检查的来源、独立冻结的 train/development/calibration/test 隔离、仅用校准集选阈值、真实候选及导出/量化/运行时一致性证据、最终麦克风/结构/AFE 真人评测，以及物理目标板 performance/soak。产品从原始词尾到应用 callback 的 500 ms 上限必须包含 AFE、处理和交付；post-AFE 偏移或原始采样坐标 p95 只是诊断，不能替代逐事件 callback 最大时延实测。缺少受支持且绑定时钟、完整 tuple 和事件覆盖的测量时，状态为 NOT_RUN，最终产品放行被阻断。手动 self-hosted qualification workflow 是仓库内入口，但需要另行获准的真实输入与硬件，普通 CI 不提供这些证据，也不授予产品资格。
 
 `kws-pipeline` 是面向**低算力嵌入式 Linux / RTOS 产品**的常驻端侧唤醒引擎，目标包括 Cortex-A32、Cortex-A7 及相近 CPU 预算。
 
@@ -311,13 +311,13 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-最终 gate 强制 model ABI v2、keyword-pack ABI v3、frontend-spec v2、exact corpus identity、dataset-audit coverage、product-board evidence identity，以及 policy 的 `shipping_approved=true`。仓库现在主动保持该状态为 false，直到后置的真实人声/最终 AFE 与物理目标板证据真正形成。
+最终 gate 要求 model ABI v2、keyword-pack ABI v3、frontend-spec v2、exact corpus identity、dataset-audit coverage、product-board evidence identity 与明确获准的 policy，但这些本身不足以放行：还必须具备真实候选、独立隔离评估与仅校准集选阈值、导出/量化/运行时一致性、最终真人/AFE 和物理板端证据，以及受支持的原始词尾到应用 callback ≤500 ms 实测。当前 callback collector 尚不受支持，因此最终 shipping 保持 fail-closed NOT_RUN，不能由历史声学/资源阶段资格推导批准。
 
 ## 验证边界
 
 CI 当前证明软件合同和 deterministic/synthetic regression：GCC/Clang、CTest、static analysis、coverage、ASan/UBSan、libFuzzer、Cortex-A32 cross-build（其 **CTest 套件实际在 `qemu-arm-static` 下执行**）以及 hosted-vs-Cortex-A32 的 int8 kernel 数值对拍门禁、frontend/decoder、corpus identity、自训练闭环、robustness/FAR regression、runtime-soak/target-evidence schema、SDK reproducibility、model supply-chain、model-release contract pin。
 
-它**不宣称真实商用声学和物理板级 qualification 已完成**。完成本轮 non-real-data 工程闭环后，产品证据阶段只剩两步：① 真实普通话经过最终麦克风/结构/AFE；② 物理目标板 performance/soak 并最终批准完整 deployment tuple。这两步在本仓库**均无法执行**：都需要硬件、真人受试者与 self-hosted runner，所以 `real-human-qualification.yml` 与 `target-dut-qualification.yml` 都是 `workflow_dispatch` only。
+它**不宣称真实商用声学、callback 时延或物理板级 qualification 已完成**。工程闭环不证明来源权利、真实候选质量、数据隔离、仅校准集选阈值或导出/运行时一致性。真人/最终 AFE 和目标板 workflow 是需要单独授权与 self-hosted 条件的手动入口。历史声学/资源 `qualified` 字段保留原有较窄范围；新的 `end_to_end_latency.status=NOT_RUN` 会沿证据链传播，最终 shipping 对缺失、未测或不受支持的 callback 证据一律拒绝。真实 callback 测量合同和独立验收仍待实现，不能用夹具伪造通过。
 
 详见 `docs/README.md`、`docs/CUSTOMIZATION.md`、`docs/RELEASE_QUALIFICATION.md`、`docs/TARGET_EVIDENCE.md`、`docs/CORPUS_IDENTITY.md`、`docs/AUDIO_DISCONTINUITY.md` 和 Issue #2。
 
