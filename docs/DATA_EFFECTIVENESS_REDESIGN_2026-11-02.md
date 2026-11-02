@@ -30,7 +30,7 @@ acceptance criteria. No change to commercial/*.policy.json is proposed.
    "holdout" ASR); all are observed research clips. Five preset slots are
    not five independent real speakers. The historical holdout is not a new blind
    acceptance set.
-2. kms-pipeline's historical 384-clip speech-like base is diagnostic only
+2. kws-pipeline's historical 384-clip speech-like base is diagnostic only
    under the reviewed-label training gate. The existing frozen shipping model
    was trained from a tone backend, not from the latest synthetic R&D.
 3. The rights-scoped authorized-voice-clone batch (#688) can plan up to 512
