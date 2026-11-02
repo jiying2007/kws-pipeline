@@ -30,7 +30,7 @@ deliberately does not claim to repeat those checks.
 The source producer is the pinned `kws-data` checkout containing:
 - `research/auto-tts-voice-clone-20261102/bulk_pool.py`
 - `bulk_runner.py` with verified output `plan-lock.json` and
-  `cells/<cell_id>/completed.json + audio-16k.wav`
+  `cells/<cell_id>/started.json + completed.json + audio-16k.wav`
 - `bulk_asr.py` with `receipt_contract.py`, original private native
   ASR receipts and the `--report` output `kws-bulk-clone-machine-screen-v1`
 
