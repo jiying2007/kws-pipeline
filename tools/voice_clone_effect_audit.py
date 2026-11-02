@@ -94,7 +94,9 @@ def load_screen(path: Path | None) -> dict[str, dict]:
             require(isinstance(family, str) and family.strip() and family not in families,
                     "ASR screen families must be named and distinct")
             families.add(family)
-            texts.append(clean_text(observation.get("raw_text")))
+            raw_text = observation.get("raw_text")
+            require(isinstance(raw_text, str), "ASR screen raw_text must be a string (empty permitted)")
+            texts.append(normalized_transcript(raw_text))
         indexed[item] = {"file_sha256": row["file_sha256"], "texts": texts,
                          "model_families": sorted(families)}
     return indexed
@@ -110,10 +112,14 @@ def classify(row: dict, screen: dict | None) -> str:
     if row["requested_intent"] != "wake" and any(
             any(keyword in text for keyword in WAKE_TEXTS) for text in texts):
         return "NEGATIVE_WAKE_CONFUSION_REVIEW"
+    if not any(texts):
+        return "ASR_ALL_EMPTY_UNVERIFIED"
     if all(text == requested for text in texts):
         return SCREEN_MATCH
     if row["requested_intent"] == "wake":
         return "WAKE_TEXT_MISS_OR_DISAGREEMENT"
+    if any(not text for text in texts):
+        return "ASR_PARTIAL_EMPTY_OR_DISAGREEMENT"
     return "NEGATIVE_TEXT_MISS_OR_DISAGREEMENT"
 
 
@@ -219,6 +225,8 @@ def audit(campaign_root: Path, screen_path: Path | None = None) -> dict:
         gaps.append("POSITIVE_PRONUNCIATION_YIELD_NEEDS_IMPROVEMENT")
     if all_counts["NEGATIVE_WAKE_CONFUSION_REVIEW"]:
         gaps.append("NEGATIVE_WAKE_CONFUSION_NEEDS_REVIEW")
+    if all_counts["ASR_ALL_EMPTY_UNVERIFIED"] or all_counts["ASR_PARTIAL_EMPTY_OR_DISAGREEMENT"]:
+        gaps.append("EMPTY_ASR_SCREEN_IS_NOT_SILENCE_EVIDENCE")
     if len(source_groups) == 1:
         gaps.append("SINGLE_SOURCE_FAMILY_NO_CROSS_FAMILY_GENERALIZATION")
     # This tool has no real-human/AFE/continuous-stream/board results. Their
