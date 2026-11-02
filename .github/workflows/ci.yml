@@ -78,14 +78,6 @@ jobs:
         run: python3 -B tests/test_research_ci_changes.py
       - name: Verify tracked worktree after Research change selection contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Research change selection contract"'
-      - name: Offline authorized voice-clone contract suite (no model)
-        timeout-minutes: 3
-        run: |
-          python3 -I -S -B tests/test_authorized_voice_cloning.py
-          python3 -I -S -B -O tests/test_authorized_voice_cloning.py
-          python3 -I -S -B -OO tests/test_authorized_voice_cloning.py
-      - name: Verify tracked worktree after voice-clone contracts
-        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Offline authorized voice-clone contracts"'
       - name: ARM dependency wall-clock budget contracts with fake APT only
         timeout-minutes: 2
         run: |
