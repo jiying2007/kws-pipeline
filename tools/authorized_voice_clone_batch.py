@@ -204,6 +204,25 @@ def create_once(path: Path, value: str) -> None:
         need(path.read_text(encoding="utf-8") == value, f"existing output differs: {path.name}")
 
 
+def claim_invocation_once(path: Path, value: str) -> None:
+    """Atomically reserve one provider call; a second claimant must never run it.
+
+    Unlike create_once for immutable metadata, the attempt marker must not
+    treat an already-existing *equal* file as permission to invoke again.
+    An in-flight or abruptly interrupted attempt is conservatively consumed.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with path.open("x", encoding="utf-8") as stream:
+            stream.write(value)
+            stream.flush()
+            os.fsync(stream.fileno())
+    except FileExistsError as exc:
+        raise ValueError(
+            "attempt already claimed by another execution or unknown; no automatic retry"
+        ) from exc
+
+
 def render_argv(provider: dict, speaker: dict, phrase: dict, seed: int,
                 output: Path, cache: Path) -> list[str]:
     mapping = {"executable": str(provider["executable"]),
@@ -266,7 +285,7 @@ def run_speaker(campaign: dict, speaker: dict, output_root: Path) -> list[dict]:
                 need(not receipt.exists() and not audio.exists(), "orphan output must not be overwritten")
                 argv = render_argv(provider, speaker, phrase, seed, audio, cache_dir)
                 need(Path(argv[0]).resolve() == provider["executable"], "provider executable drifted")
-                create_once(marker, intent_text)  # write the durable claim BEFORE invoking the provider
+                claim_invocation_once(marker, intent_text)  # exclusive durable claim BEFORE provider invocation
                 audio.parent.mkdir(parents=True, exist_ok=True)
                 cache_dir.mkdir(parents=True, exist_ok=True)
                 env = {key: os.environ[key] for key in

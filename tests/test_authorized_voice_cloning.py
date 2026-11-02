@@ -124,6 +124,25 @@ class AuthorizedCloningTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "receipt metadata/output mismatch"):
             clone.execute(campaign, self.output, workers=1)
 
+    def test_concurrent_attempt_claim_has_exactly_one_winner(self) -> None:
+        from concurrent.futures import ThreadPoolExecutor
+
+        marker = self.root / "attempts" / "one.intent.json"
+
+        def claim() -> str:
+            try:
+                clone.claim_invocation_once(marker, '{"campaign":"single"}\\n')
+            except ValueError as exc:
+                self.assertIn("already claimed", str(exc))
+                return "blocked"
+            return "winner"
+
+        with ThreadPoolExecutor(max_workers=16) as pool:
+            results = list(pool.map(lambda _index: claim(), range(16)))
+        self.assertEqual(results.count("winner"), 1)
+        self.assertEqual(results.count("blocked"), 15)
+        self.assertEqual(marker.read_text(), '{"campaign":"single"}\\n')
+
     def test_incomplete_attempt_is_consumed_not_retried(self) -> None:
         campaign = self.loaded()
         marker = self.output / "attempts" / "anonymous-1" / "anonymous-1-k1-s0.intent.json"
