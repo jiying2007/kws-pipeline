@@ -29,6 +29,8 @@ receipts**, disagreements **P1/acoustic adjudication**, a supported positive
 source-family **P1/diversity diagnosis**, and the mandatory external real
 human/final AFE and SSC305 qualification **P0/blocker**.
 
+Field-capture priorities can be checked using [Phase-A field-plan coverage preflight](PHASE_A_FIELD_PLAN_PREFLIGHT.md), which counts only requested tasks and leaves every actual qualification metric unavailable.
+
 The ordered plan is **advice**, not automatically generated additional data.
 No one-off confidence threshold, scorecard, or TTS voice count can grant an
 unverified source a product-training identity.
