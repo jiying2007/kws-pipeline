@@ -490,5 +490,18 @@ class AuthorizedCloningTests(unittest.TestCase):
             bulk_boundary.measure(plan, screen, root)
 
 
+    def test_bulk_effect_bridge_never_writes_private_report_into_public_repo(self) -> None:
+        plan, screen, root = self.make_bulk_data_fixture()
+        plan_path, screen_path = self.root / "bulk-plan.json", self.root / "bulk-screen.json"
+        dump(plan_path, plan)
+        dump(screen_path, screen)
+        forbidden = ROOT / "restricted-effect-report-should-never-exist.json"
+        self.assertFalse(forbidden.exists())
+        with self.assertRaisesRegex(ValueError, "PRIVATE_REPORT_MUST_NOT_BE_IN_PUBLIC_REPOSITORY"):
+            bulk_boundary.main(["--plan", str(plan_path), "--screen", str(screen_path),
+                "--generated-root", str(root), "--output", str(forbidden)])
+        self.assertFalse(forbidden.exists())
+
+
 if __name__ == "__main__":
     unittest.main()
