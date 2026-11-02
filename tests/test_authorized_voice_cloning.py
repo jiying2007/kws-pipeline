@@ -163,6 +163,24 @@ class AuthorizedCloningTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "same reference reused"):
             self.loaded()
 
+    def test_normalizes_punctuation_before_negative_keyword_check(self) -> None:
+        self.payload["phrases"][1]["text"] = "你好，小窝呀！"
+        self.save_plan()
+        with self.assertRaisesRegex(ValueError, "negative intent contains"):
+            self.loaded()
+
+    def test_duplicate_pcm_with_different_file_bytes_does_not_add_speaker(self) -> None:
+        other = self.root / "rewrapped-reference.wav"
+        other.write_bytes(self.reference.read_bytes() + b"extra-container-bytes")
+        duplicate = dict(self.payload["speakers"][0])
+        duplicate["speaker_id"] = "anonymous-2"
+        duplicate["reference"] = {"path": str(other), "sha256": sha(other)}
+        self.payload["speakers"].append(duplicate)
+        self.payload["max_attempts"] = 12
+        self.save_plan()
+        with self.assertRaisesRegex(ValueError, "same decoded PCM reused"):
+            self.loaded()
+
     def test_blocks_wrong_negative_and_unbounded_budget(self) -> None:
         self.payload["phrases"][1]["text"] = "你好小窝呀"
         self.save_plan()
