@@ -190,3 +190,17 @@ Keep private audio/transcripts/results off public GitHub.
 **Completion is demonstrated by observed improvement on a fresh, independent,
 controlled data/model comparison, followed by real-world Phase A/B/C evidence.
 A successful generation script or CI regression alone is not completion.**
+
+
+## 2026-11-02 implementation: typed intent-level coverage
+
+The authorized batch now accepts an optional, narrowly validated per-phrase
+\`challenge_family\`, and the offline audit measures output and three-ASR
+screening counts by \`intent:challenge_family\`. See
+[\`AUTHORIZED_VOICE_CLONING.md\`](AUTHORIZED_VOICE_CLONING.md#typed-challenge-families-optional-backwards-compatible).
+
+This closes the first gap between a large request matrix and
+diagnosable near-miss categories. It **does not** verify that TTS pronounced
+the intended words, and it does not prove that a candidate survived the
+source-authenticated training gate. Earlier v1 campaigns remain readable
+without retagging or rewriting any historical recordings.
