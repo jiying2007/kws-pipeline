@@ -12,6 +12,7 @@ import wave
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import authorized_voice_clone_batch as clone  # noqa: E402
+import voice_clone_effect_audit as effect  # noqa: E402
 
 
 def sha(path: Path) -> str:
@@ -242,6 +243,116 @@ class AuthorizedCloningTests(unittest.TestCase):
         campaign = self.loaded()
         with self.assertRaisesRegex(ValueError, "cannot be inside"):
             clone.execute(campaign, ROOT / "private-voice-clones", workers=1)
+
+
+    def test_effect_audit_requires_real_generated_audio_and_keeps_gates_closed(self) -> None:
+        clone.execute(self.loaded(), self.output, workers=1)
+        summary = effect.audit(self.output)
+        self.assertEqual(summary["total_generated"], 6)
+        self.assertEqual(summary["screened"], 0)
+        self.assertEqual(summary["source_family_roster"], 1)
+        self.assertEqual(summary["unique_output_pcm"], 1)  # fake provider repeats all clips
+        self.assertIn("THREE_ASR_SCREENING_INCOMPLETE", summary["gaps"])
+        self.assertIn("MISSING_PRODUCT_KEYWORD_GENERATION", summary["gaps"])
+        self.assertFalse(summary["label_authentication_verified"])
+        self.assertFalse(summary["training_admitted"])
+        self.assertFalse(summary["qualification_allowed"])
+        self.assertFalse(summary["shipping_approved"])
+
+    def test_effect_audit_three_asr_text_matches_are_never_training_authority(self) -> None:
+        clone.execute(self.loaded(), self.output, workers=1)
+        rows = [json.loads(x) for x in (self.output / "manifest.jsonl").read_text().splitlines()]
+        screen = self.root / "screen.jsonl"
+        with screen.open("w", encoding="utf-8") as stream:
+            for row in rows:
+                stream.write(json.dumps({
+                    "item_id": row["item_id"], "file_sha256": row["file_sha256"],
+                    "observations": [
+                        {"model_family": f"diagnostic-{i}", "raw_text": row["text_requested"]}
+                        for i in range(3)]}, ensure_ascii=False) + "\n")
+        summary = effect.audit(self.output, screen)
+        self.assertEqual(summary["screened"], 6)
+        self.assertEqual(summary["screen_counts"][effect.SCREEN_MATCH], 6)
+        self.assertFalse(summary["label_authentication_verified"])
+        self.assertFalse(summary["training_admitted"])
+        self.assertEqual(summary["conclusion"], "SCREENING_ONLY_NOT_TRAINING_OR_QUALIFICATION")
+
+    def test_effect_audit_negative_wake_confusion_is_review_not_negative_label(self) -> None:
+        clone.execute(self.loaded(), self.output, workers=1)
+        rows = [json.loads(x) for x in (self.output / "manifest.jsonl").read_text().splitlines()]
+        target = next(r for r in rows if r["requested_intent"] == "near_miss")
+        screen = self.root / "screen.jsonl"
+        screen.write_text(json.dumps({
+            "item_id": target["item_id"], "file_sha256": target["file_sha256"],
+            "observations": [
+                {"model_family": "f1", "raw_text": "你好小屋"},
+                {"model_family": "f2", "raw_text": "你好小窝"},
+                {"model_family": "f3", "raw_text": "你好小屋"}]}, ensure_ascii=False) + "\n")
+        summary = effect.audit(self.output, screen)
+        self.assertEqual(summary["screen_counts"]["NEGATIVE_WAKE_CONFUSION_REVIEW"], 1)
+        self.assertIn("NEGATIVE_WAKE_CONFUSION_NEEDS_REVIEW", summary["gaps"])
+        self.assertFalse(summary["training_admitted"])
+
+    def test_effect_audit_detects_changed_pcm_and_screen_audio_mismatch(self) -> None:
+        clone.execute(self.loaded(), self.output, workers=1)
+        rows = [json.loads(x) for x in (self.output / "manifest.jsonl").read_text().splitlines()]
+        screen = self.root / "screen.jsonl"
+        row = rows[0]
+        screen.write_text(json.dumps({"item_id": row["item_id"], "file_sha256": "a" * 64,
+            "observations": [{"model_family": f"f{i}", "raw_text": row["text_requested"]}
+                             for i in range(3)]}) + "\n")
+        with self.assertRaisesRegex(ValueError, "bound to a different WAV"):
+            effect.audit(self.output, screen)
+        wav = self.output / row["audio"]
+        wav.write_bytes(wav.read_bytes() + b"changed")
+        with self.assertRaisesRegex(ValueError, "generated PCM/file identity mismatch"):
+            effect.audit(self.output)
+
+    def test_effect_audit_disallows_cross_speaker_identical_pcm(self) -> None:
+        reference2 = self.root / "reference2.wav"
+        with wave.open(str(reference2), "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000)
+            w.writeframes(b"\x22\x33" * (16000 * 3))
+        license2 = self.root / "license2.json"
+        dump(license2, {**self.license, "covered_speaker_ids": ["anonymous-2"]})
+        self.payload["speakers"].append({
+            "speaker_id": "anonymous-2", "source_family_id": "family-A",
+            "reference": {"path": "reference2.wav", "sha256": sha(reference2)},
+            "rights_evidence": {"path": "license2.json", "sha256": sha(license2)},
+            "reference_text": "新的参考音频"})
+        self.payload["max_attempts"] = 12
+        self.save_plan()
+        clone.execute(self.loaded(), self.output, workers=1)
+        with self.assertRaisesRegex(ValueError, "identical decoded PCM duplicated across original"):
+            effect.audit(self.output)
+
+    def test_effect_audit_forged_authority_and_path_traversal_fail(self) -> None:
+        clone.execute(self.loaded(), self.output, workers=1)
+        manifest = self.output / "manifest.jsonl"
+        summary_path = self.output / "summary.json"
+        original = [json.loads(x) for x in manifest.read_text().splitlines()]
+        summary = json.loads(summary_path.read_text())
+        for field, value, error in (
+            ("training_admitted", True, "unauthorized authority claim"),
+            ("audio", "audio/../../outside.wav", "WAV path escapes")):
+            rows = [dict(row) for row in original]
+            rows[0][field] = value
+            manifest.write_text("".join(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n"
+                                        for row in rows), encoding="utf-8")
+            summary["manifest_sha256"] = sha(manifest)
+            dump(summary_path, summary)
+            with self.assertRaisesRegex(ValueError, error):
+                effect.audit(self.output)
+
+    def test_effect_audit_rejects_duplicate_asr_families(self) -> None:
+        clone.execute(self.loaded(), self.output, workers=1)
+        row = json.loads((self.output / "manifest.jsonl").read_text().splitlines()[0])
+        screen = self.root / "screen.jsonl"
+        screen.write_text(json.dumps({"item_id": row["item_id"],
+            "file_sha256": row["file_sha256"],
+            "observations": [{"model_family": "same", "raw_text": row["text_requested"]}] * 3}) + "\n")
+        with self.assertRaisesRegex(ValueError, "families must be named and distinct"):
+            effect.audit(self.output, screen)
 
 
 if __name__ == "__main__":
