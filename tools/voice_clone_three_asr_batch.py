@@ -9,11 +9,9 @@ No command runs unless --execute is supplied. No unknown call is retried.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path
-import re
 import subprocess
 import sys
 
@@ -26,7 +24,6 @@ from voice_clone_effect_audit import (audit as effect_audit, private_audio_path,
                                       read_jsonl)
 
 POLICY = "offline-authorized-clone-three-asr-batch-screen-v1"
-SHA = re.compile(r"[0-9a-f]{64}\Z")
 PLACEHOLDER = re.compile(r"\{([^{}]+)\}")
 MAX_RECORDINGS = 256
 DEFAULT_CONFIG = {"language": "zh", "task": "transcribe", "prompt": "", "hotwords": []}
@@ -163,7 +160,10 @@ def run_recognizer(recognizer: dict, *, output_root: Path,
         receipt = read_object(receipt_path)
         need(all(receipt.get(k) == v for k, v in intent.items()) and
              receipt.get("raw_sha256") == sha256_file(raw_path) and
-             receipt.get("screen_only") is True, "ASR readback receipt mismatch")
+             receipt.get("screen_only") is True and
+             receipt.get("training_admitted") is False and
+             receipt.get("qualification_allowed") is False,
+             "ASR readback receipt mismatch")
     else:
         need(not raw_path.exists() and not receipt_path.exists(),
              "orphan ASR output cannot be overwritten")
