@@ -20,6 +20,7 @@ import textwrap
 
 OFFICIAL_WORKFLOWS = (
     '.github/workflows/ci.yml',
+    '.github/workflows/authorized-voice-clone-contracts.yml',
     '.github/workflows/training-integration.yml',
     '.github/workflows/training-audit-closure.yml',
     '.github/workflows/speech-like-external-base-bundle-contract.yml',
