@@ -183,6 +183,10 @@ treat partial keyword phrases as positive. Contextual positives, acoustic
 pause assertions and actual error labels need their own reviewed source
 contracts before extending this taxonomy.
 
+See [private three-ASR batch screening](VOICE_CLONE_THREE_ASR_SCREEN.md) for an
+explicitly opted-in offline pipeline that executes three pinned recognizer batch
+providers and preserves source hashes without passing target/requested text.
+
 Empty ASR transcripts are allowed as *screen observations* and produce
 `ASR_ALL_EMPTY_UNVERIFIED` or `ASR_PARTIAL_EMPTY_OR_DISAGREEMENT` diagnostic
 outcomes; three empty transcripts cannot prove that a WAV is truly silent.
