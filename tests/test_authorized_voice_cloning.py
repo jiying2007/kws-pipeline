@@ -405,5 +405,21 @@ class AuthorizedCloningTests(unittest.TestCase):
             effect.audit(self.output)
 
 
+    def test_all_empty_asr_outputs_do_not_prove_silence_or_wake_correctness(self) -> None:
+        clone.execute(self.loaded(), self.output, workers=1)
+        row = json.loads((self.output / "manifest.jsonl").read_text().splitlines()[0])
+        screen = self.root / "empty-screen.jsonl"
+        screen.write_text(json.dumps({"item_id": row["item_id"],
+            "file_sha256": row["file_sha256"],
+            "observations": [{"model_family": f"distinct-{i}", "raw_text": ""}
+                             for i in range(3)]}) + "\n")
+        report = effect.audit(self.output, screen)
+        self.assertEqual(report["screen_counts"]["ASR_ALL_EMPTY_UNVERIFIED"], 1)
+        self.assertIn("EMPTY_ASR_SCREEN_IS_NOT_SILENCE_EVIDENCE", report["gaps"])
+        self.assertFalse(report["label_authentication_verified"])
+        self.assertFalse(report["training_admitted"])
+        self.assertFalse(report["qualification_allowed"])
+
+
 if __name__ == "__main__":
     unittest.main()
