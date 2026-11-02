@@ -360,7 +360,8 @@ class AuthorizedCloningTests(unittest.TestCase):
         root = self.root / "bulk-generated"
         root.mkdir(exist_ok=True)
         ref = {"reference_id": "ref-one", "speaker_group_id": "speaker-one",
-               "source_family_id": "family-one", "role": "train-candidate"}
+               "source_family_id": "family-one", "role": "train-candidate",
+               "wav_sha256": "e" * 64}
         cells = []
         phrases = (("bulk-a111", "你好小窝", "positive-intent", 1),
                    ("bulk-b222", "你好小屋", "hard-negative-intent", None))
@@ -371,7 +372,7 @@ class AuthorizedCloningTests(unittest.TestCase):
                           "role": ref["role"], "prompt": text, "intended_kind": kind,
                           "intended_keyword_id": keyword, "label_authority": "intended_only",
                           "synthetic": True, "training_admitted": False,
-                          "qualification_allowed": False})
+                          "qualification_allowed": False, "seed": 1000 + len(cells)})
         plan = {"schema": bulk_boundary.PLAN_SCHEMA, "model_id": bulk_boundary.MODEL,
                 "references": [ref], "cells": cells,
                 "budgets": {"max_total_calls": 2, "max_calls_per_invocation": 64,
@@ -387,6 +388,14 @@ class AuthorizedCloningTests(unittest.TestCase):
         for idx, (cell, status) in enumerate(zip(cells, statuses)):
             folder = root / "cells" / cell["cell_id"]
             folder.mkdir(parents=True, exist_ok=True)
+            dump(folder / "started.json", {
+                "schema": bulk_boundary.START_RECEIPT, "cell_id": cell["cell_id"],
+                "reference_id": cell["reference_id"],
+                "reference_wav_sha256": ref["wav_sha256"],
+                "plan_sha256": bulk_boundary.canonical_sha(plan),
+                "source_family_id": ref["source_family_id"],
+                "seed": cell["seed"], "attempts": 1,
+                "training_admitted": False})
             wav = folder / "audio-16k.wav"
             with wave.open(str(wav), "wb") as stream:
                 stream.setnchannels(1)
@@ -501,6 +510,24 @@ class AuthorizedCloningTests(unittest.TestCase):
             bulk_boundary.main(["--plan", str(plan_path), "--screen", str(screen_path),
                 "--generated-root", str(root), "--output", str(forbidden)])
         self.assertFalse(forbidden.exists())
+
+
+    def test_bulk_effect_bridge_requires_exact_source_start_and_one_shot_intent(self) -> None:
+        plan, screen, root = self.make_bulk_data_fixture()
+        start = root / "cells" / "bulk-a111" / "started.json"
+        receipt = json.loads(start.read_text(encoding="utf-8"))
+        receipt["attempts"] = 2
+        dump(start, receipt)
+        with self.assertRaisesRegex(ValueError, "SOURCE_START_RECEIPT_DRIFT"):
+            bulk_boundary.measure(plan, screen, root)
+        receipt["attempts"] = 1
+        receipt["reference_wav_sha256"] = "f" * 64
+        dump(start, receipt)
+        with self.assertRaisesRegex(ValueError, "SOURCE_START_RECEIPT_DRIFT"):
+            bulk_boundary.measure(plan, screen, root)
+        start.unlink()
+        with self.assertRaises((FileNotFoundError, ValueError)):
+            bulk_boundary.measure(plan, screen, root)
 
 
 if __name__ == "__main__":
