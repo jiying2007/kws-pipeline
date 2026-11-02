@@ -26,6 +26,7 @@ POLICY = "kws-data-bulk-effect-consumer-v1"
 PLAN_SCHEMA = "kws-bulk-clone-corpus-plan-v1"
 SCREEN_SCHEMA = "kws-bulk-clone-machine-screen-v1"
 TTS_RECEIPT = "kws-bulk-clone-complete-v1"
+START_RECEIPT = "kws-bulk-clone-start-v1"
 MODEL = "Qwen/Qwen3-TTS-12Hz-0.6B-Base"
 HEX = re.compile(r"[0-9a-f]{64}\Z")
 ID = re.compile(r"[a-z][a-z0-9_-]{1,63}\Z")
@@ -122,7 +123,8 @@ def validate_plan(plan: dict) -> tuple[dict, dict]:
                 all(type(ref.get(k)) is str and ID.fullmatch(ref[k])
                     for k in ("reference_id", "speaker_group_id", "source_family_id")) and
                 ref.get("role") in ("train-candidate", "development-only") and
-                ref["reference_id"] not in refmap,
+                ref["reference_id"] not in refmap and
+                type(ref.get("wav_sha256")) is str and HEX.fullmatch(ref["wav_sha256"]),
                 "BULK_REFERENCE_IDENTITY")
         for group in ("speaker:" + ref["speaker_group_id"], "family:" + ref["source_family_id"]):
             require(group not in roles or roles[group] == ref["role"],
@@ -144,7 +146,9 @@ def validate_plan(plan: dict) -> tuple[dict, dict]:
                 cell.get("label_authority") == "intended_only" and
                 cell.get("training_admitted") is False and
                 cell.get("qualification_allowed") is False and
-                cell.get("synthetic") is True, "BULK_CELL_INTENT_OR_LINEAGE")
+                cell.get("synthetic") is True and
+                type(cell.get("seed")) is int and cell["seed"] >= 0,
+                "BULK_CELL_INTENT_OR_LINEAGE")
         cmap[cell["cell_id"]] = cell
     return refmap, cmap
 
@@ -220,6 +224,25 @@ def measure(plan: dict, screen: dict, generation_root: Path) -> dict:
         if row["status"] == "NO_GENERATION":
             require(not completed_path.exists(), "UNREPORTED_GENERATED_WAV")
         else:
+            # The producer commits this one-shot invocation intent before
+            # synthesizing. A completion without its original source/seed/plan
+            # receipt cannot establish even diagnostic provenance.
+            started = read_json(source_file(root, folder / "started.json"), 65536)
+            reference = refmap[cell["reference_id"]]
+            require(set(started) == {
+                "schema", "cell_id", "reference_id", "reference_wav_sha256",
+                "plan_sha256", "source_family_id", "seed", "attempts",
+                "training_admitted"} and
+                started["schema"] == START_RECEIPT and
+                started["cell_id"] == cell_id and
+                started["reference_id"] == cell["reference_id"] and
+                started["reference_wav_sha256"] == reference["wav_sha256"] and
+                started["plan_sha256"] == canonical_sha(plan) and
+                started["source_family_id"] == family and
+                type(started["seed"]) is int and started["seed"] == cell["seed"] and
+                type(started["attempts"]) is int and started["attempts"] == 1 and
+                started["training_admitted"] is False,
+                "SOURCE_START_RECEIPT_DRIFT")
             completion = read_json(source_file(root, folder / "completed.json"), 65536)
             require(completion.get("schema") == TTS_RECEIPT and
                     completion.get("status") == "GENERATED_PENDING_ASR" and
