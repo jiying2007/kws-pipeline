@@ -58,6 +58,7 @@ Current machine-readable product authority is `configs/shipping.xiaowo.json`. Th
 - [`KWS_LANDING_EXECUTION.md`](KWS_LANDING_EXECUTION.md) — historical staged training diagnosis, algorithm comparison and product-evidence closure
 - [`PRODUCT_MODEL_TRAINING.md`](PRODUCT_MODEL_TRAINING.md) — canonical governed model-training/preflight handoff, provenance and promotion boundaries
 - [`DATASET_ITERATION.md`](DATASET_ITERATION.md) — dataset-driven iteration for the registered deployable model without changing release authority
+- [`DATA_EFFECTIVENESS_REDESIGN_2026-11-02.md`](DATA_EFFECTIVENESS_REDESIGN_2026-11-02.md) — goal-driven source/voice-clone/ASR/negative-mining redesign, with strict independent acceptance and no current training authority
 - [`research/`](research/) — retained historical experiment/negative-result evidence; archived files are not current executable runbooks
 - [`REPOSITORY_GOVERNANCE.md`](REPOSITORY_GOVERNANCE.md) — current repository/platform governance state
 - [`GOVERNANCE_TARGET.md`](GOVERNANCE_TARGET.md) — enforced terminal governance target
