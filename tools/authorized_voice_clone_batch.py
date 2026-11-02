@@ -116,7 +116,7 @@ def load_campaign(plan_path: Path) -> dict:
         need(isinstance(text, str) and bool(text.strip()) and len(text) <= 120,
              f"phrases[{i}].text: invalid text")
         need(kind in KINDS, f"phrases[{i}].intent: invalid kind")
-        normalized = "".join(text.split())
+        normalized = re.sub(r"[\W_]+", "", text, flags=re.UNICODE)
         need(phrase_id not in seen_phrase_ids and normalized not in seen_text, "phrases: duplicate id/text")
         if kind == "wake":
             need(normalized in WAKE_TEXTS, "wake text is not a configured keyword")
@@ -136,7 +136,7 @@ def load_campaign(plan_path: Path) -> dict:
     need(isinstance(speakers, list) and 1 <= len(speakers) <= MAX_SPEAKERS,
          "speakers: expected 1-512 authorized sources")
     need(len(seeds) * len(phrases) <= MAX_PER_SPEAKER, "per-speaker recording cap exceeded")
-    seen_speakers, seen_refs = set(), set()
+    seen_speakers, seen_refs, seen_ref_pcm = set(), set(), set()
     parsed_speakers = []
     for i, row in enumerate(speakers):
         need(isinstance(row, dict), f"speakers[{i}]: expected object")
@@ -146,6 +146,8 @@ def load_campaign(plan_path: Path) -> dict:
         ref, ref_sha = pinned_file(root, row.get("reference"), f"speakers[{i}].reference")
         need(ref_sha not in seen_refs, "speakers: same reference reused as another speaker")
         ref_audio = inspect_pcm16_wav(ref)
+        need(ref_audio["pcm_sha256"] not in seen_ref_pcm,
+             "speakers: same decoded PCM reused as another speaker")
         need(3.0 <= ref_audio["duration_s"] <= 30.0, "reference must be 3-30 seconds mono PCM16 16kHz")
         rights, rights_sha = pinned_file(root, row.get("rights_evidence"), f"speakers[{i}].rights_evidence")
         rights_data = read_object(rights)
@@ -171,7 +173,12 @@ def load_campaign(plan_path: Path) -> dict:
                                 "reference_text": ref_text})
         seen_speakers.add(speaker_id)
         seen_refs.add(ref_sha)
+        seen_ref_pcm.add(ref_audio["pcm_sha256"])
     planned = len(parsed_speakers) * len(parsed_phrases) * len(seeds)
+    # Hyphens in IDs must not create ambiguous source_id aliases.
+    all_ids = [f"{speaker['speaker_id']}-{phrase['id']}-s{seed}"
+               for speaker in parsed_speakers for phrase in parsed_phrases for seed in seeds]
+    need(len(set(all_ids)) == planned, "speaker/phrase IDs produce ambiguous recording IDs")
     max_attempts = raw.get("max_attempts")
     need(type(max_attempts) is int and planned <= max_attempts <= MAX_RECORDINGS,
          "max_attempts must be a finite explicit budget covering the plan (max 32768)")
