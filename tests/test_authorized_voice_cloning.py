@@ -355,5 +355,55 @@ class AuthorizedCloningTests(unittest.TestCase):
             effect.audit(self.output, screen)
 
 
+    def test_typed_challenges_bind_generation_and_screening_by_family(self) -> None:
+        typed = ("exact_requested", "homophone_requested", "ordinary_conversation_requested")
+        for phrase, family in zip(self.payload["phrases"], typed):
+            phrase["challenge_family"] = family
+        self.save_plan()
+        campaign = self.loaded()
+        self.assertEqual([p["challenge_family"] for p in campaign["phrases"]], list(typed))
+        clone.execute(campaign, self.output, workers=1)
+        report = effect.audit(self.output)
+        for kind, family in zip(clone.KINDS, typed):
+            self.assertEqual(report["screen_by_challenge_family"][
+                kind + ":" + family][effect.SCREEN_NONE], 2)
+        self.assertFalse(report["qualification_allowed"])
+        self.assertFalse(report["training_admitted"])
+        self.assertEqual(clone.execute(campaign, self.output, workers=1)["recordings"], 6)
+        receipt = sorted((self.output / "attempts").rglob("*.receipt.json"))[0]
+        data = json.loads(receipt.read_text(encoding="utf-8"))
+        data["challenge_family"] = "other_near_miss_requested"
+        dump(receipt, data)
+        with self.assertRaisesRegex(RuntimeError, "receipt metadata/output mismatch"):
+            clone.execute(campaign, self.output, workers=1)
+
+    def test_challenge_family_wrong_intent_unknown_and_wrong_type_are_rejected(self) -> None:
+        for bad in ("homophone_requested", "not-a-taxonomy-family", [], False):
+            with self.subTest(bad=bad):
+                self.payload["phrases"][0]["challenge_family"] = bad
+                self.save_plan()
+                with self.assertRaisesRegex(ValueError, "not allowed for intent"):
+                    self.loaded()
+        self.payload["phrases"][0].pop("challenge_family")
+        self.payload["phrases"][1]["challenge_family"] = "homophone_requested"
+        self.save_plan()
+        self.assertEqual(self.loaded()["phrases"][1]["challenge_family"], "homophone_requested")
+
+    def test_auditor_rejects_forged_cross_intent_challenge_family(self) -> None:
+        clone.execute(self.loaded(), self.output, workers=1)
+        manifest = self.output / "manifest.jsonl"
+        summary_file = self.output / "summary.json"
+        records = [json.loads(line) for line in manifest.read_text().splitlines()]
+        row = next(record for record in records if record["requested_intent"] == "wake")
+        row["challenge_family"] = "homophone_requested"
+        manifest.write_text("".join(json.dumps(record, sort_keys=True, ensure_ascii=False) + "\n"
+                                    for record in records), encoding="utf-8")
+        summary = json.loads(summary_file.read_text(encoding="utf-8"))
+        summary["manifest_sha256"] = sha(manifest)
+        dump(summary_file, summary)
+        with self.assertRaisesRegex(ValueError, "challenge family conflicts"):
+            effect.audit(self.output)
+
+
 if __name__ == "__main__":
     unittest.main()
