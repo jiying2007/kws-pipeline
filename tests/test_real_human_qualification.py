@@ -125,6 +125,70 @@ def test_phase_a_field_plan_preflight() -> None:
     assert full_report["critical_negative_exposure_hours_missing"] == \
         policy["critical_negative_exposure_hours"]
     assert not full_report["qualification_allowed"] and not full_report["shipping_approved"]
+    assert len(json.dumps(full, ensure_ascii=False, sort_keys=True,
+                          separators=(",", ":")).encode()) > 1024 * 1024
+    # Upstream kws-data v1 verifies individual manifests only up to 1 MiB.
+    # Two <=1 MiB shards are allowed, but MUST be evaluated together to
+    # count each speaker once and preserve both of that speaker's sessions.
+    shard_one = draft([
+        (f"speaker-{i:03d}", f"session-{i:03d}-1",
+         f"family-{i:03d}", "sealed-evaluation") for i in range(40)
+    ])
+    shard_two = draft([
+        (f"speaker-{i:03d}", f"session-{i:03d}-2",
+         f"family-{i:03d}", "sealed-evaluation") for i in range(40)
+    ])
+    for shard in (shard_one, shard_two):
+        assert len(json.dumps(shard, ensure_ascii=False, sort_keys=True,
+                              separators=(",", ":")).encode()) < 1024 * 1024
+    hashes = [preflight.canonical_sha(shard_one), preflight.canonical_sha(shard_two)]
+    joint = preflight.assess_many([shard_one, shard_two], policy, hashes)
+    assert joint["source_shard_count"] == 2
+    assert joint["source_shard_plan_sha256s"] == hashes
+    assert joint["declared_sealed_speakers"] == 40
+    assert joint["declared_sealed_sessions"] == 80
+    assert joint["sealed_requested_wakes_by_keyword"] == {"1": 960, "2": 960}
+    assert not joint["aggregate_source_identity_authenticated"]
+    assert joint["verified_negative_audio_hours"] == 0
+    assert not joint["qualification_allowed"]
+    # Individual plans may each be structurally valid and still cause cross-
+    # shard speaker/voice-family split leakage. The aggregate must reject it.
+    leaking = json.loads(json.dumps(shard_two))
+    for row in leaking["slots"]:
+        if row["speaker_id"] == "speaker-000":
+            row["role"] = "development"
+    try:
+        preflight.assess_many(
+            [shard_one, leaking], policy,
+            [hashes[0], preflight.canonical_sha(leaking)])
+    except ValueError as exc:
+        assert "FIELD_SPEAKER_OR_FAMILY_CROSSES_SPLITS" in str(exc)
+    else:
+        raise AssertionError("cross-shard source split leakage accepted")
+    try:
+        preflight.assess_many([shard_one, shard_one], policy, [hashes[0], hashes[0]])
+    except ValueError as exc:
+        assert "FIELD_INTENT_OR_SLOT_ID_CHANGED" in str(exc)
+    else:
+        raise AssertionError("duplicated shard increased observed coverage")
+    with tempfile.TemporaryDirectory() as shard_tmp:
+        shard_root = pathlib.Path(shard_tmp)
+        inputs = [shard_root / "plan-a.json", shard_root / "plan-b.json"]
+        policy_file = shard_root / "policy.json"
+        output = shard_root / "aggregated-private-coverage.json"
+        for target, shard in zip(inputs, (shard_one, shard_two)):
+            target.write_text(json.dumps(shard, ensure_ascii=False), encoding="utf-8")
+        policy_file.write_text(json.dumps(policy), encoding="utf-8")
+        assert preflight.main([
+            "--field-plan", str(inputs[0]), "--field-plan", str(inputs[1]),
+            "--phase-a-policy", str(policy_file),
+            "--expected-plan-sha256", hashes[0],
+            "--expected-plan-sha256", hashes[1], "--output", str(output),
+        ]) == 0
+        reported = json.loads(output.read_text(encoding="utf-8"))
+        assert reported["declared_sealed_speakers"] == 40
+        assert reported["source_shard_count"] == 2
+        assert not reported["qualification_allowed"]
 
     bad = json.loads(json.dumps(plan))
     bad["slots"][0]["audio_recorded"] = True
