@@ -44,7 +44,148 @@ def run(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
     return completed
 
 
+
+def test_phase_a_field_plan_preflight() -> None:
+    """No actual recording, source right, AFE, qualification or model involved."""
+    import sys
+    sys.path.insert(0, str(ROOT / "tools"))
+    import phase_a_field_plan_preflight as preflight
+
+    policy = json.loads((ROOT / "commercial/real-human-qualification.policy.json")
+                        .read_text(encoding="utf-8"))
+
+    def draft(session_roles: list[tuple[str, str, str, str]]) -> dict:
+        slots = []
+        for speaker, session, family, role in session_roles:
+            for kind, prompt, distance, azimuth, repetition in sorted(preflight.expected_tasks()):
+                row = {
+                    "speaker_id": speaker, "session_id": session,
+                    "source_family_id": family, "role": role,
+                    "room_id": "room-one", "device_id": "microphone-one",
+                    "afe_profile_sha256": None,
+                    "distance_m": distance, "azimuth_deg": azimuth,
+                    "repetition": repetition, "prompt": prompt,
+                    "intent_kind": kind,
+                    "intended_keyword_id": preflight.WORDS.get(prompt),
+                    "audio_recorded": False, "human_verbatim_reviewed": False,
+                    "rights_approved": False, "training_admitted": False,
+                }
+                row["slot_id"] = preflight.slot_identity(row)
+                slots.append(row)
+        slots.sort(key=lambda row: row["slot_id"])
+        return {
+            "schema": preflight.FIELD_SCHEMA,
+            "source_type": "human-field-recording-candidate",
+            "scope": "private-local-pilot-only",
+            "roles_are_declared_not_authenticated": True,
+            "participants": len(session_roles),
+            "slots": slots,
+            "human_rights_authenticated": False,
+            "audio_labels_verified": False, "training_admitted": False,
+            "qualification_allowed": False, "shipping_approved": False,
+            "model_calls": 0,
+        }
+
+    roles = [
+        ("speaker-a", "speaker-a-1", "family-a", "train-candidate"),
+        ("speaker-b", "speaker-b-1", "family-b", "development"),
+        ("speaker-c", "speaker-c-1", "family-c", "sealed-evaluation"),
+    ]
+    plan = draft(roles)
+    result = preflight.assess(plan, policy, preflight.canonical_sha(plan))
+    assert result["declared_session_participants"] == 3
+    assert result["declared_sealed_speakers"] == 1
+    assert result["sealed_requested_wakes_by_keyword"] == {"1": 12, "2": 12}
+    assert result["sealed_rear_azimuth_candidate_wakes"] == {"1": 6, "2": 6}
+    assert result["verified_negative_audio_hours"] == 0
+    assert result["verified_real_speakers"] == 0
+    assert not result["qualification_allowed"] and not result["training_admitted"]
+    assert result["planned_quota_gaps"]["declared_sealed_speakers_missing"] == 39
+    assert result["planned_quota_gaps"]["declared_sealed_speakers_short_of_session_min"] == 1
+    tagged = {r["name"]: r for r in result["critical_positive_slice_plans"]}
+    for name in ("rear", "playback", "double_talk", "robot_motion"):
+        assert tagged[name]["requested_support"]["1"]["planned_candidate_slots"] == 0
+        assert not tagged[name]["actual_qualification_support_verified"]
+
+    # A full *declared* 40-speaker, two-session sealed plan can meet the raw
+    # slot-count minimum while STILL having zero verified acoustic evidence.
+    full = draft([
+        (f"speaker-{i:03d}", f"session-{i:03d}-{j}",
+         f"family-{i:03d}", "sealed-evaluation")
+        for i in range(40) for j in (1, 2)
+    ])
+    full_report = preflight.assess(full, policy, preflight.canonical_sha(full))
+    assert full_report["declared_sealed_speakers"] == 40
+    assert full_report["declared_sealed_sessions"] == 80
+    assert full_report["sealed_requested_wakes_by_keyword"] == {"1": 960, "2": 960}
+    assert full_report["planned_quota_gaps"]["planned_wakes_total_missing"] == 0
+    assert full_report["planned_quota_gaps"]["declared_sealed_speakers_missing"] == 0
+    assert full_report["verified_actual_keyword_events"] == 0
+    assert full_report["verified_negative_audio_hours"] == 0
+    assert full_report["critical_negative_exposure_hours_missing"] == \
+        policy["critical_negative_exposure_hours"]
+    assert not full_report["qualification_allowed"] and not full_report["shipping_approved"]
+
+    bad = json.loads(json.dumps(plan))
+    bad["slots"][0]["audio_recorded"] = True
+    try:
+        preflight.assess(bad, policy, preflight.canonical_sha(bad))
+    except ValueError as exc:
+        assert "FIELD_SLOT_CANNOT_CLAIM_OBSERVED_AUDIO_OR_AUTHORITY" in str(exc)
+    else:
+        raise AssertionError("forged recorded audio was accepted")
+    bad = json.loads(json.dumps(plan))
+    bad["slots"][0]["slot_id"] = "s-forged"
+    try:
+        preflight.assess(bad, policy, preflight.canonical_sha(bad))
+    except ValueError as exc:
+        assert "FIELD_INTENT_OR_SLOT_ID_CHANGED" in str(exc)
+    else:
+        raise AssertionError("forged slot identity was accepted")
+    try:
+        preflight.assess(plan, policy, "0" * 64)
+    except ValueError as exc:
+        assert "INDEPENDENT_FROZEN_FIELD_PLAN_DIGEST_MISMATCH" in str(exc)
+    else:
+        raise AssertionError("edited frozen plan digest accepted")
+    bad_policy = json.loads(json.dumps(policy))
+    bad_policy["minimums"]["speakers"] = True
+    try:
+        preflight.assess(plan, bad_policy, preflight.canonical_sha(plan))
+    except ValueError as exc:
+        assert "PHASE_A_QUOTA_NOT_POSITIVE_INTEGER" in str(exc)
+    else:
+        raise AssertionError("boolean speaker policy accepted")
+    # A private 0600, create-once record only; never public Git worktree.
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = pathlib.Path(tmp)
+        plan_file, policy_file, output = (
+            tmp / "field-plan.json", tmp / "phase-a.json", tmp / "coverage.json")
+        plan_file.write_text(json.dumps(plan, ensure_ascii=False), encoding="utf-8")
+        policy_file.write_text(json.dumps(policy), encoding="utf-8")
+        args = ["--field-plan", str(plan_file), "--phase-a-policy", str(policy_file),
+                "--expected-plan-sha256", preflight.canonical_sha(plan),
+                "--output", str(output)]
+        assert preflight.main(args) == 0
+        assert (output.stat().st_mode & 0o777) == 0o600
+        assert json.loads(output.read_text())["qualification_allowed"] is False
+        try:
+            preflight.main(args)
+        except FileExistsError:
+            pass
+        else:
+            raise AssertionError("existing report overwritten")
+        args[-1] = str(ROOT / "never-publish-private-field-plan-report.json")
+        try:
+            preflight.main(args)
+        except ValueError as exc:
+            assert "PRIVATE_CREATE_ONLY_OUTPUT_REQUIRED" in str(exc)
+        else:
+            raise AssertionError("private field-plan output accepted inside repository")
+
+
 def main() -> int:
+    test_phase_a_field_plan_preflight()
     production_policy = json.loads(
         (ROOT / "commercial/real-human-qualification.policy.json").read_text(
             encoding="utf-8"
