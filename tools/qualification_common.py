@@ -283,6 +283,34 @@ def read_vocabulary(path: pathlib.Path) -> dict:
     }
 
 
+def require_default_qualification_runtime(runtime: dict) -> None:
+    """Reject declarations unsupported by the default-only qualification runners.
+
+    kws_wav and kws_board_bench pass NULL to kws_engine_init. Until their
+    effective configuration is carried through the evidence chain, qualification
+    may describe only kws_default_config(), not another otherwise legal config.
+    This restriction does not change the general runtime/SDK parameter ranges.
+    """
+    ranges = parameter_contract()["runtime"]
+    for name in (
+        "min_speech_dbfs",
+        "token_boost",
+        "state_retention",
+        "refractory_ms",
+        "external_vad_threshold",
+    ):
+        entry = ranges[name]
+        value = runtime.get(name)
+        label = f"qualification runtime.{name}"
+        actual = (bounded_int(value, label, entry) if name == "refractory_ms"
+                  else bounded_float(value, label, entry))
+        if actual != entry["default"]:
+            raise ValueError(
+                f"{label} must equal the default-only runner value "
+                f"{entry['default']}; non-default qualification is unsupported"
+            )
+
+
 def validate_runtime_config(path: pathlib.Path, model: dict) -> dict:
     config = load_json(path)
     if json_int(config.get("sample_rate_hz"), "config.sample_rate_hz") != SAMPLE_RATE_HZ:

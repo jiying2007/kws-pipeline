@@ -30,12 +30,109 @@ from qualification_metrics import (validate_event_metrics, score, validate_recor
                                    validate_detections, EVENT_SCORING_CONTRACT)
 from test_board_bench import board_summary_fixture
 
-PYTHON = [sys.executable] + (["-" + "O" * sys.flags.optimize] if sys.flags.optimize else [])
+PYTHON = [sys.executable, "-S", "-B"] + (["-" + "O" * sys.flags.optimize] if sys.flags.optimize else [])
 
 def require(condition: bool, message: str) -> None:
     """Keep the standalone-gate regression checks active under -O/-OO."""
     if not condition:
         raise AssertionError(message)
+
+
+def verify_default_runtime_binding(config, manifest, producer_command, gate_command):
+    """Both entry points reject legal-but-unexecuted runtime declarations."""
+    original_config = config.read_text(encoding="utf-8")
+    original_manifest = manifest.read_text(encoding="utf-8")
+    baseline_config = json.loads(original_config)
+    baseline_manifest = json.loads(original_manifest)
+    alternatives = {
+        "min_speech_dbfs": -54.0,
+        "token_boost": 1.6,
+        "state_retention": 0.93,
+        "refractory_ms": 1201,
+        "external_vad_threshold": 0.46,
+    }
+
+    def rejected(command, label):
+        checked = subprocess.run(command, capture_output=True, text=True,
+                                 check=False, timeout=60)
+        require(checked.returncode == 2,
+                f"{label}: expected rejection: {checked.stdout}{checked.stderr}")
+        require("runtime." in checked.stderr or "non-finite JSON constant" in checked.stderr,
+                f"{label}: rejected for an unrelated reason: {checked.stderr}")
+
+    try:
+        for name, alternative in alternatives.items():
+            changed = copy.deepcopy(baseline_config)
+            changed["runtime"][name] = alternative
+            write_json(config, changed)
+            rejected(producer_command, f"producer legal non-default {name}")
+            require(manifest.read_text(encoding="utf-8") == original_manifest,
+                    "rejected producer must preserve the previous manifest")
+
+            # A hand-edited manifest bypasses the producer; the independent gate
+            # must enforce the same runner limitation itself.
+            forged = copy.deepcopy(baseline_manifest)
+            forged["runtime"][name] = alternative
+            write_json(manifest, forged)
+            rejected(gate_command, f"gate legal non-default {name}")
+            manifest.write_text(original_manifest, encoding="utf-8")
+
+        # Missing normalized fields cannot be guessed by the standalone gate.
+        for name in alternatives:
+            forged = copy.deepcopy(baseline_manifest)
+            del forged["runtime"][name]
+            write_json(manifest, forged)
+            rejected(gate_command, f"gate missing {name}")
+        manifest.write_text(original_manifest, encoding="utf-8")
+
+        for name in alternatives:
+            for bad in (True, "default", None, float("nan"),
+                        float("inf"), float("-inf")):
+                changed = copy.deepcopy(baseline_config)
+                changed["runtime"][name] = bad
+                # Deliberately malformed JSON constants must reach the CLI;
+                # the shared fixture writer correctly refuses them itself.
+                config.write_text(json.dumps(changed, allow_nan=True) + "\n",
+                                  encoding="utf-8")
+                rejected(producer_command, f"producer invalid {name}")
+                forged = copy.deepcopy(baseline_manifest)
+                forged["runtime"][name] = bad
+                manifest.write_text(json.dumps(forged, allow_nan=True) + "\n",
+                                    encoding="utf-8")
+                rejected(gate_command, f"gate invalid {name}")
+                manifest.write_text(original_manifest, encoding="utf-8")
+        for name in ("min_speech_dbfs", "state_retention", "refractory_ms"):
+            changed = copy.deepcopy(baseline_config)
+            del changed["runtime"][name]
+            write_json(config, changed)
+            rejected(producer_command, f"producer missing required {name}")
+        changed = copy.deepcopy(baseline_config)
+        changed["runtime"]["refractory_ms"] = 1200.0
+        write_json(config, changed)
+        rejected(producer_command, "producer integer field encoded as float")
+        config.write_text(original_config, encoding="utf-8")
+        forged = copy.deepcopy(baseline_manifest)
+        forged["runtime"]["refractory_ms"] = 1200.0
+        write_json(manifest, forged)
+        rejected(gate_command, "gate integer field encoded as float")
+        manifest.write_text(original_manifest, encoding="utf-8")
+        # Explicit optional defaults are accepted as well as their existing
+        # omission/normalization in the fixture's original producer input.
+        explicit = copy.deepcopy(baseline_config)
+        explicit["runtime"]["external_vad_threshold"] = 0.45
+        write_json(config, explicit)
+        subprocess.run(producer_command, check=True, timeout=60)
+        subprocess.run(gate_command, check=True, timeout=60)
+        omitted = copy.deepcopy(baseline_config)
+        omitted["runtime"].pop("token_boost", None)
+        omitted["runtime"].pop("external_vad_threshold", None)
+        write_json(config, omitted)
+        subprocess.run(producer_command, check=True, timeout=60)
+        subprocess.run(gate_command, check=True, timeout=60)
+        print("default-runtime binding: 80 rejection cases + 2 default roundtrips ok")
+    finally:
+        config.write_text(original_config, encoding="utf-8")
+        manifest.write_text(original_manifest, encoding="utf-8")
 
 
 def verify_standalone_soak_replay(manifest, policy, gate_command, runtime_soak,
@@ -589,6 +686,7 @@ def main() -> int:
             checked = subprocess.run(gate_command, capture_output=True, text=True, check=False)
             require(checked.returncode == expected, checked.stdout + checked.stderr)
 
+        verify_default_runtime_binding(config, manifest, command, gate_command)
         original_manifest = manifest.read_text(encoding="utf-8")
         verify_standalone_soak_replay(manifest, policy, gate_command, runtime_soak,
                                       evidence_raw, valid_policy)

@@ -43516,6 +43516,85 @@
           }
         }
       ]
+    },
+    {
+      "id": "qualification-default-runtime-binding-20261102",
+      "date": "2026-11-02",
+      "base_commit": "7e5ccb931b1392f27b774ec78d5266c2b6cc24df",
+      "base_tree": "3d114ab8c3559ca4aa71da84d297410bfeb3086a",
+      "workflow_source_changed": false,
+      "scope": "Reject qualification runtime declarations unsupported by default-only WAV and board runners in both manifest generation and independent qualification gate.",
+      "rationale": "Canonical parameter-contract defaults are the only source. Keep SDK ranges and production defaults unchanged. Existing normal qualification fixture suite adds 80 rejection cases and 2 default roundtrips; no claim of actual model or board qualification.",
+      "files": [
+        {
+          "path": "tools/qualification_common.py",
+          "before": {
+            "path": "tools/qualification_common.py",
+            "mode": "100644",
+            "bytes": 12850,
+            "sha256": "6a7092af1df3f6408188e6c249485594c074753176f294d9bb4a593f7928300c",
+            "git_blob_sha1": "eca24993ed47264fa316e60bc42538c61b874ea3"
+          },
+          "after": {
+            "path": "tools/qualification_common.py",
+            "mode": "100644",
+            "bytes": 14009,
+            "sha256": "4f5a43aa7fa4ffbb41fb5820a820f71be205c1ae9eec635ea42a2dc4b658f526",
+            "git_blob_sha1": "cceebd9fe7bc094bfab7bb4b69a8427c9c7848cd"
+          }
+        },
+        {
+          "path": "tools/qualification_manifest.py",
+          "before": {
+            "path": "tools/qualification_manifest.py",
+            "mode": "100644",
+            "bytes": 22467,
+            "sha256": "34e28f4c8057ea2e7464f3d40ff510097e622abfe30408849e28947e77473fc7",
+            "git_blob_sha1": "489bdbf96b2ebf322071b7aff0e119f4c0d0576d"
+          },
+          "after": {
+            "path": "tools/qualification_manifest.py",
+            "mode": "100644",
+            "bytes": 22561,
+            "sha256": "de6b039736a42a1c3252be421e077b40588cfbe282114b8f55b3f78ead547bc6",
+            "git_blob_sha1": "969ccf89343d256d8b70a9f7c52c97a635838a95"
+          }
+        },
+        {
+          "path": "tools/qualification_gate.py",
+          "before": {
+            "path": "tools/qualification_gate.py",
+            "mode": "100644",
+            "bytes": 27894,
+            "sha256": "330ffa9012de0d353e93b826a1187dce96d8563b828a79addf2578d2ec0e2d98",
+            "git_blob_sha1": "e194d7c5d5b2f58b89a39e8aff53f44bb71f6410"
+          },
+          "after": {
+            "path": "tools/qualification_gate.py",
+            "mode": "100644",
+            "bytes": 28016,
+            "sha256": "6869c775d76daf5256bcc69adde2027931ec3ed18cea90e45e59045edd328291",
+            "git_blob_sha1": "fd1ab19ce51170f409eec03760531c0284109ab4"
+          }
+        },
+        {
+          "path": "tests/test_release_qualification.py",
+          "before": {
+            "path": "tests/test_release_qualification.py",
+            "mode": "100644",
+            "bytes": 31938,
+            "sha256": "3e5c48cf61457570e35dca36e41465e87187c0b79eaca74a984da523cacc296a",
+            "git_blob_sha1": "02e1dd3d0046a3448e28692a071fac8b94739fd3"
+          },
+          "after": {
+            "path": "tests/test_release_qualification.py",
+            "mode": "100644",
+            "bytes": 37110,
+            "sha256": "778cfc8e283172f0d41703560b652671c56e7862d4dd2bdb2cec468518617c96",
+            "git_blob_sha1": "04b7ad95ad21c120945d1f0075ecc8cbd6f6988f"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
