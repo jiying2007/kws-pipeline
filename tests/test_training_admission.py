@@ -12,6 +12,7 @@ import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "training"), str(ROOT / "tools")]
+from qualification_common import parameter_contract
 from audit_dataset import write_lineage_sidecar
 from speech_label_admission import admission_from_reviews, canonical_sha256
 from training_admission import (verify_training_manifests, require_promotable_admission,
@@ -634,7 +635,11 @@ class QualificationAdmissionMetadataTests(unittest.TestCase):
         return {"schema_version": 3, "source_sha": "a" * 40, "sku": "schema-only",
                 "runtime": {"model_abi": 2, "keyword_pack_abi": 3, "sample_rate_hz": 16000,
                             "frame_length_samples": 400, "frame_hop_samples": 320,
-                            "frontend_kind": 0, "frontend_name": "logmel"},
+                            "frontend_kind": 0, "frontend_name": "logmel",
+                            **{name: parameter_contract()["runtime"][name]["default"]
+                               for name in ("min_speech_dbfs", "token_boost",
+                                            "state_retention", "refractory_ms",
+                                            "external_vad_threshold")}},
                 "vocabulary": {"fingerprint": "0x" + "a" * 16, "sha256": "8" * 64},
                 "model_lineage": lineage, "artifacts": artifacts, "dataset_audit": self.audit,
                 "evaluation": {}, "board": {}, "evidence": {}}

@@ -1,0 +1,39 @@
+name: authorized-voice-clone-contracts
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/authorized-voice-clone-contracts.yml"
+      - "tools/authorized_voice_clone_batch.py"
+      - "tests/test_authorized_voice_cloning.py"
+      - "tools/README.md"
+      - "docs/AUTHORIZED_VOICE_CLONING.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: authorized-voice-clone-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  offline-source-contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test authorization, source identity, run budget and resumability
+        run: |
+          set -euo pipefail
+          python3 -I -S -B tests/test_authorized_voice_cloning.py
+          python3 -I -S -B -O tests/test_authorized_voice_cloning.py
+          python3 -I -S -B -OO tests/test_authorized_voice_cloning.py
+      - name: Verify tracked-worktree integrity
+        run: |
+          set -euo pipefail
+          git diff --exit-code HEAD --
+          git diff --quiet --cached
+          test -z "$(git status --porcelain --untracked-files=no)"

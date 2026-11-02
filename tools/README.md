@@ -48,6 +48,7 @@ make collected measurements auditable and do not substitute for those measuremen
 
 ## Speech-like source preparation and admission
 
+- [`authorized_voice_clone_batch.py`](authorized_voice_clone_batch.py) — Offline, rights-scoped bounded multi-speaker cloning intents; no automatic training or qualification. [Private-generation guide](../docs/AUTHORIZED_VOICE_CLONING.md).
 - [`asr_native_contracts.py`](asr_native_contracts.py) — Validate frozen native-ASR configuration and capture metadata without running recognition.
 - [`asr_source_resolver.py`](asr_source_resolver.py) — Verify retained evidence against code-owned source roots; production train roots are currently empty.
 - [`attach_speech_like_labels.py`](attach_speech_like_labels.py)

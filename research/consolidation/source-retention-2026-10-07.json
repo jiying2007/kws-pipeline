@@ -15642,7 +15642,8 @@
     ".github/workflows/tts-quality-remaining-20261014-v1.yml",
     ".github/workflows/tts-pilot-asr-20261014-v1.yml",
     ".github/workflows/kw1-preset-supplement-20261014-v1.yml",
-    ".github/workflows/kw1-supplement-observation.yml"
+    ".github/workflows/kw1-supplement-observation.yml",
+    ".github/workflows/authorized-voice-clone-contracts.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -43595,6 +43596,34 @@
           }
         }
       ]
+    },
+    {
+      "id": "qualification-runtime-admission-fixture-sync-20261102",
+      "date": "2026-11-02",
+      "base_commit": "df62b1f98bcf8a9f3eed762b4847659e67aa0929",
+      "base_tree": "6ff086a4717d525e3bff4146cb00073e465885c3",
+      "workflow_source_changed": false,
+      "scope": "Synchronize existing admission metadata fixture with canonical runtime defaults without weakening qualification gate or admission assertions.",
+      "rationale": "CI41454646868 failed because an existing metadata-only fixture omitted runtime defaults before its intended admission checks. Preserve the failed run; normal, -O and -OO admission suites each passed45 tests locally. No actual model qualification.",
+      "files": [
+        {
+          "path": "tests/test_training_admission.py",
+          "before": {
+            "path": "tests/test_training_admission.py",
+            "mode": "100644",
+            "bytes": 64349,
+            "sha256": "6d8cc9a1a9d827616d5367351d64b33e5a35bb87cb51a26cec2668c0acc8129b",
+            "git_blob_sha1": "4768b9b902bf4588f985f6cbb3b4c5a8566bdce2"
+          },
+          "after": {
+            "path": "tests/test_training_admission.py",
+            "mode": "100644",
+            "bytes": 64717,
+            "sha256": "6af9c7c3c4dcb3ed0a069596abe443d98bc83054f6381c0e8ade7fedcf2e24f9",
+            "git_blob_sha1": "0066e5b9d1c9a810f8eb8ab86a478a7ba7c82b1c"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -43688,6 +43717,13 @@
       "bytes": 964,
       "sha256": "3882b9b5498c3479086c354eb393142339c1466ce468a25ad5efd19ec1dd0731",
       "git_blob_sha1": "68472c1bc2837fb7243a2552d25060f7da270adc"
+    },
+    {
+      "path": ".github/workflows/authorized-voice-clone-contracts.yml",
+      "mode": "100644",
+      "bytes": 1271,
+      "sha256": "b44acb0d9a4b448a4578afaca4eabd49162603438dbd5a76b7fae7a0bae017ca",
+      "git_blob_sha1": "f98d751fea32576585a465012113ecae82ce9922"
     }
   ],
   "current_source_revision": {
