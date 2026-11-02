@@ -153,3 +153,32 @@ acceptance remain separate mandatory product gates.
 All repository tests for this entry point use a harmless local fake WAV provider;
 a passing test **does not** mean any Qwen/CosyVoice model was run or any
 licensed speaker source was imported.
+
+
+## Typed challenge families (optional, backwards-compatible)
+
+The campaign's individual phrase objects may now include an explicit
+\`"challenge_family"\` *generation-intent taxonomy*:
+
+| \`intent\` | Allowed \`challenge_family\` values |
+| --- | --- |
+| \`wake\` | \`exact_requested\` |
+| \`near_miss\` | \`homophone_requested\`, \`partial_prefix_requested\`, \`partial_suffix_requested\`, \`cross_sentence_requested\`, \`reordered_requested\`, \`other_near_miss_requested\` |
+| \`ordinary_negative\` | \`ordinary_conversation_requested\`, \`media_script_requested\`, \`other_nonwake_requested\` |
+
+These labels describe what the TTS command **asked** for, not what the
+generated waveform contains or whether it caused a false accept.
+The exact chosen subtype is included in the immutable campaign fingerprint,
+attempt intent and completed WAV receipt. Replay of a mismatched subtype fails.
+Legacy campaigns without a subtype retain **exactly their old fingerprints and
+receipts** and appear under \`unclassified_legacy\` in the effect-screen report.
+
+The optional subtype lets the offline
+[\`voice_clone_effect_audit.py\`](../tools/voice_clone_effect_audit.py) report
+\`screen_by_challenge_family\` alongside text and speaker-family yield. It never
+creates a true negative label, authenticated ASR evidence, independent
+speaker count, or qualification. The current v1 generator still requires wake
+text to normalize to one complete product keyword and will not silently
+treat partial keyword phrases as positive. Contextual positives, acoustic
+pause assertions and actual error labels need their own reviewed source
+contracts before extending this taxonomy.
