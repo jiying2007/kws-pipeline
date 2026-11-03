@@ -252,6 +252,14 @@ def test_phase_a_field_plan_preflight() -> None:
         assert "PHASE_A_QUOTA_NOT_POSITIVE_INTEGER" in str(exc)
     else:
         raise AssertionError("boolean speaker policy accepted")
+    weakened = json.loads(json.dumps(policy))
+    weakened["minimums"]["expected_wakes_per_keyword"] = 1
+    try:
+        preflight.assess(plan, weakened, preflight.canonical_sha(plan))
+    except ValueError as exc:
+        assert "PHASE_A_POLICY_NOT_CURRENT_SOURCE" in str(exc)
+    else:
+        raise AssertionError("caller-supplied weakened Phase A policy accepted")
     # A private 0600, create-once record only; never public Git worktree.
     with tempfile.TemporaryDirectory() as tmp:
         tmp = pathlib.Path(tmp)
