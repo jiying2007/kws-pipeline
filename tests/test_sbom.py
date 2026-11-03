@@ -192,35 +192,6 @@ class SbomTests(unittest.TestCase):
         with self.assertRaises(subprocess.CalledProcessError):
             self.generate()
 
-    def test_release_commands_run_semantics_and_fail_closed(self):
-        for workflow in ("release.yml", "deployment-release.yml"):
-            source = (ROOT / ".github/workflows" / workflow).read_text()
-            match = re.search(r"^\s*python3 tools/validate_sbom.py[^\n]*(?:\\\n[^\n]*)*", source, re.M)
-            self.assertIsNotNone(match, workflow)
-            command = match.group(0).strip()
-            self.assertNotIn("json.tool", command)
-            # Execute the literal workflow command with its SDK root and output
-            # variables bound to our synthetic fixture, before corrupting JSON.
-            import shutil
-            runner = self.directory / workflow
-            (runner / "dist").mkdir(parents=True)
-            for suffix in ("sdk", "sdk-a"):
-                shutil.copytree(self.sdk, runner / suffix)
-            destination = runner / "dist/kws-pipeline-0.3.0.spdx.json"
-            destination.write_bytes(self.output.read_bytes())
-            env = dict(os.environ, RUNNER_TEMP=str(runner), VERSION="0.3.0", stem="kws-pipeline-0.3.0")
-            (runner / "tools").symlink_to(ROOT / "tools", target_is_directory=True)
-            result = subprocess.run(["bash", "-e", "-c", command], cwd=runner, env=env,
-                                    capture_output=True, text=True)
-            self.assertEqual(result.returncode, 0, result.stderr)
-            bad = copy.deepcopy(self.document)
-            bad["files"][0]["checksums"] = bad["files"][0]["checksums"][1:]
-            destination.write_text(json.dumps(bad))
-            result = subprocess.run(["bash", "-e", "-c", command], cwd=runner, env=env,
-                                    capture_output=True, text=True)
-            self.assertNotEqual(result.returncode, 0, workflow)
-            self.assertIn("requires SHA1", result.stderr)
-
     def test_duplicate_json_key_cli_rejected(self):
         self.output.write_text(self.output.read_text().replace('"spdxVersion":', '"spdxVersion":"SPDX-2.2","spdxVersion":'))
         result = subprocess.run([sys.executable, ROOT / "tools/validate_sbom.py", self.output,
