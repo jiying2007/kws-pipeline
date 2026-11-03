@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 68457,
-      "sha256": "48e9a2a9c00ae0bb4be6a4c1208618a80222c87c495b9f495f841d870e5cf471",
-      "git_blob_sha1": "0f907cee7f321cde42f645ea8cb26bcd34311808"
+      "bytes": 68773,
+      "sha256": "00000000000000000000000000000000003ad0ed972880118c25727b209c0281",
+      "git_blob_sha1": "76d1b54303553c24186d2aeae88776d056c3b8ce"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15284,13 +15284,6 @@
       "bytes": 9046,
       "sha256": "df627697d915972501bb528af873296c359a05d6d8eab060d31ce6d57bc5b63f",
       "git_blob_sha1": "758d106802b1f13155a1fcf761fd968ae8353367"
-    },
-    {
-      "path": ".github/workflows/deployment-release.yml",
-      "mode": "100644",
-      "bytes": 19514,
-      "sha256": "8dd6ba074874704bf62f97c4a4f3d4140327c993d43b997971748239f9b8412a",
-      "git_blob_sha1": "2ccee7da43e89bdf6827f0eeb6c87e98d09e949f"
     },
     {
       "path": ".github/workflows/experiment-quality-guards.yml",
@@ -15412,13 +15405,6 @@
       "git_blob_sha1": "409fa360592fe7e6d6865287063f80b6bbf449f7"
     },
     {
-      "path": ".github/workflows/release.yml",
-      "mode": "100644",
-      "bytes": 16901,
-      "sha256": "57e9059fce5d6d4069679be97cc4f35af9621caadff23509545be4fedfa7cf39",
-      "git_blob_sha1": "ff808152fd3a947d323f865f4e4bad101419eed1"
-    },
-    {
       "path": ".github/workflows/repository-cleanup.yml",
       "mode": "100644",
       "bytes": 18351,
@@ -15531,13 +15517,6 @@
       "git_blob_sha1": "fcf52f8f7a3285e89862142d9b29afc98a83bf10"
     },
     {
-      "path": ".github/workflows/shipping-approval.yml",
-      "mode": "100644",
-      "bytes": 17906,
-      "sha256": "0607732659ffab51a5827288039db7719ceb72429ca0513c93fef23fd1cffc9c",
-      "git_blob_sha1": "6102e35b0c94a5b825240ecd457d0f8ac69d9f7e"
-    },
-    {
       "path": ".github/workflows/speech-like-base-index-contract.yml",
       "mode": "100644",
       "bytes": 6703,
@@ -15599,13 +15578,6 @@
       "bytes": 6787,
       "sha256": "5364e25d901de2123be7eb84750c89f5d5b14070420faff564df4e5415270d2e",
       "git_blob_sha1": "e0ed70d323ff675b44fcef681590631e3b28806c"
-    },
-    {
-      "path": ".github/workflows/target-cohort-promotion.yml",
-      "mode": "100644",
-      "bytes": 10505,
-      "sha256": "6d83eace1ed35937d9073677de8da100e8d2ae3b56a1c36cd4da3910de6af18d",
-      "git_blob_sha1": "f5474e96339b3a0a996dd96c86c79eceb2878522"
     },
     {
       "path": ".github/workflows/target-dut-qualification.yml",
@@ -43884,6 +43856,100 @@
             "sha256": "cb57e3362f12887f51ab11f341fe237a249307f1cf378fbb82d6c68c9489100a",
             "git_blob_sha1": "9ac3039a8e5855d1a321842790fbf962cdc561ab"
           }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-03",
+      "operation_id": "research-only-retire-sdk-deployment-publication-20261103",
+      "source_commit": "c1c03803d69a5faf2eb5147656b9c241ca838490",
+      "scope": "Current research CI retains scientific checks while retired release/deployment publication workflows have no active triggers; original frozen archive and source provenance remain unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 68457,
+            "sha256": "48e9a2a9c00ae0bb4be6a4c1208618a80222c87c495b9f495f841d870e5cf471",
+            "git_blob_sha1": "0f907cee7f321cde42f645ea8cb26bcd34311808"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 68751,
+            "sha256": "4093457bd58a06ee30f30aabe2b8bfd541fda020d82993c3f7efc89de260fd0e",
+            "git_blob_sha1": "2d13eaca68f04cd9df5fe59d14a71e07457701dc"
+          }
+        },
+        {
+          "path": ".github/workflows/release.yml",
+          "before": {
+            "path": ".github/workflows/release.yml",
+            "mode": "100644",
+            "bytes": 16901,
+            "sha256": "57e9059fce5d6d4069679be97cc4f35af9621caadff23509545be4fedfa7cf39",
+            "git_blob_sha1": "ff808152fd3a947d323f865f4e4bad101419eed1"
+          },
+          "after": null
+        },
+        {
+          "path": ".github/workflows/deployment-release.yml",
+          "before": {
+            "path": ".github/workflows/deployment-release.yml",
+            "mode": "100644",
+            "bytes": 19514,
+            "sha256": "8dd6ba074874704bf62f97c4a4f3d4140327c993d43b997971748239f9b8412a",
+            "git_blob_sha1": "2ccee7da43e89bdf6827f0eeb6c87e98d09e949f"
+          },
+          "after": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-03",
+      "operation_id": "research-only-retire-shipping-cohort-publication-20261103",
+      "source_commit": "8fbdc51f809092c8a8058faf51f6407faef2cfd1",
+      "scope": "Retire terminal shipping approval and cohort-release publication; retain raw multi-device resource/soak measurement and scientific evaluation. Exact active CI SHA updated; frozen archived sources unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 68751,
+            "sha256": "4093457bd58a06ee30f30aabe2b8bfd541fda020d82993c3f7efc89de260fd0e",
+            "git_blob_sha1": "2d13eaca68f04cd9df5fe59d14a71e07457701dc"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 68773,
+            "sha256": "00000000000000000000000000000000003ad0ed972880118c25727b209c0281",
+            "git_blob_sha1": "76d1b54303553c24186d2aeae88776d056c3b8ce"
+          }
+        },
+        {
+          "path": ".github/workflows/shipping-approval.yml",
+          "before": {
+            "path": ".github/workflows/shipping-approval.yml",
+            "mode": "100644",
+            "bytes": 17906,
+            "sha256": "0607732659ffab51a5827288039db7719ceb72429ca0513c93fef23fd1cffc9c",
+            "git_blob_sha1": "6102e35b0c94a5b825240ecd457d0f8ac69d9f7e"
+          },
+          "after": null
+        },
+        {
+          "path": ".github/workflows/target-cohort-promotion.yml",
+          "before": {
+            "path": ".github/workflows/target-cohort-promotion.yml",
+            "mode": "100644",
+            "bytes": 10505,
+            "sha256": "6d83eace1ed35937d9073677de8da100e8d2ae3b56a1c36cd4da3910de6af18d",
+            "git_blob_sha1": "f5474e96339b3a0a996dd96c86c79eceb2878522"
+          },
+          "after": null
         }
       ]
     }
