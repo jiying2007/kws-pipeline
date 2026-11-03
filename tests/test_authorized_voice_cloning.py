@@ -588,7 +588,7 @@ class AuthorizedCloningTests(unittest.TestCase):
         self.assertIn("QUARANTINE_POSSIBLE_WAKE_IN_NEGATIVE", codes)
         self.assertIn("NO_MACHINE_SCREENED_KEYWORD_POSITIVE", codes)
         self.assertIn("VERIFY_POSITIVE_SOURCE_LABELS", codes)
-        self.assertIn("EXTERNAL_PRODUCT_DATA_AND_AUTHORITY_MISSING", codes)
+        self.assertIn("INDEPENDENT_RESEARCH_EVIDENCE_MISSING", codes)
         self.assertEqual(result["source_families_declared"], 1)
         self.assertFalse(result["next_campaign_authorized"])
         self.assertFalse(result["training_admitted"])
@@ -629,7 +629,7 @@ class AuthorizedCloningTests(unittest.TestCase):
         self.assertEqual(output.stat().st_mode & 0o777, 0o600)
         rows = json.loads(output.read_text(encoding="utf-8"))
         self.assertEqual(rows["input_effect_sha256"], feedback.canonical_sha(report))
-        self.assertFalse(rows["shipping_approved"])
+        self.assertNotIn("shipping_approved", rows)
         with self.assertRaises(FileExistsError):
             feedback.main(["--effect", str(source), "--output", str(output)])
         with self.assertRaisesRegex(ValueError, "PRIVATE_OUTPUT_ONLY"):
