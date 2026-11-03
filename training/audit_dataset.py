@@ -194,10 +194,7 @@ def parse_jsonl(path: pathlib.Path) -> list[dict]:
     for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if not raw.strip() or raw.lstrip().startswith("#"):
             continue
-        try:
-            row = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"{path}:{line_no}: invalid JSON: {exc}") from exc
+        row = strict_manifest_json(raw, path, line_no)
         rows.append(parse_record(row, path, line_no))
     return rows
 
