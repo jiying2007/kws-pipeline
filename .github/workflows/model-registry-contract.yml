@@ -8,7 +8,7 @@ on:
       - "tools/materialize_model_registry.py"
       - "tools/verify_model_registry.py"
       - ".github/workflows/model-registry-contract.yml"
-      - ".github/workflows/model-promotion.yml"
+      - "configs/research-baseline.xiaowo.json"
       - ".gitignore"
   pull_request:
     paths:
@@ -16,7 +16,7 @@ on:
       - "tools/materialize_model_registry.py"
       - "tools/verify_model_registry.py"
       - ".github/workflows/model-registry-contract.yml"
-      - ".github/workflows/model-promotion.yml"
+      - "configs/research-baseline.xiaowo.json"
       - ".gitignore"
 
 permissions:
@@ -43,38 +43,44 @@ jobs:
           for entry in "${entries[@]}"; do
             python3 tools/verify_model_registry.py --registry-dir "$entry"
           done
-          pinned="$(jq -r '.model.release_tag' configs/shipping.xiaowo.json)"
-          test -d "models/registry/$pinned" || {
-            echo "current shipping contract model is missing from Git registry: $pinned" >&2
-            exit 2
-          }
-          python3 tools/verify_model_registry.py \
-            --registry-dir "models/registry/$pinned" \
-            --config configs/shipping.xiaowo.json
-      - name: Verify future promotion Git-mirror contract
+          python3 -B - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          baseline = json.loads(Path("configs/research-baseline.xiaowo.json").read_text(encoding="utf-8"))
+          if baseline.get("schema") != "kws-research-model-baseline-v1" or baseline.get("policy") != "frozen-historical-research-comparator":
+              raise SystemExit("research baseline policy mismatch")
+          tag = baseline.get("model_tag")
+          if not isinstance(tag, str) or not tag.startswith("model-"):
+              raise SystemExit("invalid research model tag")
+          root = Path("models/registry") / tag
+          if not root.is_dir():
+              raise SystemExit("pinned research comparator is missing from Git registry")
+          for name, field in (
+              ("xiaowo-model.kwm", "model_sha256"),
+              ("xiaowo-keywords.kwk", "keyword_pack_sha256"),
+          ):
+              expected = baseline.get(field)
+              if not isinstance(expected, str) or len(expected) != 64:
+                  raise SystemExit("invalid research model digest")
+              actual = hashlib.sha256((root / name).read_bytes()).hexdigest()
+              if actual != expected:
+                  raise SystemExit("research model/keyword digest drift: " + name)
+          print("research model tuple pinned to exact registry bytes")
+          PY
+      - name: Assert registry research boundary
         run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import pathlib
-          workflow=pathlib.Path(".github/workflows/model-promotion.yml").read_text()
-          assert "pull-requests: write" in workflow
-          assert "Mirror promoted model into Git registry" in workflow
-          assert "tools/materialize_model_registry.py" in workflow
-          assert "tools/verify_model_registry.py" in workflow
-          assert (
-              'registry_branch="model-registry/$MODEL_RELEASE_TAG"' in workflow
-              or 'registry_branch="model-registry/${MODEL_RELEASE_TAG}"' in workflow
-          )
-          assert "git push origin" in workflow
-          assert "gh pr create" in workflow
-          assert "gh pr list" in workflow
-          assert "Verify immutable model release" in workflow
-          assert "steps.release.outputs.exists != 'true'" in workflow
-          assert "model registry already present on main" in workflow
-          assert 'refs/remotes/origin/${registry_branch}' in workflow
-          assert "automatic PR creation failed" not in workflow
-          assert "2>/tmp/model-registry-pr.err || true" not in workflow
-          print("future model-promotion registry mirror/self-heal: ok")
+          python3 -B - <<'PY'
+          from pathlib import Path
+          workflow = Path(".github/workflows/model-registry-contract.yml").read_text(encoding="utf-8")
+          verifier = Path("tools/verify_model_registry.py").read_text(encoding="utf-8")
+          active_workflow = workflow.split("      - name: Assert registry research boundary", 1)[0]
+          for forbidden in ("configs/shipping.xiaowo.json", "commercial/", "shipping_approved", "model-promotion.yml"):
+              assert forbidden not in active_workflow, forbidden
+          for forbidden in ("verify_model_release", "shipping_approved", "shipping_evidence_boundary", "--config"):
+              assert forbidden not in verifier, forbidden
+          print("research registry verification has no publication gate")
           PY
       - name: Worktree remains clean
         run: git diff --exit-code -- .

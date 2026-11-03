@@ -1,30 +1,18 @@
-name: kws-landing-status
+name: kws-research-comparator-status
 
 on:
   push:
-    branches: [main, "governance/kws-landing-status-v1"]
+    branches: [main]
     paths:
-      - "configs/shipping.xiaowo.json"
-      - "configs/training/kws-v2-efficient-encoder-closure-v1.json"
+      - "configs/research-baseline.xiaowo.json"
       - "models/registry/**"
-      - "tools/kws_landing_status.py"
       - "tools/verify_model_registry.py"
-      - "commercial/real-human-qualification.policy.json"
-      - "commercial/target-qualification.policy.json"
-      - ".github/workflows/dataset-driven-iteration.yml"
-      - ".github/workflows/real-human-qualification.yml"
       - ".github/workflows/kws-landing-status.yml"
   pull_request:
     paths:
-      - "configs/shipping.xiaowo.json"
-      - "configs/training/kws-v2-efficient-encoder-closure-v1.json"
+      - "configs/research-baseline.xiaowo.json"
       - "models/registry/**"
-      - "tools/kws_landing_status.py"
       - "tools/verify_model_registry.py"
-      - "commercial/real-human-qualification.policy.json"
-      - "commercial/target-qualification.policy.json"
-      - ".github/workflows/dataset-driven-iteration.yml"
-      - ".github/workflows/real-human-qualification.yml"
       - ".github/workflows/kws-landing-status.yml"
   workflow_dispatch:
 
@@ -34,25 +22,47 @@ permissions:
 jobs:
   status:
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Verify pinned model registry
+      - name: Verify pinned research comparator and historical registry identity
         run: |
-          set -euo pipefail
-          tag="$(jq -r '.model.release_tag' configs/shipping.xiaowo.json)"
-          python3 tools/verify_model_registry.py \
-            --registry-dir "models/registry/$tag" \
-            --config configs/shipping.xiaowo.json
-      - name: Build and verify product landing status
-        run: |
-          set -euo pipefail
-          python3 tools/kws_landing_status.py \
-            --verify \
-            --output "$RUNNER_TEMP/kws-landing-status.json"
-          cat "$RUNNER_TEMP/kws-landing-status.json" >> "$GITHUB_STEP_SUMMARY"
-      - name: Python syntax
-        run: python3 -m py_compile tools/kws_landing_status.py
+          python3 -B - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          import re
+          import subprocess
+          import sys
+
+          baseline = json.loads(Path("configs/research-baseline.xiaowo.json").read_text(encoding="utf-8"))
+          if baseline.get("schema") != "kws-research-model-baseline-v1":
+              raise SystemExit("invalid research comparator schema")
+          if baseline.get("policy") != "frozen-historical-research-comparator":
+              raise SystemExit("invalid research comparator policy")
+          tag = baseline.get("model_tag")
+          if not isinstance(tag, str) or not re.fullmatch(r"model-[0-9a-f]{12}", tag):
+              raise SystemExit("invalid model comparator tag")
+          root = Path("models/registry") / tag
+          subprocess.run([sys.executable, "-B", "tools/verify_model_registry.py",
+                          "--registry-dir", str(root)], check=True)
+          registry = json.loads((root / "registry.json").read_text(encoding="utf-8"))
+          if registry["training"]["head_sha"] != baseline.get("training_source_sha"):
+              raise SystemExit("research training source drift")
+          for filename, field in (("xiaowo-model.kwm", "model_sha256"),
+                                  ("xiaowo-keywords.kwk", "keyword_pack_sha256")):
+              if hashlib.sha256((root / filename).read_bytes()).hexdigest() != baseline.get(field):
+                  raise SystemExit("research comparator SHA256 drift: " + filename)
+          for field in ("actual_human_wav_evaluated",
+                        "independent_longstream_far_measured", "ssc305_measured"):
+              if baseline.get(field) is not False:
+                  raise SystemExit("historical research comparator overclaims: " + field)
+          report = {"model_tag": tag, "historical_comparator_verified": True,
+                    "research_model_accepted": False,
+                    "independent_acoustic_evidence": False}
+          print(json.dumps(report, sort_keys=True))
+          PY
       - name: Worktree remains clean
         run: git diff --exit-code -- .

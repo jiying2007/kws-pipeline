@@ -1,25 +1,23 @@
-# Promoted model registry
+# Immutable KWS research model registry
 
-Each child directory is named by the immutable GitHub model release tag.
+This directory retains exact model bytes and training-source provenance for
+reproducible acoustic experiments. A GitHub tag and historical metadata fields
+are evidence identifiers, **not** permission to ship or a claim of model quality.
 
-A valid entry is a byte-for-byte mirror of the promoted release plus
-`registry.json`.
+Every model directory contains `registry.json` and its hash-bound assets.
+Verify a saved model without a deployment, approval, or publication config:
 
-Validate any entry with:
-
-```bash
-python3 tools/verify_model_registry.py \
-  --registry-dir models/registry/model-<id>
+```sh
+python3 -B tools/verify_model_registry.py \
+  --registry-dir models/registry/model-749187ec1d66
 ```
 
-For the currently pinned product model, also bind the repository shipping
-contract:
+The default research comparator is pinned independently by
+[`configs/research-baseline.xiaowo.json`](../../configs/research-baseline.xiaowo.json).
+Its model and keyword-pack SHA-256 values are checked against actual registry
+assets by `.github/workflows/model-registry-contract.yml`.
 
-```bash
-python3 tools/verify_model_registry.py \
-  --registry-dir models/registry/"$(jq -r '.model.release_tag' configs/shipping.xiaowo.json)" \
-  --config configs/shipping.xiaowo.json
-```
-
-Do not manually replace bytes in an existing entry. A new trained/promoted model
-gets a new immutable release tag and a new registry directory.
+Do not rewrite an existing registry entry. New research candidates must retain
+their own immutable training, data, model and source-family identities.
+Retained historical records, model tags and previous measurements are not
+blind validation evidence for a new experiment.

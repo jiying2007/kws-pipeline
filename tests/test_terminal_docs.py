@@ -434,12 +434,12 @@ def main() -> int:
         formal_workflow,
         ROOT / ".github" / "workflows" / "model-training.yml",
         (
-            "Refuse consumed formal qualification seed",
+            "Refuse consumed research evaluation seed",
             "if active == frozen:",
             "if frozen not in retired:",
             "if active != reserved:",
-            "qualification_seed_state",
-            "next_formal_candidate_seed_reserved",
+            "frozen_seed_state",
+            "next_research_seed",
             "consumed/frozen",
         ),
     )
