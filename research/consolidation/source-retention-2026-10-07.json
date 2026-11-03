@@ -15365,9 +15365,9 @@
     {
       "path": ".github/workflows/model-training.yml",
       "mode": "100644",
-      "bytes": 13945,
-      "sha256": "6e15d45973875b7b05e8f55bfeca5c07da1f4765814e92182334c1d0501e5834",
-      "git_blob_sha1": "e444bc88070a21a3b650f7f15a3501a842040ea4"
+      "bytes": 13936,
+      "sha256": "cb57e3362f12887f51ab11f341fe237a249307f1cf378fbb82d6c68c9489100a",
+      "git_blob_sha1": "9ac3039a8e5855d1a321842790fbf962cdc561ab"
     },
     {
       "path": ".github/workflows/native-a20-quality-tools.yml",
@@ -43856,6 +43856,33 @@
             "bytes": 2951,
             "sha256": "4036e41eeac9dce088ea32afe4f73c581275b0efa415c6b769c4b7d657e0e867",
             "git_blob_sha1": "b85012d8a6dd7f57ff241ff44864e7c95f2e2b32"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-03",
+      "operation_id": "research-model-training-seed-independent-v1",
+      "public_main_base_commit": "31e027fe63269db8c040d0218fe2c8035e9d82f7",
+      "source_commit": "e3a10449a47e51dd8c7e637400bc1510204826cd",
+      "workflow_source_changed": true,
+      "scope": "KWS research training entry reads independent consumed seed and keyword contract, not historical deployment/shipping approval; no training math or real speech gate weakened",
+      "files": [
+        {
+          "path": ".github/workflows/model-training.yml",
+          "before": {
+            "path": ".github/workflows/model-training.yml",
+            "mode": "100644",
+            "bytes": 13945,
+            "sha256": "6e15d45973875b7b05e8f55bfeca5c07da1f4765814e92182334c1d0501e5834",
+            "git_blob_sha1": "e444bc88070a21a3b650f7f15a3501a842040ea4"
+          },
+          "after": {
+            "path": ".github/workflows/model-training.yml",
+            "mode": "100644",
+            "bytes": 13936,
+            "sha256": "cb57e3362f12887f51ab11f341fe237a249307f1cf378fbb82d6c68c9489100a",
+            "git_blob_sha1": "9ac3039a8e5855d1a321842790fbf962cdc561ab"
           }
         }
       ]

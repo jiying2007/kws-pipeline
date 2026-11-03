@@ -14,22 +14,22 @@ def read_json(path: pathlib.Path) -> dict:
 
 def verify(
     config_path: pathlib.Path,
-    shipping_path: pathlib.Path,
+    research_baseline_path: pathlib.Path,
     keywords_path: pathlib.Path,
     *,
     require_product_speech_like_base: bool = False,
 ) -> dict:
     config = read_json(config_path)
-    shipping = read_json(shipping_path)
+    research = read_json(research_baseline_path)
+    if research.get("schema") != "kws-research-model-baseline-v1" or research.get("policy") != "frozen-historical-research-comparator":
+        raise ValueError("independent research baseline policy is required")
     active = int(config["qualification_holdout_seed"])
     retired = [int(value) for value in config["retired_qualification_holdout_seeds"]]
-    model = shipping["model"]
-    policy = shipping["nightly_policy"]
-    frozen = int(model["qualification_seed"])
-    state = str(model["qualification_seed_state"])
-    reserved = int(policy["next_formal_candidate_seed_reserved"])
+    frozen = int(research["frozen_qualification_seed"])
+    state = str(research["frozen_seed_state"])
+    reserved = int(research["next_research_seed"])
     if state != "consumed-and-frozen":
-        raise ValueError(f"unexpected shipping qualification seed state: {state!r}")
+        raise ValueError(f"unexpected research frozen seed state: {state!r}")
     if active == frozen:
         raise ValueError(f"formal qualification seed {active} is already consumed/frozen")
     if frozen not in retired:
@@ -49,9 +49,9 @@ def verify(
         ["2", "小窝小窝", "0.55", "xiao3 wo1 xiao3 wo1"],
     ]
     if rows != expected:
-        raise ValueError(f"shipping wake-word contract drifted: {rows!r}")
+        raise ValueError(f"research keyword contract drifted: {rows!r}")
     if any(len(row[1]) != 4 for row in rows) or any(row[1] == "小窝" for row in rows):
-        raise ValueError("shipping wake words must remain exactly the two four-character phrases")
+        raise ValueError("research keywords must remain exactly the two four-character phrases")
 
     product_data = None
     if require_product_speech_like_base:
@@ -134,11 +134,11 @@ def verify(
                     raise ValueError(f"external base {split}.{field} must be lowercase SHA256")
 
     return {
-        "active_formal_seed": active,
-        "frozen_formal_seed": frozen,
-        "reserved_formal_seed": reserved,
+        "active_research_seed": active,
+        "frozen_research_seed": frozen,
+        "reserved_research_seed": reserved,
         "retired_seed_count": len(retired),
-        "shipping_wake_words": [row[1] for row in rows],
+        "research_wake_words": [row[1] for row in rows],
         "product_speech_like_base_required": require_product_speech_like_base,
         "actual_review_receipts_verified": False,
         "verification_scope": "configuration-only; optimizer independently verifies bound receipts",
@@ -157,9 +157,9 @@ def main() -> int:
         default=root / "configs/training/xiaowo.torch-domain.json",
     )
     parser.add_argument(
-        "--shipping",
+        "--research-baseline",
         type=pathlib.Path,
-        default=root / "configs/shipping.xiaowo.json",
+        default=root / "configs/research-baseline.xiaowo.json",
     )
     parser.add_argument(
         "--keywords",
@@ -170,7 +170,7 @@ def main() -> int:
     args = parser.parse_args()
     result = verify(
         args.config.resolve(),
-        args.shipping.resolve(),
+        args.research_baseline.resolve(),
         args.keywords.resolve(),
         require_product_speech_like_base=args.require_product_speech_like_base,
     )

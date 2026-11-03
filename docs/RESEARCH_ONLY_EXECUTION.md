@@ -45,3 +45,17 @@ and prior workflow identities solely for reproducibility. Their original
 release-oriented field names are historical evidence, not current approval
 authority for new dataset research. Do not mutate retained history or declare
 its frozen synthetic results a new independent real-world result.
+
+## Frozen research training seed and keyword entry
+
+The technical model-training entry uses
+training/verify_training_entry_contract.py and the independent
+configs/research-baseline.xiaowo.json. The historical held-out seed
+271838 remains consumed, and the next reserved research seed is 271843.
+The two four-character Mandarin phrases and their existing pinned
+token/keyword geometry are still checked byte-for-byte. Old measured
+validation audio cannot become a new blind holdout through a field rename.
+
+The model-training Actions retain exact source-trained-data admission,
+one-variable budget and technical readback tests. They do not consult
+the legacy shipping configuration for model or seed permission.

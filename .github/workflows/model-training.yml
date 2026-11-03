@@ -86,13 +86,13 @@ jobs:
       # if active == frozen:
       # if frozen not in retired:
       # if active != reserved:
-      # qualification_seed_state; next_formal_candidate_seed_reserved; consumed/frozen.
-      - name: Refuse consumed formal qualification seed
+      # research frozen_seed_state; next_research_seed; consumed/frozen.
+      - name: Refuse consumed research evaluation seed
         run: >-
           python3 training/verify_training_entry_contract.py
           --config "$KWS_EFFECTIVE_TRAINING_CONFIG"
           --require-product-speech-like-base
-      - name: Verify shipping wake-word contract
+      - name: Verify exact research keyword contract
         run: >-
           python3 training/verify_training_entry_contract.py
           --config "$KWS_EFFECTIVE_TRAINING_CONFIG"
@@ -172,12 +172,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash training/materialize_governed_product_base.sh
-      - name: Refuse consumed formal qualification seed
+      - name: Refuse consumed research evaluation seed
         run: >-
           python3 training/verify_training_entry_contract.py
           --config "$KWS_EFFECTIVE_TRAINING_CONFIG"
           --require-product-speech-like-base
-      - name: Verify shipping wake-word contract
+      - name: Verify exact research keyword contract
         run: >-
           python3 training/verify_training_entry_contract.py
           --config "$KWS_EFFECTIVE_TRAINING_CONFIG"
