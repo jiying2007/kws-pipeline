@@ -31,8 +31,9 @@ IDENT = re.compile(r"[a-z][a-z0-9_-]{1,63}\Z")
 ONE_SIDED_Z95 = 1.6448536269514722
 METRICS = ("frr_upper_95", "far_upper_95_per_hour", "p95_post_end_latency_ms",
            "cpu_ms_per_s", "rss_kib", "p99_block_ms")
-RESOURCE_FIELDS = {"measurement_class", "measurement_receipt_sha256",
-                   "cpu_ms_per_s", "rss_kib", "p99_block_ms"}
+RESOURCE_FIELDS = {"measurement_class", "measurement_receipt_path",
+                   "measurement_receipt_sha256", "cpu_ms_per_s",
+                   "rss_kib", "p99_block_ms"}
 BUDGET_FIELDS = {"min_expected_wakes", "min_negative_hours", "max_frr_upper_95",
                  "max_far_upper_95_per_hour", "max_latency_ms",
                  "max_cpu_ms_per_s", "max_rss_kib", "max_p99_block_ms",
@@ -86,15 +87,41 @@ def digest(value: object, n: int, code: str) -> str:
     return value
 
 
-def resource(row: object) -> dict:
+def resource(row: object, scorecard: dict) -> dict:
     need(type(row) is dict and set(row) == RESOURCE_FIELDS and
          row["measurement_class"] == "host-development-only", "RESOURCE_EVIDENCE_UNQUALIFIED")
     receipt_sha = digest(row["measurement_receipt_sha256"], 64,
                          "RESOURCE_RECEIPT_SHA_MISSING")
+    filename = row["measurement_receipt_path"]
+    need(type(filename) is str, "RESOURCE_RECEIPT_NOT_PRIVATE")
+    path = Path(filename)
+    need(path.is_absolute() and path.resolve() != ROOT and
+         ROOT not in path.resolve().parents, "RESOURCE_RECEIPT_NOT_PRIVATE")
+    receipt = read_json(path, max_bytes=128 * 1024)
+    need(sha(path.read_bytes()) == receipt_sha, "RESOURCE_RECEIPT_BYTES_CHANGED")
+    need(set(receipt) == {"schema_version", "policy", "model_id", "code_sha",
+                          "measurement_class", "simulated", "metric_values",
+                          "training_admitted", "qualification_allowed"} and
+         receipt["schema_version"] == 1 and
+         receipt["policy"] == "kws-host-development-resource-v1" and
+         receipt["model_id"] == scorecard["identity"]["model_id"] and
+         receipt["code_sha"] == scorecard["identity"]["code_sha"] and
+         receipt["measurement_class"] == "host-development-only" and
+         receipt["simulated"] is False and
+         receipt["training_admitted"] is False and
+         receipt["qualification_allowed"] is False,
+         "RESOURCE_MEASUREMENT_IDENTITY_DRIFT")
+    values = receipt["metric_values"]
+    need(type(values) is dict and
+         set(values) == {"cpu_ms_per_s", "rss_kib", "p99_block_ms"},
+         "RESOURCE_RECEIPT_METRIC_FIELDS")
+    measured = {key: number(values[key], key, strictly_positive=True)
+                for key in ("cpu_ms_per_s", "rss_kib", "p99_block_ms")}
+    need(all(type(row[key]) in (int, float) and measured[key] == row[key]
+             for key in measured), "RESOURCE_RECEIPT_VALUES_DRIFT")
     return {"measurement_class": "host-development-only",
             "measurement_receipt_sha256": receipt_sha,
-            **{key: number(row[key], key, strictly_positive=True)
-               for key in ("cpu_ms_per_s", "rss_kib", "p99_block_ms")}}
+            **measured}
 
 
 def load_entry(entry: dict, *, expected_role: str) -> tuple[dict, dict, dict]:
@@ -162,7 +189,7 @@ def load_entry(entry: dict, *, expected_role: str) -> tuple[dict, dict, dict]:
                  card["far_rate"]["upper_bound_95_per_hour"], "far_bound"),
              "p95_post_end_latency_ms": latency,
              "negative_exposure_hours": negative_hours}
-    return card, point, resource(entry["resource"])
+    return card, point, resource(entry["resource"], card)
 
 
 def dominates(a: dict, b: dict) -> bool:
