@@ -15351,9 +15351,9 @@
     {
       "path": ".github/workflows/model-registry-contract.yml",
       "mode": "100644",
-      "bytes": 3190,
-      "sha256": "62d85777eda3188f97075c67b4f22c46cd52ef5bf02d979935d97ac33d8ddb9f",
-      "git_blob_sha1": "7a9c87aabe3bf7017085be11b463059887cc4c7f"
+      "bytes": 3733,
+      "sha256": "9739017330b247dd29a0035136d68cf566dc36854926f777ecb04c9bcce57101",
+      "git_blob_sha1": "90c8fae7149002598108cae350baca56b93af0fa"
     },
     {
       "path": ".github/workflows/model-training-preflight.yml",
@@ -43800,6 +43800,34 @@
             "bytes": 22972,
             "sha256": "f78930bbd4243819312a39c2432d5e2d3c72016d54cc9f1e5403180f20aa7285",
             "git_blob_sha1": "52cd8a3e67c6bd45c74cb8fd34d89a6735ef8fce"
+          }
+        }
+      ]
+    },
+    {
+      "id": "research-registry-contract-independent-of-shipping-20261103",
+      "date": "2026-11-03",
+      "base_commit": "ab0f0c8a7884e1c62f87ff5d546f2da416d472e8",
+      "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
+      "workflow_source_changed": true,
+      "scope": "Verify historical research comparator by immutable Git registry bytes; remove active shipping-approval and model-promotion CI coupling; keep retained source and model lineage untouched.",
+      "rationale": "Pure KWS research must not require commercial publication configuration. Research baseline SHA-256 pins model/keywords. This change does not relax offline/audio/SSC305 technical measurement or assert any new model validity.",
+      "files": [
+        {
+          "path": ".github/workflows/model-registry-contract.yml",
+          "before": {
+            "path": ".github/workflows/model-registry-contract.yml",
+            "mode": "100644",
+            "bytes": 3190,
+            "sha256": "62d85777eda3188f97075c67b4f22c46cd52ef5bf02d979935d97ac33d8ddb9f",
+            "git_blob_sha1": "7a9c87aabe3bf7017085be11b463059887cc4c7f"
+          },
+          "after": {
+            "path": ".github/workflows/model-registry-contract.yml",
+            "mode": "100644",
+            "bytes": 3733,
+            "sha256": "9739017330b247dd29a0035136d68cf566dc36854926f777ecb04c9bcce57101",
+            "git_blob_sha1": "90c8fae7149002598108cae350baca56b93af0fa"
           }
         }
       ]
