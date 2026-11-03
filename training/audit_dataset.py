@@ -79,6 +79,33 @@ def inspect_wav(path: pathlib.Path) -> tuple[int, float, str]:
     return frames, frames / SAMPLE_RATE_HZ, hashlib.sha256(pcm).hexdigest()
 
 
+def strict_manifest_json(raw: str, origin: pathlib.Path, line_no: int | None = None) -> object:
+    """Reject ambiguous JSON keys and non-finite values before reading lineage.
+
+    Both JSONL manifests and TSV lineage sidecars are source-of-truth inputs.
+    Python's default json.loads silently keeps the last duplicate key and
+    accepts NaN/Infinity, so their semantic identity could differ between
+    parsers even when the exact file SHA was recorded.
+    """
+    def unique(pairs: list[tuple[str, object]]) -> dict:
+        value: dict[str, object] = {}
+        for key, item in pairs:
+            if key in value:
+                raise ValueError("duplicate JSON key in dataset manifest")
+            value[key] = item
+        return value
+
+    def reject_constant(token: str) -> None:
+        raise ValueError("non-finite JSON value in dataset manifest")
+
+    try:
+        return json.loads(raw, object_pairs_hook=unique,
+                          parse_constant=reject_constant)
+    except json.JSONDecodeError as exc:
+        where = f"{origin}:{line_no}" if line_no is not None else str(origin)
+        raise ValueError(f"{where}: invalid JSON") from exc
+
+
 def lineage_path(path: pathlib.Path) -> pathlib.Path:
     return pathlib.Path(str(path) + ".lineage.json")
 
