@@ -59,3 +59,18 @@ validation audio cannot become a new blind holdout through a field rename.
 The model-training Actions retain exact source-trained-data admission,
 one-variable budget and technical readback tests. They do not consult
 the legacy shipping configuration for model or seed permission.
+
+## Retired automatic publication surfaces (2026-11-03)
+
+The historical `release.yml` SDK publication workflow and
+`deployment-release.yml` commercial-candidate publication workflow have
+been removed from active GitHub Actions. They previously listened to release
+tags/branches or the `deployment/commercial-candidate` push branch. Their exact
+source and old run history remain preserved by Git/GitHub; none is a condition
+for current reproducible data preparation, keyword experiments, FAR/FRR
+measurement or resource profiling.
+
+`model-promotion.yml`, `shipping-approval.yml` and related real-human/DUT
+qualification paths still exist as legacy surfaces and require separate
+dependency migration under #704. Their presence does not confer research
+approval or imply real-hardware evidence.

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 68457,
-      "sha256": "48e9a2a9c00ae0bb4be6a4c1208618a80222c87c495b9f495f841d870e5cf471",
-      "git_blob_sha1": "0f907cee7f321cde42f645ea8cb26bcd34311808"
+      "bytes": 68751,
+      "sha256": "4093457bd58a06ee30f30aabe2b8bfd541fda020d82993c3f7efc89de260fd0e",
+      "git_blob_sha1": "2d13eaca68f04cd9df5fe59d14a71e07457701dc"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15284,13 +15284,6 @@
       "bytes": 9046,
       "sha256": "df627697d915972501bb528af873296c359a05d6d8eab060d31ce6d57bc5b63f",
       "git_blob_sha1": "758d106802b1f13155a1fcf761fd968ae8353367"
-    },
-    {
-      "path": ".github/workflows/deployment-release.yml",
-      "mode": "100644",
-      "bytes": 19514,
-      "sha256": "8dd6ba074874704bf62f97c4a4f3d4140327c993d43b997971748239f9b8412a",
-      "git_blob_sha1": "2ccee7da43e89bdf6827f0eeb6c87e98d09e949f"
     },
     {
       "path": ".github/workflows/experiment-quality-guards.yml",
@@ -15410,13 +15403,6 @@
       "bytes": 14973,
       "sha256": "82a1b7de2b9837240f0564eb22274a7e8cdc9e6ffdcd123724c15d3489d5f33d",
       "git_blob_sha1": "409fa360592fe7e6d6865287063f80b6bbf449f7"
-    },
-    {
-      "path": ".github/workflows/release.yml",
-      "mode": "100644",
-      "bytes": 16901,
-      "sha256": "57e9059fce5d6d4069679be97cc4f35af9621caadff23509545be4fedfa7cf39",
-      "git_blob_sha1": "ff808152fd3a947d323f865f4e4bad101419eed1"
     },
     {
       "path": ".github/workflows/repository-cleanup.yml",
@@ -43884,6 +43870,53 @@
             "sha256": "cb57e3362f12887f51ab11f341fe237a249307f1cf378fbb82d6c68c9489100a",
             "git_blob_sha1": "9ac3039a8e5855d1a321842790fbf962cdc561ab"
           }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-03",
+      "operation_id": "research-only-retire-sdk-deployment-publication-20261103",
+      "source_commit": "c1c03803d69a5faf2eb5147656b9c241ca838490",
+      "scope": "Current research CI retains scientific checks while retired release/deployment publication workflows have no active triggers; original frozen archive and source provenance remain unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 68457,
+            "sha256": "48e9a2a9c00ae0bb4be6a4c1208618a80222c87c495b9f495f841d870e5cf471",
+            "git_blob_sha1": "0f907cee7f321cde42f645ea8cb26bcd34311808"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 68751,
+            "sha256": "4093457bd58a06ee30f30aabe2b8bfd541fda020d82993c3f7efc89de260fd0e",
+            "git_blob_sha1": "2d13eaca68f04cd9df5fe59d14a71e07457701dc"
+          }
+        },
+        {
+          "path": ".github/workflows/release.yml",
+          "before": {
+            "path": ".github/workflows/release.yml",
+            "mode": "100644",
+            "bytes": 16901,
+            "sha256": "57e9059fce5d6d4069679be97cc4f35af9621caadff23509545be4fedfa7cf39",
+            "git_blob_sha1": "ff808152fd3a947d323f865f4e4bad101419eed1"
+          },
+          "after": null
+        },
+        {
+          "path": ".github/workflows/deployment-release.yml",
+          "before": {
+            "path": ".github/workflows/deployment-release.yml",
+            "mode": "100644",
+            "bytes": 19514,
+            "sha256": "8dd6ba074874704bf62f97c4a4f3d4140327c993d43b997971748239f9b8412a",
+            "git_blob_sha1": "2ccee7da43e89bdf6827f0eeb6c87e98d09e949f"
+          },
+          "after": null
         }
       ]
     }

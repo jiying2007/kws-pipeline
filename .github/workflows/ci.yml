@@ -275,13 +275,16 @@ jobs:
         run: python3 tests/test_github_hosted_resource_probe.py
       - name: Verify tracked worktree after GitHub hosted resource probe contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "GitHub hosted resource probe contract"'
-      - name: Release workflow command contract
+      - name: Research-only publication boundary contract
         run: |
-          python3 tests/test_release_workflow_contract.py
-          python3 -O tests/test_release_workflow_contract.py
-          python3 -OO tests/test_release_workflow_contract.py
-      - name: Verify tracked worktree after Release workflow command contract
-        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Release workflow command contract"'
+          python3 -I -S -B tests/test_research_publication_boundary.py
+          python3 -I -S -B tests/test_test_inventory.py
+          python3 -I -S -B -O tests/test_test_inventory.py
+          python3 -I -S -B -OO tests/test_test_inventory.py
+          python3 -I -S -B -O tests/test_research_publication_boundary.py
+          python3 -I -S -B -OO tests/test_research_publication_boundary.py
+      - name: Verify tracked worktree after research publication boundary
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Research-only publication boundary contract"'
       - name: Repository cleanup safety contract
         run: python3 tests/test_repository_cleanup_contract.py
       - name: Verify tracked worktree after Repository cleanup safety contract
@@ -873,7 +876,7 @@ jobs:
       - name: Target and shipping promotion contract
         run: python3 tests/test_target_shipping_contract.py
       - name: Upload target and shipping promotion diagnostic
-        if: failure()
+        if: failure() && hashFiles('.target-shipping-contract-diagnostic.json') != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: target-shipping-contract-diagnostic-${{ matrix.cc }}
