@@ -1159,6 +1159,21 @@ def main() -> int:
     if strict.testsRun != 36 or strict.skipped or not strict.wasSuccessful():
         return 1
 
+    # Keep the original 36 scoring invariants untouched. The new no-model
+    # multilingual tournament has its own fail-closed contracts in normal,
+    # optimized and stripped Python execution.
+    for optimization in ((), ("-O",), ("-OO",)):
+        check = subprocess.run(
+            [sys.executable, *optimization,
+             str(ROOT / "tests/test_multilingual_kws_tournament.py")],
+            check=False, capture_output=True, text=True,
+            timeout=30,
+        )
+        if check.returncode != 0 or "Ran 11 tests" not in check.stderr:
+            print("multilingual tournament source contract failed",
+                  optimization, check.stdout, check.stderr, file=sys.stderr)
+            return 1
+
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
 
