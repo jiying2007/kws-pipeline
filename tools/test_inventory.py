@@ -25,7 +25,6 @@ OFFICIAL_WORKFLOWS = (
     '.github/workflows/training-audit-closure.yml',
     '.github/workflows/speech-like-external-base-bundle-contract.yml',
     '.github/workflows/product-training-data-contract.yml',
-    '.github/workflows/release.yml',
 )
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
@@ -154,8 +153,6 @@ def declared_paths(block):
 def scope(workflow, job, text, gated=False):
     if workflow.name == 'ci.yml':
         return 'conditional-mainline' if gated else 'mainline-required'
-    if workflow.name == 'release.yml':
-        return 'release-only'
     if 'self-hosted' in text:
         return 'hardware-or-self-hosted'
     if re.search(r'^\s+paths(?:-ignore)?:', text, re.M):
