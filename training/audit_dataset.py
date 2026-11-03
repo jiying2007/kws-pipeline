@@ -99,9 +99,15 @@ def strict_manifest_json(raw: str, origin: pathlib.Path, line_no: int | None = N
     def reject_constant(token: str) -> None:
         raise ValueError("non-finite JSON value in dataset manifest")
 
+    def finite_float(token: str) -> float:
+        value = float(token)
+        if not math.isfinite(value):
+            raise ValueError("non-finite JSON value in dataset manifest")
+        return value
+
     try:
         return json.loads(raw, object_pairs_hook=unique,
-                          parse_constant=reject_constant)
+                          parse_constant=reject_constant, parse_float=finite_float)
     except json.JSONDecodeError as exc:
         where = f"{origin}:{line_no}" if line_no is not None else str(origin)
         raise ValueError(f"{where}: invalid JSON") from exc
