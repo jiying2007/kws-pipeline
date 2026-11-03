@@ -9,6 +9,7 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -29,6 +30,7 @@ MAX_SPEAKERS = 512
 MAX_RECORDINGS = 32768
 MAX_PER_SPEAKER = 128
 MAX_WORKERS = 4
+MAX_INPUT_JSON_BYTES = 8 * 1024 * 1024
 
 
 def need(condition: bool, message: str) -> None:
@@ -46,9 +48,35 @@ def digest(value: object, field: str) -> str:
     return value
 
 
+def strict_json_pairs(pairs: list[tuple[str, object]]) -> dict:
+    result = {}
+    for key, value in pairs:
+        need(key not in result, "input JSON duplicate key: " + key)
+        result[key] = value
+    return result
+
+
+def finite_json_float(token: str) -> float:
+    value = float(token)
+    need(math.isfinite(value), "input JSON non-finite number")
+    return value
+
+
+def reject_json_constant(token: str) -> None:
+    raise ValueError("input JSON non-finite constant: " + token)
+
+
 def read_object(path: Path) -> dict:
-    value = json.loads(path.read_text(encoding="utf-8"))
-    need(isinstance(value, dict), f"{path.name}: expected JSON object")
+    # Campaigns, rights assertions and replay receipts are untrusted even when
+    # byte-hash pinned. Bound the read itself to avoid a growing file defeating
+    # a preliminary stat check and silently ambiguous JSON authorizations.
+    need(path.is_file(), f"{path.name}: expected JSON file")
+    with path.open("rb") as stream:
+        raw = stream.read(MAX_INPUT_JSON_BYTES + 1)
+    need(len(raw) <= MAX_INPUT_JSON_BYTES, f"{path.name}: input JSON exceeds byte limit")
+    value = json.loads(raw.decode("utf-8"), object_pairs_hook=strict_json_pairs,
+                       parse_float=finite_json_float, parse_constant=reject_json_constant)
+    need(type(value) is dict, f"{path.name}: expected JSON object")
     return value
 
 
