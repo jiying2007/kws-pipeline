@@ -61,6 +61,7 @@ Current machine-readable product authority is `configs/shipping.xiaowo.json`. Th
 - [`DATA_EFFECTIVENESS_REDESIGN_2026-11-02.md`](DATA_EFFECTIVENESS_REDESIGN_2026-11-02.md) — goal-driven source/voice-clone/ASR/negative-mining redesign, with strict independent acceptance and no current training authority
 - [`KWS_DATA_BULK_EFFECT_BOUNDARY.md`](KWS_DATA_BULK_EFFECT_BOUNDARY.md) — canonical kws-data Qwen clone/three-ASR private effects imported as independent non-training diagnostic evidence
 - [`KWS_DATA_FEEDBACK_PRIORITIES.md`](KWS_DATA_FEEDBACK_PRIORITIES.md) — ranked, bounded next-source/negative/keyword feedback from private verified effects, never another automatic source or release authority
+- [`PHASE_A_FIELD_PLAN_PREFLIGHT.md`](PHASE_A_FIELD_PLAN_PREFLIGHT.md) — planned real-human 40×2/1200-wake/24h quotas, one-MiB field-pilot sharding and remaining independent Phase-A evidence
 - [`research/`](research/) — retained historical experiment/negative-result evidence; archived files are not current executable runbooks
 - [`REPOSITORY_GOVERNANCE.md`](REPOSITORY_GOVERNANCE.md) — current repository/platform governance state
 - [`GOVERNANCE_TARGET.md`](GOVERNANCE_TARGET.md) — enforced terminal governance target
