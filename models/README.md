@@ -7,7 +7,7 @@ Model storage is split by lifecycle.
 Failed runs, per-round checkpoints and unselected research candidates remain
 ephemeral workflow artifacts. They are **not** committed to Git.
 
-## Promoted model registry
+## Historical verified model registry
 
 A historical model that passed the retired `model-promotion` publication verifier was also required to be
 mirrored into:
@@ -27,12 +27,13 @@ The registry entry contains the exact immutable release tuple, including:
 - `MODEL_SHA256SUMS`;
 - `registry.json` — Git-mirror identity and storage policy.
 
-The immutable GitHub model release remains the distribution/attestation source.
-The Git registry is the durable, reviewable mirror so a trained model does not
-disappear with Actions artifact retention.
+The original published historical model may be inspected through its immutable
+GitHub Release and the durable Git registry. **Current research models do not
+require publication or promotion**: each new candidate needs an immutable source,
+model, keyword-pack, data and evaluation identity for scientific replay.
 
-Registry entries are immutable. Re-training creates a new release tag and a new
-directory; it never overwrites an existing entry.
+Registry entries are immutable. A new study uses a distinct content-addressed
+research model identity and directory; it never overwrites a consumed entry.
 
 Current direct-Git policy limits one registry entry to 5 MB. The present KWS
 model tuple is below 2 MB, so Git LFS is deliberately not required. If a future
@@ -41,7 +42,7 @@ than silently growing the repository.
 
 ## Runtime format
 
-The shipping runtime model format is little-endian **`KWSP` ABI v2** with a
+The embedded KWS research runtime model format is little-endian **`KWSP` ABI v2** with a
 canonical 72-byte header. It stores int8 input/recurrent/output matrices,
 float32 biases, fixed 16-kHz / 400-sample / 320-sample geometry, 64-bit
 vocabulary fingerprint and a model-bound frontend kind:
