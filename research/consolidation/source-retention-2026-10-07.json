@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 68751,
-      "sha256": "4093457bd58a06ee30f30aabe2b8bfd541fda020d82993c3f7efc89de260fd0e",
-      "git_blob_sha1": "2d13eaca68f04cd9df5fe59d14a71e07457701dc"
+      "bytes": 68773,
+      "sha256": "e0929bbbafa8ca34f07544f534995616486ff0bf76324fac64ecc0741cb12cd8",
+      "git_blob_sha1": "76d1b54303553c24186d2aeae88776d056c3b8ce"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15517,13 +15517,6 @@
       "git_blob_sha1": "fcf52f8f7a3285e89862142d9b29afc98a83bf10"
     },
     {
-      "path": ".github/workflows/shipping-approval.yml",
-      "mode": "100644",
-      "bytes": 17906,
-      "sha256": "0607732659ffab51a5827288039db7719ceb72429ca0513c93fef23fd1cffc9c",
-      "git_blob_sha1": "6102e35b0c94a5b825240ecd457d0f8ac69d9f7e"
-    },
-    {
       "path": ".github/workflows/speech-like-base-index-contract.yml",
       "mode": "100644",
       "bytes": 6703,
@@ -15585,13 +15578,6 @@
       "bytes": 6787,
       "sha256": "5364e25d901de2123be7eb84750c89f5d5b14070420faff564df4e5415270d2e",
       "git_blob_sha1": "e0ed70d323ff675b44fcef681590631e3b28806c"
-    },
-    {
-      "path": ".github/workflows/target-cohort-promotion.yml",
-      "mode": "100644",
-      "bytes": 10505,
-      "sha256": "6d83eace1ed35937d9073677de8da100e8d2ae3b56a1c36cd4da3910de6af18d",
-      "git_blob_sha1": "f5474e96339b3a0a996dd96c86c79eceb2878522"
     },
     {
       "path": ".github/workflows/target-dut-qualification.yml",
@@ -43915,6 +43901,53 @@
             "bytes": 19514,
             "sha256": "8dd6ba074874704bf62f97c4a4f3d4140327c993d43b997971748239f9b8412a",
             "git_blob_sha1": "2ccee7da43e89bdf6827f0eeb6c87e98d09e949f"
+          },
+          "after": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-03",
+      "operation_id": "research-only-retire-shipping-cohort-publication-20261103",
+      "source_commit": "8fbdc51f809092c8a8058faf51f6407faef2cfd1",
+      "scope": "Retire terminal shipping approval and cohort-release publication; retain raw multi-device resource/soak measurement and scientific evaluation. Exact active CI SHA updated; frozen archived sources unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 68751,
+            "sha256": "4093457bd58a06ee30f30aabe2b8bfd541fda020d82993c3f7efc89de260fd0e",
+            "git_blob_sha1": "2d13eaca68f04cd9df5fe59d14a71e07457701dc"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 68773,
+            "sha256": "e0929bbbafa8ca34f07544f534995616486ff0bf76324fac64ecc0741cb12cd8",
+            "git_blob_sha1": "76d1b54303553c24186d2aeae88776d056c3b8ce"
+          }
+        },
+        {
+          "path": ".github/workflows/shipping-approval.yml",
+          "before": {
+            "path": ".github/workflows/shipping-approval.yml",
+            "mode": "100644",
+            "bytes": 17906,
+            "sha256": "0607732659ffab51a5827288039db7719ceb72429ca0513c93fef23fd1cffc9c",
+            "git_blob_sha1": "6102e35b0c94a5b825240ecd457d0f8ac69d9f7e"
+          },
+          "after": null
+        },
+        {
+          "path": ".github/workflows/target-cohort-promotion.yml",
+          "before": {
+            "path": ".github/workflows/target-cohort-promotion.yml",
+            "mode": "100644",
+            "bytes": 10505,
+            "sha256": "6d83eace1ed35937d9073677de8da100e8d2ae3b56a1c36cd4da3910de6af18d",
+            "git_blob_sha1": "f5474e96339b3a0a996dd96c86c79eceb2878522"
           },
           "after": null
         }

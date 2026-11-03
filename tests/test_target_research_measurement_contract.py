@@ -7,14 +7,13 @@ import pathlib
 import subprocess
 import sys
 import tempfile
-import textwrap
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 from qualification_fixture import runtime_soak_fixture
 from test_board_bench import board_summary_fixture, write_pcm_fixture
 from runtime_soak_contract import CPU_MEASUREMENT_CONTRACT_ID
 from score_target_dut_qualification import validate_resource_budget
-DIAGNOSTIC_PATH = ROOT / ".target-shipping-contract-diagnostic.json"
+DIAGNOSTIC_PATH = ROOT / ".target-research-measurement-diagnostic.json"
 DIAGNOSTIC_STDOUT_LIMIT = 4096
 
 
@@ -267,10 +266,10 @@ def main() -> int:
 
     human_workflow = (ROOT / ".github/workflows/real-human-qualification.yml").read_text(encoding="utf-8")
     dut_workflow = (ROOT / ".github/workflows/target-dut-qualification.yml").read_text(encoding="utf-8")
-    cohort_workflow = (ROOT / ".github/workflows/target-cohort-promotion.yml").read_text(encoding="utf-8")
-    approval_workflow = (ROOT / ".github/workflows/shipping-approval.yml").read_text(encoding="utf-8")
+    for retired in ("target-cohort-promotion.yml", "shipping-approval.yml"):
+        assert not (ROOT / ".github/workflows" / retired).exists(), retired
     run("bash", "-n", "governance/require_current_main.sh")
-    for text in (human_workflow, dut_workflow, cohort_workflow, approval_workflow):
+    for text in (human_workflow, dut_workflow):
         header = text.split("permissions:", 1)[0]
         assert "workflow_dispatch:" in header
         assert "pull_request:" not in header
@@ -281,41 +280,13 @@ def main() -> int:
     assert "runs-on: [self-hosted, kws-target-board]" in dut_workflow
     assert "board_audio_class" in dut_workflow
     assert "resource_budget" in dut_workflow
-    assert "target-cohort-qualified-" in cohort_workflow
-    assert "shipping-approved-" in approval_workflow
-    assert "shipping_approved': True" in approval_workflow
-    assert "verify_live_main_ruleset.py" in approval_workflow or "require_current_main.sh" in approval_workflow
-    assert "public-phase-a-receipt.json" in approval_workflow
-    assert "public-target-cohort-receipt.json" in approval_workflow
-    # Keep every public-receipt path on the current unit/version before it can
-    # reach publishing. The terminal inline Python check is also executed with
-    # synthetic objects, without any GitHub, approval or publication operation.
-    for text in (dut_workflow, cohort_workflow, approval_workflow):
-        assert '.schema_version == 3 and .measurement_contract_id == "process-cpu-one-core-v1"' in text
-        assert '.schema_version == 2 and .measurement_contract_id == "process-cpu-one-core-v1"' in text
+    assert '.schema_version == 3 and .measurement_contract_id == "process-cpu-one-core-v1"' in dut_workflow
+    assert '.schema_version == 2 and .measurement_contract_id == "process-cpu-one-core-v1"' in dut_workflow
     assert '{schema_version:2,phase:"physical-target-dut-qualification"' in dut_workflow
-    assert '{schema_version:2,phase:"physical-target-cohort-qualification"' in cohort_workflow
-    assert '.resource_budget.measurement_contract_id == "process-cpu-one-core-v1" and .metrics.measurement_contract_id == "process-cpu-one-core-v1"' in cohort_workflow
-    start = approval_workflow.index("          for label, value, version in (")
-    end = approval_workflow.index("          if governance.get", start)
-    guard = compile(textwrap.dedent(approval_workflow[start:end]), "shipping-approval-cpu-contract", "exec")
-    good = {name: {"schema_version": version, "measurement_contract_id": CPU_MEASUREMENT_CONTRACT_ID}
-            for name, version in (("policy", 3), ("budget", 2), ("cohort", 2), ("cohort_receipt", 2))}
-    exec(guard, dict(good))
-    for name in good:
-        for field, bad_value in (("schema_version", 1), ("measurement_contract_id", None),
-                                 ("measurement_contract_id", "legacy-online-capacity")):
-            bad = json.loads(json.dumps(good))
-            bad[name][field] = bad_value
-            try:
-                exec(guard, bad)
-            except SystemExit as exc:
-                assert "unsupported CPU measurement contract" in str(exc)
-            else:
-                raise AssertionError(f"shipping approval accepted old {name}/{field}")
+    # Source-only target measurements remain independent of terminal publication.
 
 
-    with tempfile.TemporaryDirectory(prefix="kws-target-shipping-") as td:
+    with tempfile.TemporaryDirectory(prefix="kws-target-research-") as td:
         root = pathlib.Path(td)
         source_sha = "b" * 40
         corpus_sha = "c" * 64
@@ -532,7 +503,7 @@ def main() -> int:
         assert cohort["dut_count"] == 3
         assert cohort["long_soak_duts"] == 1
         assert cohort["resource_budget_sha256"] == dut["resource_budget"]["sha256"]
-        assert cohort["next_gate"] == "shipping-approval-promotion"
+        assert cohort["next_gate"] == "independent-research-review"
 
         original = cohort_paths[0].read_text(encoding="utf-8")
         for section, key, replacement in (
@@ -554,7 +525,7 @@ def main() -> int:
         cohort_paths[2].write_text(json.dumps(duplicate) + "\n", encoding="utf-8")
         run(*args, expect=2)
 
-    print("test_target_shipping_contract: ok")
+    print("test_target_research_measurement_contract: ok")
     return 0
 
 
@@ -578,6 +549,6 @@ if __name__ == "__main__":
         message = str(exc) or "assertion failed"
         message = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
         print(
-            f"::error file=tests/test_target_shipping_contract.py,line={line},title=target shipping contract::{message}"
+            f"::error file=tests/test_target_research_measurement_contract.py,line={line},title=target research measurement contract::{message}"
         )
         raise

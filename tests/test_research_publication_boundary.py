@@ -16,6 +16,8 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
         for relative in (
             "release.yml",
             "deployment-release.yml",
+            "shipping-approval.yml",
+            "target-cohort-promotion.yml",
         ):
             with self.subTest(relative=relative):
                 self.assertFalse((WORKFLOWS / relative).exists())

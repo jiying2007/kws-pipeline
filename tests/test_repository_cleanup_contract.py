@@ -80,7 +80,7 @@ REQUIRED_AUTHORITY_PATHS = (
     '.github/workflows/product-training-data-contract.yml',
     '.github/workflows/real-human-qualification.yml',
     '.github/workflows/target-dut-qualification.yml',
-    '.github/workflows/shipping-approval.yml',
+    'configs/research-baseline.xiaowo.json',
 )
 
 

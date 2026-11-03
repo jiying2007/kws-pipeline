@@ -272,15 +272,12 @@ class RegressionGateTests(unittest.TestCase):
         new['head_repository'] = {'full_name':'attacker/repo'}
         with self.assertRaisesRegex(ValueError, 'scope'): gate.select_run(pages, wf, 'owner/repo', 'a' * 40)
 
-    def test_shipping_and_producer_actually_consume_gate(self):
+    def test_frozen_far_producer_preserves_source_gate_without_publication(self):
         nightly = (ROOT / gate.WORKFLOW).read_text()
-        shipping = (ROOT / '.github/workflows/shipping-approval.yml').read_text()
-        self.assertIn('      actions: read', shipping)
         self.assertIn('far_regression_receipt.py produce', nightly)
         self.assertIn('build/far-regression/', nightly)
-        self.assertLess(shipping.index('far_regression_receipt.py fetch'), shipping.index('Assemble terminal shipping approval manifest'))
-        self.assertLess(shipping.index('far_regression_receipt.py recheck'), shipping.index('gh release create "$TAG"'))
-        self.assertIn("'current_tuple_regression':", shipping)
+        self.assertFalse((ROOT / '.github/workflows/shipping-approval.yml').exists())
+
 
 
 def run():

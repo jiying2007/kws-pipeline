@@ -873,19 +873,19 @@ jobs:
         run: python3 tests/test_real_human_qualification.py
       - name: Verify tracked worktree after Real-human qualification contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Real-human qualification contract"'
-      - name: Target and shipping promotion contract
-        run: python3 tests/test_target_shipping_contract.py
-      - name: Upload target and shipping promotion diagnostic
-        if: failure() && hashFiles('.target-shipping-contract-diagnostic.json') != ''
+      - name: Physical target research measurement contract
+        run: python3 tests/test_target_research_measurement_contract.py
+      - name: Upload target research measurement diagnostic
+        if: failure() && hashFiles('.target-research-measurement-diagnostic.json') != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: target-shipping-contract-diagnostic-${{ matrix.cc }}
-          path: .target-shipping-contract-diagnostic.json
+          name: target-research-measurement-diagnostic-${{ matrix.cc }}
+          path: .target-research-measurement-diagnostic.json
           if-no-files-found: error
           include-hidden-files: true
-      - name: Verify tracked worktree after Target and shipping promotion contract
+      - name: Verify tracked worktree after target research measurement contract
         if: always()
-        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Target and shipping promotion contract"'
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Target research measurement contract"'
       - name: Frozen replay build contract
         run: python3 tests/test_frozen_replay_build_contract.py
       - name: Verify tracked worktree after Frozen replay build contract

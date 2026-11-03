@@ -86,8 +86,8 @@ Research sources and historical product-reference contracts (not research-admiss
 - Historical `deployment-release.yml` — removed from active GitHub Actions; inspect the original Git commit for publication history. It is not an experiment or data-admission entrypoint.
 - [`.github/workflows/real-human-qualification.yml`](../.github/workflows/real-human-qualification.yml) — manual self-hosted restricted-data Phase-A workflow; raw/post-AFE WAVs are never uploaded
 - [`.github/workflows/target-dut-qualification.yml`](../.github/workflows/target-dut-qualification.yml) — manual self-hosted single-DUT physical evidence gate; raw lab evidence stays controlled
-- [`.github/workflows/target-cohort-promotion.yml`](../.github/workflows/target-cohort-promotion.yml) — immutable multi-DUT Phase-B cohort promotion
-- [`.github/workflows/shipping-approval.yml`](../.github/workflows/shipping-approval.yml) — only terminal promotion path allowed to emit `shipping_approved=true`
+- Historical `target-cohort-promotion.yml` — retired publication workflow; current research cohort scoring is `tools/score_target_cohort.py` and must use independently verified target measurements.
+- Historical `shipping-approval.yml` — retired commercial approval workflow, not a research acceptance authority.
 
 ## Repository layout
 

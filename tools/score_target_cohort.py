@@ -167,7 +167,6 @@ def main() -> int:
         "schema_version": 2,
         "phase": "physical-target-cohort-qualification",
         "qualified": not failures,
-        "shipping_approved": False,
         "deployment_tag": first["deployment_tag"],
         "deployment_target": first["deployment_target"],
         "human_qualification_tag": first["human_qualification_tag"],
@@ -194,7 +193,7 @@ def main() -> int:
         ],
         "policy_sha256": sha256_file(args.policy),
         "failures": sorted(set(failures)),
-        "next_gate": "shipping-approval-promotion" if not failures else "physical-target-cohort-failed",
+        "next_gate": "independent-research-review" if not failures else "physical-target-cohort-failed",
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
