@@ -1288,6 +1288,35 @@ def main() -> int:
     assert "configs/shipping.xiaowo.json" not in workflow
     assert "commercial/" not in workflow
     assert "shipping-approve" not in workflow
+    registry_workflow = (ROOT / ".github/workflows/model-registry-contract.yml").read_text(
+        encoding="utf-8"
+    )
+    active_registry = registry_workflow.split(
+        "      - name: Assert registry research boundary", 1
+    )[0]
+    assert "configs/research-baseline.xiaowo.json" in active_registry
+    assert "model-registry/$MODEL_RELEASE_TAG" not in active_registry
+    for obsolete in ("configs/shipping.xiaowo.json", "commercial/", "shipping_approved"):
+        assert obsolete not in active_registry, obsolete
+    verifier = (ROOT / "tools/verify_model_registry.py").read_text(encoding="utf-8")
+    assert "--config" not in verifier
+    assert "verify_model_release" not in verifier
+    pinned_dir = ROOT / "models/registry" / baseline["model_tag"]
+    registry_result = subprocess.run(
+        [sys.executable, str(ROOT / "tools/verify_model_registry.py"),
+         "--registry-dir", str(pinned_dir)],
+        check=False, capture_output=True, text=True,
+    )
+    assert registry_result.returncode == 0, registry_result.stderr
+    verified = json.loads(registry_result.stdout)
+    assert verified["verified"] is True
+    assert "shipping_approved" not in verified
+    old_flag = subprocess.run(
+        [sys.executable, str(ROOT / "tools/verify_model_registry.py"),
+         "--registry-dir", str(pinned_dir), "--config", "invalid"],
+        check=False, capture_output=True, text=True,
+    )
+    assert old_flag.returncode == 2
     assert 'branch="dataset-iteration/$run_id"' in workflow
     assert "gh pr create" in workflow
     assert "\n          git push\n" not in workflow
