@@ -15267,9 +15267,9 @@
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
       "mode": "100644",
-      "bytes": 8555,
-      "sha256": "973101add617d9a584b8ca2b266bf525d4715ad5a186a41f6b550e9af891e54c",
-      "git_blob_sha1": "e3ff7412135c661e8159363ff1612002b55c0dd4"
+      "bytes": 9051,
+      "sha256": "b56e377ce74aadf60058b257d600be446a030fcba631d2f34a911b14e481359a",
+      "git_blob_sha1": "bb963eabdc7d2b2123dc7042e2429939f22b63ab"
     },
     {
       "path": ".github/workflows/decoder-boundary-requalification.yml",
@@ -43711,6 +43711,33 @@
             "bytes": 11011,
             "sha256": "8644c7a66959fbbdec9270bf2e021a3071a9da07eb1b43de393aefa0f4ea9e24",
             "git_blob_sha1": "45930cbebff68aea1d92058361634cc3d0d23b7f"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-03",
+      "operation_id": "research-dataset-iteration-detach-shipping-v1",
+      "public_main_base_commit": "31e027fe63269db8c040d0218fe2c8035e9d82f7",
+      "source_commit": "49de467f686fe51c791eb25edd05a0334096d341",
+      "workflow_source_changed": true,
+      "scope": "One-variable dataset/model research workflow resolves historical exact KWM and keyword pack from an independent research SHA contract; no shipping config, rights approval or publication action; keeps measured FRR/FAR/latency and PR evidence route",
+      "files": [
+        {
+          "path": ".github/workflows/dataset-driven-iteration.yml",
+          "before": {
+            "path": ".github/workflows/dataset-driven-iteration.yml",
+            "mode": "100644",
+            "bytes": 8555,
+            "sha256": "973101add617d9a584b8ca2b266bf525d4715ad5a186a41f6b550e9af891e54c",
+            "git_blob_sha1": "e3ff7412135c661e8159363ff1612002b55c0dd4"
+          },
+          "after": {
+            "path": ".github/workflows/dataset-driven-iteration.yml",
+            "mode": "100644",
+            "bytes": 9051,
+            "sha256": "b56e377ce74aadf60058b257d600be446a030fcba631d2f34a911b14e481359a",
+            "git_blob_sha1": "bb963eabdc7d2b2123dc7042e2429939f22b63ab"
           }
         }
       ]

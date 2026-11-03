@@ -1274,6 +1274,20 @@ def main() -> int:
     assert "models/registry/$tag/xiaowo-model.kwm" in workflow
     assert "models/registry/$tag/xiaowo-keywords.kwk" in workflow
     assert "tools/verify_model_registry.py" in workflow
+    baseline = json.loads((ROOT / "configs/research-baseline.xiaowo.json").read_text())
+    assert baseline["schema"] == "kws-research-model-baseline-v1"
+    assert baseline["policy"] == "frozen-historical-research-comparator"
+    assert baseline["model_tag"] == "model-749187ec1d66"
+    assert baseline["model_sha256"] == "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402"
+    assert baseline["keyword_pack_sha256"] == "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723"
+    assert baseline["actual_human_wav_evaluated"] is False
+    assert baseline["independent_longstream_far_measured"] is False
+    assert baseline["ssc305_measured"] is False
+    assert "configs/research-baseline.xiaowo.json" in workflow
+    assert "research-registry:$tag" in workflow
+    assert "configs/shipping.xiaowo.json" not in workflow
+    assert "commercial/" not in workflow
+    assert "shipping-approve" not in workflow
     assert 'branch="dataset-iteration/$run_id"' in workflow
     assert "gh pr create" in workflow
     assert "\n          git push\n" not in workflow

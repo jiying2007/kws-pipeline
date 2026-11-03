@@ -1,5 +1,14 @@
 # kws-pipeline
 
+> **Current work: KWS technical research only.** Use
+> [Research execution boundary](docs/RESEARCH_ONLY_EXECUTION.md) and
+> [independent dataset iteration](.github/workflows/dataset-driven-iteration.yml).
+> Baseline identity comes from
+> [the research model manifest](configs/research-baseline.xiaowo.json),
+> not an approval or publication path. Historical release terminology below
+> describes preserved prior experiments and must not gate research.
+
+
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 Research: [reusable modules, retained results and qualification boundaries](research/README.md)
