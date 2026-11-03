@@ -23,13 +23,17 @@ from compare_dataset_iterations import (  # noqa: E402
     DATASET_IDENTITY_POLICY, FAR_POLICY, compare, far_policy,
     framing, metric, dataset_identity_policy,
 )
+from statistical_bounds import poisson_rate_upper, wilson_upper  # noqa: E402
 
-POLICY = "source-bound-kws-multilingual-development-tournament-v1"
+POLICY = "source-bound-kws-multilingual-development-tournament-exact-v2"
+SELECTION_STATISTICAL_POLICY = "negative-only-recordings-exact-poisson-one-sided95-v1"
+MAX_FA_EVENTS = 10000
+MAX_POSITIVE_EVENTS = 1000000000
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 IDENT = re.compile(r"[a-z][a-z0-9_-]{1,63}\Z")
 ONE_SIDED_Z95 = 1.6448536269514722
-METRICS = ("frr_upper_95", "far_upper_95_per_hour", "p95_post_end_latency_ms",
+METRICS = ("frr_upper_95", "selection_far_upper_95_per_hour", "p95_post_end_latency_ms",
            "cpu_ms_per_s", "rss_kib", "p99_block_ms")
 RESOURCE_FIELDS = {"measurement_class", "measurement_receipt_path",
                    "measurement_receipt_sha256", "cpu_ms_per_s",
@@ -75,7 +79,10 @@ def sha(raw: bytes) -> str:
 
 def number(value: object, label: str, *, strictly_positive: bool = False) -> float:
     need(type(value) in (int, float), "INVALID_NUMERIC_TYPE:" + label)
-    result = float(value)
+    try:
+        result = float(value)
+    except OverflowError as exc:
+        raise ValueError("INVALID_NUMERIC_RANGE:" + label) from exc
     need(math.isfinite(result) and (result > 0 if strictly_positive else result >= 0),
          "INVALID_NUMERIC_RANGE:" + label)
     return result
@@ -146,6 +153,27 @@ def load_entry(entry: dict, *, expected_role: str) -> tuple[dict, dict, dict]:
     need(type(card.get("identity")) is dict and
          card["identity"].get("variable") == "model",
          "MODEL_VARIABLE_ONLY")
+    # Bound counts before legacy validation or exact statistical arithmetic.
+    counts = card.get("metrics")
+    rate = card.get("far_rate")
+    need(type(counts) is dict and type(rate) is dict, "MISSING_EVENT_COUNTS")
+    expected = counts.get("expected")
+    fails = counts.get("false_rejects")
+    matched = counts.get("matched")
+    events = rate.get("observed_false_accepts")
+    need(type(expected) is int and 0 < expected <= MAX_POSITIVE_EVENTS and
+         type(fails) is int and 0 <= fails <= expected and
+         type(matched) is int and matched == expected - fails,
+         "INVALID_POSITIVE_EVENT_COUNTS")
+    need(type(events) is int and 0 <= events <= MAX_FA_EVENTS,
+         "INVALID_OR_UNBOUNDED_NEGATIVE_EVENT_COUNT")
+    exposure = card.get("exposure")
+    need(type(exposure) is dict, "MISSING_NEGATIVE_EXPOSURE")
+    number(exposure.get("exposure_hours"), "exposure_hours", strictly_positive=True)
+    for key in ("point_estimate_per_hour", "upper_bound_95_per_hour"):
+        number(rate.get(key), key)
+    for key in ("frr", "far_per_hour", "p95_post_end_latency_ms"):
+        number(counts.get(key), key)
     need(dataset_identity_policy(card, ident) == DATASET_IDENTITY_POLICY and
          far_policy(card, ident) == FAR_POLICY,
          "LEGACY_METRIC_POLICY_REJECTED")
@@ -162,14 +190,6 @@ def load_entry(entry: dict, *, expected_role: str) -> tuple[dict, dict, dict]:
          type(artifact.get("references_sha256")) is str and
          HEX64.fullmatch(artifact["references_sha256"]) is not None,
          "SCORECARD_REFERENCE_BINDING_MISSING")
-    counts = card["metrics"]
-    expected = counts.get("expected")
-    fails = counts.get("false_rejects")
-    matched = counts.get("matched")
-    need(type(expected) is int and expected > 0 and
-         type(fails) is int and 0 <= fails <= expected and
-         type(matched) is int and matched == expected - fails,
-         "INVALID_POSITIVE_EVENT_COUNTS")
     frr = metric(card, "frr")
     need(0 <= frr <= 1 and abs(frr - fails / expected) < 1e-12,
          "FRR_DISAGREES_WITH_EVENT_COUNTS")
@@ -182,15 +202,14 @@ def load_entry(entry: dict, *, expected_role: str) -> tuple[dict, dict, dict]:
     # One-sided Wilson 95% upper bound uses the entire number of real
     # expected events declared by the scorecard; it is development-only,
     # NOT a product qualification reference authority.
-    z = ONE_SIDED_Z95
-    p = fails / expected
-    wilson = ((p + z * z / (2 * expected) +
-               z * math.sqrt(p * (1-p) / expected + z*z / (4*expected*expected))) /
-              (1 + z*z / expected))
+    wilson = wilson_upper(fails, expected, .95)
+    exact_far = poisson_rate_upper(events, negative_hours, .95)
+    need(math.isfinite(exact_far), "NONFINITE_EXACT_FAR_BOUND")
     point = {"expected_wakes": expected, "false_rejects": fails,
              "frr": frr, "frr_upper_95": wilson,
              "far_upper_95_per_hour": number(
                  card["far_rate"]["upper_bound_95_per_hour"], "far_bound"),
+             "selection_far_upper_95_per_hour": exact_far,
              "p95_post_end_latency_ms": latency,
              "negative_exposure_hours": negative_hours}
     return card, point, resource(entry["resource"], card)
@@ -199,6 +218,27 @@ def load_entry(entry: dict, *, expected_role: str) -> tuple[dict, dict, dict]:
 def dominates(a: dict, b: dict) -> bool:
     return all(a[k] <= b[k] + 1e-12 for k in METRICS) and \
         any(a[k] < b[k] - 1e-12 for k in METRICS)
+
+
+def budget_blockers(scores: dict, resources: dict, b: dict) -> list[str]:
+    reasons = []
+    for label, observed, minimum in (
+        ("positive-support", scores["expected_wakes"], b["min_expected_wakes"]),
+        ("negative-exposure", scores["negative_exposure_hours"], b["min_negative_hours"]),
+    ):
+        if observed < minimum:
+            reasons.append("too-small-" + label)
+    for label, observed, ceiling in (
+        ("frr-confidence", scores["frr_upper_95"], b["max_frr_upper_95"]),
+        ("far-confidence", scores["selection_far_upper_95_per_hour"], b["max_far_upper_95_per_hour"]),
+        ("latency", scores["p95_post_end_latency_ms"], b["max_latency_ms"]),
+        ("cpu", resources["cpu_ms_per_s"], b["max_cpu_ms_per_s"]),
+        ("rss", resources["rss_kib"], b["max_rss_kib"]),
+        ("block", resources["p99_block_ms"], b["max_p99_block_ms"]),
+    ):
+        if observed > ceiling:
+            reasons.append(label + "-over-development-budget")
+    return reasons
 
 
 def select(plan: dict) -> dict:
@@ -226,11 +266,12 @@ def select(plan: dict) -> dict:
     need(type(raw_candidates) is list and
          1 <= len(raw_candidates) <= MAX_CANDIDATES, "TOURNAMENT_CANDIDATE_BUDGET")
     original, base, base_resources = load_entry(plan["baseline"], expected_role="development-only")
+    base_values = {**base, **base_resources}
+    base_blockers = budget_blockers(base, base_resources, b)
     ids = {plan["baseline"]["id"]}
     model_ids = {original["identity"]["model_id"]}
     required_identity = original["identity"]
     references = original["artifacts"]["references_sha256"]
-
     # A locale string chosen at report time is not corpus language evidence.
     # Require a separate exact source-bound development-cohort declaration.
     # This byte-bound note does not authenticate language or human labels.
@@ -285,38 +326,29 @@ def select(plan: dict) -> dict:
              "NONCOMPARABLE_DEVELOPMENT_COHORT")
         need(ident["model_id"] not in model_ids, "REPEATED_CANDIDATE_MODEL")
         model_ids.add(ident["model_id"])
-        # Reuse existing producer's FAR/FRR/latency comparison mathematics.
+        # Preserve legacy v4 diagnostics, never use approximate FAR to gate v2.
         comparison = compare(original, card, b["max_far_upper_95_per_hour"],
                              b["frr_point_tolerance"], b["max_latency_ms"])
         values = {**scores, **resources}
-        reasons = []
-        for field, observed, ceiling in [
-            ("positive-support", scores["expected_wakes"], b["min_expected_wakes"]),
-            ("negative-exposure", scores["negative_exposure_hours"], b["min_negative_hours"])]:
-            if observed < ceiling:
-                reasons.append("too-small-" + field)
-        for label, observed, ceiling in [
-            ("frr-confidence", scores["frr_upper_95"], b["max_frr_upper_95"]),
-            ("far-confidence", scores["far_upper_95_per_hour"], b["max_far_upper_95_per_hour"]),
-            ("latency", scores["p95_post_end_latency_ms"], b["max_latency_ms"]),
-            ("cpu", resources["cpu_ms_per_s"], b["max_cpu_ms_per_s"]),
-            ("rss", resources["rss_kib"], b["max_rss_kib"]),
-            ("block", resources["p99_block_ms"], b["max_p99_block_ms"])]:
-            if observed > ceiling:
-                reasons.append(label + "-over-development-budget")
+        reasons = budget_blockers(scores, resources, b)
+        if base_blockers:
+            reasons.append("baseline-ineligible")
         if scores["frr"] > base["frr"] + b["frr_point_tolerance"]:
             reasons.append("positive-recall-regressed")
-        if scores["far_upper_95_per_hour"] > base["far_upper_95_per_hour"] + 1e-12:
+        if scores["selection_far_upper_95_per_hour"] > base["selection_far_upper_95_per_hour"] + 1e-12:
             reasons.append("false-accept-confidence-regressed")
-        # Do not declare a winner simply because a scorecard exists.
-        if comparison["verdict"] == "regressed":
-            reasons.append("registered-comparator-regression")
+        # A tied/neutral candidate is not an improvement over the champion.
+        # This is strict observed aggregate/resource Pareto dominance, not
+        # statistical significance or a per-keyword non-regression assertion.
+        if not dominates(values, base_values):
+            reasons.append("no-strict-baseline-dominance")
         candidates.append({
             "id": entry["id"],
             "scorecard_sha256": entry["scorecard_sha256"],
             "model_id": ident["model_id"],
             "development_scores": values,
             "paired_verdict": comparison["verdict"],
+            "legacy_v4_comparison": comparison,
             "eligible_for_development_rank": not reasons,
             "blockers": sorted(set(reasons)),
         })
@@ -326,12 +358,26 @@ def select(plan: dict) -> dict:
         for y in valid if x["id"] != y["id"])]
     frontier.sort(key=lambda x: (
         x["development_scores"]["frr_upper_95"],
-        x["development_scores"]["far_upper_95_per_hour"],
+        x["development_scores"]["selection_far_upper_95_per_hour"],
         x["development_scores"]["p95_post_end_latency_ms"],
         x["development_scores"]["cpu_ms_per_s"], x["id"]))
     chosen = frontier[0]["id"] if frontier else None
     return {
-        "schema_version": 1, "policy": POLICY, "locale": plan["locale"],
+        "schema_version": 2, "policy": POLICY, "locale": plan["locale"],
+        "selection_statistical_policy": SELECTION_STATISTICAL_POLICY,
+        "input_far_policy": FAR_POLICY,
+        "confidence_scope": "marginal-per-model-not-simultaneous",
+        "per_keyword_support_status": "NOT_VERIFIED",
+        "per_keyword_non_regression_status": "NOT_VERIFIED",
+        "pre_registration_verified": False,
+        "selection_rule": "strict-observed-aggregate-and-resource-pareto-over-eligible-baseline",
+        "limitations": [
+            "Input v4 approximate FAR fields are unchanged legacy diagnostics.",
+            "Exact selection FAR uses only negative-only-recording count and hours.",
+            "Hashes and declarations do not authenticate source roles or pre-registration.",
+            "Observed Pareto dominance is not statistical significance or per-keyword improvement.",
+            "Repeated development selection and multiple candidates do not create independent test evidence.",
+        ],
         "source_role_declared": "development-only",
         "source_role_authentication_verified": False,
         "fixed_development_dataset_id": required_identity["dataset_id"],
@@ -341,6 +387,8 @@ def select(plan: dict) -> dict:
         "language_binding_sha256": language_sha,
         "control_model_id": required_identity["model_id"],
         "control_development_scores": {**base, **base_resources},
+        "control_eligible_for_development_rank": not base_blockers,
+        "control_blockers": sorted(set(base_blockers)),
         "budgets": b, "candidate_count": len(candidates),
         "candidate_results": sorted(candidates, key=lambda x: x["id"]),
         "pareto_frontier_ids": [x["id"] for x in frontier],

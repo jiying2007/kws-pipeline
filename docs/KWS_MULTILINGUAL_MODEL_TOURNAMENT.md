@@ -21,7 +21,8 @@ Entry point: `tools/select_multilingual_kws_models.py`.
   strings, and replay CI PASS are not product error metrics.
 - The existing governed `tools/compare_dataset_iterations.py` already
   enforces one variable, pinned scorecard protocol and exposure-aware FAR.
-  Reuse that calculator rather than invent another FAR estimate.
+  Keep that historical calculator for v4 receipt validation and legacy diagnostics.
+  Selection uses the existing exact Poisson helper under the explicit v2 policy.
 
 This addition selects among up to **8 already-evaluated model candidates**,
 all measured against the **same independent frozen development dataset**,
@@ -35,7 +36,11 @@ both change, stop and run an explicit paired rebaseline.
 The selector verifies `schema_version=4` v4 scorecards, the producer's
 `negative-only-recordings-iteration-approx95-v1` FAR identity/point/bound
 math, exact file SHA256, and internal positive `expected/matched/FRR`
-consistency. From expected-wake count it also computes a **one-sided 95%
+consistency. V2 retains those historical fields unchanged but computes a separate
+`selection_far_upper_95_per_hour` using `statistical_bounds.poisson_rate_upper`
+with confidence 0.95 and the same negative-only-recording count/exposure. The
+explicit selection policy is `negative-only-recordings-exact-poisson-one-sided95-v1`.
+Global false accepts from positive recordings are not substituted into this rate. From expected-wake count it also computes a **one-sided 95%
 Wilson upper confidence bound** on the *development* false-reject
 proportion. This is not independent true label authentication.
 
@@ -72,11 +77,17 @@ second, RSS and p99 block time. Each resource record has a hash-bound
 **host-development-only** measurement receipt. The selector does not
 claim the host is an actual SSC305 board.
 
-Reject a candidate for insufficient evidence, invalid source/pins,
+Both baseline and candidate must meet the development budgets. Reject a candidate
+if its baseline is ineligible, or for insufficient evidence, invalid source/pins,
 worse point FRR or FAR confidence than baseline, or any declared
 development resource budget failure. Then compute a Pareto frontier over
 FRR confidence, FAR confidence, latency and three resource metrics.
-Choose a deterministic *research leader* from the non-dominated set.
+A candidate must strictly Pareto-dominate the eligible baseline over these six
+aggregate/resource metrics before entering this set. Exact ties retain the
+champion and produce no challenger. Choose a deterministic *research leader*
+from the remaining non-dominated set. This is observed dominance, not statistical
+significance. Old v4 comparison verdicts remain diagnostic and cannot override
+the exact selection decision.
 
 If there is no eligible model, output `research_leader_id=null`;
 **never** choose a winner merely because some experiments finished.
@@ -104,7 +115,7 @@ annotations must be verified through the true data admission chain.
 ```json
 {
   "schema_version": 1,
-  "policy": "source-bound-kws-multilingual-development-tournament-v1",
+  "policy": "source-bound-kws-multilingual-development-tournament-exact-v2",
   "locale": "zh-CN",
   "role": "development-only",
   "language_binding": {
@@ -154,6 +165,15 @@ annotations must be verified through the true data admission chain.
   }
 }
 ```
+
+V1 tournament plans require an explicit policy migration; they are not silently
+reinterpreted. Input scorecard-v4 semantics remain unchanged. Policy declarations
+and file hashes do not prove pre-registration before observing results. Bounds
+are marginal per model, not simultaneous over all candidates. Per-keyword support
+and non-regression are `NOT_VERIFIED` because these input cards contain aggregate
+counts. Reusing development data repeatedly does not turn it into independent
+test evidence. Exact arithmetic is bounded to 10,000 negative events and
+1,000,000,000 positive events per card.
 
 Values are illustrative *research-development* budgets, not new
 commercial shipping limits. Placeholder hashes deliberately fail.

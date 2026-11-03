@@ -43652,6 +43652,68 @@
           }
         }
       ]
+    },
+    {
+      "id": "multilingual-tournament-exact-selection-20261103",
+      "date": "2026-11-03",
+      "base_commit": "f4be9c67a65502227cc6e5dbc82c77359bcbec7e",
+      "base_tree": "0de277508a0f42e0709456f5b909cc0ab05aa7b5",
+      "workflow_source_changed": false,
+      "scope": "Exact one-sided Poisson selection policy in the existing multilingual development tournament; preserve owner private-receipt and language binding, historical v4 scorecards, and no qualification authority.",
+      "rationale": "Reject unqualified baselines, neutral label contamination and underpowered comparisons; explicit exact-v2 plan migration. Existing tournament CI entry remains unchanged. Normal/-O/-OO 21 tests each passed locally with independent review. No real models, production promotion or new benchmark measurement.",
+      "files": [
+        {
+          "path": "tools/select_multilingual_kws_models.py",
+          "before": {
+            "path": "tools/select_multilingual_kws_models.py",
+            "mode": "100644",
+            "bytes": 18795,
+            "sha256": "ea96073d8f775136f7b828da2c5133139008a768866c4677fcdabf6b8bda880c",
+            "git_blob_sha1": "0cf0116e5fc1fd8648a035539ae903b1e4522604"
+          },
+          "after": {
+            "path": "tools/select_multilingual_kws_models.py",
+            "mode": "100644",
+            "bytes": 21537,
+            "sha256": "ee64a61c345224b8a0e2ffa8d4b94f73951675018e3200dabb8e7fdd5ba1d770",
+            "git_blob_sha1": "3bfccc9def6491a7182c2c069873638ee0f064b4"
+          }
+        },
+        {
+          "path": "tests/test_multilingual_kws_tournament.py",
+          "before": {
+            "path": "tests/test_multilingual_kws_tournament.py",
+            "mode": "100644",
+            "bytes": 14174,
+            "sha256": "a75ebe4523b6a9f2fa03d015a331d0b16ffa88252bb7f995ebe71297c908d6cc",
+            "git_blob_sha1": "be5329008ddd1249cf08c1a08a6a2bbbdfcbaa89"
+          },
+          "after": {
+            "path": "tests/test_multilingual_kws_tournament.py",
+            "mode": "100644",
+            "bytes": 20219,
+            "sha256": "e945feb1cef3b28ed7c2984336f0a98202d4658194e053a9ecb4260571acd885",
+            "git_blob_sha1": "d21a6273f0cea63a0533044472299e2d0a93cc80"
+          }
+        },
+        {
+          "path": "docs/KWS_MULTILINGUAL_MODEL_TOURNAMENT.md",
+          "before": {
+            "path": "docs/KWS_MULTILINGUAL_MODEL_TOURNAMENT.md",
+            "mode": "100644",
+            "bytes": 9463,
+            "sha256": "55aac00478fdbbe3ac488efcb20872ece28925e6816eb9afbefba5c062927367",
+            "git_blob_sha1": "4f8161592ff3854b31a2274d0c9b513aa3d37bd0"
+          },
+          "after": {
+            "path": "docs/KWS_MULTILINGUAL_MODEL_TOURNAMENT.md",
+            "mode": "100644",
+            "bytes": 11011,
+            "sha256": "8644c7a66959fbbdec9270bf2e021a3071a9da07eb1b43de393aefa0f4ea9e24",
+            "git_blob_sha1": "45930cbebff68aea1d92058361634cc3d0d23b7f"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

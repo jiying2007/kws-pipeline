@@ -16,8 +16,8 @@ from compare_dataset_iterations import FAR_POLICY, DATASET_IDENTITY_POLICY  # no
 
 
 def scorecard(model: str, *, failures: int, false_accepts: int,
-              latency: float = 210, dataset: str = "d") -> dict:
-    n, hours = 100, 10.0
+              latency: float = 210, dataset: str = "d", hours: float = 10.0) -> dict:
+    n = 100
     if not false_accepts:
         far_bound = 2.9957 / hours
     else:
@@ -105,7 +105,7 @@ class DevelopmentTournamentTests(unittest.TestCase):
                                  cpu=90, rss=1400, p99=3)
         self.low_far = sample_entry(self.root, "lower-far",
                                     scorecard("3", failures=8, false_accepts=1),
-                                    cpu=95, rss=1450, p99=3)
+                                    cpu=80, rss=1300, p99=2)
         self.plan = {
             "schema_version": 1, "policy": rank.POLICY,
             "locale": "zh-CN", "role": "development-only",
@@ -116,7 +116,7 @@ class DevelopmentTournamentTests(unittest.TestCase):
             "budgets": {
                 "min_expected_wakes": 100, "min_negative_hours": 8.0,
                 "max_frr_upper_95": 0.20,
-                "max_far_upper_95_per_hour": 0.40,
+                "max_far_upper_95_per_hour": 0.80,
                 "max_latency_ms": 500.0,
                 "max_cpu_ms_per_s": 200.0, "max_rss_kib": 3000.0,
                 "max_p99_block_ms": 15.0, "frr_point_tolerance": 0.0}
@@ -251,6 +251,97 @@ class DevelopmentTournamentTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "REPEATED_CANDIDATE_MODEL"):
             rank.select(p)
 
+    def test_exact_zero_one_event_monotonic_preserves_legacy(self) -> None:
+        entries = [sample_entry(self.root, "count-" + str(k),
+                   scorecard(str(k + 2), failures=5, false_accepts=k)) for k in (0, 1)]
+        points = [rank.load_entry(e, expected_role="development-only")[1] for e in entries]
+        self.assertGreater(points[0]["far_upper_95_per_hour"], points[1]["far_upper_95_per_hour"])
+        self.assertLess(points[0]["selection_far_upper_95_per_hour"], points[1]["selection_far_upper_95_per_hour"])
+        self.assertAlmostEqual(points[0]["selection_far_upper_95_per_hour"], .2995732273553991)
+        self.assertAlmostEqual(points[1]["selection_far_upper_95_per_hour"], .4743864518390577)
+
+    def test_two_events_eight_hours_approx_green_exact_rejects(self) -> None:
+        p = copy.deepcopy(self.plan)
+        p["baseline"] = sample_entry(self.root, "base-eight", scorecard("1", failures=10, false_accepts=2, hours=8))
+        p["candidates"] = [sample_entry(self.root, "cand-eight", scorecard("2", failures=5, false_accepts=2, hours=8))]
+        p["budgets"]["max_far_upper_95_per_hour"] = .65
+        result = rank.select(p)
+        row = result["candidate_results"][0]
+        self.assertEqual(row["paired_verdict"], "improved")
+        self.assertLess(row["development_scores"]["far_upper_95_per_hour"], .65)
+        self.assertGreater(row["development_scores"]["selection_far_upper_95_per_hour"], .78)
+        self.assertIsNone(result["research_leader_id"])
+        self.assertIn("far-confidence-over-development-budget", row["blockers"])
+        self.assertFalse(result["control_eligible_for_development_rank"])
+
+    def test_thirty_hours_zero_events_success_without_keyword_claim(self) -> None:
+        p = copy.deepcopy(self.plan)
+        p["baseline"] = sample_entry(self.root, "base-thirty", scorecard("1", failures=10, false_accepts=0, hours=30))
+        p["candidates"] = [sample_entry(self.root, "cand-thirty", scorecard("2", failures=5, false_accepts=0, hours=30))]
+        p["budgets"].update(min_negative_hours=30, max_far_upper_95_per_hour=.13)
+        result = rank.select(p)
+        self.assertEqual(result["research_leader_id"], "cand-thirty")
+        self.assertEqual(result["selection_statistical_policy"], rank.SELECTION_STATISTICAL_POLICY)
+        self.assertEqual(result["per_keyword_support_status"], "NOT_VERIFIED")
+        self.assertEqual(result["per_keyword_non_regression_status"], "NOT_VERIFIED")
+        self.assertFalse(result["shipping_approved"])
+
+    def test_equal_metrics_keep_champion(self) -> None:
+        p = copy.deepcopy(self.plan)
+        p["baseline"] = sample_entry(self.root, "equal-base", scorecard("1", failures=5, false_accepts=0))
+        p["candidates"] = [sample_entry(self.root, "equal-candidate", scorecard("2", failures=5, false_accepts=0))]
+        result = rank.select(p)
+        self.assertIsNone(result["research_leader_id"])
+        self.assertEqual(result["candidate_results"][0]["paired_verdict"], "neutral")
+        self.assertIn("no-strict-baseline-dominance", result["candidate_results"][0]["blockers"])
+
+    def test_invalid_baseline_budget_does_not_rank_good_candidate(self) -> None:
+        p = copy.deepcopy(self.plan)
+        p["baseline"] = sample_entry(self.root, "ineligible-base",
+            scorecard("1", failures=10, false_accepts=2), rss=9000)
+        result = rank.select(p)
+        self.assertFalse(result["control_eligible_for_development_rank"])
+        self.assertIsNone(result["research_leader_id"])
+        self.assertTrue(all("baseline-ineligible" in c["blockers"] for c in result["candidate_results"]))
+
+    def test_legacy_neutral_does_not_block_exact_improvement(self) -> None:
+        p = copy.deepcopy(self.plan)
+        p["baseline"] = sample_entry(self.root, "one-base", scorecard("1", failures=5, false_accepts=1))
+        p["candidates"] = [sample_entry(self.root, "zero-candidate", scorecard("2", failures=5, false_accepts=0))]
+        result = rank.select(p)
+        self.assertEqual(result["candidate_results"][0]["paired_verdict"], "neutral")
+        self.assertEqual(result["research_leader_id"], "zero-candidate")
+
+    def test_exact_regression_not_hidden_by_legacy_reverse_order(self) -> None:
+        p = copy.deepcopy(self.plan)
+        p["baseline"] = sample_entry(self.root, "zero-base", scorecard("1", failures=10, false_accepts=0))
+        p["candidates"] = [sample_entry(self.root, "one-candidate", scorecard("2", failures=5, false_accepts=1))]
+        result = rank.select(p)
+        self.assertEqual(result["candidate_results"][0]["paired_verdict"], "improved")
+        self.assertIsNone(result["research_leader_id"])
+        self.assertIn("false-accept-confidence-regressed", result["candidate_results"][0]["blockers"])
+
+    def test_huge_counts_are_rejected_before_statistical_math(self) -> None:
+        for field in ("expected", "false_rejects", "observed_false_accepts"):
+            p = copy.deepcopy(self.plan)
+            card = scorecard("2", failures=5, false_accepts=0)
+            target = card["far_rate"] if field == "observed_false_accepts" else card["metrics"]
+            target[field] = 10 ** 1000
+            p["candidates"] = [sample_entry(self.root, "huge-" + field, card)]
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                rank.select(p)
+
+    def test_bad_exposure_is_rejected(self) -> None:
+        for hours in (0, -1, True, None, "10", 10 ** 1000):
+            p = copy.deepcopy(self.plan)
+            card = scorecard("2", failures=5, false_accepts=0)
+            card["exposure"]["exposure_hours"] = hours
+            p["candidates"] = [sample_entry(self.root, "bad-hours", card)]
+            with self.subTest(hours=str(hours)[:20]), self.assertRaises(ValueError):
+                rank.select(p)
+        for hours in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(hours=hours), self.assertRaises(ValueError):
+                rank.number(hours, "exposure_hours", strictly_positive=True)
 
     def test_language_binding_cannot_be_report_time_spoofed(self) -> None:
         p = copy.deepcopy(self.plan)
