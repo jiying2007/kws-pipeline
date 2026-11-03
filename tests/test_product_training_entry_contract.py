@@ -233,7 +233,7 @@ def main() -> int:
     verified_request = verify_request(request_path)
 
     source = ROOT / "configs/training/xiaowo.torch-domain.json"
-    shipping = ROOT / "configs/shipping.xiaowo.json"
+    research = ROOT / "configs/research-baseline.xiaowo.json"
     keywords = ROOT / "keywords/zh_cn_example.tsv"
 
     # The source/template config intentionally still has the legacy tone
@@ -241,7 +241,7 @@ def main() -> int:
     try:
         verify(
             source,
-            shipping,
+            research,
             keywords,
             require_product_speech_like_base=True,
         )
@@ -300,17 +300,20 @@ def main() -> int:
         path.write_text(json.dumps(config), encoding="utf-8")
         result = verify(
             path,
-            shipping,
+            research,
             keywords,
             require_product_speech_like_base=True,
         )
         assert result["product_speech_like_base_required"] is True
         assert result["product_external_base_bundle_sha256"] == "1" * 64
         assert result["actual_review_receipts_verified"] is False
+        assert result["research_wake_words"] == ["你好小窝", "小窝小窝"]
+        assert result["frozen_research_seed"] == 271838
+        assert result["reserved_research_seed"] == 271843
         config["generator"]["external_base_admission_mode"] = "historical-frozen-diagnostic-v1"
         path.write_text(json.dumps(config), encoding="utf-8")
         try:
-            verify(path, shipping, keywords, require_product_speech_like_base=True)
+            verify(path, research, keywords, require_product_speech_like_base=True)
         except ValueError as exc:
             assert "historical frozen base is diagnostic-only" in str(exc)
         else:

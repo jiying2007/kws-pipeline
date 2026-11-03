@@ -8,5 +8,8 @@
   "dataset_status": "exposed-historical-synthetic-diagnostic",
   "actual_human_wav_evaluated": false,
   "independent_longstream_far_measured": false,
-  "ssc305_measured": false
+  "ssc305_measured": false,
+  "frozen_qualification_seed": 271838,
+  "frozen_seed_state": "consumed-and-frozen",
+  "next_research_seed": 271843
 }
