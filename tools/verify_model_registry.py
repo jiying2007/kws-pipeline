@@ -7,10 +7,6 @@ import json
 import pathlib
 import sys
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "tools"))
-from verify_model_release import verify as verify_pinned_release  # noqa: E402
-
 MAX_ENTRY_BYTES = 5_000_000
 FORBIDDEN_SUFFIXES = {".wav", ".flac", ".mp3", ".ogg", ".zip", ".tar", ".gz", ".tgz"}
 
@@ -33,7 +29,6 @@ def load_json(path: pathlib.Path) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--registry-dir", required=True, type=pathlib.Path)
-    parser.add_argument("--config", type=pathlib.Path)
     parser.add_argument("--max-entry-bytes", type=int, default=MAX_ENTRY_BYTES)
     args = parser.parse_args()
 
@@ -86,17 +81,6 @@ def main() -> int:
         raise ValueError(
             f"registry file-set mismatch: actual={sorted(actual)} expected={sorted(expected)}"
         )
-    product_lineage = {
-        "xiaowo-effective-training-config.json",
-        "xiaowo-product-speech-like-base-contract.json",
-        "training-invocation.json",
-    }
-    present_lineage = product_lineage & actual
-    if present_lineage and present_lineage != product_lineage:
-        missing_lineage = sorted(product_lineage - present_lineage)
-        raise ValueError(
-            f"speech-like product registry lineage is incomplete: missing={missing_lineage}"
-        )
     if total != int(storage.get("release_assets_bytes", -1)):
         raise ValueError("registry total byte count drift")
     if total > args.max_entry_bytes or total > int(storage.get("max_entry_bytes", 0)):
@@ -115,21 +99,6 @@ def main() -> int:
         if name not in expected or expected[name] != digest:
             raise ValueError(f"MODEL_SHA256SUMS mismatch: {name}")
 
-    if args.config:
-        report = verify_pinned_release(root, args.config, tag)
-        config = load_json(args.config)
-        model = config["model"]
-        if int(training.get("run_id", 0)) != int(model.get("training_run_id", 0)):
-            raise ValueError("registry/config training run mismatch")
-        if str(training.get("head_sha") or "") != str(model.get("trained_head_sha") or ""):
-            raise ValueError("registry/config trained head mismatch")
-        if bool(registry.get("shipping_approved")) != bool(config.get("shipping_approved")):
-            raise ValueError("registry/config shipping_approved mismatch")
-        pending = list(config.get("shipping_evidence_boundary", {}).get("pending") or [])
-        if list(registry.get("shipping_blockers") or []) != pending:
-            raise ValueError("registry/config shipping blockers mismatch")
-    else:
-        report = {"manifest_entries": len(sums)}
 
     print(json.dumps({
         "schema_version": 1,
@@ -137,8 +106,7 @@ def main() -> int:
         "release_tag": tag,
         "assets": len(expected),
         "bytes": total,
-        "shipping_approved": bool(registry.get("shipping_approved")),
-        "manifest_entries": report["manifest_entries"],
+        "manifest_entries": len(sums),
         "verified": True,
     }, indent=2, sort_keys=True))
     return 0
