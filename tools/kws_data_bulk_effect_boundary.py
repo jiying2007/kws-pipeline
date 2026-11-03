@@ -249,8 +249,7 @@ def measure(plan: dict, screen: dict, generation_root: Path) -> dict:
                     completion.get("source_family_id") == family and
                     completion.get("intended_kind") == cell["intended_kind"] and
                     completion.get("training_admitted") is False and
-                    completion.get("qualification_allowed") is False and
-                    "GENERATION_RECEIPT_DRIFT")
+                    completion.get("qualification_allowed") is False, "GENERATION_RECEIPT_DRIFT")
             wav = source_file(root, folder / "audio-16k.wav")
             actual = inspect_pcm16_wav(wav)
             reported = completion.get("audio")
