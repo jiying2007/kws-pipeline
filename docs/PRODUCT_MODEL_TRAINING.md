@@ -1,6 +1,8 @@
-# Product model training data contract
+# Research model training data contract (historical product terminology retained)
 
-The shipping-format model trainer must not silently fall back to the legacy tone
+> **Pure technical research.** This document preserves older source, label and model-evidence terminology, not an active shipping or publication requirement. The live training entry is the research-only source-admitted workflow, and the historical model-promotion publisher has been retired. Real label/rights checks and reproducible model identity remain required for technical correctness.
+
+The embedded-format model trainer must not silently fall back to the legacy tone
 generator.
 
 ## Current state
