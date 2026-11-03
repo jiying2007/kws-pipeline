@@ -201,7 +201,7 @@ def build(rt, spec):
     return factory(parsed, rnn_model=reference)
 
 
-def load_inventory(config, repo, rt):
+def load_inventory(config, repo, rt, *, data_pair_details=False):
     torch, _, Manifest, _, frontend, _, _ = rt
     from kws_vocab import load_tokens
     from training_admission import verify_training_manifests
@@ -209,7 +209,7 @@ def load_inventory(config, repo, rt):
     tokens = load_tokens(Path(config['tokens']))
     if sorted(tokens.values()) != list(range(5)):
         raise ValueError('research runner requires exact five-token vocabulary')
-    datasets, inventory = {}, []
+    datasets, inventory, train_rows = {}, [], []
     for split in ('train', 'calibration', 'selection'):
         path = Path(config['manifests'][split]).resolve()
         if path.suffix != '.jsonl':
@@ -220,10 +220,15 @@ def load_inventory(config, repo, rt):
         for line in path.read_text().splitlines():
             if not line.strip() or line.lstrip().startswith('#'):
                 continue
-            row = json.loads(line)
+            row = data_pair_json(line) if data_pair_details else json.loads(line)
             if not isinstance(row, dict):
                 raise ValueError('manifest row must be an object')
             raw_rows.append(row)
+            if data_pair_details and split == 'train':
+                train_rows.append(dict(row))
+            if data_pair_details:
+                row = data_pair_parent(row)
+                raw_rows[-1] = row
             if len(raw_rows) > MAX_ROWS_PER_SPLIT:
                 raise ValueError('too many manifest rows')
             audio = Path(canonical_audio_path(row, str(path)))
@@ -257,7 +262,246 @@ def load_inventory(config, repo, rt):
         for measured, raw in zip(ds.identity_rows, raw_rows):
             inventory.append(projected_identity(measured, raw, split))
     split_hash = validate_split(inventory)
+    if data_pair_details:
+        return datasets['train'], split_hash, admission, {'inventory': inventory, 'train_rows': train_rows}
     return datasets['train'], split_hash, admission
+
+
+
+def fixed_step_order(size, steps, seed):
+    """Same optimizer-step count, not equal epochs or acoustic exposure."""
+    bounded_integer(size, 'training rows', 1, MAX_ROWS_PER_SPLIT)
+    bounded_integer(steps, 'optimizer steps', 1, MAX_EXPOSURES)
+    bounded_integer(seed, 'seed', 0, 2**32 - 1)
+    rng, order, emitted = random.Random(seed), list(range(size)), 0
+    while emitted < steps:
+        rng.shuffle(order)
+        for index in order:
+            if emitted == steps:
+                return
+            yield index
+            emitted += 1
+
+
+def canonical_row(row):
+    return json.dumps(row, ensure_ascii=False, sort_keys=True,
+                      separators=(',', ':'), allow_nan=False)
+
+
+def data_pair_json(text):
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError('DATA_PAIR_DUPLICATE_JSON_KEY')
+            result[key] = value
+        return result
+    def finite(value):
+        result = float(value)
+        if not math.isfinite(result):
+            raise ValueError('DATA_PAIR_NONFINITE_JSON')
+        return result
+    def constant(value):
+        raise ValueError('DATA_PAIR_NONFINITE_JSON')
+    return json.loads(text, object_pairs_hook=pairs, parse_float=finite, parse_constant=constant)
+
+
+def data_pair_config(config):
+    """Explicit additive-data experiment; no architecture or eval-set factor."""
+    required = {'schema', 'development_only', 'protected_evidence_used',
+                'synthetic_diagnostic_only', 'tokens', 'train_manifests',
+                'evaluation_manifests', 'spec', 'optimizer_steps', 'seed',
+                'learning_rate', 'max_training_seconds'}
+    if type(config) is not dict or set(config) != required or config['schema'] != 'research-data-pair-v1':
+        raise ValueError('DATA_PAIR_CONFIG')
+    if (config['development_only'] is not True or config['protected_evidence_used'] is not False
+            or type(config['synthetic_diagnostic_only']) is not bool):
+        raise ValueError('DATA_PAIR_RESEARCH_SCOPE')
+    bounded_integer(config['optimizer_steps'], 'optimizer steps', 1, MAX_EXPOSURES)
+    bounded_integer(config['seed'], 'seed', 0, 2**32 - 1)
+    bounded_integer(config['max_training_seconds'], 'training seconds', 1, 3600)
+    lr = config['learning_rate']
+    if type(lr) not in (int, float) or not math.isfinite(lr) or lr <= 0:
+        raise ValueError('DATA_PAIR_LEARNING_RATE')
+    if type(config['spec']) is not dict or config['spec'].get('architecture') != 'rnn64_control':
+        raise ValueError('DATA_PAIR_SINGLE_RNN64_SPEC')
+    train_paths, evaluation = config['train_manifests'], config['evaluation_manifests']
+    if (type(train_paths) is not dict or set(train_paths) != {'control', 'treatment'}
+            or type(evaluation) is not dict or set(evaluation) != {'calibration', 'selection'}):
+        raise ValueError('DATA_PAIR_MANIFEST_KEYS')
+    paths = [config['tokens'], *train_paths.values(), *evaluation.values()]
+    if any(type(p) is not str or not p for p in paths):
+        raise ValueError('DATA_PAIR_PATH')
+    resolved = [Path(p).resolve() for p in paths]
+    if len(set(resolved)) != len(resolved):
+        raise ValueError('DATA_PAIR_INPUT_ALIAS')
+    if resolved[1].parent != resolved[2].parent:
+        raise ValueError('DATA_PAIR_COMMON_TRAIN_DIRECTORY')
+    return {arm: {**config, 'manifests': {'train': train_paths[arm], **evaluation}}
+            for arm in ('control', 'treatment')}
+
+
+def data_pair_parent(row):
+    """A declared parent file digest is not authenticated ancestry."""
+    result = dict(row)
+    value = row.get('parent_source_sha256')
+    kind = row.get('parent_source_identity_kind')
+    if 'parent_source_sha256' not in row and 'parent_source_identity_kind' not in row:
+        return result
+    if (kind != 'file-sha256' or type(value) is not str or len(value) != 64
+            or any(c not in '0123456789abcdef' for c in value)):
+        raise ValueError('DATA_PAIR_PARENT_IDENTITY_KIND')
+    links = list(result.get('lineage_links', []))
+    links.append({'source_audio_sha256': value})
+    result['lineage_links'] = links
+    return result
+
+
+def validate_data_pair_inventories(details):
+    from collections import Counter
+    a, b = (details[arm] for arm in ('control', 'treatment'))
+    control = Counter(canonical_row(row) for row in a['train_rows'])
+    treatment = Counter(canonical_row(row) for row in b['train_rows'])
+    if not control or any(treatment[row] < n for row, n in control.items()):
+        raise ValueError('DATA_PAIR_CONTROL_ROWS_CHANGED')
+    additions = treatment - control
+    if not additions or any(row in control or n != 1 for row, n in additions.items()):
+        raise ValueError('DATA_PAIR_NO_UNIQUE_ADDITION')
+    # Both arms are validated separately by load_inventory, then together.
+    # This catches ancestor components bridged only through the other arm.
+    rows = a['inventory'] + b['inventory']
+    for detail in (a, b):
+        pcm = [row['pcm_sha256'] for row in detail['inventory'] if row['split'] == 'train']
+        if len(set(pcm)) != len(pcm):
+            raise ValueError('DATA_PAIR_DUPLICATE_TRAIN_PCM')
+    return validate_split(rows)
+
+
+def initial_state_digest(model):
+    digest = hashlib.sha256()
+    for key, value in sorted(model.state_dict().items()):
+        tensor = value.detach().cpu().contiguous()
+        metadata = canonical_row({'key': key, 'dtype': str(tensor.dtype),
+                                  'shape': list(tensor.shape)}).encode()
+        raw = tensor.numpy().tobytes()
+        for block in (metadata, raw):
+            digest.update(len(block).to_bytes(8, 'big'))
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def check_frozen_inputs(expected):
+    for path, value in expected.items():
+        if sha(path) != value:
+            raise ValueError('DATA_PAIR_INPUT_DRIFT: ' + str(path))
+
+
+def train_data(args):
+    """Two admitted datasets, one model recipe, equal bounded optimizer steps.
+
+    This does not run evaluation, select a winner, or authenticate source rights.
+    """
+    config_path = args.config.resolve()
+    config_digest = sha(config_path)
+    if config_path.stat().st_size > MAX_MANIFEST_BYTES:
+        raise ValueError('DATA_PAIR_CONFIG_SIZE')
+    config = data_pair_json(config_path.read_text())
+    arm_configs = data_pair_config(config)
+    frozen = {str(config_path): config_digest}
+    for path in (config['tokens'], *config['train_manifests'].values(),
+                 *config['evaluation_manifests'].values()):
+        frozen[str(Path(path).resolve())] = sha(path)
+    check_frozen_inputs(frozen)
+    rt = runtime(args.repo.resolve())
+    torch = rt[0]
+    datasets, splits, admissions, details = {}, {}, {}, {}
+    # Both admissions must succeed before constructing either model/optimizer.
+    for arm in ('control', 'treatment'):
+        datasets[arm], splits[arm], admissions[arm], details[arm] = load_inventory(
+            arm_configs[arm], args.repo, rt, data_pair_details=True)
+    pair_split = validate_data_pair_inventories(details)
+    if config['optimizer_steps'] < len(datasets['treatment']):
+        raise ValueError('DATA_PAIR_STEPS_MUST_COVER_TREATMENT')
+    check_frozen_inputs(frozen)
+    identities = source_hashes(args.repo)
+    args.output.mkdir(parents=True, exist_ok=False)
+    results, init_digest = [], None
+    steps = config['optimizer_steps']
+    for arm in ('control', 'treatment'):
+        check_frozen_inputs(frozen)
+        torch.manual_seed(config['seed'])
+        model = build(rt, config['spec'])
+        current_init = initial_state_digest(model)
+        if init_digest is not None and current_init != init_digest:
+            raise ValueError('DATA_PAIR_INITIAL_STATE_DRIFT')
+        init_digest = current_init
+        model.train()
+        optimizer = torch.optim.Adam(model.parameters(), lr=config['learning_rate'], weight_decay=1e-4)
+        criterion = torch.nn.CTCLoss(blank=0, reduction='mean', zero_infinity=False)
+        schedule = list(fixed_step_order(len(datasets[arm]), steps, config['seed']))
+        schedule_sha = hashlib.sha256(canonical_row(schedule).encode()).hexdigest()
+        started, losses, frames, exposures = time.monotonic(), [], 0, 0
+        for index in schedule:
+            if time.monotonic() - started >= config['max_training_seconds']:
+                break
+            x, y = datasets[arm][index]
+            optimizer.zero_grad(set_to_none=True)
+            logits = model(x.unsqueeze(0))
+            loss = criterion(logits.log_softmax(2), y, torch.tensor([x.shape[0]]),
+                             torch.tensor([y.numel()]))
+            if not bool(torch.isfinite(loss)):
+                raise ValueError('DATA_PAIR_NONFINITE_LOSS')
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
+            optimizer.step()
+            losses.append(float(loss.detach()))
+            frames += int(x.shape[0])
+            exposures += 1
+        check_frozen_inputs(frozen)
+        # Re-read original WAV bytes, source lineage and both admissions.
+        refreshed = {}
+        for name in ('control', 'treatment'):
+            _, split, _, detail = load_inventory(arm_configs[name], args.repo, rt,
+                                                 data_pair_details=True)
+            if split != splits[name]:
+                raise ValueError('DATA_PAIR_AUDIO_DRIFT')
+            refreshed[name] = detail
+        if validate_data_pair_inventories(refreshed) != pair_split or source_hashes(args.repo) != identities:
+            raise ValueError('DATA_PAIR_SOURCE_DRIFT')
+        elapsed = time.monotonic() - started
+        status = 'TRAINED' if exposures == steps and elapsed <= config['max_training_seconds'] else 'INCOMPLETE_TIME_CAP'
+        checkpoint = {'schema': 'research-paired-ctc-v1', 'product_export_compatible': False,
+                      'frontend': 'logmel', 'spec': config['spec'], 'state_dict': model.state_dict(),
+                      'synthetic_diagnostic_only': config['synthetic_diagnostic_only'],
+                      'split_sha256': splits[arm], 'source_hashes': identities,
+                      'input_hashes': frozen, 'data_pair_split_sha256': pair_split}
+        target = args.output / (arm + '.research.pt')
+        torch.save(checkpoint, target)
+        results.append({'arm': arm, 'status': status, 'optimizer_steps': exposures,
+                        'input_frames': frames, 'schedule_sha256': schedule_sha,
+                        'initial_state_sha256': current_init, 'split_sha256': splits[arm],
+                        'admission': admissions[arm], 'checkpoint_sha256': sha(target),
+                        'training_seconds': elapsed,
+                        'mean_training_loss': sum(losses) / len(losses) if losses else None})
+        del model, optimizer
+        if status != 'TRAINED':
+            break  # Never present an unequal/incomplete pair as successful.
+    check_frozen_inputs(frozen)
+    complete = len(results) == 2 and all(r['status'] == 'TRAINED' for r in results)
+    receipt = {'schema': 'research-data-pair-training-v1',
+               'torch_version': torch.__version__,
+               'status': 'TRAINED_PAIR' if complete else 'INCOMPLETE_PAIR',
+               'config_sha256': config_digest, 'input_hashes': frozen,
+               'pair_split_sha256': pair_split, 'source_hashes': identities,
+               'arms': results, 'shipping_approved': False, 'effect_measured': False,
+               'limitations': ['Equal optimizer steps, not equal audio frames or wall time.',
+                              'Declared lineage and admitted labels do not authenticate rights.',
+                              'No evaluation, winner selection or production qualification.']}
+    with (args.output / 'data-pair-training-receipt.json').open('x') as stream:
+        json.dump(receipt, stream, ensure_ascii=False, indent=2)
+    if not complete:
+        raise ValueError('DATA_PAIR_INCOMPLETE')
+    return receipt
 
 
 def train(args):
@@ -412,13 +656,16 @@ def main():
     t = sub.add_parser('train')
     t.add_argument('--config', type=Path, required=True)
     t.add_argument('--output', type=Path, required=True)
+    d = sub.add_parser('train-data')
+    d.add_argument('--config', type=Path, required=True)
+    d.add_argument('--output', type=Path, required=True)
     i = sub.add_parser('infer')
     for name in ('checkpoint', 'wav', 'keywords', 'output'):
         i.add_argument('--' + name, type=Path, required=True)
     i.add_argument('--recording', required=True)
     i.add_argument('--chunk-frames', type=int, default=25)
     args = p.parse_args()
-    (train if args.command == 'train' else infer)(args)
+    {'train': train, 'train-data': train_data, 'infer': infer}[args.command](args)
 
 if __name__ == '__main__':
     main()

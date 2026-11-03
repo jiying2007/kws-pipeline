@@ -322,3 +322,61 @@ not total inference memory or runtime, and does not provide a snapshot against
 concurrent file mutation. Existing source/checkpoint identity checks remain.
 The stdlib tests cover digest boundaries, bounded/short reads, and read failures
 without large audio files, Torch, training or private inputs.
+
+## Additive-data A/B: explicit `train-data` mode
+
+`runner.py --repo REPO train-data --config PRIVATE_CONFIG --output NEW_PRIVATE_DIR`
+is separate from the legacy architecture-pair `train` mode. It uses two admitted
+training JSONL manifests and exactly one shared calibration and selection
+manifest. Both training manifests must reside in the same directory, so retained
+rows have the same relative-audio interpretation. Treatment must preserve every
+control row (including labels and multiplicity), add at least one distinct row,
+and contain no duplicate measured training PCM. This is an additive-data
+experiment, not an arbitrary dataset replacement.
+
+The private configuration has exactly these keys:
+
+- `schema: research-data-pair-v1`, `development_only: true`,
+  `protected_evidence_used: false`, `synthetic_diagnostic_only` (explicit boolean).
+- `tokens`: path to the existing five-token vocabulary.
+- `train_manifests`: `control` and `treatment` JSONL paths.
+- `evaluation_manifests`: shared `calibration` and `selection` JSONL paths.
+- `spec`: one valid bounded `rnn64_control` spec for BOTH arms.
+- `optimizer_steps`: 1..100000 and at least treatment row count.
+- `seed`: uint32, `learning_rate`: finite positive,
+  `max_training_seconds`: integer 1..3600 per arm (launch cutoff inside loop).
+
+Both training manifests call the existing training admission verifier before
+either model is constructed. The normal non-diagnostic path must satisfy real
+source/label admission; do not set the diagnostic flag to launder genuine inputs.
+Each complete arm gets exactly the same number of optimizer updates, batch size
+one, seed, model spec, optimizer and loss. Initialization state tensor names,
+types, shapes and bytes are hashed and must match. Dataset sizes may differ;
+each arm has its own deterministic cyclic shuffled sample schedule and schedule
+digest. Equal optimizer steps do NOT imply equal epochs, acoustic frames, runtime
+or equal numbers of old-corpus exposures. Input-frame totals are recorded.
+
+The union of both arms' measured identities and shared evaluation identities is
+checked with the existing connected-component split validator. Shared training
+sources across arms are expected; training-to-calibration/selection leakage is
+not. If `parent_source_sha256` is present, this mode requires the explicit
+`parent_source_identity_kind: file-sha256`; it is linked to the audio-file
+identity namespace, not the PCM namespace. Missing kind, wrong kind, malformed
+digest and ambiguous declarations fail. This is a declared parent link, NOT
+proof of ancestry or legal permission. Missing upstream parent information is
+not silently invented.
+
+Config, tokens, manifests, source code and actual audio identities are checked
+before/after training. Outputs use a new directory, never overwrite old
+checkpoints, and incomplete time-capped execution produces `INCOMPLETE_PAIR`
+rather than a successful paired result. The loop time check is not hard
+preemption of an individual Torch call: real execution also needs an external
+reviewed process/memory/time supervisor. No inference, selection, winner,
+research-effect claim, or production approval is emitted. Freeze evaluation
+streams and calibration-only threshold rules before running either arm.
+Historical exposed sources never become a sealed final test through this tool.
+
+Current tests use invented WAVs and explicit fake tensor/optimizer/admission
+objects to verify orchestration, calls and rejection paths without importing
+Torch. They are software contract tests, not real training, real admission,
+AISHELL-3 inference, speech quality or measured FAR/FRR.
