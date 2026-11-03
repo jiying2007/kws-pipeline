@@ -85,6 +85,20 @@ ranking. Missing per-keyword true labels / source family separation and
 actual independent long-stream/AFE evidence remain required product
 blockers, even if an aggregate score looks good.
 
+
+The \`language_binding\` is also a *private, hash-bound* original cohort
+declaration: \`policy=kws-development-language-cohort-binding-v1\`,
+\`schema_version=1\`, \`locale=zh-CN\` or \`en-US\`, the **same** pinned
+\`dataset_id\`, \`references_sha256\`, \`code_sha\`, \`protocol\`, and
+\`seed\` from the v4 baseline, with \`source_role=development-only\`,
+\`independent_language_verified=false\`,
+\`sealed_or_formal_data_used=false\`, \`training_admitted=false\` and
+\`qualification_allowed=false\`. The selector verifies its exact bytes
+before ranking, so changing \`locale\` in a tournament plan alone does not
+turn a Mandarin dataset into English evidence. This note **cannot prove**
+what language a human actually spoke; later source-authenticated language
+annotations must be verified through the true data admission chain.
+
 ## Input contract (private)
 
 ```json
@@ -93,6 +107,10 @@ blockers, even if an aggregate score looks good.
   "policy": "source-bound-kws-multilingual-development-tournament-v1",
   "locale": "zh-CN",
   "role": "development-only",
+  "language_binding": {
+    "path": "/restricted/eval/development-language-cohort.json",
+    "sha256": "ACTUAL_64_HEX"
+  },
   "sealed_or_formal_data_used": false,
   "model_calls_authorized": false,
   "baseline": {
