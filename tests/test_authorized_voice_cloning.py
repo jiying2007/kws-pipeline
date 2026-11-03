@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import wave
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -173,6 +174,53 @@ class AuthorizedCloningTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "unknown; no automatic retry"):
             clone.execute(campaign, self.output, workers=1)
         self.assertFalse(list((self.output / "audio").rglob("*.wav")))
+
+    def test_rights_json_refuses_duplicate_and_nonfinite_authority(self) -> None:
+        # Previously last-key-wins could turn a denied voice-clone grant into
+        # an apparently approved grant, even though file SHA remained valid.
+        approved = json.dumps(self.license, ensure_ascii=False, sort_keys=True)
+        denied = json.dumps({**self.license, "voice_cloning_permitted": False},
+                            ensure_ascii=False, sort_keys=True)
+        cases = (
+            (denied[:-1] + ',"voice_cloning_permitted":true}', "duplicate key"),
+            (approved[:-1] + ',"nested":{"scope":"x","scope":"y"}}', "duplicate key"),
+            (approved[:-1] + ',"unrelated":NaN}', "non-finite"),
+            (approved[:-1] + ',"unrelated":Infinity}', "non-finite"),
+            (approved[:-1] + ',"unrelated":-Infinity}', "non-finite"),
+            (approved[:-1] + ',"unrelated":1e309}', "non-finite"),
+            (approved[:-1] + ',"unrelated":-1e309}', "non-finite"),
+        )
+        for raw, reason in cases:
+            with self.subTest(reason=reason, raw=raw[-45:]):
+                self.rights.write_text(raw, encoding="utf-8")
+                self.payload["speakers"][0]["rights_evidence"]["sha256"] = sha(self.rights)
+                self.save_plan()
+                with self.assertRaisesRegex(ValueError, reason):
+                    self.loaded()
+                self.assertFalse(self.output.exists())
+
+    def test_campaign_json_refuses_aliases_and_bounded_read(self) -> None:
+        original = self.plan.read_text(encoding="utf-8")
+        self.plan.write_text(original[:-1] + ',"campaign_id":"other"}', encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "duplicate key"):
+            self.loaded()
+        self.save_plan()
+        with mock.patch.object(clone, "MAX_INPUT_JSON_BYTES", 64):
+            with self.assertRaisesRegex(ValueError, "exceeds byte limit"):
+                self.loaded()
+        self.assertFalse(self.output.exists())
+
+    def test_duplicate_saved_receipt_does_not_resume_or_reinvoke(self) -> None:
+        clone.execute(self.loaded(), self.output, workers=1)
+        receipt = sorted((self.output / "attempts").rglob("*.receipt.json"))[0]
+        original = receipt.read_text(encoding="utf-8").rstrip()
+        receipt.write_text(original[:-1] + ',"qualification_allowed":false}\n',
+                           encoding="utf-8")
+        with self.assertRaisesRegex(RuntimeError, "duplicate key"):
+            clone.execute(self.loaded(), self.output, workers=1)
+        calls = list((self.output / "private-prompt-cache").rglob("calls.txt"))
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(calls[0].read_text().splitlines()), 6)
 
     def test_rights_permission_and_scope_are_fail_closed(self) -> None:
         for patch in ({"voice_cloning_permitted": False},
