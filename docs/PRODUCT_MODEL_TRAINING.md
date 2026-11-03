@@ -195,7 +195,7 @@ For new candidates, finalization freezes these next to the selected model:
 - `effective-training-config.json`;
 - `product-speech-like-base-contract.json`.
 
-`model-promotion` carries them into the immutable model Release. The model
+The historical `model-promotion` workflow once carried them into an immutable model Release; that publisher is now retired. The model
 registry mirror then carries the same files into Git with the rest of the model
 tuple.
 
