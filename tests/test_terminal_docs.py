@@ -416,7 +416,7 @@ def main() -> int:
             "commercial/afe-evidence.schema.json",
             "configs/shipping.xiaowo.json",
             "shipping_authority=true",
-            "commercial-candidate",
+            "Historical deployment identity (retired)",
             "shipping_approved=false",
         ),
     )
