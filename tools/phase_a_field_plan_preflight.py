@@ -120,6 +120,11 @@ def assess(plan: dict, policy: dict, expected_plan_sha256: str) -> dict:
     for name, hours in negative_bands.items():
         need(type(name) is str and type(hours) in (int, float) and hours > 0,
              "INVALID_NEGATIVE_EXPOSURE_POLICY")
+    # A caller-supplied policy bearing the right ID but weakened numerical
+    # quotas must not silently redefine the product acceptance target.
+    current = source_json(ROOT / "commercial/real-human-qualification.policy.json")
+    need(canonical_sha(policy) == canonical_sha(current),
+         "PHASE_A_POLICY_NOT_CURRENT_SOURCE")
     slots = plan.get("slots")
     need(type(slots) is list and 1 <= len(slots) <= 3700 and
          type(plan.get("participants")) is int and 1 <= plan["participants"] <= 100 and
