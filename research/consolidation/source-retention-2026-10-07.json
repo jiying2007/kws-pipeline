@@ -43878,6 +43878,62 @@
           }
         }
       ]
+    },
+    {
+      "id": "qualification-latency-tool-index-main-integration-20261102",
+      "date": "2026-11-02",
+      "base_commit": "f2d47ddef0d8b88f0ea9f98ef5badfc8c9e398a2",
+      "base_tree": "3c5fca004ca549eefa8567c4a7e9cea4ca242da6",
+      "workflow_source_changed": false,
+      "scope": "Integrate the reviewed latency helper index with independently merged bulk-effect tool documentation without replacing either owner's source or entries.",
+      "rationale": "Preserve prior148 main records and published149/150 unchanged. Current main adds one bulk-effect helper; merged navigation contains129 tool entries. Qualification code and four manual workflow changes remain identical to the previously validated PR head; this source integration still requires new exact-head CI.",
+      "files": [
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 14442,
+            "sha256": "10f380874e14cd8d35330110144488ee3d3132dd4587eb325cfa4ca11e4a1bc7",
+            "git_blob_sha1": "9d2147d16ae09dec3c344aabe95f6dc2e8696925"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 14634,
+            "sha256": "046c83b85169ee8e3b42a474c6a81dd8c92b6ae10016e2a995041863b21ed432",
+            "git_blob_sha1": "4f69448849eb0649e3baa5bb9585914982284f21"
+          }
+        }
+      ]
+    },
+    {
+      "id": "qualification-latency-tool-index-feedback-main-integration-20261102",
+      "date": "2026-11-02",
+      "base_commit": "6992359e750a7ff272456e7c7d5eb4b323d8f720",
+      "base_tree": "b519337d79b1a4ed998cd05cf7806741c644f6f1",
+      "workflow_source_changed": false,
+      "scope": "Preserve independently merged feedback-priority source and all tool indexes while integrating the reviewed latency qualification change.",
+      "rationale": "Published maintenance entries149/150 remain unchanged. Entry151 preserves an independently reviewed no-ref integration draft on the prior main, not a published CI event. This final integration retains both #695 and #696 in full, indexes130 tools, and requires its one separately authorized exact-head validation; prior PR results do not validate this new head.",
+      "files": [
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 14702,
+            "sha256": "4b54495deae9ba1de3c3731d051e6be721c0f5c5ac44d7d561740a7e65140e90",
+            "git_blob_sha1": "3c128e8a56e24f54ee79db3d67c595079002490f"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 14894,
+            "sha256": "dfad5700ea68bd434269200a803586f71e65c3e09a421771b90d7a1a26bf984c",
+            "git_blob_sha1": "6490a460d3e1d69d065450c646f8a090fcac178c"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
