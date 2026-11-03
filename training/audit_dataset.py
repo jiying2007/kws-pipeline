@@ -136,7 +136,7 @@ def parse_tsv(path: pathlib.Path) -> list[dict]:
         targets.append([int(value) for value in target_text.split()])
     sidecar = lineage_path(path)
     if sidecar.exists():
-        payload = json.loads(sidecar.read_text(encoding="utf-8"))
+        payload = strict_manifest_json(sidecar.read_text(encoding="utf-8"), sidecar)
         if (not isinstance(payload, dict) or type(payload.get("schema_version")) is not int
                 or payload.get("schema_version") != 1
                 or payload.get("manifest_sha256") != sha256_file(path)):
