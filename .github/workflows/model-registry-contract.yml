@@ -75,8 +75,9 @@ jobs:
           from pathlib import Path
           workflow = Path(".github/workflows/model-registry-contract.yml").read_text(encoding="utf-8")
           verifier = Path("tools/verify_model_registry.py").read_text(encoding="utf-8")
+          active_workflow = workflow.split("      - name: Assert registry research boundary", 1)[0]
           for forbidden in ("configs/shipping.xiaowo.json", "commercial/", "shipping_approved", "model-promotion.yml"):
-              assert forbidden not in workflow, forbidden
+              assert forbidden not in active_workflow, forbidden
           for forbidden in ("verify_model_release", "shipping_approved", "shipping_evidence_boundary", "--config"):
               assert forbidden not in verifier, forbidden
           print("research registry verification has no publication gate")
