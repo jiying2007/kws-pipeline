@@ -1,6 +1,6 @@
 # Supplemental real-human Phase-A capture requests (private field worksheet)
 
-The existing upstream \`kws-data\` field pilot prepares 37 fixed tasks per
+The existing upstream `kws-data` field pilot prepares 37 fixed tasks per
 declared session. Those are valuable for wake words, near-phonetic confusions,
 front/rear orientation and a general background prompt, but **do not directly
 schedule** Phase-A critical playback, double-talk, robot-motion positive
@@ -18,7 +18,7 @@ Each upstream plan must be within its existing 1-MiB original input limit.
 The same pseudonymous speaker may appear in different real sessions but
 the same speaker and source family cannot cross roles or silently change.
 
-\`\`\`bash
+```bash
 python3 tools/plan_phase_a_capture_supplement.py \
   --field-plan /restricted/field-plan-a.json \
   --expected-plan-sha256 ACTUAL_EXTERNALLY_FROZEN_SHA_OF_A \
@@ -26,7 +26,7 @@ python3 tools/plan_phase_a_capture_supplement.py \
   --expected-plan-sha256 ACTUAL_EXTERNALLY_FROZEN_SHA_OF_B \
   --phase-a-policy commercial/real-human-qualification.policy.json \
   --output /restricted/reports/new-phase-a-capture-requests.json
-\`\`\`
+```
 
 The output must be a *new file in a private pre-existing directory*. The
 script never overwrites one, writes it mode 0600 and refuses public-repository
@@ -63,7 +63,7 @@ Repeats per session/scene/keyword are determined from the *actual current
 commercial Phase-A policy* with a 10% planning margin, bounded to 4 repeats.
 A 40-person ×2-session pilot requests two repetitions per keyword in each
 scene, or **1,280 additional positive-intent requests**. All tags are
-\`tags_requested\`, **never verified acoustic tags**. An actual positive
+`tags_requested`, **never verified acoustic tags**. An actual positive
 must contain a truly spoken complete wake phrase, verified with human
 annotations and independent source/session evidence. Playback of a generated
 voice does not automatically count as a real-human positive.
@@ -95,9 +95,12 @@ not a quality guarantee and does not change the 24-hour product gate.
 At 80 sealed sessions the worksheet has **1,600 capture requests**:
 1,280 wake-scene requests and 320 negative-scene requests. Each request
 has its original pseudonymous speaker/session/source family and room,
-device, AFE profile declaration, deterministic \`request_id\`,
-\`prompt_requested\`, \`tags_requested\` and, for negative blocks,
-\`duration_s_requested\`.
+device, AFE profile declaration, deterministic `request_id`,
+`prompt_requested`, `tags_requested` and, for negative blocks,
+`duration_s_requested`. The complete request roster carries a
+`capture_requests_sha256` digest; record this digest independently before
+collection and bind actual captured WAVs to the original request IDs, rather
+than rewriting a plan after a model or listener has seen the results.
 
 ## After physical recording
 
@@ -108,13 +111,13 @@ and negative exposure. Keep raw and post-AFE WAV private. Actual acquisition
 may use a capture tool compatible with the current real-human corpus
 contract; this worksheet does not execute it.
 
-The original \`kws-data\` v1 37 tasks per session are **unchanged**. These
-additional planned task IDs are NOT accepted as historical v1 \`slot_id\`
+The original `kws-data` v1 37 tasks per session are **unchanged**. These
+additional planned task IDs are NOT accepted as historical v1 `slot_id`
 values; they must be ingested through a separately reviewed real-human
 corpus intake, without forging v1 receipts.
 
 Phase A still requires the original
-\`commercial/real-human-qualification.policy.json\` real-human validation
+`commercial/real-human-qualification.policy.json` real-human validation
 and scoring, fresh sealed exposure and independent confidence bounds.
 Physical SSC305 Phase B and terminal Phase C remain mandatory.
 
