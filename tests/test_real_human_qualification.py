@@ -244,6 +244,18 @@ def test_phase_a_field_plan_preflight() -> None:
         assert "INDEPENDENT_FROZEN_FIELD_PLAN_DIGEST_MISMATCH" in str(exc)
     else:
         raise AssertionError("edited frozen plan digest accepted")
+    assert policy["minimums"]["negative_audio_hours"] == 24.0
+    # The source policy stores measured hours as a positive JSON float,
+    # while speakers/sessions/wake-event counts are genuine integers.
+    for value in (True, False, -1.0, 0.0, float("nan"), float("inf")):
+        changed = json.loads(json.dumps(policy))
+        changed["minimums"]["negative_audio_hours"] = value
+        try:
+            preflight.assess(plan, changed, preflight.canonical_sha(plan))
+        except ValueError as exc:
+            assert "PHASE_A_NEGATIVE_HOURS_INVALID" in str(exc)
+        else:
+            raise AssertionError("invalid negative-audio exposure quota accepted")
     bad_policy = json.loads(json.dumps(policy))
     bad_policy["minimums"]["speakers"] = True
     try:
