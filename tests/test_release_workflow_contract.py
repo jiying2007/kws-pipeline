@@ -590,8 +590,8 @@ class WorkflowProvenance(unittest.TestCase):
                             f"- run id: `{values['run_id']}`\n"
                             f"- controlled variable: `{values['CONTROLLED_VARIABLE']}`\n"
                             f"- model: `{values['MODEL_LABEL']}`\n\n"
-                            'The scorecard is evidence only; it does not freeze, promote or\n'
-                            'shipping-approve a model.\n')
+                            'The scorecard is research evidence only. Independent audio and\n'
+                            'target-board measurements are required before scientific acceptance.\n')
                     self.assertEqual(actual, expected)
                     self.assertIn('--body-file "$RUNNER_TEMP/' + output + '"', script)
 
@@ -606,7 +606,7 @@ class WorkflowProvenance(unittest.TestCase):
 
     def test_tuple_output_rejects_multiline_values(self):
         source = (WORKFLOWS / 'dataset-driven-iteration.yml').read_text()
-        script = command(source, 'Resolve deployable model tuple')
+        script = command(source, 'Resolve exact research model tuple')
         with tempfile.TemporaryDirectory(prefix='dataset-tuple-') as tmp:
             root = Path(tmp)
             for name in ('model.kwm', 'keywords.kwk', 'model\\nforged=value.kwm'):
