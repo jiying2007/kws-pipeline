@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter, defaultdict
+from fractions import Fraction
 import json
 import math
 import os
@@ -28,7 +29,7 @@ SCENES = {
 }
 WORDS = {"你好小窝": 1, "小窝小窝": 2}
 NEGATIVE_SCENES = ("household", "speech_confusion", "playback", "robot_motion")
-BUFFER_FACTOR = 1.10
+BUFFER_FACTOR = Fraction(11, 10)
 MAX_SEGMENT_SECONDS = 600
 MAX_TASKS = 4096
 
@@ -89,11 +90,14 @@ def build(plans: list[dict], policy: dict, frozen_hashes: list[str]) -> dict:
          all(type(v) in (int, float) and 0 < v < float("inf")
              for v in exposure.values()),
          "INVALID_PHASE_A_NEGATIVE_SCENES")
-    hours = {name: float(exposure[name]) for name in NEGATIVE_SCENES}
+    # Exact rational arithmetic avoids a binary-float roundoff accidentally
+    # adding a whole extra second at an integer quota boundary.
+    hours = {name: Fraction(str(exposure[name])) for name in NEGATIVE_SCENES}
     # The mandatory total may exceed the sum of named critical strata.
     # Assign the uncovered portion to ordinary household capture; do not
     # double count the same planned seconds in multiple strata.
-    remaining = max(0.0, float(minimums["negative_audio_hours"]) - sum(hours.values()))
+    remaining = max(Fraction(0), Fraction(str(minimums["negative_audio_hours"]))
+                    - sum(hours.values()))
     hours["household"] += remaining
     seconds = {name: math.ceil(value * BUFFER_FACTOR * 3600 / number_of_sessions)
                for name, value in hours.items()}
@@ -101,7 +105,7 @@ def build(plans: list[dict], policy: dict, frozen_hashes: list[str]) -> dict:
          "NEGATIVE_SEGMENTS_OVER_10_MINUTES_EXPAND_SEALED_COHORT")
 
     per_scene_repeats = {
-        name: math.ceil(int(positive[name]["min_expected_per_keyword"])
+        name: math.ceil(Fraction(positive[name]["min_expected_per_keyword"])
                         * BUFFER_FACTOR / number_of_sessions)
         for name in SCENES
     }
