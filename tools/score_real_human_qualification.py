@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import pathlib
 import sys
 from collections import Counter
@@ -18,6 +19,38 @@ from score_events import (  # noqa: E402
 )
 from statistical_bounds import poisson_rate_upper, wilson_upper  # noqa: E402
 from speech_asr_consensus import require_independent_reference_labels  # noqa: E402
+
+
+def sample_coordinate_latency_diagnostic(score: dict) -> dict:
+    """Research timing coordinates, never a measured callback or per-event bound."""
+    timing = score.get("timing_coordinates", {})
+    if not isinstance(timing, dict):
+        timing = {}
+    total = timing.get("total_recordings")
+    covered = timing.get("afe_contract_recordings")
+    matched = timing.get("matched_events")
+    complete = (type(total) is int and total > 0 and type(covered) is int
+                and covered == total and timing.get("raw_metrics_available") is True)
+    matched_valid = (type(matched) is int and matched > 0
+                and type(score.get("matched")) is int and score["matched"] == matched)
+    keys = ("p50_raw_capture_signed_end_offset_ms", "p95_raw_capture_signed_end_offset_ms",
+            "p50_post_afe_signed_end_offset_ms", "p95_post_afe_signed_end_offset_ms")
+    values = {key: score.get(key) for key in keys}
+    available = complete and matched_valid and all(type(value) in (int, float) and math.isfinite(value)
+                                 for value in values.values())
+    return {
+        "scope": "sample-coordinate-raw-capture-end-to-decision",
+        "status": ("WITHIN_LIMIT" if values[keys[1]] <= 500 else "EXCEEDS_LIMIT")
+                  if available else "NOT_EVALUABLE",
+        "diagnostic_limit_ms": 500,
+        "quantile": 0.95,
+        "total_recordings": total if type(total) is int and total >= 0 else None,
+        "afe_contract_recordings": covered if type(covered) is int and covered >= 0 else None,
+        "matched_events": matched if type(matched) is int and matched >= 0 else None,
+        "complete_timing_coverage": complete,
+        **{key: value if available else None for key, value in values.items()},
+        "measurement_boundary": "sample-coordinates-not-callback-clock; p95-not-per-event-maximum",
+    }
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -360,6 +393,9 @@ def main() -> int:
         "unexpected_detections_positive": len(false_accepts_positive),
         "p50_post_end_latency_ms": score["p50_post_end_latency_ms"],
         "p95_post_end_latency_ms": score["p95_post_end_latency_ms"],
+        "sample_coordinate_latency": sample_coordinate_latency_diagnostic(canonical_score),
+        "callback_latency": {"status": "NOT_MEASURED", "latency_ms": None,
+                             "reason": "no-application-callback-clock-evidence"},
         "per_keyword": per_keyword,
         "critical_positive_slices": positive_slice_results,
         "critical_negative_slices": negative_slice_results,

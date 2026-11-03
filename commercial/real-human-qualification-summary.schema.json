@@ -4,44 +4,307 @@
   "title": "KWS real-human final-AFE qualification summary",
   "type": "object",
   "additionalProperties": false,
+  "dependentRequired": {
+    "sample_coordinate_latency": ["callback_latency"],
+    "callback_latency": ["sample_coordinate_latency"]
+  },
   "required": [
-    "schema_version", "phase", "qualified", "shipping_approved", "deployment_tag",
-    "qualification_id", "corpus_sha256", "confidence_level", "recordings",
-    "positive_speakers", "expected_wakes", "false_rejects", "frr",
-    "frr_upper_bound", "negative_audio_hours", "false_accepts_negative",
-    "far_per_hour", "far_upper_bound_per_hour", "unexpected_detections_positive",
-    "p50_post_end_latency_ms", "p95_post_end_latency_ms", "per_keyword",
-    "critical_positive_slices", "critical_negative_slices", "afe",
-    "evidence_sha256", "failures", "next_gate"
+    "schema_version",
+    "phase",
+    "qualified",
+    "shipping_approved",
+    "deployment_tag",
+    "qualification_id",
+    "corpus_sha256",
+    "confidence_level",
+    "recordings",
+    "positive_speakers",
+    "expected_wakes",
+    "false_rejects",
+    "frr",
+    "frr_upper_bound",
+    "negative_audio_hours",
+    "false_accepts_negative",
+    "far_per_hour",
+    "far_upper_bound_per_hour",
+    "unexpected_detections_positive",
+    "p50_post_end_latency_ms",
+    "p95_post_end_latency_ms",
+    "per_keyword",
+    "critical_positive_slices",
+    "critical_negative_slices",
+    "afe",
+    "evidence_sha256",
+    "failures",
+    "next_gate"
   ],
   "properties": {
-    "schema_version": {"const": 1},
-    "phase": {"const": "real-human-final-afe-acoustic-qualification"},
-    "qualified": {"type": "boolean"},
-    "shipping_approved": {"const": false},
-    "deployment_tag": {"type": "string", "pattern": "^deployment-[0-9a-f]{12}$"},
-    "qualification_id": {"type": "string", "minLength": 8},
-    "corpus_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "confidence_level": {"type": "number", "exclusiveMinimum": 0.5, "exclusiveMaximum": 1.0},
-    "recordings": {"type": "integer", "minimum": 1},
-    "positive_speakers": {"type": "integer", "minimum": 1},
-    "expected_wakes": {"type": "integer", "minimum": 1},
-    "false_rejects": {"type": "integer", "minimum": 0},
-    "frr": {"type": "number", "minimum": 0.0, "maximum": 1.0},
-    "frr_upper_bound": {"type": "number", "minimum": 0.0, "maximum": 1.0},
-    "negative_audio_hours": {"type": "number", "exclusiveMinimum": 0.0},
-    "false_accepts_negative": {"type": "integer", "minimum": 0},
-    "far_per_hour": {"type": "number", "minimum": 0.0},
-    "far_upper_bound_per_hour": {"type": "number", "minimum": 0.0},
-    "unexpected_detections_positive": {"type": "integer", "minimum": 0},
-    "p50_post_end_latency_ms": {"type": "number", "minimum": 0.0},
-    "p95_post_end_latency_ms": {"type": "number", "minimum": 0.0},
-    "per_keyword": {"type": "object"},
-    "critical_positive_slices": {"type": "object"},
-    "critical_negative_slices": {"type": "object"},
-    "afe": {"type": "object"},
-    "evidence_sha256": {"type": "object"},
-    "failures": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
-    "next_gate": {"enum": ["physical-target-board-performance-and-soak", "real-human-qualification-failed"]}
+    "schema_version": {
+      "const": 1
+    },
+    "phase": {
+      "const": "real-human-final-afe-acoustic-qualification"
+    },
+    "qualified": {
+      "type": "boolean"
+    },
+    "shipping_approved": {
+      "const": false
+    },
+    "deployment_tag": {
+      "type": "string",
+      "pattern": "^deployment-[0-9a-f]{12}$"
+    },
+    "qualification_id": {
+      "type": "string",
+      "minLength": 8
+    },
+    "corpus_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "confidence_level": {
+      "type": "number",
+      "exclusiveMinimum": 0.5,
+      "exclusiveMaximum": 1
+    },
+    "recordings": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "positive_speakers": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expected_wakes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "false_rejects": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "frr": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "frr_upper_bound": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "negative_audio_hours": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "false_accepts_negative": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "far_per_hour": {
+      "type": "number",
+      "minimum": 0
+    },
+    "far_upper_bound_per_hour": {
+      "type": "number",
+      "minimum": 0
+    },
+    "unexpected_detections_positive": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "p50_post_end_latency_ms": {
+      "type": "number",
+      "minimum": 0
+    },
+    "p95_post_end_latency_ms": {
+      "type": "number",
+      "minimum": 0
+    },
+    "per_keyword": {
+      "type": "object"
+    },
+    "critical_positive_slices": {
+      "type": "object"
+    },
+    "critical_negative_slices": {
+      "type": "object"
+    },
+    "afe": {
+      "type": "object"
+    },
+    "evidence_sha256": {
+      "type": "object"
+    },
+    "failures": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "next_gate": {
+      "enum": [
+        "physical-target-board-performance-and-soak",
+        "real-human-qualification-failed"
+      ]
+    },
+    "sample_coordinate_latency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "status",
+        "diagnostic_limit_ms",
+        "quantile",
+        "total_recordings",
+        "afe_contract_recordings",
+        "matched_events",
+        "complete_timing_coverage",
+        "p50_raw_capture_signed_end_offset_ms",
+        "p95_raw_capture_signed_end_offset_ms",
+        "p50_post_afe_signed_end_offset_ms",
+        "p95_post_afe_signed_end_offset_ms",
+        "measurement_boundary"
+      ],
+      "properties": {
+        "scope": {
+          "const": "sample-coordinate-raw-capture-end-to-decision"
+        },
+        "status": {
+          "enum": [
+            "WITHIN_LIMIT",
+            "EXCEEDS_LIMIT",
+            "NOT_EVALUABLE"
+          ]
+        },
+        "diagnostic_limit_ms": {
+          "const": 500
+        },
+        "quantile": {
+          "const": 0.95
+        },
+        "total_recordings": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "afe_contract_recordings": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "matched_events": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "complete_timing_coverage": {
+          "type": "boolean"
+        },
+        "p50_raw_capture_signed_end_offset_ms": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "p95_raw_capture_signed_end_offset_ms": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "p50_post_afe_signed_end_offset_ms": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "p95_post_afe_signed_end_offset_ms": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "measurement_boundary": {
+          "const": "sample-coordinates-not-callback-clock; p95-not-per-event-maximum"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "NOT_EVALUABLE"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "p50_raw_capture_signed_end_offset_ms": {
+                "type": "null"
+              },
+              "p95_raw_capture_signed_end_offset_ms": {
+                "type": "null"
+              },
+              "p50_post_afe_signed_end_offset_ms": {
+                "type": "null"
+              },
+              "p95_post_afe_signed_end_offset_ms": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "total_recordings": {"type": "integer", "minimum": 1},
+              "afe_contract_recordings": {"type": "integer", "minimum": 1},
+              "complete_timing_coverage": {
+                "const": true
+              },
+              "matched_events": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "p50_raw_capture_signed_end_offset_ms": {
+                "type": "number"
+              },
+              "p95_raw_capture_signed_end_offset_ms": {
+                "type": "number"
+              },
+              "p50_post_afe_signed_end_offset_ms": {
+                "type": "number"
+              },
+              "p95_post_afe_signed_end_offset_ms": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "if": {"properties": {"status": {"const": "WITHIN_LIMIT"}}},
+          "then": {"properties": {"p95_raw_capture_signed_end_offset_ms": {"type": "number", "maximum": 500}}}
+        },
+        {
+          "if": {"properties": {"status": {"const": "EXCEEDS_LIMIT"}}},
+          "then": {"properties": {"p95_raw_capture_signed_end_offset_ms": {"type": "number", "exclusiveMinimum": 500}}}
+        }
+      ]
+    },
+    "callback_latency": {
+      "const": {
+        "status": "NOT_MEASURED",
+        "latency_ms": null,
+        "reason": "no-application-callback-clock-evidence"
+      }
+    }
   }
 }

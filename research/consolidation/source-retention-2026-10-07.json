@@ -43952,6 +43952,68 @@
           "after": null
         }
       ]
+    },
+    {
+      "id": "research-sample-coordinate-latency-diagnostics-20261103",
+      "date": "2026-11-03",
+      "base_commit": "b0fa8ca15ba52d680bbca86caa1119077bf1459f",
+      "base_tree": "cd2a4c31592974bddf53f8a46bf486439faa9527",
+      "workflow_source_changed": false,
+      "scope": "Add research-only raw/post-AFE sample-coordinate p95 latency diagnostics and explicit callback NOT_MEASURED; preserve legacy acoustic qualified semantics and retired publication workflows.",
+      "rationale": "One normal full suite passed locally with independent raw-log review, including 16 metadata cases and four actual scorer-to-producer synthetic cases. Raw 600/post 300 and 500/501 boundaries are not callback measurements or per-event bounds. Missing timing or zero matched events remain not evaluable. Schema constraints were statically reviewed, not validator-executed. No real corpus, model or product qualification.",
+      "files": [
+        {
+          "path": "tools/score_real_human_qualification.py",
+          "before": {
+            "path": "tools/score_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 17166,
+            "sha256": "f66858fabd1956d72d6f926dbb5cd05ada636b49be8498c5ecea99e3b1e1a348",
+            "git_blob_sha1": "eb9a1e6681abd5c1b996f6a70421a8bdabdd5eca"
+          },
+          "after": {
+            "path": "tools/score_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 19293,
+            "sha256": "e04caaba9e28b2bbaa47a3bdbc31b12093a831d97e12347afdd4cbf697536b50",
+            "git_blob_sha1": "2a3bb4663b686079cc2a9615a5aa5fe51e4aacd8"
+          }
+        },
+        {
+          "path": "commercial/real-human-qualification-summary.schema.json",
+          "before": {
+            "path": "commercial/real-human-qualification-summary.schema.json",
+            "mode": "100644",
+            "bytes": 2654,
+            "sha256": "1b6d9efee7ad9d3b577a67ce6168723731b7baca3b5417fdf822737d2a0c332d",
+            "git_blob_sha1": "0eecca53f1eadd0a6c8af95f82a45b37956e88b0"
+          },
+          "after": {
+            "path": "commercial/real-human-qualification-summary.schema.json",
+            "mode": "100644",
+            "bytes": 7610,
+            "sha256": "a645bc2bd0170973921c77299169ba6e5a49a4a44244f3b29b0f5d3a602cfd22",
+            "git_blob_sha1": "eaedf90a1092faa78530b91a9f48788296291329"
+          }
+        },
+        {
+          "path": "tests/test_real_human_qualification.py",
+          "before": {
+            "path": "tests/test_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 37779,
+            "sha256": "8b33871bfc05fbcad0367434a29cb5d0bb00f73a80563beee1edb4fc71292b1d",
+            "git_blob_sha1": "df4684dc5304f6cbac992c91bd42e85affce66d9"
+          },
+          "after": {
+            "path": "tests/test_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 46147,
+            "sha256": "2490ee77a13768365a6a98963ab8fc8f72207587756123cda49f56e64c2c1ec4",
+            "git_blob_sha1": "66fd7a96a852c9eb936364e298ca26c61ff8f88e"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
