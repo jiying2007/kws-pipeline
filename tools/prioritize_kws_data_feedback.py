@@ -33,8 +33,7 @@ def derive(report: dict) -> dict:
             and report.get("conclusion") == "INDEPENDENT_DEVELOPMENT_DIAGNOSTIC_ONLY",
             "UNSUPPORTED_EFFECT_REPORT")
     for field in ("source_rights_authenticated", "asr_source_authenticated",
-                  "human_gold", "training_admitted", "qualification_allowed",
-                  ):
+                  "human_gold", "training_admitted", "qualification_allowed"):
         require(report.get(field) is False, "UNEXPECTED_EFFECT_AUTHORITY")
     for field in ("kws_data_plan_sha256", "kws_data_screen_sha256", "adapter_lock_sha256"):
         value = report.get(field)
