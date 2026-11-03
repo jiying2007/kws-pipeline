@@ -33,9 +33,9 @@ def derive(report: dict) -> dict:
             and report.get("conclusion") == "INDEPENDENT_DEVELOPMENT_DIAGNOSTIC_ONLY",
             "UNSUPPORTED_EFFECT_REPORT")
     for field in ("source_rights_authenticated", "asr_source_authenticated",
-                  "human_gold", "training_admitted", "qualification_allowed",
-                  "shipping_approved"):
+                  "human_gold", "training_admitted", "qualification_allowed"):
         require(report.get(field) is False, "UNEXPECTED_EFFECT_AUTHORITY")
+    require("shipping_approved" not in report, "UNEXPECTED_EFFECT_AUTHORITY")
     for field in ("kws_data_plan_sha256", "kws_data_screen_sha256", "adapter_lock_sha256"):
         value = report.get(field)
         require(isinstance(value, str) and len(value) == 64 and
@@ -163,7 +163,7 @@ def derive(report: dict) -> dict:
     if duplicate_count:
         task("P1", "REPEATED_PCM_DOES_NOT_ADD_DIVERSITY",
              {}, duplicate_count, "Investigate repeated generated PCM; do not inflate speaker or acoustic coverage")
-    task("P0", "EXTERNAL_PRODUCT_DATA_AND_AUTHORITY_MISSING", {}, 0,
+    task("P0", "INDEPENDENT_RESEARCH_EVIDENCE_MISSING", {}, 0,
          "Obtain genuinely reviewed source permissions, authentic label receipts, independent final-AFE human longstreams and SSC305 target-board evidence")
     tasks.sort(key=lambda r: ({"P0": 0, "P1": 1, "P2": 2}[r["priority"]],
                               r["code"], json.dumps(r["scope"], sort_keys=True)))
@@ -178,7 +178,7 @@ def derive(report: dict) -> dict:
         "new_model_or_generator_calls_authorized": 0,
         "source_rights_authenticated": False, "asr_source_authenticated": False,
         "human_gold": False, "training_admitted": False,
-        "qualification_allowed": False, "shipping_approved": False,
+        "qualification_allowed": False,
         "conclusion": "DEVELOPMENT_DATA_GAPS_ONLY_NOT_AN_EXECUTION_PERMISSION",
     }
 

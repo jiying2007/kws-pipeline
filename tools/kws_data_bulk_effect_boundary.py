@@ -106,7 +106,7 @@ def validate_plan(plan: dict) -> tuple[dict, dict]:
     require(plan.get("schema") == PLAN_SCHEMA and plan.get("model_id") == MODEL and
             plan.get("training_admitted") is False and
             plan.get("qualification_allowed") is False and
-            plan.get("shipping_approved") is False and
+            "shipping_approved" not in plan and
             plan.get("source_rights_authenticated") is False and
             plan.get("actual_spoken_labels_verified") is False,
             "UNTRUSTED_BULK_PLAN")
@@ -159,8 +159,9 @@ def validate_screen(screen: dict, plan: dict, cmap: dict) -> dict:
             type(screen.get("adapter_lock_sha256")) is str and
             HEX.fullmatch(screen["adapter_lock_sha256"]) and
             all(screen.get(key) is False for key in
-                ("training_admitted", "qualification_allowed", "shipping_approved",
-                 "human_gold", "rights_authenticated")), "UNTRUSTED_BULK_SCREEN")
+                ("training_admitted", "qualification_allowed",
+                 "human_gold", "rights_authenticated")) and
+            "shipping_approved" not in screen, "UNTRUSTED_BULK_SCREEN")
     rows = screen.get("rows")
     require(type(rows) is list and len(rows) == len(cmap), "SCREEN_COUNT_MISMATCH")
     indexed, counts = {}, Counter()
@@ -251,7 +252,7 @@ def measure(plan: dict, screen: dict, generation_root: Path) -> dict:
                     completion.get("intended_kind") == cell["intended_kind"] and
                     completion.get("training_admitted") is False and
                     completion.get("qualification_allowed") is False and
-                    completion.get("shipping_approved") is False, "GENERATION_RECEIPT_DRIFT")
+                    "shipping_approved" not in completion, "GENERATION_RECEIPT_DRIFT")
             wav = source_file(root, folder / "audio-16k.wav")
             actual = inspect_pcm16_wav(wav)
             reported = completion.get("audio")
@@ -306,7 +307,7 @@ def measure(plan: dict, screen: dict, generation_root: Path) -> dict:
             "rows": measured_rows, "gaps": sorted(gaps),
             "source_rights_authenticated": False, "asr_source_authenticated": False,
             "human_gold": False, "training_admitted": False,
-            "qualification_allowed": False, "shipping_approved": False,
+            "qualification_allowed": False,
             "conclusion": "INDEPENDENT_DEVELOPMENT_DIAGNOSTIC_ONLY"}
 
 
