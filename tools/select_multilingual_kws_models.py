@@ -199,7 +199,7 @@ def dominates(a: dict, b: dict) -> bool:
 
 def select(plan: dict) -> dict:
     need(type(plan) is dict and set(plan) == {
-        "schema_version", "policy", "locale", "role",
+        "schema_version", "policy", "locale", "role", "language_binding",
         "sealed_or_formal_data_used", "model_calls_authorized",
         "baseline", "candidates", "budgets"} and
          plan["schema_version"] == 1 and plan["policy"] == POLICY and
@@ -226,6 +226,41 @@ def select(plan: dict) -> dict:
     model_ids = {original["identity"]["model_id"]}
     required_identity = original["identity"]
     references = original["artifacts"]["references_sha256"]
+
+    # A locale string chosen at report time is not corpus language evidence.
+    # Require a separate exact source-bound development-cohort declaration.
+    # This byte-bound note does not authenticate language or human labels.
+    binding = plan["language_binding"]
+    need(type(binding) is dict and set(binding) == {"path", "sha256"},
+         "LANGUAGE_BINDING_FIELDS")
+    need(type(binding["path"]) is str, "LANGUAGE_BINDING_PRIVATE_PATH")
+    language_path = Path(binding["path"])
+    need(language_path.is_absolute() and language_path.resolve() != ROOT and
+         ROOT not in language_path.resolve().parents, "LANGUAGE_BINDING_PRIVATE_PATH")
+    language_sha = digest(binding["sha256"], 64, "LANGUAGE_BINDING_HASH_INVALID")
+    language_note = read_json(language_path, max_bytes=128 * 1024)
+    need(sha(language_path.read_bytes()) == language_sha, "LANGUAGE_BINDING_BYTES_CHANGED")
+    need(set(language_note) == {
+        "schema_version", "policy", "locale", "dataset_id",
+        "references_sha256", "code_sha", "protocol", "seed",
+        "source_role", "independent_language_verified",
+        "sealed_or_formal_data_used", "training_admitted",
+        "qualification_allowed"} and
+        language_note["schema_version"] == 1 and
+        language_note["policy"] == "kws-development-language-cohort-binding-v1" and
+        language_note["locale"] == plan["locale"] and
+        language_note["dataset_id"] == required_identity["dataset_id"] and
+        language_note["references_sha256"] == references and
+        language_note["code_sha"] == required_identity["code_sha"] and
+        language_note["protocol"] == required_identity["protocol"] and
+        language_note["seed"] == required_identity["seed"] and
+        language_note["source_role"] == "development-only" and
+        language_note["independent_language_verified"] is False and
+        language_note["sealed_or_formal_data_used"] is False and
+        language_note["training_admitted"] is False and
+        language_note["qualification_allowed"] is False,
+        "LANGUAGE_COHORT_BINDING_DRIFT")
+
     candidates = []
     for entry in raw_candidates:
         need(type(entry) is dict and entry.get("id") not in ids,
@@ -299,6 +334,7 @@ def select(plan: dict) -> dict:
         "fixed_code_sha": required_identity["code_sha"],
         "fixed_protocol": required_identity["protocol"],
         "fixed_references_sha256": references,
+        "language_binding_sha256": language_sha,
         "control_model_id": required_identity["model_id"],
         "control_development_scores": {**base, **base_resources},
         "budgets": b, "candidate_count": len(candidates),
