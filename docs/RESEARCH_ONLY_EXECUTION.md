@@ -70,7 +70,17 @@ source and old run history remain preserved by Git/GitHub; none is a condition
 for current reproducible data preparation, keyword experiments, FAR/FRR
 measurement or resource profiling.
 
-`model-promotion.yml`, `shipping-approval.yml` and related real-human/DUT
-qualification paths still exist as legacy surfaces and require separate
-dependency migration under #704. Their presence does not confer research
+`model-promotion.yml` and related real-human/DUT qualification paths still
+exist as legacy surfaces and require separate dependency migration under #704. Their presence does not confer research
 approval or imply real-hardware evidence.
+
+## Retired terminal shipping publication (2026-11-03)
+
+The historical `shipping-approval.yml` and `target-cohort-promotion.yml`
+no longer run as GitHub Actions. They formerly published approvals/releases;
+their source and evidence remain in Git history. Cohort scoring remains in
+`tools/score_target_cohort.py`, including independent multi-DUT identity,
+CPU-percent semantics, resource budget, soak hours and failure classification.
+Its next-step output is `independent-research-review`, never a shipping
+approval. Authentic measurements, source rights and independent FAR/FRR
+qualification retain their own evidence limits.
