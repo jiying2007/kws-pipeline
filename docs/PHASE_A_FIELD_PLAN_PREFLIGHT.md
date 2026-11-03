@@ -103,6 +103,10 @@ split constraints, remaining policy quota counts and the entire current
 negative exposure-hour deficit. It intentionally excludes pseudonymous
 speaker and session IDs from the output.
 
+## Direct next field step
+
+[Supplementary critical-slice and 24h+ continuous-negative capture requests](PHASE_A_CRITICAL_CAPTURE_SUPPLEMENT.md) are generated from the same independently frozen field-plan shards and exact commercial policy. They produce private session-level acquisition tasks, never real labels, consent, exposure hours or qualification.
+
 ## What must still happen before "done"
 
 1. Actual legitimate consenting real people, genuine distinct sessions,
