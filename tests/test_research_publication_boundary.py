@@ -18,6 +18,7 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
             "deployment-release.yml",
             "shipping-approval.yml",
             "target-cohort-promotion.yml",
+            "model-promotion.yml",
         ):
             with self.subTest(relative=relative):
                 self.assertFalse((WORKFLOWS / relative).exists())
@@ -32,6 +33,7 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
             "tools/test_inventory.py --official-workflows",
             "tests/test_sbom.py",
             "tests/test_live_ruleset_contract.py",
+            "tests/test_research_model_provenance.py",
         ):
             with self.subTest(required=required):
                 self.assertIn(required, ci)
