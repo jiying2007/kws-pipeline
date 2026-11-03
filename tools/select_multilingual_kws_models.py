@@ -117,8 +117,12 @@ def resource(row: object, scorecard: dict) -> dict:
          "RESOURCE_RECEIPT_METRIC_FIELDS")
     measured = {key: number(values[key], key, strictly_positive=True)
                 for key in ("cpu_ms_per_s", "rss_kib", "p99_block_ms")}
-    need(all(type(row[key]) in (int, float) and measured[key] == row[key]
-             for key in measured), "RESOURCE_RECEIPT_VALUES_DRIFT")
+    # Validate untrusted plan values before comparing them to the independently
+    # hash-bound resource receipt. A bool must never pass as numeric 1/0.
+    declared = {key: number(row[key], key, strictly_positive=True)
+                for key in measured}
+    need(all(measured[key] == declared[key] for key in measured),
+         "RESOURCE_RECEIPT_VALUES_DRIFT")
     return {"measurement_class": "host-development-only",
             "measurement_receipt_sha256": receipt_sha,
             **measured}
