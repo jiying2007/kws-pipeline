@@ -19,7 +19,7 @@ AUDITOR = ROOT / "training" / "audit_dataset.py"
 sys.path.insert(0, str(ROOT / "training"))
 from audit_dataset import (  # noqa: E402
     audit_splits, inspect_wav, lineage_path, sha256_file,
-    verify_manifest_lineage, write_lineage_sidecar,
+    verify_manifest_lineage, write_lineage_sidecar, parse_jsonl, parse_tsv,
 )
 
 
