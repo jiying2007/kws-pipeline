@@ -1,6 +1,8 @@
-# Product model training data contract
+# Research model training data contract (historical product terminology retained)
 
-The shipping-format model trainer must not silently fall back to the legacy tone
+> **Pure technical research.** This document preserves older source, label and model-evidence terminology, not an active shipping or publication requirement. The live training entry is the research-only source-admitted workflow, and the historical model-promotion publisher has been retired. Real label/rights checks and reproducible model identity remain required for technical correctness.
+
+The embedded-format model trainer must not silently fall back to the legacy tone
 generator.
 
 ## Current state
@@ -195,7 +197,7 @@ For new candidates, finalization freezes these next to the selected model:
 - `effective-training-config.json`;
 - `product-speech-like-base-contract.json`.
 
-`model-promotion` carries them into the immutable model Release. The model
+The historical `model-promotion` workflow once carried them into an immutable model Release; that publisher is now retired. The model
 registry mirror then carries the same files into Git with the rest of the model
 tuple.
 

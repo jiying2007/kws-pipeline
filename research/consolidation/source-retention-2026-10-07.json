@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 68773,
-      "sha256": "e0929bbbafa8ca34f07544f534995616486ff0bf76324fac64ecc0741cb12cd8",
-      "git_blob_sha1": "76d1b54303553c24186d2aeae88776d056c3b8ce"
+      "bytes": 68813,
+      "sha256": "9579c675f2e5519964d2de324dcf57ff3aecfaf2f77ea022957568e6200c9dcd",
+      "git_blob_sha1": "ad144f7271c3a0d311614bfc8f29244ff146dc2d"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15333,13 +15333,6 @@
       "bytes": 2667,
       "sha256": "419ec0f21bf2754f4c3c7500d1b3e74c6a4bdff09189c26fb594927433716db8",
       "git_blob_sha1": "b43d837d6cdd4faadc2f9754b6079100b1ac9441"
-    },
-    {
-      "path": ".github/workflows/model-promotion.yml",
-      "mode": "100644",
-      "bytes": 13177,
-      "sha256": "ba0eaa7ceeac336a1edb68344ae031cb164612dce6d94a8587f1ef964e59bc91",
-      "git_blob_sha1": "b551452f1baa827ef3a4947f0f84e0446d2b5dcd"
     },
     {
       "path": ".github/workflows/model-registry-contract.yml",
@@ -43948,6 +43941,42 @@
             "bytes": 10505,
             "sha256": "6d83eace1ed35937d9073677de8da100e8d2ae3b56a1c36cd4da3910de6af18d",
             "git_blob_sha1": "f5474e96339b3a0a996dd96c86c79eceb2878522"
+          },
+          "after": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-03",
+      "operation_id": "research-only-retire-model-release-publication-20261103",
+      "source_commit": "9c4636d14f76cad0ae8f6afd7dae8b82ec6e5bd7",
+      "scope": "Retire model-release publication workflow while preserving frozen model registry, training source/asset identity checks, and research comparison lineage. Current CI source identity updated; historical provenance unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 68773,
+            "sha256": "e0929bbbafa8ca34f07544f534995616486ff0bf76324fac64ecc0741cb12cd8",
+            "git_blob_sha1": "76d1b54303553c24186d2aeae88776d056c3b8ce"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 68813,
+            "sha256": "9579c675f2e5519964d2de324dcf57ff3aecfaf2f77ea022957568e6200c9dcd",
+            "git_blob_sha1": "ad144f7271c3a0d311614bfc8f29244ff146dc2d"
+          }
+        },
+        {
+          "path": ".github/workflows/model-promotion.yml",
+          "before": {
+            "path": ".github/workflows/model-promotion.yml",
+            "mode": "100644",
+            "bytes": 13177,
+            "sha256": "ba0eaa7ceeac336a1edb68344ae031cb164612dce6d94a8587f1ef964e59bc91",
+            "git_blob_sha1": "b551452f1baa827ef3a4947f0f84e0446d2b5dcd"
           },
           "after": null
         }

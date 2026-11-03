@@ -5,7 +5,6 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKFLOW = ROOT / ".github" / "workflows" / "model-promotion.yml"
 VERIFIER = ROOT / "tools" / "verify_model_promotion_bundle.py"
 TRAINING_WORKFLOW = ROOT / ".github" / "workflows" / "model-training.yml"
 PREFLIGHT_WORKFLOW = ROOT / ".github" / "workflows" / "model-training-preflight.yml"
@@ -33,7 +32,6 @@ def require(text: str, needle: str, label: str) -> None:
 
 
 def main() -> int:
-    workflow = WORKFLOW.read_text(encoding="utf-8")
     verifier = VERIFIER.read_text(encoding="utf-8")
     training = TRAINING_WORKFLOW.read_text(encoding="utf-8")
     preflight_workflow = PREFLIGHT_WORKFLOW.read_text(encoding="utf-8")
@@ -54,32 +52,11 @@ def main() -> int:
     product_materializer = PRODUCT_MATERIALIZER.read_text(encoding="utf-8")
     far_gate = FAR_GATE.read_text(encoding="utf-8")
 
-    for needle in (
-        "workflow_dispatch:",
-        "training_run_id:",
-        "expected_head_sha:",
-        "contents: write",
-        "actions: read",
-        "cancel-in-progress: false",
-        "persist-credentials: false",
-        "actions/runs/${TRAINING_RUN_ID}",
-        "tools/verify_model_promotion_bundle.py",
-        "tools/verify_model_promotion_source.py select",
-        "tools/verify_model_promotion_source.py extract",
-        "actions/workflows/model-training.yml",
-        '--repository-id "$GITHUB_REPOSITORY_ID"',
-        '--workflow-json training-workflow.json',
-        'gh api --paginate --slurp',
-        "--training-run-id \"$TRAINING_RUN_ID\"",
-        "--expected-head-sha \"$EXPECTED_HEAD_SHA\"",
-        "sha256sum -c MODEL_SHA256SUMS",
-        "subject-checksums: dist/MODEL_SHA256SUMS",
-        "gh release view \"$tag\" --repo \"$GITHUB_REPOSITORY\"",
-        "gh release create \"$MODEL_RELEASE_TAG\"",
-        "dist/*",
-        "--target \"$EXPECTED_HEAD_SHA\"",
-    ):
-        require(workflow, needle, "model-promotion workflow")
+    # Publication-only model-promotion.yml is retired. The original
+    # source/asset/model/training evidence checks below stay fail-closed;
+    # no Release or GitHub API action is needed to qualify a research model.
+    if (ROOT / ".github/workflows/model-promotion.yml").exists():
+        raise AssertionError("retired model publication workflow was reintroduced")
 
     for needle in (
         'PREFLIGHT_POLICY = "shadow-adversarial-failure-formal-preflight-v2"',
@@ -478,19 +455,7 @@ def main() -> int:
     ):
         require(diagnostics, needle, "compact training diagnostics")
 
-    if workflow.count('--repo "$GITHUB_REPOSITORY"') < 2:
-        raise AssertionError("all release CLI calls must bind the repository explicitly")
-    scan = workflow.lower()
-    for allowed in ("latest-strict-gate-passing-round", "strict/latest"):
-        scan = scan.replace(allowed, "")
-    if "latest" in scan:
-        raise AssertionError("model promotion must never select an ambiguous training artifact")
-    if "cancel-in-progress: true" in workflow.lower():
-        raise AssertionError("model promotion must not cancel another promotion for the same provenance")
-    if 'tags:\n      - "v*"' in workflow:
-        raise AssertionError("model promotion must not masquerade as the SDK v* release workflow")
-
-    print("model promotion + staged Data V3 qualification-repair provenance contract: PASS")
+    print("research model source, training and numerical-provenance contract: PASS")
     return 0
 
 

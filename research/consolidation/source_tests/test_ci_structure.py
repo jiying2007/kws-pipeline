@@ -114,7 +114,7 @@ class CIContracts(unittest.TestCase):
         for mode in ('-O', '-OO'):
             self.assertIn('python3 -B ' + mode + ' tests/test_board_bench.py --statistics-only', benchmark)
 
-    def test_promotion_guards_run_once_per_mode_without_compiler_duplication(self):
+    def test_research_model_guards_run_once_per_mode_without_compiler_duplication(self):
         shared = jobs(self.ci)['python-contracts']
         build = jobs(self.ci)['hosted-build']
         for suite in ('promotion-admission', 'promotion-source'):
@@ -122,7 +122,8 @@ class CIContracts(unittest.TestCase):
                 command = 'python3 -S -B' + mode + ' tools/checked_unittest.py --suite ' + suite
                 self.assertEqual(shared.count(command + '\n'), 1)
                 self.assertNotIn(command, build)
-        self.assertIn('python3 tests/test_model_promotion.py', shared)
+        self.assertIn('python3 tests/test_research_model_provenance.py', shared)
+        self.assertNotIn('test_model_promotion', shared)
         self.assertNotIn('test_model_promotion', build)
         for suite in ('asr18', 'prepare', 'promotion-admission', 'promotion-source'):
             self.assertIn('--suite ' + suite, shared)
