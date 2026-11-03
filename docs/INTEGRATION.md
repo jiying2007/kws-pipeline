@@ -160,20 +160,26 @@ The synthetic `proxy` backend remains valid for development/domain stress, but i
 
 Threshold qualification must use the exact final microphone/enclosure/audio-pipeline stage composition and gain policy shipped on the SKU. Changing the AFE executable/config or hardware sound path creates a new qualification tuple.
 
-## Commercial-candidate deployment identity
+## Historical deployment identity (retired)
 
-`.github/workflows/deployment-release.yml` creates a content-addressed `deployment-<source-sha12>` candidate only from the exact current protected `main`. It refuses publication unless:
+The previous `deployment-release.yml` published content-addressed commercial
+candidate SDK/model/evidence archives after checking exact protected-main
+source, model hashes, reproducible SDK builds, and provenance. That
+**publication-only workflow has been removed from active Actions**. Its
+original source and receipts are preserved in Git/Actions history, not
+part of current research permissions or experiment execution.
 
-- the immutable promoted Model Release still targets exact trained HEAD `749187ec1d6662658f06aa9c76d47fde835968db`;
-- current runtime source (`CMakeLists.txt`, `cmake/`, `include/`, `src/`) is unchanged from the source used by the qualified model;
-- every promoted-model asset in `MODEL_SHA256SUMS` verifies;
-- two independently built installed SDK trees are byte-for-byte reproducible;
-- SDK/source/SPDX/model/qualification/robustness/FAR/shipping/nightly/AFE identities are frozen into `deployment-manifest.json` and `DEPLOYMENT_SHA256SUMS`;
-- provenance and SDK-SBOM attestations succeed.
+For current research, pin and compare the real model/keyword pack, CMake
+configuration/source, generated parameter header inputs, saved PCM,
+evaluation labels and source families; use the existing scientific CI
+and controlled dataset iteration, not a shipping configuration. Physical
+SSC305 and real-human AFE results are independent measurements and remain
+NOT_RUN unless they have actually been collected.
 
-The deployment manifest is deliberately `commercial-candidate` with `shipping_approved=false`. The two external evidence classes declared by `configs/shipping.xiaowo.json` remain pending: real-human final-AFE acoustic qualification and physical target-board performance/soak. They are not an exhaustive current readiness claim: the same policy separately requires source-specific replay/recalibration (`recalibration_required=true`). Historical model-release qualification does not qualify changed runtime source.
-
-The separate research lane also retains unresolved numerical and data-admission findings: D20 **FAIL**, D90 **NOT_RUN**, and the frozen Fixed50 **EVAL_INCONCLUSIVE_LABEL_SUPPORT** result. Saved-byte binding, listening tools and CI passes do not clear these findings or establish new human labels. See [scoped product status](KWS_LANDING_STATUS.md) and the [current research/admission entries](../research/README.md); numerical research admission and product qualification remain distinct.
+The separate research lane also retains unresolved numerical/data-admission
+findings: D20 **FAIL**, D90 **NOT_RUN**, and frozen Fixed50
+**EVAL_INCONCLUSIVE_LABEL_SUPPORT**. Historical source-bound results cannot
+be upgraded by a release tag or a workflow name.
 
 ## Release evidence boundary
 
