@@ -428,7 +428,7 @@ class AuthorizedCloningTests(unittest.TestCase):
                             "max_retries": 0, "max_paid_usd": 0},
                 "source_rights_authenticated": False,
                 "actual_spoken_labels_verified": False, "training_admitted": False,
-                "qualification_allowed": False, "shipping_approved": False}
+                "qualification_allowed": False}
         dump(root / "plan-lock.json", {"schema": "kws-bulk-clone-execution-lock-v1",
             "plan_sha256": bulk_boundary.canonical_sha(plan),
             "model_id": bulk_boundary.MODEL, "training_admitted": False})
@@ -462,7 +462,7 @@ class AuthorizedCloningTests(unittest.TestCase):
                           "pcm_sha256": meta["pcm_sha256"], "audio_frames": meta["frames"],
                           "wav_bytes": wav.stat().st_size},
                 "training_admitted": False, "qualification_allowed": False,
-                "shipping_approved": False})
+                })
             rows.append({"cell_id": cell["cell_id"],
                          "reference_id": cell["reference_id"],
                          "source_family_id": cell["source_family_id"],
@@ -476,7 +476,7 @@ class AuthorizedCloningTests(unittest.TestCase):
                   "counts": {status: 1 for status in statuses},
                   "human_gold": False, "rights_authenticated": False,
                   "training_admitted": False, "qualification_allowed": False,
-                  "shipping_approved": False}
+                  }
         return plan, screen, root
 
     def test_bulk_effect_bridge_measures_real_pcm_and_actual_data_gaps(self) -> None:
@@ -491,7 +491,8 @@ class AuthorizedCloningTests(unittest.TestCase):
         self.assertIn("HARD_NEGATIVE_WAKE_CONFUSION_NEEDS_DEVELOPMENT_REVIEW", report["gaps"])
         self.assertFalse(report["training_admitted"])
         self.assertFalse(report["asr_source_authenticated"])
-        self.assertFalse(report["shipping_approved"])
+        self.assertNotIn("shipping_approved", report)
+        self.assertNotIn("shipping_approved", feedback.derive(report))
         self.assertTrue(all(row["generated_audio"]["pcm_sha256"] for row in report["rows"]))
         plan_path, screen_path = self.root / "bulk-plan.json", self.root / "bulk-screen.json"
         dump(plan_path, plan)
