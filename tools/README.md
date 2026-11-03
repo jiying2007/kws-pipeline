@@ -152,7 +152,6 @@ make collected measurements auditable and do not substitute for those measuremen
 
 - [`export_artifacts.py`](export_artifacts.py) — Reject input/output aliases and stage model/provenance writes before per-file replacement.
 
-- [`kws_landing_status.py`](kws_landing_status.py)
 - [`materialize_model_registry.py`](materialize_model_registry.py)
 - [`model_family_resource_estimate.py`](model_family_resource_estimate.py)
 - [`model_provenance.py`](model_provenance.py)
