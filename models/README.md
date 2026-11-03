@@ -9,7 +9,7 @@ ephemeral workflow artifacts. They are **not** committed to Git.
 
 ## Promoted model registry
 
-A model that has passed the governed `model-promotion` verifier must also be
+A historical model that passed the retired `model-promotion` publication verifier was also required to be
 mirrored into:
 
 ```
