@@ -1,5 +1,13 @@
 # kws-pipeline
 
+> **当前只有 KWS 技术研究任务。** 真实效果由两条完整中文唤醒词、
+> 独立连续负例 FAR/FRR 置信界、词尾触发时延及 SSC305 资源实测决定。
+> 研究入口：[技术研究执行规范](docs/RESEARCH_ONLY_EXECUTION.md)、
+> [数据/模型单变量对照](.github/workflows/dataset-driven-iteration.yml) 和
+> [冻结研究基线模型](configs/research-baseline.xiaowo.json)。
+> 下文历史发布术语仅用于保留的旧实验溯源，不构成研究数据/训练门禁。
+
+
 [English](README.md) | 简体中文
 
 研究入口：[可复用模块、保留的实验结论与资格边界](research/README.md)

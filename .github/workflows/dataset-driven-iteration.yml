@@ -1,8 +1,8 @@
-name: dataset-driven-iteration
+name: research-dataset-iteration
 
-# Product-facing measurement lane. A manual run is valid only from the exact
-# current protected main. By default it evaluates the model tuple pinned by the
-# shipping contract and mirrored in models/registry/.
+# Technical KWS research: one-variable dataset/model measurement on protected main.
+# The default historical model is pinned by a research-only baseline manifest.
+# No release, publication, or external-approval gate is consulted.
 on:
   workflow_dispatch:
     inputs:
@@ -57,7 +57,7 @@ jobs:
       - name: Require exact current protected main
         run: bash governance/require_current_main.sh
 
-      - name: Resolve deployable model tuple
+      - name: Resolve exact research model tuple
         id: tuple
         env:
           INPUT_MODEL_PATH: ${{ inputs.model_path }}
@@ -65,13 +65,20 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "$INPUT_MODEL_PATH" && -z "$INPUT_KEYWORDS_PATH" ]]; then
-            tag="$(jq -r '.model.release_tag' configs/shipping.xiaowo.json)"
+            contract=configs/research-baseline.xiaowo.json
+            tag="$(jq -er '.model_tag' "$contract")"
+            [[ "$tag" =~ ^model-[0-9a-f]{12}$ ]] || {
+              echo "invalid pinned research model tag" >&2
+              exit 2
+            }
             model="models/registry/$tag/xiaowo-model.kwm"
             keywords="models/registry/$tag/xiaowo-keywords.kwk"
-            python3 tools/verify_model_registry.py \
-              --registry-dir "models/registry/$tag" \
-              --config configs/shipping.xiaowo.json
-            label="git-registry:$tag"
+            python3 tools/verify_model_registry.py --registry-dir "models/registry/$tag"
+            expected_model="$(jq -er '.model_sha256' "$contract")"
+            expected_keywords="$(jq -er '.keyword_pack_sha256' "$contract")"
+            test "$(sha256sum "$model" | awk '{print $1}')" = "$expected_model"
+            test "$(sha256sum "$keywords" | awk '{print $1}')" = "$expected_keywords"
+            label="research-registry:$tag"
           elif [[ -n "$INPUT_MODEL_PATH" && -n "$INPUT_KEYWORDS_PATH" ]]; then
             model="$INPUT_MODEL_PATH"
             keywords="$INPUT_KEYWORDS_PATH"
@@ -197,8 +204,8 @@ jobs:
               f"- run id: `{os.environ['DATASET_RUN_ID']}`\n"
               f"- controlled variable: `{os.environ['CONTROLLED_VARIABLE']}`\n"
               f"- model: `{os.environ['MODEL_LABEL']}`\n\n"
-              "The scorecard is evidence only; it does not freeze, promote or\n"
-              "shipping-approve a model.\n"
+              "The scorecard is research evidence only. Independent audio and\n"
+              "target-board measurements are required before scientific acceptance.\n"
           )
           (Path(os.environ['RUNNER_TEMP']) / 'dataset-iteration-pr.md').write_text(body, encoding='utf-8')
           PYBODY

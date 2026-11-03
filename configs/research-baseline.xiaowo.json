@@ -1,0 +1,12 @@
+{
+  "schema": "kws-research-model-baseline-v1",
+  "policy": "frozen-historical-research-comparator",
+  "model_tag": "model-749187ec1d66",
+  "model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+  "keyword_pack_sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+  "training_source_sha": "749187ec1d6662658f06aa9c76d47fde835968db",
+  "dataset_status": "exposed-historical-synthetic-diagnostic",
+  "actual_human_wav_evaluated": false,
+  "independent_longstream_far_measured": false,
+  "ssc305_measured": false
+}
