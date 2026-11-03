@@ -278,6 +278,9 @@ jobs:
       - name: Research-only publication boundary contract
         run: |
           python3 -I -S -B tests/test_research_publication_boundary.py
+          python3 -I -S -B tests/test_test_inventory.py
+          python3 -I -S -B -O tests/test_test_inventory.py
+          python3 -I -S -B -OO tests/test_test_inventory.py
           python3 -I -S -B -O tests/test_research_publication_boundary.py
           python3 -I -S -B -OO tests/test_research_publication_boundary.py
       - name: Verify tracked worktree after research publication boundary
