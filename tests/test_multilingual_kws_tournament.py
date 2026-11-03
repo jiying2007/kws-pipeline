@@ -73,6 +73,25 @@ def sample_entry(root: Path, name: str, card: dict,
     }
 
 
+def language_binding(root: Path, card: dict, *, locale: str = "zh-CN") -> dict:
+    identity = card["identity"]
+    payload = {
+        "schema_version": 1,
+        "policy": "kws-development-language-cohort-binding-v1",
+        "locale": locale, "dataset_id": identity["dataset_id"],
+        "references_sha256": card["artifacts"]["references_sha256"],
+        "code_sha": identity["code_sha"], "protocol": identity["protocol"],
+        "seed": identity["seed"], "source_role": "development-only",
+        "independent_language_verified": False,
+        "sealed_or_formal_data_used": False, "training_admitted": False,
+        "qualification_allowed": False,
+    }
+    path = root / ("cohort-" + locale + ".json")
+    path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+    return {"path": str(path.resolve()),
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+
+
 class DevelopmentTournamentTests(unittest.TestCase):
     def setUp(self) -> None:
         temp = tempfile.TemporaryDirectory()
@@ -90,6 +109,8 @@ class DevelopmentTournamentTests(unittest.TestCase):
         self.plan = {
             "schema_version": 1, "policy": rank.POLICY,
             "locale": "zh-CN", "role": "development-only",
+            "language_binding": language_binding(
+                self.root, scorecard("1", failures=10, false_accepts=2)),
             "sealed_or_formal_data_used": False, "model_calls_authorized": False,
             "baseline": self.baseline, "candidates": [self.fast, self.low_far],
             "budgets": {
@@ -118,6 +139,9 @@ class DevelopmentTournamentTests(unittest.TestCase):
     def test_language_is_research_label_not_an_english_shipping_license(self) -> None:
         p = copy.deepcopy(self.plan)
         p["locale"] = "en-US"
+        p["language_binding"] = language_binding(
+            self.root, scorecard("1", failures=10, false_accepts=2),
+            locale="en-US")
         r = rank.select(p)
         self.assertEqual(r["locale"], "en-US")
         self.assertTrue(r["research_leader_only"])
@@ -225,6 +249,28 @@ class DevelopmentTournamentTests(unittest.TestCase):
         p["candidates"][1] = sample_entry(
             self.root, "duplicate-model", scorecard("2", failures=8, false_accepts=1))
         with self.assertRaisesRegex(ValueError, "REPEATED_CANDIDATE_MODEL"):
+            rank.select(p)
+
+
+    def test_language_binding_cannot_be_report_time_spoofed(self) -> None:
+        p = copy.deepcopy(self.plan)
+        p["locale"] = "en-US"
+        with self.assertRaisesRegex(ValueError, "LANGUAGE_COHORT_BINDING_DRIFT"):
+            rank.select(p)
+        p = copy.deepcopy(self.plan)
+        p["language_binding"]["sha256"] = "f" * 64
+        with self.assertRaisesRegex(ValueError, "LANGUAGE_BINDING_BYTES_CHANGED"):
+            rank.select(p)
+        p = copy.deepcopy(self.plan)
+        note = json.loads(Path(p["language_binding"]["path"]).read_text())
+        note["training_admitted"] = True
+        source = self.root / "forged-locale.json"
+        source.write_text(json.dumps(note, sort_keys=True), encoding="utf-8")
+        p["language_binding"] = {
+            "path": str(source.resolve()),
+            "sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+        }
+        with self.assertRaisesRegex(ValueError, "LANGUAGE_COHORT_BINDING_DRIFT"):
             rank.select(p)
 
     def test_source_only_private_create_once_file(self) -> None:
