@@ -35,9 +35,9 @@
 
 - [Bounded batch weak import](batch-weak-import.md): offline saved native batch evidence, full-transcript machine-weak candidates and consumer-specific compatibility; no current-experiment training admission.
 
-## Product contracts
+## Research contracts and historical product references
 
-Current machine-readable product authority is `configs/shipping.xiaowo.json`. The immutable promoted model is `model-749187ec1d66`, historically synthetic-qualified for exactly `你好小窝` and `小窝小窝`. The current source contract records `recalibration_required=true`; that historical result does not qualify changed runtime source. The frozen commercial candidate is `deployment-c20f3eb88e43`. The product remains `shipping_approved=false` until real-human final-AFE acoustic evidence and physical target-board evidence both pass and the explicit terminal shipping promotion succeeds.
+Current research authority is [`docs/RESEARCH_ONLY_EXECUTION.md`](RESEARCH_ONLY_EXECUTION.md) with the pinned `configs/research-baseline.xiaowo.json` comparator. The immutable historical model `model-749187ec1d66` was evaluated on synthetic data; it is not independent real-speech or SSC305 evidence. Historical `configs/shipping.xiaowo.json` and commercial qualification records are no longer research prerequisites and are being migrated under [#704](https://github.com/jiying2007/kws-pipeline/issues/704).
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — runtime/offline architecture and hard bounds
 - [`RUNTIME_CONFIG.md`](RUNTIME_CONFIG.md) — parameter contract, L0-L3 layers, ranges, tuning and change checklist
@@ -69,7 +69,7 @@ Current machine-readable product authority is `configs/shipping.xiaowo.json`. Th
 - [`GOVERNANCE_TARGET.md`](GOVERNANCE_TARGET.md) — enforced terminal governance target
 - [`TERMINAL_HARDENING.md`](TERMINAL_HARDENING.md) — final software hardening contract
 
-Commercial-candidate contracts:
+Research sources and historical product-reference contracts (not research-admission authority):
 
 - [`configs/parameter-contract.json`](../configs/parameter-contract.json) — single source of truth for every tunable parameter, its layer, unit and validation range; consumed by the C build and by the python tools
 - [`configs/shipping.xiaowo.json`](../configs/shipping.xiaowo.json) — exact two-word product/model authority and remaining shipping evidence boundary
@@ -83,7 +83,7 @@ Commercial-candidate contracts:
 - [`commercial/target-bundle.schema.json`](../commercial/target-bundle.schema.json) — controlled target evidence bundle profile contract
 - [`governance/require_current_main.sh`](../governance/require_current_main.sh) — shared manual-promotion gate requiring exact current protected main and live terminal ruleset
 - [`.github/workflows/far-nightly.yml`](../.github/workflows/far-nightly.yml) — immutable released-model nightly FAR regression with no training/qualification
-- [`.github/workflows/deployment-release.yml`](../.github/workflows/deployment-release.yml) — immutable content-addressed SDK/model/evidence tuple; publication requires exact protected `main`
+- Historical `deployment-release.yml` — removed from active GitHub Actions; inspect the original Git commit for publication history. It is not an experiment or data-admission entrypoint.
 - [`.github/workflows/real-human-qualification.yml`](../.github/workflows/real-human-qualification.yml) — manual self-hosted restricted-data Phase-A workflow; raw/post-AFE WAVs are never uploaded
 - [`.github/workflows/target-dut-qualification.yml`](../.github/workflows/target-dut-qualification.yml) — manual self-hosted single-DUT physical evidence gate; raw lab evidence stays controlled
 - [`.github/workflows/target-cohort-promotion.yml`](../.github/workflows/target-cohort-promotion.yml) — immutable multi-DUT Phase-B cohort promotion
