@@ -70,8 +70,9 @@ source and old run history remain preserved by Git/GitHub; none is a condition
 for current reproducible data preparation, keyword experiments, FAR/FRR
 measurement or resource profiling.
 
-`model-promotion.yml` and related real-human/DUT qualification paths still
-exist as legacy surfaces and require separate dependency migration under #704. Their presence does not confer research
+Real-human/DUT qualification paths remain legacy execution surfaces needing
+independent source/evaluation migration under #704. The former
+`model-promotion.yml` has been retired from active Actions. Their presence does not confer research
 approval or imply real-hardware evidence.
 
 ## Retired terminal shipping publication (2026-11-03)
@@ -84,3 +85,12 @@ CPU-percent semantics, resource budget, soak hours and failure classification.
 Its next-step output is `independent-research-review`, never a shipping
 approval. Authentic measurements, source rights and independent FAR/FRR
 qualification retain their own evidence limits.
+
+## Retired model publication workflow (2026-11-03)
+
+`model-promotion.yml` no longer publishes a model release or submits model
+registry PRs. The historical trained model/keyword bytes, consumed seeds,
+frozen comparators and Git-model registry evidence remain immutable. Current
+`tests/test_research_model_provenance.py` checks the same training
+source/asset/budget/numerical constraints without executing a publisher;
+source and rights checks remain required for actual training.
