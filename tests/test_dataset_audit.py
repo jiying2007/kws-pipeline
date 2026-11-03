@@ -386,7 +386,7 @@ class SourceFamilyAliasTests(unittest.TestCase):
 def main() -> int:
     suite = unittest.TestSuite(
         unittest.defaultTestLoader.loadTestsFromTestCase(case)
-        for case in (CrossFieldPCMTests, SourceFamilyAliasTests)
+        for case in (CrossFieldPCMTests, SourceFamilyAliasTests, StrictManifestJsonTests)
     )
     if not unittest.TextTestRunner().run(suite).wasSuccessful():
         return 1
