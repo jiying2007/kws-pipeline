@@ -50,12 +50,24 @@ def sample_entry(root: Path, name: str, card: dict,
                  p99: float = 3.0) -> dict:
     path = root / (name + ".json")
     path.write_text(json.dumps(card, sort_keys=True, allow_nan=False), encoding="utf-8")
+    receipt = root / (name + ".resource.json")
+    receipt.write_text(json.dumps({
+        "schema_version": 1, "policy": "kws-host-development-resource-v1",
+        "model_id": card["identity"]["model_id"],
+        "code_sha": card["identity"]["code_sha"],
+        "measurement_class": "host-development-only",
+        "simulated": False,
+        "metric_values": {"cpu_ms_per_s": cpu, "rss_kib": rss,
+                          "p99_block_ms": p99},
+        "training_admitted": False, "qualification_allowed": False,
+    }, sort_keys=True), encoding="utf-8")
     return {
         "id": name, "scorecard_path": str(path.resolve()),
         "scorecard_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
         "resource": {
             "measurement_class": "host-development-only",
-            "measurement_receipt_sha256": "d" * 64,
+            "measurement_receipt_path": str(receipt.resolve()),
+            "measurement_receipt_sha256": hashlib.sha256(receipt.read_bytes()).hexdigest(),
             "cpu_ms_per_s": cpu, "rss_kib": rss, "p99_block_ms": p99,
         }
     }
@@ -173,12 +185,22 @@ class DevelopmentTournamentTests(unittest.TestCase):
         p["candidates"][0]["resource"]["measurement_class"] = "ssc305-certified"
         with self.assertRaisesRegex(ValueError, "RESOURCE_EVIDENCE_UNQUALIFIED"):
             rank.select(p)
+        p = copy.deepcopy(self.plan)
+        p["candidates"][0]["resource"]["cpu_ms_per_s"] = 2
+        with self.assertRaisesRegex(ValueError, "RESOURCE_RECEIPT_VALUES_DRIFT"):
+            rank.select(p)
+        p = copy.deepcopy(self.plan)
+        p["candidates"][0]["resource"]["measurement_receipt_sha256"] = "9" * 64
+        with self.assertRaisesRegex(ValueError, "RESOURCE_RECEIPT_BYTES_CHANGED"):
+            rank.select(p)
 
     def test_regressed_resource_or_frr_candidates_are_not_winners(self) -> None:
         p = copy.deepcopy(self.plan)
-        p["candidates"][0]["resource"]["rss_kib"] = 10000
+        p["candidates"][0] = sample_entry(
+            self.root, "rss-over", scorecard("2", failures=5, false_accepts=0),
+            rss=10000)
         r = rank.select(p)
-        self.assertNotIn("better-recall", r["pareto_frontier_ids"])
+        self.assertNotIn("rss-over", r["pareto_frontier_ids"])
         bad = scorecard("4", failures=15, false_accepts=1)
         p["candidates"][0] = sample_entry(self.root, "bad-recall", bad)
         r = rank.select(p)
