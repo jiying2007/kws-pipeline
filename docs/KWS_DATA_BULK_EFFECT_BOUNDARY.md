@@ -89,7 +89,7 @@ silently recoded into a correct hard negative.
   real-human/continuous/SSC305 evidence. Every report explicitly has
   `source_rights_authenticated=false`,
   `asr_source_authenticated=false`, `training_admitted=false`,
-  `qualification_allowed=false`, `shipping_approved=false`.
+  `qualification_allowed=false`. No product-release approval is part of this research evidence.
 
 The fixed 16-prompt challenge taxonomy is a derived **analytics mapping**,
 not a change to `kws-data` model input or its historical byte identities.
@@ -103,12 +103,13 @@ training must have independently controlled and verified source/rights plus
 actual-label evidence, a complete frozen three-ASR native policy/root where
 appropriate, family-isolated training splits and matched ancestry accepted by
 `tools/asr_source_resolver.py` /
-`training/training_admission.py`. The existing code-owned production train
+`training/training_admission.py`. The existing verified research training
 roots remain empty; do not insert `kws-data` machine-screen strings as
 authenticated training roots without completing those checks.
 
 After a truly admitted train-only base exists, compare a fixed model and
 decoder under one data variable on independent development recordings, then
-run independent real Mandarin/final-AFE Phase A and physical SSC305 Phase B
-before shipping Phase C. None of the above can be replaced with generated
-clips or fake CI inference.
+measure independent real Mandarin/final-AFE performance and physical
+SSC305 resources as separate research evaluations. These measurements are
+not prerequisites for continuing controlled source-only experiments; none
+can be replaced with generated clips or fake CI inference.
