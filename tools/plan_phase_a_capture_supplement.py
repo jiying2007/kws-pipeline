@@ -182,6 +182,7 @@ def build(plans: list[dict], policy: dict, frozen_hashes: list[str]) -> dict:
         "declared_sealed_source_families": len(set(families.values())),
         "declared_sealed_sessions": number_of_sessions,
         "new_capture_requests": len(tasks),
+        "capture_requests_sha256": canonical_sha(tasks),
         "requested_positive_by_scene_keyword": {
             s: dict(sorted(c.items())) for s, c in sorted(positive_counts.items())},
         "requested_negative_duration_s_per_session": dict(sorted(seconds.items())),
