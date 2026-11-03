@@ -50,6 +50,7 @@ def test_phase_a_field_plan_preflight() -> None:
     import sys
     sys.path.insert(0, str(ROOT / "tools"))
     import phase_a_field_plan_preflight as preflight
+    import plan_phase_a_capture_supplement as supplement
 
     policy = json.loads((ROOT / "commercial/real-human-qualification.policy.json")
                         .read_text(encoding="utf-8"))
@@ -152,6 +153,76 @@ def test_phase_a_field_plan_preflight() -> None:
     assert reversed_joint["source_shard_plan_sha256s"] == joint["source_shard_plan_sha256s"]
     assert joint["declared_sealed_speakers"] == 40
     assert joint["declared_sealed_sessions"] == 80
+
+    # The 37-slot v1 pilot lacks explicit playback/double-talk/robot-motion
+    # positive requests and does not allocate actual negative audio hours.
+    # A separate product-policy-derived supplement now prepares physical
+    # collection tasks without claiming that ANY audio has been captured.
+    capture = supplement.build([shard_one, shard_two], policy, hashes)
+    assert capture["declared_sealed_speakers"] == 40
+    assert capture["declared_sealed_sessions"] == 80
+    assert capture["new_capture_requests"] == 1600
+    assert capture["requested_negative_hours_total"] == 26.4
+    assert capture["requested_negative_duration_s_per_session"] == {
+        "household": 594, "speech_confusion": 198,
+        "playback": 198, "robot_motion": 198
+    }
+    for tag in ("rear", "playback", "double_talk", "robot_motion"):
+        assert capture["requested_positive_by_scene_keyword"][tag] == {"1": 160, "2": 160}
+    for tag, value in (("household", 13.2), ("speech_confusion", 4.4),
+                       ("playback", 4.4), ("robot_motion", 4.4)):
+        assert capture["requested_negative_hours_by_scene"][tag] == value
+    assert len({x["request_id"] for x in capture["requests"]}) == 1600
+    assert capture["capture_requests_sha256"] == preflight.canonical_sha(capture["requests"])
+    assert all(x["qualification_allowed"] is False and
+               x["actual_acoustic_tags_verified"] is False and
+               x["training_admitted"] is False for x in capture["requests"])
+    assert capture["observed_wake_events"] == 0
+    assert capture["observed_post_afe_negative_hours"] == 0
+    assert capture["shipping_approved"] is False
+    opposite = supplement.build([shard_two, shard_one], policy, hashes[::-1])
+    assert opposite == capture
+    try:
+        supplement.build([shard_one, shard_two], policy, [hashes[0], "0" * 64])
+    except ValueError as exc:
+        assert "INDEPENDENT_FROZEN_FIELD_PLAN_DIGEST_MISMATCH" in str(exc)
+    else:
+        raise AssertionError("supplement accepted forged source freeze")
+    try:
+        supplement.build([shard_one], policy, [hashes[0]])
+    except ValueError as exc:
+        assert "FRESH_SEALED_COHORT_MINIMUM_NOT_DECLARED" in str(exc)
+    else:
+        raise AssertionError("single-session capture was treated as ready")
+    with tempfile.TemporaryDirectory() as supplemental_tmp:
+        folder = pathlib.Path(supplemental_tmp)
+        for name, value in (("a.json", shard_one), ("b.json", shard_two),
+                            ("policy.json", policy)):
+            (folder / name).write_text(json.dumps(value, ensure_ascii=False,
+                                                 sort_keys=True, indent=2), encoding="utf-8")
+        output = folder / "supplemental-capture-requests.json"
+        args = ["--field-plan", str(folder / "a.json"),
+                "--field-plan", str(folder / "b.json"),
+                "--expected-plan-sha256", hashes[0],
+                "--expected-plan-sha256", hashes[1],
+                "--phase-a-policy", str(folder / "policy.json"),
+                "--output", str(output)]
+        assert supplement.main(args) == 0
+        assert (output.stat().st_mode & 0o777) == 0o600
+        assert json.loads(output.read_text())["qualification_allowed"] is False
+        try:
+            supplement.main(args)
+        except FileExistsError:
+            pass
+        else:
+            raise AssertionError("supplemental private plan overwritten")
+        args[-1] = str(ROOT / "private-capture-requests-not-for-public-repo.json")
+        try:
+            supplement.main(args)
+        except ValueError as exc:
+            assert "PRIVATE_CREATE_ONLY_OUTPUT_REQUIRED" in str(exc)
+        else:
+            raise AssertionError("supplemental private plan published in public repo")
     assert joint["declared_sealed_source_family_groups"] == 40
     assert joint["sealed_requested_wakes_by_keyword"] == {"1": 960, "2": 960}
     assert not joint["aggregate_source_identity_authenticated"]
