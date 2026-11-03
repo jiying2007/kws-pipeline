@@ -145,7 +145,11 @@ def test_phase_a_field_plan_preflight() -> None:
     hashes = [preflight.canonical_sha(shard_one), preflight.canonical_sha(shard_two)]
     joint = preflight.assess_many([shard_one, shard_two], policy, hashes)
     assert joint["source_shard_count"] == 2
-    assert joint["source_shard_plan_sha256s"] == hashes
+    assert joint["source_shard_plan_sha256s"] == sorted(hashes)
+    reversed_joint = preflight.assess_many([shard_two, shard_one],
+                                          policy, [hashes[1], hashes[0]])
+    assert reversed_joint["source_plan_sha256"] == joint["source_plan_sha256"]
+    assert reversed_joint["source_shard_plan_sha256s"] == joint["source_shard_plan_sha256s"]
     assert joint["declared_sealed_speakers"] == 40
     assert joint["declared_sealed_sessions"] == 80
     assert joint["declared_sealed_source_family_groups"] == 40
