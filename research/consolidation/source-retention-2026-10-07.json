@@ -15330,9 +15330,9 @@
     {
       "path": ".github/workflows/kws-landing-status.yml",
       "mode": "100644",
-      "bytes": 2134,
-      "sha256": "cebe23b9d0fd5992dd3aaa22b9ca61c60454a318d76533d1c621a486820c435a",
-      "git_blob_sha1": "97833b44ad2d01f0b98490fd8642f6b967ad2aa2"
+      "bytes": 2951,
+      "sha256": "4036e41eeac9dce088ea32afe4f73c581275b0efa415c6b769c4b7d657e0e867",
+      "git_blob_sha1": "b85012d8a6dd7f57ff241ff44864e7c95f2e2b32"
     },
     {
       "path": ".github/workflows/model-family-resource-contract.yml",
@@ -43828,6 +43828,34 @@
             "bytes": 3733,
             "sha256": "9739017330b247dd29a0035136d68cf566dc36854926f777ecb04c9bcce57101",
             "git_blob_sha1": "90c8fae7149002598108cae350baca56b93af0fa"
+          }
+        }
+      ]
+    },
+    {
+      "id": "research-comparator-status-removes-product-landing-20261103",
+      "date": "2026-11-03",
+      "base_commit": "ab0f0c8a7884e1c62f87ff5d546f2da416d472e8",
+      "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
+      "workflow_source_changed": true,
+      "scope": "Reuse the existing live workflow path for technical research comparator SHA and provenance verification; remove the old product landing/shipping configuration and publication status execution from active CI.",
+      "rationale": "The old workflow called retired verifier --config and blocked pure research checks. Preserve the exact current research registry chain, model SHA-256, training head and explicit NOT_MEASURED independent human/SSC305 evidence without invoking product or sales approvals.",
+      "files": [
+        {
+          "path": ".github/workflows/kws-landing-status.yml",
+          "before": {
+            "path": ".github/workflows/kws-landing-status.yml",
+            "mode": "100644",
+            "bytes": 2134,
+            "sha256": "cebe23b9d0fd5992dd3aaa22b9ca61c60454a318d76533d1c621a486820c435a",
+            "git_blob_sha1": "97833b44ad2d01f0b98490fd8642f6b967ad2aa2"
+          },
+          "after": {
+            "path": ".github/workflows/kws-landing-status.yml",
+            "mode": "100644",
+            "bytes": 2951,
+            "sha256": "4036e41eeac9dce088ea32afe4f73c581275b0efa415c6b769c4b7d657e0e867",
+            "git_blob_sha1": "b85012d8a6dd7f57ff241ff44864e7c95f2e2b32"
           }
         }
       ]
