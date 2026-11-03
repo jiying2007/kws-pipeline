@@ -1,6 +1,6 @@
-# Phase B physical target qualification and Phase C shipping approval
+# Historical Phase B physical target evaluation and Phase C shipping approval (retired)
 
-This document defines the product gates that follow a successful Phase-A `human-qualified-*` Release. It does not substitute hosted fixtures for physical measurements and it does not authorize model retraining.
+> **Historical record only.** The shipping-approval and target-cohort-promotion workflows have been retired from active Actions. Current technical research measures CPU/RSS/soak/latency with independent evidence, without publishing commercial approval. The original procedure below is retained for provenance, not as executable research instructions. See [research execution boundary](RESEARCH_ONLY_EXECUTION.md).
 
 ## Frozen chain
 
