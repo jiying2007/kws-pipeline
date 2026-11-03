@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import copy
-import importlib.util
 import json
 import pathlib
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -69,123 +67,41 @@ def check_navigation_indexes() -> None:
             raise AssertionError("missing local navigation target was accepted")
 
 
-def check_landing_status_contract() -> None:
-    spec = importlib.util.spec_from_file_location("kws_landing_status", ROOT / "tools/kws_landing_status.py")
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    status = module.build_status(ROOT)
-    module.verify(status)
-    assert status["schema_version"] == 2
-    assert status["policy"] == "kws-product-landing-status-v2"
-    assert "evidence" not in status and "research" not in status
-    assert status["assessment_scope"] == "repository-source-contract-only"
-    historical = status["historical_release_qualification"]
-    assert historical["scope"] == "frozen-model-release-only"
-    assert historical["synthetic_qualification_passed"] is True
-    assert historical["applies_to_current_source"] is False
-    shipping_path = ROOT / "configs/shipping.xiaowo.json"
-    shipping = json.loads(shipping_path.read_text(encoding="utf-8"))
-    assert historical["qualification"] == shipping["model"]["qualification"]
-    current = status["current_source"]
-    assert current["recalibration_required"] is True
-    assert current["recalibration_reason"] == shipping["threshold_calibration"]["recalibration_reason"]
-    assert current["contract_path"] == "configs/shipping.xiaowo.json"
-    assert current["contract_sha256"] == module.sha256(shipping_path)
-    dated = status["dated_regression_and_research"]
-    assert dated["scope"] == "retained-dated-observations-not-live-status"
-    snapshot = ROOT / dated["snapshot_path"]
-    assert dated["snapshot_sha256"] == module.sha256(snapshot)
-    assert snapshot.name == "CURRENT_STATUS_2026-10-09.md"
-    assert "2026-10-09T02:43:25Z" in snapshot.read_text(encoding="utf-8")
-    assert dated["current_research_entry"] == "research/README.md"
-    assert dated["current_admission_entry"].endswith("PLAN-SCHEMA.md#current-admission-checklist")
-    assert status["historical_research_closure"]["scope"] == "retained-closed-research-line-not-current-authorization"
-    assert status["control_plane"]["scope"] == "repository-file-presence-only"
-
-    def expect_error(call, text: str) -> None:
-        try:
-            call()
-        except ValueError as exc:
-            assert text in str(exc), str(exc)
-        else:
-            raise AssertionError(f"landing status accepted invalid claim: {text}")
-
-    # A source-contract pass must never imply current acoustic or live external
-    # qualification, even when the historical release qualification passed.
-    for path, value, message in (
-        (("historical_release_qualification", "synthetic_qualification_passed"), False, "historical synthetic"),
-        (("historical_release_qualification", "applies_to_current_source"), True, "current source"),
-        (("current_source", "synthetic_qualification_checked"), True, "acoustic evaluation"),
-        (("live_qualification_checked",), True, "live qualification"),
-        (("dated_regression_and_research", "live_status_checked"), True, "live status"),
-        (("external_qualification", "real_human_final_afe_passed"), True, "external qualification"),
-        (("external_qualification", "physical_target_board_passed"), True, "external qualification"),
-        (("product", "shipping_approved"), True, "shipping approval"),
-    ):
-        changed = copy.deepcopy(status)
-        target = changed
-        for key in path[:-1]:
-            target = target[key]
-        target[path[-1]] = value
-        expect_error(lambda: module.verify(changed), message)
-
-    with tempfile.TemporaryDirectory(prefix="landing-status-") as tmp:
-        root = pathlib.Path(tmp)
-        registry = pathlib.Path(status["model"]["git_registry_path"])
-        shutil.copytree(ROOT / registry, root / registry)
-        for relative in (
-            "configs/shipping.xiaowo.json",
-            "configs/training/kws-v2-efficient-encoder-closure-v1.json",
-            ".github/workflows/dataset-driven-iteration.yml",
-            ".github/workflows/real-human-qualification.yml",
-            "commercial/real-human-qualification.policy.json",
-            "commercial/target-qualification.policy.json",
-            dated["snapshot_path"], dated["current_research_entry"],
-            dated["current_admission_entry"].split("#", 1)[0],
-        ):
-            target = root / relative
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(ROOT / relative, target)
-        fixture_shipping = root / "configs/shipping.xiaowo.json"
-
-        def save_fixture(value: dict) -> None:
-            fixture_shipping.write_text(json.dumps(value), encoding="utf-8")
-
-        for invalid in (None, 0, "false"):
-            changed = copy.deepcopy(shipping)
-            changed["threshold_calibration"]["recalibration_required"] = invalid
-            save_fixture(changed)
-            expect_error(lambda: module.build_status(root), "explicitly declare recalibration_required")
-        changed = copy.deepcopy(shipping)
-        del changed["threshold_calibration"]["recalibration_required"]
-        save_fixture(changed)
-        expect_error(lambda: module.build_status(root), "explicitly declare recalibration_required")
-        changed = copy.deepcopy(shipping)
-        changed["shipping_approved"] = "false"
-        save_fixture(changed)
-        expect_error(lambda: module.build_status(root), "shipping_approved must be a boolean")
-        changed = copy.deepcopy(shipping)
-        changed["threshold_calibration"]["recalibration_required"] = False
-        changed["threshold_calibration"]["recalibration_reason"] = "invented fixture only"
-        save_fixture(changed)
-        projected = module.build_status(root)
-        module.verify(projected)
-        assert projected["current_source"]["recalibration_required"] is False
-        assert projected["current_source"]["recalibration_reason"] == "invented fixture only"
-        assert projected["current_source"]["synthetic_qualification_checked"] is False
-        assert projected["product"]["shipping_approved"] is False
-        save_fixture(shipping)
-        output = root / "output/status.json"
-        subprocess.run([sys.executable, "-B", str(ROOT / "tools/kws_landing_status.py"),
-                        "--root", str(root), "--verify", "--output", str(output)], check=True)
-        assert json.loads(output.read_text(encoding="utf-8")) == module.build_status(root)
-        (root / dated["snapshot_path"]).unlink()
-        expect_error(lambda: module.build_status(root), "status evidence/navigation missing")
-        shutil.copyfile(snapshot, root / dated["snapshot_path"])
-        asset = root / registry / "xiaowo-model.kwm"
-        asset.write_bytes(asset.read_bytes() + b"invented-corruption")
-        expect_error(lambda: module.build_status(root), "pinned asset digest mismatch")
+def check_research_comparator_status_contract() -> None:
+    # Current status is read-only research identity, not release eligibility.
+    import hashlib
+    baseline_path = ROOT / "configs/research-baseline.xiaowo.json"
+    baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+    assert baseline["schema"] == "kws-research-model-baseline-v1"
+    assert baseline["policy"] == "frozen-historical-research-comparator"
+    tag = baseline["model_tag"]
+    assert re.fullmatch(r"model-[0-9a-f]{12}", tag)
+    registry = ROOT / "models" / "registry" / tag
+    subprocess.run(
+        [sys.executable, "-B", str(ROOT / "tools/verify_model_registry.py"),
+         "--registry-dir", str(registry)],
+        check=True, capture_output=True, text=True,
+    )
+    record = json.loads((registry / "registry.json").read_text(encoding="utf-8"))
+    assert record["training"]["head_sha"] == baseline["training_source_sha"]
+    for name, key in (("xiaowo-model.kwm", "model_sha256"),
+                      ("xiaowo-keywords.kwk", "keyword_pack_sha256")):
+        assert hashlib.sha256((registry / name).read_bytes()).hexdigest() == baseline[key]
+    assert baseline["dataset_status"] == "exposed-historical-synthetic-diagnostic"
+    for key in ("actual_human_wav_evaluated", "independent_longstream_far_measured",
+                "ssc305_measured"):
+        assert baseline[key] is False, key
+    workflow = (ROOT / ".github/workflows/kws-landing-status.yml").read_text(encoding="utf-8")
+    require_all(workflow, ROOT / ".github/workflows/kws-landing-status.yml", (
+        "kws-research-comparator-status",
+        "configs/research-baseline.xiaowo.json",
+        "kws-research-model-baseline-v1",
+        "frozen-historical-research-comparator",
+        "tools/verify_model_registry.py",
+        "research_model_accepted", "independent_acoustic_evidence",
+    ))
+    assert "configs/shipping.xiaowo.json" not in workflow
+    assert "commercial/" not in workflow
 
 
 def check_current_status_docs() -> None:
@@ -248,7 +164,7 @@ def check_target_bundle_docs() -> None:
 def main() -> int:
     check_target_bundle_docs()
     check_navigation_indexes()
-    check_landing_status_contract()
+    check_research_comparator_status_contract()
     check_current_status_docs()
     docs = [
         ROOT / "README.md",

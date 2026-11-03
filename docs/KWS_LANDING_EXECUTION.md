@@ -5,7 +5,7 @@
 > 当前从[产品状态](KWS_LANDING_STATUS.md)、[研究入口](../research/README.md)及
 > [唯一准入清单](../research/d20-diagnostic-admission-v1/PLAN-SCHEMA.md#current-admission-checklist)
 > 开始；公开证据交付见[归档与恢复](../research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md)。
-> 产品机器权威仍为 `configs/shipping.xiaowo.json` 与 `commercial/*.policy.json`。
+> 本文历史使用过的产品发布配置不再是当前研究执行的入口。当前使用 `configs/research-baseline.xiaowo.json` 作固定研究模型比较器。
 
 ## 冻结基线与目标
 
@@ -69,7 +69,7 @@
 
 ## 连续性与收口
 
-- 本地检查（2026-09-26）：独立 `/tmp` CMake Release/strict 构建成功，5/5 CTest 通过；Python 3.12 下诊断、阶段进度、训练预检、事件评分、真人资格 fixture 和终态文档测试通过；`tools/kws_landing_status.py --verify` 与 `git diff --check` 通过。这些是源码/工具层证据，不包含本轮 PyTorch 精修复现或板端结果。
+- 本地检查（2026-09-26）：独立 `/tmp` CMake Release/strict 构建成功，5/5 CTest 通过；Python 3.12 下诊断、阶段进度、训练预检、事件评分、真人资格 fixture 和终态文档测试通过；`已退役的历史状态工具（不再执行）` 与 `git diff --check` 通过。这些是源码/工具层证据，不包含本轮 PyTorch 精修复现或板端结果。
 - `goal_statement`：获得可复核的两词产品放行，而非仅使一次合成训练运行变绿。
 - `completion_claim`：当前完成源码级诊断增强、产品评分边界和训练预检输入加固，并确认本轮精修的开发集门槛失败；具体算法机制、模型候选和产品放行均未完成。
 - `required_evidence`：阶段 A 的认证诊断、阶段 B 的配对开发集结果、阶段 C 的不可变模型与资格链、阶段 D/E 的受控现场收据。

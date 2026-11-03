@@ -1,4 +1,6 @@
-# KWS product landing status
+# KWS historical landing status
+
+> 这是历史产品落地记录，不再构成研究模型的发布资格判断。当前只读研究比较器为 `configs/research-baseline.xiaowo.json`，由 `.github/workflows/kws-landing-status.yml` 进行固定身份校验。
 
 ## Current model and engineering status
 
@@ -210,7 +212,7 @@ is changed by this status note.
 Run the existing source-contract report:
 
 ```bash
-python3 tools/kws_landing_status.py --verify
+# Historical tool retired; current checks run in .github/workflows/kws-landing-status.yml
 ```
 
 This command verifies the repository's pinned source contract and local model
