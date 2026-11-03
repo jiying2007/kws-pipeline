@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import pathlib
 import re
 import sys
@@ -79,6 +80,39 @@ def inspect_wav(path: pathlib.Path) -> tuple[int, float, str]:
     return frames, frames / SAMPLE_RATE_HZ, hashlib.sha256(pcm).hexdigest()
 
 
+def strict_manifest_json(raw: str, origin: pathlib.Path, line_no: int | None = None) -> object:
+    """Reject ambiguous JSON keys and non-finite values before reading lineage.
+
+    Both JSONL manifests and TSV lineage sidecars are source-of-truth inputs.
+    Python's default json.loads silently keeps the last duplicate key and
+    accepts NaN/Infinity, so their semantic identity could differ between
+    parsers even when the exact file SHA was recorded.
+    """
+    def unique(pairs: list[tuple[str, object]]) -> dict:
+        value: dict[str, object] = {}
+        for key, item in pairs:
+            if key in value:
+                raise ValueError("duplicate JSON key in dataset manifest")
+            value[key] = item
+        return value
+
+    def reject_constant(token: str) -> None:
+        raise ValueError("non-finite JSON value in dataset manifest")
+
+    def finite_float(token: str) -> float:
+        value = float(token)
+        if not math.isfinite(value):
+            raise ValueError("non-finite JSON value in dataset manifest")
+        return value
+
+    try:
+        return json.loads(raw, object_pairs_hook=unique,
+                          parse_constant=reject_constant, parse_float=finite_float)
+    except json.JSONDecodeError as exc:
+        where = f"{origin}:{line_no}" if line_no is not None else str(origin)
+        raise ValueError(f"{where}: invalid JSON") from exc
+
+
 def lineage_path(path: pathlib.Path) -> pathlib.Path:
     return pathlib.Path(str(path) + ".lineage.json")
 
@@ -109,7 +143,7 @@ def parse_tsv(path: pathlib.Path) -> list[dict]:
         targets.append([int(value) for value in target_text.split()])
     sidecar = lineage_path(path)
     if sidecar.exists():
-        payload = json.loads(sidecar.read_text(encoding="utf-8"))
+        payload = strict_manifest_json(sidecar.read_text(encoding="utf-8"), sidecar)
         if (not isinstance(payload, dict) or type(payload.get("schema_version")) is not int
                 or payload.get("schema_version") != 1
                 or payload.get("manifest_sha256") != sha256_file(path)):
@@ -164,14 +198,13 @@ def parse_record(row: dict, path: pathlib.Path, line_no: int) -> dict:
 
 def parse_jsonl(path: pathlib.Path) -> list[dict]:
     rows: list[dict] = []
-    for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        if not raw.strip() or raw.lstrip().startswith("#"):
-            continue
-        try:
-            row = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"{path}:{line_no}: invalid JSON: {exc}") from exc
-        rows.append(parse_record(row, path, line_no))
+    # Stream the file: do not hold a second whole JSONL text copy in memory.
+    with path.open("r", encoding="utf-8") as source:
+        for line_no, raw in enumerate(source, 1):
+            if not raw.strip() or raw.lstrip().startswith("#"):
+                continue
+            row = strict_manifest_json(raw, path, line_no)
+            rows.append(parse_record(row, path, line_no))
     return rows
 
 

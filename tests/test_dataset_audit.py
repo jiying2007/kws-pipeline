@@ -19,7 +19,7 @@ AUDITOR = ROOT / "training" / "audit_dataset.py"
 sys.path.insert(0, str(ROOT / "training"))
 from audit_dataset import (  # noqa: E402
     audit_splits, inspect_wav, lineage_path, sha256_file,
-    verify_manifest_lineage, write_lineage_sidecar,
+    verify_manifest_lineage, write_lineage_sidecar, parse_jsonl, parse_tsv,
 )
 
 
@@ -164,6 +164,55 @@ def test_bound_lineage_sidecars() -> None:
         rejected("source lineage is required")
         unknown = audit_splits(specs)
         assert unknown["identity_disjointness"]["source_pcm_sha256"] == "unknown"
+
+
+class StrictManifestJsonTests(unittest.TestCase):
+    """Ambiguous data-source JSON must fail before a WAV or training is read."""
+
+    def test_jsonl_duplicate_identity_is_never_last_key_wins(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "train.jsonl"
+            path.write_text(
+                '{"path":"candidate.wav","speaker_id":"train-person",'
+                '"speaker_id":"evaluation-person"}\n', encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "duplicate JSON key"):
+                parse_jsonl(path)
+
+    def test_jsonl_nested_duplicate_or_nonfinite_evidence_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "train.jsonl"
+            for unsafe in ('{"path":"candidate.wav","admission":{"approved":false,'
+                           '"approved":true}}\n',
+                           '{"path":"candidate.wav","admission":{"confidence":NaN}}\n',
+                           '{"path":"candidate.wav","admission":{"confidence":Infinity}}\n',
+                           '{"path":"candidate.wav","admission":{"confidence":1e309}}\n',
+                           '{"path":"candidate.wav","admission":{"confidence":-1e309}}\n'):
+                with self.subTest(unsafe=unsafe):
+                    path.write_text(unsafe, encoding="utf-8")
+                    with self.assertRaisesRegex(
+                            ValueError, "duplicate JSON key|non-finite JSON value"):
+                        parse_jsonl(path)
+
+    def test_tsv_sidecar_duplicate_or_nonfinite_evidence_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "train.tsv"
+            path.write_text("candidate.wav\t1 2\n", encoding="utf-8")
+            sidecar = lineage_path(path)
+            manifest_sha = sha256_file(path)
+            for unsafe in (
+                '{"schema_version":1,"schema_version":1,'
+                f'"manifest_sha256":"{manifest_sha}",'
+                '"rows":[{"path":"candidate.wav","target_ids":[1,2]}]}',
+                '{"schema_version":1,'
+                f'"manifest_sha256":"{manifest_sha}",'
+                '"rows":[{"path":"candidate.wav","target_ids":[1,2],'
+                '"admission":{"score":-Infinity}}]}',
+            ):
+                with self.subTest(unsafe=unsafe):
+                    sidecar.write_text(unsafe, encoding="utf-8")
+                    with self.assertRaisesRegex(
+                            ValueError, "duplicate JSON key|non-finite JSON value"):
+                        parse_tsv(path)
 
 
 class CrossFieldPCMTests(unittest.TestCase):
@@ -339,7 +388,7 @@ class SourceFamilyAliasTests(unittest.TestCase):
 def main() -> int:
     suite = unittest.TestSuite(
         unittest.defaultTestLoader.loadTestsFromTestCase(case)
-        for case in (CrossFieldPCMTests, SourceFamilyAliasTests)
+        for case in (CrossFieldPCMTests, SourceFamilyAliasTests, StrictManifestJsonTests)
     )
     if not unittest.TextTestRunner().run(suite).wasSuccessful():
         return 1
