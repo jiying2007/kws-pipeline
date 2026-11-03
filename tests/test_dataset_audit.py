@@ -184,7 +184,9 @@ class StrictManifestJsonTests(unittest.TestCase):
             for unsafe in ('{"path":"candidate.wav","admission":{"approved":false,'
                            '"approved":true}}\n',
                            '{"path":"candidate.wav","admission":{"confidence":NaN}}\n',
-                           '{"path":"candidate.wav","admission":{"confidence":Infinity}}\n'):
+                           '{"path":"candidate.wav","admission":{"confidence":Infinity}}\n',
+                           '{"path":"candidate.wav","admission":{"confidence":1e309}}\n',
+                           '{"path":"candidate.wav","admission":{"confidence":-1e309}}\n'):
                 with self.subTest(unsafe=unsafe):
                     path.write_text(unsafe, encoding="utf-8")
                     with self.assertRaisesRegex(
