@@ -114,9 +114,14 @@ def assess(plan: dict, policy: dict, expected_plan_sha256: str) -> dict:
          type(negative_bands) is dict and slices and negative_bands,
          "PHASE_A_COVERAGE_POLICY_MISSING")
     for field in ("speakers", "sessions_per_speaker", "expected_wakes_total",
-                  "expected_wakes_per_keyword", "negative_audio_hours"):
+                  "expected_wakes_per_keyword"):
         need(type(minimums.get(field)) is int and minimums[field] > 0,
              "PHASE_A_QUOTA_NOT_POSITIVE_INTEGER")
+    # Hours are continuous evidence. The frozen Phase-A policy expresses 24.0
+    # as JSON float; accept finite positive int/float, never bool/nonfinite.
+    hours = minimums.get("negative_audio_hours")
+    need(type(hours) in (int, float) and
+         0 < hours < float("inf"), "PHASE_A_NEGATIVE_HOURS_INVALID")
     for name, hours in negative_bands.items():
         need(type(name) is str and type(hours) in (int, float) and hours > 0,
              "INVALID_NEGATIVE_EXPOSURE_POLICY")
