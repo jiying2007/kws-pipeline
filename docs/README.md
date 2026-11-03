@@ -58,6 +58,7 @@ Current machine-readable product authority is `configs/shipping.xiaowo.json`. Th
 - [`KWS_LANDING_EXECUTION.md`](KWS_LANDING_EXECUTION.md) — historical staged training diagnosis, algorithm comparison and product-evidence closure
 - [`PRODUCT_MODEL_TRAINING.md`](PRODUCT_MODEL_TRAINING.md) — canonical governed model-training/preflight handoff, provenance and promotion boundaries
 - [`DATASET_ITERATION.md`](DATASET_ITERATION.md) — dataset-driven iteration for the registered deployable model without changing release authority
+- [`KWS_MULTILINGUAL_MODEL_TOURNAMENT.md`](KWS_MULTILINGUAL_MODEL_TOURNAMENT.md) — source-bound zh/en fixed-development, one-variable multiobjective model selection; no automatic release
 - [`DATA_EFFECTIVENESS_REDESIGN_2026-11-02.md`](DATA_EFFECTIVENESS_REDESIGN_2026-11-02.md) — goal-driven source/voice-clone/ASR/negative-mining redesign, with strict independent acceptance and no current training authority
 - [`KWS_DATA_BULK_EFFECT_BOUNDARY.md`](KWS_DATA_BULK_EFFECT_BOUNDARY.md) — canonical kws-data Qwen clone/three-ASR private effects imported as independent non-training diagnostic evidence
 - [`KWS_DATA_FEEDBACK_PRIORITIES.md`](KWS_DATA_FEEDBACK_PRIORITIES.md) — ranked, bounded next-source/negative/keyword feedback from private verified effects, never another automatic source or release authority
