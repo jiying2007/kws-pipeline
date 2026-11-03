@@ -441,9 +441,9 @@ jobs:
           python3 -B tools/test_inventory.py --root research/experiment_quality_guards/tests --workflow .github/workflows/ci.yml
       - name: Verify tracked worktree after Saved review and dataset quality guards
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Saved review and dataset quality guards"'
-      - name: Model promotion contract
+      - name: Research model provenance contract
         run: |
-          python3 tests/test_model_promotion.py
+          python3 tests/test_research_model_provenance.py
           python3 -S -B tools/checked_unittest.py --suite promotion-admission
           python3 -S -B -O tools/checked_unittest.py --suite promotion-admission
           python3 -S -B -OO tools/checked_unittest.py --suite promotion-admission
@@ -451,8 +451,8 @@ jobs:
           python3 -S -B -O tools/checked_unittest.py --suite promotion-source
           python3 -S -B -OO tools/checked_unittest.py --suite promotion-source
           python3 tests/test_feature_cache_contract.py
-      - name: Verify tracked worktree after Model promotion contract
-        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Model promotion contract"'
+      - name: Verify tracked worktree after research model provenance contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Research model provenance contract"'
       - name: Closed offline campaign capsule contracts
         run: |
           python3 -I -S -B tools/checked_unittest.py --suite campaign-capsule
