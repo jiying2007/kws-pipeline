@@ -43741,6 +43741,68 @@
           }
         }
       ]
+    },
+    {
+      "id": "matched-additive-data-pair-training-20261103",
+      "date": "2026-11-03",
+      "base_commit": "ab0f0c8a7884e1c62f87ff5d546f2da416d472e8",
+      "base_tree": "26a3432abf6d45ceffa18e4648c537b18abd6165",
+      "workflow_source_changed": false,
+      "scope": "Explicit additive-data paired research training mode using one architecture, matched initialization and optimizer steps, shared independent evaluation and existing admission.",
+      "rationale": "User requested eight-speaker Chinese small-batch research and paired training. Both training manifests pass original admission before model creation. Original labels retained, measured PCM and declared ancestor isolation validated across the union, inputs frozen and incomplete runs cannot claim success. 58 tests passed in normal/O/OO with independent review using fake runtime/admission and invented WAVs. No real corpus, weights, training, effect measurement or production qualification is claimed. Rebased on the merged research-only baseline work, preserving all prior workflow identities and maintenance history; no change to the independent owner PR705.",
+      "files": [
+        {
+          "path": "research/model_comparison/runner.py",
+          "before": {
+            "path": "research/model_comparison/runner.py",
+            "mode": "100644",
+            "bytes": 21686,
+            "sha256": "8a83bea1735937b6f26b00350bfc7258b31bc553a30753b4e80ee307b487b93d",
+            "git_blob_sha1": "3c8b41f945bae86334099960eaf835b3fbaab09d"
+          },
+          "after": {
+            "path": "research/model_comparison/runner.py",
+            "mode": "100644",
+            "bytes": 34322,
+            "sha256": "80a454a2960558d9c373b8e9e4ab5d90dec07bee3cbd4c71175be337363da5e2",
+            "git_blob_sha1": "f253bcf65871fe119f5bf496e0f55a90a260b24f"
+          }
+        },
+        {
+          "path": "tests/test_model_comparison.py",
+          "before": {
+            "path": "tests/test_model_comparison.py",
+            "mode": "100644",
+            "bytes": 21994,
+            "sha256": "6199ce6a9c50a2d012f438dd1da0f66d3949e07aec334c0c7ee8550d26d89722",
+            "git_blob_sha1": "8857467cef1f16d7a0e92e81dd67e35de78f5964"
+          },
+          "after": {
+            "path": "tests/test_model_comparison.py",
+            "mode": "100644",
+            "bytes": 35729,
+            "sha256": "0d97e97fbc964c4072a2414d897335298a9feef8b5347001c5a1c30e47ed9b45",
+            "git_blob_sha1": "41e9769288c147626f7680ca1d300de55e6a4524"
+          }
+        },
+        {
+          "path": "research/model_comparison/README.md",
+          "before": {
+            "path": "research/model_comparison/README.md",
+            "mode": "100644",
+            "bytes": 19346,
+            "sha256": "84f97ebbe1fc96150f977d96f1f7b9d37c6e8e70db7235b711615251511eb4c7",
+            "git_blob_sha1": "c36449c14728f74969a0e8b7a65c46bc7a5075dc"
+          },
+          "after": {
+            "path": "research/model_comparison/README.md",
+            "mode": "100644",
+            "bytes": 22972,
+            "sha256": "f78930bbd4243819312a39c2432d5e2d3c72016d54cc9f1e5403180f20aa7285",
+            "git_blob_sha1": "52cd8a3e67c6bd45c74cb8fd34d89a6735ef8fce"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

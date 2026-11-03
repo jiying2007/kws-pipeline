@@ -413,4 +413,266 @@ class StreamingHashTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 runner.sha(Path(tmp) / 'missing.bin')
 
+
+class DataPairTests(unittest.TestCase):
+    """Invented WAVs and fake tensor/optimizer; never imports Torch."""
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.rows = []
+        for i in range(7):
+            path = self.root / ('audio%d.wav' % i)
+            with wave.open(str(path), 'wb') as out:
+                out.setparams((1, 2, 16000, 0, 'NONE', 'not compressed'))
+                out.writeframes(struct.pack('<h', i + 1) * (16 + i))
+            self.rows.append({'path': path.name, 'speaker_id': 'speaker%d' % i,
+                              'session_id': 'session%d' % i, 'source_id': 'source%d' % i,
+                              'tokens': [1, 2]})
+        self.paths = {key: self.root / (key + '.jsonl')
+                      for key in ('control', 'treatment', 'calibration', 'selection')}
+        self.write_rows('control', self.rows[:2])
+        self.write_rows('treatment', self.rows[:5])
+        self.write_rows('calibration', self.rows[5:6])
+        self.write_rows('selection', self.rows[6:])
+        (self.root / 'tokens.json').write_text('{}')
+        self.config = {'schema': 'research-data-pair-v1', 'development_only': True,
+            'protected_evidence_used': False, 'synthetic_diagnostic_only': True,
+            'tokens': str(self.root / 'tokens.json'),
+            'train_manifests': {key: str(self.paths[key]) for key in ('control', 'treatment')},
+            'evaluation_manifests': {key: str(self.paths[key]) for key in ('calibration', 'selection')},
+            'spec': {'architecture': 'rnn64_control'}, 'optimizer_steps': 7, 'seed': 7,
+            'learning_rate': 0.001, 'max_training_seconds': 10}
+        self.config_path = self.root / 'config.json'
+        self.output = self.root / 'result'
+        self.admission_calls, self.step_counts, self.models = [], [], []
+        self.reject_treatment = False
+        self.mutate_on_step = None
+        self.init_drift = False
+
+    def write_rows(self, split, rows):
+        import json
+        self.paths[split].write_text(''.join(json.dumps(r) + '\n' for r in rows))
+
+    def inspector(self, path):
+        with wave.open(str(path), 'rb') as wav:
+            pcm = wav.readframes(wav.getnframes())
+        return {'pcm_sha256': hashlib.sha256(pcm).hexdigest(),
+                'file_sha256': runner.sha(path)}
+
+    def fake_admission(self, paths, tokens, diagnostic):
+        self.admission_calls.append((str(paths[0]), diagnostic))
+        if self.reject_treatment and paths[0] == self.paths['treatment']:
+            raise ValueError('TEST_ADMISSION_REJECTED')
+        return {'test_double': True, 'training_admitted': False}
+
+    def context(self):
+        from contextlib import ExitStack
+        import json
+        test = self
+        class Tensor:
+            dtype, shape = 'float32', (3,)
+            def __init__(self, raw=b'initial'):
+                self.raw = raw
+            def detach(self): return self
+            def cpu(self): return self
+            def contiguous(self): return self
+            def numpy(self): return self
+            def tobytes(self): return self.raw
+            def unsqueeze(self, dim): return self
+            def log_softmax(self, dim): return self
+            def numel(self): return 2
+            def backward(self): pass
+            def __float__(self): return 1.0
+        class Model:
+            def __init__(self):
+                self.index = len(test.models)
+                self.tensor = Tensor(b'different' if test.init_drift and self.index else b'initial')
+                test.models.append(self)
+            def state_dict(self): return {'weight': self.tensor}
+            def parameters(self): return []
+            def train(self): pass
+            def __call__(self, x): return Tensor()
+        class Optimizer:
+            def __init__(self, *args, **kwargs):
+                self.index = len(test.step_counts)
+                test.step_counts.append(0)
+            def zero_grad(self, **kwargs): pass
+            def step(self):
+                test.step_counts[self.index] += 1
+                if test.mutate_on_step:
+                    test.mutate_on_step()
+        class Manifest:
+            def __init__(self, paths, *args):
+                self.rows = [json.loads(l) for l in paths[0].read_text().splitlines() if l.strip()]
+                self.identity_rows = [
+                    {**test.inspector(paths[0].parent/r['path']),
+                     **{k: r[k] for k in ('speaker_id','session_id','source_id')}}
+                    for r in self.rows]
+            def __len__(self): return len(self.rows)
+            def __getitem__(self, index): return Tensor(), Tensor()
+        torch = SimpleNamespace(__version__='fake-not-torch', manual_seed=lambda seed: None,
+            optim=SimpleNamespace(Adam=Optimizer),
+            nn=SimpleNamespace(CTCLoss=lambda **kw: lambda *a: Tensor(),
+                               utils=SimpleNamespace(clip_grad_norm_=lambda *a: None)),
+            tensor=lambda x: Tensor(), isfinite=lambda x: True,
+            save=lambda value,path: Path(path).write_bytes(b'fake-checkpoint'))
+        rt = (torch, None, Manifest, None, 'fake-logmel', None, None)
+        stack = ExitStack()
+        stack.enter_context(patch.dict(sys.modules, {
+            'kws_vocab': SimpleNamespace(load_tokens=lambda p:{str(i):i for i in range(5)}),
+            'training_admission': SimpleNamespace(verify_training_manifests=self.fake_admission),
+            'corpus_identity': SimpleNamespace(canonical_audio_path=lambda row,path:row['path'],
+                                              inspect_pcm16_wav=self.inspector)}))
+        stack.enter_context(patch.object(runner, 'runtime', return_value=rt))
+        stack.enter_context(patch.object(runner, 'build', side_effect=lambda *a: Model()))
+        stack.enter_context(patch.object(runner, 'source_hashes', return_value={'fixture':'a'*64}))
+        return stack
+
+    def execute(self):
+        import json
+        self.config_path.write_text(json.dumps(self.config))
+        return runner.train_data(SimpleNamespace(config=self.config_path, repo=ROOT, output=self.output))
+
+    def test_success_actual_orchestration_two_sizes_same_steps(self):
+        with self.context():
+            receipt = self.execute()
+        self.assertEqual(self.step_counts, [7, 7])
+        self.assertEqual([p for p,d in self.admission_calls[:2]],
+                         [str(self.paths['control']), str(self.paths['treatment'])])
+        self.assertTrue(all(d is True for p,d in self.admission_calls))
+        a,b = receipt['arms']
+        self.assertEqual(a['initial_state_sha256'], b['initial_state_sha256'])
+        self.assertNotEqual(a['schedule_sha256'], b['schedule_sha256'])
+        self.assertEqual(receipt['status'], 'TRAINED_PAIR')
+        self.assertFalse(receipt['effect_measured'])
+        self.assertFalse(receipt['shipping_approved'])
+        self.assertTrue((self.output/'data-pair-training-receipt.json').exists())
+
+    def test_second_admission_refusal_before_any_model(self):
+        self.reject_treatment = True
+        with self.context(), self.assertRaisesRegex(ValueError, 'TEST_ADMISSION_REJECTED'):
+            self.execute()
+        self.assertEqual(self.models, [])
+        self.assertEqual(self.step_counts, [])
+        self.assertFalse(self.output.exists())
+
+    def test_changed_control_label_rejected(self):
+        changed = copy.deepcopy(self.rows[:5])
+        changed[0]['tokens'] = [3]
+        self.write_rows('treatment', changed)
+        with self.context(), self.assertRaisesRegex(ValueError, 'CONTROL_ROWS_CHANGED'):
+            self.execute()
+        self.assertEqual(self.models, [])
+
+    def test_duplicate_is_not_data_addition(self):
+        self.write_rows('treatment', self.rows[:2] + self.rows[:1])
+        with self.context(), self.assertRaisesRegex(ValueError, 'NO_UNIQUE_ADDITION'):
+            self.execute()
+
+    def test_common_eval_only_and_no_architecture_factor(self):
+        for key, value in [('specs', {'control':{}, 'treatment':{}}),
+                           ('evaluation_manifests', {'control':{}, 'treatment':{}})]:
+            config = copy.deepcopy(self.config); config[key] = value
+            with self.assertRaises(ValueError):
+                runner.data_pair_config(config)
+        config = copy.deepcopy(self.config); config['spec']['architecture'] = 'other'
+        with self.assertRaisesRegex(ValueError, 'SINGLE_RNN64_SPEC'):
+            runner.data_pair_config(config)
+
+    def test_train_and_eval_alias_rejected(self):
+        self.config['evaluation_manifests']['selection'] = self.config['evaluation_manifests']['calibration']
+        with self.assertRaisesRegex(ValueError, 'INPUT_ALIAS'):
+            runner.data_pair_config(self.config)
+
+    def test_real_inventory_declared_parent_leakage(self):
+        changed = copy.deepcopy(self.rows[:5])
+        changed[4]['parent_source_identity_kind'] = 'file-sha256'
+        changed[4]['parent_source_sha256'] = runner.sha(self.root/self.rows[6]['path'])
+        self.write_rows('treatment', changed)
+        with self.context(), self.assertRaisesRegex(ValueError, 'cross-split leakage'):
+            self.execute()
+        self.assertEqual(self.models, [])
+
+    def test_parent_kind_missing_or_wrong_rejected(self):
+        for kind in (None, 'pcm-sha256', 'unknown'):
+            row = {'parent_source_sha256': 'a'*64}
+            if kind is not None: row['parent_source_identity_kind'] = kind
+            with self.assertRaisesRegex(ValueError, 'PARENT_IDENTITY_KIND'):
+                runner.data_pair_parent(row)
+        self.assertEqual(runner.data_pair_parent({'path':'x'}), {'path':'x'})
+        with self.assertRaisesRegex(ValueError, 'PARENT_IDENTITY_KIND'):
+            runner.data_pair_parent({'parent_source_sha256': None})
+
+    def test_union_connected_component_rejected(self):
+        # Pure union rejection, not a claim that both partial fixture
+        # inventories individually satisfy all three required splits.
+        def row(split, who, pcm, links=()):
+            return {'split':split, 'speaker_id':who, 'session_id':who,
+                    'source_id':who, 'pcm_sha256':pcm*64, 'lineage_links':list(links)}
+        cal=row('calibration','cal','c'); sel=row('selection','sel','d')
+        atrain=row('train','a','a',[{'source_audio_sha256':'e'*64}])
+        btrain=row('train','b','b',[{'source_audio_sha256':'e'*64}, {'source_id':'sel'}])
+        details={'control':{'train_rows':[{'path':'a'}], 'inventory':[atrain,cal,sel]},
+                 'treatment':{'train_rows':[{'path':'a'},{'path':'b'}], 'inventory':[btrain]}}
+        with self.assertRaisesRegex(ValueError, 'cross-split leakage'):
+            runner.validate_data_pair_inventories(details)
+
+    def test_initial_state_drift_rejected(self):
+        self.init_drift=True
+        with self.context(), self.assertRaisesRegex(ValueError, 'INITIAL_STATE_DRIFT'):
+            self.execute()
+        self.assertEqual(self.step_counts, [7])
+        self.assertFalse((self.output/'data-pair-training-receipt.json').exists())
+
+    def test_config_drift_rejected(self):
+        self.mutate_on_step=lambda: self.config_path.write_text('{}')
+        with self.context(), self.assertRaisesRegex(ValueError, 'INPUT_DRIFT'):
+            self.execute()
+        self.assertFalse((self.output/'data-pair-training-receipt.json').exists())
+
+    def test_input_audio_drift_rejected(self):
+        audio = self.root/self.rows[0]['path']
+        original = audio.read_bytes()
+        # Keep the RIFF envelope valid; change one PCM byte deterministically.
+        changed = original[:-1] + bytes([original[-1] ^ 1])
+        self.mutate_on_step=lambda: audio.write_bytes(changed)
+        with self.context(), self.assertRaisesRegex(ValueError, 'DATA_PAIR_AUDIO_DRIFT'):
+            self.execute()
+        self.assertFalse((self.output/'data-pair-training-receipt.json').exists())
+
+    def test_timeout_is_incomplete_not_success(self):
+        with self.context(), patch.object(runner.time, 'monotonic', side_effect=[0, 11, 12]), \
+                self.assertRaisesRegex(ValueError, 'DATA_PAIR_INCOMPLETE'):
+            self.execute()
+        import json
+        receipt=json.loads((self.output/'data-pair-training-receipt.json').read_text())
+        self.assertEqual(receipt['status'], 'INCOMPLETE_PAIR')
+        self.assertEqual(receipt['arms'][0]['optimizer_steps'], 0)
+        self.assertEqual(len(self.models), 1)
+
+    def test_fixed_step_schedule_bounds_and_repeatability(self):
+        self.assertEqual(len(list(runner.fixed_step_order(2,7,7))),7)
+        self.assertEqual(list(runner.fixed_step_order(5,7,7)),list(runner.fixed_step_order(5,7,7)))
+        for size,steps,seed in [(0,7,7),(2,True,7),(2,7,-1)]:
+            with self.assertRaises(ValueError): list(runner.fixed_step_order(size,steps,seed))
+
+    def test_strict_json_and_insufficient_steps(self):
+        for raw in ('{"a":1,"a":2}', '{"x":NaN}', '{"x":1e999}'):
+            with self.assertRaises(ValueError): runner.data_pair_json(raw)
+        self.config['optimizer_steps'] = 4
+        with self.context(), self.assertRaisesRegex(ValueError, 'STEPS_MUST_COVER_TREATMENT'):
+            self.execute()
+        self.assertEqual(self.models, [])
+
+    def test_added_relabelled_same_pcm_rejected(self):
+        changed = copy.deepcopy(self.rows[:2])
+        extra = dict(self.rows[0]); extra['tokens'] = [3]
+        changed.append(extra)
+        self.write_rows('treatment', changed)
+        with self.context(), self.assertRaisesRegex(ValueError, 'DUPLICATE_TRAIN_PCM'):
+            self.execute()
+        self.assertEqual(self.models, [])
+
+
 if __name__=='__main__':unittest.main()
