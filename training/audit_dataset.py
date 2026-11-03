@@ -198,11 +198,13 @@ def parse_record(row: dict, path: pathlib.Path, line_no: int) -> dict:
 
 def parse_jsonl(path: pathlib.Path) -> list[dict]:
     rows: list[dict] = []
-    for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        if not raw.strip() or raw.lstrip().startswith("#"):
-            continue
-        row = strict_manifest_json(raw, path, line_no)
-        rows.append(parse_record(row, path, line_no))
+    # Stream the file: do not hold a second whole JSONL text copy in memory.
+    with path.open("r", encoding="utf-8") as source:
+        for line_no, raw in enumerate(source, 1):
+            if not raw.strip() or raw.lstrip().startswith("#"):
+                continue
+            row = strict_manifest_json(raw, path, line_no)
+            rows.append(parse_record(row, path, line_no))
     return rows
 
 
