@@ -28,6 +28,8 @@ confidence bounds; rejecting everything still fails recall when positives exist.
 
 So this lane does not judge. It **measures**, in a form that can be compared.
 
+After producing genuine immutable v4 scorecards under one frozen development dataset, use [the multilingual model tournament](KWS_MULTILINGUAL_MODEL_TOURNAMENT.md) to automatically reject comparable candidates with worse FAR/FRR confidence or excessive latency/resources. This is research-only, never independent real-human/SSC305 release authority.
+
 ## The two controlled variables
 
 Every run declares exactly two things and which of them is under test:

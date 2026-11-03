@@ -907,6 +907,13 @@ jobs:
         run: python3 tests/test_dataset_iteration.py
       - name: Verify tracked worktree after Dataset iteration contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Dataset iteration contract"'
+      - name: Multilingual model tournament source contracts
+        run: |
+          python3 -S -B tests/test_multilingual_kws_tournament.py
+          python3 -S -B -O tests/test_multilingual_kws_tournament.py
+          python3 -S -B -OO tests/test_multilingual_kws_tournament.py
+      - name: Verify tracked worktree after multilingual tournament source contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Multilingual tournament source contracts"'
       - name: Product training data contract
         run: |
           python3 tests/test_product_training_entry_contract.py

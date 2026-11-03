@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 67992,
-      "sha256": "4c9581b3b6a24698e31cdaa7e191016a1c65f6a62576ccf75ee82f9dd1e69feb",
-      "git_blob_sha1": "a1f288293c3be5ab0b9677d2de1cf484fa06f779"
+      "bytes": 68457,
+      "sha256": "48e9a2a9c00ae0bb4be6a4c1208618a80222c87c495b9f495f841d870e5cf471",
+      "git_blob_sha1": "0f907cee7f321cde42f645ea8cb26bcd34311808"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -43621,6 +43621,34 @@
             "bytes": 64717,
             "sha256": "6af9c7c3c4dcb3ed0a069596abe443d98bc83054f6381c0e8ade7fedcf2e24f9",
             "git_blob_sha1": "0066e5b9d1c9a810f8eb8ab86a478a7ba7c82b1c"
+          }
+        }
+      ]
+    },
+    {
+      "id": "multilingual-tournament-exact-ci-registration-20261103",
+      "date": "2026-11-03",
+      "base_commit": "b02edb7c1cc26c65a6e291f1e7661f44724133fd",
+      "base_tree": "1b5aec5b753d03319d854e4cb0f6d8252ca972db",
+      "workflow_source_changed": true,
+      "scope": "Source-bound bilingual development tournament regression suite now explicitly invoked in normal/-O/-OO CI; preserve existing dataset iteration 36 checks and the public source-only no-model qualification boundary.",
+      "rationale": "Initial exact-head CI showed the standalone tournament was invoked only indirectly, defeating the official test inventory. The repaired CI declares it as a direct executable command, keeps tracked-tree guard, and does not change production runtime, model weights, scientific result, original 718 historical files or sealed approval.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 67992,
+            "sha256": "4c9581b3b6a24698e31cdaa7e191016a1c65f6a62576ccf75ee82f9dd1e69feb",
+            "git_blob_sha1": "a1f288293c3be5ab0b9677d2de1cf484fa06f779"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 68457,
+            "sha256": "48e9a2a9c00ae0bb4be6a4c1208618a80222c87c495b9f495f841d870e5cf471",
+            "git_blob_sha1": "0f907cee7f321cde42f645ea8cb26bcd34311808"
           }
         }
       ]

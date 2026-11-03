@@ -106,6 +106,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`build_decoder_boundary_references.py`](build_decoder_boundary_references.py)
 - [`build_training_diagnostics.py`](build_training_diagnostics.py)
 - [`compare_dataset_iterations.py`](compare_dataset_iterations.py)
+- [`select_multilingual_kws_models.py`](select_multilingual_kws_models.py) — Rank only paired same-corpus zh/en development KWS model results by FAR/FRR confidence and CPU/RSS/latency Pareto, never shipping. [Model tournament](../docs/KWS_MULTILINGUAL_MODEL_TOURNAMENT.md).
 - [`diagnose_acoustic_alignment.py`](diagnose_acoustic_alignment.py)
 - [`diagnose_acoustic_boundary_segmentation.py`](diagnose_acoustic_boundary_segmentation.py)
 - [`diagnose_boundary_separability.py`](diagnose_boundary_separability.py)
