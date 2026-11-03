@@ -525,7 +525,7 @@ def main() -> int:
         cohort_paths[2].write_text(json.dumps(duplicate) + "\n", encoding="utf-8")
         run(*args, expect=2)
 
-    print("test_target_shipping_contract: ok")
+    print("test_target_research_measurement_contract: ok")
     return 0
 
 
