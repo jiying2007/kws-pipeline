@@ -428,7 +428,7 @@ class AuthorizedCloningTests(unittest.TestCase):
                             "max_retries": 0, "max_paid_usd": 0},
                 "source_rights_authenticated": False,
                 "actual_spoken_labels_verified": False, "training_admitted": False,
-                "qualification_allowed": False, "shipping_approved": False}
+                "qualification_allowed": False}
         dump(root / "plan-lock.json", {"schema": "kws-bulk-clone-execution-lock-v1",
             "plan_sha256": bulk_boundary.canonical_sha(plan),
             "model_id": bulk_boundary.MODEL, "training_admitted": False})
@@ -461,8 +461,7 @@ class AuthorizedCloningTests(unittest.TestCase):
                 "audio": {"wav_sha256": meta["file_sha256"],
                           "pcm_sha256": meta["pcm_sha256"], "audio_frames": meta["frames"],
                           "wav_bytes": wav.stat().st_size},
-                "training_admitted": False, "qualification_allowed": False,
-                "shipping_approved": False})
+                "training_admitted": False, "qualification_allowed": False})
             rows.append({"cell_id": cell["cell_id"],
                          "reference_id": cell["reference_id"],
                          "source_family_id": cell["source_family_id"],
@@ -475,8 +474,7 @@ class AuthorizedCloningTests(unittest.TestCase):
                   "adapter_lock_sha256": "a" * 64, "rows": rows,
                   "counts": {status: 1 for status in statuses},
                   "human_gold": False, "rights_authenticated": False,
-                  "training_admitted": False, "qualification_allowed": False,
-                  "shipping_approved": False}
+                  "training_admitted": False, "qualification_allowed": False}
         return plan, screen, root
 
     def test_bulk_effect_bridge_measures_real_pcm_and_actual_data_gaps(self) -> None:
@@ -491,7 +489,7 @@ class AuthorizedCloningTests(unittest.TestCase):
         self.assertIn("HARD_NEGATIVE_WAKE_CONFUSION_NEEDS_DEVELOPMENT_REVIEW", report["gaps"])
         self.assertFalse(report["training_admitted"])
         self.assertFalse(report["asr_source_authenticated"])
-        self.assertFalse(report["shipping_approved"])
+        self.assertNotIn("shipping_approved", report)
         self.assertTrue(all(row["generated_audio"]["pcm_sha256"] for row in report["rows"]))
         plan_path, screen_path = self.root / "bulk-plan.json", self.root / "bulk-screen.json"
         dump(plan_path, plan)
@@ -543,6 +541,21 @@ class AuthorizedCloningTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "UNREPORTED_GENERATED_WAV"):
             bulk_boundary.measure(plan, screen, root)
         plan, screen, root = self.make_bulk_data_fixture()
+        plan["shipping_approved"] = False
+        with self.assertRaisesRegex(ValueError, "UNTRUSTED_BULK_PLAN"):
+            bulk_boundary.measure(plan, screen, root)
+        plan, screen, root = self.make_bulk_data_fixture()
+        screen["shipping_approved"] = False
+        with self.assertRaisesRegex(ValueError, "UNTRUSTED_BULK_SCREEN"):
+            bulk_boundary.measure(plan, screen, root)
+        plan, screen, root = self.make_bulk_data_fixture()
+        completed = root / "cells" / "bulk-a111" / "completed.json"
+        receipt = json.loads(completed.read_text(encoding="utf-8"))
+        receipt["shipping_approved"] = False
+        dump(completed, receipt)
+        with self.assertRaisesRegex(ValueError, "GENERATION_RECEIPT_DRIFT"):
+            bulk_boundary.measure(plan, screen, root)
+        plan, screen, root = self.make_bulk_data_fixture()
         screen["training_admitted"] = True
         with self.assertRaisesRegex(ValueError, "UNTRUSTED_BULK_SCREEN"):
             bulk_boundary.measure(plan, screen, root)
@@ -587,7 +600,7 @@ class AuthorizedCloningTests(unittest.TestCase):
         self.assertIn("QUARANTINE_POSSIBLE_WAKE_IN_NEGATIVE", codes)
         self.assertIn("NO_MACHINE_SCREENED_KEYWORD_POSITIVE", codes)
         self.assertIn("VERIFY_POSITIVE_SOURCE_LABELS", codes)
-        self.assertIn("EXTERNAL_PRODUCT_DATA_AND_AUTHORITY_MISSING", codes)
+        self.assertIn("INDEPENDENT_RESEARCH_EVIDENCE_MISSING", codes)
         self.assertEqual(result["source_families_declared"], 1)
         self.assertFalse(result["next_campaign_authorized"])
         self.assertFalse(result["training_admitted"])
@@ -628,7 +641,7 @@ class AuthorizedCloningTests(unittest.TestCase):
         self.assertEqual(output.stat().st_mode & 0o777, 0o600)
         rows = json.loads(output.read_text(encoding="utf-8"))
         self.assertEqual(rows["input_effect_sha256"], feedback.canonical_sha(report))
-        self.assertFalse(rows["shipping_approved"])
+        self.assertNotIn("shipping_approved", rows)
         with self.assertRaises(FileExistsError):
             feedback.main(["--effect", str(source), "--output", str(output)])
         with self.assertRaisesRegex(ValueError, "PRIVATE_OUTPUT_ONLY"):

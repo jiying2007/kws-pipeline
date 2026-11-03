@@ -63,7 +63,7 @@ Every action contains \`new_model_or_generator_calls_authorized=0\` and both
 plan has \`next_campaign_authorized=false\`,
 \`source_rights_authenticated=false\`,
 \`asr_source_authenticated=false\`,
-\`human_gold=false\`, \`shipping_approved=false\`.
+\`human_gold=false\`. Research feedback rejects legacy publication-approval fields.
 
 The feedback can inform the next independently authorized bounded
 \`kws-data\` campaign (after acquiring legitimate voice rights and pinned

@@ -89,7 +89,7 @@ silently recoded into a correct hard negative.
   real-human/continuous/SSC305 evidence. Every report explicitly has
   `source_rights_authenticated=false`,
   `asr_source_authenticated=false`, `training_admitted=false`,
-  `qualification_allowed=false`, `shipping_approved=false`.
+  `qualification_allowed=false`. Publication-approval fields are absent from research receipts.
 
 The fixed 16-prompt challenge taxonomy is a derived **analytics mapping**,
 not a change to `kws-data` model input or its historical byte identities.
