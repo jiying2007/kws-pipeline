@@ -173,6 +173,7 @@ def test_phase_a_field_plan_preflight() -> None:
                        ("playback", 4.4), ("robot_motion", 4.4)):
         assert capture["requested_negative_hours_by_scene"][tag] == value
     assert len({x["request_id"] for x in capture["requests"]}) == 1600
+    assert capture["capture_requests_sha256"] == preflight.canonical_sha(capture["requests"])
     assert all(x["qualification_allowed"] is False and
                x["actual_acoustic_tags_verified"] is False and
                x["training_admitted"] is False for x in capture["requests"])
