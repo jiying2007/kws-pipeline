@@ -1169,7 +1169,7 @@ def main() -> int:
             check=False, capture_output=True, text=True,
             timeout=30,
         )
-        if check.returncode != 0 or "Ran 11 tests" not in check.stderr:
+        if check.returncode != 0 or "Ran 12 tests" not in check.stderr:
             print("multilingual tournament source contract failed",
                   optimization, check.stdout, check.stderr, file=sys.stderr)
             return 1
