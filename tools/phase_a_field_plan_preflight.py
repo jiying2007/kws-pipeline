@@ -287,12 +287,14 @@ def assess_many(plans: list[dict], policy: dict, expected_hashes: list[str]) -> 
         assess(plan, policy, expected)  # original exact source plan, no trust upgrades
     combined = dict(plans[0])
     combined["participants"] = sum(plan["participants"] for plan in plans)
-    combined["slots"] = [row for plan in plans for row in plan["slots"]]
+    # Independent shard invocation order is not a new corpus identity.
+    combined["slots"] = sorted((row for plan in plans for row in plan["slots"]),
+                               key=lambda row: row["slot_id"])
     result = assess(combined, policy, canonical_sha(combined))
     # All source references are the separately frozen source hashes. The
     # aggregate digest is a derived comparison key, never source attestation.
     result["source_shard_count"] = len(plans)
-    result["source_shard_plan_sha256s"] = list(expected_hashes)
+    result["source_shard_plan_sha256s"] = sorted(expected_hashes)
     result["aggregate_source_identity_authenticated"] = False
     return result
 
