@@ -194,7 +194,7 @@ class StrictManifestJsonTests(unittest.TestCase):
     def test_tsv_sidecar_duplicate_or_nonfinite_evidence_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = pathlib.Path(tmp) / "train.tsv"
-            path.write_text("candidate.wav\\t1 2\\n", encoding="utf-8")
+            path.write_text("candidate.wav\t1 2\n", encoding="utf-8")
             sidecar = lineage_path(path)
             manifest_sha = sha256_file(path)
             for unsafe in (
