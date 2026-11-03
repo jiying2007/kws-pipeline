@@ -166,6 +166,53 @@ def test_bound_lineage_sidecars() -> None:
         assert unknown["identity_disjointness"]["source_pcm_sha256"] == "unknown"
 
 
+class StrictManifestJsonTests(unittest.TestCase):
+    """Ambiguous data-source JSON must fail before a WAV or training is read."""
+
+    def test_jsonl_duplicate_identity_is_never_last_key_wins(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "train.jsonl"
+            path.write_text(
+                '{"path":"candidate.wav","speaker_id":"train-person",'
+                '"speaker_id":"evaluation-person"}\n', encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "duplicate JSON key"):
+                parse_jsonl(path)
+
+    def test_jsonl_nested_duplicate_or_nonfinite_evidence_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "train.jsonl"
+            for unsafe in ('{"path":"candidate.wav","admission":{"approved":false,'
+                           '"approved":true}}\n',
+                           '{"path":"candidate.wav","admission":{"confidence":NaN}}\n',
+                           '{"path":"candidate.wav","admission":{"confidence":Infinity}}\n'):
+                with self.subTest(unsafe=unsafe):
+                    path.write_text(unsafe, encoding="utf-8")
+                    with self.assertRaisesRegex(
+                            ValueError, "duplicate JSON key|non-finite JSON value"):
+                        parse_jsonl(path)
+
+    def test_tsv_sidecar_duplicate_or_nonfinite_evidence_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "train.tsv"
+            path.write_text("candidate.wav\\t1 2\\n", encoding="utf-8")
+            sidecar = lineage_path(path)
+            manifest_sha = sha256_file(path)
+            for unsafe in (
+                '{"schema_version":1,"schema_version":1,'
+                f'"manifest_sha256":"{manifest_sha}",'
+                '"rows":[{"path":"candidate.wav","target_ids":[1,2]}]}',
+                '{"schema_version":1,'
+                f'"manifest_sha256":"{manifest_sha}",'
+                '"rows":[{"path":"candidate.wav","target_ids":[1,2],'
+                '"admission":{"score":-Infinity}}]}',
+            ):
+                with self.subTest(unsafe=unsafe):
+                    sidecar.write_text(unsafe, encoding="utf-8")
+                    with self.assertRaisesRegex(
+                            ValueError, "duplicate JSON key|non-finite JSON value"):
+                        parse_tsv(path)
+
+
 class CrossFieldPCMTests(unittest.TestCase):
     """Synthetic WAVs only; assertions remain active under -O and -OO."""
 
