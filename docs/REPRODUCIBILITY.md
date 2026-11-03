@@ -8,27 +8,23 @@
 
 Deterministic tar metadata alone satisfies none of the compiled-binary claims. Release documentation must use the strongest claim actually proved by the current gates.
 
-## Deployment runtime source equivalence
+## Historical deployment runtime source equivalence (retired publication gate)
 
-The commercial-candidate publication gate compares the qualified model's exact
-training commit with the candidate commit across `CMakeLists.txt`, `cmake/`,
-`include/`, `src/`, `configs/parameter-contract.json`, and
-`tools/gen_parameter_limits.py`. The last two are configure-time inputs to the
-private `kws_parameter_limits.h`; changing either can change compiled decoder or
-frontend behavior even when every C/CMake file is unchanged. Differences,
-including deletions and renames, reject publication. Documentation-only changes
-outside this set can pass. The manifest's `runtime_equivalence_paths` comes from
-the exact path array successfully checked by the gate.
+The earlier commercial publication gate compared a historical model training
+commit against its candidate runtime tree, including `CMakeLists.txt`,
+`cmake/`, `include/`, `src/`, `configs/parameter-contract.json` and
+`tools/gen_parameter_limits.py`. The last two can affect generated
+`kws_parameter_limits.h` even when C code is unchanged. Historical reports,
+source commits and negative cases remain in Git history.
 
-This is repository runtime-input equality, not compiler/environment or binary
-identity, and is not a fresh acoustic qualification. CMake source/configuration
-identity and installed-SDK byte comparison retain their separate roles. Hosted
-evaluation tools are not installed into the core SDK; their runners and model/
-keyword-pack bytes remain separately bound by the qualification evidence. New
-core build inputs must extend this gate and its offline tests in
-`tests/test_release_workflow_contract.py`. Real-human final-AFE, physical-board,
-source provenance, and explicit shipping-approval gates remain required.
-
+This is useful *research provenance guidance*, not current admission authority:
+new KWS experiments must pin their actual source, configuration, generator,
+training data and model/keyword assets, then measure any changed runtime
+independently. Source-path equivalence alone never establishes matching
+numerical behavior, acoustics or target-board performance. The former
+`test_release_workflow_contract.py` was tied to the now-deleted deployment
+publishing script; active CI retains independent source/config digests,
+corpus identity, runtime regression and reproducibility tests.
 
 ## Runtime build configuration identity
 
