@@ -15598,7 +15598,8 @@
     ".github/workflows/qwen-nonclone-pilot-20261104-v1.yml",
     ".github/workflows/qwen-nonclone-asr-20261104-v1.yml",
     ".github/workflows/qwen-nonclone64-20261104-v1.yml",
-    ".github/workflows/native-prepare-20261104-v1.yml"
+    ".github/workflows/native-prepare-20261104-v1.yml",
+    ".github/workflows/runner-storage-20261104-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -44761,6 +44762,70 @@
           "git_blob_sha1": "f1696fe338532a86aa66ec2f7ba33d6f7146f893"
         }
       ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "runner-storage-20261104-v1",
+      "source_commit": "d92600fec93d072388df766c3169b6a42eb847e4",
+      "workflow_source_changed": true,
+      "scope": "One independent first-create-only five-minute read-only hosted filesystem aggregate measurement after the disk guard stopped native preparation. Fixed root/workspace/docker targets; no model, download, install, deletion, arbitrary path scan, threshold change, or consumed experiment retry. Fresh runner is not historical free-space evidence.",
+      "files": [
+        {
+          "path": ".github/workflows/runner-storage-20261104-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/runner-storage-20261104-v1.yml",
+            "mode": "100644",
+            "bytes": 1425,
+            "sha256": "51b6839b29f74d19898dcd2216d116ec81d0b6cb644588549174eea166402dfd",
+            "git_blob_sha1": "d9c26a85ced91a3e7cb831c182235b7279355426"
+          }
+        }
+      ],
+      "source_files": [
+        {
+          "path": "research/runner-storage-20261104/README.md",
+          "mode": "100644",
+          "bytes": 3952,
+          "sha256": "487dfbc29e8cca63566e8eeb193b3ac7f3a1f4a282c7466673a48b6aab59dcff",
+          "git_blob_sha1": "56ca215f9d4c9edf40df6cec0edc97f031fdfabf"
+        },
+        {
+          "path": "research/runner-storage-20261104/collect_storage.py",
+          "mode": "100644",
+          "bytes": 10099,
+          "sha256": "15454d55ebfa50ba899d1e3f6a3459becc20ef2d769c6890932e0b8dbc20561a",
+          "git_blob_sha1": "85f8350dee90a71ea256cfab47bf090430dab428"
+        },
+        {
+          "path": "research/runner-storage-20261104/source-lock.json",
+          "mode": "100644",
+          "bytes": 602,
+          "sha256": "e7764d563482183b33d495ba97379ee8d3fe59b3da0b15fb20d6d89b4e7db014",
+          "git_blob_sha1": "0f97403f53efc048144e421d0d56d685312ac0f5"
+        },
+        {
+          "path": "research/runner-storage-20261104/test_storage.py",
+          "mode": "100644",
+          "bytes": 22392,
+          "sha256": "c4a592e2140fb60a43e85a2e6c80f668b7730e33105e3585eb2de36442189278",
+          "git_blob_sha1": "a3a13d6035bc452e6a962241b418d5777754dbd8"
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "mode": "100644",
+          "bytes": 20250,
+          "sha256": "4abb3f0c632756f64fd88f96438e1dd7cdea09de6283849d9000c35fc7938520",
+          "git_blob_sha1": "2f94ccde4d88f467da3f84d6ac6eda712cab3f45"
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "mode": "100644",
+          "bytes": 69184,
+          "sha256": "c9bbb181f048b10a35271e7abe144dd54edf9ed5cc18f9f3f2bd7b1ba89d3ecc",
+          "git_blob_sha1": "2e9596b411aa1371bcecd7eb45755d99e2473af4"
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -44889,6 +44954,13 @@
       "bytes": 1554,
       "sha256": "aa89ee52cc7154b23c3bc17bd5341e845b789ba45cb5a0c334db004ec21b803a",
       "git_blob_sha1": "016b3eed711aea524990c955ccf8a924388bd38f"
+    },
+    {
+      "path": ".github/workflows/runner-storage-20261104-v1.yml",
+      "mode": "100644",
+      "bytes": 1425,
+      "sha256": "51b6839b29f74d19898dcd2216d116ec81d0b6cb644588549174eea166402dfd",
+      "git_blob_sha1": "d9c26a85ced91a3e7cb831c182235b7279355426"
     }
   ],
   "current_source_revision": {
