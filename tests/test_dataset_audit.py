@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import importlib.util
 import pathlib
@@ -10,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import wave
 
 from qualification_fixture import write_wav
@@ -385,10 +387,67 @@ class SourceFamilyAliasTests(unittest.TestCase):
 
 
 
+class StreamingWavTests(unittest.TestCase):
+    def test_pcm_hash_is_chunked_with_exact_remainder(self):
+        from corpus_identity import PCM_HASH_CHUNK_FRAMES
+        frames = PCM_HASH_CHUNK_FRAMES * 2 + 17
+        pcm = (b"\x01\x00\xff\x7f" * ((frames + 1) // 2))[:frames * 2]
+        with tempfile.TemporaryDirectory() as td:
+            path = pathlib.Path(td) / "long.wav"
+            with wave.open(str(path), "wb") as writer:
+                writer.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+                writer.writeframes(pcm)
+            requests = []
+            original = wave.Wave_read.readframes
+            def bounded(reader, requested):
+                self.assertGreater(requested, 0)
+                self.assertLessEqual(requested, PCM_HASH_CHUNK_FRAMES)
+                requests.append(requested)
+                return original(reader, requested)
+            with mock.patch.object(wave.Wave_read, "readframes", bounded):
+                result = inspect_wav(path)
+            self.assertEqual(result, (frames, frames / 16000, hashlib.sha256(pcm).hexdigest()))
+            self.assertEqual(requests, [PCM_HASH_CHUNK_FRAMES, PCM_HASH_CHUNK_FRAMES, 17])
+
+    def test_short_read_at_any_chunk_is_rejected(self):
+        from corpus_identity import PCM_HASH_CHUNK_FRAMES
+        with tempfile.TemporaryDirectory() as td:
+            path = pathlib.Path(td) / "long.wav"
+            with wave.open(str(path), "wb") as writer:
+                writer.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+                writer.writeframes(b"\x01\x00" * (PCM_HASH_CHUNK_FRAMES * 2 + 17))
+            original = wave.Wave_read.readframes
+            for fail_at in (1, 2, 3):
+                with self.subTest(fail_at=fail_at):
+                    calls = [0]
+                    def short(reader, requested):
+                        calls[0] += 1
+                        data = original(reader, requested)
+                        return data[:-2] if calls[0] == fail_at else data
+                    with mock.patch.object(wave.Wave_read, "readframes", short):
+                        with self.assertRaisesRegex(ValueError, "truncated PCM payload"):
+                            inspect_wav(path)
+
+    def test_empty_and_physically_truncated_wav_still_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = pathlib.Path(td) / "bad.wav"
+            with wave.open(str(path), "wb") as writer:
+                writer.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+                writer.writeframes(b"")
+            with self.assertRaisesRegex(ValueError, "empty PCM payload"):
+                inspect_wav(path)
+            with wave.open(str(path), "wb") as writer:
+                writer.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+                writer.writeframes(b"\x01\x00" * 32)
+            path.write_bytes(path.read_bytes()[:-2])
+            with self.assertRaisesRegex(ValueError, "truncated PCM payload"):
+                inspect_wav(path)
+
+
 def main() -> int:
     suite = unittest.TestSuite(
         unittest.defaultTestLoader.loadTestsFromTestCase(case)
-        for case in (CrossFieldPCMTests, SourceFamilyAliasTests, StrictManifestJsonTests)
+        for case in (CrossFieldPCMTests, SourceFamilyAliasTests, StrictManifestJsonTests, StreamingWavTests)
     )
     if not unittest.TextTestRunner().run(suite).wasSuccessful():
         return 1
@@ -591,3 +650,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
