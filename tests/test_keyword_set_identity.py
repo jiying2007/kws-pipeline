@@ -478,7 +478,7 @@ class IdentityTests(unittest.TestCase):
             "configs/parameter-contract.json": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06",
             "keywords/zh_cn_example.tsv": "1d17ed101c950bbc55327dd56c7e0a03faa6ab1a6ef36cf73ede55d7d9b88db5",
             "keywords/tokens.example.txt": "af113e57eb6375b3c364b3845c6698ea460e29f718c8303657777183d6eda8c7",
-            "configs/nightly.xiaowo-frozen-model.json": "a515749b2987e1df23f588a1db8f4e2e9a7f710662ed6f8b4df92c09aacf40f5f6",
+            "configs/nightly.xiaowo-frozen-model.json": "a515749b2987e1df23f588a1db8f1e9a7f710662ed6f8b4df92c09aacf40f5f6",
         }
         baseline = json.loads((ROOT / "configs/research-baseline.xiaowo.json").read_text())
         self.assertEqual(baseline["schema"], "kws-research-model-baseline-v1")
