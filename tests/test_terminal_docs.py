@@ -227,8 +227,13 @@ def main() -> int:
         require_all(
             path.read_text(encoding="utf-8"),
             path,
-            ("tools/collect_target_evidence.py", "product-board", "--attestation-verification"),
+            ("tools/collect_target_evidence.py", "--attestation-verification"),
         )
+
+    # Model source identity is research-only; product-board branding in an
+    # old page is not a scientific validation prerequisite.
+    assert not (ROOT / "configs/shipping.xiaowo.json").exists()
+    assert (ROOT / "configs/research/two-keyword-synthetic-comparator.json").is_file()
 
     target_evidence = ROOT / "docs" / "TARGET_EVIDENCE.md"
     require_all(
