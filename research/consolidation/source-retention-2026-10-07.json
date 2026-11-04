@@ -15596,7 +15596,8 @@
     ".github/workflows/kw1-supplement-observation.yml",
     ".github/workflows/authorized-voice-clone-contracts.yml",
     ".github/workflows/qwen-nonclone-pilot-20261104-v1.yml",
-    ".github/workflows/qwen-nonclone-asr-20261104-v1.yml"
+    ".github/workflows/qwen-nonclone-asr-20261104-v1.yml",
+    ".github/workflows/qwen-nonclone64-20261104-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -44330,6 +44331,77 @@
           "git_blob_sha1": "f5a21264bb08c4818b39811a3f5c869cf5fc350b"
         }
       ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "qwen-nonclone64-20261104-v1",
+      "source_commit": "9b6e5d6860861db07a94042b203278612834dd02",
+      "workflow_source_changed": true,
+      "scope": "Add independent first-create-only 64-cell public-preset Qwen TTS CPU campaign; four sequential isolated 16-cell lanes, no cloning or private source, exact workflow allowance, fixed denominator, no retries, ASR or training admission.",
+      "files": [
+        {
+          "path": ".github/workflows/qwen-nonclone64-20261104-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/qwen-nonclone64-20261104-v1.yml",
+            "mode": "100644",
+            "bytes": 1442,
+            "sha256": "35ae7e29cf0d9aad6c415a88de23acefd6575c53695780f13c6d7325e1ee29be",
+            "git_blob_sha1": "915dc7a4daef0eb799139c5516d7113558ea9057"
+          }
+        }
+      ],
+      "source_files": [
+        {
+          "path": "research/qwen-nonclone64-20261104/test_campaign.py",
+          "mode": "100644",
+          "bytes": 17938,
+          "sha256": "81cb4344c6f23ed3ee1140ffb74d86cf66a5f16a59fbf92b022ae6025a4b8ead",
+          "git_blob_sha1": "0c196566136e115ffe77feb2b53e71900f499ba4"
+        },
+        {
+          "path": "research/qwen-nonclone64-20261104/README.md",
+          "mode": "100644",
+          "bytes": 5421,
+          "sha256": "bd5eab63ef7a4abbd144c5cb6db50763afb774fbbdff3754ff0e14650342d534",
+          "git_blob_sha1": "35ce5f359f1367f3535071498695c7f3656afd50"
+        },
+        {
+          "path": "research/qwen-nonclone64-20261104/worker.py",
+          "mode": "100644",
+          "bytes": 7063,
+          "sha256": "da22a8ee6f548fdb8d6947be0cfe9bb81435dd3a19507f0411e48d62193196d1",
+          "git_blob_sha1": "52247003c7b17b7796523730bba895b307dc9ab2"
+        },
+        {
+          "path": "research/qwen-nonclone64-20261104/source-lock.json",
+          "mode": "100644",
+          "bytes": 3094,
+          "sha256": "5700cfcde45c44682325482156cc03d7f0964a72ebdd0e7ed6ef748124001ca7",
+          "git_blob_sha1": "450efb13363cf0d984f6bdfae7293afca9d7992c"
+        },
+        {
+          "path": "research/qwen-nonclone64-20261104/campaign.py",
+          "mode": "100644",
+          "bytes": 15205,
+          "sha256": "8807d8f7cd3b941346ae82380fcd42d9d3a60dccf5306997e80ae3973cc93df6",
+          "git_blob_sha1": "4d3f6a0e5d3c938143632c9ab40b0fa145ef01b7"
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "mode": "100644",
+          "bytes": 19958,
+          "sha256": "1ba255f1542f3caf9408b587a8f1791c42e963551a5a55e3f2c5121bfeed0b03",
+          "git_blob_sha1": "d91dc092a6ecb608338697611a83ff499e8e7924"
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "mode": "100644",
+          "bytes": 66619,
+          "sha256": "03ccae2441067239866f9376b42c62d8a9ebfe41bedad5100a8fe7843a040ec3",
+          "git_blob_sha1": "7e7cfc5f8253a6da65e23d1f041ea2f403d445ce"
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -44444,6 +44516,13 @@
       "bytes": 1458,
       "sha256": "11fa3d42651090e7fc044dd1a8857b0f93abbbadc8d3d1e29191d1f062bb0338",
       "git_blob_sha1": "d9236d61ea7b83f23a4928ea2f3047da98f24a2c"
+    },
+    {
+      "path": ".github/workflows/qwen-nonclone64-20261104-v1.yml",
+      "mode": "100644",
+      "bytes": 1442,
+      "sha256": "35ae7e29cf0d9aad6c415a88de23acefd6575c53695780f13c6d7325e1ee29be",
+      "git_blob_sha1": "915dc7a4daef0eb799139c5516d7113558ea9057"
     }
   ],
   "current_source_revision": {
