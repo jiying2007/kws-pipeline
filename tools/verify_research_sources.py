@@ -265,7 +265,8 @@ def verify(root, manifest):
     approved_with_nonclone_asr = approved_with_nonclone + ['.github/workflows/qwen-nonclone-asr-20261104-v1.yml']
     approved_with_nonclone64 = approved_with_nonclone_asr + ['.github/workflows/qwen-nonclone64-20261104-v1.yml']
     approved_with_native_prepare = approved_with_nonclone64 + ['.github/workflows/native-prepare-20261104-v1.yml']
-    if additions not in (approved, approved_with_clone, approved_with_nonclone, approved_with_nonclone_asr, approved_with_nonclone64, approved_with_native_prepare):
+    approved_with_storage_probe = approved_with_native_prepare + ['.github/workflows/runner-storage-20261104-v1.yml']
+    if additions not in (approved, approved_with_clone, approved_with_nonclone, approved_with_nonclone_asr, approved_with_nonclone64, approved_with_native_prepare, approved_with_storage_probe):
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed additions
     # both bind CURRENT bytes. Historical maintenance receipts are evidence,
