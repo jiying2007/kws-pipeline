@@ -11,16 +11,16 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-Research: [reusable modules, retained results and qualification boundaries](research/README.md)
+Research: [reusable modules, retained results and independent evidence boundaries](research/README.md)
 
-Current status: [model and engineering summary](docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status), checked 2026-10-29. The [audit implementation and production closure record](docs/KWS_PRODUCTION_CLOSURE_2026-10-29.md) binds merged repairs, new regressions, pending local acceptance and the remaining data, candidate, final-AFE and physical-board gates. Historical SKU, retained FSMN B/OR and posterior-only C keep their separate evidence scopes; a new production model is not yet qualified.
+Current status: [model and engineering summary](docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status), checked 2026-10-29. The [historical engineering audit and earlier closure record](docs/KWS_PRODUCTION_CLOSURE_2026-10-29.md) binds merged repairs, new regressions, pending local acceptance and the remaining data, candidate, final-AFE and physical-board gates. Historical SKU, retained FSMN B/OR and posterior-only C keep their separate evidence scopes; no current model has independently measured real-human and physical SSC305 performance.
 
 Current archive delivery: [complete public archive, index and verified restoration](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md). The old expanded-copy target is cancelled; its historical status remains NOT_PUSHED. D20 numerical failure and D90 not yet tested, fixed50 inconclusive support and the old-model nightly failure remain separate; human/device qualification is deferred.
 
 > **Evidence boundary — read this before quoting any number below.**
 > The qualification recorded in this repository was produced on a **synthetic
-> corpus**. It is engineering evidence, not a commercial acoustic claim. Two
-> product-evidence items are deliberately **not executable in this repository**:
+> corpus**. It is historical synthetic engineering evidence, not independent
+> real-speech or device evidence. Two scientific measurements remain **NOT_RUN**:
 > real human speech through the final microphone/enclosure/AFE, and physical
 > target-board performance/soak. They need hardware and human subjects. The
 > former manual GitHub Release publishers (`real-human-qualification.yml`
@@ -31,12 +31,12 @@ Current archive delivery: [complete public archive, index and verified restorati
 > `configs/shipping.xiaowo.json` is not research approval. See
 > [Validation boundary](#validation-boundary).
 
-`kws-pipeline` is a low-compute, always-on keyword spotting engine for embedded Linux/RTOS-class products. The **historically synthetic-qualified product SKU** is deliberately narrow and ships exactly two four-character Mandarin wake phrases:
+`kws-pipeline` studies low-compute, streaming keyword spotting for embedded Linux/RTOS-class systems. The **frozen historical synthetic model comparator** recognizes precisely two four-character Mandarin wake phrases:
 
 - **你好小窝** — `ni3 hao3 xiao3 wo1`
 - **小窝小窝** — `xiao3 wo1 xiao3 wo1`
 
-The standalone two-character phrase **小窝 is not a shipping wake word** for this SKU. The qualified model uses a dedicated five-token vocabulary (`<blk>`, `ni3`, `hao3`, `xiao3`, `wo1`). The framework supports larger vocabularies and configurable keyword packs, but arbitrary-Mandarin L0 phrase replacement has **not** been qualified for this released model.
+The standalone two-character phrase **小窝 is a partial/negative phrase**, not an accepted full-wake positive. The frozen comparator uses a dedicated five-token vocabulary (`<blk>`, `ni3`, `hao3`, `xiao3`, `wo1`). The framework supports larger vocabularies and configurable keyword packs, but arbitrary-Mandarin L0 phrase replacement has **not** been independently evaluated for this frozen comparator.
 
 The engine consumes mono PCM16 16-kHz audio after a lightweight BF/AEC/RES/NS/AGC chain such as [`jiying2007/audio-pipeline`](https://github.com/jiying2007/audio-pipeline):
 
@@ -55,12 +55,12 @@ PCM16 16 kHz
 
 ## Historical engineering-qualified model
 
-The current immutable model release is [`model-749187ec1d66`](https://github.com/jiying2007/kws-pipeline/releases/tag/model-749187ec1d66) and is bound to:
+The **historical GitHub Release archive** [`model-749187ec1d66`](https://github.com/jiying2007/kws-pipeline/releases/tag/model-749187ec1d66) records the following old provenance (the active scientific comparator uses the Git model registry, not Release download):
 
 - model-training run `34134789576`;
 - exact trained HEAD `749187ec1d6662658f06aa9c76d47fde835968db`;
 - `model.kwm` SHA256 `ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402`;
-- exact two-keyword shipping pack above;
+- exact two-phrase historical keyword pack above;
 - untouched synthetic qualification seed `271838`, now **consumed and permanently frozen**;
 - qualification `256/256`, `0 FR`, `0 FA`;
 - strict robustness pass;
@@ -69,8 +69,8 @@ The current immutable model release is [`model-749187ec1d66`](https://github.com
 These are **historical release qualification results**. The later frozen-model
 [nightly run 37860130019](https://github.com/jiying2007/kws-pipeline/actions/runs/37860130019)
 failed: **2 false accepts / 8 hours**, upper95 **0.786974 FA/h** (gate: 0 false
-accepts and upper95 ≤ 0.40). It tested this same old model, not D20/D90. Shipping
-approval remains false. See the [current audit](research/consolidation/CI_AUDIT_2026-10-09.md). The separate [2026-10-14 entry](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry) links later nightly failure `38482297930` on its exact historical source; it is not a new acoustic evaluation of current main.
+accepts and upper95 ≤ 0.40). It tested this same old model, not D20/D90. This
+negative result is retained as historical research evidence, not a release decision. See the [current audit](research/consolidation/CI_AUDIT_2026-10-09.md). The separate [2026-10-14 entry](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry) links later nightly failure `38482297930` on its exact historical source; it is not a new acoustic evaluation of current main.
 
 
 The Git storage allowlist keeps `models/registry/**` tracked even when generated `.kwm` and `.pt` intermediates are ignored; archived bytes remain independently hash-verified.
@@ -78,7 +78,7 @@ The frozen synthetic comparison now uses [`configs/research/two-keyword-syntheti
 
 The current source contract separately records `recalibration_required=true`;
 historical qualification does not qualify changed runtime source.
-See [product status](docs/KWS_LANDING_STATUS.md) for the exact evidence scopes.
+See [research and historical evidence status](docs/KWS_LANDING_STATUS.md) for the exact evidence scopes.
 
 ### Reproducible model and keyword asset verification
 
@@ -112,7 +112,7 @@ negative tests still cover modified assets, missing assets and forged manifests.
 - Adjacent repeated acoustic tokens obey structural CTC blank-separation semantics.
 - Shared-prefix phrases are resolved independently of TSV order: `immediate` ranks priority, depth, confidence; `longest`/`grace` rank depth, priority, confidence. Exact ties select the smaller unsigned keyword ID. Per-frame pending arbitration preserves the held winner's grace age when only its confidence improves.
 - `kws_engine_notify_discontinuity()` clears partial acoustic state on XRUN, route, clock or suspend/resume discontinuities.
-- Runtime accepts versioned external-AFE metadata and exposes bounded telemetry suitable for product diagnostics.
+- Runtime accepts versioned external-AFE metadata and exposes bounded telemetry for reproducible acoustic and embedded diagnostics.
 
 The larger ~420-token / ~26-KB model described in design notes is a **framework sizing option**, not the identity of the currently qualified five-token model.
 
@@ -132,9 +132,9 @@ find_package(KwsPipeline CONFIG REQUIRED)
 target_link_libraries(app PRIVATE KwsPipeline::core)
 ```
 
-## Shipping keyword pack and customization boundary
+## Frozen research keyword pack and customization boundary
 
-The qualified shipping TSV is exactly:
+The frozen historical two-phrase research TSV is exactly:
 
 ```text
 id  text      threshold  explicit-pinyin
@@ -153,7 +153,7 @@ python3 tools/compile_keywords.py \
   --out-json build/keywords.json
 ```
 
-L0 keyword-pack changes are valid only when every requested acoustic token already exists in the loaded model vocabulary and the resulting product tuple is revalidated. For the current dedicated five-token shipping model, only the two phrases above are release-qualified. A Mandarin phrase that needs other tokens requires an intentionally broader/new acoustic model and fresh qualification; it must not be presented as a zero-training field update.
+L0 keyword-pack experiments are meaningful only when every requested acoustic token exists in the loaded vocabulary; the changed pair must be independently evaluated. This historical five-token comparator covers only the two full phrases above. A different Mandarin phrase needing other tokens requires a broader/retrained model and fresh acoustic measurements, never an unmeasured zero-training capability claim.
 
 See `docs/CUSTOMIZATION.md` for L0/L1/L2 rules.
 
@@ -174,7 +174,7 @@ The accepted release's formal qualification seed `271838` is exposed and must ne
 
 ### Nightly regression is intentionally separate
 
-`.github/workflows/far-nightly.yml` no longer retrains a model and no longer renders formal qualification. It downloads the exact immutable `model-749187ec1d66` Release, verifies release checksums/provenance/acceptance evidence, renders an independent `nightly-frozen-model-v1` synthetic negative corpus and runs four long-FAR shards against the frozen released model.
+`.github/workflows/far-nightly.yml` does not retrain or publish a model. It loads the immutable historical comparator from `models/registry/model-749187ec1d66/`, checks SHA-256 against `configs/research-baseline.xiaowo.json` and the Git registry manifest, then evaluates four bounded independent synthetic-negative shards. It does **not** download or consult a GitHub Release, nor turn a failed long-FAR result into an accepted model.
 
 `configs/nightly.xiaowo-frozen-model.json` contains **no formal qualification seed or FAR-holdout namespace**. Nightly evidence is regression evidence only; it can never become fresh qualification evidence.
 
@@ -194,7 +194,7 @@ Future independently authorized experiments may bind a measured `audio-pipeline`
 
 ## Immutable training environment
 
-Shipping training should use an immutable OCI image referenced as `name@sha256:<digest>`. `training/Dockerfile` performs no network dependency installation. `training/build_container.py` validates the immutable base and records a build receipt. The real `torch_ctc` integration workflow uses repository variable **`KWS_TRAINING_IMAGE`** (or the manual `training_image` input) and accepts only a digest-pinned image reference.
+For reproducible research training, use an immutable OCI image referenced as `name@sha256:<digest>`. `training/Dockerfile` performs no network dependency installation. `training/build_container.py` validates the immutable base and records a build receipt. The real `torch_ctc` integration workflow uses repository variable **`KWS_TRAINING_IMAGE`** (or the manual `training_image` input) and accepts only a digest-pinned image reference.
 
 ## Continuous evaluation and statistical boundary
 

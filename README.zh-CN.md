@@ -12,24 +12,24 @@
 
 研究入口：[可复用模块、保留的实验结论与资格边界](research/README.md)
 
-当前状态：[模型与工程摘要](docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status)，核对日期 2026-10-29。[审查修复与生产闭环记录](docs/KWS_PRODUCTION_CLOSURE_2026-10-29.md) 列出已合入修复、新增回归、待完成的本地验收，以及新训练数据、候选部署、真人 AFE 和目标板资格的下一关。历史 SKU、FSMN B/OR 与 posterior-only C 的证据范围保留；新生产模型尚未放行。
+当前状态：[模型与工程摘要](docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status)，核对日期 2026-10-29。[历史工程审查与旧闭环记录](docs/KWS_PRODUCTION_CLOSURE_2026-10-29.md) 列出已合入修复、新增回归、待完成的本地验收，以及新训练数据、候选部署、真人 AFE 和目标板资格的下一关。历史 SKU、FSMN B/OR 与 posterior-only C 的证据范围保留；尚无经过独立真人声学与 SSC305 真机测量的新研究模型。
 
 当前归档交付：[完整公开归档、索引与可验证恢复](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md)。旧展开副本目标已取消；历史状态仍为 NOT_PUSHED。D20 数值失败、D90 尚未执行数值验证、fixed50 支持不足、旧模型 nightly 失败分别保留；真人与实机验证暂缓。
 
 > **证据边界 —— 引用下方任何数字前请先读这一段。**
 > 本仓库记录的 qualification 全部产生于**合成语料**，属于工程证据，不是商用声学结论。
-> 有两项产品证据被刻意**排除在本仓库可执行范围之外**：真实人声经过最终麦克风/结构/AFE，以及物理目标板 performance/soak —— 它们需要硬件和真人受试者。旧人工 GitHub Release 发布工作流 `real-human-qualification.yml`、`target-dut-qualification.yml` 已从活动 Actions 退役；真人声学、AFE、目标设备资源的独立评分工具仍保留，需要真实数据/设备及合法授权方可运行。工具存在不等于真人/SSC305 已实测。历史 `configs/shipping.xiaowo.json` 不再决定科研准入。详见「验证边界」。
+> 仍有两类独立科研测量缺少真实输入：真实人声经过最终麦克风/结构/AFE，以及物理目标板 performance/soak —— 它们需要硬件和真人受试者。旧人工 GitHub Release 发布工作流 `real-human-qualification.yml`、`target-dut-qualification.yml` 已从活动 Actions 退役；真人声学、AFE、目标设备资源的独立评分工具仍保留，需要真实数据/设备及合法授权方可运行。工具存在不等于真人/SSC305 已实测。历史 `configs/shipping.xiaowo.json` 不再决定科研准入。详见「验证边界」。
 
-`kws-pipeline` 是面向**低算力嵌入式 Linux / RTOS 产品**的常驻端侧唤醒引擎，目标包括 Cortex-A32、Cortex-A7 及相近 CPU 预算。
+`kws-pipeline` 是用于**低算力嵌入式 Linux / RTOS 研究**的常驻端侧唤醒引擎，目标包括 Cortex-A32、Cortex-A7 及相近 CPU 预算。
 
-历史已完成 synthetic qualification 的产品 SKU **严格只包含两个四字中文唤醒词**：
+冻结的历史合成语音模型对照**严格只覆盖两个四字中文唤醒词**：
 
 - **你好小窝** — `ni3 hao3 xiao3 wo1`
 - **小窝小窝** — `xiao3 wo1 xiao3 wo1`
 
-独立两字 **“小窝”不是当前 shipping wake word**。当前正式模型使用专用 5-token 词表：`<blk> / ni3 / hao3 / xiao3 / wo1`。框架本身支持更大的拼音词表和可更新 KWKP，但**当前发布模型并未证明任意中文短语都可以 L0 不训练直接替换**。
+独立两字 **“小窝”只作部分短语/负例**，不是完整唤醒正例。冻结模型对照使用专用 5-token 词表：`<blk> / ni3 / hao3 / xiao3 / wo1`。框架本身支持更大的拼音词表和可更新 KWKP，但**没有独立证据证明任意中文短语都可以 L0 不训练直接替换**。
 
-典型产品链：
+典型研究信号链：
 
 ```text
 最终麦克风 / 双麦
@@ -48,12 +48,12 @@
 
 ## 历史 Engineering-Qualified 模型
 
-当前不可变模型 Release 为 [`model-749187ec1d66`](https://github.com/jiying2007/kws-pipeline/releases/tag/model-749187ec1d66)，精确绑定：
+历史 GitHub Release 归档 [`model-749187ec1d66`](https://github.com/jiying2007/kws-pipeline/releases/tag/model-749187ec1d66) 保留以下旧来源，**当前科研对照从 Git 模型注册表读取而非下载 Release**：
 
 - model-training run `34134789576`；
 - exact trained HEAD `749187ec1d6662658f06aa9c76d47fde835968db`；
 - `model.kwm` SHA256 `ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402`；
-- 上述两条精确 shipping keyword；
+- 上述两条冻结研究关键词；
 - untouched synthetic qualification seed `271838`，现已**消费并永久冻结**；
 - qualification：`256/256`、`0 FR`、`0 FA`；
 - strict robustness 全通过；
@@ -62,7 +62,7 @@
 以上是**历史 Release qualification 结果**。后续同一旧模型的
 [nightly run 37860130019](https://github.com/jiying2007/kws-pipeline/actions/runs/37860130019)
 已失败：**8 小时内 2 次误接受**，upper95 **0.786974 FA/h**（门槛为 0 次误接受且
-upper95 ≤ 0.40）。这不是 D20/D90 的结果，shipping approval 仍为 false。
+upper95 ≤ 0.40）。这不是 D20/D90 的结果；原始失败记录不构成任何科研模型通过或发布决定。
 见[本次审计](research/consolidation/CI_AUDIT_2026-10-09.md)。另见[2026-10-14 历史入口](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry)：后续 nightly `38482297930` 仍失败，绑定其历史执行源码，并非对当前 main 的新增声学评估。
 
 
@@ -70,7 +70,7 @@ upper95 ≤ 0.40）。这不是 D20/D90 的结果，shipping approval 仍为 fal
 冻结的两词研究对照已迁到 [`configs/research/two-keyword-synthetic-comparator.json`](configs/research/two-keyword-synthetic-comparator.json)，保留历史阈值、模型/关键词哈希和需重新校准的事实；不包含商用发布授权，也不能代替真实人声、最终 AFE 或 SSC305 实测。旧配置只在 Git 历史中供审计。
 
 当前源码 contract 另行记录 `recalibration_required=true`；历史资格不构成变更后
-运行时源码的资格。各证据范围见[产品状态](docs/KWS_LANDING_STATUS.md)。
+运行时源码的资格。各证据范围见[研究与历史状态](docs/KWS_LANDING_STATUS.md)。
 
 ### 冻结研究模型与关键词资产验证
 
@@ -100,7 +100,7 @@ python3 tools/verify_research_model_assets.py \
 - 相邻重复 acoustic token 遵守 CTC blank-separated 结构语义。
 - 共享前缀仲裁不依赖 TSV 行顺序：`immediate` 依次比较 priority、depth、confidence；`longest`/`grace` 依次比较 depth、priority、confidence。以上全部相同时，选择较小的无符号 keyword ID。每帧先完成 pending 仲裁；若仍由原候选胜出且仅 confidence 提升，保留其已等待的 grace 帧数。
 - `kws_engine_notify_discontinuity()` 在 XRUN、route、clock、suspend/resume 后清理 partial acoustic state。
-- 外部 AFE metadata 和 runtime telemetry 均是版本化、有边界的产品接口。
+- 外部 AFE metadata 和 runtime telemetry 均版本化、有边界，可用于可复现研究与嵌入式诊断。
 
 设计文档中提到的约 420-token / 约 26-KB 几何是**框架容量设计项**，不是当前已 qualification 的 5-token 正式模型身份。
 
@@ -115,9 +115,9 @@ cmake --install build --prefix /your/prefix
 
 SDK 支持 CMake package 和 `pkg-config`。
 
-## Shipping keyword pack 与定制边界
+## 冻结研究关键词包与定制边界
 
-当前正式 TSV 精确为：
+历史冻结研究 TSV 精确为：
 
 ```text
 id  text      threshold  explicit-pinyin
@@ -136,7 +136,7 @@ python3 tools/compile_keywords.py \
   --out-json build/keywords.json
 ```
 
-L0 keyword-pack 更新只适用于**新关键词的全部 acoustic token 已存在于当前模型词表**的场景，并且新产品 tuple 仍需重新验证。当前 5-token shipping model 只正式验证了上述两个四字词；任何需要其他中文拼音 token 的新唤醒词，都应视为更大词表/新模型或定制模型工作，并经过 fresh qualification，不能宣传成“任意中文零训练换词”。
+L0 keyword-pack 实验只适用于**全部 acoustic token 已存在于加载模型词表**的场景；变更后的模型/关键词组合仍需独立声学评测。该冻结五 token 对照只覆盖上述两条完整四字词。新拼音 token 需要更大词表或重新训练、再进行独立测量，不能凭兼容性声明“任意中文零训练换词”。
 
 详见 `docs/CUSTOMIZATION.md`。
 
@@ -157,13 +157,13 @@ python3 training/iterate_domain.py \
 
 ### Nightly 与 formal qualification 完全分离
 
-`.github/workflows/far-nightly.yml` 不再重新训练模型，也不再生成 formal qualification cohort。Nightly 会：
+`.github/workflows/far-nightly.yml` 不重新训练或发布模型。Nightly：
 
-1. 下载 exact immutable `model-749187ec1d66`；
-2. 校验 Release checksums、promotion manifest、qualification / robustness / continuous-FAR 证据；
-3. 使用独立 `nightly-frozen-model-v1` synthetic negative namespace；
-4. 对 frozen released model 跑四个 long-FAR shard；
-5. 只生成 regression evidence。
+1. 从 Git 中的 `models/registry/model-749187ec1d66/` 读取冻结历史对照；
+2. 根据 `configs/research-baseline.xiaowo.json` 和注册表校验模型、关键词、训练来源 SHA-256；
+3. 使用独立的 `nightly-frozen-model-v1` synthetic negative namespace；
+4. 执行四个 long-FAR 负例分片与置信界计算；
+5. 只输出科研回归证据，不下载 GitHub Release，也不把历史失败变成 PASS。
 
 `configs/nightly.xiaowo-frozen-model.json` 中不存在 formal qualification seed 或 formal FAR holdout namespace，因此 nightly 永远不能把 271838 再次消费，也不能冒充 fresh qualification。
 
@@ -183,7 +183,7 @@ python3 training/iterate_domain.py \
 
 ## 不可变训练环境
 
-正式训练必须使用 `name@sha256:<digest>` 固定 OCI 镜像。`training/Dockerfile` 不在 build 时浮动安装依赖；`training/build_container.py` 校验 immutable base 并记录 build receipt。真实 `torch_ctc` integration workflow 使用仓库变量 **`KWS_TRAINING_IMAGE`**（或手动 `training_image` input），只接受 digest-pinned image。
+科研训练应使用 `name@sha256:<digest>` 固定 OCI 镜像。`training/Dockerfile` 不在 build 时浮动安装依赖；`training/build_container.py` 校验 immutable base 并记录 build receipt。真实 `torch_ctc` integration workflow 使用仓库变量 **`KWS_TRAINING_IMAGE`**（或手动 `training_image` input），只接受 digest-pinned image。
 
 ## 连续评测与统计边界
 

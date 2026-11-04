@@ -106,6 +106,25 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
         self.assertIn("Historical release records (not executable research)", docs)
         self.assertIn("now-unreferenced `tools/verify_release_tag.py`", docs)
 
+    def test_current_readmes_do_not_reintroduce_release_download_as_nightly(self):
+        """Docs must describe the active Git-registry research path, not old releases."""
+        for relative, heading, terminator, required in (
+            ("README.md", "### Nightly regression is intentionally separate",
+             "\n## Final AFE integration contract",
+             "does **not** download or consult a GitHub Release"),
+            ("README.zh-CN.md", "### Nightly 与 formal qualification 完全分离",
+             "\n## 最终 AFE 接入契约", "不下载 GitHub Release"),
+        ):
+            with self.subTest(relative=relative):
+                text = (ROOT / relative).read_text(encoding="utf-8")
+                self.assertIn("models/registry/model-749187ec1d66/", text)
+                section = text.split(heading, 1)[1].split(terminator, 1)[0]
+                self.assertIn("models/registry/model-749187ec1d66/", section)
+                self.assertIn(required, section)
+                self.assertNotIn("gh release download", section)
+                self.assertNotIn("下载 exact immutable", section)
+                self.assertNotIn("It downloads the exact immutable", section)
+
     def test_historical_product_policy_directory_is_not_live(self):
         self.assertFalse((ROOT / "commercial").exists())
         for filename in ("real-human-phase-a.policy.json", "target-dut-phase-b.policy.json"):
