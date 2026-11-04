@@ -128,3 +128,15 @@ remain. Original SHA256 receipts and historical source-release metadata stay
 in Git and Actions history, not current experiment admission. A new base
 requires separately authorized and source-bound dataset research, never a
 product Release.
+
+## Active workflow publication guard (2026-11-04)
+
+The required offline `tests/test_research_publication_boundary.py` now
+reviews **every active** `.github/workflows/*.yml` and rejects GitHub Release
+writers/downloaders, Release/tag-push entrypoints and release-publishing Actions.
+The negative fixtures fail on a resurrected publisher, while ordinary
+GCC/Clang, ARM, sanitizers, KWS acoustic scoring, TTS/ASR source contracts,
+research training and deterministic data preparation remain unchanged.
+Historical approvals, old Git/Actions records and archived source data are
+provenance only; they cannot become research model admission or physical
+SSC305/human evidence by renaming a file.
