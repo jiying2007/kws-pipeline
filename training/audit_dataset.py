@@ -13,7 +13,7 @@ from collections import defaultdict
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from corpus_identity import (audio_identity, canonical_audio_path, resolve_audio_path,
+from corpus_identity import (PCM_HASH_CHUNK_FRAMES, audio_identity, canonical_audio_path, resolve_audio_path,
                              validate_pcm16_wav_payload)  # noqa: E402
 
 from source_identity import SOURCE_ID_FIELDS, SOURCE_FAMILY_FIELDS, source_identity_namespace  # noqa: E402
@@ -72,12 +72,18 @@ def inspect_wav(path: pathlib.Path) -> tuple[int, float, str]:
                 raise ValueError(f"{path}: WAV frame count differs from data payload")
             if frames <= 0:
                 raise ValueError(f"{path}: empty PCM payload")
-            pcm = wf.readframes(frames)
-            if len(pcm) != frames * 2:
-                raise ValueError(f"{path}: truncated PCM payload")
+            pcm_digest = hashlib.sha256()
+            remaining = frames
+            while remaining:
+                requested = min(remaining, PCM_HASH_CHUNK_FRAMES)
+                pcm = wf.readframes(requested)
+                if len(pcm) != requested * 2:
+                    raise ValueError(f"{path}: truncated PCM payload")
+                pcm_digest.update(pcm)
+                remaining -= requested
     except (EOFError, wave.Error) as exc:
         raise ValueError(f"{path}: invalid WAV: {exc}") from exc
-    return frames, frames / SAMPLE_RATE_HZ, hashlib.sha256(pcm).hexdigest()
+    return frames, frames / SAMPLE_RATE_HZ, pcm_digest.hexdigest()
 
 
 def strict_manifest_json(raw: str, origin: pathlib.Path, line_no: int | None = None) -> object:
@@ -548,3 +554,4 @@ if __name__ == "__main__":
     except (OSError, TypeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2)
+
