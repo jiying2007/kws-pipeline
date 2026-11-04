@@ -190,7 +190,7 @@ make collected measurements auditable and do not substitute for those measuremen
 ## Verified test execution and current regression
 
 - [`checked_unittest.py`](checked_unittest.py) — Enforce reviewed test IDs, counts, modes and outcomes; no automatic contract rewriting.
-- [`far_regression_receipt.py`](far_regression_receipt.py) — Recompute saved continuous-FAR evidence and bind the latest exact-deployment run before shipping approval; no model execution.
+- [`far_regression_receipt.py`](far_regression_receipt.py) — Recompute saved synthetic continuous-FAR evidence, bind exact current research source/model/config identities, and reject older-green fallbacks; no product-release authorization or model training. See [research FAR regression](../docs/RESEARCH_FAR_REGRESSION.md).
 
 ### Data/model effect iteration
 
