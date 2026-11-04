@@ -44022,6 +44022,48 @@
           "after": null
         }
       ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "dataset-audit-streaming-pcm-20261104",
+      "source_commit": "35a1c0f46ccd1929f2ac1299ebc4b1f551dad17c",
+      "scope": "Bound the existing dataset audit PCM read size to 65536 frames, preserving hash/frame/output and truncation rejection semantics; add streaming regressions. No workflow changes or real model/data admission. Local Python 3.12 tracemalloc measurement is not RSS or ARM evidence.",
+      "files": [
+        {
+          "path": "training/audit_dataset.py",
+          "before": {
+            "path": "training/audit_dataset.py",
+            "mode": "100644",
+            "bytes": 24673,
+            "sha256": "a16c0e2d780e4a84bf639b1e81c824ea9c111bcec6e0739f3ba8a569739adae5",
+            "git_blob_sha1": "ece4552e643c4e1150ca183a90612dd60858c706"
+          },
+          "after": {
+            "path": "training/audit_dataset.py",
+            "mode": "100644",
+            "bytes": 24952,
+            "sha256": "40f01f7aaeb74a13670da385d9a830ddb8c2743afd566ed5293afe968320908d",
+            "git_blob_sha1": "cc6b14f51b68f6fea120d64b65302c1d0d54765b"
+          }
+        },
+        {
+          "path": "tests/test_dataset_audit.py",
+          "before": {
+            "path": "tests/test_dataset_audit.py",
+            "mode": "100644",
+            "bytes": 26414,
+            "sha256": "f993826a5a350c227eca33d210de352e489e42801b5ceee19deb1add759cbffe",
+            "git_blob_sha1": "6a05d9cced203515281f32436fc6cb1371c45d84"
+          },
+          "after": {
+            "path": "tests/test_dataset_audit.py",
+            "mode": "100644",
+            "bytes": 29505,
+            "sha256": "9bda6326913fa7f6a5934dba5f85e81c60541d299635dbe652a9f65bb92a6597",
+            "git_blob_sha1": "ce2711b74d126a8c7243598b245ef8bf0da4e6e7"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
