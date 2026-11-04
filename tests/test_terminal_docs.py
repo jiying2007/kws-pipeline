@@ -126,6 +126,16 @@ def check_current_status_docs() -> None:
         assert "历史范围" in text.split("\n## ", 1)[0]
         assert "../research/README.md" in text
         assert "PLAN-SCHEMA.md#current-admission-checklist" in text
+    # Old product release procedures are preserved only as source records.
+    release_doc = (ROOT / "docs/RELEASE_QUALIFICATION.md").read_text(encoding="utf-8")
+    target_doc = (ROOT / "docs/TARGET_EVIDENCE.md").read_text(encoding="utf-8")
+    roadmap_doc = (ROOT / "docs/KWS_RESEARCH_PRODUCT_ROADMAP.md").read_text(encoding="utf-8")
+    assert "Historical record only; not an active KWS technical-research" in release_doc
+    assert "not current runnable research instructions" in release_doc
+    assert "Technical research only" in target_doc
+    assert "not product Shipping or certification authority" in target_doc
+    assert "旧配置已从活动主线退役" in roadmap_doc.split("\n## ", 1)[0]
+    assert "产品机器权威仍为" not in roadmap_doc.split("\n## ", 1)[0]
     landing = ROOT / "docs/KWS_LANDING_STATUS.md"
     require_local_navigation(landing)
     require_all(landing.read_text(encoding="utf-8"), landing, (

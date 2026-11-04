@@ -1,11 +1,11 @@
-# KWS 全链路研究与产品化路线图
+# KWS 全链路研究与历史产品化路线图（只读研究档案）
 
 > 历史范围：第 0–10 节保留当时源码、实验与执行阶段的记录，其中“当前”“下一步”及
 > 许可描述仅适用于各自记录日期，不构成今日执行许可，也不恢复已退役通道。
 > 当前从[产品状态](KWS_LANDING_STATUS.md)、[研究入口](../research/README.md)及
 > [唯一准入清单](../research/d20-diagnostic-admission-v1/PLAN-SCHEMA.md#current-admission-checklist)
 > 开始；公开证据交付见[归档与恢复](../research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md)。
-> 产品机器权威仍为 `configs/shipping.xiaowo.json` 与 `commercial/*.policy.json`。
+> 这些旧配置已从活动主线退役，**不再构成机器权威或准入条件**。当前执行只以[研究执行规范](RESEARCH_ONLY_EXECUTION.md)、[冻结研究对照](../configs/research/two-keyword-synthetic-comparator.json)及真实来源/设备独立证据为准；旧路径仅供 Git 历史溯源。
 
 ## 2026-10-11：隔离的 C0/C1 源码准备
 
