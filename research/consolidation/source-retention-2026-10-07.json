@@ -15602,7 +15602,8 @@
     ".github/workflows/runner-storage-20261104-v1.yml",
     ".github/workflows/native-prepare-capacity-20261104-v1.yml",
     ".github/workflows/native-prepare-fence-v2-20261104-v1.yml",
-    ".github/workflows/native-prepare-scan-v3-20261104-v1.yml"
+    ".github/workflows/native-prepare-scan-v3-20261104-v1.yml",
+    ".github/workflows/native-prepare-tokenizer-v4-20261104-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -45133,6 +45134,98 @@
           "git_blob_sha1": "a770876b17224273d055ad6a98a2046e37d88da2"
         }
       ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "native-prepare-tokenizer-v4-20261104-v1",
+      "source_commit": "51aca29acc5b9e734a10489dbec0b26c0660b820",
+      "workflow_source_changed": true,
+      "scope": "Isolated prospective Sense tokenizer binding through actual retained six-field PreparedRuntime, fixed tokenizer.bpemodel path/assets/receipt/hash/serialized bytes; no fallback or synthetic outer field. All118 consumed source identities retained; three explicit stage replacements. Same reviewed scan guard, no-audio40-minute job/1800-second budget,25/16/8GiB and64MiB thresholds. No ASR,training,raw payload or consumed retry; offline defect does not identify historical missing exception attribute.",
+      "files": [
+        {
+          "path": ".github/workflows/native-prepare-tokenizer-v4-20261104-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/native-prepare-tokenizer-v4-20261104-v1.yml",
+            "mode": "100644",
+            "bytes": 2717,
+            "sha256": "ba8a1e786e5e8c86d7240d43da500f223ae0a56d74fb1c174870e6650d57dc88",
+            "git_blob_sha1": "bd7250b9eb75993197e4ebc2daf80454eb3466a6"
+          }
+        }
+      ],
+      "source_files": [
+        {
+          "path": "research/native-prepare-tokenizer-v4-20261104/README.md",
+          "mode": "100644",
+          "bytes": 3144,
+          "sha256": "91f78cf3a1d9718d797d3e626d4bafd3aa68bec947c87025aa880f22b6a7315a",
+          "git_blob_sha1": "04e107e23a30d05ea3a8df104f16de7d766b556c"
+        },
+        {
+          "path": "research/native-prepare-tokenizer-v4-20261104/host.py",
+          "mode": "100644",
+          "bytes": 16207,
+          "sha256": "a9f499bbb66d08a29694f2e9b3e08e9c76523cbd61126ca61cf753053e1a28c3",
+          "git_blob_sha1": "6209c9364fd187c94b8e9dd490d97d5c27a07630"
+        },
+        {
+          "path": "research/native-prepare-tokenizer-v4-20261104/qwen-source-members.json",
+          "mode": "100644",
+          "bytes": 12420,
+          "sha256": "db02446019f22fcc8269b77b3735a8dcfd6a2e3e084ad1931a983b544fd3a8b6",
+          "git_blob_sha1": "b345228ec1d49ab24961a01adc3513fb31905291"
+        },
+        {
+          "path": "research/native-prepare-tokenizer-v4-20261104/sense-review-template.json",
+          "mode": "100644",
+          "bytes": 23245,
+          "sha256": "f0d4bd586b95c643a8f68d2f8001dbdb922724b279e4100f34c72b747d62d0dd",
+          "git_blob_sha1": "d3d4191706557a3045074a408b0308891134c088"
+        },
+        {
+          "path": "research/native-prepare-tokenizer-v4-20261104/sense_capture.py",
+          "mode": "100644",
+          "bytes": 26545,
+          "sha256": "f9069a14142185cba54eafa97dc53a9d71fe1a2dab5329b6e6bb671999fcd3a7",
+          "git_blob_sha1": "b57f4d5eb6c6acd6470a6a22b2571f2d8f411a75"
+        },
+        {
+          "path": "research/native-prepare-tokenizer-v4-20261104/source-lock.json",
+          "mode": "100644",
+          "bytes": 28077,
+          "sha256": "0a7a489e94f7bc940ae8e58cc4be43a8f59873e87cd599303297c6a8b962896a",
+          "git_blob_sha1": "f270be0dd383f2ea5b2944d07918306134def9a2"
+        },
+        {
+          "path": "research/native-prepare-tokenizer-v4-20261104/test_host_tokenizer.py",
+          "mode": "100644",
+          "bytes": 15675,
+          "sha256": "f51530421263d364a65cdccd4548aa4dec9928753b8596fc39c9663c7bfe4f1c",
+          "git_blob_sha1": "9676f4603b6a2aaa5d790bc0e775415539406722"
+        },
+        {
+          "path": "research/native-prepare-tokenizer-v4-20261104/test_tokenizer_binding.py",
+          "mode": "100644",
+          "bytes": 6541,
+          "sha256": "9f0f9cedee119eda20b53351dc765bc49d032906df7b0ddcbae560cb8d3d662f",
+          "git_blob_sha1": "2d5937d16b62a90611d6c140133b3242f761157a"
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "mode": "100644",
+          "bytes": 20887,
+          "sha256": "dcaeb45480485a014adb8645e769873d6dc1564766e4b04a0792f481e5cb10dd",
+          "git_blob_sha1": "c9089436151e236b7ba839a3841921b31c6e4d54"
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "mode": "100644",
+          "bytes": 74818,
+          "sha256": "4c79989022b648dd923ded6e4a34051abb8b4000827b5bc3fa950cee66b0173c",
+          "git_blob_sha1": "91627d0b4a84a747a0ab0731e1550ef57ecfa69e"
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -45289,6 +45382,13 @@
       "bytes": 2468,
       "sha256": "7358517a35664fc5ba6dd1e696f7bf43344e65dadc6b37e9452a56d16429186b",
       "git_blob_sha1": "31f712d14a8a824ea505d3dbbd46f47742a4ab32"
+    },
+    {
+      "path": ".github/workflows/native-prepare-tokenizer-v4-20261104-v1.yml",
+      "mode": "100644",
+      "bytes": 2717,
+      "sha256": "ba8a1e786e5e8c86d7240d43da500f223ae0a56d74fb1c174870e6650d57dc88",
+      "git_blob_sha1": "bd7250b9eb75993197e4ebc2daf80454eb3466a6"
     }
   ],
   "current_source_revision": {
