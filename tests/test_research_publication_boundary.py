@@ -106,6 +106,11 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
         self.assertIn("Historical release records (not executable research)", docs)
         self.assertIn("now-unreferenced `tools/verify_release_tag.py`", docs)
 
+    def test_retired_commercial_bootstrap_helper_is_not_active(self):
+        self.assertFalse((ROOT / "tools/cleanup_bootstrap_branch.sh").exists())
+        index = (ROOT / "tools/README.md").read_text(encoding="utf-8")
+        self.assertNotIn("](cleanup_bootstrap_branch.sh)", index)
+
     def test_current_readmes_do_not_reintroduce_release_download_as_nightly(self):
         """Docs must describe the active Git-registry research path, not old releases."""
         for relative, heading, terminator, required in (
