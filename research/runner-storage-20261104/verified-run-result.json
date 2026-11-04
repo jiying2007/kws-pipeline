@@ -1,0 +1,150 @@
+{
+  "schema": "verified-runner-storage-result-v1",
+  "run_id": 41824495359,
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/41824495359",
+  "source_commit": "c50fa9315a8e5e18e235fdafb55e6223a8f4e991",
+  "artifact": {
+    "id": 13318556828,
+    "sha256": "330c75731f0985d15a306cb791d91193c2c2ddcbd3e2fc0617ceb1e2e13ecd48",
+    "expires_at": "2026-11-11T11:52:53Z"
+  },
+  "observation": {
+    "authorizes_model_execution": false,
+    "campaign": "runner-storage-20261104-v1",
+    "cleanup_actions": 0,
+    "device_equality_is_not_mount_identity": true,
+    "docker_commands": 0,
+    "experiment_retries": 0,
+    "filesystem_snapshots_are_sequential": true,
+    "filesystem_target_count": 3,
+    "identity": {
+      "head_sha": "c50fa9315a8e5e18e235fdafb55e6223a8f4e991",
+      "ref": "refs/heads/research/runner-storage-20261104-v1",
+      "repository": "jiying2007/kws-pipeline",
+      "run_attempt": 1,
+      "run_id": 41824495359,
+      "run_number": 1,
+      "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/41824495359",
+      "runner_image": {
+        "metadata_complete": true,
+        "os": "ubuntu24",
+        "version": "20261026.354.1"
+      },
+      "workflow": ".github/workflows/runner-storage-20261104-v1.yml",
+      "workflow_sha": "c50fa9315a8e5e18e235fdafb55e6223a8f4e991"
+    },
+    "measurement_is_previous_prepare_runner": false,
+    "measurement_scope": "fresh_runner_after_checkout_and_source_tests",
+    "model_calls": 0,
+    "model_downloads": 0,
+    "observed_at_utc": "2026-11-04T11:52:53.444291Z",
+    "package_installs": 0,
+    "prepare_reserve_bytes": 26843545600,
+    "prepare_reserve_changed": false,
+    "previous_prepare_disk_bytes_observed": false,
+    "previous_prepare_run_id": 41822443746,
+    "previous_prepare_source_prefix": "2784c3a",
+    "recursive_scans": 0,
+    "reserve_comparison_uses": "minimum_of_sequential_available_byte_snapshots",
+    "schema": "runner-storage-aggregate-v1",
+    "shared_devices": [
+      {
+        "left": "root",
+        "right": "workspace",
+        "same_device": true
+      },
+      {
+        "left": "root",
+        "right": "docker_root",
+        "same_device": true
+      },
+      {
+        "left": "workspace",
+        "right": "docker_root",
+        "same_device": true
+      }
+    ],
+    "source_lock_sha256": "e7764d563482183b33d495ba97379ee8d3fe59b3da0b15fb20d6d89b4e7db014",
+    "status": "measured_all",
+    "targets": [
+      {
+        "conservative_available_bytes": 91610882048,
+        "device_id": 2049,
+        "device_major": 8,
+        "device_minor": 1,
+        "disk_usage": {
+          "available_bytes": 91610882048,
+          "total_bytes": 154894188544,
+          "used_bytes": 63266529280
+        },
+        "label": "root",
+        "meets_unchanged_prepare_reserve": true,
+        "status": "measured",
+        "statvfs": {
+          "available_bytes": 91610882048,
+          "available_inodes": 18424055,
+          "block_bytes": 4096,
+          "fragment_bytes": 4096,
+          "free_bytes": 91627659264,
+          "free_inodes": 18424055,
+          "total_bytes": 154894188544,
+          "total_inodes": 19529728
+        }
+      },
+      {
+        "conservative_available_bytes": 91610882048,
+        "device_id": 2049,
+        "device_major": 8,
+        "device_minor": 1,
+        "disk_usage": {
+          "available_bytes": 91610882048,
+          "total_bytes": 154894188544,
+          "used_bytes": 63266529280
+        },
+        "label": "workspace",
+        "meets_unchanged_prepare_reserve": true,
+        "status": "measured",
+        "statvfs": {
+          "available_bytes": 91610882048,
+          "available_inodes": 18424055,
+          "block_bytes": 4096,
+          "fragment_bytes": 4096,
+          "free_bytes": 91627659264,
+          "free_inodes": 18424055,
+          "total_bytes": 154894188544,
+          "total_inodes": 19529728
+        }
+      },
+      {
+        "conservative_available_bytes": 91610882048,
+        "device_id": 2049,
+        "device_major": 8,
+        "device_minor": 1,
+        "disk_usage": {
+          "available_bytes": 91610882048,
+          "total_bytes": 154894188544,
+          "used_bytes": 63266529280
+        },
+        "label": "docker_root",
+        "meets_unchanged_prepare_reserve": true,
+        "status": "measured",
+        "statvfs": {
+          "available_bytes": 91610882048,
+          "available_inodes": 18424055,
+          "block_bytes": 4096,
+          "fragment_bytes": 4096,
+          "free_bytes": 91627659264,
+          "free_inodes": 18424055,
+          "total_bytes": 154894188544,
+          "total_inodes": 19529728
+        }
+      }
+    ]
+  },
+  "verification": {
+    "archive_sha256_verified": true,
+    "single_status_member": true,
+    "run_head_and_source_lock_matched": true,
+    "historical_failed_runner_capacity_reconstructed": false
+  }
+}
