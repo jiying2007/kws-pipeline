@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/jiying2007/kws-pipeline/commercial/real-human-development-corpus.schema.json",
+  "$id": "https://github.com/jiying2007/kws-pipeline/configs/research/real-human-development-corpus.schema.json",
   "title": "Restricted development corpus structural manifest",
-  "description": "Standalone restricted development structure only. Declarations do not certify consent, labels or anonymity and grant no training, qualification, shipping or publication authority. The CLI also enforces strict JSON token types, duplicate-key/nonfinite rejection, filesystem/byte/WAV identity, coverage and event relationships.",
+  "description": "Restricted development-only audio structure. Machine-readable source/byte checks do not authenticate consent, labels, anonymity, training eligibility, independent evaluation or publication rights. Research-scoped consent must be declared explicitly and verified independently before actual use.",
   "$comment": "Design provenance: feat/restricted-development-dataset-iteration-v1 at 064493c5bd71c4de40aa9d6569254724ee1ada46. Hardened standalone port; not an old workflow compatibility contract. JSON Schema considers 1.0 an integer; this CLI intentionally requires integer JSON tokens for integer fields.",
   "type": "object",
   "additionalProperties": false,
@@ -187,7 +187,7 @@
           },
           "consent_scope": {
             "type": "string",
-            "const": "product-kws-development"
+            "const": "research-kws-development"
           },
           "retention_class": {
             "type": "string",

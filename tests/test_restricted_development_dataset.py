@@ -65,7 +65,7 @@ class DevelopmentCorpusTest(unittest.TestCase):
                              if index < 2 else []),
                 "capture": {"sample_rate_hz": 16000, "channels": 1,
                             "sample_format": "pcm_s16le"},
-                "consent_scope": "product-kws-development",
+                "consent_scope": "research-kws-development",
                 "retention_class": "restricted-raw-audio",
             }
             self.fixture["recordings"].append(row)
@@ -115,9 +115,10 @@ class DevelopmentCorpusTest(unittest.TestCase):
         self.assertEqual(summary["expected_by_keyword"], {"1": 1, "2": 1})
         self.assertEqual(summary["negative_audio_hours"], 1 / 3600)
         for field in ("consent_verified", "labels_verified", "anonymization_verified",
-                      "training_authority", "qualification_authority", "shipping_authority",
+                      "training_authority", "qualification_authority",
                       "publication_authority"):
             self.assertIs(summary[field], False)
+        self.assertNotIn("shipping_authority", summary)
         self.assertIs(summary["structural_checks_passed"], True)
         self.assertIs(summary["audio_bytes_hashes_and_payload_verified"], True)
         self.assertNotIn("private-", result.stdout)
@@ -238,7 +239,7 @@ class DevelopmentCorpusTest(unittest.TestCase):
             "recording": ("", "x" * 65, "private person", None, 1),
             "speaker_id": ("", "x" * 65, "private@example.invalid", [], 2),
             "session_id": (False,), "source_id": ({},), "room_id": ([],), "device_id": (None,),
-            "consent_scope": ("qualification", True),
+            "consent_scope": ("qualification", "product-kws-development", True),
             "retention_class": ("public", None),
             "tags": (["private-tag"], ["household", "household"], [["household"]], ["rear"], "household"),
             "input_sha256": ("F" * 64, "f" * 63, True),
@@ -464,8 +465,11 @@ class DevelopmentCorpusTest(unittest.TestCase):
                 validator.inspect_audio(fd, (row["input_path"],), row, "recordings[0]")
 
     def test_schema_and_ci_contract(self) -> None:
-        schema = json.loads((ROOT / "commercial/real-human-development-corpus.schema.json").read_text())
+        schema = json.loads((ROOT / "configs/research/real-human-development-corpus.schema.json").read_text())
+        self.assertFalse((ROOT / "commercial/real-human-development-corpus.schema.json").exists())
+        self.assertEqual(schema["$id"], "https://github.com/jiying2007/kws-pipeline/configs/research/real-human-development-corpus.schema.json")
         row = schema["properties"]["recordings"]["items"]
+        self.assertEqual(row["properties"]["consent_scope"]["const"], "research-kws-development")
         self.assertEqual(set(row["required"]), validator.ROW_KEYS)
         self.assertEqual(set(row["properties"]), validator.ROW_KEYS | {"snr_db"})
         self.assertEqual(set(row["properties"]["tags"]["items"]["enum"]), validator.TAGS)
