@@ -1,20 +1,10 @@
 #!/usr/bin/env python3
-"""Verify a downloaded immutable model release against the product contract.
+"""Verify locally available frozen research model assets against pinned SHA256.
 
-The README states that the qualified model is bound to four SHA256 digests, and
-those digests live in ``configs/shipping.xiaowo.json``. Until now nothing
-checked a download against them, so a consumer who fetched the release assets
-had no fail-closed way to confirm they received the qualified bytes.
-
-Fetching is deliberately out of scope -- ``gh release download`` or plain HTTPS
-is the downloader's job. Keeping the network out makes this check deterministic
-and runnable in CI.
-
-The two checks are not redundant. ``MODEL_SHA256SUMS`` is shipped *inside* the
-release, so on its own it only proves the download is internally consistent: an
-attacker who replaces an asset can regenerate the manifest to match. The
-contract pins live in the repository, so they are what actually binds the
-download to the qualified tuple.
+This offline tool checks the four immutable model/keyword SHA256 pins and the
+MODEL_SHA256SUMS manifest independently. It neither fetches nor publishes a
+GitHub Release, and reports no acoustic, human, rights or physical-board PASS.
+Historical asset naming remains only as byte-format provenance.
 """
 from __future__ import annotations
 
@@ -26,8 +16,8 @@ import pathlib
 HEX = set("0123456789abcdef")
 SUMS_NAME = "MODEL_SHA256SUMS"
 
-# Contract key -> release asset name. The contract is the authority for the
-# qualified tuple; the release asset names are what `gh release download`
+# Contract key -> frozen asset name. The contract is the authority for the
+# frozen comparator source; file names are inherited from immutable Git history
 # produces.
 PINNED_ASSETS = {
     "model_sha256": "xiaowo-model.kwm",
@@ -76,7 +66,7 @@ def parse_sums(path: pathlib.Path) -> dict[str, str]:
     return entries
 
 
-def verify(assets: pathlib.Path, config: pathlib.Path, release_tag: str) -> dict[str, object]:
+def verify(assets: pathlib.Path, config: pathlib.Path, registry_tag: str) -> dict[str, object]:
     if not assets.is_dir():
         raise ValueError(f"assets directory does not exist: {assets}")
     contract = json.loads(config.read_text(encoding="utf-8"))
@@ -86,11 +76,11 @@ def verify(assets: pathlib.Path, config: pathlib.Path, release_tag: str) -> dict
     if not isinstance(model, dict):
         raise ValueError("contract has no 'model' object")
 
-    pinned_tag = str(model.get("release_tag") or "")
+    pinned_tag = str(model.get("registry_tag") or "")
     if not pinned_tag:
-        raise ValueError("contract model.release_tag is missing")
-    if release_tag and release_tag != pinned_tag:
-        raise ValueError(f"--release-tag {release_tag!r} does not match contract {pinned_tag!r}")
+        raise ValueError("contract model.registry_tag is missing")
+    if registry_tag and registry_tag != pinned_tag:
+        raise ValueError(f"--registry-tag {registry_tag!r} does not match contract {pinned_tag!r}")
 
     sums_path = assets / SUMS_NAME
     if not sums_path.is_file():
@@ -122,35 +112,35 @@ def verify(assets: pathlib.Path, config: pathlib.Path, release_tag: str) -> dict
             raise ValueError(f"{name} is pinned by the contract but absent from {SUMS_NAME}")
         pins[name] = pin
 
-    return {"release_tag": pinned_tag, "manifest_entries": len(sums), "pinned_assets": pins}
+    return {"registry_tag": pinned_tag, "manifest_entries": len(sums), "pinned_assets": pins}
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Verify a downloaded model release against the product contract."
+        description="Verify frozen research model assets against pinned source digests."
     )
     parser.add_argument(
         "--assets-dir",
         required=True,
         type=pathlib.Path,
-        help="directory holding the downloaded release assets",
+        help="directory holding the downloaded frozen assets",
     )
     parser.add_argument(
         "--config",
         type=pathlib.Path,
-        default=pathlib.Path(__file__).resolve().parents[1] / "configs" / "shipping.xiaowo.json",
-        help="product contract that pins the qualified digests",
+        default=pathlib.Path(__file__).resolve().parents[1] / "configs" / "research" / "two-keyword-synthetic-comparator.json",
+        help="research comparator contract that pins the archived model SHA256 pins",
     )
     parser.add_argument(
-        "--release-tag",
+        "--registry-tag",
         default="",
-        help="assert that the contract pins this exact release tag",
+        help="assert that the contract pins this exact registry tag",
     )
     args = parser.parse_args()
-    report = verify(args.assets_dir, args.config, args.release_tag)
+    report = verify(args.assets_dir, args.config, args.registry_tag)
     print(
-        "verify_model_release: ok "
-        f"release_tag={report['release_tag']} "
+        "verify_research_model_assets: ok "
+        f"registry_tag={report['registry_tag']} "
         f"manifest_entries={report['manifest_entries']} "
         f"pinned_assets={len(report['pinned_assets'])}"
     )

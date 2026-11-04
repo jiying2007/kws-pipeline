@@ -8,9 +8,9 @@ import sys
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-TOOL = ROOT / "tools" / "verify_model_release.py"
+TOOL = ROOT / "tools" / "verify_research_model_assets.py"
 
-# Mirrors tools/verify_model_release.py: contract key -> release asset name.
+# Mirrors tools/verify_research_model_assets.py: contract key -> release asset name.
 PINNED = {
     "model_sha256": "xiaowo-model.kwm",
     "checkpoint_sha256": "xiaowo-model.pt",
@@ -35,7 +35,7 @@ def write_sums(assets: pathlib.Path) -> None:
 
 
 def build(root: pathlib.Path) -> tuple[pathlib.Path, pathlib.Path]:
-    """Create a self-consistent release directory and a contract that pins it."""
+    """Create a self-consistent frozen asset bundle directory and a contract that pins it."""
     assets = root / "assets"
     assets.mkdir()
     for index, name in enumerate(sorted(PINNED.values())):
@@ -45,11 +45,11 @@ def build(root: pathlib.Path) -> tuple[pathlib.Path, pathlib.Path]:
     contract = {
         "schema_version": 1,
         "model": {
-            "release_tag": TAG,
+            "registry_tag": TAG,
             **{key: sha256(assets / name) for key, name in PINNED.items()},
         },
     }
-    config = root / "shipping.json"
+    config = root / "research.json"
     config.write_text(json.dumps(contract, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return assets, config
 
@@ -75,12 +75,12 @@ def main() -> int:
         root = pathlib.Path(td)
         assets, config = build(root)
 
-        # A self-consistent release verifies, with and without a tag assertion.
-        assert run(assets, config) == 0, "a self-consistent release must verify"
-        assert run(assets, config, "--release-tag", TAG) == 0
+        # A self-consistent frozen asset bundle verifies, with and without a tag assertion.
+        assert run(assets, config) == 0, "a self-consistent frozen asset bundle must verify"
+        assert run(assets, config, "--registry-tag", TAG) == 0
 
-        # The release tag is part of the contract, not a cosmetic label.
-        assert run(assets, config, "--release-tag", "model-000000000000") == 2
+        # The registry tag is part of the contract, not a cosmetic label.
+        assert run(assets, config, "--registry-tag", "model-000000000000") == 2
 
         # A single flipped byte in a pinned asset must fail.
         target = assets / PINNED["model_sha256"]
@@ -129,7 +129,7 @@ def main() -> int:
         contract = json.loads(config.read_text(encoding="utf-8"))
         contract["model"]["model_sha256"] = "0" * 64
         config.write_text(json.dumps(contract, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        assert run(assets, config) == 2, "a contract pin the release cannot satisfy must fail"
+        assert run(assets, config) == 2, "a contract pin the frozen assets cannot satisfy must fail"
 
     print("test_model_release_pin: ok")
     return 0

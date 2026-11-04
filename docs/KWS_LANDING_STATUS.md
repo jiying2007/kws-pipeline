@@ -1,5 +1,7 @@
 # KWS historical landing status
 
+> **Current authority: technical research only.** The frozen synthetic model and keyword source is `configs/research/two-keyword-synthetic-comparator.json`; it is not real-human FAR/FRR, a physical SSC305 measurement or commercial publication authority. Old product/Release terminology elsewhere on this page is historical context, not a workflow to execute.
+
 > 这是历史产品落地记录，不再构成研究模型的发布资格判断。当前只读研究比较器为 `configs/research-baseline.xiaowo.json`，由 `.github/workflows/kws-landing-status.yml` 进行固定身份校验。
 
 ## Current model and engineering status
@@ -32,7 +34,7 @@ plus physical-board qualification remain outstanding.
 See the [2026-10-29 implementation and production closure record](KWS_PRODUCTION_CLOSURE_2026-10-29.md)
 for source/run identities, the next data gate, integration receipts and exact
 Phase A/Phase B completion requirements. Shipping/recalibration authority stays
-in `configs/shipping.xiaowo.json` and `commercial/*.policy.json`.
+in `configs/research/two-keyword-synthetic-comparator.json` and `commercial/*.policy.json`.
 
 ### Retained model snapshot: 2026-10-19
 
@@ -231,7 +233,7 @@ JSON schema v2 replaces the unscoped v1 `evidence` and `research` objects:
   `applies_to_current_source=false`; this does not qualify changed runtime source
   or establish that later regression passed.
 - `current_source`: directly projects `threshold_calibration.recalibration_required`
-  and its reason from `configs/shipping.xiaowo.json`. It currently requires
+  and its reason from `configs/research/two-keyword-synthetic-comparator.json`. It currently requires
   recalibration. `synthetic_qualification_checked=false`; this command performs
   no acoustic evaluation and cannot clear that requirement.
 - `dated_regression_and_research`: links the existing dated evidence snapshot
@@ -334,7 +336,7 @@ The current source-research additions have distinct evidence scopes:
   recall improvement remain unestablished; model, shipping decoder, thresholds
   and `shipping_approved=false` are unchanged.
 
-Product authority remains `configs/shipping.xiaowo.json` and
+Historical product authority previously used `configs/shipping.xiaowo.json` and
 `commercial/*.policy.json`. Phase A requires final product microphones/enclosure,
 final AFE, real human speech, 3–5 m coverage, rear direction, playback, double-talk,
 robot motion and 24 hours of post-AFE negative exposure. Phase B requires physical

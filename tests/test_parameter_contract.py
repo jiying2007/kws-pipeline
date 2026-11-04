@@ -169,37 +169,41 @@ def within(value: float, entry: dict) -> bool:
     return True
 
 
-def check_calibration_binding(shipping: dict, digest: str) -> None:
-    calibration = shipping["threshold_calibration"]
+def check_calibration_binding(comparator: dict, digest: str) -> None:
+    assert comparator["research_scope"] == "frozen-historical-synthetic-comparator"
+    assert "shipping_approved" not in comparator
+    assert comparator.get("independent_real_human_accepted") is not True
+    calibration = comparator["threshold_calibration"]
     historical = calibration["parameter_contract_sha256"]
-    assert re.fullmatch(r"[0-9a-f]{64}", historical), "invalid historical calibration binding"
+    assert re.fullmatch(r"[0-9a-f]{64}", historical), "invalid historical calibration hash"
     assert calibration["required_parameter_contract_sha256"] == digest
     if historical != digest:
-        assert calibration["recalibration_required"] is True, "contract drift requires recalibration"
-        assert shipping["shipping_approved"] is False, "historical calibration cannot approve shipping"
-        assert calibration["recalibration_reason"], "contract drift needs an explicit reason"
+        assert calibration["recalibration_required"] is True
+        assert calibration["recalibration_reason"], "historical calibration drift requires a reason"
 
 
-def check_shipping_contract(contract: dict, digest: str) -> None:
-    """The shipping contract must pin the contract and re-derive the same list."""
-    shipping = json.loads(
-        (ROOT / "configs" / "shipping.xiaowo.json").read_text(encoding="utf-8")
-    )
-    pinned = shipping["parameter_contract"]
+def check_research_comparator_contract(contract: dict, digest: str) -> None:
+    """Frozen synthetic thresholds remain source-bound, never human/DUT evidence."""
+    comparator_path = ROOT / "configs/research/two-keyword-synthetic-comparator.json"
+    comparator = json.loads(comparator_path.read_text(encoding="utf-8"))
+    assert not (ROOT / "configs/shipping.xiaowo.json").exists()
+    assert comparator["evidence_status"] == "historical-synthetic-diagnostic-not-independent"
+    pinned = comparator["parameter_contract"]
     assert pinned["contract_id"] == contract["contract_id"]
     assert pinned["path"] == "configs/parameter-contract.json"
-    assert pinned["sha256"] == digest, "shipping contract pins a stale parameter contract"
+    assert pinned["sha256"] == digest, "research comparator pins stale parameter contract"
 
-    calibration = shipping["threshold_calibration"]
-    check_calibration_binding(shipping, digest)
-
-    # Updating active metadata must not relabel the historical calibration as
-    # current evidence. Both safety flags fail closed while these bindings differ.
+    calibration = comparator["threshold_calibration"]
+    check_calibration_binding(comparator, digest)
     assert calibration["parameter_contract_sha256"] != digest
-    for section, key, value in (("threshold_calibration", "recalibration_required", False),
-                                (None, "shipping_approved", True),
-                                ("threshold_calibration", "required_parameter_contract_sha256", "0" * 64)):
-        changed = json.loads(json.dumps(shipping))
+    for section, key, value in (
+        ("threshold_calibration", "recalibration_required", False),
+        (None, "independent_real_human_accepted", True),
+        (None, "shipping_approved", True),
+        ("threshold_calibration", "required_parameter_contract_sha256", "0" * 64),
+        (None, "research_scope", "commercial-shipping"),
+    ):
+        changed = json.loads(json.dumps(comparator))
         target = changed if section is None else changed[section]
         target[key] = value
         try:
@@ -207,10 +211,8 @@ def check_shipping_contract(contract: dict, digest: str) -> None:
         except AssertionError:
             pass
         else:
-            raise AssertionError(f"unsafe calibration binding accepted: {key}")
+            raise AssertionError("unsafe frozen-calibration source admitted: " + key)
 
-    # The recalibration list must equal the contract's own invalidation flags,
-    # plus the L0 model release tag which the contract cannot see.
     flagged = [
         f"runtime.{name}"
         for name in RUNTIME
@@ -221,20 +223,25 @@ def check_shipping_contract(contract: dict, digest: str) -> None:
         for name, entry in contract["algorithm_constants"].items()
         if entry.get("invalidates_thresholds")
     )
-    assert sorted(calibration["invalidated_by"]) == sorted(flagged + ["model.release_tag"])
+    assert sorted(calibration["invalidated_by"]) == sorted(flagged + ["model.registry_tag"])
 
-    # Every calibrated threshold must still match the shipping wake word list.
-    words = {word["text"]: word["threshold"] for word in shipping["shipping_wake_words"]}
-    assert calibration["thresholds"], "calibration must record the thresholds"
+    words = {word["text"]: word["threshold"] for word in comparator["research_wake_words"]}
+    assert set(words) == {"你好小窝", "小窝小窝"}
+    assert comparator["negative_partial_phrases"] == ["小窝"]
+    assert calibration["thresholds"], "historical calibration requires original thresholds"
     for entry in calibration["thresholds"]:
         assert entry["text"] in words, entry
         assert entry["value"] == words[entry["text"]], entry
 
-    # Every L2 field must be present and inside the contract range.
-    assert set(shipping["runtime"]) == set(RUNTIME), sorted(shipping["runtime"])
+    assert set(comparator["runtime"]) == set(RUNTIME)
     for name in RUNTIME:
-        assert within(shipping["runtime"][name], contract["runtime"][name]), name
-
+        assert within(comparator["runtime"][name], contract["runtime"][name]), name
+    frozen = json.loads((ROOT / "configs/research-baseline.xiaowo.json").read_text(encoding="utf-8"))
+    assert comparator["model"]["registry_tag"] == frozen["model_tag"]
+    assert comparator["model"]["model_sha256"] == frozen["model_sha256"]
+    assert comparator["model"]["keyword_pack_sha256"] == frozen["keyword_pack_sha256"]
+    assert comparator["independent_measurement_requirements"]["actual_human_wav_evaluated"] is False
+    assert comparator["independent_measurement_requirements"]["actual_ssc305_measured"] is False
 
 
 def main() -> int:
@@ -282,7 +289,7 @@ def main() -> int:
         token_map = compiler.load_tokens(ROOT / "keywords" / "tokens.example.txt")
         check_rejects(compiler, contract, token_map, scratch)
         check_broken_contracts(generator, contract, scratch)
-        check_shipping_contract(contract, digest)
+        check_research_comparator_contract(contract, digest)
 
     print("test_parameter_contract: ok")
     return 0

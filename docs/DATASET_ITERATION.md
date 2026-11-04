@@ -1,5 +1,7 @@
 # Dataset-driven iteration lane
 
+> **Current authority: technical research only.** The frozen synthetic model and keyword source is `configs/research/two-keyword-synthetic-comparator.json`; it is not real-human FAR/FRR, a physical SSC305 measurement or commercial publication authority. Old product/Release terminology elsewhere on this page is historical context, not a workflow to execute.
+
 This is the fourth lane, alongside Research, Confirm and Qualification.
 
 ## Why it exists
@@ -182,7 +184,7 @@ current protected `main` with a dataset (`references.jsonl`) and the variable
 under test.
 
 Leave `model_path` and `keywords_path` empty to use the model tuple pinned by
-`configs/shipping.xiaowo.json` and mirrored under `models/registry/`. This is
+`configs/research/two-keyword-synthetic-comparator.json` and mirrored under `models/registry/`. This is
 the default product-facing path. To compare another deployable model, supply
 **both** paths explicitly; supplying only one is refused.
 
