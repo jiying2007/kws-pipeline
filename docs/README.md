@@ -49,11 +49,11 @@ Current research authority is [`docs/RESEARCH_ONLY_EXECUTION.md`](RESEARCH_ONLY_
 - [`REAL_HUMAN_QUALIFICATION.md`](REAL_HUMAN_QUALIFICATION.md) — restricted real-Mandarin corpus, frozen final-AFE, no-retry exposure and Phase-A runbook
 - [`TARGET_AND_SHIPPING_PROMOTION.md`](TARGET_AND_SHIPPING_PROMOTION.md) — Phase-B per-DUT/multi-DUT target qualification and Phase-C terminal shipping approval
 - [`PERFORMANCE.md`](PERFORMANCE.md) — hosted and target-board performance contracts
-- [`RELEASE_QUALIFICATION.md`](RELEASE_QUALIFICATION.md) — artifact-bound shipping qualification
+- [`RELEASE_QUALIFICATION.md`](RELEASE_QUALIFICATION.md) — archived product qualification contracts and old receipt examples, not current research admission or publication
 - [`SYNTHETIC_TRAINING.md`](SYNTHETIC_TRAINING.md) — deterministic synthetic/domain loop
 - [`CORPUS_IDENTITY.md`](CORPUS_IDENTITY.md) — byte-complete training/evaluation corpus identity
 - [`SPEECH_BASE_ADMISSION.md`](SPEECH_BASE_ADMISSION.md) — reviewed actual labels, source lineage and diagnostic-only historical inputs
-- [`TARGET_EVIDENCE.md`](TARGET_EVIDENCE.md) — machine-collected physical target evidence contract
+- [`TARGET_EVIDENCE.md`](TARGET_EVIDENCE.md) — physical target research measurement; historical field names grant no Release approval
 - [`AUDIO_DISCONTINUITY.md`](AUDIO_DISCONTINUITY.md) — XRUN/route/clock reset semantics
 - [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) — traceable/rebuildable/bit-reproducible claims
 - [`TESTING_STRATEGY.md`](TESTING_STRATEGY.md) — layered regression and product evidence

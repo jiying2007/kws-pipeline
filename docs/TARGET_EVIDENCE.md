@@ -1,18 +1,18 @@
-# Target evidence collection
+# Physical-target research evidence collection
 
-Target-board qualification must retain raw, machine-collected evidence alongside summarized SKU metrics. v0.3 separates **runtime soak acquisition**, **raw evidence identity**, **external attestation verification** and **final target evidence assembly** so a JSON summary cannot silently substitute for the measured artifacts.
+**Technical research only.** Actual DUT research must retain source-bound, machine-collected measurements alongside aggregate statistics. The inherited v0.3 evidence contract separates runtime-soak acquisition, raw input identity, independent attestation and actual target evidence assembly so a JSON summary cannot replace measured artifacts.
 
-This document describes the software evidence contract. Hosted fixtures exercise the contract, but they are not physical product evidence.
+This guide preserves strict technical tools and historical field names for reproducibility, **not product Shipping or certification authority**. Hosted fixtures test software contracts, not physical SSC305 performance; missing source rights, board or measurements must remain NOT_RUN/BLOCKED. See [research-only execution](RESEARCH_ONLY_EXECUTION.md).
 
 ## Runtime timing
 
-Cross-build and retain `kws_board_bench`, then run the exact shipping `.kwm/.kwk` and representative post-AFE WAV. Preserve the emitted JSON plus the exact benchmark executable, model, keyword pack and board-audio bytes.
+Cross-build and retain `kws_board_bench`, then run the exact source-bound research `.kwm/.kwk` and an appropriately licensed post-AFE WAV. Preserve the emitted JSON plus the exact benchmark executable, model, keyword pack and board-audio bytes.
 
 `kws_board_bench` measures per-hop processing time/RTF/headroom. It does not replace sustained product-process CPU/RSS/thermal/soak evidence.
 
 ## Runtime soak
 
-Run the actual product/KWS qualification process under `tools/collect_runtime_soak.py`:
+Run the actual independently authorized DUT research process under `tools/collect_runtime_soak.py` (the `product-*` command below is a **historical placeholder**, not a provided production executable):
 
 ```bash
 python3 tools/collect_runtime_soak.py \

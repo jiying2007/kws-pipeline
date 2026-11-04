@@ -1,6 +1,8 @@
-# Release qualification
+# Historical Release qualification — archived evidence contract
 
-Repository CI proves software contracts. A shipping wake-word claim requires a separate artifact-bound qualification bundle built from the exact model lineage, original audio bytes, final runtime/AFE artifacts and trusted physical-target evidence.
+> **Historical record only; not an active KWS technical-research execution or publishing gate.** This page retains original schema identities, CLI examples and negative evidence for reproducibility. Do not use an old product/Shipping policy, deployment tag, certificate or Release as current model/data admission. The active research authority is [RESEARCH_ONLY_EXECUTION.md](RESEARCH_ONLY_EXECUTION.md). Real-person audio, AFE and physical device measurements require independent source rights, actual hardware and scientific evaluation; without them results remain NOT_RUN/BLOCKED.
+
+The old product certification plan required artifact-bound lineage, original audio bytes and trusted physical-target evidence. The procedures below are **not current runnable research instructions**.
 
 `v0.3.x` deliberately hard-cuts the evidence schemas. Older qualification manifests/provenance are not accepted as v0.3 shipping evidence.
 
@@ -19,7 +21,7 @@ Repository CI proves software contracts. A shipping wake-word claim requires a s
 - qualification policy: **schema v3**;
 - qualification gate result: **schema v4**.
 
-The CPU-unit hard cut rejects runtime-soak/target-evidence/manifest/policy v2 and earlier gate results; no archived capacity-normalized evidence is silently promoted. Current physical-target policies are v3, approved resource budgets v2, and DUT/cohort summaries and public receipts v2. All bind the fixed CPU measurement contract.
+The CPU-unit hard cut rejects runtime-soak/target-evidence/manifest/policy v2 and earlier gate results; no archived capacity-normalized evidence is silently promoted. Historical physical-target policy v3, resource budget v2 and DUT/cohort receipts v2 remain archival source evidence, not current research admission. They retain the fixed CPU measurement contract.
 
 The software version may change while KWSP/KWKP remain unchanged. v0.3 changes public discontinuity/evidence contracts, not the on-device model/keyword binary layouts.
 
