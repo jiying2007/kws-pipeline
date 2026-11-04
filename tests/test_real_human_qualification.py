@@ -406,35 +406,14 @@ def main() -> int:
     assert summary_schema["properties"]["shipping_approved"]["const"] is False
     assert "critical_negative_slices" in summary_schema["required"]
 
-    workflow = (ROOT / ".github/workflows/real-human-qualification.yml").read_text(
-        encoding="utf-8"
-    )
-    assert "workflow_dispatch:" in workflow
-    assert "pull_request:" not in workflow
-    assert "push:" not in workflow.split("permissions:", 1)[0]
-    assert "runs-on: [self-hosted, kws-real-audio]" in workflow
-    assert "corpus_manifest_path:" not in workflow
-    assert "audio_root:" not in workflow
-    assert "afe_adapter_path:" not in workflow
-    assert "qualification_id:" in workflow and "afe_profile:" in workflow
-    assert "KWS_REAL_HUMAN_ROOT" in workflow and "KWS_FINAL_AFE_ROOT" in workflow
-    consume = "Consume fresh corpus before final AFE or KWS evaluation"
-    afe_run = "Execute frozen final AFE over consumed held-out corpus"
-    kws_run = "Run frozen KWS over post-AFE human audio"
-    assert consume in workflow and afe_run in workflow and kws_run in workflow
-    assert workflow.index(consume) < workflow.index(afe_run) < workflow.index(kws_run)
-    assert "human-exposure-${corpus_sha:0:16}" in workflow
-    assert "final_afe_identity_sha256" in workflow
-    assert "--expected-identity build/real-human/final-afe-identity.json" in workflow
-    assert "raw audio remains restricted" in workflow.lower()
-    upload_section = workflow.split(
-        "Retain qualification evidence without raw or post-AFE audio", 1
-    )[1].split("Publish successful Phase-A receipt", 1)[0]
-    assert "build/real-human/afe/post-afe" not in upload_section
-    assert "*.wav" not in upload_section
-    assert "shipping_approved:false" in workflow
-    assert "--pre-tolerance-ms 0" in workflow
-    assert "--post-tolerance-ms 500" in workflow
+    # The historical self-hosted publisher was tied to deployment releases.
+    # It must not be an admission or execution prerequisite for research.
+    assert not (ROOT / ".github/workflows/real-human-qualification.yml").exists()
+    for scorer in ("tools/seal_real_human_corpus.py",
+                   "tools/validate_real_human_corpus.py",
+                   "tools/run_final_afe_corpus.py",
+                   "tools/score_real_human_qualification.py"):
+        assert (ROOT / scorer).is_file(), scorer
 
     with tempfile.TemporaryDirectory(prefix="kws-real-human-contract-") as tmp_raw:
         tmp = pathlib.Path(tmp_raw)
