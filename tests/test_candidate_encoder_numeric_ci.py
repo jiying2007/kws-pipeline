@@ -57,7 +57,7 @@ class CandidateNumericCIContracts(unittest.TestCase):
                      "research/kws-candidate-registry-v1/candidates.json",
                      "research/kws-candidate-registry-v1/build_registry.py", "research/kws-candidate-registry-v1/input-pins.json"):
             self.assertEqual(filters.count(path), 2)
-        job = self.workflow.split("  objective-math:\n", 1)[1].split("  live-base-binding:\n", 1)[0]
+        job = self.workflow.split("  objective-math:\n", 1)[1].split("  training-reproducibility-replica:\n", 1)[0]
         step = job.split("      - name: Direct fit checkpoint and registry software fixtures\n", 1)[1].split("      - name:", 1)[0]
         self.assertIn("timeout-minutes: 5", step)
         self.assertIn("needs.select-scope.outputs.candidate_required == 'true'", step)
@@ -76,7 +76,7 @@ class CandidateNumericCIContracts(unittest.TestCase):
             self.assertEqual(changes.scopes([path, "training/train_ctc.py"]), (True, True))
         filters = [path for _, path in exact_path_filters(ROOT / changes.WORKFLOW)]
         self.assertEqual(filters.count("tests/test_direct_fit_delivery.py"), 2)
-        job = self.workflow.split("  objective-math:\n", 1)[1].split("  live-base-binding:\n", 1)[0]
+        job = self.workflow.split("  objective-math:\n", 1)[1].split("  training-reproducibility-replica:\n", 1)[0]
         step = job.split("      - name: Direct fit bounded delivery software fixtures\n", 1)[1].split("      - name:", 1)[0]
         self.assertIn("timeout-minutes: 2", step)
         self.assertIn("needs.select-scope.outputs.candidate_required == 'true'", step)
@@ -89,7 +89,7 @@ class CandidateNumericCIContracts(unittest.TestCase):
         self.assertNotIn("path: build/\n", artifact)
 
     def test_direct_fixture_step_and_receipt_are_bounded(self):
-        job = self.workflow.split("  objective-math:\n", 1)[1].split("  live-base-binding:\n", 1)[0]
+        job = self.workflow.split("  objective-math:\n", 1)[1].split("  training-reproducibility-replica:\n", 1)[0]
         step = job.split("      - name: Direct KWS three-class software fixture contracts\n", 1)[1].split("      - name:", 1)[0]
         self.assertIn("timeout-minutes: 5", step)
         self.assertIn("needs.select-scope.outputs.candidate_required == 'true'", step)
@@ -167,17 +167,20 @@ class CandidateNumericCIContracts(unittest.TestCase):
                 changes.event_paths(event, {}, ref)
 
     def test_existing_job_conditions_and_fail_closed_compare(self):
-        for name in ("contract", "live-base-binding", "training-reproducibility-replica"):
+        for name in ("contract", "training-reproducibility-replica"):
             self.assertIn("  " + name + ":\n    needs: select-scope\n    if: ${{ needs.select-scope.outputs.existing_required == 'true' }}\n", self.workflow)
         self.assertIn("    needs: [select-scope, training-reproducibility-replica]\n    if: ${{ always() && needs.select-scope.outputs.existing_required == 'true' }}\n", self.workflow)
         self.assertIn('replica: [a, b]', self.workflow)
+        self.assertNotIn("  live-base-binding:\n", self.workflow)
+        self.assertNotIn("gh release download", self.workflow)
+        self.assertNotIn("releases/tags/$tag", self.workflow)
         for command in ("Train unobserved parity reference", "Train deterministic fixture",
                         "Verify observation leaves actual training unchanged",
                         "Enforce numerical-class reproducibility policy"):
             self.assertIn(command, self.workflow)
 
     def test_numeric_step_is_bounded_and_reuses_existing_runtime(self):
-        job = self.workflow.split("  objective-math:\n", 1)[1].split("  live-base-binding:\n", 1)[0]
+        job = self.workflow.split("  objective-math:\n", 1)[1].split("  training-reproducibility-replica:\n", 1)[0]
         step = job.split("      - name: Candidate encoder random-feature numeric contracts\n", 1)[1].split("      - name:", 1)[0]
         self.assertIn("timeout-minutes: 5", step)
         self.assertIn(".venv-objective/bin/python -B tests/test_candidate_encoder_numeric.py", step)
@@ -261,7 +264,7 @@ class CandidateNumericCIContracts(unittest.TestCase):
                 with self.subTest(event=event, dependency=path):
                     self.assertTrue(any(fnmatch.fnmatchcase(path, pattern) for pattern in filters), path)
                     self.assertTrue(any(changes.scopes([path])), path)
-        job = self.workflow.split("  objective-math:\n", 1)[1].split("  live-base-binding:\n", 1)[0]
+        job = self.workflow.split("  objective-math:\n", 1)[1].split("  training-reproducibility-replica:\n", 1)[0]
         step = job.split("      - name: Research model train and streaming numeric smoke\n", 1)[1].split("      - name:", 1)[0]
         self.assertNotIn("if:", step)
         self.assertNotIn("continue-on-error", step)
