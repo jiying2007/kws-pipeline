@@ -1,0 +1,513 @@
+{
+  "schema": "reviewed-sense-runtime-capture-template-v1",
+  "dependencies": {
+    "frontend_source": {
+      "sha256": "f0ecff8313064245610d7c69a3f6d99890e3f21bf977959ff6ea37f96297aecf",
+      "bytes": 26735
+    },
+    "fbank_source": {
+      "sha256": "93dc12d6f9e9b67bbdbdd337e66a868a1c8a6359d5f0329b13e0238b69c246fc",
+      "bytes": 6497
+    },
+    "parser_source": {
+      "sha256": "878278e46ae9af349a93e37dddffa83e916f447ef82fb6dd61fa8948bb8261d7",
+      "bytes": 1927
+    },
+    "cmvn_file": {
+      "sha256": "29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5",
+      "bytes": 11203
+    },
+    "tokenizer_file": {
+      "sha256": "aa87f86064c3730d799ddf7af3c04659151102cba548bce325cf06ba4da4e6a8",
+      "bytes": 377341
+    },
+    "backend_package_source": {
+      "sha256": "b9444c0a2d0f462651aff6343a543a6a0cc89ab322af824f8e1883d4b5b162d5",
+      "bytes": 386
+    },
+    "backend_binary": {
+      "sha256": "5285a70bf2b6965a106ea13adbcb0a21fbc16931ac3f50f30ea2280b6e141b34",
+      "bytes": 512864
+    },
+    "backend_core_library": {
+      "sha256": "6bc8be5a9aa42bfa15b9859b94a2eb048a87ba3223b43512daa5d59077a58113",
+      "bytes": 243160
+    }
+  },
+  "sources": [
+    {
+      "path": "/code/research/native-asr-integration-20261104/prepare_worker.py",
+      "member": "bindings/code/research/native-asr-integration-20261104/prepare_worker.py",
+      "sha256": "37eac493593f4c6a73a250fac35985a076b1eacf3cea381e03f8ec3f89d2f0d8",
+      "bytes": 6236
+    },
+    {
+      "path": "/code/research/native-asr-integration-20261104/qwen_worker.py",
+      "member": "bindings/code/research/native-asr-integration-20261104/qwen_worker.py",
+      "sha256": "bd8df010500a17eaebd2f7675978df6d64a9d9a4b3c0c423606168792c57cba2",
+      "bytes": 7271
+    },
+    {
+      "path": "/code/research/native-asr-integration-20261104/safe_diagnostic.py",
+      "member": "bindings/code/research/native-asr-integration-20261104/safe_diagnostic.py",
+      "sha256": "dd8d95f3aabaa82d4f5bf58ab97e8b67f2b603be8f0a15746db4d20280a64255",
+      "bytes": 7492
+    },
+    {
+      "path": "/code/research/native-asr-integration-20261104/zero_forward.py",
+      "member": "bindings/code/research/native-asr-integration-20261104/zero_forward.py",
+      "sha256": "a47bc830f5e690e4d6a4c95735753c57e27268e1e0e7d408353c8de1108e5376",
+      "bytes": 7838
+    },
+    {
+      "path": "/code/research/qwen-native-capture-20261104/ADMISSION.md",
+      "member": "bindings/code/research/qwen-native-capture-20261104/ADMISSION.md",
+      "sha256": "d8cada4fffbd06ba044a48aba7ed157b128c0cfc834de9e318fa94a9b07bdde1",
+      "bytes": 3899
+    },
+    {
+      "path": "/code/research/qwen-native-capture-20261104/README-capture.md",
+      "member": "bindings/code/research/qwen-native-capture-20261104/README-capture.md",
+      "sha256": "19058d64ad47cc1ab95ea7f4f5c970c3723b0f73e57b6d13d77d125679cb292e",
+      "bytes": 3196
+    },
+    {
+      "path": "/code/research/qwen-native-capture-20261104/capture_worker.py",
+      "member": "bindings/code/research/qwen-native-capture-20261104/capture_worker.py",
+      "sha256": "cfcb7d4edc0c6f967ff3f01319973abe7d2c7e7db8c623e63260ce06cc700d73",
+      "bytes": 14931
+    },
+    {
+      "path": "/code/research/qwen-native-capture-20261104/generation_capture.py",
+      "member": "bindings/code/research/qwen-native-capture-20261104/generation_capture.py",
+      "sha256": "675cbfeda44897526fde470f76ec7ac7ce03748d555125f4d555c3d4160b6191",
+      "bytes": 3669
+    },
+    {
+      "path": "/code/research/qwen-native-capture-20261104/native_sink.py",
+      "member": "bindings/code/research/qwen-native-capture-20261104/native_sink.py",
+      "sha256": "d516325edaf2c412a1c1c41b14bd4e976355ea49543d27b121afe02620221ee8",
+      "bytes": 12268
+    },
+    {
+      "path": "/code/research/qwen-native-capture-20261104/test_capture_worker.py",
+      "member": "bindings/code/research/qwen-native-capture-20261104/test_capture_worker.py",
+      "sha256": "35c64333cb2fd332ba8b8e7bafb4c2092e1fc511ace8adb2612f3d46733b56d4",
+      "bytes": 7341
+    },
+    {
+      "path": "/code/research/qwen-native-capture-20261104/test_generation_capture.py",
+      "member": "bindings/code/research/qwen-native-capture-20261104/test_generation_capture.py",
+      "sha256": "294d4b05942321e60020e2876f306c32e97bb055be50e0b571e5d2c53eab0a9f",
+      "bytes": 4129
+    },
+    {
+      "path": "/code/research/qwen-native-capture-20261104/test_native_sink.py",
+      "member": "bindings/code/research/qwen-native-capture-20261104/test_native_sink.py",
+      "sha256": "58b52795dcda9747946afc5a73753552501f235ee16cb309db9dc034b083b7af",
+      "bytes": 11479
+    },
+    {
+      "path": "/code/research/qwen-native-capture-20261104/transformers-review.json",
+      "member": "bindings/code/research/qwen-native-capture-20261104/transformers-review.json",
+      "sha256": "1bdd20711c009fa0e52834e99576f33e27afe8b188af3da06f2358f4a9a11b31",
+      "bytes": 705
+    },
+    {
+      "path": "/code/research/qwen6_asr/FUNASR_MODEL_LICENSE",
+      "member": "bindings/code/research/qwen6_asr/FUNASR_MODEL_LICENSE",
+      "sha256": "7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8",
+      "bytes": 5306
+    },
+    {
+      "path": "/code/research/qwen6_asr/NOTICE.md",
+      "member": "bindings/code/research/qwen6_asr/NOTICE.md",
+      "sha256": "a01fd4891fd878f2bbb4de93e13dbef67dd10b127974240046304803c96685a7",
+      "bytes": 1699
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/asr6_contract.py",
+      "member": "bindings/code/research/qwen6_asr/core/asr6_contract.py",
+      "sha256": "d1c3368133e06a3de9758b23f136c3a37a74a63057f317ece863470ad0304b10",
+      "bytes": 5799
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/asr_stage/adapters.py",
+      "member": "bindings/code/research/qwen6_asr/core/asr_stage/adapters.py",
+      "sha256": "85512f20280cfa0aeb06b50699664e360db39bbf5b58034d3a2ede5cde8ff6ca",
+      "bytes": 16560
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/asr_stage/architecture.py",
+      "member": "bindings/code/research/qwen6_asr/core/asr_stage/architecture.py",
+      "sha256": "d3f0d67bcf724c34763ac4666a1570b02dfd979182e6183403ef91e0897d58ab",
+      "bytes": 6922
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/asr_stage/assets.py",
+      "member": "bindings/code/research/qwen6_asr/core/asr_stage/assets.py",
+      "sha256": "91a8c7e75f37872fc1b07cabc2afd1790901bf44a3fda1e48fb5abc2b129ff6e",
+      "bytes": 5481
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/asr_stage/decoding.py",
+      "member": "bindings/code/research/qwen6_asr/core/asr_stage/decoding.py",
+      "sha256": "fd401bd85e4ca3d871e5a9354753d3599facbb32b9df22e34f05e5476e74b503",
+      "bytes": 3167
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/asr_stage/execution.py",
+      "member": "bindings/code/research/qwen6_asr/core/asr_stage/execution.py",
+      "sha256": "149befff56ef9da603d8b27174ca1a1d4eae638cc86f356cc5a1b8412ac06c9f",
+      "bytes": 10872
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/asr_stage/runtime_support.py",
+      "member": "bindings/code/research/qwen6_asr/core/asr_stage/runtime_support.py",
+      "sha256": "f3a6ee85e30dc5a1bc2351a76843c44bc988aed83745773e543e1b69cf4a6d90",
+      "bytes": 5889
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/pcm/pcm_binding.py",
+      "member": "bindings/code/research/qwen6_asr/core/pcm/pcm_binding.py",
+      "sha256": "1f8cb1e8fba2c99dfd969b7f33a12011243aa68f0a6e1eb0dbf45d90fc9b1684",
+      "bytes": 15751
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/runtime_version_gate.py",
+      "member": "bindings/code/research/qwen6_asr/core/runtime_version_gate.py",
+      "sha256": "c6d2e35c69f3ba34e3a7f92bd9b486eb00476f76ed5c8687319f4382b23bd512",
+      "bytes": 1685
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/sense_binding.py",
+      "member": "bindings/code/research/qwen6_asr/core/sense_binding.py",
+      "sha256": "1a2fd8474d347591939b3ce9ab7411aa9a8f9ce0ffa732d93a95402b677503d2",
+      "bytes": 5393
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/vendor/checkpoint_guard/__init__.py",
+      "member": "bindings/code/research/qwen6_asr/core/vendor/checkpoint_guard/__init__.py",
+      "sha256": "ca1bfd88d26591efeb70bb58155294be4ebc2af7a6e45cc5f09f3e90dc5c541e",
+      "bytes": 85
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/vendor/checkpoint_guard/checkpoint_contract.py",
+      "member": "bindings/code/research/qwen6_asr/core/vendor/checkpoint_guard/checkpoint_contract.py",
+      "sha256": "80cd48b0ce8beb2f7473372a3d904ba42af316c7df4a3c44f8a8b54dd50896c4",
+      "bytes": 11858
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/vendor/checkpoint_guard/exact_apply.py",
+      "member": "bindings/code/research/qwen6_asr/core/vendor/checkpoint_guard/exact_apply.py",
+      "sha256": "10bc8634053a602b1669a007865c9d18955577b8aab4b7e7f14dfdcc6ce9e22b",
+      "bytes": 7190
+    },
+    {
+      "path": "/code/research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+      "member": "bindings/code/research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+      "sha256": "b21139d3d63467b910f13b4bc2045d08a737799f9d4bc4dae96972f2a9cd1dad",
+      "bytes": 20838
+    },
+    {
+      "path": "/code/research/qwen6_asr/import_preflight.py",
+      "member": "bindings/code/research/qwen6_asr/import_preflight.py",
+      "sha256": "30cfe60347ccc6074d98a21406fccee3e3be5c54822aa8d874aae3655693ae1c",
+      "bytes": 8907
+    },
+    {
+      "path": "/code/research/qwen6_asr/model-locks.json",
+      "member": "bindings/code/research/qwen6_asr/model-locks.json",
+      "sha256": "8b0813aba3c2447c7dc30b47e856e4ce9a619a98d32ed6dfa9f44dc6646714e4",
+      "bytes": 7689
+    },
+    {
+      "path": "/code/research/qwen6_asr/runtime-lock.json",
+      "member": "bindings/code/research/qwen6_asr/runtime-lock.json",
+      "sha256": "2d496a76bd0e044a6812bfc9afdd8965474bf135bd21f3a24f71695638d1183f",
+      "bytes": 229711
+    },
+    {
+      "path": "/code/research/qwen6_asr/sense_parser.py",
+      "member": "bindings/code/research/qwen6_asr/sense_parser.py",
+      "sha256": "878278e46ae9af349a93e37dddffa83e916f447ef82fb6dd61fa8948bb8261d7",
+      "bytes": 1927
+    },
+    {
+      "path": "/code/research/qwen6_asr/setup_diagnostics.py",
+      "member": "bindings/code/research/qwen6_asr/setup_diagnostics.py",
+      "sha256": "1b98e253d7054d0bfcd5ec128cb3a331bb05de48776330e84ea348694b3a1bf2",
+      "bytes": 8676
+    },
+    {
+      "path": "/code/research/qwen6_asr/setup_locked.py",
+      "member": "bindings/code/research/qwen6_asr/setup_locked.py",
+      "sha256": "d7c580b59b0bd249bc62c9093b9de5f8842170510cf11e7e61c29057e6287af4",
+      "bytes": 37521
+    },
+    {
+      "path": "/code/research/qwen6_asr/wheel_identity.py",
+      "member": "bindings/code/research/qwen6_asr/wheel_identity.py",
+      "sha256": "623ee07a0d8f85ba1d7218a56fcd0e270df8c6e2c3e353dd52b3184ca915d8d5",
+      "bytes": 2774
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/README.md",
+      "member": "bindings/code/research/sense-native-capture-20261104/README.md",
+      "sha256": "572a643aa7f6284a5658bfb8f09e3d25f39408bcb9e02f67f2ff57702fd49b0e",
+      "bytes": 13502
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/RESOLVER-REVIEW.md",
+      "member": "bindings/code/research/sense-native-capture-20261104/RESOLVER-REVIEW.md",
+      "sha256": "9c1a9e9ad449806051bab0e54db1c5a99c37dd9e12a3bca7c854a5d6fdb6459f",
+      "bytes": 3695
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/frontend-observation.schema.json",
+      "member": "bindings/code/research/sense-native-capture-20261104/frontend-observation.schema.json",
+      "sha256": "1a2fef7a175fffbcf168f6d64d4a67f9f0f6ff6ffca390b2fa3a14d26e95b930",
+      "bytes": 9394
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/frontend_verifier.py",
+      "member": "bindings/code/research/sense-native-capture-20261104/frontend_verifier.py",
+      "sha256": "0cff930c6c02bcc15fe737979ea59e89921c0b477449355162f2d85d72484468",
+      "bytes": 8957
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/independent-wheel-review.json",
+      "member": "bindings/code/research/sense-native-capture-20261104/independent-wheel-review.json",
+      "sha256": "11e1afec3e25f58d498545fa92ff636b93e4e031b523aefc6ce1d84232b6ed51",
+      "bytes": 1199
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/recovered-dependency-identities.json",
+      "member": "bindings/code/research/sense-native-capture-20261104/recovered-dependency-identities.json",
+      "sha256": "9549559835b3f16606282193a2c8221594d89f2bd7eb3eca1fbee15e995e36ad",
+      "bytes": 3439
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/resolver-patch-base.json",
+      "member": "bindings/code/research/sense-native-capture-20261104/resolver-patch-base.json",
+      "sha256": "4c1a0b0bef28710ab4bdf9d14e474e0a527788f5bf4f0e69f5722f3e7bce8ee8",
+      "bytes": 283
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/retained_native_contracts.py",
+      "member": "bindings/code/research/sense-native-capture-20261104/retained_native_contracts.py",
+      "sha256": "752f192fb125fb31291a8246845c3015dc97348fc27822c389e14b52da3ef674",
+      "bytes": 20495
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/reviewed-dependency-identities.json",
+      "member": "bindings/code/research/sense-native-capture-20261104/reviewed-dependency-identities.json",
+      "sha256": "66201f98ac89ac36cf97d8f67ddbb75f18c31c790fe539b7e34028a153c1f0dd",
+      "bytes": 1033
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/reviewed-wheel-members.json",
+      "member": "bindings/code/research/sense-native-capture-20261104/reviewed-wheel-members.json",
+      "sha256": "c4a9e06c6339b07bc8a011573c0073ba65212b1495221854b891e6ffdd9c1856",
+      "bytes": 1101
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/sense-frontend-resolver-review.patch",
+      "member": "bindings/code/research/sense-native-capture-20261104/sense-frontend-resolver-review.patch",
+      "sha256": "e2a05935cd20875dc6af9d4c0f7e5b97bdcc222e9491d3bc12c7f71c117d537a",
+      "bytes": 11627
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/sense_capture.py",
+      "member": "bindings/code/research/sense-native-capture-20261104/sense_capture.py",
+      "sha256": "f9069a14142185cba54eafa97dc53a9d71fe1a2dab5329b6e6bb671999fcd3a7",
+      "bytes": 26545
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/test_frontend_verifier.py",
+      "member": "bindings/code/research/sense-native-capture-20261104/test_frontend_verifier.py",
+      "sha256": "47dcdc2e81222cfa92901239162c779a13bbcfc1380f29ca40e54ce4df02c07f",
+      "bytes": 6722
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/test_review_regressions.py",
+      "member": "bindings/code/research/sense-native-capture-20261104/test_review_regressions.py",
+      "sha256": "b7a560eab95f8dd4933ea6f47997830e1afe8d5a269930a66581c5be5a2f7f8d",
+      "bytes": 5478
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/test_sense_capture.py",
+      "member": "bindings/code/research/sense-native-capture-20261104/test_sense_capture.py",
+      "sha256": "016414d46402053d0efb505c530e0e2ef2db31f0fbce421f7d4867481faac2ec",
+      "bytes": 16336
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/test_worker.py",
+      "member": "bindings/code/research/sense-native-capture-20261104/test_worker.py",
+      "sha256": "432575731dc88d78010add9746c0e75f66c6eaed3cf784b575eccd6c9731a36d",
+      "bytes": 10595
+    },
+    {
+      "path": "/code/research/sense-native-capture-20261104/worker.py",
+      "member": "bindings/code/research/sense-native-capture-20261104/worker.py",
+      "sha256": "d0b8c17a594557ad0b00e36714f60d6ec3f682a54bed9aa978fe40a7120556f3",
+      "bytes": 15127
+    },
+    {
+      "path": "/code/research/source-screen32-v1/asr_worker.py",
+      "member": "bindings/code/research/source-screen32-v1/asr_worker.py",
+      "sha256": "b5cef29fe4e2c67f9121d93f83eb351f3e7a8ca14136ad684669832a77164f17",
+      "bytes": 40928
+    },
+    {
+      "path": "/code/research/source-screen32-v1/container-lock.json",
+      "member": "bindings/code/research/source-screen32-v1/container-lock.json",
+      "sha256": "71a687d9580c2310dcc73768daffa6f881c41aa96310be144cf4dfccbefb5ba1",
+      "bytes": 2691
+    },
+    {
+      "path": "/code/research/source-screen32-v1/runtime_scope.py",
+      "member": "bindings/code/research/source-screen32-v1/runtime_scope.py",
+      "sha256": "c08bd46d34bea011a63d32867386b26637d5a02753769654e08e4c32c31cb927",
+      "bytes": 3014
+    },
+    {
+      "path": "/code/research/source-screen32-v1/sense_adapter.py",
+      "member": "bindings/code/research/source-screen32-v1/sense_adapter.py",
+      "sha256": "307a3a5985ae616e777f0b71ffc37ac31cd4b78bd12b4d7cbd69f816813057c1",
+      "bytes": 9287
+    },
+    {
+      "path": "/code/research/source-screen32-v1/setup_adapter.py",
+      "member": "bindings/code/research/source-screen32-v1/setup_adapter.py",
+      "sha256": "b7f6c3493ad0da909c7e6856d27f3247f5e1716ce6c981cb396a03687aa7e547",
+      "bytes": 15434
+    },
+    {
+      "path": "/code/research/source-screen32-whisper-v1/adapter.py",
+      "member": "bindings/code/research/source-screen32-whisper-v1/adapter.py",
+      "sha256": "d142605a62ff990633194b43992b698673780b065e5f3599d7e27eccc74d693b",
+      "bytes": 15431
+    },
+    {
+      "path": "/code/research/source-screen32-whisper-v1/common.py",
+      "member": "bindings/code/research/source-screen32-whisper-v1/common.py",
+      "sha256": "21cc72171d071cc9ac0113307af751315b69ce70fbf522a1b2586a7617900861",
+      "bytes": 5108
+    },
+    {
+      "path": "/code/research/source-screen32-whisper-v1/runtime-lock.json",
+      "member": "bindings/code/research/source-screen32-whisper-v1/runtime-lock.json",
+      "sha256": "881443c6e66acb99223137bd8342788468f814d0a1c3e73ba33a27da3ad1fe6d",
+      "bytes": 21952
+    },
+    {
+      "path": "/code/research/source-screen32-whisper-v1/setup_runtime.py",
+      "member": "bindings/code/research/source-screen32-whisper-v1/setup_runtime.py",
+      "sha256": "526d4c5b282c61644ee8357fb045e371288b5143b6a4ec9981ce867a758704c4",
+      "bytes": 17512
+    },
+    {
+      "path": "/code/research/source-screen32-whisper-v1/source-lock.json",
+      "member": "bindings/code/research/source-screen32-whisper-v1/source-lock.json",
+      "sha256": "0635fb8759fb56439f59db6956612f78cc8903c239f81f3eb7f9b0c47eb99649",
+      "bytes": 6780
+    },
+    {
+      "path": "/code/research/tts-pilot-screening-v1/blind_utils.py",
+      "member": "bindings/code/research/tts-pilot-screening-v1/blind_utils.py",
+      "sha256": "c656e40e6f767cc1841cb7812dd102b617bc7a83947716c1bc6e1c0f3fb63fa3",
+      "bytes": 915
+    },
+    {
+      "path": "/code/research/tts-pilot-screening-v1/whisper_worker.py",
+      "member": "bindings/code/research/tts-pilot-screening-v1/whisper_worker.py",
+      "sha256": "76619a7f245bfb4d5470e82bd4445c00cd74dc6987548e77f5dbae5927a3efe9",
+      "bytes": 2618
+    },
+    {
+      "path": "/code/research/whisper-native-capture-20261104/README.md",
+      "member": "bindings/code/research/whisper-native-capture-20261104/README.md",
+      "sha256": "9ff4946b24a4f9a4b021710ea7554e442dbb8cdb2649ea859cc716110510faa1",
+      "bytes": 13216
+    },
+    {
+      "path": "/code/research/whisper-native-capture-20261104/test_whisper_capture.py",
+      "member": "bindings/code/research/whisper-native-capture-20261104/test_whisper_capture.py",
+      "sha256": "dcbe2a96b1b8f5d20daebe03aad03df2a1dc981d09d7f425188ce1dae4e25a16",
+      "bytes": 19455
+    },
+    {
+      "path": "/code/research/whisper-native-capture-20261104/test_worker.py",
+      "member": "bindings/code/research/whisper-native-capture-20261104/test_worker.py",
+      "sha256": "e3ee77c957938047b5b54f3774d5368aed0b63edfc9c71b4843deea3729467f1",
+      "bytes": 6721
+    },
+    {
+      "path": "/code/research/whisper-native-capture-20261104/verification.json",
+      "member": "bindings/code/research/whisper-native-capture-20261104/verification.json",
+      "sha256": "37467cc69911a2080648a737124382188c4b24e1b5cf87a96cd543cfba61d70c",
+      "bytes": 2340
+    },
+    {
+      "path": "/code/research/whisper-native-capture-20261104/whisper_capture.py",
+      "member": "bindings/code/research/whisper-native-capture-20261104/whisper_capture.py",
+      "sha256": "0ffd691d7b941f905de8e2be4cf0e95257d207e90b875c01cc6053d88d1dbf22",
+      "bytes": 22289
+    },
+    {
+      "path": "/code/research/whisper-native-capture-20261104/worker.py",
+      "member": "bindings/code/research/whisper-native-capture-20261104/worker.py",
+      "sha256": "e83a2a379182559eb1ffb6289f7c240a8b4c7973d9d31a459c3d9b66f558eb86",
+      "bytes": 8169
+    },
+    {
+      "path": "/code/tools/asr_native_contracts.py",
+      "member": "bindings/code/tools/asr_native_contracts.py",
+      "sha256": "752f192fb125fb31291a8246845c3015dc97348fc27822c389e14b52da3ef674",
+      "bytes": 20495
+    },
+    {
+      "path": "/code/tools/speech_asr_consensus.py",
+      "member": "bindings/code/tools/speech_asr_consensus.py",
+      "sha256": "ac7329b2e6d7b9c494c22da38fbf398a926805b5227a1fb52b33c9e0f1df2e8f",
+      "bytes": 29277
+    },
+    {
+      "path": "/code/tools/speech_label_admission.py",
+      "member": "bindings/code/tools/speech_label_admission.py",
+      "sha256": "d7fb1a6708a5729e6bfe2c7b294b0961767e2fbd631d0395812aac723791d73f",
+      "bytes": 10901
+    },
+    {
+      "path": "/runtime/venv/lib/python3.12/site-packages/funasr/frontends/wav_frontend.py",
+      "member": "bindings/runtime/funasr/frontends/wav_frontend.py",
+      "sha256": "f0ecff8313064245610d7c69a3f6d99890e3f21bf977959ff6ea37f96297aecf",
+      "bytes": 26735
+    },
+    {
+      "path": "/runtime/venv/lib/python3.12/site-packages/funasr/utils/fbank.py",
+      "member": "bindings/runtime/funasr/utils/fbank.py",
+      "sha256": "93dc12d6f9e9b67bbdbdd337e66a868a1c8a6359d5f0329b13e0238b69c246fc",
+      "bytes": 6497
+    },
+    {
+      "path": "/runtime/venv/lib/python3.12/site-packages/kaldi_native_fbank/__init__.py",
+      "member": "bindings/runtime/kaldi_native_fbank/__init__.py",
+      "sha256": "b9444c0a2d0f462651aff6343a543a6a0cc89ab322af824f8e1883d4b5b162d5",
+      "bytes": 386
+    },
+    {
+      "path": "/runtime/venv/lib/python3.12/site-packages/_kaldi_native_fbank.cpython-312-x86_64-linux-gnu.so",
+      "member": "bindings/runtime/_kaldi_native_fbank.cpython-312-x86_64-linux-gnu.so",
+      "sha256": "5285a70bf2b6965a106ea13adbcb0a21fbc16931ac3f50f30ea2280b6e141b34",
+      "bytes": 512864
+    },
+    {
+      "path": "/runtime/venv/lib/python3.12/site-packages/kaldi_native_fbank/lib/libkaldi-native-fbank-core.so",
+      "member": "bindings/runtime/kaldi_native_fbank/lib/libkaldi-native-fbank-core.so",
+      "sha256": "6bc8be5a9aa42bfa15b9859b94a2eb048a87ba3223b43512daa5d59077a58113",
+      "bytes": 243160
+    }
+  ]
+}
