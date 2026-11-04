@@ -1,0 +1,14 @@
+{
+  "url": "https://github.com/huggingface/transformers/blob/v4.57.6/src/transformers/generation/utils.py",
+  "stage": "reviewed_official_source_not_runtime_verification",
+  "resolution_line": 2378,
+  "later_mutations": [
+    "special token tensors prepared at 2433",
+    "use_cache may change at 2454",
+    "max/min generated length resolved at 2501",
+    "cache preparation at 2530"
+  ],
+  "scope": "Resolver snapshot is not final complete configuration. Required greedy controls checked again after return; custom caller processors and stopping criteria rejected at actual thinker.generate boundary.",
+  "sha256": "55fd5c50aa785e226afa03e4507b8d27c0328714c0bd048bc60af9e8813a1173",
+  "bytes": 210172
+}

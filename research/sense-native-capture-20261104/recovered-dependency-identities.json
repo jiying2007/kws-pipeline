@@ -1,0 +1,68 @@
+{
+  "schema": "sense-dependency-identity-recovery-v1",
+  "known": {
+    "frontend_source": {
+      "bytes": 26735,
+      "sha256": "f0ecff8313064245610d7c69a3f6d99890e3f21bf977959ff6ea37f96297aecf",
+      "source": "fixed30-setup-diagnosis-v1/sox-method-sources/source-members/funasr/frontends/wav_frontend.py",
+      "local_original_bytes_verified": true
+    },
+    "fbank_source": {
+      "bytes": 6497,
+      "sha256": "93dc12d6f9e9b67bbdbdd337e66a868a1c8a6359d5f0329b13e0238b69c246fc",
+      "source": "fixed30-setup-diagnosis-v1/sox-method-sources/source-members/funasr/utils/fbank.py",
+      "local_original_bytes_verified": true
+    },
+    "parser_source": {
+      "bytes": 1927,
+      "sha256": "878278e46ae9af349a93e37dddffa83e916f447ef82fb6dd61fa8948bb8261d7",
+      "source": "kws-three-asr-pilot-20261104/research/qwen6_asr/sense_parser.py",
+      "local_original_bytes_verified": true
+    },
+    "cmvn_file": {
+      "bytes": 11203,
+      "sha256": "29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5",
+      "source": "kws-three-asr-pilot-20261104-verified/primary/sensevoice/sensevoice/model-load.json#assets.verified_files.am.mvn",
+      "local_original_bytes_verified": false,
+      "completed_run_verified_inventory": true
+    },
+    "tokenizer_file": {
+      "bytes": 377341,
+      "sha256": "aa87f86064c3730d799ddf7af3c04659151102cba548bce325cf06ba4da4e6a8",
+      "source": "kws-three-asr-pilot-20261104-verified/primary/sensevoice/sensevoice/model-load.json#assets.verified_files.chn_jpn_yue_eng_ko_spectok.bpe.model",
+      "local_original_bytes_verified": false,
+      "completed_run_verified_inventory": true
+    },
+    "backend_package_source": {
+      "bytes": 386,
+      "sha256": "b9444c0a2d0f462651aff6343a543a6a0cc89ab322af824f8e1883d4b5b162d5",
+      "source": "kaldi_native_fbank-1.22.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl!/kaldi_native_fbank/__init__.py",
+      "local_original_bytes_verified": true
+    },
+    "backend_binary": {
+      "bytes": 512864,
+      "sha256": "5285a70bf2b6965a106ea13adbcb0a21fbc16931ac3f50f30ea2280b6e141b34",
+      "source": "kaldi_native_fbank-1.22.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl!/_kaldi_native_fbank.cpython-312-x86_64-linux-gnu.so",
+      "local_original_bytes_verified": true
+    },
+    "backend_core_library": {
+      "bytes": 243160,
+      "sha256": "6bc8be5a9aa42bfa15b9859b94a2eb048a87ba3223b43512daa5d59077a58113",
+      "source": "kaldi_native_fbank-1.22.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl!/kaldi_native_fbank/lib/libkaldi-native-fbank-core.so",
+      "local_original_bytes_verified": true
+    }
+  },
+  "missing_member_identities": [],
+  "containing_pinned_wheel": {
+    "filename": "kaldi_native_fbank-1.22.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+    "url": "https://files.pythonhosted.org/packages/84/90/01ef7331c52b1eaf9916f3f7a535155aac2e9e2ddad12a141613d92758c7/kaldi_native_fbank-1.22.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+    "sha256": "f16e74372fe9e20abb4183f98a8e2288d5ee4c48d04d94b6160311170e007661",
+    "size_bytes": 322002
+  },
+  "wheel_source": "kws-three-asr-pilot-20261104/research/qwen6_asr/runtime-lock.json",
+  "downloads_performed": 0,
+  "complete_review_manifest": false,
+  "training_admitted": false,
+  "dependency_identity_set_complete": true,
+  "independent_review": "independent-wheel-review.json"
+}

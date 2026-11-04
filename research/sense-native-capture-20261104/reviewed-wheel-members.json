@@ -1,0 +1,28 @@
+{
+  "schema": "readonly-locked-wheel-member-review-v1",
+  "wheel": {
+    "filename": "kaldi_native_fbank-1.22.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+    "url": "https://files.pythonhosted.org/packages/84/90/01ef7331c52b1eaf9916f3f7a535155aac2e9e2ddad12a141613d92758c7/kaldi_native_fbank-1.22.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+    "sha256": "f16e74372fe9e20abb4183f98a8e2288d5ee4c48d04d94b6160311170e007661",
+    "size_bytes": 322002
+  },
+  "members": [
+    {
+      "member": "_kaldi_native_fbank.cpython-312-x86_64-linux-gnu.so",
+      "bytes": 512864,
+      "sha256": "5285a70bf2b6965a106ea13adbcb0a21fbc16931ac3f50f30ea2280b6e141b34"
+    },
+    {
+      "member": "kaldi_native_fbank/__init__.py",
+      "bytes": 386,
+      "sha256": "b9444c0a2d0f462651aff6343a543a6a0cc89ab322af824f8e1883d4b5b162d5"
+    },
+    {
+      "member": "kaldi_native_fbank/lib/libkaldi-native-fbank-core.so",
+      "bytes": 243160,
+      "sha256": "6bc8be5a9aa42bfa15b9859b94a2eb048a87ba3223b43512daa5d59077a58113"
+    }
+  ],
+  "installed": false,
+  "executed": false
+}

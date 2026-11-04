@@ -1,0 +1,74 @@
+{
+  "schema": "whisper-native-capture-local-verification-v1",
+  "date": "2026-11-04",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 13216,
+      "sha256": "9ff4946b24a4f9a4b021710ea7554e442dbb8cdb2649ea859cc716110510faa1"
+    },
+    {
+      "path": "test_whisper_capture.py",
+      "bytes": 19455,
+      "sha256": "dcbe2a96b1b8f5d20daebe03aad03df2a1dc981d09d7f425188ce1dae4e25a16"
+    },
+    {
+      "path": "test_worker.py",
+      "bytes": 6721,
+      "sha256": "e3ee77c957938047b5b54f3774d5368aed0b63edfc9c71b4843deea3729467f1"
+    },
+    {
+      "path": "whisper_capture.py",
+      "bytes": 22117,
+      "sha256": "173a09a370928bd106f543b34d56a638b227b8840600aa16ecd9f99ecd7063c1"
+    },
+    {
+      "path": "worker.py",
+      "bytes": 8169,
+      "sha256": "e83a2a379182559eb1ffb6289f7c240a8b4c7973d9d31a459c3d9b66f558eb86"
+    }
+  ],
+  "checks": [
+    {
+      "mode": [
+        "normal"
+      ],
+      "passed": true,
+      "tests": 27,
+      "output": "...........................\n----------------------------------------------------------------------\nRan 27 tests in 0.112s\n\nOK\n"
+    },
+    {
+      "mode": [
+        "-O"
+      ],
+      "passed": true,
+      "tests": 27,
+      "output": "...........................\n----------------------------------------------------------------------\nRan 27 tests in 0.112s\n\nOK\n"
+    },
+    {
+      "mode": [
+        "-OO"
+      ],
+      "passed": true,
+      "tests": 27,
+      "output": "...........................\n----------------------------------------------------------------------\nRan 27 tests in 0.123s\n\nOK\n"
+    }
+  ],
+  "python38_grammar_passed": true,
+  "retained_pins_unchanged": true,
+  "legacy_progress_contract": "load/index0 or cell/index1..16; terminal does not rewrite progress",
+  "ml_packages_imported": false,
+  "model_loaded": false,
+  "model_downloaded": false,
+  "recognition_run": false,
+  "remote_mutations": false,
+  "training_admitted": false,
+  "verification_scope": "Invented stdlib fixtures and source/schema/state checks only; not authenticity or admission.",
+  "pending": [
+    "actual runtime/native preparation measurements",
+    "real frozen three-model policy and new audio",
+    "independent source/asset/authenticity review",
+    "source rights/lineage and reviewed train trust root"
+  ],
+  "isolated_cli_help_passed": true
+}

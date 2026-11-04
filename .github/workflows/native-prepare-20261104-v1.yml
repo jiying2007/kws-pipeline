@@ -1,0 +1,35 @@
+name: Native no-audio preparation 20261104 v1
+on:
+  push:
+    branches: [research/native-prepare-20261104-v1]
+permissions:
+  contents: read
+concurrency:
+  group: native-prepare-20261104-v1
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/native-prepare-20261104-v1' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_number == 1 && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Offline no-model source tests
+        run: |
+          set -euo pipefail
+          for opt in '' -O -OO; do
+            python3 -I -B $opt research/native-asr-integration-20261104/test_zero_forward.py
+            python3 -I -B $opt research/native-asr-integration-20261104/test_integration.py
+          done
+      - name: Prepare three actual models without audio or recognition
+        run: python3 -I -B research/native-asr-integration-20261104/prepare_host.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: native-prepare-20261104-v1-public
+          path: native-private-native-prepare-20261104-v1/aggregate-only/status.json
+          if-no-files-found: error
+          retention-days: 7

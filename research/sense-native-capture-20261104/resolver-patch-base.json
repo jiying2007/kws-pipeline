@@ -1,0 +1,7 @@
+{
+  "base_path": "tools/asr_source_resolver.py",
+  "base_sha256": "72b14c2288656628232bf33f7db5ad44678f52ae0bcf225029cf9d4aa2cc0088",
+  "candidate_sha256": "4200a9093acce9e1c65ea69cb662eeb9a59451777bdf62325afbe23b6fa9973e",
+  "trust_roots_changed": false,
+  "patch_applied": false
+}
