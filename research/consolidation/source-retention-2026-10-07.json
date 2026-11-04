@@ -15599,7 +15599,8 @@
     ".github/workflows/qwen-nonclone-asr-20261104-v1.yml",
     ".github/workflows/qwen-nonclone64-20261104-v1.yml",
     ".github/workflows/native-prepare-20261104-v1.yml",
-    ".github/workflows/runner-storage-20261104-v1.yml"
+    ".github/workflows/runner-storage-20261104-v1.yml",
+    ".github/workflows/native-prepare-capacity-20261104-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -44826,6 +44827,77 @@
           "git_blob_sha1": "2e9596b411aa1371bcecd7eb45755d99e2473af4"
         }
       ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "native-prepare-capacity-20261104-v1",
+      "source_commit": "5f684744d38747fc648c68b321355e4e57fc2a38",
+      "workflow_source_changed": true,
+      "scope": "One fresh first-create-only, single-job bounded no-audio native model preparation. Persist same-job numeric disk capacity before unchanged 25GiB initial gate; retain original 16/8GiB setup gates, 1800-second inner budget and 40-minute job timeout. Consumed native prepare v1 remains unchanged. No ASR inference, training, raw payload publication, new cleanup or threshold reduction.",
+      "files": [
+        {
+          "path": ".github/workflows/native-prepare-capacity-20261104-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/native-prepare-capacity-20261104-v1.yml",
+            "mode": "100644",
+            "bytes": 1807,
+            "sha256": "fd034ad6847cd000f3ac4705634b966df2980198059e366c4b11899008c4457a",
+            "git_blob_sha1": "5df121fd7a9b9cb03461c8efaa484cb7be05896d"
+          }
+        }
+      ],
+      "source_files": [
+        {
+          "path": "research/native-prepare-capacity-20261104/host.py",
+          "mode": "100644",
+          "bytes": 9181,
+          "sha256": "5d4704c35e57eacf72f8797e696a7cd943eb65c41ccbce901607491c6ab623f8",
+          "git_blob_sha1": "63f7d0811c80148414b1aace70b8ef4df1189bc8"
+        },
+        {
+          "path": "research/native-prepare-capacity-20261104/README.md",
+          "mode": "100644",
+          "bytes": 2238,
+          "sha256": "1323db27fa584a3e91a86124f8f56efb1d7252f86f3588b2e19c74807dea78f0",
+          "git_blob_sha1": "97a386d9d35844268f578a7b9d1ddf933457db09"
+        },
+        {
+          "path": "research/native-prepare-capacity-20261104/capacity.py",
+          "mode": "100644",
+          "bytes": 3525,
+          "sha256": "1df234418ca584f807119d92b438199e9aef2ce043cc1a665650d2952a6282b6",
+          "git_blob_sha1": "30b47f44c1306bad4a853666e457a44efaf19f19"
+        },
+        {
+          "path": "research/native-prepare-capacity-20261104/test_capacity.py",
+          "mode": "100644",
+          "bytes": 10515,
+          "sha256": "4776fd57ee1050a452ffe96b0a02c58c205724ffe5571fa198cdea4ba71ba231",
+          "git_blob_sha1": "c7f17d47df00b19e33f4d6e05be053583ddbbf2a"
+        },
+        {
+          "path": "research/native-prepare-capacity-20261104/source-lock.json",
+          "mode": "100644",
+          "bytes": 21658,
+          "sha256": "b1c10c4a05eb3961ea2b092b601beae5927da6a46eec59418a1a6e455c378ffa",
+          "git_blob_sha1": "8b7ba68661cb92ab65a2b036578072054efcfe42"
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "mode": "100644",
+          "bytes": 20411,
+          "sha256": "290ccf2b753cbd7b7010bb969fd8d23a040f2837ccb8c435c39c5da0f4457a40",
+          "git_blob_sha1": "257a617ca24e18f616e76c5fa22e60c192c2ec9b"
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "mode": "100644",
+          "bytes": 70529,
+          "sha256": "12cec505fed03c7ee964fb5312969fc654c8408890a70508bd4389c1a85c8643",
+          "git_blob_sha1": "e41e0c5d8c30cd09991a78ab7718caa3d4d98ccc"
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -44961,6 +45033,13 @@
       "bytes": 1425,
       "sha256": "51b6839b29f74d19898dcd2216d116ec81d0b6cb644588549174eea166402dfd",
       "git_blob_sha1": "d9c26a85ced91a3e7cb831c182235b7279355426"
+    },
+    {
+      "path": ".github/workflows/native-prepare-capacity-20261104-v1.yml",
+      "mode": "100644",
+      "bytes": 1807,
+      "sha256": "fd034ad6847cd000f3ac4705634b966df2980198059e366c4b11899008c4457a",
+      "git_blob_sha1": "5df121fd7a9b9cb03461c8efaa484cb7be05896d"
     }
   ],
   "current_source_revision": {
