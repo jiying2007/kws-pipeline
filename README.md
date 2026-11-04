@@ -72,6 +72,8 @@ failed: **2 false accepts / 8 hours**, upper95 **0.786974 FA/h** (gate: 0 false
 accepts and upper95 ≤ 0.40). It tested this same old model, not D20/D90. Shipping
 approval remains false. See the [current audit](research/consolidation/CI_AUDIT_2026-10-09.md). The separate [2026-10-14 entry](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry) links later nightly failure `38482297930` on its exact historical source; it is not a new acoustic evaluation of current main.
 
+
+The Git storage allowlist keeps `models/registry/**` tracked even when generated `.kwm` and `.pt` intermediates are ignored; archived bytes remain independently hash-verified.
 The frozen synthetic comparison now uses [`configs/research/two-keyword-synthetic-comparator.json`](configs/research/two-keyword-synthetic-comparator.json). It fixes the historical thresholds, model/keyword hashes and original stale-calibration status, **without** granting training, release, real-human acoustic or physical-board qualification. The retired commercial configuration remains available only through Git history.
 
 The current source contract separately records `recalibration_required=true`;

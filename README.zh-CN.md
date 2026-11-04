@@ -65,6 +65,8 @@
 upper95 ≤ 0.40）。这不是 D20/D90 的结果，shipping approval 仍为 false。
 见[本次审计](research/consolidation/CI_AUDIT_2026-10-09.md)。另见[2026-10-14 历史入口](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry)：后续 nightly `38482297930` 仍失败，绑定其历史执行源码，并非对当前 main 的新增声学评估。
 
+
+仓库仍明确保留 `models/registry/**` Git 追踪例外，冻结模型资产按 SHA-256 独立校验。
 冻结的两词研究对照已迁到 [`configs/research/two-keyword-synthetic-comparator.json`](configs/research/two-keyword-synthetic-comparator.json)，保留历史阈值、模型/关键词哈希和需重新校准的事实；不包含商用发布授权，也不能代替真实人声、最终 AFE 或 SSC305 实测。旧配置只在 Git 历史中供审计。
 
 当前源码 contract 另行记录 `recalibration_required=true`；历史资格不构成变更后
