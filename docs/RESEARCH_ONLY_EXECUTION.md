@@ -94,3 +94,11 @@ frozen comparators and Git-model registry evidence remain immutable. Current
 `tests/test_research_model_provenance.py` checks the same training
 source/asset/budget/numerical constraints without executing a publisher;
 source and rights checks remain required for actual training.
+
+## Frozen negative FAR research
+
+The scheduled `far-nightly.yml` now uses the immutable Git research
+comparator and `configs/research-baseline.xiaowo.json`, not a product
+Release or the legacy shipping configuration. See
+[research FAR regression](RESEARCH_FAR_REGRESSION.md). Historical false accepts
+remain failed evidence, not a product suitability claim.
