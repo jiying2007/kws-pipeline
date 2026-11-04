@@ -15597,7 +15597,8 @@
     ".github/workflows/authorized-voice-clone-contracts.yml",
     ".github/workflows/qwen-nonclone-pilot-20261104-v1.yml",
     ".github/workflows/qwen-nonclone-asr-20261104-v1.yml",
-    ".github/workflows/qwen-nonclone64-20261104-v1.yml"
+    ".github/workflows/qwen-nonclone64-20261104-v1.yml",
+    ".github/workflows/native-prepare-20261104-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -44402,6 +44403,364 @@
           "git_blob_sha1": "7e7cfc5f8253a6da65e23d1f041ea2f403d445ce"
         }
       ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "native-prepare-20261104-v1",
+      "source_commit": "67969db3444eae571c2fdef21e3770983cb96f85",
+      "workflow_source_changed": true,
+      "scope": "Add one first-create-only no-audio native configuration preparation; three guarded real model loads, zero recognition inputs/calls, aggregate-only hashes/status, 40-minute single job and 1800-second inner bound. Full ASR launch remains blocked pending evidence persistence and trust review; no raw ASR or audio published.",
+      "files": [
+        {
+          "path": ".github/workflows/native-prepare-20261104-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/native-prepare-20261104-v1.yml",
+            "mode": "100644",
+            "bytes": 1554,
+            "sha256": "aa89ee52cc7154b23c3bc17bd5341e845b789ba45cb5a0c334db004ec21b803a",
+            "git_blob_sha1": "016b3eed711aea524990c955ccf8a924388bd38f"
+          }
+        }
+      ],
+      "source_files": [
+        {
+          "path": "research/native-asr-integration-20261104/README.md",
+          "mode": "100644",
+          "bytes": 5148,
+          "sha256": "4737437c2fb653eba98eac880072018d3446bd647f75a510151e2cd53ec41aa1",
+          "git_blob_sha1": "174421dbdf999ac510260f904c842d3cb003f125"
+        },
+        {
+          "path": "research/native-asr-integration-20261104/balanced-order.json",
+          "mode": "100644",
+          "bytes": 1192,
+          "sha256": "368ddfc005a5fde619fbc91f4275665e34a1bfc28a6bed88e68ab595ad35c1d4",
+          "git_blob_sha1": "a722a93dbd8db11e38962c57b978fa0b18f1fb95"
+        },
+        {
+          "path": "research/native-asr-integration-20261104/balanced_order.py",
+          "mode": "100644",
+          "bytes": 478,
+          "sha256": "9ac839b3ae6dd75b38e9e015e0a8366cccce966fbf80941550750630a9a3fbad",
+          "git_blob_sha1": "4cab5ebfb21b4a2ce2823fb9d61acf8cb99f5590"
+        },
+        {
+          "path": "research/native-asr-integration-20261104/host.py",
+          "mode": "100644",
+          "bytes": 17335,
+          "sha256": "e29808c4e16aed6eb31dc16513a22dd9c3dc8948a41e456eb5d527eb3bfbda57",
+          "git_blob_sha1": "639b478699e40e8953c5f1072aa54902fdf72f6e"
+        },
+        {
+          "path": "research/native-asr-integration-20261104/prepare_host.py",
+          "mode": "100644",
+          "bytes": 7277,
+          "sha256": "95adb3526697d6e2a487562e4c7ccd37be6fa17d27c3e54a6138164ff8452ad9",
+          "git_blob_sha1": "6e30d8b968482a07ebfa8b44ed73191018170252"
+        },
+        {
+          "path": "research/native-asr-integration-20261104/prepare_worker.py",
+          "mode": "100644",
+          "bytes": 5199,
+          "sha256": "b6ef34aad470a117bca9a781ad656a51a38b30b1b9cb75ecc93d26ddb094866a",
+          "git_blob_sha1": "68c56343376a6bcd0c7b07aca4b1e5cfcb723ead"
+        },
+        {
+          "path": "research/native-asr-integration-20261104/qwen-source-members.json",
+          "mode": "100644",
+          "bytes": 12247,
+          "sha256": "a8b9fd372e998299d0eaea0f8920c74ead31118b7e3610d609ee96cd4aed23e5",
+          "git_blob_sha1": "d663cde8cfa484026d211de7d77754e8d48a08c4"
+        },
+        {
+          "path": "research/native-asr-integration-20261104/qwen_worker.py",
+          "mode": "100644",
+          "bytes": 7271,
+          "sha256": "bd8df010500a17eaebd2f7675978df6d64a9d9a4b3c0c423606168792c57cba2",
+          "git_blob_sha1": "e2f620737f0cdd7b01078c85d21a9a8aa3c53a50"
+        },
+        {
+          "path": "research/native-asr-integration-20261104/sense-review-template.json",
+          "mode": "100644",
+          "bytes": 22952,
+          "sha256": "f472dcaaadfb476365c63355c0dcca9a37c94b8996d724766579bf73d3c25946",
+          "git_blob_sha1": "e70dfdd3962cfe073757c4dc69a8b62a3df711fd"
+        },
+        {
+          "path": "research/native-asr-integration-20261104/test_integration.py",
+          "mode": "100644",
+          "bytes": 8600,
+          "sha256": "5c2749e1660f0870ddf742a209b7cbd72d08f27c06f2c08ad6bdfc08c98f57ea",
+          "git_blob_sha1": "bd7d103430aa2226e6e9d503d21805fd225196e5"
+        },
+        {
+          "path": "research/native-asr-integration-20261104/test_zero_forward.py",
+          "mode": "100644",
+          "bytes": 8762,
+          "sha256": "d64b4569fcba0f7fcf29ccb370b5580684bc81556d8c67f668b5642b0f91cc1c",
+          "git_blob_sha1": "13f3d560a5428924b277abd8e063a375478f79e0"
+        },
+        {
+          "path": "research/native-asr-integration-20261104/zero_forward.py",
+          "mode": "100644",
+          "bytes": 4427,
+          "sha256": "67427ce0bfb880d4920b707dbe3f8ec900ab473811e6798dbaff41fb6d70ee7c",
+          "git_blob_sha1": "3a3ad7c779e445c3870cd1e2ec2306ee0702baec"
+        },
+        {
+          "path": "research/qwen-native-capture-20261104/ADMISSION.md",
+          "mode": "100644",
+          "bytes": 3899,
+          "sha256": "d8cada4fffbd06ba044a48aba7ed157b128c0cfc834de9e318fa94a9b07bdde1",
+          "git_blob_sha1": "0ef76e5da613c1e86efa5a4790bb887a5e66eb79"
+        },
+        {
+          "path": "research/qwen-native-capture-20261104/README-capture.md",
+          "mode": "100644",
+          "bytes": 3196,
+          "sha256": "19058d64ad47cc1ab95ea7f4f5c970c3723b0f73e57b6d13d77d125679cb292e",
+          "git_blob_sha1": "9bb6c255de8ca568917b73c263ae0abc11394861"
+        },
+        {
+          "path": "research/qwen-native-capture-20261104/capture_worker.py",
+          "mode": "100644",
+          "bytes": 14931,
+          "sha256": "cfcb7d4edc0c6f967ff3f01319973abe7d2c7e7db8c623e63260ce06cc700d73",
+          "git_blob_sha1": "10b358808545fad290eea12c8290cfa4c8009b11"
+        },
+        {
+          "path": "research/qwen-native-capture-20261104/generation_capture.py",
+          "mode": "100644",
+          "bytes": 3669,
+          "sha256": "675cbfeda44897526fde470f76ec7ac7ce03748d555125f4d555c3d4160b6191",
+          "git_blob_sha1": "fe7f9b3c53ec52d2dea8c941d33d12afdf40095d"
+        },
+        {
+          "path": "research/qwen-native-capture-20261104/native_sink.py",
+          "mode": "100644",
+          "bytes": 12268,
+          "sha256": "d516325edaf2c412a1c1c41b14bd4e976355ea49543d27b121afe02620221ee8",
+          "git_blob_sha1": "4689a57b3d94d17a9b6bcfd56da99846950797a3"
+        },
+        {
+          "path": "research/qwen-native-capture-20261104/test_capture_worker.py",
+          "mode": "100644",
+          "bytes": 7341,
+          "sha256": "35c64333cb2fd332ba8b8e7bafb4c2092e1fc511ace8adb2612f3d46733b56d4",
+          "git_blob_sha1": "08c3150a07652cfa2eb381ceafa355a668b9353d"
+        },
+        {
+          "path": "research/qwen-native-capture-20261104/test_generation_capture.py",
+          "mode": "100644",
+          "bytes": 4129,
+          "sha256": "294d4b05942321e60020e2876f306c32e97bb055be50e0b571e5d2c53eab0a9f",
+          "git_blob_sha1": "1a4318fb9fdbdbfe191d46d2c9e3d7c0ded6536b"
+        },
+        {
+          "path": "research/qwen-native-capture-20261104/test_native_sink.py",
+          "mode": "100644",
+          "bytes": 11479,
+          "sha256": "58b52795dcda9747946afc5a73753552501f235ee16cb309db9dc034b083b7af",
+          "git_blob_sha1": "463b1a93871741f4a933402e34d00d9fa9d1611b"
+        },
+        {
+          "path": "research/qwen-native-capture-20261104/transformers-review.json",
+          "mode": "100644",
+          "bytes": 705,
+          "sha256": "1bdd20711c009fa0e52834e99576f33e27afe8b188af3da06f2358f4a9a11b31",
+          "git_blob_sha1": "eb9936fb0cab3ac27fd00be4185dbda071903985"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/README.md",
+          "mode": "100644",
+          "bytes": 13502,
+          "sha256": "572a643aa7f6284a5658bfb8f09e3d25f39408bcb9e02f67f2ff57702fd49b0e",
+          "git_blob_sha1": "5f330ec958ee4562a0761f1bf79c8152f0ab9e8c"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/RESOLVER-REVIEW.md",
+          "mode": "100644",
+          "bytes": 3695,
+          "sha256": "9c1a9e9ad449806051bab0e54db1c5a99c37dd9e12a3bca7c854a5d6fdb6459f",
+          "git_blob_sha1": "fb790bce41923955ccb695df5f6f749581f8d62b"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/frontend-observation.schema.json",
+          "mode": "100644",
+          "bytes": 9394,
+          "sha256": "1a2fef7a175fffbcf168f6d64d4a67f9f0f6ff6ffca390b2fa3a14d26e95b930",
+          "git_blob_sha1": "fd4abaddfcec2cd95f137a495937d84f22fa9d41"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/frontend_verifier.py",
+          "mode": "100644",
+          "bytes": 8957,
+          "sha256": "0cff930c6c02bcc15fe737979ea59e89921c0b477449355162f2d85d72484468",
+          "git_blob_sha1": "afbd2725dd257eee272d7a158884a4f74411e373"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/independent-wheel-review.json",
+          "mode": "100644",
+          "bytes": 1199,
+          "sha256": "11e1afec3e25f58d498545fa92ff636b93e4e031b523aefc6ce1d84232b6ed51",
+          "git_blob_sha1": "3581c418b5aae3ca4bc2a7c7052f95b18fa157ba"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/recovered-dependency-identities.json",
+          "mode": "100644",
+          "bytes": 3439,
+          "sha256": "9549559835b3f16606282193a2c8221594d89f2bd7eb3eca1fbee15e995e36ad",
+          "git_blob_sha1": "0a4c6f0a2a068d2ba543c0705577592d8d550a8c"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/resolver-patch-base.json",
+          "mode": "100644",
+          "bytes": 283,
+          "sha256": "4c1a0b0bef28710ab4bdf9d14e474e0a527788f5bf4f0e69f5722f3e7bce8ee8",
+          "git_blob_sha1": "d7d9c1495da23f5952792e1d9f797c078c3939a9"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/retained_native_contracts.py",
+          "mode": "100644",
+          "bytes": 20495,
+          "sha256": "752f192fb125fb31291a8246845c3015dc97348fc27822c389e14b52da3ef674",
+          "git_blob_sha1": "002a87a7638feb569b4919ca54ee50683b1630ba"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/reviewed-dependency-identities.json",
+          "mode": "100644",
+          "bytes": 1033,
+          "sha256": "66201f98ac89ac36cf97d8f67ddbb75f18c31c790fe539b7e34028a153c1f0dd",
+          "git_blob_sha1": "bf1a413e40f39656221768e5014036124a95442e"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/reviewed-wheel-members.json",
+          "mode": "100644",
+          "bytes": 1101,
+          "sha256": "c4a9e06c6339b07bc8a011573c0073ba65212b1495221854b891e6ffdd9c1856",
+          "git_blob_sha1": "954f32c7f0e64ef2d787348c72bfe6c9ec88a59c"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/sense-frontend-resolver-review.patch",
+          "mode": "100644",
+          "bytes": 11627,
+          "sha256": "e2a05935cd20875dc6af9d4c0f7e5b97bdcc222e9491d3bc12c7f71c117d537a",
+          "git_blob_sha1": "7816bfc505e7350f679a69b88ec2033f5c16d044"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/sense_capture.py",
+          "mode": "100644",
+          "bytes": 23189,
+          "sha256": "275f4b7f2bfa6b7973b5a7414b315940cd1a4295d1228406e5c79ae40e494277",
+          "git_blob_sha1": "4ecd7e8a8e2ac86972aa7bfd5c2df662ef2672ec"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/test_frontend_verifier.py",
+          "mode": "100644",
+          "bytes": 6722,
+          "sha256": "47dcdc2e81222cfa92901239162c779a13bbcfc1380f29ca40e54ce4df02c07f",
+          "git_blob_sha1": "2a6cd5ed59aac346d6629077cba711858d405cc0"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/test_review_regressions.py",
+          "mode": "100644",
+          "bytes": 5478,
+          "sha256": "b7a560eab95f8dd4933ea6f47997830e1afe8d5a269930a66581c5be5a2f7f8d",
+          "git_blob_sha1": "f5160da6a37ac5779b917ecf7165c6c59528e3bd"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/test_sense_capture.py",
+          "mode": "100644",
+          "bytes": 16336,
+          "sha256": "016414d46402053d0efb505c530e0e2ef2db31f0fbce421f7d4867481faac2ec",
+          "git_blob_sha1": "862fd06cb945b200742b89120537d6e4a307637c"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/test_worker.py",
+          "mode": "100644",
+          "bytes": 10595,
+          "sha256": "432575731dc88d78010add9746c0e75f66c6eaed3cf784b575eccd6c9731a36d",
+          "git_blob_sha1": "2c4f6f4c92c32affb5fde4a66584cc4a7808d898"
+        },
+        {
+          "path": "research/sense-native-capture-20261104/worker.py",
+          "mode": "100644",
+          "bytes": 15071,
+          "sha256": "33285ee07bbf3a3c62ee167ee9d1399b8a806f70196fae5dea50445929948cc4",
+          "git_blob_sha1": "5e2dfebc0d04766714c1c323da1f87cdfb594656"
+        },
+        {
+          "path": "research/whisper-native-capture-20261104/README.md",
+          "mode": "100644",
+          "bytes": 13216,
+          "sha256": "9ff4946b24a4f9a4b021710ea7554e442dbb8cdb2649ea859cc716110510faa1",
+          "git_blob_sha1": "e7a60495ff82c6a6bbdcb1b9cf34b9b19bf4af0b"
+        },
+        {
+          "path": "research/whisper-native-capture-20261104/test_whisper_capture.py",
+          "mode": "100644",
+          "bytes": 19455,
+          "sha256": "dcbe2a96b1b8f5d20daebe03aad03df2a1dc981d09d7f425188ce1dae4e25a16",
+          "git_blob_sha1": "51b87f59b6cede547d5d81eed6701f2b24db9885"
+        },
+        {
+          "path": "research/whisper-native-capture-20261104/test_worker.py",
+          "mode": "100644",
+          "bytes": 6721,
+          "sha256": "e3ee77c957938047b5b54f3774d5368aed0b63edfc9c71b4843deea3729467f1",
+          "git_blob_sha1": "11bec7ba0438869259c4468fec357bab01e017bd"
+        },
+        {
+          "path": "research/whisper-native-capture-20261104/verification.json",
+          "mode": "100644",
+          "bytes": 2340,
+          "sha256": "37467cc69911a2080648a737124382188c4b24e1b5cf87a96cd543cfba61d70c",
+          "git_blob_sha1": "598a5ae596035819f75746e180b5b2c6a9459a7f"
+        },
+        {
+          "path": "research/whisper-native-capture-20261104/whisper_capture.py",
+          "mode": "100644",
+          "bytes": 22117,
+          "sha256": "173a09a370928bd106f543b34d56a638b227b8840600aa16ecd9f99ecd7063c1",
+          "git_blob_sha1": "23e2ac1ee7eee62aa086571a9c2092e8f0031c32"
+        },
+        {
+          "path": "research/whisper-native-capture-20261104/worker.py",
+          "mode": "100644",
+          "bytes": 8169,
+          "sha256": "e83a2a379182559eb1ffb6289f7c240a8b4c7973d9d31a459c3d9b66f558eb86",
+          "git_blob_sha1": "c0fbcc5083220d70292cf1fc942fff7979856763"
+        },
+        {
+          "path": "research/native-asr-integration-20261104/prepare-source-lock.json",
+          "mode": "100644",
+          "bytes": 20749,
+          "sha256": "25e4c3e3409253b2ad41baa41c9e8c1d8694415456d66facfd7a3646bff3cf21",
+          "git_blob_sha1": "8d7cb778ac95ffd2151380e322a4b3e14c46342a"
+        },
+        {
+          "path": "research/native-asr-integration-20261104/source-lock.json",
+          "mode": "100644",
+          "bytes": 20873,
+          "sha256": "8ec377f673bec42bda6b39b426b20dad9facd655375cc22e17b0858eeed01090",
+          "git_blob_sha1": "d47c8315320b5a0397550380844609fb73f119e1"
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "mode": "100644",
+          "bytes": 20103,
+          "sha256": "4f9e19646e5110103af9c5b8c904b71b73c2098731fbbc81a81d7c04424b343c",
+          "git_blob_sha1": "229a94ed86d0bbd79089e4914d720b659b977ba2"
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "mode": "100644",
+          "bytes": 67885,
+          "sha256": "8f13e073dea540f7e7bb1b2a71d5d6f0d437a002b6a5e71bf2225ff867c11402",
+          "git_blob_sha1": "f1696fe338532a86aa66ec2f7ba33d6f7146f893"
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -44523,6 +44882,13 @@
       "bytes": 1442,
       "sha256": "35ae7e29cf0d9aad6c415a88de23acefd6575c53695780f13c6d7325e1ee29be",
       "git_blob_sha1": "915dc7a4daef0eb799139c5516d7113558ea9057"
+    },
+    {
+      "path": ".github/workflows/native-prepare-20261104-v1.yml",
+      "mode": "100644",
+      "bytes": 1554,
+      "sha256": "aa89ee52cc7154b23c3bc17bd5341e845b789ba45cb5a0c334db004ec21b803a",
+      "git_blob_sha1": "016b3eed711aea524990c955ccf8a924388bd38f"
     }
   ],
   "current_source_revision": {
