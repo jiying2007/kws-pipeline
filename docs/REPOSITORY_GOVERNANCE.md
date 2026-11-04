@@ -1,6 +1,6 @@
 # Repository governance
 
-This document defines repository-side controls for `kws-pipeline`. Product acoustic and physical target-board qualification remains a separate evidence boundary described in `RELEASE_QUALIFICATION.md` and Issue #2.
+This document defines repository-side controls for the **research-only** `kws-pipeline`. Independent human and physical target acoustic/resource measurements are scientific evidence, not commercial approval or a requirement to publish a model. Historical Release/Shipping documents remain provenance only; current research authority is [research-only execution](RESEARCH_ONLY_EXECUTION.md).
 
 ## Controls enforced as code
 
@@ -10,13 +10,13 @@ The repository carries:
 - C line-coverage gate, ASan/UBSan and parser fuzzing;
 - a symbol-level purity gate on `libkws_pipeline.a` so the "no heap, hidden thread, lock, filesystem or text/pinyin conversion" runtime claim cannot regress silently;
 - Cortex-A32 ARMv7 hard-float cross-build whose CTest suite is actually executed under `qemu-arm-static`, plus a hosted-vs-Cortex-A32 numerical parity gate on the int8 inference kernel;
-- frontend parity, dataset leakage/corpus-identity audits, synthetic/domain loops, long-FAR regression and release-qualification tests;
+- frontend parity, dataset leakage/corpus-identity audits, synthetic/domain loops, independent long-FAR regression and retained historical qualification negatives;
 - automatic Python test inventory so new `tests/test_*.py` files cannot silently miss Actions;
 - clean CMake/pkg-config SDK consumption and two-build installed-SDK byte comparison;
 - immutable-training-image contract and a real `torch_ctc` integration workflow when an immutable training image is configured;
-- deterministic release archives, SHA256SUMS, SPDX SBOM and GitHub attestations, plus `tools/verify_model_release.py` so a downloaded model release is checked against the contract pins rather than only against the manifest shipped beside it;
-- self-cleaning version-bound `release/vX.Y.Z` bootstrap and merged-branch cleanup;
-- CODEOWNERS, product-evidence PR template and Dependabot for pinned Actions.
+- deterministic source/model SHA256 manifests and retained historical release/SBOM attestations for audit; source-only tests must never grant publication authority;
+- source-bound research branch cleanup, with historical release bootstrap records preserved only in Git;
+- CODEOWNERS, research evidence PR templates and Dependabot for pinned Actions.
 
 ## Current `main` platform policy
 
@@ -47,8 +47,8 @@ GitHub's classic branch-protection sub-object may still report
 repository ruleset above. Do not interpret the classic endpoint alone as
 evidence that `main` is unprotected.
 
-Steady-state branch cleanup, immutable release/tag policy, source-controlled CI
-and retained evidence history remain part of the repository contract.
+Steady-state branch cleanup, immutable historical tags/archives, source-controlled
+research CI and retained evidence history remain part of the repository contract.
 
 ## Governance re-audit boundary
 
@@ -66,59 +66,48 @@ grant permission to bypass live platform enforcement.
 
 Closed research execution lanes are not compatibility APIs. Once a lane has a retained
 machine-readable closure/evidence record and the live product authority has moved to a
-canonical owner, its old workflows, helpers, mirror tests and compatibility entry points
+canonical research owner, its old workflows, helpers, mirror tests and compatibility entry points
 must stay absent.
 
 `tests/test_repository_cleanup_contract.py` enforces this for the retired
 generalization, GRU/RNN parallel-development, startup/preceding-context, generic synthetic
-loop and superseded decoder-diagnostic paths. It also verifies that the canonical product
-training, qualification and shipping authorities remain present.
+loop and superseded decoder-diagnostic paths. It also verifies that the canonical research training, negative evaluation and source-history authorities remain present.
 
-If future product data justifies reopening one of those research questions, introduce an
+If future permitted research data justifies reopening one of those scientific questions, introduce an
 explicit new lane with fresh scope and evidence boundaries. Do not silently resurrect the
 retired path names or re-add mirror implementations merely for compatibility.
 
-## Release policy
+## Historical release records (not executable research)
 
-A formal release is valid only when the following identity is coherent:
+The former `release.yml`, `deployment-release.yml`, `model-promotion.yml`,
+`shipping-approval.yml` and manual human/DUT release publishers have been
+removed from active Actions. The now-unreferenced `tools/verify_release_tag.py`
+bootstrap helper is also retired; its original source and annotated-tag
+resolution behavior remain available at the prior Git commit for audit, not
+as a callable research entrypoint. Nothing here authorizes creating, moving,
+or deleting historic immutable tags, Releases or model evidence.
 
-- source commit selected for release;
-- `CMakeLists.txt` SDK version;
-- `vX.Y.Z` tag and GitHub Release;
-- complete release CI matrix;
-- two independently configured same-builder SDK installs compare byte-for-byte;
-- SDK/source archives and `SHA256SUMS`;
-- SPDX SBOM;
-- GitHub build-provenance and SBOM attestations.
-
-The bootstrap workflow refuses version mismatches, duplicate releases and existing tags
-whose resolved commit differs from the artifact source SHA. Annotated tags are peeled to
-their commit before publication; API failures are not treated as missing tags.
-`tools/verify_release_tag.py` performs this read-only check for SDK and model releases.
-Model promotion also requires the exact current protected-main control plane; the
-selected historical training run and its source SHA remain independently verified.
-
-Failed, cancelled or skipped bootstrap runs preserve the temporary branch for diagnosis.
-Automatic cleanup requires successful validation and publication, and deletes only the
-branch still at the exact run SHA using an atomic lease. A newer branch tip is preserved.
-A failed publication can leave a tag or Release; inspect its actual state and assets before
-retrying rather than assuming that failure rolled back remote writes. These checks do not
-move existing tags, rewrite published releases or change release permissions.
+Current PR/main research CI checks source/rights, data roles, reproducibility,
+model registry SHA, acoustic and resource evidence and negative cases. It does
+not require a product release tag, SDK publication, commercial approval, or a
+success-labelled physical qualification. A new research experiment must be
+separately authorized and hash-bound; older synthetic failures retain their
+original FAILED state.
 
 ## Software milestone completion
 
 A completed software/repository milestone requires:
 
-- no open implementation/release-maintenance PR;
-- no retained implementation/release-bootstrap branch;
+- no open unclassified research implementation PR;
+- no retained unclassified research execution branch;
 - green final `main` CI;
 - installable SDK and reproducibility gate;
-- release integrity assets when formally released;
+- source/rights and immutable research evidence inventories with truthful failures;
 - byte-complete training/evaluation corpus identity and machine-bound target-evidence contracts;
-- explicit acknowledgement that real product measurements remain external evidence.
+- explicit acknowledgement that real human/physical-target measurements remain independent and external.
 
-The absence of real Mandarin/device data does not make source CI false; it means the SKU is not acoustically/physically qualified.
+The absence of real Mandarin/device data does not make source CI false; it means independent acoustic/physical results are NOT_RUN, not PASS.
 
 ## Evidence boundary
 
-Repository CI proves software contracts, deterministic synthetic regressions, artifact relationships and build compatibility. It cannot prove real 0.3–5 m Mandarin FAR/FRR or Cortex-A32 CPU/RSS/stack/thermal/power behavior without those actual measurements. Hosted/generated evidence must never be relabeled as shipping evidence.
+Repository CI proves software contracts, deterministic synthetic regressions, artifact relationships and build compatibility. It cannot prove real 0.3–5 m Mandarin FAR/FRR or Cortex-A32 CPU/RSS/stack/thermal/power behavior without those actual measurements. Hosted/generated evidence must never be relabeled as real-person or real-device evidence.
