@@ -78,11 +78,11 @@ Research sources and historical product-reference contracts (not research-admiss
 - [`configs/nightly.xiaowo-frozen-model.json`](../configs/nightly.xiaowo-frozen-model.json) — independent frozen-model synthetic regression namespace; no formal qualification seed fields
 - [`configs/research/afe-evidence.schema.json`](../configs/research/afe-evidence.schema.json) — source-bound command-AFE evidence schema, research measurement only
 - [`configs/research/real-human-coverage-v1.json`](../configs/research/real-human-coverage-v1.json) — current research-only source-locked speaker/session, FAR/FRR, confidence, latency and slice quotas for field planning
-- [`commercial/real-human-qualification.policy.json`](../commercial/real-human-qualification.policy.json) — historical frozen Phase-A policy still used by archived scorer contracts, not research admission
+- [`configs/research/history/real-human-phase-a.policy.json`](../configs/research/history/real-human-phase-a.policy.json) — read-only original Phase-A policy, exact historical numerical evidence comparator; **not** current research admission
 - Historical `commercial/real-human-corpus.schema.json` — retired Phase-A deployment manifest schema; recover immutable original source from Git history, not active study admission
 - [`configs/research/final-afe-adapter.schema.json`](../configs/research/final-afe-adapter.schema.json) — private research final-AFE command adapter with exact executable/config identity
 - Historical `commercial/real-human-qualification-summary.schema.json` — retired product release summary schema; strict original numeric scorer tests and source identity remain unchanged
-- [`commercial/target-qualification.policy.json`](../commercial/target-qualification.policy.json) — physical per-DUT and multi-DUT cohort target policy
+- [`configs/research/history/target-dut-phase-b.policy.json`](../configs/research/history/target-dut-phase-b.policy.json) — read-only historical per-DUT/cohort product policy, not current experiment approval
 - [`configs/research/physical-target-profile.schema.json`](../configs/research/physical-target-profile.schema.json) — strict physical-target research input identity (not proof of measurement)
 - [`configs/research/physical-target-resource-budget.schema.json`](../configs/research/physical-target-resource-budget.schema.json) — bounded CPU/RSS/stack/temperature/power research limits
 - [`governance/require_current_main.sh`](../governance/require_current_main.sh) — shared manual-promotion gate requiring exact current protected main and live terminal ruleset
@@ -97,7 +97,7 @@ Research sources and historical product-reference contracts (not research-admiss
 - [`src/`](../src/), [`include/`](../include/), [`cmake/`](../cmake/) and [`CMakeLists.txt`](../CMakeLists.txt): device library and SDK build
 - [`configs/`](../configs/), [`keywords/`](../keywords/), [`models/`](../models/): current machine-readable product inputs and model registry
 - [`training/`](../training/), [`eval/`](../eval/) and [`tools/`](../tools/README.md): offline preparation, evaluation and engineering utilities
-- [`commercial/`](../commercial/) contains historical, still-migrating measurement schemas/policies (not current research admission); [`governance/`](../governance/) tracks source-control rules
+- The retired `commercial/` directory is preserved in Git history only; frozen policy bytes live in [`configs/research/history/`](../configs/research/history/), and active research measurements use explicit source/rights and numerical contracts. [`governance/`](../governance/) tracks source-control rules
 - [`tests/`](../tests/), [`fuzz/`](../fuzz/), [`bench/`](../bench/): software verification
 - [`research/`](../research/README.md): isolated reusable research code plus frozen source/evidence archives
 - [`docs/research/`](research/): earlier narrative records; the current conclusions are in the research map above

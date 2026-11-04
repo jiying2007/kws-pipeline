@@ -385,7 +385,7 @@ def test_phase_a_field_plan_preflight() -> None:
 def main() -> int:
     test_phase_a_field_plan_preflight()
     production_policy = json.loads(
-        (ROOT / "commercial/real-human-qualification.policy.json").read_text(
+        (ROOT / "configs/research/history/real-human-phase-a.policy.json").read_text(
             encoding="utf-8"
         )
     )

@@ -116,3 +116,15 @@ remain failed evidence, not a product suitability claim.
 model/data experiments. The old tagged commercial bootstrap helper is retired
 from the active tree; its Git source remains historical and may be inspected,
 but does not determine current research admission or model provenance.
+
+## Retired GitHub Release-backed base recovery (2026-11-04)
+
+The former `live-base-binding` job in `product-training-data-contract.yml`
+used a published GitHub Release as a **live** input to historical model-base
+materialization. That job is removed from current research CI. Scientific
+source/role checks, deterministic training reproducibility replicas, candidate
+encoder numeric fixtures, GCC/Clang/ARM portability and provenance checks
+remain. Original SHA256 receipts and historical source-release metadata stay
+in Git and Actions history, not current experiment admission. A new base
+requires separately authorized and source-bound dataset research, never a
+product Release.

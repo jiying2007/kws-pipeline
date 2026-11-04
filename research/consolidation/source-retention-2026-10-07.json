@@ -15386,9 +15386,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "bytes": 92885,
-      "sha256": "00f066f9e6626f9d57d8acd83336d04c5396f087ee994a62991477c2d55abd73",
-      "git_blob_sha1": "6a3c727b89288d5e537774aa713722a0fd194267"
+      "bytes": 87216,
+      "sha256": "b5c70cbdad9bf6b5bd911ff46f806278911a6b1f1f6c9ae1f09e5884d490ff6b",
+      "git_blob_sha1": "2aa56505d6c70ed09ccf43b0f1af6a10c4015650"
     },
     {
       "path": ".github/workflows/repository-cleanup.yml",
@@ -44020,6 +44020,32 @@
             "git_blob_sha1": "bbf3b8ad4c349873e3e623aca41d5244dfc0e696"
           },
           "after": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "research-only-remove-release-base-binding-20261104",
+      "source_commit": "99fd59667d57c625088775d98dc563cdeb042c49",
+      "workflow_source_changed": true,
+      "scope": "Retire the live GitHub Release-backed corpus materialization job while retaining mathematical/scientific source/CPU reproducibility and the exact historical source receipt.",
+      "files": [
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 92885,
+            "sha256": "00f066f9e6626f9d57d8acd83336d04c5396f087ee994a62991477c2d55abd73",
+            "git_blob_sha1": "6a3c727b89288d5e537774aa713722a0fd194267"
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 87216,
+            "sha256": "b5c70cbdad9bf6b5bd911ff46f806278911a6b1f1f6c9ae1f09e5884d490ff6b",
+            "git_blob_sha1": "2aa56505d6c70ed09ccf43b0f1af6a10c4015650"
+          }
         }
       ]
     },
