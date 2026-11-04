@@ -18,7 +18,7 @@
 
 > **证据边界 —— 引用下方任何数字前请先读这一段。**
 > 本仓库记录的 qualification 全部产生于**合成语料**，属于工程证据，不是商用声学结论。
-> 有两项产品证据被刻意**排除在本仓库可执行范围之外**：真实人声经过最终麦克风/结构/AFE，以及物理目标板 performance/soak —— 它们需要硬件和真人受试者。消费这两项证据的 workflow（`real-human-qualification.yml`、`target-dut-qualification.yml`）均为 `workflow_dispatch` only 且需要 self-hosted runner，因此不会在 `push` 或 fork 中触发。`configs/shipping.xiaowo.json` 在两者齐备前始终保留 `shipping_approved=false`。详见「验证边界」。
+> 有两项产品证据被刻意**排除在本仓库可执行范围之外**：真实人声经过最终麦克风/结构/AFE，以及物理目标板 performance/soak —— 它们需要硬件和真人受试者。以前依赖产品 Release 的 `real-human-qualification.yml` 与 `target-dut-qualification.yml` 已从可执行 Actions 退役；真实音频和物理目标板评估需在获准的受控机器上使用保留的独立评分工具，不依赖发布资格。`configs/shipping.xiaowo.json` 在两者齐备前始终保留 `shipping_approved=false`。详见「验证边界」。
 
 `kws-pipeline` 是面向**低算力嵌入式 Linux / RTOS 产品**的常驻端侧唤醒引擎，目标包括 Cortex-A32、Cortex-A7 及相近 CPU 预算。
 
@@ -325,7 +325,7 @@ python3 tools/qualification_gate.py \
 
 CI 当前证明软件合同和 deterministic/synthetic regression：GCC/Clang、CTest、static analysis、coverage、ASan/UBSan、libFuzzer、Cortex-A32 cross-build（其 **CTest 套件实际在 `qemu-arm-static` 下执行**）以及 hosted-vs-Cortex-A32 的 int8 kernel 数值对拍门禁、frontend/decoder、corpus identity、自训练闭环、robustness/FAR regression、runtime-soak/target-evidence schema、SDK reproducibility、model supply-chain、model-release contract pin。
 
-它**不宣称真实商用声学和物理板级 qualification 已完成**。完成本轮 non-real-data 工程闭环后，产品证据阶段只剩两步：① 真实普通话经过最终麦克风/结构/AFE；② 物理目标板 performance/soak 并最终批准完整 deployment tuple。这两步在本仓库**均无法执行**：都需要硬件、真人受试者与 self-hosted runner，所以 `real-human-qualification.yml` 与 `target-dut-qualification.yml` 都是 `workflow_dispatch` only。
+它**不宣称真实商用声学和物理板级 qualification 已完成**。完成本轮 non-real-data 工程闭环后，产品证据阶段只剩两步：① 真实普通话经过最终麦克风/结构/AFE；② 物理目标板 performance/soak 并最终批准完整 deployment tuple。这两步在本仓库**均无法执行**：都需要硬件、真人受试者与 self-hosted runner，历史 `real-human-qualification.yml` 与 `target-dut-qualification.yml` 已退役；可复现的声学及目标板离线评分器仍保留，必须依据真实输入证据，不得将源码 CI 视为硬件 PASS。
 
 详见 `docs/README.md`、`docs/CUSTOMIZATION.md`、`docs/RELEASE_QUALIFICATION.md`、`docs/TARGET_EVIDENCE.md`、`docs/CORPUS_IDENTITY.md`、`docs/AUDIO_DISCONTINUITY.md` 和 Issue #2。
 
