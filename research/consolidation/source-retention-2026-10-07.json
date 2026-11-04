@@ -15600,7 +15600,8 @@
     ".github/workflows/qwen-nonclone64-20261104-v1.yml",
     ".github/workflows/native-prepare-20261104-v1.yml",
     ".github/workflows/runner-storage-20261104-v1.yml",
-    ".github/workflows/native-prepare-capacity-20261104-v1.yml"
+    ".github/workflows/native-prepare-capacity-20261104-v1.yml",
+    ".github/workflows/native-prepare-fence-v2-20261104-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -44898,6 +44899,154 @@
           "git_blob_sha1": "e41e0c5d8c30cd09991a78ab7718caa3d4d98ccc"
         }
       ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "native-prepare-fence-v2-20261104-v1",
+      "source_commit": "7bb70287fdaa9df6c9d39baec6b4899bdee8b626",
+      "workflow_source_changed": true,
+      "scope": "New isolated guarded metadata and bounded no-audio diagnostic preparation; original 88 source identities and consumed campaigns unchanged. Seven exact staged replacements plus one diagnostics addition; original 25/16/8GiB guards, one40-minute job and1800-second inner budget. No audio, recognition, training or raw evidence publication. Offline reproducible interface defect does not establish the previous unretained runtime exception.",
+      "files": [
+        {
+          "path": ".github/workflows/native-prepare-fence-v2-20261104-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/native-prepare-fence-v2-20261104-v1.yml",
+            "mode": "100644",
+            "bytes": 2299,
+            "sha256": "c762a579cedcdde1c6a53298203fc5f0450812c5da92a58b67889ae548673541",
+            "git_blob_sha1": "f578bb168312e29c42f15db6a12f8e6012df4630"
+          }
+        }
+      ],
+      "source_files": [
+        {
+          "path": "research/native-prepare-fence-v2-20261104/README.md",
+          "mode": "100644",
+          "bytes": 2800,
+          "sha256": "7efa0cd13dca8944f192434a2e7aa048b24bf332305343d24b717c36e6cf4f78",
+          "git_blob_sha1": "e4e00ef88381b871d9a5f0cf151934b57643da53"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/host.py",
+          "mode": "100644",
+          "bytes": 11043,
+          "sha256": "0d9ce040e16c2b12e580b62cb00871231f63127afe7a2242d1fbec8d140ca920",
+          "git_blob_sha1": "c7697317788211eadae3aeed1bd654040c44967e"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/prepare_worker.py",
+          "mode": "100644",
+          "bytes": 6236,
+          "sha256": "37eac493593f4c6a73a250fac35985a076b1eacf3cea381e03f8ec3f89d2f0d8",
+          "git_blob_sha1": "6c980b28d099034576f9c8208fccefee317f0c56"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/qwen-source-members.json",
+          "mode": "100644",
+          "bytes": 12420,
+          "sha256": "15292e3e2923d2b8d32dd5ba0010055c7586817984ff9c079aa1d458402e1a36",
+          "git_blob_sha1": "8b45a8c5461eb37eeb0be83ca7588b1b9bf688e3"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/safe_diagnostic.py",
+          "mode": "100644",
+          "bytes": 7492,
+          "sha256": "dd8d95f3aabaa82d4f5bf58ab97e8b67f2b603be8f0a15746db4d20280a64255",
+          "git_blob_sha1": "015c0532b0a2b1092a9cf3ca116e39b31b007a3e"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/sense/sense_capture.py",
+          "mode": "100644",
+          "bytes": 23914,
+          "sha256": "708f7e451a3ecb4c70337f381b50004d52aea03746fb30d294ecfa6d085abde2",
+          "git_blob_sha1": "4daef38060be073359613141d54fbfd6239a9956"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/sense/worker.py",
+          "mode": "100644",
+          "bytes": 15127,
+          "sha256": "d0b8c17a594557ad0b00e36714f60d6ec3f682a54bed9aa978fe40a7120556f3",
+          "git_blob_sha1": "6c6383508956ee08c22e6c7ac587a4f6ba4e528b"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/sense-review-template.json",
+          "mode": "100644",
+          "bytes": 23245,
+          "sha256": "e573d91fe75570c3b153f6312263f62b78bb429eeb8680dedc6538e858422f0e",
+          "git_blob_sha1": "d6e3777c1d8b1ac1310cefee04b4e7d8e24b515a"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/source-lock.json",
+          "mode": "100644",
+          "bytes": 25097,
+          "sha256": "1ee10ac2827b76c2b48b49e11eafdcedb8fd0bf816c311f091cdd64d9b2475b7",
+          "git_blob_sha1": "4c97b35abb3de0043bbc19a81bb3233fbd34b866"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/test_fence_composition.py",
+          "mode": "100644",
+          "bytes": 10972,
+          "sha256": "1a994d6635a21806bd43a9cac8611c177b38fea6c130df4b59ebb976ed052d80",
+          "git_blob_sha1": "b9068a58417040f7621160baf9d1b6be58ae3c1c"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/test_host_overlay.py",
+          "mode": "100644",
+          "bytes": 12547,
+          "sha256": "470337e6d46261ae59b117c099ff38024410c1728c147f74dcfc909fd2fec802",
+          "git_blob_sha1": "d12d29deb3e8141d1534dc03a7582363bbc97f61"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/test_prepare_diagnostics.py",
+          "mode": "100644",
+          "bytes": 8016,
+          "sha256": "d96d642b4ce477013789036f87ad08cd595bf385ff3345167c2100c002a17a05",
+          "git_blob_sha1": "052fb11f281ef6b774bf395dcf73e6483cee59ca"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/test_safe_diagnostic.py",
+          "mode": "100644",
+          "bytes": 7255,
+          "sha256": "09cebfdd6f348e0ff7f0ef3dbabb2518dfd064d973b17f8e1ca0bf33296f17b1",
+          "git_blob_sha1": "97d6a016cf066a5738bf89f7d9e42d2b637a3305"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/test_whisper_overlay.py",
+          "mode": "100644",
+          "bytes": 5704,
+          "sha256": "70a50633eadf52cd59b170acff26ab9f1e676b054c6b240434a73dd7c3f4959f",
+          "git_blob_sha1": "814860ae48f82713c2116355ad4c81b0b1fb01f3"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/whisper_capture.py",
+          "mode": "100644",
+          "bytes": 22289,
+          "sha256": "0ffd691d7b941f905de8e2be4cf0e95257d207e90b875c01cc6053d88d1dbf22",
+          "git_blob_sha1": "d8970c846840a03b0b97c502234f292e7b31ae0c"
+        },
+        {
+          "path": "research/native-prepare-fence-v2-20261104/zero_forward.py",
+          "mode": "100644",
+          "bytes": 7838,
+          "sha256": "a47bc830f5e690e4d6a4c95735753c57e27268e1e0e7d408353c8de1108e5376",
+          "git_blob_sha1": "fb05850af05c7b7026b9e5fadc263236f4a48a46"
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "mode": "100644",
+          "bytes": 20569,
+          "sha256": "135bea3a92440a8d7211feb5bbdd7d6a59c6d5020a0974d81191e79aa9e61934",
+          "git_blob_sha1": "8f0a5a91208e5faf68c45a9a3974df43399c8fe5"
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "mode": "100644",
+          "bytes": 71914,
+          "sha256": "9ae72aae67dcf26382f9b3a00f5d871e89cac4cdfacc2713fbf8ca157db74c64",
+          "git_blob_sha1": "08f59cb3cdd08c9c159bbe4f9aa633705379586c"
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -45040,6 +45189,13 @@
       "bytes": 1807,
       "sha256": "fd034ad6847cd000f3ac4705634b966df2980198059e366c4b11899008c4457a",
       "git_blob_sha1": "5df121fd7a9b9cb03461c8efaa484cb7be05896d"
+    },
+    {
+      "path": ".github/workflows/native-prepare-fence-v2-20261104-v1.yml",
+      "mode": "100644",
+      "bytes": 2299,
+      "sha256": "c762a579cedcdde1c6a53298203fc5f0450812c5da92a58b67889ae548673541",
+      "git_blob_sha1": "f578bb168312e29c42f15db6a12f8e6012df4630"
     }
   ],
   "current_source_revision": {
