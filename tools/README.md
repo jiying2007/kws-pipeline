@@ -43,7 +43,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`source_identity.py`](source_identity.py) — Shared recording/source-family namespace; unrelated identity domains remain separate.
 - [`keyword_set_identity.py`](keyword_set_identity.py)
 - [`kws_vocab.py`](kws_vocab.py)
-- [`validate_shipping_keywords.py`](validate_shipping_keywords.py)
+- [`validate_research_keyword_pair.py`](validate_research_keyword_pair.py)
 - [`verify_corpus_identity.py`](verify_corpus_identity.py)
 
 ## Speech-like source preparation and admission
