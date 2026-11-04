@@ -158,7 +158,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`verify_model_promotion_source.py`](verify_model_promotion_source.py) — Authenticate the governed training producer and safely verify/extract its exact artifact carrier.
 - [`verify_model_promotion_bundle.py`](verify_model_promotion_bundle.py)
 - [`verify_model_registry.py`](verify_model_registry.py)
-- [`verify_model_release.py`](verify_model_release.py)
+- [`verify_research_model_assets.py`](verify_research_model_assets.py)
 
 ## Repository verification and maintenance
 

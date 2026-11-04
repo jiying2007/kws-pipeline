@@ -1,5 +1,7 @@
 # Runtime configuration
 
+> **Current authority: technical research only.** The frozen synthetic model and keyword source is `configs/research/two-keyword-synthetic-comparator.json`; it is not real-human FAR/FRR, a physical SSC305 measurement or commercial publication authority. Old product/Release terminology elsewhere on this page is historical context, not a workflow to execute.
+
 This document is the operator-facing companion to `configs/parameter-contract.json`.
 That JSON file is the single source of truth for every tunable parameter, its unit
 and its legal range; this document explains what each parameter does, how to tune
@@ -21,7 +23,7 @@ Consequences:
   outside the contract. There is no second copy of the range to drift.
 - The generated header records `KWS_PARAMETER_CONTRACT_SHA256`, so a shipped
   binary can be tied back to the exact contract revision that produced it.
-- `configs/shipping.xiaowo.json` pins the same digest in its
+- `configs/research/two-keyword-synthetic-comparator.json` pins the same digest in its
   `parameter_contract.sha256` and
   `threshold_calibration.required_parameter_contract_sha256` fields. The separate
   `threshold_calibration.parameter_contract_sha256` retains the contract identity
@@ -246,10 +248,10 @@ the runtime does not silently clamp grace or extend the boundary.
    configs/parameter-contract.json build/generated`.
 2. If the parameter is `effective` and `invalidates_thresholds`, re-run
    threshold calibration and update `threshold_calibration` in
-   `configs/shipping.xiaowo.json`, including its `parameter_contract_sha256`.
+   `configs/research/two-keyword-synthetic-comparator.json`, including its `parameter_contract_sha256`.
 3. Update `parameter_contract.sha256` and
    `threshold_calibration.required_parameter_contract_sha256` in
-   `configs/shipping.xiaowo.json`. Preserve the historical calibration digest
+   `configs/research/two-keyword-synthetic-comparator.json`. Preserve the historical calibration digest
    unless a new source-bound calibration has actually run. Even a documentation-
    only contract edit changes its byte identity; identify it as metadata
    maintenance, retain `recalibration_required`, and never infer new qualification.
@@ -263,7 +265,7 @@ the runtime does not silently clamp grace or extend the boundary.
 ## What is not covered
 
 The contract fixes legal ranges, not product performance. Two evidence classes
-remain open and are tracked in `configs/shipping.xiaowo.json`:
+remain open and are tracked in `configs/research/two-keyword-synthetic-comparator.json`:
 `real-human-final-afe-acoustic-qualification` and
 `physical-target-board-performance-and-soak`. Hosted x86 timing and synthetic
 corpus results must never be promoted into either.

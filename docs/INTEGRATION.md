@@ -1,5 +1,7 @@
 # Integration with audio-pipeline
 
+> **Current authority: technical research only.** The frozen synthetic model and keyword source is `configs/research/two-keyword-synthetic-comparator.json`; it is not real-human FAR/FRR, a physical SSC305 measurement or commercial publication authority. Old product/Release terminology elsewhere on this page is historical context, not a workflow to execute.
+
 Preferred product chain:
 
 ```text
@@ -12,7 +14,7 @@ microphones -> audio-pipeline (BF/AEC/RES/NS/AGC as SKU requires)
 
 Do not run two independent resamplers when `audio-pipeline` already emits 16-kHz mono. KWS normally consumes post-AEC/post-NS audio so local speaker playback and device noise are reduced before wake detection. Validate thresholds against the exact AGC configuration because gain changes alter score distributions.
 
-The current promoted model is `model-749187ec1d66`. `configs/shipping.xiaowo.json` is the machine-readable product authority and contains exactly `你好小窝` and `小窝小窝`; generic overlap fixtures are decoder tests, not additional shipping wake words.
+`model-749187ec1d66` is a frozen historical synthetic comparator, not an approved current model. `configs/research/two-keyword-synthetic-comparator.json` pins the exact `你好小窝` and `小窝小窝` research wake phrases and original SHA256s; generic overlap fixtures are decoder tests, not additional measured phrases.
 
 ## Field-updatable initialization
 
@@ -181,7 +183,7 @@ findings: D20 **FAIL**, D90 **NOT_RUN**, and frozen Fixed50
 **EVAL_INCONCLUSIVE_LABEL_SUPPORT**. Historical source-bound results cannot
 be upgraded by a release tag or a workflow name.
 
-## Release evidence boundary
+## Historical Release evidence boundary (not active research admission)
 
 The final product tuple must retain enough identity to connect the shipping data path to the candidate deployment and final qualification:
 

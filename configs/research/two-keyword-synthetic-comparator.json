@@ -1,11 +1,9 @@
 {
   "schema_version": 1,
-  "contract_id": "xiaowo-dual-wake-v1",
-  "product_scope": "dedicated-two-keyword-mandarin-kws",
-  "evidence_status": "synthetic-qualified",
-  "shipping_approved": false,
+  "contract_id": "xiaowo-two-wake-frozen-research-v1",
+  "evidence_status": "historical-synthetic-diagnostic-not-independent",
   "runtime": {
-    "min_speech_dbfs": -55.0,
+    "min_speech_dbfs": -55,
     "token_boost": 1.5,
     "state_retention": 0.94,
     "refractory_ms": 1200,
@@ -29,7 +27,7 @@
       "runtime.state_retention",
       "runtime.external_vad_threshold",
       "algorithm.KWS_DECODER_BOUNDARY_RESET_INACTIVE_FRAMES",
-      "model.release_tag"
+      "model.registry_tag"
     ],
     "thresholds": [
       {
@@ -44,32 +42,16 @@
       }
     ],
     "recalibration_required": true,
-    "recalibration_reason": "thresholds were selected on a synthetic corpus; the real-human final-AFE corpus in shipping_evidence_boundary.pending has not been run; removing deprecated token_boost from decoder floating-point arithmetic may change boundary decisions, so replay/calibration and product qualification must be rerun against the new source and active parameter contract"
+    "recalibration_reason": "Frozen synthetic threshold calibration and old parameter-contract hash do not qualify an independent real-human/final-AFE or SSC305 experiment. Recalibrate only with independently sourced development data; never reinterpret old seed or metrics as fresh measurement."
   },
-  "shipping_wake_words": [
-    {
-      "id": 1,
-      "text": "你好小窝",
-      "threshold": 0.55,
-      "tokens": ["ni3", "hao3", "xiao3", "wo1"]
-    },
-    {
-      "id": 2,
-      "text": "小窝小窝",
-      "threshold": 0.55,
-      "tokens": ["xiao3", "wo1", "xiao3", "wo1"]
-    }
-  ],
-  "forbidden_shipping_wake_words": ["小窝"],
   "vocabulary": {
-    "kind": "dedicated-product-vocabulary",
+    "kind": "frozen-comparator-vocabulary",
     "size": 5,
     "tokens_path": "keywords/tokens.example.txt",
     "keyword_tsv_path": "keywords/zh_cn_example.tsv",
     "arbitrary_mandarin_l0_change_claimed": false
   },
   "model": {
-    "release_tag": "model-749187ec1d66",
     "training_run_id": 34134789576,
     "trained_head_sha": "749187ec1d6662658f06aa9c76d47fde835968db",
     "model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
@@ -78,30 +60,58 @@
     "keyword_tsv_sha256": "d04023ccaeeafc6938fd8620762edd739e4760c35321be6edc8b32631b982ab4",
     "qualification_seed": 271838,
     "qualification_seed_state": "consumed-and-frozen",
-    "qualification": {
+    "continuous_far_false_accepts": 0,
+    "registry_tag": "model-749187ec1d66",
+    "historical_synthetic_evaluation": {
       "expected_wakes": 256,
       "matched_wakes": 256,
       "false_rejects": 0,
       "false_accepts": 0
     },
-    "robustness_qualified": true,
-    "continuous_far_false_accepts": 0
+    "historical_synthetic_robustness_passed": true
   },
   "nightly_policy": {
-    "mode": "immutable-released-model-regression",
+    "mode": "frozen-historical-research-regression",
     "may_train": false,
     "may_render_formal_qualification": false,
     "may_consume_formal_qualification_seed": false,
     "formal_qualification_seed": 271838,
     "next_formal_candidate_seed_reserved": 271843
   },
-  "shipping_evidence_boundary": {
+  "research_scope": "frozen-historical-synthetic-comparator",
+  "research_wake_words": [
+    {
+      "id": 1,
+      "text": "你好小窝",
+      "threshold": 0.55,
+      "tokens": [
+        "ni3",
+        "hao3",
+        "xiao3",
+        "wo1"
+      ]
+    },
+    {
+      "id": 2,
+      "text": "小窝小窝",
+      "threshold": 0.55,
+      "tokens": [
+        "xiao3",
+        "wo1",
+        "xiao3",
+        "wo1"
+      ]
+    }
+  ],
+  "negative_partial_phrases": [
+    "小窝"
+  ],
+  "independent_measurement_requirements": {
     "final_afe_required": true,
     "real_human_acoustic_required": true,
-    "physical_target_board_required": true,
-    "pending": [
-      "real-human-final-afe-acoustic-qualification",
-      "physical-target-board-performance-and-soak"
-    ]
-  }
+    "physical_ssc305_required": true,
+    "actual_human_wav_evaluated": false,
+    "actual_ssc305_measured": false
+  },
+  "historical_source_blob_sha1": "55bb340cdcbb55a1467ae6955ee38f8684b5facf"
 }

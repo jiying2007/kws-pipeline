@@ -15,6 +15,8 @@ WORKFLOW = ROOT / '.github' / 'workflows' / 'repository-cleanup.yml'
 
 
 RETIRED_PATH_GLOBS = (
+    'configs/shipping.xiaowo.json',
+    'tools/verify_model_release.py',
     '.github/workflows/real-human-qualification.yml',
     '.github/workflows/target-dut-qualification.yml',
     '.github/workflows/development-generalization-*.yml',
@@ -73,7 +75,7 @@ RETIRED_PATH_GLOBS = (
 )
 
 REQUIRED_AUTHORITY_PATHS = (
-    'configs/shipping.xiaowo.json',
+    'configs/research/two-keyword-synthetic-comparator.json',
     'configs/training/xiaowo.torch-domain.json',
     'configs/training/kws-v2-efficient-encoder-closure-v1.json',
     '.github/workflows/model-training.yml',

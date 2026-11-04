@@ -86,6 +86,20 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
                          {"max_cpu_percent", "max_rss_kib", "max_stack_high_water_bytes",
                           "max_temp_c", "max_average_power_mw"})
 
+    def test_shipping_comparator_and_legacy_asset_verifier_are_retired(self):
+        self.assertFalse((ROOT / "configs/shipping.xiaowo.json").exists())
+        self.assertFalse((ROOT / "tools/verify_model_release.py").exists())
+        current = ROOT / "configs/research/two-keyword-synthetic-comparator.json"
+        self.assertTrue(current.is_file())
+        import json
+        comparator = json.loads(current.read_text(encoding="utf-8"))
+        self.assertEqual(comparator["research_scope"], "frozen-historical-synthetic-comparator")
+        self.assertNotIn("shipping_approved", comparator)
+        self.assertNotIn("shipping_wake_words", comparator)
+        self.assertNotIn("shipping_evidence_boundary", comparator)
+        self.assertFalse(comparator["independent_measurement_requirements"]["actual_ssc305_measured"])
+        self.assertTrue((ROOT / "tools/verify_research_model_assets.py").is_file())
+
     def test_research_document_tracks_later_migration(self):
         doc = (ROOT / "docs/RESEARCH_ONLY_EXECUTION.md").read_text(encoding="utf-8")
         self.assertIn("Retired automatic publication surfaces", doc)

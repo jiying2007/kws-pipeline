@@ -74,7 +74,7 @@ Current research authority is [`docs/RESEARCH_ONLY_EXECUTION.md`](RESEARCH_ONLY_
 Research sources and historical product-reference contracts (not research-admission authority):
 
 - [`configs/parameter-contract.json`](../configs/parameter-contract.json) — single source of truth for every tunable parameter, its layer, unit and validation range; consumed by the C build and by the python tools
-- [`configs/shipping.xiaowo.json`](../configs/shipping.xiaowo.json) — exact two-word product/model authority and remaining shipping evidence boundary
+- [`configs/research/two-keyword-synthetic-comparator.json`](../configs/research/two-keyword-synthetic-comparator.json) — frozen synthetic two-keyword model/parameter/source comparator; no shipping or real-human/DUT admission
 - [`configs/nightly.xiaowo-frozen-model.json`](../configs/nightly.xiaowo-frozen-model.json) — independent frozen-model synthetic regression namespace; no formal qualification seed fields
 - [`configs/research/afe-evidence.schema.json`](../configs/research/afe-evidence.schema.json) — source-bound command-AFE evidence schema, research measurement only
 - [`configs/research/real-human-coverage-v1.json`](../configs/research/real-human-coverage-v1.json) — current research-only source-locked speaker/session, FAR/FRR, confidence, latency and slice quotas for field planning

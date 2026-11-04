@@ -65,39 +65,32 @@
 upper95 ≤ 0.40）。这不是 D20/D90 的结果，shipping approval 仍为 false。
 见[本次审计](research/consolidation/CI_AUDIT_2026-10-09.md)。另见[2026-10-14 历史入口](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry)：后续 nightly `38482297930` 仍失败，绑定其历史执行源码，并非对当前 main 的新增声学评估。
 
-`configs/shipping.xiaowo.json` 是机器可读的当前产品 contract。它故意保持 `shipping_approved=false`：synthetic qualification 是强工程证据，但不能替代后续真实人声 + 最终 AFE 声学资格和物理目标板证据。
+
+仓库仍明确保留 `models/registry/**` Git 追踪例外，冻结模型资产按 SHA-256 独立校验。
+冻结的两词研究对照已迁到 [`configs/research/two-keyword-synthetic-comparator.json`](configs/research/two-keyword-synthetic-comparator.json)，保留历史阈值、模型/关键词哈希和需重新校准的事实；不包含商用发布授权，也不能代替真实人声、最终 AFE 或 SSC305 实测。旧配置只在 Git 历史中供审计。
 
 当前源码 contract 另行记录 `recalibration_required=true`；历史资格不构成变更后
 运行时源码的资格。各证据范围见[产品状态](docs/KWS_LANDING_STATUS.md)。
 
-### 获取与校验 Release
+### 冻结研究模型与关键词资产验证
 
-模型、checkpoint 与 keyword pack 是不可变 Release 资产，也已跟踪到
-[正式模型 Git registry](models/registry/model-749187ec1d66/)。`.gitignore` 排除中间
-`*.kwm`/`*.pt` 文件，但明确放行 `models/registry/**`；见[模型存储策略](models/README.md)。
-可以使用本地 registry 镜像，也可下载 Release 后用 contract 校验：
-
-```bash
-gh release download model-749187ec1d66 \
-  --repo jiying2007/kws-pipeline --dir model-release
-python3 tools/verify_model_release.py \
-  --assets-dir model-release --release-tag model-749187ec1d66
-```
-
-Release 是公开的，没有 `gh` 时可直接走 HTTPS：
+[Git 注册表](models/registry/model-749187ec1d66/) 保留模型、检查点、
+关键词、来源及不可变 SHA256。该旧模型仅是合成数据的**历史对照**，
+不是已通过独立真人测试的当前优选模型。验证时只读取 Git 资产，不查询或发布 Release：
 
 ```bash
-base=https://github.com/jiying2007/kws-pipeline/releases/download/model-749187ec1d66
-mkdir -p model-release
-curl -sSL -o model-release/MODEL_SHA256SUMS "$base/MODEL_SHA256SUMS"
-awk '{print $2}' model-release/MODEL_SHA256SUMS \
-  | xargs -I{} curl -sSL --fail -o "model-release/{}" "$base/{}"
-python3 tools/verify_model_release.py --assets-dir model-release
+python3 tools/verify_model_registry.py \
+  --registry-dir models/registry/model-749187ec1d66
+python3 tools/verify_research_model_assets.py \
+  --assets-dir models/registry/model-749187ec1d66 \
+  --registry-tag model-749187ec1d66
 ```
 
-`verify_model_release.py` 做两件相互独立的事，第二件才是关键。`MODEL_SHA256SUMS` 随 Release 一起下发，因此它只能证明「这次下载内部自洽」—— 能替换资产的人同样能重算 manifest 使其吻合。真正把下载绑定到已 qualification tuple 的，是仓库里 `configs/shipping.xiaowo.json` pin 住的四个摘要（`xiaowo-model.kwm`、`xiaowo-model.pt`、`xiaowo-keywords.kwk`、`xiaowo-keywords.tsv`）。所以重算过的 manifest 无法为被替换的资产背书；如果 manifest 漏掉了某个被 pin 的资产，工具会直接失败而不是跳过。`tests/test_model_release_pin.py` 逐一覆盖了这些失败模式。
+校验器同时检查四项源代码固定哈希及历史 `MODEL_SHA256SUMS`，并拒绝
+资产替换、哈希清单重算后伪造通过或遗漏固定资产。离线负例仍保留在
+`tests/test_model_release_pin.py`（历史文件名）。
 
-## Runtime / 产品特性
+## Runtime / 技术研究特性
 
 - 实时库只依赖 C11 + libm；PyTorch、`pypinyin` 仅在线下工具链。
 - 实时路径无 heap、隐藏线程、锁、文件系统和中文/拼音转换。这一点是被门禁强制的，而不是靠约定：`tools/check_runtime_purity.py` 把 `libkws_pipeline.a` 的未定义符号集与显式白名单（内部 `kws_*` 调用、`mem*`、ISO C 数学函数、stack protector 与 ARMv7 EABI 除法辅助函数）比对，新增外部依赖会直接让 CI 失败，而不是静静通过评审。
@@ -186,7 +179,7 @@ python3 training/iterate_domain.py \
 - `latency_samples`；
 - 可选 pipeline SHA / source SHA / toolchain identity。
 
-后续真实人声/设备阶段会把最终 `audio-pipeline` binary + config 注入这个 contract；在最终 AFE identity 真正存在并通过最终证据前，`shipping_approved` 始终保持 false。
+真实人声与目标板实验必须独立绑定合法授权的数据、实际 AFE 程序与配置、设备身份和测量来源；目前缺乏的声学/SSC305 结果只能标记为 NOT_RUN/BLOCKED，不能根据历史合成结果视为通过。
 
 ## 不可变训练环境
 
@@ -319,13 +312,13 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-最终 gate 强制 model ABI v2、keyword-pack ABI v3、frontend-spec v2、exact corpus identity、dataset-audit coverage、product-board evidence identity，以及 policy 的 `shipping_approved=true`。仓库现在主动保持该状态为 false，直到后置的真实人声/最终 AFE 与物理目标板证据真正形成。
+研究门禁保留 model ABI v2、keyword-pack ABI v3、frontend-spec v2、语料身份、数据审核和目标板来源完整性；真实人声/AFE、物理设备时延与资源测量需独立开展，不能转化为产品资格或伪造 PASS。
 
 ## 验证边界
 
-CI 当前证明软件合同和 deterministic/synthetic regression：GCC/Clang、CTest、static analysis、coverage、ASan/UBSan、libFuzzer、Cortex-A32 cross-build（其 **CTest 套件实际在 `qemu-arm-static` 下执行**）以及 hosted-vs-Cortex-A32 的 int8 kernel 数值对拍门禁、frontend/decoder、corpus identity、自训练闭环、robustness/FAR regression、runtime-soak/target-evidence schema、SDK reproducibility、model supply-chain、model-release contract pin。
+CI 当前证明软件合同和 deterministic/synthetic regression：GCC/Clang、CTest、static analysis、coverage、ASan/UBSan、libFuzzer、Cortex-A32 cross-build（其 **CTest 套件实际在 `qemu-arm-static` 下执行**）以及 hosted-vs-Cortex-A32 的 int8 kernel 数值对拍门禁、frontend/decoder、corpus identity、自训练闭环、robustness/FAR regression、runtime-soak/target-evidence schema、SDK reproducibility、model supply-chain、冻结研究模型资产 SHA256 pin。
 
-它**不宣称真实商用声学和物理板级 qualification 已完成**。完成本轮 non-real-data 工程闭环后，产品证据阶段只剩两步：① 真实普通话经过最终麦克风/结构/AFE；② 物理目标板 performance/soak 并最终批准完整 deployment tuple。这两步在本仓库**均无法执行**：都需要硬件、真人受试者与 self-hosted runner，所以 `real-human-qualification.yml` 与 `target-dut-qualification.yml` 都是 `workflow_dispatch` only。
+它**不宣称真实商用声学和物理板级 qualification 已完成**。完成本轮 non-real-data 工程闭环后，产品证据阶段只剩两步：① 真实普通话经过最终麦克风/结构/AFE；② 物理目标板 performance/soak 并最终批准完整 deployment tuple。这两步在本仓库**均无法执行**：都需要硬件、真人受试者与 self-hosted runner，这两条旧的商用 Release 发布工作流均已退役，独立真机与真人实验须有真实输入和合法授权。
 
 详见 `docs/README.md`、`docs/CUSTOMIZATION.md`、`docs/RELEASE_QUALIFICATION.md`、`docs/TARGET_EVIDENCE.md`、`docs/CORPUS_IDENTITY.md`、`docs/AUDIO_DISCONTINUITY.md` 和 Issue #2。
 

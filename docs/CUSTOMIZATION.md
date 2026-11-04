@@ -1,5 +1,7 @@
 # Wake-word customization
 
+> **Current authority: technical research only.** The frozen synthetic model and keyword source is `configs/research/two-keyword-synthetic-comparator.json`; it is not real-human FAR/FRR, a physical SSC305 measurement or commercial publication authority. Old product/Release terminology elsewhere on this page is historical context, not a workflow to execute.
+
 The runtime supports three customization levels, but product claims must distinguish **framework capability** from the vocabulary/model that has actually passed release qualification.
 
 ## Current shipping SKU
@@ -22,7 +24,7 @@ id  text      threshold  explicit-pinyin
 2   小窝小窝  0.55       xiao3 wo1 xiao3 wo1
 ```
 
-The standalone two-character `小窝` is **not** a shipping wake word. `configs/shipping.xiaowo.json` is the machine-readable contract.
+The two-character `小窝` is a partial/negative phrase, not one of the two full research wake phrases. `configs/research/two-keyword-synthetic-comparator.json` is the frozen synthetic comparator.
 
 The deployed acoustic model is `KWSP` ABI v2 and the field-updatable keyword pack is `KWKP` ABI v3. Both carry the same vocabulary size/fingerprint. Model ABI v2 also binds the frontend kind (`logmel` or `pcen-lite`). Warm starts, export provenance and release qualification reject vocabulary/frontend mismatches.
 
@@ -164,6 +166,6 @@ The shipping AFE is part of the release-qualification tuple. The renderer's `com
 
 The current synthetic-qualified model used proxy AFE evidence. The final real `audio-pipeline` identity will be bound in the deferred real-human/device qualification phase; until then the product contract remains `shipping_approved=false`.
 
-## Release rule
+## Research source and fresh-measurement boundary
 
 Any change to `.kwm`, `.kwk`, token vocabulary, runtime behavior/config, or shipping AFE binary/config creates a new release-qualification tuple. Model provenance, runtime release identity, keyword-pack hash, AFE identity and final evidence must all refer to the same product deployment. See `docs/RELEASE_QUALIFICATION.md`.

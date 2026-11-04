@@ -72,41 +72,37 @@ failed: **2 false accepts / 8 hours**, upper95 **0.786974 FA/h** (gate: 0 false
 accepts and upper95 ≤ 0.40). It tested this same old model, not D20/D90. Shipping
 approval remains false. See the [current audit](research/consolidation/CI_AUDIT_2026-10-09.md). The separate [2026-10-14 entry](docs/KWS_LANDING_STATUS.md#2026-10-14-current-source-entry) links later nightly failure `38482297930` on its exact historical source; it is not a new acoustic evaluation of current main.
 
-`configs/shipping.xiaowo.json` is the machine-readable product contract. It intentionally records `shipping_approved=false`: synthetic qualification is engineering evidence, not a substitute for final real-human/final-AFE acoustic qualification and physical target-board evidence.
+
+The Git storage allowlist keeps `models/registry/**` tracked even when generated `.kwm` and `.pt` intermediates are ignored; archived bytes remain independently hash-verified.
+The frozen synthetic comparison now uses [`configs/research/two-keyword-synthetic-comparator.json`](configs/research/two-keyword-synthetic-comparator.json). It fixes the historical thresholds, model/keyword hashes and original stale-calibration status, **without** granting training, release, real-human acoustic or physical-board qualification. The retired commercial configuration remains available only through Git history.
 
 The current source contract separately records `recalibration_required=true`;
 historical qualification does not qualify changed runtime source.
 See [product status](docs/KWS_LANDING_STATUS.md) for the exact evidence scopes.
 
-### Fetching and verifying the release
+### Reproducible model and keyword asset verification
 
-The model, checkpoint and keyword pack are immutable Release assets and are also
-tracked in the promoted [Git registry](models/registry/model-749187ec1d66/).
-`.gitignore` excludes intermediate `*.kwm`/`*.pt` files but explicitly permits
-`models/registry/**`; see [model storage policy](models/README.md). You can use the
-local registry mirror or fetch the Release and check it against the contract:
-
-```bash
-gh release download model-749187ec1d66 \
-  --repo jiying2007/kws-pipeline --dir model-release
-python3 tools/verify_model_release.py \
-  --assets-dir model-release --release-tag model-749187ec1d66
-```
-
-The release is public, so plain HTTPS works when `gh` is unavailable:
+The source-controlled [frozen Git registry](models/registry/model-749187ec1d66/)
+contains the exact model, checkpoint, keyword pack, TSV, provenance and checksum
+manifest. The historical model is a **synthetic comparator**, not an accepted
+new KWS model. Verify its bytes without downloading or publishing any Release:
 
 ```bash
-base=https://github.com/jiying2007/kws-pipeline/releases/download/model-749187ec1d66
-mkdir -p model-release
-curl -sSL -o model-release/MODEL_SHA256SUMS "$base/MODEL_SHA256SUMS"
-awk '{print $2}' model-release/MODEL_SHA256SUMS \
-  | xargs -I{} curl -sSL --fail -o "model-release/{}" "$base/{}"
-python3 tools/verify_model_release.py --assets-dir model-release
+python3 tools/verify_model_registry.py \
+  --registry-dir models/registry/model-749187ec1d66
+python3 tools/verify_research_model_assets.py \
+  --assets-dir models/registry/model-749187ec1d66 \
+  --registry-tag model-749187ec1d66
 ```
 
-`verify_model_release.py` checks two independent things, and the second one is the point. `MODEL_SHA256SUMS` ships *inside* the release, so on its own it only proves the download is internally consistent: whoever can replace an asset can regenerate the manifest to match it. The four digests pinned in `configs/shipping.xiaowo.json` (`xiaowo-model.kwm`, `xiaowo-model.pt`, `xiaowo-keywords.kwk`, `xiaowo-keywords.tsv`) live in this repository, so they are what actually binds a download to the qualified tuple. A regenerated manifest therefore cannot launder a substituted asset, and the tool refuses a manifest that omits a pinned asset rather than skipping it. `tests/test_model_release_pin.py` exercises each of those failure modes.
+The verifier requires both the repository's four SHA-256 pins
+(`configs/research/two-keyword-synthetic-comparator.json`) and the archived
+`MODEL_SHA256SUMS` manifest. Replacing an asset and regenerating its checksums
+cannot evade the independently pinned source hash. Existing
+`tests/test_model_release_pin.py` is a historical filename; its offline
+negative tests still cover modified assets, missing assets and forged manifests.
 
-## Runtime and product properties
+## Runtime and technical research properties
 
 - C11 + libm only in the real-time library; PyTorch and `pypinyin` remain offline.
 - No heap, hidden thread, lock, filesystem or text/pinyin conversion in the real-time path. This is enforced rather than assumed: `tools/check_runtime_purity.py` checks the undefined symbols of `libkws_pipeline.a` against an explicit allowlist (internal `kws_*` calls, `mem*`, ISO C math, the stack protector and the ARMv7 EABI divide helpers), so a new external dependency fails CI instead of passing review unnoticed.
@@ -194,7 +190,7 @@ Synthetic formal training currently uses the built-in proxy AFE, but the rendere
 - reported latency in samples;
 - optional final pipeline SHA/source SHA/toolchain identity.
 
-The final real `audio-pipeline` binary/config will be inserted through this contract during the later real-human/device qualification phase. Until that exact final AFE identity exists, `shipping_approved` remains false.
+Future independently authorized experiments may bind a measured `audio-pipeline` executable/config and actual microphone/board identity; until then real-human FAR/FRR and SSC305 figures remain NOT_RUN, not approved.
 
 ## Immutable training environment
 
@@ -327,13 +323,13 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-The shipping gate requires model ABI v2, keyword-pack ABI v3, frontend-spec v2, exact corpus identity, dataset-audit coverage, product-board evidence identity and a policy with `shipping_approved=true`. The repository keeps that last state false until the deferred real-human/final-AFE and physical-board evidence actually passes.
+Technical research preserves model ABI v2, keyword-pack ABI v3, frontend-spec v2, corpus identity and dataset-audit checks. Actual human/AFE and physical board performance are separate independent experiments; neither Git status nor synthetic validation can turn them into measured PASS.
 
 ## Validation boundary
 
-CI proves software contracts and deterministic/synthetic regressions: GCC/Clang, CTest, static analysis, coverage, ASan/UBSan, libFuzzer, a Cortex-A32 cross-build **whose CTest suite is actually executed under `qemu-arm-static`** alongside a hosted-vs-Cortex-A32 numerical parity gate on the int8 kernel, frontend/decoder contracts, corpus identity, self-training, robustness/FAR regression, runtime-soak/target-evidence schema validation, SDK reproducibility, model supply-chain integrity and a model-release contract pin.
+CI proves software contracts and deterministic/synthetic regressions: GCC/Clang, CTest, static analysis, coverage, ASan/UBSan, libFuzzer, a Cortex-A32 cross-build **whose CTest suite is actually executed under `qemu-arm-static`** alongside a hosted-vs-Cortex-A32 numerical parity gate on the int8 kernel, frontend/decoder contracts, corpus identity, self-training, robustness/FAR regression, runtime-soak/target-evidence schema validation, SDK reproducibility, model supply-chain integrity and frozen research model asset SHA-256 pins.
 
-It does **not** claim final commercial acoustic or physical-board qualification. After the non-real-data engineering closure, the only product-evidence phase intentionally left is: (1) real Mandarin through the final microphones/enclosure/AFE, then (2) physical target-board performance/soak and final tuple approval. Neither phase can run here: both need hardware, human subjects and a self-hosted runner, which is why `real-human-qualification.yml` and `target-dut-qualification.yml` are `workflow_dispatch`-only.
+It does **not** claim final commercial acoustic or physical-board qualification. After the non-real-data engineering closure, the only product-evidence phase intentionally left is: (1) real Mandarin through the final microphones/enclosure/AFE, then (2) physical target-board performance/soak and final tuple approval. Those old manual Release publishers are retired. Real measurements require separately authorized human audio, actual final AFE and physical target; missing evidence remains NOT_RUN or BLOCKED.
 
 See `docs/README.md`, `docs/CUSTOMIZATION.md`, `docs/RELEASE_QUALIFICATION.md`, `docs/TARGET_EVIDENCE.md`, `docs/CORPUS_IDENTITY.md`, `docs/AUDIO_DISCONTINUITY.md` and Issue #2.
 

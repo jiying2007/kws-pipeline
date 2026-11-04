@@ -54,7 +54,22 @@ class ParallelPlanTests(unittest.TestCase):
                 'd2c7808f2666b0ca89dfec1dad7d55403698748e',
             ),
         }
+        # This historical plan intentionally still points to the old model
+        # comparator source. The active path is retired, and only the new
+        # research comparator may be used by current execution.
         for path in self.plan['authority_paths'] + [self.plan['retained_plan_path']]:
+            if path == 'configs/shipping.xiaowo.json':
+                self.assertFalse((ROOT / path).exists())
+                current = json.loads(
+                    (ROOT / 'configs/research/two-keyword-synthetic-comparator.json')
+                    .read_text(encoding='utf-8')
+                )
+                self.assertEqual(current['research_scope'], 'frozen-historical-synthetic-comparator')
+                self.assertEqual(current['historical_source_blob_sha1'],
+                                 '55bb340cdcbb55a1467ae6955ee38f8684b5facf')
+                self.assertEqual(current['model']['registry_tag'], 'model-749187ec1d66')
+                self.assertFalse(current['independent_measurement_requirements']['actual_human_wav_evaluated'])
+                continue
             if path in history:
                 current, expected_blob = history[path]
                 self.assertFalse((ROOT / path).exists(), path)
