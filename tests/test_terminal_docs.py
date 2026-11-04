@@ -138,7 +138,7 @@ def check_current_status_docs() -> None:
 def check_target_bundle_docs() -> None:
     path = ROOT / "docs/TARGET_AND_SHIPPING_PROMOTION.md"
     text = path.read_text(encoding="utf-8")
-    policy = json.loads((ROOT / "commercial/target-qualification.policy.json").read_text(encoding="utf-8"))
+    policy = json.loads((ROOT / "configs/research/history/target-dut-phase-b.policy.json").read_text(encoding="utf-8"))
     budget = policy["resource_budget"]
     schema = json.loads((ROOT / budget["schema"]).read_text(encoding="utf-8"))
     filename = budget["fixed_bundle_file"]
