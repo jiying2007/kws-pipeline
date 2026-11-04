@@ -52,7 +52,7 @@ def test_phase_a_field_plan_preflight() -> None:
     import phase_a_field_plan_preflight as preflight
     import plan_phase_a_capture_supplement as supplement
 
-    policy = json.loads((ROOT / "commercial/real-human-qualification.policy.json")
+    policy = json.loads((ROOT / "configs/research/real-human-coverage-v1.json")
                         .read_text(encoding="utf-8"))
 
     def draft(session_roles: list[tuple[str, str, str, str]]) -> dict:
@@ -101,6 +101,8 @@ def test_phase_a_field_plan_preflight() -> None:
     assert result["verified_negative_audio_hours"] == 0
     assert result["verified_real_speakers"] == 0
     assert not result["qualification_allowed"] and not result["training_admitted"]
+    assert result["research_policy_id"] == "xiaowo-research-real-human-coverage-v1"
+    assert "deployment_tag" not in policy and "shipping_approved" not in policy
     assert result["planned_quota_gaps"]["declared_sealed_speakers_missing"] == 39
     assert result["planned_quota_gaps"]["declared_sealed_speakers_short_of_session_min"] == 1
     tagged = {r["name"]: r for r in result["critical_positive_slice_plans"]}
@@ -125,7 +127,7 @@ def test_phase_a_field_plan_preflight() -> None:
     assert full_report["verified_negative_audio_hours"] == 0
     assert full_report["critical_negative_exposure_hours_missing"] == \
         policy["critical_negative_exposure_hours"]
-    assert not full_report["qualification_allowed"] and not full_report["shipping_approved"]
+    assert not full_report["qualification_allowed"] and "shipping_approved" not in full_report
     assert len(json.dumps(full, ensure_ascii=False, sort_keys=True,
                           separators=(",", ":")).encode()) > 1024 * 1024
     # Upstream kws-data v1 verifies individual manifests only up to 1 MiB.
@@ -179,7 +181,8 @@ def test_phase_a_field_plan_preflight() -> None:
                x["training_admitted"] is False for x in capture["requests"])
     assert capture["observed_wake_events"] == 0
     assert capture["observed_post_afe_negative_hours"] == 0
-    assert capture["shipping_approved"] is False
+    assert capture["research_policy_id"] == "xiaowo-research-real-human-coverage-v1"
+    assert "shipping_approved" not in capture and "deployment_tag" not in capture
     opposite = supplement.build([shard_two, shard_one], policy, hashes[::-1])
     assert opposite == capture
     try:
@@ -205,7 +208,7 @@ def test_phase_a_field_plan_preflight() -> None:
                 "--field-plan", str(folder / "b.json"),
                 "--expected-plan-sha256", hashes[0],
                 "--expected-plan-sha256", hashes[1],
-                "--phase-a-policy", str(folder / "policy.json"),
+                "--research-coverage-policy", str(folder / "policy.json"),
                 "--output", str(output)]
         assert supplement.main(args) == 0
         assert (output.stat().st_mode & 0o777) == 0o600
@@ -284,7 +287,7 @@ def test_phase_a_field_plan_preflight() -> None:
         policy_file.write_text(json.dumps(policy), encoding="utf-8")
         assert preflight.main([
             "--field-plan", str(inputs[0]), "--field-plan", str(inputs[1]),
-            "--phase-a-policy", str(policy_file),
+            "--research-coverage-policy", str(policy_file),
             "--expected-plan-sha256", hashes[0],
             "--expected-plan-sha256", hashes[1], "--output", str(output),
         ]) == 0
@@ -335,6 +338,14 @@ def test_phase_a_field_plan_preflight() -> None:
         assert "PHASE_A_QUOTA_NOT_POSITIVE_INTEGER" in str(exc)
     else:
         raise AssertionError("boolean speaker policy accepted")
+    forged_approval = json.loads(json.dumps(policy))
+    forged_approval["shipping_approved"] = True
+    try:
+        preflight.assess(plan, forged_approval, preflight.canonical_sha(plan))
+    except ValueError as exc:
+        assert "UNEXPECTED_PHASE_A_POLICY" in str(exc)
+    else:
+        raise AssertionError("commercial approval flag unexpectedly accepted in research policy")
     weakened = json.loads(json.dumps(policy))
     weakened["minimums"]["expected_wakes_per_keyword"] = 1
     try:
@@ -350,7 +361,7 @@ def test_phase_a_field_plan_preflight() -> None:
             tmp / "field-plan.json", tmp / "phase-a.json", tmp / "coverage.json")
         plan_file.write_text(json.dumps(plan, ensure_ascii=False), encoding="utf-8")
         policy_file.write_text(json.dumps(policy), encoding="utf-8")
-        args = ["--field-plan", str(plan_file), "--phase-a-policy", str(policy_file),
+        args = ["--field-plan", str(plan_file), "--research-coverage-policy", str(policy_file),
                 "--expected-plan-sha256", preflight.canonical_sha(plan),
                 "--output", str(output)]
         assert preflight.main(args) == 0
