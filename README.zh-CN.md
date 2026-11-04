@@ -18,7 +18,7 @@
 
 > **证据边界 —— 引用下方任何数字前请先读这一段。**
 > 本仓库记录的 qualification 全部产生于**合成语料**，属于工程证据，不是商用声学结论。
-> 有两项产品证据被刻意**排除在本仓库可执行范围之外**：真实人声经过最终麦克风/结构/AFE，以及物理目标板 performance/soak —— 它们需要硬件和真人受试者。消费这两项证据的 workflow（`real-human-qualification.yml`、`target-dut-qualification.yml`）均为 `workflow_dispatch` only 且需要 self-hosted runner，因此不会在 `push` 或 fork 中触发。`configs/shipping.xiaowo.json` 在两者齐备前始终保留 `shipping_approved=false`。详见「验证边界」。
+> 有两项产品证据被刻意**排除在本仓库可执行范围之外**：真实人声经过最终麦克风/结构/AFE，以及物理目标板 performance/soak —— 它们需要硬件和真人受试者。旧人工 GitHub Release 发布工作流 `real-human-qualification.yml`、`target-dut-qualification.yml` 已从活动 Actions 退役；真人声学、AFE、目标设备资源的独立评分工具仍保留，需要真实数据/设备及合法授权方可运行。工具存在不等于真人/SSC305 已实测。历史 `configs/shipping.xiaowo.json` 不再决定科研准入。详见「验证边界」。
 
 `kws-pipeline` 是面向**低算力嵌入式 Linux / RTOS 产品**的常驻端侧唤醒引擎，目标包括 Cortex-A32、Cortex-A7 及相近 CPU 预算。
 

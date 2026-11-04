@@ -154,13 +154,12 @@ def check_target_bundle_docs() -> None:
         )),
         "`target-profile.json.resource_budget_id` must match `resource-budget.json.budget_id`",
     ))
-    workflow_path = ROOT / ".github/workflows/target-dut-qualification.yml"
-    pre_download = workflow_path.read_text(encoding="utf-8").split("gh release download", 1)[0]
-    require_all(pre_download, workflow_path, (
-        ".resource_budget.fixed_bundle_file",
-        f'test "$budget_file" = {filename}',
-        'test -f "$bundle/$budget_file"',
-    ))
+    # No product Release publisher is a current research preflight. Preserve
+    # resource-budget source/schema checks above, and the offline scorers.
+    assert not (ROOT / ".github/workflows/target-dut-qualification.yml").exists()
+    assert not (ROOT / ".github/workflows/real-human-qualification.yml").exists()
+    assert (ROOT / "tools/score_target_dut_qualification.py").is_file()
+    assert (ROOT / "tools/score_real_human_qualification.py").is_file()
 
 
 def main() -> int:

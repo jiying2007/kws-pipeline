@@ -70,10 +70,17 @@ source and old run history remain preserved by Git/GitHub; none is a condition
 for current reproducible data preparation, keyword experiments, FAR/FRR
 measurement or resource profiling.
 
-Real-human/DUT qualification paths remain legacy execution surfaces needing
-independent source/evaluation migration under #704. The former
-`model-promotion.yml` has been retired from active Actions. Their presence does not confer research
-approval or imply real-hardware evidence.
+The former `real-human-qualification.yml` and `target-dut-qualification.yml`
+were also retired from active Actions on 2026-11-04 because each could publish
+GitHub Releases based on commercial deployment/qualification tuples. Their
+original source remains in immutable Git/Actions history. Existing strict
+private-corpus intake, final AFE, actual WAV scoring, independent FRR/FAR
+confidence bounds, physical CPU/RSS/power/soak collectors and negative tests
+remain in `tools/` and `tests/`. These standalone scientific tools are **not**
+a new self-hosted research workflow; missing human/DUT evidence is NOT_RUN,
+never PASS. Future physical experiments must independently bind rights, frozen
+model identity, actual hardware and source hashes without a Release gate. The
+former `model-promotion.yml` is also retired from active Actions.
 
 ## Retired terminal shipping publication (2026-11-03)
 
