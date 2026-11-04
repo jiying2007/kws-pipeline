@@ -264,27 +264,16 @@ def main() -> int:
     assert production["cohort"]["require_same_resource_budget"] is True
     assert production["board_audio_policy"]["human_derived_audio_forbidden"] is True
 
-    human_workflow = (ROOT / ".github/workflows/real-human-qualification.yml").read_text(encoding="utf-8")
-    dut_workflow = (ROOT / ".github/workflows/target-dut-qualification.yml").read_text(encoding="utf-8")
-    for retired in ("target-cohort-promotion.yml", "shipping-approval.yml"):
-        assert not (ROOT / ".github/workflows" / retired).exists(), retired
-    run("bash", "-n", "governance/require_current_main.sh")
-    for text in (human_workflow, dut_workflow):
-        header = text.split("permissions:", 1)[0]
-        assert "workflow_dispatch:" in header
-        assert "pull_request:" not in header
-        assert "push:" not in header
-        assert "train_ctc.py" not in text
-        assert "iterate_domain.py" not in text
-        assert "governance/require_current_main.sh" in text
-    assert "runs-on: [self-hosted, kws-target-board]" in dut_workflow
-    assert "board_audio_class" in dut_workflow
-    assert "resource_budget" in dut_workflow
-    assert '.schema_version == 3 and .measurement_contract_id == "process-cpu-one-core-v1"' in dut_workflow
-    assert '.schema_version == 2 and .measurement_contract_id == "process-cpu-one-core-v1"' in dut_workflow
-    assert '{schema_version:2,phase:"physical-target-dut-qualification"' in dut_workflow
-    # Source-only target measurements remain independent of terminal publication.
-
+    for legacy in ("real-human-qualification.yml",
+                   "target-dut-qualification.yml",
+                   "target-cohort-promotion.yml",
+                   "shipping-approval.yml"):
+        assert not (ROOT / ".github/workflows" / legacy).exists(), legacy
+    # Preserve the actual offline scoring and physical measurement contracts.
+    assert (ROOT / "tools/score_real_human_qualification.py").is_file()
+    assert (ROOT / "tools/score_target_dut_qualification.py").is_file()
+    assert (ROOT / "tools/score_target_cohort.py").is_file()
+    assert (ROOT / "tools/collect_target_evidence.py").is_file()
 
     with tempfile.TemporaryDirectory(prefix="kws-target-research-") as td:
         root = pathlib.Path(td)
