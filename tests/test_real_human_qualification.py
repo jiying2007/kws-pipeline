@@ -409,13 +409,13 @@ def main() -> int:
     assert production_policy["privacy"]["raw_audio_public_upload_allowed"] is False
     assert production_policy["privacy"]["post_afe_audio_public_upload_allowed"] is False
 
-    summary_schema = json.loads(
-        (ROOT / "commercial/real-human-qualification-summary.schema.json").read_text(
-            encoding="utf-8"
-        )
-    )
-    assert summary_schema["properties"]["shipping_approved"]["const"] is False
-    assert "critical_negative_slices" in summary_schema["required"]
+    # Publication-only frozen Phase-A schema is retained in Git history;
+    # current technical source tests must not require a commercial namespace.
+    assert not (ROOT / "commercial/real-human-qualification-summary.schema.json").exists()
+    assert not (ROOT / "commercial/real-human-corpus.schema.json").exists()
+    # The real scorer and its independent critical-negative dynamic tests
+    # remain in this suite; absence of archived schema never waives thresholds.
+    assert (ROOT / "tools/score_real_human_qualification.py").is_file()
 
     # The historical manual Release publisher was retired for research-only
     # execution. All corpus/privacy/AFE/scoring negatives below still run.

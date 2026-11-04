@@ -136,7 +136,7 @@ python3 tools/validate_real_human_corpus.py \
   --public-summary /tmp/q-2026-09-a001-intake.json
 ```
 
-`commercial/real-human-corpus.schema.json` describes the sealed manifest.
+Historical `commercial/real-human-corpus.schema.json` described the frozen Phase-A deployment manifest; it is no longer a live study schema. Its exact original bytes remain in Git history. Actual lawful restricted corpus intake is separately source- and permission-bound.
 
 ## Final AFE adapter
 
@@ -272,7 +272,7 @@ human-qualified-<corpus-sha16>
 
 The public Release contains only aggregate/non-audio evidence: Phase-A receipt, qualification summary, corpus intake summary, frozen AFE identity, AFE corpus summary and evidence checksums. It explicitly retains `shipping_approved=false`.
 
-The machine result shape is documented by `commercial/real-human-qualification-summary.schema.json`.
+Historical product qualification result schema `commercial/real-human-qualification-summary.schema.json` is retained in Git history only; current independent scientific evaluation must use real sources, measured FRR/FAR, confidence bounds, latency and sidecar identity rather than a publication receipt.
 
 Phase A PASS changes the next gate to:
 

@@ -79,9 +79,9 @@ Research sources and historical product-reference contracts (not research-admiss
 - [`configs/research/afe-evidence.schema.json`](../configs/research/afe-evidence.schema.json) — source-bound command-AFE evidence schema, research measurement only
 - [`configs/research/real-human-coverage-v1.json`](../configs/research/real-human-coverage-v1.json) — current research-only source-locked speaker/session, FAR/FRR, confidence, latency and slice quotas for field planning
 - [`commercial/real-human-qualification.policy.json`](../commercial/real-human-qualification.policy.json) — historical frozen Phase-A policy still used by archived scorer contracts, not research admission
-- [`commercial/real-human-corpus.schema.json`](../commercial/real-human-corpus.schema.json) — private sealed held-out human corpus contract
+- Historical `commercial/real-human-corpus.schema.json` — retired Phase-A deployment manifest schema; recover immutable original source from Git history, not active study admission
 - [`configs/research/final-afe-adapter.schema.json`](../configs/research/final-afe-adapter.schema.json) — private research final-AFE command adapter with exact executable/config identity
-- [`commercial/real-human-qualification-summary.schema.json`](../commercial/real-human-qualification-summary.schema.json) — aggregate Phase-A result contract; `shipping_approved` is always false
+- Historical `commercial/real-human-qualification-summary.schema.json` — retired product release summary schema; strict original numeric scorer tests and source identity remain unchanged
 - [`commercial/target-qualification.policy.json`](../commercial/target-qualification.policy.json) — physical per-DUT and multi-DUT cohort target policy
 - [`configs/research/physical-target-profile.schema.json`](../configs/research/physical-target-profile.schema.json) — strict physical-target research input identity (not proof of measurement)
 - [`configs/research/physical-target-resource-budget.schema.json`](../configs/research/physical-target-resource-budget.schema.json) — bounded CPU/RSS/stack/temperature/power research limits
