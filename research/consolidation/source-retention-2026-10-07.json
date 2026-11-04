@@ -15594,7 +15594,8 @@
     ".github/workflows/tts-pilot-asr-20261014-v1.yml",
     ".github/workflows/kw1-preset-supplement-20261014-v1.yml",
     ".github/workflows/kw1-supplement-observation.yml",
-    ".github/workflows/authorized-voice-clone-contracts.yml"
+    ".github/workflows/authorized-voice-clone-contracts.yml",
+    ".github/workflows/qwen-nonclone-pilot-20261104-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -44116,6 +44117,77 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "qwen-nonclone-pilot-20261104-v1",
+      "source_commit": "8a0d4a582b879f10b8cd02d56865773e402900c2",
+      "workflow_source_changed": true,
+      "scope": "Add independent first-create-only four-cell nonclone preset Qwen CPU pilot; exact workflow allowance, locked official public assets, no cloning, private inputs, ASR, training admission, paid services or historical retries.",
+      "files": [
+        {
+          "path": ".github/workflows/qwen-nonclone-pilot-20261104-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/qwen-nonclone-pilot-20261104-v1.yml",
+            "mode": "100644",
+            "bytes": 1705,
+            "sha256": "14a12e21332261fa9ce17f09d402ca245ebc8af496d00115c7aa13338c8b7134",
+            "git_blob_sha1": "1828cdf82b27aec5c98dee45a4c2abcd58e1bb5a"
+          }
+        }
+      ],
+      "source_files": [
+        {
+          "path": "research/qwen-nonclone-pilot-20261104/campaign.py",
+          "mode": "100644",
+          "bytes": 10814,
+          "sha256": "76a828c02ac2622e9f90a08a281cdea5187e32ddaeacb0358f5f0c7ddb16f220",
+          "git_blob_sha1": "4119e8d80486a5cfbf106a6b4fc8c8f32d7ece1b"
+        },
+        {
+          "path": "research/qwen-nonclone-pilot-20261104/worker.py",
+          "mode": "100644",
+          "bytes": 6621,
+          "sha256": "21b5b5135e3964480a119a8485693e5abc87f8274ce8f320690495f753716bbb",
+          "git_blob_sha1": "c1e46de08d2620a7b1c2cd0248f41319d02e900d"
+        },
+        {
+          "path": "research/qwen-nonclone-pilot-20261104/test_campaign.py",
+          "mode": "100644",
+          "bytes": 10297,
+          "sha256": "e5a9a63784ed082c12cfefff1b778185719a521bf6ac226952710c88370253a0",
+          "git_blob_sha1": "8d4e251f20a0d9779e9e41a0601fcb5eb9c4b2c6"
+        },
+        {
+          "path": "research/qwen-nonclone-pilot-20261104/source-lock.json",
+          "mode": "100644",
+          "bytes": 2894,
+          "sha256": "42683c93bc1d1e6ebe339bf1e60a0e5c25a2440077072ee3a8a64b3815f40632",
+          "git_blob_sha1": "3b0e162134ea5fe8af22e7474b80ed5addb34fa8"
+        },
+        {
+          "path": "research/qwen-nonclone-pilot-20261104/README.md",
+          "mode": "100644",
+          "bytes": 4601,
+          "sha256": "118ebbf82f1188b29683b4ebd3b34bdddd3624d0b09f802e25eefdb512e73880",
+          "git_blob_sha1": "bbf97d5c641140847ddbb5aa47fac6e5001c9386"
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "mode": "100644",
+          "bytes": 19676,
+          "sha256": "b00fbdc90956bbcf0ed570bdcf946b7940162e229f0fd178b212dda195e16805",
+          "git_blob_sha1": "d6ac73a297de452cbbf6bf284f30039237f4c774"
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "mode": "100644",
+          "bytes": 64196,
+          "sha256": "9f2bcf0928689193b45aa118984b388187444a8456228495c67f53b5062fce90",
+          "git_blob_sha1": "b1a22dd6b13d634414a37fcaebe46a0e0e9d01c3"
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -44216,6 +44288,13 @@
       "bytes": 1271,
       "sha256": "b44acb0d9a4b448a4578afaca4eabd49162603438dbd5a76b7fae7a0bae017ca",
       "git_blob_sha1": "f98d751fea32576585a465012113ecae82ce9922"
+    },
+    {
+      "path": ".github/workflows/qwen-nonclone-pilot-20261104-v1.yml",
+      "mode": "100644",
+      "bytes": 1705,
+      "sha256": "14a12e21332261fa9ce17f09d402ca245ebc8af496d00115c7aa13338c8b7134",
+      "git_blob_sha1": "1828cdf82b27aec5c98dee45a4c2abcd58e1bb5a"
     }
   ],
   "current_source_revision": {
