@@ -1,0 +1,69 @@
+{
+  "schema": "qwen-nonclone-artifact-independent-verification-v1",
+  "run_id": 41803323981,
+  "head_sha": "adc2047807289dcba1ff7774c4340797fa0ae57e",
+  "artifact_id": 13309540962,
+  "artifact_zip_sha256": "0b598d492683e865126a8ab2f9c66c722deae89a40c507fc843a694a37bf3540",
+  "artifact_members_verified": 18,
+  "waveforms": [
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-00",
+      "requested_text": "你好小窝",
+      "sha256": "3a5d55033c527bfcc0865ea50db75e2d2e2bd39368487e24e2c1d161d83502c5",
+      "frames": 48000,
+      "sample_rate_hz": 24000,
+      "duration_seconds": 2.0,
+      "peak": 0.6190038323402405,
+      "rms": 0.09754007513918247,
+      "nonfinite_samples": 0,
+      "clipped_samples": 0,
+      "training_admitted": false
+    },
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-01",
+      "requested_text": "小窝小窝",
+      "sha256": "3b0c22ea6fcddae38c6c2a4daa835cffbb861a926a630b5b46b36b9fa3778732",
+      "frames": 44160,
+      "sample_rate_hz": 24000,
+      "duration_seconds": 1.84,
+      "peak": 0.4998933672904968,
+      "rms": 0.054465796406734504,
+      "nonfinite_samples": 0,
+      "clipped_samples": 0,
+      "training_admitted": false
+    },
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-02",
+      "requested_text": "你好小屋",
+      "sha256": "bf76edbbeaf303af836a025719feee79ae91d6719f90b988d339b9246618f6c2",
+      "frames": 40320,
+      "sample_rate_hz": 24000,
+      "duration_seconds": 1.68,
+      "peak": 0.4287734627723694,
+      "rms": 0.06155477083638774,
+      "nonfinite_samples": 0,
+      "clipped_samples": 0,
+      "training_admitted": false
+    },
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-03",
+      "requested_text": "今天晚上吃什么",
+      "sha256": "591f76a5d34b33a674e59248f48af327a07b6f4f24195a4de65c76641a0bf5c9",
+      "frames": 61440,
+      "sample_rate_hz": 24000,
+      "duration_seconds": 2.56,
+      "peak": 0.7245241403579712,
+      "rms": 0.08943842469367867,
+      "nonfinite_samples": 0,
+      "clipped_samples": 0,
+      "training_admitted": false
+    }
+  ],
+  "total_seconds": 8.08,
+  "host_wall_seconds": 356.142938924,
+  "setup_seconds": 271.740551491,
+  "inference_stage_seconds": 80.39114325399999,
+  "training_admitted": false,
+  "human_gold": false,
+  "asr_calls": 0
+}

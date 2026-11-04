@@ -1,0 +1,191 @@
+{
+  "campaign": "qwen-nonclone-pilot-20261104-v1",
+  "source_kind": "synthetic-public-preset",
+  "planned": [
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-00",
+      "text": "你好小窝",
+      "intended_kind": "positive-intent",
+      "intended_keyword_id": 1,
+      "speaker": "Vivian",
+      "seed": 20261104,
+      "attempts": 1,
+      "label_authority": "requested_text_only",
+      "training_admitted": false
+    },
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-01",
+      "text": "小窝小窝",
+      "intended_kind": "positive-intent",
+      "intended_keyword_id": 2,
+      "speaker": "Vivian",
+      "seed": 20261105,
+      "attempts": 1,
+      "label_authority": "requested_text_only",
+      "training_admitted": false
+    },
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-02",
+      "text": "你好小屋",
+      "intended_kind": "near-miss-intent",
+      "intended_keyword_id": null,
+      "speaker": "Vivian",
+      "seed": 20261106,
+      "attempts": 1,
+      "label_authority": "requested_text_only",
+      "training_admitted": false
+    },
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-03",
+      "text": "今天晚上吃什么",
+      "intended_kind": "ordinary-negative-intent",
+      "intended_keyword_id": null,
+      "speaker": "Vivian",
+      "seed": 20261107,
+      "attempts": 1,
+      "label_authority": "requested_text_only",
+      "training_admitted": false
+    }
+  ],
+  "outcomes": [
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-00",
+      "text": "你好小窝",
+      "intended_kind": "positive-intent",
+      "intended_keyword_id": 1,
+      "speaker": "Vivian",
+      "seed": 20261104,
+      "attempts": 1,
+      "label_authority": "requested_text_only",
+      "training_admitted": false,
+      "status": "generated",
+      "seconds": 14.737292934000038,
+      "metrics": {
+        "duration_seconds": 2.0,
+        "peak": 0.6190038323402405,
+        "rms": 0.09754007513918247,
+        "clipped_fraction": 0.0,
+        "quality_flags": [],
+        "technically_valid": true,
+        "human_phonetic_review": "PENDING",
+        "naturalness": "PENDING",
+        "pronunciation_target": "PENDING",
+        "qualified": false,
+        "training_admitted": false
+      },
+      "raw_wav_sha256": "3a5d55033c527bfcc0865ea50db75e2d2e2bd39368487e24e2c1d161d83502c5",
+      "native": {
+        "sample_rate_hz": 24000,
+        "channels": 1,
+        "frames": 48000,
+        "subtype": "FLOAT",
+        "source_values_sha256": "a324c1d8881b27fea7f6166c80882023b14d1cfdfc6822cb69f19c16df118fd9"
+      }
+    },
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-01",
+      "text": "小窝小窝",
+      "intended_kind": "positive-intent",
+      "intended_keyword_id": 2,
+      "speaker": "Vivian",
+      "seed": 20261105,
+      "attempts": 1,
+      "label_authority": "requested_text_only",
+      "training_admitted": false,
+      "status": "generated",
+      "seconds": 13.338944776000005,
+      "metrics": {
+        "duration_seconds": 1.84,
+        "peak": 0.4998933672904968,
+        "rms": 0.054465796406734504,
+        "clipped_fraction": 0.0,
+        "quality_flags": [],
+        "technically_valid": true,
+        "human_phonetic_review": "PENDING",
+        "naturalness": "PENDING",
+        "pronunciation_target": "PENDING",
+        "qualified": false,
+        "training_admitted": false
+      },
+      "raw_wav_sha256": "3b0c22ea6fcddae38c6c2a4daa835cffbb861a926a630b5b46b36b9fa3778732",
+      "native": {
+        "sample_rate_hz": 24000,
+        "channels": 1,
+        "frames": 44160,
+        "subtype": "FLOAT",
+        "source_values_sha256": "7d00bd0064a777169fa571041004e890b8badf4513db5f311b76aae1cb0ccc5c"
+      }
+    },
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-02",
+      "text": "你好小屋",
+      "intended_kind": "near-miss-intent",
+      "intended_keyword_id": null,
+      "speaker": "Vivian",
+      "seed": 20261106,
+      "attempts": 1,
+      "label_authority": "requested_text_only",
+      "training_admitted": false,
+      "status": "generated",
+      "seconds": 11.943805334999979,
+      "metrics": {
+        "duration_seconds": 1.68,
+        "peak": 0.4287734627723694,
+        "rms": 0.06155477083638774,
+        "clipped_fraction": 0.0,
+        "quality_flags": [],
+        "technically_valid": true,
+        "human_phonetic_review": "PENDING",
+        "naturalness": "PENDING",
+        "pronunciation_target": "PENDING",
+        "qualified": false,
+        "training_admitted": false
+      },
+      "raw_wav_sha256": "bf76edbbeaf303af836a025719feee79ae91d6719f90b988d339b9246618f6c2",
+      "native": {
+        "sample_rate_hz": 24000,
+        "channels": 1,
+        "frames": 40320,
+        "subtype": "FLOAT",
+        "source_values_sha256": "24acf686b357293427f82a0213fd8fd32311997c234d7dc93b0e99a3acd50fef"
+      }
+    },
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-03",
+      "text": "今天晚上吃什么",
+      "intended_kind": "ordinary-negative-intent",
+      "intended_keyword_id": null,
+      "speaker": "Vivian",
+      "seed": 20261107,
+      "attempts": 1,
+      "label_authority": "requested_text_only",
+      "training_admitted": false,
+      "status": "generated",
+      "seconds": 18.273606735000044,
+      "metrics": {
+        "duration_seconds": 2.56,
+        "peak": 0.7245241403579712,
+        "rms": 0.08943842469367867,
+        "clipped_fraction": 0.0,
+        "quality_flags": [],
+        "technically_valid": true,
+        "human_phonetic_review": "PENDING",
+        "naturalness": "PENDING",
+        "pronunciation_target": "PENDING",
+        "qualified": false,
+        "training_admitted": false
+      },
+      "raw_wav_sha256": "591f76a5d34b33a674e59248f48af327a07b6f4f24195a4de65c76641a0bf5c9",
+      "native": {
+        "sample_rate_hz": 24000,
+        "channels": 1,
+        "frames": 61440,
+        "subtype": "FLOAT",
+        "source_values_sha256": "391b2b15260ab305a015161f338005def0f16ca5e5556e38970e1393e9bad17a"
+      }
+    }
+  ],
+  "status": "four_generated_pending_independent_screen",
+  "training_admitted": false,
+  "human_gold": false
+}
