@@ -1,0 +1,38 @@
+{
+  "campaign": "qwen-nonclone-pilot-20261104-v1",
+  "host_status": "generated_pending_independent_screen",
+  "worker_reported_generation_status": "four_generated_pending_independent_screen",
+  "outcomes": [
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-00",
+      "status": "generated_technically_valid",
+      "attempt_claimed": true,
+      "training_admitted": false
+    },
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-01",
+      "status": "generated_technically_valid",
+      "attempt_claimed": true,
+      "training_admitted": false
+    },
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-02",
+      "status": "generated_technically_valid",
+      "attempt_claimed": true,
+      "training_admitted": false
+    },
+    {
+      "cell_id": "qwen-nonclone-pilot-20261104-v1-03",
+      "status": "generated_technically_valid",
+      "attempt_claimed": true,
+      "training_admitted": false
+    }
+  ],
+  "planned_cells": 4,
+  "claimed_attempts": 4,
+  "generated_files_verified": 4,
+  "all_four_technically_valid": true,
+  "training_admitted": false,
+  "human_gold": false,
+  "runtime_verification_summary_present": true
+}

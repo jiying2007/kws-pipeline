@@ -1,0 +1,30 @@
+{
+  "schema": "qwen-nonclone-source-freeze-v1",
+  "campaign": "qwen-nonclone-pilot-20261104-v1",
+  "base_commit": "c339dfd97d9696fe956a244730e7ccb8129ff5da",
+  "files": {
+    ".github/workflows/qwen-nonclone-pilot-20261104-v1.yml": "14a12e21332261fa9ce17f09d402ca245ebc8af496d00115c7aa13338c8b7134",
+    "research/source-screen32-v1/runtime_scope.py": "c08bd46d34bea011a63d32867386b26637d5a02753769654e08e4c32c31cb927",
+    "research/source-screen32-v1/qwen_adapter.py": "0b3397c50be95b63262b603e323ad68a888a4025e6d8fd1a7de11769071f8826",
+    "research/source-screen32-v1/container-lock.json": "71a687d9580c2310dcc73768daffa6f881c41aa96310be144cf4dfccbefb5ba1",
+    "research/source-screen32-v1/setup_adapter.py": "b7f6c3493ad0da909c7e6856d27f3247f5e1716ce6c981cb396a03687aa7e547",
+    "research/source-screen32-v1/hosted_run.py": "f561883ff305a1e411dbc9323401f73d59a044b46ed15ef6bc0157c221db1f1c",
+    "research/source-screen32-v1/tts_worker.py": "fea079a39605b311337bcea99fbef0fa0486263c1eba122dba6e8c8834868612",
+    "research/source-screen32-v1/contract.py": "5aa40db17ae3d67df3995a55714b880e5aec0b68b262db82c37b9935c28af3b5",
+    "research/tts-quality-pilot-v1/runtime_scope.py": "c08bd46d34bea011a63d32867386b26637d5a02753769654e08e4c32c31cb927",
+    "research/tts-quality-pilot-v1/qwen06-model-lock.json": "9da27e3dea80033174141613458b03901460d0523ca2be7323e12071bad2ac90",
+    "research/tts-quality-pilot-v1/setup_adapter.py": "889b2b2ee33e940dff00a51a090f1ec5fad83c8343f6aa21ac4392602e22faf6",
+    "research/tts-quality-pilot-v1/pilot.py": "b3f885b119854f2241f002b2ec44dd6fe4b57f82da20a1f54020adc7f06de6f5",
+    "research/qwen-nonclone-pilot-20261104/test_campaign.py": "e5a9a63784ed082c12cfefff1b778185719a521bf6ac226952710c88370253a0",
+    "research/qwen-nonclone-pilot-20261104/worker.py": "21b5b5135e3964480a119a8485693e5abc87f8274ce8f320690495f753716bbb",
+    "research/qwen-nonclone-pilot-20261104/campaign.py": "76a828c02ac2622e9f90a08a281cdea5187e32ddaeacb0358f5f0c7ddb16f220",
+    "research/qwen6_tts/wheel_identity.py": "623ee07a0d8f85ba1d7218a56fcd0e270df8c6e2c3e353dd52b3184ca915d8d5",
+    "research/qwen6_tts/generate_six.py": "25530b89fa3f58f44ceb8d3c2a8f26f3b37651c7173f62414dc96142919ea03e",
+    "research/qwen6_tts/import_preflight.py": "30cfe60347ccc6074d98a21406fccee3e3be5c54822aa8d874aae3655693ae1c",
+    "research/qwen6_tts/runtime-lock.json": "6a707c2fa2c2ae8f842176a7f9c8301186d51fddef167c413160c7f2816613de",
+    "research/qwen6_tts/setup_locked.py": "aac8d8e66504444f2965aa8d95dcfef9e8c6fa63d74f2eade15ca1290bc6b4b3",
+    "research/qwen6_tts/model-locks.json": "c206556a633b7d04c334494fc5a82934a19d572c125982c689f18f8b2d472110",
+    "research/qwen6_tts/runtime_gate.py": "f4333b694bb1bc261e4bdeea6d586dc9f76b1afce6ce0af9dfcdb74d57d12815",
+    "research/qwen6_tts/setup_diagnostics.py": "7c583ba0ed6f0e90f72ab3b5c107e3666a32d25359ce13ffc284d545f7d1dd5f"
+  }
+}

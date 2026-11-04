@@ -1,0 +1,10 @@
+{
+  "campaign": "runner-storage-20261104-v1",
+  "files": {
+    ".github/workflows/runner-storage-20261104-v1.yml": "51b6839b29f74d19898dcd2216d116ec81d0b6cb644588549174eea166402dfd",
+    "research/runner-storage-20261104/README.md": "487dfbc29e8cca63566e8eeb193b3ac7f3a1f4a282c7466673a48b6aab59dcff",
+    "research/runner-storage-20261104/collect_storage.py": "15454d55ebfa50ba899d1e3f6a3459becc20ef2d769c6890932e0b8dbc20561a",
+    "research/runner-storage-20261104/test_storage.py": "c4a592e2140fb60a43e85a2e6c80f668b7730e33105e3585eb2de36442189278"
+  },
+  "schema": "runner-storage-source-lock-v1"
+}

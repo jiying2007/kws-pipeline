@@ -1,0 +1,47 @@
+{
+  "schema": "public-synthetic-run-metadata-v1",
+  "repository": "jiying2007/kws-pipeline",
+  "run_id": 41814320901,
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/41814320901",
+  "source_commit": "f0a26c5f39910ae6a8cb674a31cf08e57fcfc2f2",
+  "run_number": 1,
+  "run_attempt": 1,
+  "conclusion": "success",
+  "artifact": {
+    "id": 13314781496,
+    "size_in_bytes": 11560534,
+    "sha256": "0704e28608f636fa14e8bfa30ebc5ed5b870b9576ec8c80fbe15da9e05033ac5",
+    "expires_at": "2026-11-18T10:45:04Z"
+  },
+  "observed": {
+    "planned_cells": 64,
+    "claimed_attempts": 64,
+    "verified_native_wavs": 64,
+    "unique_wav_hashes": 64,
+    "total_audio_seconds": 130.16,
+    "total_frames": 3123840,
+    "sample_rate_hz": 24000,
+    "channels": 1,
+    "subtype": "FLOAT",
+    "min_audio_seconds": 1.12,
+    "max_audio_seconds": 7.6,
+    "nonfinite_samples": 0,
+    "clipped_files": 0,
+    "indexed_members_verified": 97,
+    "host_wall_seconds": 1033.800858685,
+    "reference_voice_inputs": 0,
+    "retries": 0,
+    "new_asr_calls": 0,
+    "new_training_runs": 0
+  },
+  "scope": {
+    "machine_generated_public_presets": true,
+    "phonetic_review": "pending",
+    "naturalness": "pending",
+    "asr_screen": "pending",
+    "training_admitted": false,
+    "human_gold": false,
+    "source_family_split": "train_only_intent_not_admission",
+    "public_summary_only": true
+  }
+}

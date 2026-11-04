@@ -1,0 +1,34 @@
+name: Qwen nonclone 64-cell train-only expansion 20261104 v1
+on:
+  push:
+    branches: [research/qwen-nonclone64-20261104-v1]
+permissions:
+  contents: read
+concurrency:
+  group: qwen-nonclone64-20261104-v1
+  cancel-in-progress: false
+jobs:
+  expansion:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen-nonclone64-20261104-v1' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_number == 1 && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Offline source contracts only
+        run: |
+          set -euo pipefail
+          for opt in '' -O -OO; do
+            python3 -I -B $opt research/qwen-nonclone64-20261104/test_campaign.py
+          done
+      - name: 64 preset calls once with no credentials passed to workers
+        run: python3 -I -B research/qwen-nonclone64-20261104/campaign.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: qwen-nonclone64-20261104-v1-public
+          path: nonclone-qwen-nonclone64-20261104-v1/artifact/
+          retention-days: 14
+          if-no-files-found: error

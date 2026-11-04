@@ -1,0 +1,28 @@
+{
+  "schema": "independent-sense-wheel-static-review-v1",
+  "wheel": {
+    "filename": "kaldi_native_fbank-1.22.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+    "url": "https://files.pythonhosted.org/packages/84/90/01ef7331c52b1eaf9916f3f7a535155aac2e9e2ddad12a141613d92758c7/kaldi_native_fbank-1.22.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+    "sha256": "f16e74372fe9e20abb4183f98a8e2288d5ee4c48d04d94b6160311170e007661",
+    "size_bytes": 322002
+  },
+  "all_record_members_verified": 21,
+  "metadata_sha256": "e8c6b15a2900e1ba4014a225141033c5270fc797f46dd52c0ab42c5cbe96cd29",
+  "metadata_matches_runtime_lock": true,
+  "extension_needed": [
+    "libkaldi-native-fbank-core.so",
+    "libstdc++.so.6",
+    "libm.so.6",
+    "libgcc_s.so.1",
+    "libc.so.6",
+    "ld-linux-x86-64.so.2"
+  ],
+  "extension_rpath": "$ORIGIN:$ORIGIN/kaldi_native_fbank/lib",
+  "core_soname": "libkaldi-native-fbank-core.so",
+  "core_rpath": "$ORIGIN",
+  "wheel_native_code_dependency_count": 2,
+  "observed_runtime_mappings": false,
+  "system_abi_libraries_scope": "existing pinned container boundary; not newly per-file measured here",
+  "installed": false,
+  "executed": false
+}

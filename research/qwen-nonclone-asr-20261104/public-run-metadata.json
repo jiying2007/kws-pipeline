@@ -1,0 +1,28 @@
+{
+  "schema": "qwen-nonclone-public-run-metadata-v1",
+  "source_repository": "jiying2007/kws-pipeline",
+  "tts": {
+    "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/41803323981",
+    "source_commit": "adc2047807289dcba1ff7774c4340797fa0ae57e",
+    "artifact_id": 13309540962,
+    "artifact_sha256": "0b598d492683e865126a8ab2f9c66c722deae89a40c507fc843a694a37bf3540",
+    "generated_files": 4
+  },
+  "asr": {
+    "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/41809066322",
+    "source_commit": "8a5816a6dd66fbdfc5a0891956fa11be24830400",
+    "artifact_id": 13310962982,
+    "artifact_sha256": "458b0c705366b225cc81ce5ac27a54b01ad6f030a7d4d0b3c295efdddf491117",
+    "artifact_expiry": "2026-11-18T09:43:24Z",
+    "status": "success",
+    "planned_calls": 12,
+    "successful_complete_calls": 12,
+    "generated_audio_denominator": 4,
+    "machine_requested_text_matches": 3,
+    "independent_terminal_reconstruction": "exact_match",
+    "training_admitted": false,
+    "human_gold": false
+  },
+  "payloads_included": false,
+  "scope": "Public GitHub run identifiers, source commits, artifact hashes and aggregate machine-screen status only. No archive, raw transcripts, decoder traces, audio, weights or credentials are included."
+}

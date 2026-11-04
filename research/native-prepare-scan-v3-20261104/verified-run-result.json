@@ -1,0 +1,421 @@
+{
+  "schema": "native-prepare-scan-verified-result-v1",
+  "run_id": 41843572690,
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/41843572690",
+  "source_head": "7c87ac18832c874691ca6bae7599759ad854b6d2",
+  "run_number": 1,
+  "run_attempt": 1,
+  "artifact_id": 13329784159,
+  "artifact_sha256": "cb3a0571895daa68400f5ae925388d91e47010088771a5a1d051ecdfa7c97b80",
+  "artifact_expires_at": "2026-11-11T14:06:51Z",
+  "verified_members": [
+    "capacity.json",
+    "safe-summary.json",
+    "status.json"
+  ],
+  "result": {
+    "status.json": {
+      "audio_inputs": 0,
+      "campaign": "native-prepare-scan-v3-20261104-v1",
+      "evidence_persistence": "runner-only",
+      "inference_calls": 0,
+      "models": [
+        {
+          "asset_lock_sha256": "ea89ac53c6bce265b8c37300d46640417a1ec7b57e854ec7ed728ed45f0eee31",
+          "family": "qwen06",
+          "native_config_sha256": "ca6efd3e9eeac2eaa81882df73145b6f061cb70d3fe89557fb3850c9d88c5c39",
+          "source_lock_sha256": "d7ed308183a05ccde1ab1333d8e2dbea14f518e0d4d667801012ea52819f46c7",
+          "status": "prepared_zero_forward"
+        },
+        {
+          "family": "sensevoice",
+          "status": "failed_no_retry"
+        },
+        {
+          "family": "whisper",
+          "status": "not_run"
+        }
+      ],
+      "policy_sha256": null,
+      "retry": false,
+      "schema": "native-no-audio-preparation-public-v1",
+      "status": "stopped_no_retry",
+      "training_admitted": false
+    },
+    "capacity.json": {
+      "observations": [
+        {
+          "docker": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 91852193792,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 63025217536
+          },
+          "elapsed_milliseconds": 0,
+          "root": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 91852193792,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 63025217536
+          },
+          "stage": "initial",
+          "work_workspace_same_device": true,
+          "workspace": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 91852193792,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 63025217536
+          }
+        },
+        {
+          "docker": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 91850969088,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 63026442240
+          },
+          "elapsed_milliseconds": 16,
+          "root": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 91850969088,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 63026442240
+          },
+          "stage": "before_image",
+          "work_workspace_same_device": true,
+          "workspace": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 91850969088,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 63026442240
+          }
+        },
+        {
+          "docker": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 91709677568,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 63167733760
+          },
+          "elapsed_milliseconds": 3972,
+          "root": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 91709677568,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 63167733760
+          },
+          "stage": "after_image",
+          "work_workspace_same_device": true,
+          "workspace": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 91709677568,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 63167733760
+          }
+        },
+        {
+          "docker": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 91709673472,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 63167737856
+          },
+          "elapsed_milliseconds": 3973,
+          "root": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 91709673472,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 63167737856
+          },
+          "stage": "before_setup_primary",
+          "work_workspace_same_device": true,
+          "workspace": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 91709673472,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 63167737856
+          }
+        },
+        {
+          "docker": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 86492086272,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 68385325056
+          },
+          "elapsed_milliseconds": 137917,
+          "root": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 86492086272,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 68385325056
+          },
+          "stage": "after_setup_primary",
+          "work_workspace_same_device": true,
+          "workspace": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 86492086272,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 68385325056
+          }
+        },
+        {
+          "docker": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 86492082176,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 68385329152
+          },
+          "elapsed_milliseconds": 137918,
+          "root": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 86492082176,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 68385329152
+          },
+          "stage": "before_setup_whisper",
+          "work_workspace_same_device": true,
+          "workspace": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 86492082176,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 68385329152
+          }
+        },
+        {
+          "docker": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639756288,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237655040
+          },
+          "elapsed_milliseconds": 170827,
+          "root": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639756288,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237655040
+          },
+          "stage": "after_setup_whisper",
+          "work_workspace_same_device": true,
+          "workspace": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639756288,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237655040
+          }
+        },
+        {
+          "docker": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639752192,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237659136
+          },
+          "elapsed_milliseconds": 170828,
+          "root": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639752192,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237659136
+          },
+          "stage": "before_prepare_qwen06",
+          "work_workspace_same_device": true,
+          "workspace": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639752192,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237659136
+          }
+        },
+        {
+          "docker": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639518720,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237892608
+          },
+          "elapsed_milliseconds": 244282,
+          "root": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639518720,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237892608
+          },
+          "stage": "after_prepare_qwen06",
+          "work_workspace_same_device": true,
+          "workspace": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639518720,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237892608
+          }
+        },
+        {
+          "docker": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639518720,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237892608
+          },
+          "elapsed_milliseconds": 244283,
+          "root": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639518720,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237892608
+          },
+          "stage": "before_prepare_sensevoice",
+          "work_workspace_same_device": true,
+          "workspace": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639518720,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237892608
+          }
+        },
+        {
+          "docker": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639485952,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237925376
+          },
+          "elapsed_milliseconds": 268175,
+          "root": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639485952,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237925376
+          },
+          "stage": "after_prepare_sensevoice",
+          "work_workspace_same_device": true,
+          "workspace": {
+            "device_major": 259,
+            "device_minor": 1,
+            "free_bytes": 84639485952,
+            "status": "available",
+            "total_bytes": 154894188544,
+            "used_bytes": 70237925376
+          }
+        }
+      ],
+      "previous_runner_capacity_is_not_evidence": true,
+      "primary_initial_free_bytes": 17179869184,
+      "required_initial_free_bytes": 26843545600,
+      "retained_setup_temp_and_container_cleanup_unchanged": true,
+      "run_id": "41843572690",
+      "runner_capacity_cleanup_performed": false,
+      "schema": "native-prepare-same-job-capacity-v1",
+      "snapshots_are_sequential_not_atomic": true,
+      "source_head": "7c87ac18832c874691ca6bae7599759ad854b6d2",
+      "whisper_initial_free_bytes": 8589934592
+    },
+    "safe-summary.json": {
+      "campaign": "native-prepare-scan-v3-20261104-v1",
+      "diagnostics_do_not_authorize_success": true,
+      "models": [
+        {
+          "exception_class": null,
+          "family": "qwen06",
+          "schema": "native-prepare-safe-summary-v1",
+          "stage": "complete",
+          "status": "complete"
+        },
+        {
+          "exception_class": "AttributeError",
+          "family": "sensevoice",
+          "schema": "native-prepare-safe-summary-v1",
+          "stage": "prepare_native_identity",
+          "status": "failed"
+        },
+        {
+          "family": "whisper",
+          "reason": "missing",
+          "schema": "native-prepare-safe-summary-v1",
+          "status": "unavailable"
+        }
+      ],
+      "schema": "native-prepare-safe-summary-set-v1"
+    }
+  },
+  "interpretation": {
+    "disk_gate_passed": true,
+    "runtime_setups_completed": [
+      "primary",
+      "whisper"
+    ],
+    "qwen_prepare_completed": true,
+    "sense_failure_stage": "prepare_native_identity",
+    "sense_exception_class": "AttributeError",
+    "specific_attribute_and_inner_trace_not_retained": true,
+    "whisper_prepare_not_run": true,
+    "output_scan_completed_this_run": true,
+    "consumed_branch_must_not_be_reused": true,
+    "full_asr_still_blocked": true
+  }
+}

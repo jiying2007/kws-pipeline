@@ -1,0 +1,413 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "frontend_class",
+    "attributes",
+    "attribute_types",
+    "attribute_source",
+    "dependencies",
+    "cmvn",
+    "observation_stage",
+    "dither_rng_reproducibility",
+    "training_admitted",
+    "native_execution_mappings"
+  ],
+  "properties": {
+    "schema": {
+      "const": "observed-sense-frontend-v1"
+    },
+    "frontend_class": {
+      "const": "funasr.frontends.wav_frontend.WavFrontend"
+    },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fs",
+        "window",
+        "n_mels",
+        "frame_length",
+        "frame_shift",
+        "filter_length_min",
+        "filter_length_max",
+        "lfr_m",
+        "lfr_n",
+        "dither",
+        "snip_edges",
+        "upsacle_samples"
+      ],
+      "properties": {
+        "fs": {
+          "type": "integer"
+        },
+        "window": {
+          "type": "string"
+        },
+        "n_mels": {
+          "type": "integer"
+        },
+        "frame_length": {
+          "type": "number"
+        },
+        "frame_shift": {
+          "type": "number"
+        },
+        "filter_length_min": {
+          "type": "integer"
+        },
+        "filter_length_max": {
+          "type": "integer"
+        },
+        "lfr_m": {
+          "type": "integer"
+        },
+        "lfr_n": {
+          "type": "integer"
+        },
+        "dither": {
+          "type": "number"
+        },
+        "snip_edges": {
+          "type": "boolean"
+        },
+        "upsacle_samples": {
+          "type": "boolean"
+        }
+      }
+    },
+    "attribute_types": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fs",
+        "window",
+        "n_mels",
+        "frame_length",
+        "frame_shift",
+        "filter_length_min",
+        "filter_length_max",
+        "lfr_m",
+        "lfr_n",
+        "dither",
+        "snip_edges",
+        "upsacle_samples"
+      ],
+      "properties": {
+        "fs": {
+          "enum": [
+            "int"
+          ]
+        },
+        "window": {
+          "enum": [
+            "str"
+          ]
+        },
+        "n_mels": {
+          "enum": [
+            "int"
+          ]
+        },
+        "frame_length": {
+          "enum": [
+            "int",
+            "float"
+          ]
+        },
+        "frame_shift": {
+          "enum": [
+            "int",
+            "float"
+          ]
+        },
+        "filter_length_min": {
+          "enum": [
+            "int"
+          ]
+        },
+        "filter_length_max": {
+          "enum": [
+            "int"
+          ]
+        },
+        "lfr_m": {
+          "enum": [
+            "int"
+          ]
+        },
+        "lfr_n": {
+          "enum": [
+            "int"
+          ]
+        },
+        "dither": {
+          "enum": [
+            "int",
+            "float"
+          ]
+        },
+        "snip_edges": {
+          "enum": [
+            "bool"
+          ]
+        },
+        "upsacle_samples": {
+          "enum": [
+            "bool"
+          ]
+        }
+      }
+    },
+    "attribute_source": {
+      "const": "actual_loaded_WavFrontend_attributes_no_defaults"
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frontend_source",
+        "fbank_source",
+        "backend_package_source",
+        "backend_binary",
+        "cmvn_file",
+        "tokenizer_file",
+        "parser_source",
+        "backend_core_library"
+      ],
+      "properties": {
+        "frontend_source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "bytes"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4194304
+            }
+          }
+        },
+        "fbank_source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "bytes"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4194304
+            }
+          }
+        },
+        "backend_package_source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "bytes"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4194304
+            }
+          }
+        },
+        "backend_binary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "bytes"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 33554432
+            }
+          }
+        },
+        "cmvn_file": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "bytes"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4194304
+            }
+          }
+        },
+        "tokenizer_file": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "bytes"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4194304
+            }
+          }
+        },
+        "parser_source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "bytes"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4194304
+            }
+          }
+        },
+        "backend_core_library": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "bytes"
+          ],
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 33554432
+            }
+          }
+        }
+      }
+    },
+    "cmvn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "device",
+        "dtype",
+        "shape",
+        "encoding",
+        "values",
+        "sha256"
+      ],
+      "properties": {
+        "device": {
+          "const": "cpu"
+        },
+        "dtype": {
+          "const": "float32"
+        },
+        "shape": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8192
+          }
+        },
+        "encoding": {
+          "const": "ieee754-binary32-le"
+        },
+        "values": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8192,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "observation_stage": {
+      "const": "loaded_object_observation"
+    },
+    "dither_rng_reproducibility": {
+      "const": "not established"
+    },
+    "training_admitted": {
+      "const": false
+    },
+    "native_execution_mappings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "backend_binary",
+        "backend_core_library"
+      ],
+      "properties": {
+        "backend_binary": {
+          "const": true
+        },
+        "backend_core_library": {
+          "const": true
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Observed SenseVoice frontend runtime dependency v1",
+  "description": "Cross-field validation additionally requires shape=[2,N], exactly N finite float32 CMVN values per row, little-endian packed-value SHA256 equality, exact actual attribute type labels, and reviewed original dependency-byte identity. This is not source/asset membership or admission."
+}

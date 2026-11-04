@@ -261,7 +261,16 @@ def verify(root, manifest):
     # is accepted only when its explicit identity is present and the active
     # checkout exactly matches the declared set; no arbitrary workflow escapes.
     approved_with_clone = approved + ['.github/workflows/authorized-voice-clone-contracts.yml']
-    if additions not in (approved, approved_with_clone):
+    approved_with_nonclone = approved_with_clone + ['.github/workflows/qwen-nonclone-pilot-20261104-v1.yml']
+    approved_with_nonclone_asr = approved_with_nonclone + ['.github/workflows/qwen-nonclone-asr-20261104-v1.yml']
+    approved_with_nonclone64 = approved_with_nonclone_asr + ['.github/workflows/qwen-nonclone64-20261104-v1.yml']
+    approved_with_native_prepare = approved_with_nonclone64 + ['.github/workflows/native-prepare-20261104-v1.yml']
+    approved_with_storage_probe = approved_with_native_prepare + ['.github/workflows/runner-storage-20261104-v1.yml']
+    approved_with_capacity_prepare = approved_with_storage_probe + ['.github/workflows/native-prepare-capacity-20261104-v1.yml']
+    approved_with_fence_prepare = approved_with_capacity_prepare + ['.github/workflows/native-prepare-fence-v2-20261104-v1.yml']
+    approved_with_scan_prepare = approved_with_fence_prepare + ['.github/workflows/native-prepare-scan-v3-20261104-v1.yml']
+    approved_with_tokenizer_prepare = approved_with_scan_prepare + ['.github/workflows/native-prepare-tokenizer-v4-20261104-v1.yml']
+    if additions not in (approved, approved_with_clone, approved_with_nonclone, approved_with_nonclone_asr, approved_with_nonclone64, approved_with_native_prepare, approved_with_storage_probe, approved_with_capacity_prepare, approved_with_fence_prepare, approved_with_scan_prepare, approved_with_tokenizer_prepare):
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed additions
     # both bind CURRENT bytes. Historical maintenance receipts are evidence,
@@ -326,3 +335,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
