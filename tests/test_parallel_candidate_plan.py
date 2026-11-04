@@ -39,8 +39,34 @@ class ParallelPlanTests(unittest.TestCase):
         self.assertEqual(validate(self.plan), dict(metadata_shape_valid=True, evidence_status='NOT_RUN',
             execution_ready=False, input_authenticity_verified=False, numerical_admission=False,
             product_qualified=False, shipping_approved=False))
+        # This as-of-2026-10-10 plan is disabled, NOT_RUN metadata only.
+        # Product policy paths are historical references, not executable
+        # admission paths. Verify the exact retained blobs in research history
+        # without editing the frozen plan or pretending their original paths
+        # still exist.
+        history = {
+            'commercial/real-human-qualification.policy.json': (
+                'configs/research/history/real-human-phase-a.policy.json',
+                'e7f4a1f422e2d167cb843ba3943f19a46866aa78',
+            ),
+            'commercial/target-qualification.policy.json': (
+                'configs/research/history/target-dut-phase-b.policy.json',
+                'd2c7808f2666b0ca89dfec1dad7d55403698748e',
+            ),
+        }
         for path in self.plan['authority_paths'] + [self.plan['retained_plan_path']]:
-            self.assertTrue((ROOT / path).is_file(), path)
+            if path in history:
+                current, expected_blob = history[path]
+                self.assertFalse((ROOT / path).exists(), path)
+                raw = (ROOT / current).read_bytes()
+                import hashlib
+                blob_sha = hashlib.sha1(
+                    ('blob %d\\0' % len(raw)).encode('ascii') + raw
+                ).hexdigest()
+                self.assertEqual(blob_sha, expected_blob, current)
+            else:
+                self.assertTrue((ROOT / path).is_file(), path)
+        self.assertFalse((ROOT / 'commercial').exists())
         old = json.loads((ROOT / self.plan['retained_plan_path']).read_text())
         self.assertIn('model-architecture', old['controlled_variables_fixed_between_arms'])
         self.assertIsNone(self.plan['supersedes'])
