@@ -126,6 +126,13 @@ def main() -> int:
     ).read_text(encoding="utf-8")
     assert "retry_to_file()" in materializer
     assert "retry_release_download()" in materializer
+    # Research source migration #733 can use the byte-identical archive without
+    # querying GitHub Releases, while the old fallback remains explicit debt.
+    assert 'research_archive="${KWS_RESEARCH_BASE_ARCHIVE:-}"' in materializer
+    assert 'sha256sum -c --status' in materializer
+    assert 'cp -- "$research_archive" "$release_root/$archive"' in materializer
+    assert 'if [ -n "$research_archive" ]; then' in materializer
+    assert 'Historical fallback remains live until #733' in materializer
     assert "KWS_DOWNLOAD_RETRY_ATTEMPTS" in materializer
     assert "--clobber" in materializer
 
