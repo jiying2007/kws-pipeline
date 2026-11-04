@@ -84,8 +84,8 @@ Research sources and historical product-reference contracts (not research-admiss
 - [`governance/require_current_main.sh`](../governance/require_current_main.sh) — shared manual-promotion gate requiring exact current protected main and live terminal ruleset
 - [`.github/workflows/far-nightly.yml`](../.github/workflows/far-nightly.yml) — immutable released-model nightly FAR regression with no training/qualification
 - Historical `deployment-release.yml` — removed from active GitHub Actions; inspect the original Git commit for publication history. It is not an experiment or data-admission entrypoint.
-- [`.github/workflows/real-human-qualification.yml`](../.github/workflows/real-human-qualification.yml) — manual self-hosted restricted-data Phase-A workflow; raw/post-AFE WAVs are never uploaded
-- [`.github/workflows/target-dut-qualification.yml`](../.github/workflows/target-dut-qualification.yml) — manual self-hosted single-DUT physical evidence gate; raw lab evidence stays controlled
+- Historical `real-human-qualification.yml` — retired release-coupled publisher; current independent corpus, final-AFE and FAR/FRR scoring use `tools/validate_real_human_corpus.py`, `tools/run_final_afe_corpus.py` and `tools/score_real_human_qualification.py`, with private raw audio retained locally.
+- Historical `target-dut-qualification.yml` — retired release-coupled publisher; current controlled target measurements use `tools/collect_target_evidence.py` and `tools/score_target_dut_qualification.py` without a shipping tag.
 - Historical `target-cohort-promotion.yml` — retired publication workflow; current research cohort scoring is `tools/score_target_cohort.py` and must use independently verified target measurements.
 - Historical `shipping-approval.yml` — retired commercial approval workflow, not a research acceptance authority.
 
