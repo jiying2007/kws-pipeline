@@ -97,7 +97,7 @@ Research sources and historical product-reference contracts (not research-admiss
 - [`src/`](../src/), [`include/`](../include/), [`cmake/`](../cmake/) and [`CMakeLists.txt`](../CMakeLists.txt): device library and SDK build
 - [`configs/`](../configs/), [`keywords/`](../keywords/), [`models/`](../models/): current machine-readable product inputs and model registry
 - [`training/`](../training/), [`eval/`](../eval/) and [`tools/`](../tools/README.md): offline preparation, evaluation and engineering utilities
-- [`commercial/`](../commercial/) contains historical, still-migrating measurement schemas/policies (not current research admission); [`governance/`](../governance/) tracks source-control rules
+- The retired `commercial/` directory is preserved in Git history only; frozen policy bytes live in [`configs/research/history/`](../configs/research/history/), and active research measurements use explicit source/rights and numerical contracts. [`governance/`](../governance/) tracks source-control rules
 - [`tests/`](../tests/), [`fuzz/`](../fuzz/), [`bench/`](../bench/): software verification
 - [`research/`](../research/README.md): isolated reusable research code plus frozen source/evidence archives
 - [`docs/research/`](research/): earlier narrative records; the current conclusions are in the research map above
