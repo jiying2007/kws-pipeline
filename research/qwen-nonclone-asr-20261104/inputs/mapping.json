@@ -1,0 +1,63 @@
+{
+  "source_run_id": 41803323981,
+  "source_head": "adc2047807289dcba1ff7774c4340797fa0ae57e",
+  "method": "scipy.signal.resample_poly",
+  "up": 2,
+  "down": 3,
+  "window": [
+    "kaiser",
+    5.0
+  ],
+  "padtype": "constant",
+  "numpy_version": "2.3.5",
+  "scipy_version": "1.17.0",
+  "quantization": "floor_float64_times_32768_to_int16",
+  "gain_normalization": false,
+  "trimming": false,
+  "rows": [
+    {
+      "sample_id": "qwen-nonclone-pilot-20261104-v1-02",
+      "requested_text": "你好小屋",
+      "native_sha256": "bf76edbbeaf303af836a025719feee79ae91d6719f90b988d339b9246618f6c2",
+      "native_frames": 40320,
+      "derived_sha256": "0cec92540fef9af7e423860cd28c526c39b9430bb4cc04c58cbcc73d32294213",
+      "pcm_sha256": "6f949c75e7d70292d94ebf778ff782bbc7532861498953c20ccbaf3501786715",
+      "frames": 26880,
+      "training_admitted": false,
+      "opaque_id": "clip-000001"
+    },
+    {
+      "sample_id": "qwen-nonclone-pilot-20261104-v1-00",
+      "requested_text": "你好小窝",
+      "native_sha256": "3a5d55033c527bfcc0865ea50db75e2d2e2bd39368487e24e2c1d161d83502c5",
+      "native_frames": 48000,
+      "derived_sha256": "0f25b8e19e0e3b1c556ded696decea6f72bc9450138c4277a4223f9ac08b9e43",
+      "pcm_sha256": "11f6b7bd14ae612ca1c1082a3e1525b7dc8a674d412f7ccf7e9fa1e9d542977a",
+      "frames": 32000,
+      "training_admitted": false,
+      "opaque_id": "clip-000002"
+    },
+    {
+      "sample_id": "qwen-nonclone-pilot-20261104-v1-03",
+      "requested_text": "今天晚上吃什么",
+      "native_sha256": "591f76a5d34b33a674e59248f48af327a07b6f4f24195a4de65c76641a0bf5c9",
+      "native_frames": 61440,
+      "derived_sha256": "5eef41ef01064981df19245c15933db950fe64b26163eabb8f14563e10ac2a0d",
+      "pcm_sha256": "361fc054d165de26381e04c45039f8c39579b43f2ed01ecbc1ee9defdb9dc4a8",
+      "frames": 40960,
+      "training_admitted": false,
+      "opaque_id": "clip-000003"
+    },
+    {
+      "sample_id": "qwen-nonclone-pilot-20261104-v1-01",
+      "requested_text": "小窝小窝",
+      "native_sha256": "3b0c22ea6fcddae38c6c2a4daa835cffbb861a926a630b5b46b36b9fa3778732",
+      "native_frames": 44160,
+      "derived_sha256": "caa1a865136eccae600d45f54e1e8397e321d4ea834a6a44bd7275314e918fa3",
+      "pcm_sha256": "c0fe0028be580a931f0ec5b344b4d7b287f30dbba679279f6a5d51d825f46b2f",
+      "frames": 29440,
+      "training_admitted": false,
+      "opaque_id": "clip-000004"
+    }
+  ]
+}
