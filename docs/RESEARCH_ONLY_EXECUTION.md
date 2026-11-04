@@ -70,10 +70,10 @@ source and old run history remain preserved by Git/GitHub; none is a condition
 for current reproducible data preparation, keyword experiments, FAR/FRR
 measurement or resource profiling.
 
-Real-human/DUT qualification paths remain legacy execution surfaces needing
-independent source/evaluation migration under #704. The former
-`model-promotion.yml` has been retired from active Actions. Their presence does not confer research
-approval or imply real-hardware evidence.
+The former `model-promotion.yml` publisher has been retired from active Actions.
+The historical release-coupled real-human/DUT execution paths are retired in
+this change too; original workflow bytes and historical run identity remain in
+Git/Actions history. None constitutes present acoustic or hardware evidence.
 
 ## Retired terminal shipping publication (2026-11-03)
 
@@ -94,3 +94,18 @@ frozen comparators and Git-model registry evidence remain immutable. Current
 `tests/test_research_model_provenance.py` checks the same training
 source/asset/budget/numerical constraints without executing a publisher;
 source and rights checks remain required for actual training.
+
+## Retired release-coupled human/target workflows (2026-11-04)
+
+`real-human-qualification.yml` and `target-dut-qualification.yml` no longer
+require or consume commercial deployment/model Release tags because their old
+publisher Actions have been retired from the live workflow directory.
+**Retained science:** `tools/seal_real_human_corpus.py`,
+`tools/validate_real_human_corpus.py`, `tools/run_final_afe_corpus.py`,
+`tools/score_real_human_qualification.py`, `tools/collect_target_evidence.py`,
+`tools/score_target_dut_qualification.py`, and `tools/score_target_cohort.py`.
+Their corpus privacy, source/rights, independent FAR/FRR, event latency,
+CPU-percent unit, power/RSS/thermal and soak guards still require authentic
+input evidence and retain truthful NOT_RUN where not available. The frozen
+commercial policy namespace and its obsolete aliases require separate
+migration under #704; not claimed complete by removing the publishers.
