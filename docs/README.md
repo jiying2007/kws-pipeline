@@ -76,11 +76,11 @@ Research sources and historical product-reference contracts (not research-admiss
 - [`configs/parameter-contract.json`](../configs/parameter-contract.json) — single source of truth for every tunable parameter, its layer, unit and validation range; consumed by the C build and by the python tools
 - [`configs/shipping.xiaowo.json`](../configs/shipping.xiaowo.json) — exact two-word product/model authority and remaining shipping evidence boundary
 - [`configs/nightly.xiaowo-frozen-model.json`](../configs/nightly.xiaowo-frozen-model.json) — independent frozen-model synthetic regression namespace; no formal qualification seed fields
-- [`commercial/afe-evidence.schema.json`](../commercial/afe-evidence.schema.json) — fail-closed final command-AFE evidence schema
+- [`configs/research/afe-evidence.schema.json`](../configs/research/afe-evidence.schema.json) — source-bound command-AFE evidence schema, research measurement only
 - [`configs/research/real-human-coverage-v1.json`](../configs/research/real-human-coverage-v1.json) — current research-only source-locked speaker/session, FAR/FRR, confidence, latency and slice quotas for field planning
 - [`commercial/real-human-qualification.policy.json`](../commercial/real-human-qualification.policy.json) — historical frozen Phase-A policy still used by archived scorer contracts, not research admission
 - [`commercial/real-human-corpus.schema.json`](../commercial/real-human-corpus.schema.json) — private sealed held-out human corpus contract
-- [`commercial/final-afe-adapter.schema.json`](../commercial/final-afe-adapter.schema.json) — private final audio-pipeline command adapter contract
+- [`configs/research/final-afe-adapter.schema.json`](../configs/research/final-afe-adapter.schema.json) — private research final-AFE command adapter with exact executable/config identity
 - [`commercial/real-human-qualification-summary.schema.json`](../commercial/real-human-qualification-summary.schema.json) — aggregate Phase-A result contract; `shipping_approved` is always false
 - [`commercial/target-qualification.policy.json`](../commercial/target-qualification.policy.json) — physical per-DUT and multi-DUT cohort target policy
 - [`commercial/target-bundle.schema.json`](../commercial/target-bundle.schema.json) — controlled target evidence bundle profile contract

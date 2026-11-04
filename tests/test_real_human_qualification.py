@@ -636,7 +636,8 @@ def main() -> int:
             str(identity_path),
         )
         identity = json.loads(identity_path.read_text(encoding="utf-8"))
-        assert identity["shipping_authority"] is True
+        assert identity["research_measurement_only"] is True
+        assert "shipping_authority" not in identity
         assert "command_argv" not in identity
         assert len(identity["command_argv_sha256"]) == 64
         assert len(identity["identity_sha256"]) == 64
@@ -659,7 +660,8 @@ def main() -> int:
         afe_summary = json.loads(
             (afe_root / "afe-corpus-summary.json").read_text(encoding="utf-8")
         )
-        assert afe_summary["afe"]["shipping_authority"] is True
+        assert afe_summary["afe"]["research_measurement_only"] is True
+        assert "shipping_authority" not in afe_summary["afe"]
         assert afe_summary["afe"]["identity_sha256"] == identity["identity_sha256"]
         assert afe_summary["latency_samples"] == {"min": 0, "max": 0}
 
@@ -747,6 +749,14 @@ def main() -> int:
 
         afe_summary_path = afe_root / "afe-corpus-summary.json"
         valid_afe_summary = afe_summary_path.read_text(encoding="utf-8")
+        drifted_afe = json.loads(valid_afe_summary)
+        drifted_afe["afe"]["shipping_authority"] = True
+        afe_summary_path.write_text(json.dumps(drifted_afe), encoding="utf-8")
+        invalid = run(
+            "python3", "tools/score_real_human_qualification.py", *gate_args, expect=2
+        )
+        assert "not research-scoped command backend" in invalid.stdout
+        afe_summary_path.write_text(valid_afe_summary, encoding="utf-8")
         drifted_afe = json.loads(valid_afe_summary)
         drifted_afe["references_sha256"] = "0" * 64
         afe_summary_path.write_text(json.dumps(drifted_afe), encoding="utf-8")
