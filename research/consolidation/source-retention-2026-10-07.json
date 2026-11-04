@@ -15295,9 +15295,9 @@
     {
       "path": ".github/workflows/far-nightly.yml",
       "mode": "100644",
-      "bytes": 14142,
-      "sha256": "10c260a82f4e4211f7f9893b6e4fd72c248cb5092c09a7761930174254156810",
-      "git_blob_sha1": "eae43f8c754a56e4a54f977fb7dbcd509d1743e5"
+      "bytes": 15660,
+      "sha256": "99587ec96f0e4a4bcca034a126fb77513f2b116e300ad09ffbde4bdd21f39370",
+      "git_blob_sha1": "56ccd8463c4baaff381dc2718634817feabc8cf2"
     },
     {
       "path": ".github/workflows/frozen-far-source-replay.yml",
@@ -43979,6 +43979,31 @@
             "git_blob_sha1": "b551452f1baa827ef3a4947f0f84e0446d2b5dcd"
           },
           "after": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "research-only-far-baseline-no-release-20261104",
+      "source_commit": "f9d4e76dce145ee31c749d765bd236271dae928c",
+      "scope": "Retire FAR scheduled research dependence on product GitHub Release and shipping contract while keeping frozen 4x7200-second numerical acceptance, known false-trigger sources, CPU/source hashes and current-run no-older-green evidence; source-only tests remain non-measurement.",
+      "files": [
+        {
+          "path": ".github/workflows/far-nightly.yml",
+          "before": {
+            "path": ".github/workflows/far-nightly.yml",
+            "mode": "100644",
+            "bytes": 14142,
+            "sha256": "10c260a82f4e4211f7f9893b6e4fd72c248cb5092c09a7761930174254156810",
+            "git_blob_sha1": "eae43f8c754a56e4a54f977fb7dbcd509d1743e5"
+          },
+          "after": {
+            "path": ".github/workflows/far-nightly.yml",
+            "mode": "100644",
+            "bytes": 15660,
+            "sha256": "99587ec96f0e4a4bcca034a126fb77513f2b116e300ad09ffbde4bdd21f39370",
+            "git_blob_sha1": "56ccd8463c4baaff381dc2718634817feabc8cf2"
+          }
         }
       ]
     }
