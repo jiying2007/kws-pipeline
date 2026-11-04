@@ -24,7 +24,7 @@ python3 tools/plan_phase_a_capture_supplement.py \
   --expected-plan-sha256 ACTUAL_EXTERNALLY_FROZEN_SHA_OF_A \
   --field-plan /restricted/field-plan-b.json \
   --expected-plan-sha256 ACTUAL_EXTERNALLY_FROZEN_SHA_OF_B \
-  --phase-a-policy commercial/real-human-qualification.policy.json \
+  --research-coverage-policy configs/research/real-human-coverage-v1.json \
   --output /restricted/reports/new-phase-a-capture-requests.json
 ```
 
@@ -60,7 +60,7 @@ words in four independently annotated acoustic scenes:
 | Robot motion | 3 m / front | >=80 actual events |
 
 Repeats per session/scene/keyword are determined from the *actual current
-commercial Phase-A policy* with a 10% planning margin, bounded to 4 repeats.
+research human-coverage policy* with a 10% planning margin, bounded to 4 repeats.
 A 40-person ×2-session pilot requests two repetitions per keyword in each
 scene, or **1,280 additional positive-intent requests**. All tags are
 `tags_requested`, **never verified acoustic tags**. An actual positive
@@ -116,12 +116,13 @@ additional planned task IDs are NOT accepted as historical v1 `slot_id`
 values; they must be ingested through a separately reviewed real-human
 corpus intake, without forging v1 receipts.
 
-Phase A still requires the original
-`commercial/real-human-qualification.policy.json` real-human validation
-and scoring, fresh sealed exposure and independent confidence bounds.
-Physical SSC305 Phase B and terminal Phase C remain mandatory.
+The research-only coverage policy preserves the original speaker, session,
+FRR/FAR confidence, latency and negative-exposure thresholds. Actual human
+recordings, source rights, frozen final AFE and independent scoring are still
+required before reporting measured acoustic effects; physical SSC305 study
+is separately authorized and remains NOT_RUN until real hardware is available.
 
 **Every worksheet unconditionally reports zero observed real speakers,
 zero actual wake events, zero observed final-AFE negative hours, and all
-training/qualification/shipping flags false.** This planning step does not
+training/qualification claims false; no shipping fields.** This planning step does not
 authorize fresh holdout consumption, training or model promotion.

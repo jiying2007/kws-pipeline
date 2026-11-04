@@ -76,7 +76,7 @@ def build(plans: list[dict], policy: dict, frozen_hashes: list[str]) -> dict:
          "FRESH_SEALED_COHORT_MINIMUM_NOT_DECLARED")
     number_of_sessions = len(sessions)
 
-    # Work from the immutable product policy, not a hardcoded/looser target.
+    # Work from the checked-in research coverage policy, never a looser requested target.
     positive = {rule["name"]: rule for rule in policy["critical_positive_slices"]
                 if isinstance(rule, dict) and "tag" in rule}
     need(set(SCENES) <= set(positive) and all(
@@ -180,8 +180,8 @@ def build(plans: list[dict], policy: dict, frozen_hashes: list[str]) -> dict:
         "schema_version": 1, "policy": POLICY,
         "frozen_source_plan_sha256s": sorted(frozen_hashes),
         "derived_field_plan_sha256": source["source_plan_sha256"],
-        "phase_a_policy_sha256": canonical_sha(policy),
-        "deployment_tag": policy["deployment_tag"],
+        "research_coverage_policy_sha256": canonical_sha(policy),
+        "research_policy_id": policy["policy_id"],
         "declared_sealed_speakers": len(sealed_people),
         "declared_sealed_source_families": len(set(families.values())),
         "declared_sealed_sessions": number_of_sessions,
@@ -204,7 +204,6 @@ def build(plans: list[dict], policy: dict, frozen_hashes: list[str]) -> dict:
         "physical_ssc305_verified": False,
         "training_admitted": False,
         "qualification_allowed": False,
-        "shipping_approved": False,
         "conclusion": "SUPPLEMENTARY_CAPTURE_INTENT_ONLY_NOT_ACOUSTIC_EVIDENCE",
     }
 
@@ -213,18 +212,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--field-plan", type=Path, action="append", required=True)
     parser.add_argument("--expected-plan-sha256", action="append", required=True)
-    parser.add_argument("--phase-a-policy", type=Path, required=True)
+    parser.add_argument("--research-coverage-policy", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     a = parser.parse_args(argv)
     need(1 <= len(a.field_plan) == len(a.expected_plan_sha256) <= 8,
          "FIELD_PLAN_HASH_COUNT")
     plans = [source_json(path, max_bytes=1024 * 1024) for path in a.field_plan]
-    policy = source_json(a.phase_a_policy)
+    policy = source_json(a.research_coverage_policy)
     result = build(plans, policy, a.expected_plan_sha256)
     output = a.output.resolve()
     need(output != ROOT and ROOT not in output.parents and
          all(output != path.resolve() for path in
-             (*a.field_plan, a.phase_a_policy)) and output.parent.is_dir(),
+             (*a.field_plan, a.research_coverage_policy)) and output.parent.is_dir(),
          "PRIVATE_CREATE_ONLY_OUTPUT_REQUIRED")
     encoded = (json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True,
                           allow_nan=False) + "\n").encode("utf-8")

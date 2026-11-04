@@ -7,15 +7,15 @@ AFE/SSC305 qualification.
 
 Entry point: `tools/phase_a_field_plan_preflight.py`. Its only inputs are
 the existing `research/field-collection-pilot-20261102/plan.py` **v1 planned**
-artifact(s), exact independently frozen SHA-256 for each, and the CURRENT
-`commercial/real-human-qualification.policy.json`. The caller-provided policy
+artifact(s), exact independently frozen SHA-256 for each, and the CURRENT research-only
+`configs/research/real-human-coverage-v1.json`. The caller-provided policy
 must match the currently checked-out repository policy **exactly** after
 canonical parsing: keeping the same policy ID while lowering quotas is rejected.
 It executes no microphone, TTS, ASR, training, scoring or hardware command.
 
-## Concrete uncovered product requirements
+## Uncovered real-speech research coverage targets
 
-The current immutable Phase-A policy requires:
+The current source-locked research coverage policy preserves the numerical targets:
 - ≥40 independent real Mandarin speakers, ≥2 real sessions/speaker.
 - ≥1,200 *actual* expected wake events: ≥600 per **你好小窝** and
   **小窝小窝**. Each distance/orientation/playback/double-talk/robot-motion
@@ -24,7 +24,7 @@ The current immutable Phase-A policy requires:
   household, speech-confusion, playback and robot-motion exposures.
 - FRR ≤5% with 95% upper bound ≤6.5%; FAR ≤0.1/hour with 95% upper
   bound ≤0.13/hour; p95 actual word-end-to-event latency ≤500 ms.
-- Future same deployment/AFE/board Phase B and production Phase C.
+- Independent source-bound final-AFE and physical-board studies; no commercial deployment, model publication or certification prerequisite.
 
 The v1 field pilot plans **37 prompt tasks per declared session**:
 24 wake-intent slots (two keywords × three distances × front/rear × two
@@ -88,7 +88,7 @@ python3 tools/phase_a_field_plan_preflight.py \
   --expected-plan-sha256 REPLACE_WITH_ACTUALLY_FROZEN_A_HASH \
   --field-plan /restricted/field-plan-b.json \
   --expected-plan-sha256 REPLACE_WITH_ACTUALLY_FROZEN_B_HASH \
-  --phase-a-policy commercial/real-human-qualification.policy.json \
+  --research-coverage-policy configs/research/real-human-coverage-v1.json \
   --output /restricted/reports/new-field-plan-coverage.json
 ```
 
@@ -105,7 +105,7 @@ speaker and session IDs from the output.
 
 ## Direct next field step
 
-[Supplementary critical-slice and 24h+ continuous-negative capture requests](PHASE_A_CRITICAL_CAPTURE_SUPPLEMENT.md) are generated from the same independently frozen field-plan shards and exact commercial policy. They produce private session-level acquisition tasks, never real labels, consent, exposure hours or qualification.
+[Supplementary critical-slice and 24h+ continuous-negative capture requests](PHASE_A_CRITICAL_CAPTURE_SUPPLEMENT.md) are generated from the same independently frozen field-plan shards and exact research coverage policy. They produce private session-level acquisition tasks, never real labels, consent, exposure hours or qualification.
 
 ## What must still happen before "done"
 
@@ -118,11 +118,10 @@ speaker and session IDs from the output.
 3. An independently fresh sealed cohort, actual Phase-A validated positive
    support and ≥24 valid negative hours with policy-specific critical slices.
 4. Real measured FRR/FAR confidence bounds and word-end latency on the
-   frozen deployment/AFE, followed by physical SSC305 Phase B and terminal
-   Phase C. Current shipping remains unapproved.
+   frozen source/model/AFE, followed by independently authorized physical SSC305 research measurements; absent hardware is NOT_RUN.
 
 Every report from this tool has `verified_real_speakers=0`,
 `verified_actual_keyword_events=0`, `verified_negative_audio_hours=0`,
-`training_admitted=false`, `qualification_allowed=false` and
-`shipping_approved=false`. Successful software tests cannot remove any of
-these blockers. This preflight is not a substitute for product data collection.
+`training_admitted=false`, `qualification_allowed=false` and a frozen
+research-only policy identity (no shipping approval or deployment fields). Successful software tests cannot remove any of
+these blockers. This preflight is not a substitute for lawful real-world data collection.

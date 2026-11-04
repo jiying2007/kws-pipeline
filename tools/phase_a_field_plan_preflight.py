@@ -104,8 +104,9 @@ def assess(plan: dict, policy: dict, expected_plan_sha256: str) -> dict:
          type(plan.get("model_calls")) is int and plan["model_calls"] == 0,
          "FIELD_PLAN_CANNOT_CLAIM_CAPTURE_OR_AUTHORITY")
     need(type(policy) is dict and policy.get("schema_version") == 1 and
-         policy.get("policy_id") == "xiaowo-real-human-phase-a-v1" and
-         policy.get("shipping_approved") is False,
+         policy.get("policy_id") == "xiaowo-research-real-human-coverage-v1" and
+         policy.get("research_only") is True and
+         "deployment_tag" not in policy and "shipping_approved" not in policy,
          "UNEXPECTED_PHASE_A_POLICY")
     minimums = policy.get("minimums")
     slices = policy.get("critical_positive_slices")
@@ -125,9 +126,9 @@ def assess(plan: dict, policy: dict, expected_plan_sha256: str) -> dict:
     for name, hours in negative_bands.items():
         need(type(name) is str and type(hours) in (int, float) and hours > 0,
              "INVALID_NEGATIVE_EXPOSURE_POLICY")
-    # A caller-supplied policy bearing the right ID but weakened numerical
-    # quotas must not silently redefine the product acceptance target.
-    current = source_json(ROOT / "commercial/real-human-qualification.policy.json")
+    # A caller-supplied research policy cannot silently relax source-bound
+    # speaker/session/event/exposure quotas or independent evidence limits.
+    current = source_json(ROOT / "configs/research/real-human-coverage-v1.json")
     need(canonical_sha(policy) == canonical_sha(current),
          "PHASE_A_POLICY_NOT_CURRENT_SOURCE")
     slots = plan.get("slots")
@@ -254,8 +255,8 @@ def assess(plan: dict, policy: dict, expected_plan_sha256: str) -> dict:
     return {
         "schema_version": 1, "policy": POLICY,
         "source_plan_sha256": expected_plan_sha256,
-        "phase_a_policy_sha256": canonical_sha(policy),
-        "deployment_tag": policy.get("deployment_tag"),
+        "research_coverage_policy_sha256": canonical_sha(policy),
+        "research_policy_id": policy["policy_id"],
         "declared_session_participants": plan["participants"],
         "declared_role_slot_counts": {k: dict(v) for k, v in sorted(counts.items())},
         "declared_sealed_speakers": eligible,
@@ -276,7 +277,7 @@ def assess(plan: dict, policy: dict, expected_plan_sha256: str) -> dict:
         "final_afe_identity_verified": False,
         "speaker_independence_verified": False,
         "rights_authenticated": False, "training_admitted": False,
-        "qualification_allowed": False, "shipping_approved": False,
+        "qualification_allowed": False,
         "conclusion": "FIELD_PLAN_COVERAGE_ONLY_REAL_RECORDINGS_REQUIRED",
     }
 
@@ -312,18 +313,18 @@ def assess_many(plans: list[dict], policy: dict, expected_hashes: list[str]) -> 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--field-plan", type=Path, action="append", required=True)
-    p.add_argument("--phase-a-policy", type=Path, required=True)
+    p.add_argument("--research-coverage-policy", type=Path, required=True)
     p.add_argument("--expected-plan-sha256", action="append", required=True)
     p.add_argument("--output", type=Path, required=True)
     args = p.parse_args(argv)
     need(len(args.field_plan) == len(args.expected_plan_sha256) and
          1 <= len(args.field_plan) <= 8, "FIELD_SHARD_PLAN_AND_HASH_COUNT")
     plans = [source_json(path, max_bytes=1024 * 1024) for path in args.field_plan]
-    result = assess_many(plans, source_json(args.phase_a_policy),
+    result = assess_many(plans, source_json(args.research_coverage_policy),
                          args.expected_plan_sha256)
     output = args.output.resolve()
     need(all(output != path.resolve() for path in args.field_plan) and
-         output != args.phase_a_policy.resolve() and
+         output != args.research_coverage_policy.resolve() and
          output != ROOT and ROOT not in output.parents and
          output.parent.is_dir(), "PRIVATE_CREATE_ONLY_OUTPUT_REQUIRED")
     raw = (json.dumps(result, sort_keys=True, ensure_ascii=False, indent=2) + "\n").encode()
