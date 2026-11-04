@@ -163,7 +163,7 @@ make collected measurements auditable and do not substitute for those measuremen
 ## Repository verification and maintenance
 
 - [`candidate_numeric_ci_changes.py`](candidate_numeric_ci_changes.py) — Select bounded candidate numeric checks while preserving existing product and training CI scopes; no model execution.
-- [`cleanup_bootstrap_branch.sh`](cleanup_bootstrap_branch.sh) — Exact-trigger-SHA cleanup after successful publication.
+- Historical commercial release-branch cleanup is retired from the active tree; its exact source remains available in Git history. Research branch maintenance uses the current repository governance process.
 - [`check_bench_signal.py`](check_bench_signal.py)
 - [`check_deferred_verdicts.py`](check_deferred_verdicts.py)
 - [`check_gcov.py`](check_gcov.py)
