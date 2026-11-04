@@ -15,6 +15,8 @@ WORKFLOW = ROOT / '.github' / 'workflows' / 'repository-cleanup.yml'
 
 
 RETIRED_PATH_GLOBS = (
+    '.github/workflows/real-human-qualification.yml',
+    '.github/workflows/target-dut-qualification.yml',
     '.github/workflows/development-generalization-*.yml',
     '.github/workflows/gru-*.yml',
     '.github/workflows/rnn-development-curriculum.yml',
@@ -78,8 +80,6 @@ REQUIRED_AUTHORITY_PATHS = (
     '.github/workflows/model-training-preflight.yml',
     '.github/workflows/product-development-experiment.yml',
     '.github/workflows/product-training-data-contract.yml',
-    '.github/workflows/real-human-qualification.yml',
-    '.github/workflows/target-dut-qualification.yml',
     'configs/research-baseline.xiaowo.json',
 )
 
@@ -291,7 +291,7 @@ def main() -> int:
 
     for relative in REQUIRED_AUTHORITY_PATHS:
         path = ROOT / relative
-        assert path.is_file(), f'canonical product authority missing: {relative}'
+        assert path.is_file(), f'retained scientific source contract missing: {relative}'
 
     for relative in REQUIRED_RETAINED_PATHS:
         path = ROOT / relative

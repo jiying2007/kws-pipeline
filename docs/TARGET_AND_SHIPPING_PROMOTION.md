@@ -1,6 +1,6 @@
 # Historical Phase B physical target evaluation and Phase C shipping approval (retired)
 
-> **Historical record only.** The shipping-approval and target-cohort-promotion workflows have been retired from active Actions. Current technical research measures CPU/RSS/soak/latency with independent evidence, without publishing commercial approval. The original procedure below is retained for provenance, not as executable research instructions. See [research execution boundary](RESEARCH_ONLY_EXECUTION.md).
+> **Historical record only.** The shipping-approval, target-cohort-promotion, real-human-qualification and target-dut-qualification workflows have been retired from active Actions. Current technical research measures CPU/RSS/soak/latency with independent evidence, without publishing commercial approval. The original procedure below is retained for provenance, not as executable research instructions. See [research execution boundary](RESEARCH_ONLY_EXECUTION.md).
 
 ## Frozen chain
 

@@ -23,11 +23,13 @@ Current archive delivery: [complete public archive, index and verified restorati
 > product-evidence items are deliberately **not executable in this repository**:
 > real human speech through the final microphone/enclosure/AFE, and physical
 > target-board performance/soak. They need hardware and human subjects. The
-> workflows that would consume them (`real-human-qualification.yml`,
-> `target-dut-qualification.yml`) are `workflow_dispatch`-only and need a
-> self-hosted runner, so they never fire on `push` or in a fork.
-> `configs/shipping.xiaowo.json` keeps `shipping_approved=false` until both
-> exist. See [Validation boundary](#validation-boundary).
+> former manual GitHub Release publishers (`real-human-qualification.yml`
+> and `target-dut-qualification.yml`) are **retired from active Actions**.
+> Standalone source/consent/AFE/acoustic and physical-resource evidence scorers
+> remain for independently authorized research experiments. No real-human
+> or SSC305 experiment is claimed by their presence. Historical
+> `configs/shipping.xiaowo.json` is not research approval. See
+> [Validation boundary](#validation-boundary).
 
 `kws-pipeline` is a low-compute, always-on keyword spotting engine for embedded Linux/RTOS-class products. The **historically synthetic-qualified product SKU** is deliberately narrow and ships exactly two four-character Mandarin wake phrases:
 

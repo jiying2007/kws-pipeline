@@ -86,8 +86,7 @@ Research sources and historical product-reference contracts (not research-admiss
 - [`governance/require_current_main.sh`](../governance/require_current_main.sh) — shared manual-promotion gate requiring exact current protected main and live terminal ruleset
 - [`.github/workflows/far-nightly.yml`](../.github/workflows/far-nightly.yml) — immutable released-model nightly FAR regression with no training/qualification
 - Historical `deployment-release.yml` — removed from active GitHub Actions; inspect the original Git commit for publication history. It is not an experiment or data-admission entrypoint.
-- [`.github/workflows/real-human-qualification.yml`](../.github/workflows/real-human-qualification.yml) — manual self-hosted restricted-data Phase-A workflow; raw/post-AFE WAVs are never uploaded
-- [`.github/workflows/target-dut-qualification.yml`](../.github/workflows/target-dut-qualification.yml) — manual self-hosted single-DUT physical evidence gate; raw lab evidence stays controlled
+- Historical `real-human-qualification.yml` and `target-dut-qualification.yml` — retired manual GitHub Release publishers; source and previous receipts remain in Git/Actions history. Standalone restricted real-human/target scoring tools retain original numeric/privacy guardrails. New experiments require independent data and physical-runner authorization.
 - Historical `target-cohort-promotion.yml` — retired publication workflow; current research cohort scoring is `tools/score_target_cohort.py` and must use independently verified target measurements.
 - Historical `shipping-approval.yml` — retired commercial approval workflow, not a research acceptance authority.
 
@@ -96,7 +95,7 @@ Research sources and historical product-reference contracts (not research-admiss
 - [`src/`](../src/), [`include/`](../include/), [`cmake/`](../cmake/) and [`CMakeLists.txt`](../CMakeLists.txt): device library and SDK build
 - [`configs/`](../configs/), [`keywords/`](../keywords/), [`models/`](../models/): current machine-readable product inputs and model registry
 - [`training/`](../training/), [`eval/`](../eval/) and [`tools/`](../tools/README.md): offline preparation, evaluation and engineering utilities
-- [`commercial/`](../commercial/), [`governance/`](../governance/): product-evidence and promotion contracts
+- [`commercial/`](../commercial/) contains historical, still-migrating measurement schemas/policies (not current research admission); [`governance/`](../governance/) tracks source-control rules
 - [`tests/`](../tests/), [`fuzz/`](../fuzz/), [`bench/`](../bench/): software verification
 - [`research/`](../research/README.md): isolated reusable research code plus frozen source/evidence archives
 - [`docs/research/`](research/): earlier narrative records; the current conclusions are in the research map above

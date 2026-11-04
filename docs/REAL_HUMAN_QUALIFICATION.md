@@ -1,4 +1,6 @@
-# Real-human final-AFE qualification
+# Historical real-human final-AFE qualification (retired publication workflow)
+
+> **Historical evidence procedure only.** The old `.github/workflows/real-human-qualification.yml` manual GitHub Release publisher is no longer active. The source/consent, private corpus, AFE and scoring tools remain valid for separately authorized research experiments; the historical deployment/Release commands below are *not runnable current research instructions*. No actual human recording, FRR/FAR or target result is claimed. See [research-only execution](RESEARCH_ONLY_EXECUTION.md).
 
 This document defines Phase A of product qualification for the frozen commercial candidate `deployment-c20f3eb88e43`. It does **not** authorize model retraining and it does **not** make the product shipping-approved. Phase B physical target-board evidence remains mandatory after Phase A passes.
 
@@ -221,7 +223,7 @@ That marker contains hashes/identity only, never audio. Once the marker exists, 
 
 If the final AFE executable/config changes after the marker is created, the run fails and the corpus remains consumed.
 
-## Running the workflow
+## Historical workflow procedure (retired; do not dispatch)
 
 The workflow must be dispatched from the exact current protected `main`; `governance/require_current_main.sh` rejects branch refs, stale main SHAs or weakened live rulesets before any held-out corpus is consumed.
 

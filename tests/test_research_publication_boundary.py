@@ -19,6 +19,8 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
             "shipping-approval.yml",
             "target-cohort-promotion.yml",
             "model-promotion.yml",
+            "real-human-qualification.yml",
+            "target-dut-qualification.yml",
         ):
             with self.subTest(relative=relative):
                 self.assertFalse((WORKFLOWS / relative).exists())
@@ -50,6 +52,8 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
         self.assertIn("Retired automatic publication surfaces", doc)
         self.assertIn("model-promotion.yml", doc)
         self.assertIn("shipping-approval.yml", doc)
+        self.assertIn("real-human-qualification.yml", doc)
+        self.assertIn("target-dut-qualification.yml", doc)
 
 
 if __name__ == "__main__":
