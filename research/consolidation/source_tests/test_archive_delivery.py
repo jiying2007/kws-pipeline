@@ -93,7 +93,22 @@ class ArchiveDeliveryTests(unittest.TestCase):
             'D20_raw_numerical_gate': 'FAIL', 'D90': 'NOT_RUN',
             'human_and_device_qualification': 'DEFERRED', 'shipping_approved': False,
             'historical_experiment_reproduction': 'NOT_CLAIMED'})
-        self.assertFalse(json.loads((ROOT / 'configs/shipping.xiaowo.json').read_text())['shipping_approved'])
+        # The original commercial source was retired from the active tree.
+        # Historical qualification evidence remains byte-pinned, not upgraded.
+        self.assertFalse((ROOT / 'configs/shipping.xiaowo.json').exists())
+        comparator = json.loads(
+            (ROOT / 'configs/research/two-keyword-synthetic-comparator.json').read_text()
+        )
+        self.assertEqual(comparator['historical_source_blob_sha1'],
+                         '55bb340cdcbb55a1467ae6955ee38f8684b5facf')
+        self.assertEqual(comparator['research_scope'],
+                         'frozen-historical-synthetic-comparator')
+        self.assertFalse(
+            comparator['independent_measurement_requirements']['actual_human_wav_evaluated']
+        )
+        self.assertFalse(
+            comparator['independent_measurement_requirements']['actual_ssc305_measured']
+        )
 
     def test_navigation_points_to_current_delivery(self):
         for name in ('README.md', 'README.zh-CN.md', 'research/README.md'):
