@@ -83,7 +83,8 @@ Research sources and historical product-reference contracts (not research-admiss
 - [`configs/research/final-afe-adapter.schema.json`](../configs/research/final-afe-adapter.schema.json) — private research final-AFE command adapter with exact executable/config identity
 - [`commercial/real-human-qualification-summary.schema.json`](../commercial/real-human-qualification-summary.schema.json) — aggregate Phase-A result contract; `shipping_approved` is always false
 - [`commercial/target-qualification.policy.json`](../commercial/target-qualification.policy.json) — physical per-DUT and multi-DUT cohort target policy
-- [`commercial/target-bundle.schema.json`](../commercial/target-bundle.schema.json) — controlled target evidence bundle profile contract
+- [`configs/research/physical-target-profile.schema.json`](../configs/research/physical-target-profile.schema.json) — strict physical-target research input identity (not proof of measurement)
+- [`configs/research/physical-target-resource-budget.schema.json`](../configs/research/physical-target-resource-budget.schema.json) — bounded CPU/RSS/stack/temperature/power research limits
 - [`governance/require_current_main.sh`](../governance/require_current_main.sh) — shared manual-promotion gate requiring exact current protected main and live terminal ruleset
 - [`.github/workflows/far-nightly.yml`](../.github/workflows/far-nightly.yml) — immutable released-model nightly FAR regression with no training/qualification
 - Historical `deployment-release.yml` — removed from active GitHub Actions; inspect the original Git commit for publication history. It is not an experiment or data-admission entrypoint.
