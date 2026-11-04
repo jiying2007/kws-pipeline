@@ -147,18 +147,18 @@ Synthetic/measured-domain training can invoke the final `audio-pipeline` through
 
 AFE identity binds the command template, actual executable SHA256, declared config-file bundle SHA256, input/output hashes and result sidecar rather than temporary paths. Reported AFE latency is added to event timing so BF/AEC/NS buffering or lookahead cannot silently shift wake-latency scoring.
 
-The repository-side shipping schema is **`commercial/afe-evidence.schema.json`**. Shipping-authoritative AFE evidence must bind at least:
+The research source-only AFE schema is **`configs/research/afe-evidence.schema.json`** and the adapter contract is **`configs/research/final-afe-adapter.schema.json`**. These bind measurement provenance, not product qualification or publication authority. An actual command-AFE experiment must retain at least:
 
-- `backend=command` and `shipping_authority=true`;
+- `backend=command` and `research_measurement_only=true` (old `shipping_authority` is rejected);
 - exact executable and config-bundle SHA256;
 - input PCM, output PCM and result-sidecar SHA256;
 - non-negative `latency_samples`;
 - mono PCM16 16 kHz;
 - exact SKU, microphone revision and enclosure revision.
 
-The synthetic `proxy` backend remains valid for development/domain stress, but it has no shipping authority. It cannot clear `shipping_evidence_boundary.final_afe_required` in `configs/shipping.xiaowo.json`.
+The synthetic `proxy` backend remains useful for development/domain stress but cannot become an independently recorded human/final-AFE measurement. It cannot replace real external microphone/enclosure/AFE evidence.
 
-Threshold qualification must use the exact final microphone/enclosure/audio-pipeline stage composition and gain policy shipped on the SKU. Changing the AFE executable/config or hardware sound path creates a new qualification tuple.
+Independent threshold research must bind the exact tested microphone/enclosure/audio-pipeline composition, executable/config hash and acoustic route. Changing those inputs creates a new experimental identity; no commercial shipping permission follows.
 
 ## Historical deployment identity (retired)
 

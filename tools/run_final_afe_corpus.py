@@ -281,7 +281,7 @@ def main() -> int:
                 "schema_version": 1,
                 "recording": recording,
                 "backend": "command",
-                "shipping_authority": True,
+                "research_measurement_only": True,
                 "executable_sha256": identity["executable_sha256"],
                 "config_bundle_sha256": identity["config_bundle_sha256"],
                 "input_pcm_sha256": row["input_sha256"],
