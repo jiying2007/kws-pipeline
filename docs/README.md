@@ -35,7 +35,7 @@
 
 - [Bounded batch weak import](batch-weak-import.md): offline saved native batch evidence, full-transcript machine-weak candidates and consumer-specific compatibility; no current-experiment training admission.
 
-## Research contracts and historical product references
+- [Frozen negative-stream FAR research](RESEARCH_FAR_REGRESSION.md): reproducible Git-registered model/keyword source, research-only v2 evidence and independent no-older-green regression.\n\n## Research contracts and historical product references
 
 Current research authority is [`docs/RESEARCH_ONLY_EXECUTION.md`](RESEARCH_ONLY_EXECUTION.md) with the pinned `configs/research-baseline.xiaowo.json` comparator. The immutable historical model `model-749187ec1d66` was evaluated on synthetic data; it is not independent real-speech or SSC305 evidence. Historical `configs/shipping.xiaowo.json` and commercial qualification records are no longer research prerequisites and are being migrated under [#704](https://github.com/jiying2007/kws-pipeline/issues/704).
 
