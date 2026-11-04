@@ -31,6 +31,15 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
         self.assertIn("Historical release records (not executable research)", docs)
         self.assertIn("now-unreferenced `tools/verify_release_tag.py`", docs)
 
+    def test_historical_product_policy_directory_is_not_live(self):
+        self.assertFalse((ROOT / "commercial").exists())
+        for filename in ("real-human-phase-a.policy.json", "target-dut-phase-b.policy.json"):
+            self.assertTrue((ROOT / "configs/research/history" / filename).is_file())
+        for workflow in WORKFLOWS.glob("*.yml"):
+            self.assertNotIn("configs/research/history/",
+                             workflow.read_text(encoding="utf-8"),
+                             "Historical product policy cannot be active research CI")
+
     def test_scientific_ci_remains_active(self):
         ci = (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
         for required in (
@@ -55,7 +64,7 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
 
     def test_research_target_input_schema_is_not_a_commercial_entrypoint(self):
         policy = __import__("json").loads(
-            (ROOT / "commercial/target-qualification.policy.json").read_text(encoding="utf-8")
+            (ROOT / "configs/research/history/target-dut-phase-b.policy.json").read_text(encoding="utf-8")
         )
         self.assertEqual(
             policy["resource_budget"]["schema"],

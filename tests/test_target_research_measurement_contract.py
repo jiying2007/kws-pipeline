@@ -251,7 +251,7 @@ def make_bundle(
 
 def main() -> int:
     production = json.loads(
-        (ROOT / "commercial/target-qualification.policy.json").read_text(encoding="utf-8")
+        (ROOT / "configs/research/history/target-dut-phase-b.policy.json").read_text(encoding="utf-8")
     )
     assert production["schema_version"] == 3
     assert production["shipping_approved"] is False
