@@ -19,7 +19,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import compile_keywords as compiler
 import keyword_set_identity as identity
 from kws_vocab import load_tokens
-from validate_shipping_keywords import validate_shipping_keywords
+from validate_research_keyword_pair import validate_research_keywords
 
 
 class IdentityTests(unittest.TestCase):
@@ -472,49 +472,45 @@ class IdentityTests(unittest.TestCase):
                 self.assertNotIn("shipping_approved", built)
                 self.assertNotIn("binary_validated", built)
 
-    def test_current_shipping_tuple_unchanged(self):
+    def test_current_research_keyword_tuple_unchanged(self):
+        # Immutable scientific comparator, not a shipping/promotion admission gate.
         expected_sha = {
             "configs/parameter-contract.json": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06",
             "keywords/zh_cn_example.tsv": "1d17ed101c950bbc55327dd56c7e0a03faa6ab1a6ef36cf73ede55d7d9b88db5",
             "keywords/tokens.example.txt": "af113e57eb6375b3c364b3845c6698ea460e29f718c8303657777183d6eda8c7",
-            "configs/shipping.xiaowo.json": "4f39810a362096f2345c8e2e3326c3899e0d30b0b5e0632a6f2622a1364d5b21",
             "configs/nightly.xiaowo-frozen-model.json": "a515749b2987e1df23f588a1db8f1e9a7f710662ed6f8b4df92c09aacf40f5f6",
         }
-        shipping = json.loads((ROOT / "configs/shipping.xiaowo.json").read_text())
-        self.assertFalse(shipping["shipping_approved"])
-        self.assertEqual(shipping["model"]["release_tag"], "model-749187ec1d66")
-        calibration = shipping["threshold_calibration"]
-        self.assertEqual(calibration["parameter_contract_sha256"],
-                         "eb124d432382f989aa9e40951d8561c1c1448fd74f167324f2383fa6e6f73a3b")
-        self.assertEqual(calibration["required_parameter_contract_sha256"],
-                         expected_sha["configs/parameter-contract.json"])
-        self.assertTrue(calibration["recalibration_required"])
-        self.assertEqual([entry["value"] for entry in calibration["thresholds"]], [0.55, 0.55])
-        self.assertEqual(shipping["runtime"], {
-            "min_speech_dbfs": -55.0, "token_boost": 1.5, "state_retention": 0.94,
-            "refractory_ms": 1200, "external_vad_threshold": 0.45,
-        })
-        for key, value in {
-            "model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
-            "checkpoint_sha256": "d005bfe74188c0e24e9e665c10251fd6feea5c879ebcbe96cb8c85f6a85ea14b",
-            "keyword_pack_sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
-            "keyword_tsv_sha256": "d04023ccaeeafc6938fd8620762edd739e4760c35321be6edc8b32631b982ab4",
-        }.items():
-            self.assertEqual(shipping["model"][key], value)
-        self.assertEqual(shipping["vocabulary"]["size"], 5)
-        for path, digest in expected_sha.items():
-            self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)
-        validate_shipping_keywords(ROOT / "keywords/zh_cn_example.tsv")
+        baseline = json.loads((ROOT / "configs/research-baseline.xiaowo.json").read_text())
+        self.assertEqual(baseline["schema"], "kws-research-model-baseline-v1")
+        self.assertEqual(baseline["policy"], "frozen-historical-research-comparator")
+        self.assertEqual(baseline["model_tag"], "model-749187ec1d66")
+        self.assertEqual(baseline["training_source_sha"], "749187ec1d6662658f06aa9c76d47fde835968db")
+        self.assertEqual(baseline["model_sha256"],
+                         "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402")
+        self.assertEqual(baseline["keyword_pack_sha256"],
+                         "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723")
+        self.assertEqual(baseline["frozen_qualification_seed"], 271838)
+        self.assertEqual(baseline["frozen_seed_state"], "consumed-and-frozen")
+        self.assertEqual(baseline["dataset_status"], "exposed-historical-synthetic-diagnostic")
+        for name in ("actual_human_wav_evaluated", "independent_longstream_far_measured", "ssc305_measured"):
+            self.assertIs(baseline[name], False)
+        for source, expected in expected_sha.items():
+            self.assertEqual(hashlib.sha256((ROOT / source).read_bytes()).hexdigest(), expected)
+        canonical = validate_research_keywords(ROOT / "keywords/zh_cn_example.tsv")
+        self.assertEqual([row["phrase"] for row in canonical], ["你好小窝", "小窝小窝"])
+        self.assertEqual([row["threshold"] for row in canonical], ["0.55", "0.55"])
         before = {p: (ROOT / p).read_bytes() for p in expected_sha}
-        built = identity.build_keyword_set_identity(root=ROOT, tokens_path="keywords/tokens.example.txt",
-                                                   keywords_path="keywords/zh_cn_example.tsv",
-                                                   parameter_contract_path="configs/parameter-contract.json")
+        built = identity.build_keyword_set_identity(
+            root=ROOT,
+            tokens_path="keywords/tokens.example.txt",
+            keywords_path="keywords/zh_cn_example.tsv",
+            parameter_contract_path="configs/parameter-contract.json",
+        )
         self.assertEqual(built["semantic_sha256"], "1da8b5e4356080f163fe79301c4664f96d8339b8df4e2d86df2e38f8819bfba1")
         self.assertEqual([row["id"] for row in built["semantics"]["keywords"]], [1, 2])
         self.assertEqual([row["text"] for row in built["semantics"]["keywords"]], ["你好小窝", "小窝小窝"])
         self.assertEqual([row["threshold"] for row in built["semantics"]["keywords"]], [0.55, 0.55])
         self.assertEqual(before, {p: (ROOT / p).read_bytes() for p in expected_sha})
-
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

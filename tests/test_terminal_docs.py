@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import copy
 import json
+import hashlib
+from decimal import Decimal
 import pathlib
 import re
 import subprocess
@@ -236,113 +238,75 @@ def main() -> int:
         ("schema v3", "process-cpu-one-core-v1", "--runtime-soak", "--power-raw", "external attestation"),
     )
 
-    shipping = json.loads((ROOT / "configs" / "shipping.xiaowo.json").read_text(encoding="utf-8"))
+    baseline = json.loads(
+        (ROOT / "configs/research-baseline.xiaowo.json").read_text(encoding="utf-8")
+    )
+    assert baseline["schema"] == "kws-research-model-baseline-v1"
+    assert baseline["policy"] == "frozen-historical-research-comparator"
+    assert baseline["dataset_status"] == "exposed-historical-synthetic-diagnostic"
+    assert baseline["model_tag"] == "model-749187ec1d66"
+    assert baseline["training_source_sha"] == "749187ec1d6662658f06aa9c76d47fde835968db"
+    assert baseline["model_sha256"] == "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402"
+    assert baseline["keyword_pack_sha256"] == "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723"
+    assert baseline["frozen_qualification_seed"] == 271838
+    assert baseline["frozen_seed_state"] == "consumed-and-frozen"
+    for field in ("actual_human_wav_evaluated", "independent_longstream_far_measured", "ssc305_measured"):
+        assert baseline[field] is False
     formal_training = json.loads(
-        (ROOT / "configs" / "training" / "xiaowo.torch-domain.json").read_text(encoding="utf-8")
+        (ROOT / "configs/training/xiaowo.torch-domain.json").read_text(encoding="utf-8")
     )
-    assert shipping["schema_version"] == 1
-    assert shipping["contract_id"] == "xiaowo-dual-wake-v1"
-    assert shipping["product_scope"] == "dedicated-two-keyword-mandarin-kws"
-    assert shipping["evidence_status"] == "synthetic-qualified"
-    assert shipping["shipping_approved"] is False
-    assert shipping["shipping_wake_words"] == [
-        {
-            "id": 1,
-            "text": "你好小窝",
-            "threshold": 0.55,
-            "tokens": ["ni3", "hao3", "xiao3", "wo1"],
-        },
-        {
-            "id": 2,
-            "text": "小窝小窝",
-            "threshold": 0.55,
-            "tokens": ["xiao3", "wo1", "xiao3", "wo1"],
-        },
-    ]
-    assert shipping["forbidden_shipping_wake_words"] == ["小窝"]
-    assert all(len(row["text"]) == 4 for row in shipping["shipping_wake_words"])
+    assert baseline["next_research_seed"] == int(formal_training["qualification_holdout_seed"])
 
-    vocab = shipping["vocabulary"]
-    assert vocab["kind"] == "dedicated-product-vocabulary"
-    assert vocab["size"] == 5
-    assert vocab["arbitrary_mandarin_l0_change_claimed"] is False
-    assert (ROOT / vocab["tokens_path"]).read_text(encoding="utf-8").splitlines() == [
-        "<blk> 0",
-        "ni3 1",
-        "hao3 2",
-        "xiao3 3",
-        "wo1 4",
+    registry = ROOT / "models" / "registry" / baseline["model_tag"]
+    for filename, field in (
+        ("xiaowo-model.kwm", "model_sha256"),
+        ("xiaowo-keywords.kwk", "keyword_pack_sha256"),
+    ):
+        assert hashlib.sha256((registry / filename).read_bytes()).hexdigest() == baseline[field]
+    assert (ROOT / "keywords/tokens.example.txt").read_text(encoding="utf-8").splitlines() == [
+        "<blk> 0", "ni3 1", "hao3 2", "xiao3 3", "wo1 4",
     ]
-    assert load_keyword_rows(ROOT / vocab["keyword_tsv_path"]) == [
-        ["1", "你好小窝", "0.55", "ni3 hao3 xiao3 wo1"],
-        ["2", "小窝小窝", "0.55", "xiao3 wo1 xiao3 wo1"],
+    # Preserve the byte-exact archived TSV spelling; never rewrite the frozen
+    # registry or weaken the independent numeric research-keyword validator.
+    keyword_rows = load_keyword_rows(registry / "xiaowo-keywords.tsv")
+    assert keyword_rows == [
+        ["1", "你好小窝", "0.550000", "ni3 hao3 xiao3 wo1"],
+        ["2", "小窝小窝", "0.550000", "xiao3 wo1 xiao3 wo1"],
     ]
-    model = shipping["model"]
-    assert model["release_tag"] == "model-749187ec1d66"
-    assert model["training_run_id"] == 34134789576
-    assert model["trained_head_sha"] == "749187ec1d6662658f06aa9c76d47fde835968db"
-    assert model["model_sha256"] == "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402"
-    assert model["keyword_pack_sha256"] == "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723"
-    assert model["qualification_seed"] == 271838
-    assert model["qualification_seed_state"] == "consumed-and-frozen"
-    assert model["qualification"] == {
-        "expected_wakes": 256,
-        "matched_wakes": 256,
-        "false_rejects": 0,
-        "false_accepts": 0,
-    }
-    assert model["robustness_qualified"] is True
-    assert model["continuous_far_false_accepts"] == 0
-
-    nightly_policy = shipping["nightly_policy"]
-    assert nightly_policy["mode"] == "immutable-released-model-regression"
-    assert nightly_policy["may_train"] is False
-    assert nightly_policy["may_render_formal_qualification"] is False
-    assert nightly_policy["may_consume_formal_qualification_seed"] is False
-    assert nightly_policy["formal_qualification_seed"] == 271838
-    assert nightly_policy["next_formal_candidate_seed_reserved"] == int(
-        formal_training["qualification_holdout_seed"]
-    )
+    assert [Decimal(row[2]) for row in keyword_rows] == [Decimal("0.55")] * 2
 
     nightly_config = json.loads(
-        (ROOT / "configs" / "nightly.xiaowo-frozen-model.json").read_text(encoding="utf-8")
+        (ROOT / "configs/nightly.xiaowo-frozen-model.json").read_text(encoding="utf-8")
     )
     assert nightly_config["regression_namespace"] == "nightly-frozen-model-v1"
     assert nightly_config["seed"] == 880137
     for key in (
-        "qualification_holdout_seed",
-        "retired_qualification_holdout_seeds",
-        "far_holdout_round_namespace",
-        "retired_far_holdout_round_namespaces",
+        "qualification_holdout_seed", "retired_qualification_holdout_seeds",
+        "far_holdout_round_namespace", "retired_far_holdout_round_namespaces",
     ):
-        assert key not in nightly_config, f"nightly config leaked formal namespace: {key}"
+        assert key not in nightly_config, "nightly cannot consume formal holdout namespace: " + key
 
-    nightly_workflow = (ROOT / ".github" / "workflows" / "far-nightly.yml").read_text(encoding="utf-8")
+    nightly_workflow = (ROOT / ".github/workflows/far-nightly.yml").read_text(encoding="utf-8")
     for value in (
-        "MODEL_RELEASE_TAG: model-749187ec1d66",
+        "FROZEN_MODEL_TAG: model-749187ec1d66",
         "EXPECTED_TRAINED_HEAD_SHA: 749187ec1d6662658f06aa9c76d47fde835968db",
         "EXPECTED_TRAINING_RUN_ID: \"34134789576\"",
         "EXPECTED_MODEL_SHA256: ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
         "EXPECTED_KEYWORD_PACK_SHA256: 370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
-        "gh release download",
-        "configs/nightly.xiaowo-frozen-model.json",
-        "training/render_domains.py",
-        "eval/long_far_stream.py",
-        "eval/aggregate_far.py",
-        "training_performed': False",
-        "formal_qualification_seed_consumed': False",
+        "verify_model_registry.py", "configs/research-baseline.xiaowo.json",
+        "validate_research_keyword_pair.py", "MODEL_SHA256SUMS",
+        "training/render_domains.py", "eval/long_far_stream.py",
+        "eval/aggregate_far.py", "far_regression_receipt.py produce",
+        "training_performed': False", "formal_qualification_seed_consumed': False",
     ):
-        assert value in nightly_workflow, f"far-nightly missing frozen-model contract: {value}"
-    for value in (
-        "training/iterate_domain.py",
-        "training/train_ctc.py",
-        "training/render_qualification_holdout.py",
-        "training/finalize_domain_candidate.py",
-        "configs/training/xiaowo.torch-domain.json",
-        ".venv/bin/python",
-        "torch==",
+        assert value in nightly_workflow, "research nightly missing scientific contract: " + value
+    for forbidden in (
+        "gh release", "configs/shipping.xiaowo.json", "shipping_approved",
+        "model-promotion.yml", "training/iterate_domain.py", "training/train_ctc.py",
+        "training/render_qualification_holdout.py", "training/finalize_domain_candidate.py",
+        "configs/training/xiaowo.torch-domain.json", ".venv/bin/python", "torch==",
     ):
-        assert value not in nightly_workflow, f"far-nightly must not train/formally qualify: {value}"
+        assert forbidden not in nightly_workflow, "research nightly has legacy authority: " + forbidden
 
     formal_workflow = (ROOT / ".github" / "workflows" / "model-training.yml").read_text(encoding="utf-8")
     trigger_block = formal_workflow.split("  workflow_dispatch:", 1)[0]
@@ -380,45 +344,12 @@ def main() -> int:
     ):
         assert non_model_path not in trigger_block, f"model-training trigger still includes non-model path: {non_model_path}"
 
-    shipping_boundary = shipping["shipping_evidence_boundary"]
-    assert shipping_boundary["final_afe_required"] is True
-    assert shipping_boundary["real_human_acoustic_required"] is True
-    assert shipping_boundary["physical_target_board_required"] is True
-    assert shipping_boundary["pending"] == [
-        "real-human-final-afe-acoustic-qualification",
-        "physical-target-board-performance-and-soak",
-    ]
-
-    afe_schema = json.loads((ROOT / "commercial" / "afe-evidence.schema.json").read_text(encoding="utf-8"))
-    assert afe_schema["additionalProperties"] is False
-    assert afe_schema["properties"]["backend"]["const"] == "command"
-    assert afe_schema["properties"]["shipping_authority"]["const"] is True
-    assert afe_schema["properties"]["sample_rate_hz"]["const"] == 16000
-    assert afe_schema["properties"]["channels"]["const"] == 1
-    assert afe_schema["properties"]["sample_format"]["const"] == "pcm_s16le"
-    assert {
-        "executable_sha256",
-        "config_bundle_sha256",
-        "input_pcm_sha256",
-        "output_pcm_sha256",
-        "result_sidecar_sha256",
-        "latency_samples",
-        "sku",
-        "microphone_revision",
-        "enclosure_revision",
-    } <= set(afe_schema["required"])
-
-    integration = (ROOT / "docs" / "INTEGRATION.md").read_text(encoding="utf-8")
+    integration = (ROOT / "docs/INTEGRATION.md").read_text(encoding="utf-8")
     require_all(
-        integration,
-        ROOT / "docs" / "INTEGRATION.md",
-        (
-            "commercial/afe-evidence.schema.json",
-            "configs/shipping.xiaowo.json",
-            "Historical deployment identity (retired)",
-            "independent measurements",
-        ),
+        integration, ROOT / "docs/INTEGRATION.md",
+        ("Historical deployment identity (retired)", "independent measurements"),
     )
+    assert (ROOT / "docs/RESEARCH_ONLY_EXECUTION.md").is_file()
 
     governance_doc = (ROOT / "docs" / "GOVERNANCE_TARGET.md").read_text(encoding="utf-8")
     require_all(

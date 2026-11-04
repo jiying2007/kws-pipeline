@@ -13,7 +13,7 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from kws_vocab import load_tokens, vocab_fingerprint  # noqa: E402
-from validate_shipping_keywords import validate_shipping_keywords  # noqa: E402
+from validate_research_keyword_pair import validate_research_keywords  # noqa: E402
 
 
 def compile_one(tokens: pathlib.Path, keywords: pathlib.Path, root: pathlib.Path):
@@ -415,27 +415,27 @@ def main() -> int:
             start = 24 + index * 48
             assert struct.unpack("<IfHBBBBH16H", example_blob[start:start + 48])[3:8] == expected
 
-        # Shipping validation must compare threshold semantics, not decimal formatting.
-        shipping = root / "shipping.tsv"
-        shipping.write_text(
+        # Research keyword validation compares numeric threshold semantics, not TSV formatting.
+        research = root / "research.tsv"
+        research.write_text(
             "1\t你好小窝\t0.550000\tni3 hao3 xiao3 wo1\n"
             "2\t小窝小窝\t0.55\txiao3 wo1 xiao3 wo1\n",
             encoding="utf-8",
         )
-        canonical = validate_shipping_keywords(shipping)
+        canonical = validate_research_keywords(research)
         assert [item["threshold"] for item in canonical] == ["0.55", "0.55"]
 
-        drifted_shipping = root / "shipping-drifted.tsv"
-        drifted_shipping.write_text(
-            shipping.read_text(encoding="utf-8").replace("0.550000", "0.56", 1),
+        drifted_research = root / "research-drifted.tsv"
+        drifted_research.write_text(
+            research.read_text(encoding="utf-8").replace("0.550000", "0.56", 1),
             encoding="utf-8",
         )
         try:
-            validate_shipping_keywords(drifted_shipping)
+            validate_research_keywords(drifted_research)
         except ValueError as exc:
             assert "threshold drifted" in str(exc)
         else:
-            raise AssertionError("shipping threshold semantic drift must be rejected")
+            raise AssertionError("research threshold semantic drift must be rejected")
 
         reordered = root / "tokens-reordered.txt"
         reordered.write_text("wo1 4\nxiao3 3\nhao3 2\nni3 1\n<blk> 0\n", encoding="utf-8")

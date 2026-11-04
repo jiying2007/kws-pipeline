@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Current-deployment regression gate. No model execution or historical fallback.
+"""Source-pinned research FAR regression. No model execution or older-green fallback.
 
 The Actions API authenticates run/artifact origin; this verifier recomputes the
-saved evidence. Receipts alone never authenticate a run or qualify a product.
+saved evidence. Receipts alone never authenticate a run or prove real-world FAR.
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ sys.path[:0] = [str(ROOT / 'eval'), str(ROOT / 'tools')]
 from aggregate_far import validate_shard
 from statistical_bounds import poisson_rate_upper
 
-SCHEMA = 'current-tuple-far-regression-v1'
+SCHEMA = 'research-frozen-far-regression-v2'
 WORKFLOW = '.github/workflows/far-nightly.yml'
 SEEDS = (1103, 2207, 3301, 4409)
 # Original rendered WAV bytes, not tokens or a guessed causal acoustic label.
@@ -32,9 +32,10 @@ KNOWN_FA_SOURCES = {
 KNOWN_CONFIG = 'a515749b2987e1df23f588a1db8f1e9a7f710662ed6f8b4df92c09aacf40f5f6'
 SOURCE_ROOTS = ('CMakeLists.txt', 'cmake', 'src', 'include', 'configs/parameter-contract.json',
                 'tools/gen_parameter_limits.py', 'tools/kws_raw_stream.c', 'tools/tool_io.c',
+                'configs/research-baseline.xiaowo.json',
                 'tools/tool_io.h', 'eval/long_far_stream.py', 'training/synthetic_audio.py',
                 'training/render_domains.py', 'training/acoustic_scene.py', 'training/frontend_spec.py')
-CONFIGS = ('shipping.xiaowo.json', 'nightly.xiaowo-frozen-model.json', 'parameter-contract.json')
+CONFIGS = ('research-baseline.xiaowo.json', 'nightly.xiaowo-frozen-model.json', 'parameter-contract.json')
 
 
 def require(condition, message):
@@ -79,10 +80,24 @@ def evaluate(root):
     configs = {name: sha(bind('far-regression/' + name)) for name in CONFIGS}
     require(configs['nightly.xiaowo-frozen-model.json'] == KNOWN_CONFIG,
             'known failure generator config changed; applicability requires reviewed replacement')
-    shipping = load(root / 'far-regression/shipping.xiaowo.json')
-    require(configs['parameter-contract.json'] == shipping['parameter_contract']['sha256'], 'active parameter contract mismatch')
+    baseline = load(root / 'far-regression/research-baseline.xiaowo.json')
+    require(baseline.get('schema') == 'kws-research-model-baseline-v1' and
+            baseline.get('policy') == 'frozen-historical-research-comparator' and
+            baseline.get('dataset_status') == 'exposed-historical-synthetic-diagnostic' and
+            baseline.get('frozen_seed_state') == 'consumed-and-frozen' and
+            baseline.get('frozen_qualification_seed') == 271838,
+            'frozen research baseline identity mismatch')
+    for field in ('actual_human_wav_evaluated', 'independent_longstream_far_measured', 'ssc305_measured'):
+        require(baseline.get(field) is False,
+                'research baseline cannot claim new real-world evidence: ' + field)
+    for filename in ('research-baseline.xiaowo.json', 'parameter-contract.json'):
+        source = source_binding['files'].get('configs/' + filename)
+        require(isinstance(source, dict) and source.get('sha256') == configs[filename],
+                'source-bound research configuration mismatch: ' + filename)
     runtime = sha(bind('far-regression/kws_raw_stream'))
-    model, pack = shipping['model']['model_sha256'], shipping['model']['keyword_pack_sha256']
+    model, pack = baseline['model_sha256'], baseline['keyword_pack_sha256']
+    require(all(isinstance(x, str) and re.fullmatch('[0-9a-f]{64}', x) for x in (model, pack)),
+            'research baseline model identity missing')
     manifest = sha(bind('nightly-negative.tsv'))
     domain = rows(bind('nightly-domain/domain-index.jsonl'))
     domain_hashes = {row['wav_sha256'] for row in domain if row.get('kind') != 'positive'}
@@ -131,12 +146,12 @@ def evaluate(root):
     passed = counts == 0 and upper <= 0.4 and injections >= 800 and seconds >= 800
     require(aggregate.get('qualified') is passed, 'aggregate verdict mismatch')
     return {'source_binding': source_binding, 'identity': {'runner_sha256': runtime, 'model_sha256': model, 'keyword_pack_sha256': pack,
-                         'shipping_contract_sha256': configs['shipping.xiaowo.json'],
+                         'research_baseline_sha256': configs['research-baseline.xiaowo.json'],
                          'nightly_contract_sha256': configs['nightly.xiaowo-frozen-model.json'],
                          'parameter_contract_sha256': configs['parameter-contract.json']},
             'status': 'passed' if passed else 'failed', 'qualified': passed,
             'metrics': expected, 'files': files, 'known_fa_sources_covered': sorted(KNOWN_FA_SOURCES),
-            'product_qualification_allowed': False}
+            'real_human_or_target_measured': False}
 
 
 def produce(root, source, run_id, attempt):
@@ -148,7 +163,7 @@ def produce(root, source, run_id, attempt):
         require(result['source_binding']['source_sha'] == source, 'runtime source binding mismatch')
         record.update(result)
     except (OSError, KeyError, TypeError, ValueError) as exc:
-        record.update(status='unknown', qualified=False, blocker=str(exc), product_qualification_allowed=False)
+        record.update(status='unknown', qualified=False, blocker=str(exc), real_human_or_target_measured=False)
     return record
 
 
@@ -177,7 +192,7 @@ def verify_source_tree(binding, tree):
     expected_paths = {path for path in blobs if any(path == prefix or path.startswith(prefix + '/') for prefix in SOURCE_ROOTS)}
     require(set(binding['files']) == expected_paths, 'runtime source file set mismatch')
     for path, row in binding['files'].items():
-        require(row['git_blob_sha1'] == blobs[path], 'runner source differs from deployed source: ' + path)
+        require(row['git_blob_sha1'] == blobs[path], 'runner source differs from reviewed source: ' + path)
 
 
 def select_run(pages, workflow, repository, source):
@@ -212,7 +227,7 @@ def gh_json(endpoint, paginate=False):
 
 def current_run(repository, source):
     require(re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repository or ''), 'invalid repository')
-    require(re.fullmatch('[0-9a-f]{40}', source or ''), 'invalid deployment source')
+    require(re.fullmatch('[0-9a-f]{40}', source or ''), 'invalid research source')
     workflow = gh_json(f'repos/{repository}/actions/workflows/far-nightly.yml')
     pages = gh_json(f"repos/{repository}/actions/workflows/{workflow['id']}/runs?head_sha={source}&per_page=100", True)
     return select_run(pages, workflow, repository, source)
@@ -233,19 +248,18 @@ def extract_verified(archive, digest, output):
         bundle.extractall(output)
 
 
-def verify_download(root, deployment, selected):
+def verify_download(root, request, selected):
     receipt = load(root / 'far-regression/receipt.json')
-    require(receipt.get('schema') == SCHEMA and receipt.get('source_sha') == deployment['source_sha'] and
+    require(receipt.get('schema') == SCHEMA and receipt.get('source_sha') == request['source_sha'] and
             receipt.get('run_id') == selected['id'] and receipt.get('run_attempt') == selected['run_attempt'],
             'receipt source/run/attempt mismatch')
-    recomputed = produce(root, deployment['source_sha'], selected['id'], selected['run_attempt'])
+    recomputed = produce(root, request['source_sha'], selected['id'], selected['run_attempt'])
     require(receipt == recomputed, 'receipt does not match saved raw evidence')
     require(receipt['qualified'] is True and receipt['status'] == 'passed', 'current regression failed or unknown')
     identity = receipt['identity']
-    for key in ('shipping_contract_sha256', 'nightly_contract_sha256'):
-        require(identity[key] == deployment[key], 'deployment config mismatch: ' + key)
-    for key in ('model_sha256', 'keyword_pack_sha256'):
-        require(identity[key] == deployment['model_release'][key], 'deployment model/pack mismatch: ' + key)
+    for key in ('research_baseline_sha256', 'nightly_contract_sha256',
+                'parameter_contract_sha256', 'model_sha256', 'keyword_pack_sha256'):
+        require(identity[key] == request[key], 'research source/asset identity mismatch: ' + key)
     return receipt
 
 
@@ -255,7 +269,7 @@ def main():
     p = subs.add_parser('produce'); p.add_argument('--root', type=Path, required=True)
     p.add_argument('--source', required=True); p.add_argument('--run-id', type=int, required=True)
     p.add_argument('--attempt', type=int, required=True)
-    p = subs.add_parser('fetch'); p.add_argument('--deployment', type=Path, required=True)
+    p = subs.add_parser('fetch'); p.add_argument('--research-request', type=Path, required=True)
     p.add_argument('--repository', required=True); p.add_argument('--output', type=Path, required=True)
     p = subs.add_parser('recheck'); p.add_argument('--record', type=Path, required=True)
     args = parser.parse_args()
@@ -264,9 +278,10 @@ def main():
         write(args.root / 'far-regression/receipt.json', produce(args.root, args.source, args.run_id, args.attempt))
     elif args.command == 'fetch':
         require(not args.output.exists(), 'fresh output directory required; stale evidence must not survive')
-        deployment = load(args.deployment)
-        require(deployment.get('repository') == args.repository, 'deployment repository mismatch')
-        selected = current_run(args.repository, deployment['source_sha'])
+        request = load(args.research_request)
+        require(request.get('schema') == 'research-far-verification-request-v1' and
+                request.get('repository') == args.repository, 'research request repository/schema mismatch')
+        selected = current_run(args.repository, request['source_sha'])
         pages = gh_json(f"repos/{args.repository}/actions/runs/{selected['id']}/artifacts?per_page=100", True)
         artifacts = [a for page in pages for a in page['artifacts']]
         require({p['total_count'] for p in pages} == {len(artifacts)}, 'incomplete artifact pagination')
@@ -281,19 +296,19 @@ def main():
             subprocess.run(['gh', 'api', f"repos/{args.repository}/actions/artifacts/{artifact['id']}/zip"], stdout=out, check=True)
         root = args.output / 'evidence'
         extract_verified(archive, artifact.get('digest'), root)
-        receipt = verify_download(root, deployment, selected)
-        tree = gh_json(f"repos/{args.repository}/git/trees/{deployment['source_sha']}?recursive=1")
+        receipt = verify_download(root, request, selected)
+        tree = gh_json(f"repos/{args.repository}/git/trees/{request['source_sha']}?recursive=1")
         verify_source_tree(receipt['source_binding'], tree)
-        require(current_run(args.repository, deployment['source_sha']) == selected, 'regression selection changed during verification')
+        require(current_run(args.repository, request['source_sha']) == selected, 'regression selection changed during verification')
         write(args.output / 'verification.json', {'schema': SCHEMA, 'qualified': True, 'repository': args.repository,
               'selection': selected, 'artifact_id': artifact['id'], 'artifact_sha256': sha(archive),
               'receipt_sha256': sha(root / 'far-regression/receipt.json'), 'identity': receipt['identity'],
-              'deployment_manifest_sha256': sha(args.deployment), 'product_qualification_allowed': False})
+              'research_request_sha256': sha(args.research_request), 'real_human_or_target_measured': False})
     else:
         record = load(args.record)
         require(record.get('schema') == SCHEMA and record.get('qualified') is True, 'missing verified regression')
         require(current_run(record['repository'], record['selection']['head_sha']) == record['selection'],
-                'newer/changed regression run appeared before publication; approval is blocked')
+                'newer/changed regression run appeared; research verification invalidated')
     return 0
 
 

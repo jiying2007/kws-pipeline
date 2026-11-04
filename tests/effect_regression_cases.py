@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'eval'), str(ROOT / 'tools')]
 import effect_evidence as evidence
 import far_regression_receipt as gate
+import validate_research_keyword_pair as research_keywords
 
 
 def result_fixture():
@@ -32,9 +33,19 @@ def saved_fixture(root):
         shutil.copyfile(ROOT / 'configs' / name, folder / name)
     (folder / 'kws_raw_stream').write_bytes(b'fake runner: not executable')
     gate.write(folder / 'source-binding.json', {'schema': 'far-runtime-source-binding-v1', 'source_sha': 'a' * 40,
-                'files': {'tools/kws_raw_stream.c': {'git_blob_sha1': 'b' * 40, 'sha256': 'c' * 64}}})
+                'files': {
+                    'tools/kws_raw_stream.c': {'git_blob_sha1': 'b' * 40, 'sha256': 'c' * 64},
+                    'configs/parameter-contract.json': {
+                        'git_blob_sha1': 'b' * 40,
+                        'sha256': gate.sha(folder / 'parameter-contract.json'),
+                    },
+                    'configs/research-baseline.xiaowo.json': {
+                        'git_blob_sha1': 'b' * 40,
+                        'sha256': gate.sha(folder / 'research-baseline.xiaowo.json'),
+                    },
+                }})
     (root / 'nightly-negative.tsv').write_text('fixture-only\n')
-    model = gate.load(folder / 'shipping.xiaowo.json')['model']
+    model = gate.load(folder / 'research-baseline.xiaowo.json')
     hashes = sorted(gate.KNOWN_FA_SOURCES)
     domain = [{'kind': 'confusable', 'wav_sha256': digest} for digest in hashes]
     domain_dir = root / 'nightly-domain'; domain_dir.mkdir()
@@ -221,7 +232,7 @@ class RegressionGateTests(unittest.TestCase):
 
     def test_recompute_saved_pass_without_model(self):
         result = gate.evaluate(self.root)
-        self.assertTrue(result['qualified']); self.assertFalse(result['product_qualification_allowed'])
+        self.assertTrue(result['qualified']); self.assertFalse(result['real_human_or_target_measured'])
 
     def test_missing_raw_or_stale_pass_blocks(self):
         (self.root / 'far-run-3301/detections.jsonl').unlink()
@@ -233,6 +244,46 @@ class RegressionGateTests(unittest.TestCase):
             p = self.root / path; original = p.read_bytes(); p.write_bytes(original + b' ')
             with self.assertRaises(ValueError): gate.evaluate(self.root)
             p.write_bytes(original)
+
+    def test_research_baseline_and_source_binding_are_not_approval_shortcuts(self):
+        for field, changed in (
+            ('policy', 'product-shipping-authority'),
+            ('dataset_status', 'synthetic-qualified-for-real-world'),
+            ('actual_human_wav_evaluated', True),
+            ('frozen_qualification_seed', 271839),
+            ('model_sha256', '0' * 64),
+        ):
+            with self.subTest(field=field):
+                path = self.root / 'far-regression/research-baseline.xiaowo.json'
+                original = path.read_bytes()
+                data = gate.load(path)
+                data[field] = changed
+                gate.write(path, data)
+                with self.assertRaises(ValueError):
+                    gate.evaluate(self.root)
+                path.write_bytes(original)
+        bound = self.root / 'far-regression/source-binding.json'
+        original = bound.read_bytes()
+        data = gate.load(bound)
+        data['files']['configs/parameter-contract.json']['sha256'] = '0' * 64
+        gate.write(bound, data)
+        with self.assertRaisesRegex(ValueError, 'source-bound research configuration mismatch'):
+            gate.evaluate(self.root)
+        bound.write_bytes(original)
+
+    def test_keyword_pair_is_exact_and_python38_compatible(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'keywords.tsv'
+            path.write_bytes((ROOT / 'models/registry/model-749187ec1d66/xiaowo-keywords.tsv').read_bytes())
+            rows = research_keywords.validate_research_keywords(path)
+            self.assertEqual([row['phrase'] for row in rows], ['你好小窝', '小窝小窝'])
+            for invalid in (
+                '1\\t你好小窝\\tNaN\\tni3 hao3 xiao3 wo1\\n',
+                '1\\t你好小窝\\t0.55\\tni3 hao3 xiao3 wo1\\n',
+            ):
+                path.write_text(invalid.replace('\\t', '\t').replace('\\n', '\n'), encoding='utf-8')
+                with self.assertRaises(ValueError):
+                    research_keywords.validate_research_keywords(path)
 
     def test_known_failure_source_missing_blocks(self):
         p = self.root / 'nightly-domain/domain-index.jsonl'; p.write_text('')
@@ -248,10 +299,12 @@ class RegressionGateTests(unittest.TestCase):
 
     def test_receipt_attempt_and_source_are_bound(self):
         receipt = gate.produce(self.root, 'a' * 40, 1, 1); gate.write(self.root / 'far-regression/receipt.json', receipt)
-        deployment = dict(source_sha='a' * 40, model_release={key: receipt['identity'][key] for key in ['model_sha256', 'keyword_pack_sha256']},
-                          shipping_contract_sha256=receipt['identity']['shipping_contract_sha256'], nightly_contract_sha256=receipt['identity']['nightly_contract_sha256'])
-        self.assertTrue(gate.verify_download(self.root, deployment, dict(id=1, run_attempt=1))['qualified'])
-        with self.assertRaisesRegex(ValueError, 'attempt mismatch'): gate.verify_download(self.root, deployment, dict(id=1, run_attempt=2))
+        request = dict(source_sha='a' * 40, **receipt['identity'])
+        self.assertTrue(gate.verify_download(self.root, request, dict(id=1, run_attempt=1))['qualified'])
+        with self.assertRaisesRegex(ValueError, 'attempt mismatch'): gate.verify_download(self.root, request, dict(id=1, run_attempt=2))
+        forged = dict(request, research_baseline_sha256='0' * 64)
+        with self.assertRaisesRegex(ValueError, 'research source/asset identity mismatch'):
+            gate.verify_download(self.root, forged, dict(id=1, run_attempt=1))
 
     def test_full_archive_digest_and_path_safety(self):
         p = self.root / 'artifact.zip'
