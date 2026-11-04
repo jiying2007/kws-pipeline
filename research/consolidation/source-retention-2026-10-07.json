@@ -15595,7 +15595,8 @@
     ".github/workflows/kw1-preset-supplement-20261014-v1.yml",
     ".github/workflows/kw1-supplement-observation.yml",
     ".github/workflows/authorized-voice-clone-contracts.yml",
-    ".github/workflows/qwen-nonclone-pilot-20261104-v1.yml"
+    ".github/workflows/qwen-nonclone-pilot-20261104-v1.yml",
+    ".github/workflows/qwen-nonclone-asr-20261104-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -44188,6 +44189,147 @@
           "git_blob_sha1": "b1a22dd6b13d634414a37fcaebe46a0e0e9d01c3"
         }
       ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "qwen-nonclone-asr-20261104-v1",
+      "source_commit": "455102c4d2c4cdf324707edb724372fdc2873291",
+      "workflow_source_changed": true,
+      "scope": "Add independent first-create-only four-audio three-ASR public synthetic screen; exact new allowance and artifact-bound inputs; no TTS retry, private voices, training or paid API.",
+      "files": [
+        {
+          "path": ".github/workflows/qwen-nonclone-asr-20261104-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/qwen-nonclone-asr-20261104-v1.yml",
+            "mode": "100644",
+            "bytes": 1458,
+            "sha256": "11fa3d42651090e7fc044dd1a8857b0f93abbbadc8d3d1e29191d1f062bb0338",
+            "git_blob_sha1": "d9236d61ea7b83f23a4928ea2f3047da98f24a2c"
+          }
+        }
+      ],
+      "source_files": [
+        {
+          "path": "research/qwen-nonclone-asr-20261104/host.py",
+          "mode": "100644",
+          "bytes": 10924,
+          "sha256": "138a81025eb76229e15d665d51f536fdc77dd03a6468980a25eab3943f834b9d",
+          "git_blob_sha1": "ee0410ce3fe057b66fdf0af6cad2a510a27ca5a0"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/derive.py",
+          "mode": "100644",
+          "bytes": 2897,
+          "sha256": "a2db729ca50686ab3c140ff3d1e5a2f7ca7c9f0ac5933e8140f2d12612881b87",
+          "git_blob_sha1": "519e5cb23cd73d2507b3b2f77ad5e82f9ab9082d"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/README.md",
+          "mode": "100644",
+          "bytes": 4248,
+          "sha256": "e2c313e5b7e84da4f483b2b4630a97530daf73f64489b0f2d80256629a85f785",
+          "git_blob_sha1": "eae8e706835ae38b767ff412e2a8a46a8623c081"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/source-lock.json",
+          "mode": "100644",
+          "bytes": 11637,
+          "sha256": "47f7e51c2806ee9ba6280df07797cc8d16fa9edf2e6b50ca6d739f4778a4a218",
+          "git_blob_sha1": "395577acc20b9f8d6a434c18cba784197bfbdc13"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/test_host.py",
+          "mode": "100644",
+          "bytes": 8742,
+          "sha256": "8323b89beec8addf3f693c144e0f6bf1ffe06ddb7627e704cf1cd978407d65cc",
+          "git_blob_sha1": "877cbaf854a85d92d7fae8e5460cd61ca2266998"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/inputs/qwen-nonclone-pilot-20261104-v1-02.wav",
+          "mode": "100644",
+          "bytes": 53804,
+          "sha256": "0cec92540fef9af7e423860cd28c526c39b9430bb4cc04c58cbcc73d32294213",
+          "git_blob_sha1": "1bb46caf68acfe10445e20736572ba32a7c2d494"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/inputs/qwen-nonclone-pilot-20261104-v1-03.wav",
+          "mode": "100644",
+          "bytes": 81964,
+          "sha256": "5eef41ef01064981df19245c15933db950fe64b26163eabb8f14563e10ac2a0d",
+          "git_blob_sha1": "5fdd24f94d0128a37a77c6d38003ec958c470eff"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/inputs/mapping.json",
+          "mode": "100644",
+          "bytes": 2422,
+          "sha256": "9eda0e1d049194d46cbb6de91f94b82586f884cceb5fb2a643130511e72ab537",
+          "git_blob_sha1": "28b29631996804f7eb46eadb92acebe1a4979628"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/inputs/qwen-nonclone-pilot-20261104-v1-00.wav",
+          "mode": "100644",
+          "bytes": 64044,
+          "sha256": "0f25b8e19e0e3b1c556ded696decea6f72bc9450138c4277a4223f9ac08b9e43",
+          "git_blob_sha1": "c789ab3bd1f2ebe5fa732424b4f50e360c83cc00"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/inputs/qwen-nonclone-pilot-20261104-v1-01.wav",
+          "mode": "100644",
+          "bytes": 58924,
+          "sha256": "caa1a865136eccae600d45f54e1e8397e321d4ea834a6a44bd7275314e918fa3",
+          "git_blob_sha1": "94e86a9507911f6e376535683e2c164c7775d950"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/inputs/blind/job.json",
+          "mode": "100644",
+          "bytes": 839,
+          "sha256": "a1c9a0a1cf1cb1372bbca05ddf0aaf2582ee5cbfbf9e4123cb523ca01b441ce4",
+          "git_blob_sha1": "5a51a53567b41af154a4991d5ad99fa6e46d22a8"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/inputs/blind/audio/5eef41ef01064981df19245c15933db950fe64b26163eabb8f14563e10ac2a0d.wav",
+          "mode": "100644",
+          "bytes": 81964,
+          "sha256": "5eef41ef01064981df19245c15933db950fe64b26163eabb8f14563e10ac2a0d",
+          "git_blob_sha1": "5fdd24f94d0128a37a77c6d38003ec958c470eff"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/inputs/blind/audio/0f25b8e19e0e3b1c556ded696decea6f72bc9450138c4277a4223f9ac08b9e43.wav",
+          "mode": "100644",
+          "bytes": 64044,
+          "sha256": "0f25b8e19e0e3b1c556ded696decea6f72bc9450138c4277a4223f9ac08b9e43",
+          "git_blob_sha1": "c789ab3bd1f2ebe5fa732424b4f50e360c83cc00"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/inputs/blind/audio/0cec92540fef9af7e423860cd28c526c39b9430bb4cc04c58cbcc73d32294213.wav",
+          "mode": "100644",
+          "bytes": 53804,
+          "sha256": "0cec92540fef9af7e423860cd28c526c39b9430bb4cc04c58cbcc73d32294213",
+          "git_blob_sha1": "1bb46caf68acfe10445e20736572ba32a7c2d494"
+        },
+        {
+          "path": "research/qwen-nonclone-asr-20261104/inputs/blind/audio/caa1a865136eccae600d45f54e1e8397e321d4ea834a6a44bd7275314e918fa3.wav",
+          "mode": "100644",
+          "bytes": 58924,
+          "sha256": "caa1a865136eccae600d45f54e1e8397e321d4ea834a6a44bd7275314e918fa3",
+          "git_blob_sha1": "94e86a9507911f6e376535683e2c164c7775d950"
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "mode": "100644",
+          "bytes": 19818,
+          "sha256": "003f71a61ab8689f2ba147379465b8056f4bef80e1c5cea088e996be983c04e7",
+          "git_blob_sha1": "eed29789670d63eba9bb147bd4fa747633c785a8"
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "mode": "100644",
+          "bytes": 65391,
+          "sha256": "ab874e936fd9a6283a43f1827123077ea6396da8df22c1635ca03f1d65f1afc2",
+          "git_blob_sha1": "f5a21264bb08c4818b39811a3f5c869cf5fc350b"
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -44295,6 +44437,13 @@
       "bytes": 1705,
       "sha256": "14a12e21332261fa9ce17f09d402ca245ebc8af496d00115c7aa13338c8b7134",
       "git_blob_sha1": "1828cdf82b27aec5c98dee45a4c2abcd58e1bb5a"
+    },
+    {
+      "path": ".github/workflows/qwen-nonclone-asr-20261104-v1.yml",
+      "mode": "100644",
+      "bytes": 1458,
+      "sha256": "11fa3d42651090e7fc044dd1a8857b0f93abbbadc8d3d1e29191d1f062bb0338",
+      "git_blob_sha1": "d9236d61ea7b83f23a4928ea2f3047da98f24a2c"
     }
   ],
   "current_source_revision": {
