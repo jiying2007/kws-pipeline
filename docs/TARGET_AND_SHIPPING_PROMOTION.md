@@ -128,3 +128,5 @@ The approval Release is the shipping authority for that immutable tuple. It does
 - A board revision or final-AFE change creates a new cohort.
 - Real-human failures do not automatically authorize model training.
 - Formal seed `271838` remains consumed/frozen. Future model candidates must follow the active seed and retired-seed list in `configs/training/xiaowo.torch-domain.json`.
+
+The historical `target-dut-qualification.yml` release-coupled entrypoint has also been retired; score physical evidence offline using `tools/score_target_dut_qualification.py` and immutable source/CPU/RSS/soak inputs, without claiming hardware execution from CI.
