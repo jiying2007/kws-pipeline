@@ -152,13 +152,13 @@ def check_target_bundle_docs() -> None:
         )),
         "`target-profile.json.resource_budget_id` must match `resource-budget.json.budget_id`",
     ))
-    workflow_path = ROOT / ".github/workflows/target-dut-qualification.yml"
-    pre_download = workflow_path.read_text(encoding="utf-8").split("gh release download", 1)[0]
-    require_all(pre_download, workflow_path, (
-        ".resource_budget.fixed_bundle_file",
-        f'test "$budget_file" = {filename}',
-        'test -f "$bundle/$budget_file"',
-    ))
+    # No archived release-coupled target Actions may be a research authority.
+    assert not (ROOT / ".github/workflows/target-dut-qualification.yml").exists()
+    scorer = ROOT / "tools/score_target_dut_qualification.py"
+    source = scorer.read_text(encoding="utf-8")
+    for name in ("validate_resource_budget(", '"--bundle"', '"--policy"',
+                 '"--output"'):
+        assert name in source, f"{scorer}: missing research evidence check {name}"
 
 
 def main() -> int:
