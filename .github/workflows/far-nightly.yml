@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     env:
-      MODEL_RELEASE_TAG: model-749187ec1d66
+      FROZEN_MODEL_TAG: model-749187ec1d66
       EXPECTED_TRAINED_HEAD_SHA: 749187ec1d6662658f06aa9c76d47fde835968db
       EXPECTED_TRAINING_RUN_ID: "34134789576"
       EXPECTED_MODEL_SHA256: ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402
@@ -35,38 +35,63 @@ jobs:
             kws_raw_stream kws_decoder_tests kws_decoder_retention_tests
           ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
 
-      - name: Download exact immutable promoted model
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Load hash-pinned historical model from Git research registry
         shell: bash
         run: |
           set -euo pipefail
-          gh release view "$MODEL_RELEASE_TAG" \
-            --repo "$GITHUB_REPOSITORY" \
-            --json tagName,targetCommitish,isDraft,isPrerelease \
-            > build/model-release.json
+          registry="models/registry/${FROZEN_MODEL_TAG}"
+          test -f "$registry/registry.json"
+          python3 tools/verify_model_registry.py --registry-dir "$registry"
+          mkdir -p build/frozen-model
+          cp -a "$registry/." build/frozen-model/
+          (cd build/frozen-model && sha256sum -c MODEL_SHA256SUMS)
           python3 - <<'PY'
+          import hashlib
           import json
           import os
           from pathlib import Path
 
-          release = json.loads(Path('build/model-release.json').read_text(encoding='utf-8'))
-          if release.get('tagName') != os.environ['MODEL_RELEASE_TAG']:
-              raise SystemExit('model release tag mismatch')
-          if release.get('targetCommitish') != os.environ['EXPECTED_TRAINED_HEAD_SHA']:
-              raise SystemExit('model release target is not the frozen trained HEAD')
-          if bool(release.get('isDraft')) or bool(release.get('isPrerelease')):
-              raise SystemExit('nightly model release must be final, not draft/prerelease')
-          PY
-          mkdir -p build/frozen-model
-          gh release download "$MODEL_RELEASE_TAG" \
-            --repo "$GITHUB_REPOSITORY" \
-            --dir build/frozen-model
-          test -s build/frozen-model/MODEL_SHA256SUMS
-          (
-            cd build/frozen-model
-            sha256sum -c MODEL_SHA256SUMS
+          baseline_path = Path("configs/research-baseline.xiaowo.json")
+          baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+          expected = {
+              "schema": "kws-research-model-baseline-v1",
+              "policy": "frozen-historical-research-comparator",
+              "model_tag": os.environ["FROZEN_MODEL_TAG"],
+              "model_sha256": os.environ["EXPECTED_MODEL_SHA256"],
+              "keyword_pack_sha256": os.environ["EXPECTED_KEYWORD_PACK_SHA256"],
+              "training_source_sha": os.environ["EXPECTED_TRAINED_HEAD_SHA"],
+              "frozen_qualification_seed": 271838,
+              "frozen_seed_state": "consumed-and-frozen",
+              "dataset_status": "exposed-historical-synthetic-diagnostic",
+              "actual_human_wav_evaluated": False,
+              "independent_longstream_far_measured": False,
+              "ssc305_measured": False,
+          }
+          for key, value in expected.items():
+              if baseline.get(key) != value:
+                  raise SystemExit("research baseline identity drift: " + key)
+          root = Path("build/frozen-model")
+          for filename, key in (
+              ("xiaowo-model.kwm", "model_sha256"),
+              ("xiaowo-keywords.kwk", "keyword_pack_sha256"),
+          ):
+              actual = hashlib.sha256((root / filename).read_bytes()).hexdigest()
+              if actual != baseline[key]:
+                  raise SystemExit("Git-pinned model asset mismatch: " + filename)
+          identity = {
+              "evidence_class": "frozen-historical-synthetic-model-registry-v1",
+              "research_baseline_sha256": hashlib.sha256(baseline_path.read_bytes()).hexdigest(),
+              "model_tag": baseline["model_tag"],
+              "training_source_sha": baseline["training_source_sha"],
+              "model_sha256": baseline["model_sha256"],
+              "keyword_pack_sha256": baseline["keyword_pack_sha256"],
+              "actual_real_human_or_dut_measured": False,
+          }
+          Path("build/model-registry-identity.json").write_text(
+              json.dumps(identity, sort_keys=True, indent=2) + "\n", encoding="utf-8"
           )
+          print(json.dumps(identity, sort_keys=True))
+          PY
 
       - name: Verify frozen model provenance and strict acceptance
         shell: bash
@@ -105,9 +130,9 @@ jobs:
           model_sha = sha256(root / 'xiaowo-model.kwm')
           keyword_sha = sha256(root / 'xiaowo-keywords.kwk')
           if model_sha != os.environ['EXPECTED_MODEL_SHA256']:
-              raise SystemExit('released model SHA drifted')
+              raise SystemExit('historical model SHA drifted')
           if keyword_sha != os.environ['EXPECTED_KEYWORD_PACK_SHA256']:
-              raise SystemExit('released keyword-pack SHA drifted')
+              raise SystemExit('historical keyword-pack SHA drifted')
 
           manifest = json.loads((root / 'model-promotion-manifest.json').read_text(encoding='utf-8'))
           source = manifest.get('source', {})
@@ -165,7 +190,7 @@ jobs:
               raise SystemExit('released continuous-FAR evidence is not strict-pass')
 
           print(json.dumps({
-              'release_tag': os.environ['MODEL_RELEASE_TAG'],
+              'historical_model_tag': os.environ['FROZEN_MODEL_TAG'],
               'trained_head_sha': os.environ['EXPECTED_TRAINED_HEAD_SHA'],
               'model_sha256': model_sha,
               'keyword_pack_sha256': keyword_sha,
@@ -175,7 +200,7 @@ jobs:
               'continuous_far_per_hour': 0.0,
           }, indent=2, sort_keys=True, ensure_ascii=False))
           PY
-          python3 tools/validate_shipping_keywords.py build/frozen-model/xiaowo-keywords.tsv
+          python3 tools/validate_research_keyword_pair.py build/frozen-model/xiaowo-keywords.tsv
 
       - name: Render isolated nightly negative regression corpus
         shell: bash
@@ -232,7 +257,7 @@ jobs:
           print(json.dumps(evidence, indent=2, sort_keys=True))
           PY
 
-      - name: Stream four independent negative shards against the frozen released model
+      - name: Stream four independent negative shards against the frozen research comparator
         shell: bash
         run: |
           set -euo pipefail
@@ -264,7 +289,7 @@ jobs:
               --output "build/far-run-$seed/detection-source-map.jsonl"
           done
 
-      - name: Aggregate eight hours for the frozen released model only
+      - name: Aggregate eight hours for the frozen research comparator only
         run: >-
           python3 eval/aggregate_far.py
           --summary build/far-run-1103/summary.json
@@ -284,7 +309,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/far-regression
-          cp configs/shipping.xiaowo.json configs/nightly.xiaowo-frozen-model.json configs/parameter-contract.json build/far-regression/
+          cp configs/research-baseline.xiaowo.json configs/nightly.xiaowo-frozen-model.json configs/parameter-contract.json build/far-regression/
           if test -f build/kws_raw_stream; then cp build/kws_raw_stream build/far-regression/; fi
           python3 tools/far_regression_receipt.py produce --root build \
             --source "$GITHUB_SHA" --run-id "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT"
@@ -295,7 +320,7 @@ jobs:
         with:
           name: far-frozen-model-regression
           path: |
-            build/model-release.json
+            build/model-registry-identity.json
             build/frozen-model/model-promotion-manifest.json
             build/frozen-model/qualification-summary.json
             build/frozen-model/qualification-cohort.json
