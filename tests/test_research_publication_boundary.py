@@ -47,6 +47,30 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
         self.assertNotIn("'.github/workflows/release.yml'", inventory)
         self.assertTrue((ROOT / "configs/research-baseline.xiaowo.json").is_file())
 
+    def test_research_target_input_schema_is_not_a_commercial_entrypoint(self):
+        policy = __import__("json").loads(
+            (ROOT / "commercial/target-qualification.policy.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            policy["resource_budget"]["schema"],
+            "configs/research/physical-target-resource-budget.schema.json",
+        )
+        self.assertTrue((ROOT / "configs/research/physical-target-profile.schema.json").is_file())
+        self.assertTrue((ROOT / "configs/research/physical-target-resource-budget.schema.json").is_file())
+        self.assertFalse((ROOT / "commercial/target-bundle.schema.json").exists())
+        profile = __import__("json").loads(
+            (ROOT / "configs/research/physical-target-profile.schema.json").read_text(encoding="utf-8")
+        )
+        budget = __import__("json").loads(
+            (ROOT / "configs/research/physical-target-resource-budget.schema.json").read_text(encoding="utf-8")
+        )
+        self.assertTrue(profile["$id"].endswith("/configs/research/physical-target-profile.schema.json"))
+        self.assertTrue(budget["$id"].endswith("/configs/research/physical-target-resource-budget.schema.json"))
+        self.assertEqual(budget["properties"]["measurement_contract_id"]["const"], "process-cpu-one-core-v1")
+        self.assertEqual(set(budget["properties"]["limits"]["required"]),
+                         {"max_cpu_percent", "max_rss_kib", "max_stack_high_water_bytes",
+                          "max_temp_c", "max_average_power_mw"})
+
     def test_research_document_tracks_later_migration(self):
         doc = (ROOT / "docs/RESEARCH_ONLY_EXECUTION.md").read_text(encoding="utf-8")
         self.assertIn("Retired automatic publication surfaces", doc)
