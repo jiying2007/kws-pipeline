@@ -51,7 +51,78 @@ def require_no_live_release_authority(source: str, path: str) -> None:
             raise AssertionError(path + ": publisher action is forbidden")
 
 
+# This is a debt detector, NOT a waiver of research-only execution. Issue #733
+# owns removal of the sole known historical Release-backed training input.
+SHELL_CALL_RE = re.compile(
+    r"\b(?:bash|sh)[ \t]+((?:training|tools)/[A-Za-z0-9_./-]+\.sh)\b"
+)
+RELEASE_READ_RE = re.compile(
+    r"\bgh[ \t]+release[ \t]+(?:download|view)\b"
+    r"|\bgh[ \t]+api[^\n]*?/releases(?:/|\b)"
+)
+KNOWN_RELEASE_READ_DEBT = frozenset({"training/materialize_governed_product_base.sh"})
+
+
+def find_indirect_release_readers(workflows, scripts):
+    """Identify Release-reading shell scripts actually referenced by live YAML.
+
+    Keep source-only and Python 3.8 compatible. This first-pass detector covers
+    direct bash/sh references in the training/tools paths, not arbitrary dynamic
+    shell or Python imports; migration #733 must close the broader dependency.
+    """
+    invoked = set()
+    for workflow in workflows.values():
+        invoked.update(SHELL_CALL_RE.findall(workflow))
+    return {
+        path for path in invoked
+        if path in scripts and RELEASE_READ_RE.search(scripts[path])
+    }
+
+
+def require_no_new_indirect_release_readers(workflows, scripts, known_debt):
+    readers = find_indirect_release_readers(workflows, scripts)
+    new = readers - set(known_debt)
+    if new:
+        raise AssertionError("new indirect Release readers: " + ", ".join(sorted(new)))
+    return readers
+
+
 class ResearchPublicationBoundaryTests(unittest.TestCase):
+
+    def test_indirect_release_reader_debt_cannot_expand(self):
+        workflows = {
+            p.name: p.read_text(encoding="utf-8")
+            for p in WORKFLOWS.glob("*.yml")
+        }
+        scripts = {
+            str(p.relative_to(ROOT)): p.read_text(encoding="utf-8")
+            for directory in ("training", "tools")
+            for p in (ROOT / directory).rglob("*.sh")
+        }
+        actual = require_no_new_indirect_release_readers(
+            workflows, scripts, KNOWN_RELEASE_READ_DEBT
+        )
+        # This explicit nonempty debt is a blocker, not terminal research PASS.
+        # Remove this assertion and allowlist only with #733's source migration.
+        self.assertEqual(actual, KNOWN_RELEASE_READ_DEBT)
+
+    def test_indirect_release_reader_negative_and_clean_fixtures(self):
+        workflows = {"live.yml": "jobs:\n  train:\n    steps:\n"
+                     "      - run: bash training/research-base.sh\n"}
+        bad = {"training/research-base.sh":
+               '#!/bin/sh\n gh release download legacy-tag\n'}
+        with self.assertRaisesRegex(AssertionError, "new indirect Release readers"):
+            require_no_new_indirect_release_readers(workflows, bad, set())
+        bad["training/research-base.sh"] = (
+            '#!/bin/sh\n gh api "repos/o/r/releases/tags/legacy"\n'
+        )
+        with self.assertRaisesRegex(AssertionError, "new indirect Release readers"):
+            require_no_new_indirect_release_readers(workflows, bad, set())
+        good = {"training/research-base.sh": "#!/bin/sh\nsha256sum -c sums\n"}
+        self.assertEqual(
+            require_no_new_indirect_release_readers(workflows, good, set()), set()
+        )
+
     def test_active_workflow_tree_has_no_release_execution_authority(self):
         workflows = sorted(WORKFLOWS.glob("*.yml"))
         self.assertGreaterEqual(len(workflows), 20)
