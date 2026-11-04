@@ -78,8 +78,9 @@ REQUIRED_AUTHORITY_PATHS = (
     '.github/workflows/model-training-preflight.yml',
     '.github/workflows/product-development-experiment.yml',
     '.github/workflows/product-training-data-contract.yml',
-    '.github/workflows/real-human-qualification.yml',
-    '.github/workflows/target-dut-qualification.yml',
+    'tools/score_real_human_qualification.py',
+    'tools/score_target_dut_qualification.py',
+    'tools/score_target_cohort.py',
     'configs/research-baseline.xiaowo.json',
 )
 
