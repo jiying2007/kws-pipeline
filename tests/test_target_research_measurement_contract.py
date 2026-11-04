@@ -398,7 +398,8 @@ def main() -> int:
         assert dut["metrics"]["audio_seconds"] is None
         budget = json.loads((bundle / "resource-budget.json").read_text())
         required_limits = production["resource_budget"]["required_limit_fields"]
-        schema = json.loads((ROOT / "commercial/target-resource-budget.schema.json").read_text())
+        schema = json.loads((ROOT / "configs/research/physical-target-resource-budget.schema.json").read_text())
+        assert not (ROOT / "commercial/target-resource-budget.schema.json").exists()
         assert schema["properties"]["schema_version"]["const"] == 2
         assert schema["properties"]["measurement_contract_id"]["const"] == CPU_MEASUREMENT_CONTRACT_ID
         assert "maximum" not in schema["properties"]["limits"]["properties"]["max_cpu_percent"]
