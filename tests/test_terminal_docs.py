@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import json
 import hashlib
+from decimal import Decimal
 import pathlib
 import re
 import subprocess
@@ -265,10 +266,14 @@ def main() -> int:
     assert (ROOT / "keywords/tokens.example.txt").read_text(encoding="utf-8").splitlines() == [
         "<blk> 0", "ni3 1", "hao3 2", "xiao3 3", "wo1 4",
     ]
-    assert load_keyword_rows(registry / "xiaowo-keywords.tsv") == [
-        ["1", "你好小窝", "0.55", "ni3 hao3 xiao3 wo1"],
-        ["2", "小窝小窝", "0.55", "xiao3 wo1 xiao3 wo1"],
+    # Preserve the byte-exact archived TSV spelling; never rewrite the frozen
+    # registry or weaken the independent numeric research-keyword validator.
+    keyword_rows = load_keyword_rows(registry / "xiaowo-keywords.tsv")
+    assert keyword_rows == [
+        ["1", "你好小窝", "0.550000", "ni3 hao3 xiao3 wo1"],
+        ["2", "小窝小窝", "0.550000", "xiao3 wo1 xiao3 wo1"],
     ]
+    assert [Decimal(row[2]) for row in keyword_rows] == [Decimal("0.55")] * 2
 
     nightly_config = json.loads(
         (ROOT / "configs/nightly.xiaowo-frozen-model.json").read_text(encoding="utf-8")
