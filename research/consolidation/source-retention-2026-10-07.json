@@ -15601,7 +15601,8 @@
     ".github/workflows/native-prepare-20261104-v1.yml",
     ".github/workflows/runner-storage-20261104-v1.yml",
     ".github/workflows/native-prepare-capacity-20261104-v1.yml",
-    ".github/workflows/native-prepare-fence-v2-20261104-v1.yml"
+    ".github/workflows/native-prepare-fence-v2-20261104-v1.yml",
+    ".github/workflows/native-prepare-scan-v3-20261104-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -45047,6 +45048,91 @@
           "git_blob_sha1": "08f59cb3cdd08c9c159bbe4f9aa633705379586c"
         }
       ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "native-prepare-scan-v3-20261104-v1",
+      "source_commit": "4dcdc12c4eac652e5016daace43e3d6a950269f6",
+      "workflow_source_changed": true,
+      "scope": "Isolated host-only repair for the observed atomic-progress-file output-accounting race. Preserve64MiB threshold, bounded full-observation restart, fail-closed other errors and original cleanup. All110 consumed fence source identities and78 scientific stage mappings unchanged. One new first-create-only40-minute no-audio job/1800-second inner budget,25/16/8GiB guards; no ASR, training, raw payload or consumed-run retry.",
+      "files": [
+        {
+          "path": ".github/workflows/native-prepare-scan-v3-20261104-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/native-prepare-scan-v3-20261104-v1.yml",
+            "mode": "100644",
+            "bytes": 2468,
+            "sha256": "7358517a35664fc5ba6dd1e696f7bf43344e65dadc6b37e9452a56d16429186b",
+            "git_blob_sha1": "31f712d14a8a824ea505d3dbbd46f47742a4ab32"
+          }
+        }
+      ],
+      "source_files": [
+        {
+          "path": "research/native-prepare-scan-v3-20261104/README.md",
+          "mode": "100644",
+          "bytes": 3127,
+          "sha256": "cc383100f533b54434a20c786d2357daba0c7e9812568684152899d71a2b7469",
+          "git_blob_sha1": "b7c22261bdf99e36e2b7322a29d4ab92c67280e5"
+        },
+        {
+          "path": "research/native-prepare-scan-v3-20261104/boundary.py",
+          "mode": "100644",
+          "bytes": 21685,
+          "sha256": "b9e61a1e3593038860415cd3141e62b2c18bd6dbb937a5c6e48a7717b8c96848",
+          "git_blob_sha1": "e9c4df8f250cc435908b27d14eae1b6004b4c3b4"
+        },
+        {
+          "path": "research/native-prepare-scan-v3-20261104/host.py",
+          "mode": "100644",
+          "bytes": 14811,
+          "sha256": "ede81e305c41c699c3655482e17b8744f523751ed5db2cb75f92984730d44090",
+          "git_blob_sha1": "23ac673f2136df7aea1d986db074deaba0764b78"
+        },
+        {
+          "path": "research/native-prepare-scan-v3-20261104/output_size.py",
+          "mode": "100644",
+          "bytes": 5515,
+          "sha256": "ffa46b23945322467b65b80f4d7913fd70bbd661709d7f404073bcc51cf265da",
+          "git_blob_sha1": "a718430d5943813cffbc7433edfcc2a6c3c9db57"
+        },
+        {
+          "path": "research/native-prepare-scan-v3-20261104/source-lock.json",
+          "mode": "100644",
+          "bytes": 26249,
+          "sha256": "f80d01557b6189c626028d9574740cedbd6212d479e439969584446a244a7fb9",
+          "git_blob_sha1": "95ce9b54eb149be034debc2a82898ba36a84b9c7"
+        },
+        {
+          "path": "research/native-prepare-scan-v3-20261104/test_host_scan.py",
+          "mode": "100644",
+          "bytes": 14463,
+          "sha256": "f1d7b9ba4c64dab6c8912bf3522781be115881e460c9b0998b1fcc80b302a38a",
+          "git_blob_sha1": "a94a0fdee746bf9834bc89bca50f880d927b6939"
+        },
+        {
+          "path": "research/native-prepare-scan-v3-20261104/test_output_size.py",
+          "mode": "100644",
+          "bytes": 12120,
+          "sha256": "309208bccdc9cb6365a56dd36c08e95c1a98bd541ba3b6ba009c95fa82dc8330",
+          "git_blob_sha1": "d764524364253c4d74cd406f1ecc8d5e420a1558"
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "mode": "100644",
+          "bytes": 20721,
+          "sha256": "c6436bcd8345b41019d1128a35be159d1b17c45ee16790b5dc491509f9501545",
+          "git_blob_sha1": "1e4742ed58d2baf1cbf0be28ac0f3b95121cb3a3"
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "mode": "100644",
+          "bytes": 73340,
+          "sha256": "e42efc23b554fe4194edb6a081e082661116cb01c69af79d6c75843b9c81400d",
+          "git_blob_sha1": "a770876b17224273d055ad6a98a2046e37d88da2"
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -45196,6 +45282,13 @@
       "bytes": 2299,
       "sha256": "c762a579cedcdde1c6a53298203fc5f0450812c5da92a58b67889ae548673541",
       "git_blob_sha1": "f578bb168312e29c42f15db6a12f8e6012df4630"
+    },
+    {
+      "path": ".github/workflows/native-prepare-scan-v3-20261104-v1.yml",
+      "mode": "100644",
+      "bytes": 2468,
+      "sha256": "7358517a35664fc5ba6dd1e696f7bf43344e65dadc6b37e9452a56d16429186b",
+      "git_blob_sha1": "31f712d14a8a824ea505d3dbbd46f47742a4ab32"
     }
   ],
   "current_source_revision": {
