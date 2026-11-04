@@ -15,7 +15,7 @@
   },
   "resource_budget": {
     "required": true,
-    "schema": "commercial/target-resource-budget.schema.json",
+    "schema": "configs/research/physical-target-resource-budget.schema.json",
     "fixed_bundle_file": "resource-budget.json",
     "required_limit_fields": [
       "max_cpu_percent",

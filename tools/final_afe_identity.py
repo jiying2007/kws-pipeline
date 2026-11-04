@@ -100,7 +100,7 @@ def inspect_adapter(path: pathlib.Path) -> tuple[dict, pathlib.Path, dict]:
     public = {
         "schema_version": 1,
         "backend": "command",
-        "shipping_authority": True,
+        "research_measurement_only": True,
         "executable_sha256": sha256_file(executable),
         "config_bundle_sha256": config_bundle_sha,
         "config_files": config_rows,

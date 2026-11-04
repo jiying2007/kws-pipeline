@@ -146,7 +146,7 @@ Store private adapter profiles under:
 $KWS_FINAL_AFE_ROOT/<afe_profile>.json
 ```
 
-The adapter is described by `commercial/final-afe-adapter.schema.json`. Example shape:
+The current source-only research adapter is described by `configs/research/final-afe-adapter.schema.json`; AFE output evidence is described by `configs/research/afe-evidence.schema.json`. These do not assert product qualification. Example shape:
 
 ```json
 {

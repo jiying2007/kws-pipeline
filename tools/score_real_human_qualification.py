@@ -135,9 +135,10 @@ def main() -> int:
         raise ValueError("deployment identity differs across policy/corpus/AFE")
     if (
         afe.get("afe", {}).get("backend") != "command"
-        or afe.get("afe", {}).get("shipping_authority") is not True
+        or afe.get("afe", {}).get("research_measurement_only") is not True
+        or "shipping_authority" in afe.get("afe", {})
     ):
-        raise ValueError("final AFE evidence is not shipping-authoritative command backend")
+        raise ValueError("final AFE evidence is not research-scoped command backend")
     if (
         intake.get("raw_audio_hashes_verified") is not True
         or intake.get("pii_fields_rejected") is not True
