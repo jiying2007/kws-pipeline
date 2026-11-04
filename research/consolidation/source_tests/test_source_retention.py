@@ -60,6 +60,25 @@ class RetentionTests(unittest.TestCase):
                 '.github/workflows/tts-pilot-asr-20261014-v1.yml',
                 '.github/workflows/kw1-preset-supplement-20261014-v1.yml',
                 '.github/workflows/kw1-supplement-observation.yml'])
+    def test_exact_nonclone_workflow_allowance(self):
+        for name in ('authorized-voice-clone-contracts.yml', 'qwen-nonclone-pilot-20261104-v1.yml'):
+            path = '.github/workflows/' + name
+            self.manifest['allowed_new_active_workflows'].append(path)
+            self.manifest['current_added_active_workflows'].append(self.file(path, b'name: invented offline fixture\n'))
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        original = copy.deepcopy(self.manifest)
+        self.manifest['allowed_new_active_workflows'][-1] += '.other'
+        with self.assertRaisesRegex(ValueError, 'unexpected active workflow addition'):
+            verify(self.root, self.manifest)
+        self.manifest = copy.deepcopy(original)
+        self.manifest['current_added_active_workflows'].pop()
+        with self.assertRaisesRegex(ValueError, 'missing or duplicate'):
+            verify(self.root, self.manifest)
+        self.manifest = original
+        (self.root / self.manifest['allowed_new_active_workflows'][-1]).write_bytes(b'changed')
+        with self.assertRaises(ValueError):
+            verify(self.root, self.manifest)
+
     def test_valid_retention(self):
         self.assertEqual(verify(self.root,self.manifest),1)
     def test_changed_bytes(self):
@@ -1072,3 +1091,4 @@ class FixedWorkflowDependabotTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main(verbosity=2)
+

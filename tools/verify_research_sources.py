@@ -261,7 +261,8 @@ def verify(root, manifest):
     # is accepted only when its explicit identity is present and the active
     # checkout exactly matches the declared set; no arbitrary workflow escapes.
     approved_with_clone = approved + ['.github/workflows/authorized-voice-clone-contracts.yml']
-    if additions not in (approved, approved_with_clone):
+    approved_with_nonclone = approved_with_clone + ['.github/workflows/qwen-nonclone-pilot-20261104-v1.yml']
+    if additions not in (approved, approved_with_clone, approved_with_nonclone):
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed additions
     # both bind CURRENT bytes. Historical maintenance receipts are evidence,
@@ -326,3 +327,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
