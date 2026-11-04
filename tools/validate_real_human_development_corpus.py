@@ -227,7 +227,7 @@ def validate(manifest: object, root_fd: int) -> dict:
         recordings.add(recording)
         for field in IDENTITY_FIELDS:
             identifier(row[field], f"{label}.{field}")
-        require(row["consent_scope"] == "product-kws-development",
+        require(row["consent_scope"] == "research-kws-development",
                 f"{label}: development consent declaration required")
         require(row["retention_class"] == "restricted-raw-audio",
                 f"{label}: restricted retention declaration required")
@@ -294,7 +294,6 @@ def validate(manifest: object, root_fd: int) -> dict:
         "anonymization_verified": False,
         "training_authority": False,
         "qualification_authority": False,
-        "shipping_authority": False,
         "publication_authority": False,
     }
 

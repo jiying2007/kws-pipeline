@@ -39,7 +39,7 @@ There is no compatibility integration or implicit public-upload permission.
 ## Manifest contract
 
 The machine-readable structural reference is
-[`commercial/real-human-development-corpus.schema.json`](../commercial/real-human-development-corpus.schema.json).
+[`configs/research/real-human-development-corpus.schema.json`](../configs/research/real-human-development-corpus.schema.json).
 The CLI is authoritative for strict JSON token types and byte/filesystem/event
 checks that JSON Schema alone cannot express. It rejects duplicate object keys,
 nonfinite numbers (including overflow such as `1e999`), booleans or strings used
@@ -76,7 +76,7 @@ Every record requires these fields; only `snr_db` is optional:
   length within the actual recording duration; adjoining events are allowed
 - `capture`: exactly `sample_rate_hz` (integer 8,000–192,000), `channels`
   (integer 1–16), `sample_format` (`pcm_s16le`), matching WAV headers
-- `consent_scope`: exactly `product-kws-development`
+- `consent_scope`: exactly `research-kws-development`; historical `product-kws-development` declarations are **rejected**, not silently converted into research consent. Actual research rights still need independent authorization.
 - `retention_class`: exactly `restricted-raw-audio`
 
 All objects are closed. There is no free-text `notes`, transcript, general
@@ -106,7 +106,7 @@ attestation that can authorize a downstream job.
 `structural_checks_passed` and `audio_bytes_hashes_and_payload_verified` describe
 these checks only. The report explicitly sets `consent_verified`,
 `labels_verified`, `anonymization_verified`, `training_authority`,
-`qualification_authority`, `shipping_authority`, and `publication_authority`
+`qualification_authority` and `publication_authority`
 to `false`.
 
 Human review and independent records must establish consent, permitted uses,
@@ -114,7 +114,7 @@ actual speaker identity and independence, correct wake/negative labels, lawful
 retention, and anonymization. A declaration does not prove any of those facts.
 Even aggregate statistics can be sensitive for a small group. Review before
 sharing the report; keep audio and manifests restricted. This tool grants no
-training, qualification, shipping, or publication permission. It is not a
+training, independent evaluation or publication permission. It is not a
 sandbox against a privileged or concurrently malicious local filesystem owner.
 
 ## Tests and design provenance
@@ -134,7 +134,7 @@ Design source: branch `feat/restricted-development-dataset-iteration-v1`, commit
 `064493c5bd71c4de40aa9d6569254724ee1ada46` in `jiying2007/kws-pipeline`.
 Reviewed source-file SHA256 values:
 
-- `commercial/real-human-development-corpus.schema.json`:
+- Historical retired schema path `commercial/real-human-development-corpus.schema.json` (available at original Git commit, **not** an active research schema):
   `b90a2b724b044c95633f675f76360a55c8c2978bbb9af28362fe74b363c9a1ad`
 - `tools/validate_real_human_development_corpus.py`:
   `03bd5f4d0f52d34ce8e95b068616948a4f0813f3ee7d3872dd05b0e97ae85698`
