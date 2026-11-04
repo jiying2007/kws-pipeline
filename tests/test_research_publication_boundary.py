@@ -5,13 +5,88 @@ Python 3.8+, no network, training, TTS/ASR, or audio side effects.
 The historical publication commands remain available in Git history only.
 """
 from pathlib import Path
+import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
 
 
+
+def require_no_live_release_authority(source: str, path: str) -> None:
+    """Active YAML must not publish or download Release as scientific authority.
+
+    Keep this source-only: comments and historical docs are not executable.
+    This does not disable any C/ASR/TTS/model quality regression gate.
+    """
+    header = source.split("\njobs:\n", 1)[0]
+    if re.search(r"(?m)^  release:\s*$", header):
+        raise AssertionError(path + ": release publication trigger is forbidden")
+    if re.search(r"(?m)^  push:\s*$", header) and re.search(
+            r"(?m)^    tags:\s*$", header):
+        raise AssertionError(path + ": tag-push publication trigger is forbidden")
+    if re.search(r"(?m)^\s*workflows:\s*\[\s*['\"]?Release\b", header):
+        raise AssertionError(path + ": release-dependent workflow_run is forbidden")
+    for raw in source.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if re.match(
+                r"^(?:-\s*run:\s*|run:\s*)?gh\s+release\s+"
+                r"(?:create|upload|download|edit|delete|view|publish)\b",
+                line):
+            raise AssertionError(path + ": gh release command is forbidden")
+        if re.match(
+                r"^(?:-\s*run:\s*|run:\s*)?gh\s+api\s+.*?/releases(?:/|\b)",
+                line):
+            raise AssertionError(path + ": GitHub Release API use is forbidden")
+        if re.match(
+                r"^(?:-\s*run:\s*|run:\s*)?gh\s+api\s+.*?\breleases\b",
+                line):
+            raise AssertionError(path + ": GitHub Release API use is forbidden")
+        if re.search(
+                r"^\s*(?:-\s*)?uses:\s*(?:softprops/action-gh-release|"
+                r"actions/create-release|actions/upload-release-asset)(?:@|\b)",
+                line):
+            raise AssertionError(path + ": publisher action is forbidden")
+
+
 class ResearchPublicationBoundaryTests(unittest.TestCase):
+    def test_active_workflow_tree_has_no_release_execution_authority(self):
+        workflows = sorted(WORKFLOWS.glob("*.yml"))
+        self.assertGreaterEqual(len(workflows), 20)
+        for path in workflows:
+            with self.subTest(path=path.name):
+                require_no_live_release_authority(
+                    path.read_text(encoding="utf-8"), str(path)
+                )
+
+    def test_release_authority_counterexamples_are_rejected(self):
+        bad = (
+            "name: old\non:\n  release:\n    types: [published]\njobs:\n",
+            "name: old\non:\n  push:\n    tags:\n      - v*\njobs:\n",
+            "name: old\non:\n  workflow_run:\n    workflows: [Release]\njobs:\n",
+            "on:\n  workflow_dispatch:\njobs:\n  test:\n    steps:\n"
+            "      - run: gh release create v1.0.0 build/model.kwm\n",
+            "on:\n  workflow_dispatch:\njobs:\n  test:\n    steps:\n"
+            "      - run: gh release download v1.0.0\n",
+            "on:\n  workflow_dispatch:\njobs:\n  test:\n    steps:\n"
+            "      - uses: softprops/action-gh-release@v2\n",
+            "on:\n  workflow_dispatch:\njobs:\n  test:\n    steps:\n"
+            "      - run: gh api repos/owner/repo/releases/tags/v1\n",
+        )
+        for source in bad:
+            with self.subTest(source=source[:45]):
+                with self.assertRaises(AssertionError):
+                    require_no_live_release_authority(source, "fixture")
+        # A historical mention in a comment is not a live shell command.
+        require_no_live_release_authority(
+            "name: review\non:\n  pull_request:\njobs:\n"
+            "  source:\n    steps:\n      - run: echo research-only\n"
+            "      # historical gh release create has been retired\n",
+            "fixture-clean",
+        )
+
     def test_legacy_push_publication_workflows_are_retired(self):
         for relative in (
             "release.yml",
