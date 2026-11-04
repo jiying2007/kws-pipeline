@@ -23,9 +23,10 @@ Current archive delivery: [complete public archive, index and verified restorati
 > product-evidence items are deliberately **not executable in this repository**:
 > real human speech through the final microphone/enclosure/AFE, and physical
 > target-board performance/soak. They need hardware and human subjects. The
-> workflows that would consume them (`real-human-qualification.yml`,
-> `target-dut-qualification.yml`) are `workflow_dispatch`-only and need a
-> self-hosted runner, so they never fire on `push` or in a fork.
+> historical release-coupled workflow entrypoints (`real-human-qualification.yml`
+> and `target-dut-qualification.yml`) have been retired. Scientific corpus,
+> AFE and board scoring tools remain available for independently authorized
+> offline measurements on controlled systems, without publication or tags.
 > `configs/shipping.xiaowo.json` keeps `shipping_approved=false` until both
 > exist. See [Validation boundary](#validation-boundary).
 
@@ -331,7 +332,7 @@ The shipping gate requires model ABI v2, keyword-pack ABI v3, frontend-spec v2, 
 
 CI proves software contracts and deterministic/synthetic regressions: GCC/Clang, CTest, static analysis, coverage, ASan/UBSan, libFuzzer, a Cortex-A32 cross-build **whose CTest suite is actually executed under `qemu-arm-static`** alongside a hosted-vs-Cortex-A32 numerical parity gate on the int8 kernel, frontend/decoder contracts, corpus identity, self-training, robustness/FAR regression, runtime-soak/target-evidence schema validation, SDK reproducibility, model supply-chain integrity and a model-release contract pin.
 
-It does **not** claim final commercial acoustic or physical-board qualification. After the non-real-data engineering closure, the only product-evidence phase intentionally left is: (1) real Mandarin through the final microphones/enclosure/AFE, then (2) physical target-board performance/soak and final tuple approval. Neither phase can run here: both need hardware, human subjects and a self-hosted runner, which is why `real-human-qualification.yml` and `target-dut-qualification.yml` are `workflow_dispatch`-only.
+It does **not** claim final commercial acoustic or physical-board qualification. After the non-real-data engineering closure, the only product-evidence phase intentionally left is: (1) real Mandarin through the final microphones/enclosure/AFE, then (2) physical target-board performance/soak and final tuple approval. Neither real-human nor physical-board evidence can be inferred from source CI. The old release-coupled `real-human-qualification.yml` and `target-dut-qualification.yml` entrypoints have been retired; independent offline scorers remain, requiring actual controlled inputs and evidence.
 
 See `docs/README.md`, `docs/CUSTOMIZATION.md`, `docs/RELEASE_QUALIFICATION.md`, `docs/TARGET_EVIDENCE.md`, `docs/CORPUS_IDENTITY.md`, `docs/AUDIO_DISCONTINUITY.md` and Issue #2.
 
