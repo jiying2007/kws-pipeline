@@ -373,7 +373,9 @@ def main() -> int:
             "governance/main-ruleset-target.json",
             "kws-main-terminal",
             "403 Resource not accessible by integration",
-            "deployment/commercial-candidate",
+            "former `deployment/commercial-candidate` branch",
+            "not product publication",
+            "NOT_RUN/FAIL",
         ),
     )
     cleanup_workflow = (ROOT / ".github" / "workflows" / "repository-cleanup.yml").read_text(

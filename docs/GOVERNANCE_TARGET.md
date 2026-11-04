@@ -34,7 +34,7 @@ If the live ruleset already exists, audit/update that rule instead of creating
 another policy with the same purpose. Use the narrowest repository-rules
 administration credential available and never commit an administration token.
 
-Before creating `deployment/commercial-candidate`, independently re-read live GitHub state and verify the enforcing ruleset targets `main` and contains at least the rules above. The deployment workflow separately requires the source SHA to equal current `main` and `main` to report `protected=true`; publication remains fail-closed otherwise.
+For any research change, verify the live ruleset still protects `main` and that exact-head source, contract, compiler, sanitizer, and ARM checks are complete before a protected pull-request merge. The former `deployment/commercial-candidate` branch and deployment publication workflow are retired historical records, **not** branches or workflows to create or execute. See [research-only execution](RESEARCH_ONLY_EXECUTION.md).
 
 The currently connected GitHub App may still be unable to perform direct
 branch-protection administration; that endpoint can return
@@ -42,8 +42,9 @@ branch-protection administration; that endpoint can return
 not mean the repository ruleset is absent and is never permission to bypass the
 platform gate.
 
-Platform governance is currently enforced. Repository governance being complete
-does **not** make the product shipping-qualified: after an immutable deployment
-candidate exists, the remaining product evidence boundary is still real
-Mandarin through the final microphone/enclosure/AFE chain and physical
-target-board qualification.
+Repository governance protects scientific source integrity, not product publication.
+It does not establish real-speaker FRR/FAR, final microphone/enclosure/AFE
+performance, or physical SSC305 CPU/RSS/latency/soak evidence. Those research
+measurements require independent recorded inputs and truthful NOT_RUN/FAIL
+states when evidence is absent. Neither a GitHub Release nor a commercial
+candidate is required to carry out reproducible technical experiments.
