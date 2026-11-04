@@ -15302,9 +15302,9 @@
     {
       "path": ".github/workflows/frozen-far-source-replay.yml",
       "mode": "100644",
-      "bytes": 20470,
-      "sha256": "bca1406b1c57a0fac40331a5c3535316129e6fe958cc8e03f6604a5429fae839",
-      "git_blob_sha1": "958233cd273564e22928acf6107381320c746776"
+      "bytes": 21076,
+      "sha256": "e009ae47e8778e94bfb2a52ea8fbf432823174fb8f3419642c877d0758d55175",
+      "git_blob_sha1": "e443f402921d36d5a8eaa2e1c92e2ec5d84c726a"
     },
     {
       "path": ".github/workflows/github-hosted-resource-probe.yml",
@@ -44087,6 +44087,32 @@
             "bytes": 29505,
             "sha256": "9bda6326913fa7f6a5934dba5f85e81c60541d299635dbe652a9f65bb92a6597",
             "git_blob_sha1": "ce2711b74d126a8c7243598b245ef8bf0da4e6e7"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "research-frozen-far-registry-no-release-20261104",
+      "source_commit": "bf864cd0c7efcec0657f5eae05b6f238a45d01e3",
+      "workflow_source_changed": true,
+      "scope": "Replace active frozen FAR historical model GitHub Release API/download with byte-exact Git registry comparator and research baseline; retain pinned failed FAR evidence, all fixed numerical sources, no new model approval.",
+      "files": [
+        {
+          "path": ".github/workflows/frozen-far-source-replay.yml",
+          "before": {
+            "path": ".github/workflows/frozen-far-source-replay.yml",
+            "mode": "100644",
+            "bytes": 20470,
+            "sha256": "bca1406b1c57a0fac40331a5c3535316129e6fe958cc8e03f6604a5429fae839",
+            "git_blob_sha1": "958233cd273564e22928acf6107381320c746776"
+          },
+          "after": {
+            "path": ".github/workflows/frozen-far-source-replay.yml",
+            "mode": "100644",
+            "bytes": 21076,
+            "sha256": "e009ae47e8778e94bfb2a52ea8fbf432823174fb8f3419642c877d0758d55175",
+            "git_blob_sha1": "e443f402921d36d5a8eaa2e1c92e2ec5d84c726a"
           }
         }
       ]
