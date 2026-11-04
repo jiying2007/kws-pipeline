@@ -61,7 +61,7 @@ class ParallelPlanTests(unittest.TestCase):
                 raw = (ROOT / current).read_bytes()
                 import hashlib
                 blob_sha = hashlib.sha1(
-                    ('blob %d\\0' % len(raw)).encode('ascii') + raw
+                    ('blob %d\0' % len(raw)).encode('ascii') + raw
                 ).hexdigest()
                 self.assertEqual(blob_sha, expected_blob, current)
             else:
