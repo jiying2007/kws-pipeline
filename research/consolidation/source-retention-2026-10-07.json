@@ -15391,13 +15391,6 @@
       "git_blob_sha1": "6a3c727b89288d5e537774aa713722a0fd194267"
     },
     {
-      "path": ".github/workflows/real-human-qualification.yml",
-      "mode": "100644",
-      "bytes": 14973,
-      "sha256": "82a1b7de2b9837240f0564eb22274a7e8cdc9e6ffdcd123724c15d3489d5f33d",
-      "git_blob_sha1": "409fa360592fe7e6d6865287063f80b6bbf449f7"
-    },
-    {
       "path": ".github/workflows/repository-cleanup.yml",
       "mode": "100644",
       "bytes": 18351,
@@ -15571,13 +15564,6 @@
       "bytes": 6787,
       "sha256": "5364e25d901de2123be7eb84750c89f5d5b14070420faff564df4e5415270d2e",
       "git_blob_sha1": "e0ed70d323ff675b44fcef681590631e3b28806c"
-    },
-    {
-      "path": ".github/workflows/target-dut-qualification.yml",
-      "mode": "100644",
-      "bytes": 11666,
-      "sha256": "c4ce46581d6681856ce72e3b7bf629db9ed9a6af65f66accca7bc1890f58855b",
-      "git_blob_sha1": "bbf3b8ad4c349873e3e623aca41d5244dfc0e696"
     },
     {
       "path": ".github/workflows/training-audit-closure.yml",
@@ -43977,6 +43963,36 @@
             "bytes": 13177,
             "sha256": "ba0eaa7ceeac336a1edb68344ae031cb164612dce6d94a8587f1ef964e59bc91",
             "git_blob_sha1": "b551452f1baa827ef3a4947f0f84e0446d2b5dcd"
+          },
+          "after": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-04",
+      "operation_id": "research-only-retire-human-dut-release-20261104",
+      "source_commit": "ccb55831c606e9591877e13fbdc56b486a6f40fe",
+      "scope": "Remove release/tag-coupled self-hosted publishing Actions; preserve private human corpus sealing, AFE replay and FRR/FAR scoring, physical DUT CPU/RSS/power/soak evaluation, source rights, and negative tests. All frozen archival files and provenance are unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/real-human-qualification.yml",
+          "before": {
+            "path": ".github/workflows/real-human-qualification.yml",
+            "mode": "100644",
+            "bytes": 14973,
+            "sha256": "82a1b7de2b9837240f0564eb22274a7e8cdc9e6ffdcd123724c15d3489d5f33d",
+            "git_blob_sha1": "409fa360592fe7e6d6865287063f80b6bbf449f7"
+          },
+          "after": null
+        },
+        {
+          "path": ".github/workflows/target-dut-qualification.yml",
+          "before": {
+            "path": ".github/workflows/target-dut-qualification.yml",
+            "mode": "100644",
+            "bytes": 11666,
+            "sha256": "c4ce46581d6681856ce72e3b7bf629db9ed9a6af65f66accca7bc1890f58855b",
+            "git_blob_sha1": "bbf3b8ad4c349873e3e623aca41d5244dfc0e696"
           },
           "after": null
         }
