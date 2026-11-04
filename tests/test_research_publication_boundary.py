@@ -25,6 +25,12 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
             with self.subTest(relative=relative):
                 self.assertFalse((WORKFLOWS / relative).exists())
 
+    def test_orphaned_historical_release_tag_helper_stays_retired(self):
+        self.assertFalse((ROOT / "tools/verify_release_tag.py").exists())
+        docs = (ROOT / "docs/REPOSITORY_GOVERNANCE.md").read_text(encoding="utf-8")
+        self.assertIn("Historical release records (not executable research)", docs)
+        self.assertIn("now-unreferenced `tools/verify_release_tag.py`", docs)
+
     def test_scientific_ci_remains_active(self):
         ci = (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
         for required in (

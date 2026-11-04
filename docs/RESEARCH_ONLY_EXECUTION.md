@@ -109,3 +109,10 @@ comparator and `configs/research-baseline.xiaowo.json`, not a product
 Release or the legacy shipping configuration. See
 [research FAR regression](RESEARCH_FAR_REGRESSION.md). Historical false accepts
 remain failed evidence, not a product suitability claim.
+
+## Retired orphaned release-tag helper
+
+`tools/verify_release_tag.py` was not invoked by current research Actions or
+model/data experiments. The old tagged commercial bootstrap helper is retired
+from the active tree; its Git source remains historical and may be inspected,
+but does not determine current research admission or model provenance.

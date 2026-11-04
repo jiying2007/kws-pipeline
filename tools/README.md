@@ -159,7 +159,6 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`verify_model_promotion_bundle.py`](verify_model_promotion_bundle.py)
 - [`verify_model_registry.py`](verify_model_registry.py)
 - [`verify_model_release.py`](verify_model_release.py)
-- [`verify_release_tag.py`](verify_release_tag.py) — Read-only exact commit binding for lightweight or annotated release tags; bootstrap absence is explicit.
 
 ## Repository verification and maintenance
 
