@@ -21,6 +21,9 @@ on:
       - 'training/render_domains.py'
       - 'training/synthetic_audio.py'
       - 'configs/nightly.xiaowo-frozen-model.json'
+      - 'configs/research-baseline.xiaowo.json'
+      - 'models/registry/model-749187ec1d66/**'
+      - 'tools/verify_model_registry.py'
       - 'CMakeLists.txt'
 
 permissions:
@@ -29,7 +32,8 @@ permissions:
 
 env:
   KWS_FROZEN_FAR_REPLAY_SPEC: .github/triggers/frozen-far-source-replay.json
-  MODEL_RELEASE_TAG: model-749187ec1d66
+  MODEL_REGISTRY_DIR: models/registry/model-749187ec1d66
+  RESEARCH_BASELINE: configs/research-baseline.xiaowo.json
   EXPECTED_TRAINED_HEAD_SHA: 749187ec1d6662658f06aa9c76d47fde835968db
   NIGHTLY_CONFIG: configs/nightly.xiaowo-frozen-model.json
 
@@ -256,57 +260,43 @@ jobs:
           cmake --build build --parallel --target             kws_wav             kws_raw_stream             kws_posterior_dump             kws_decoder_replay             kws_decoder_path_replay             kws_trace_slice             kws_decoder_tests             kws_decoder_retention_tests
           ctest --test-dir build --output-on-failure             -R '^kws_decoder_(tests|retention_tests)$'
 
-      - name: Download exact immutable promoted model
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Verify exact immutable Git-registered research comparator
         shell: bash
         run: |
           set -euo pipefail
-          gh release view "$MODEL_RELEASE_TAG"             --repo "$GITHUB_REPOSITORY"             --json tagName,targetCommitish,isDraft,isPrerelease             > build/model-release.json
-          python3 - <<'PY'
-          import json
-          import os
-          import pathlib
-
-          spec=json.loads(
-              pathlib.Path(os.environ["KWS_FROZEN_FAR_REPLAY_SPEC"])
-              .read_text(encoding="utf-8")
-          )
-          release=json.loads(
-              pathlib.Path("build/model-release.json").read_text(encoding="utf-8")
-          )
-          if release.get("tagName") != os.environ["MODEL_RELEASE_TAG"]:
-              raise SystemExit("model release tag mismatch")
-          if release.get("targetCommitish") != os.environ["EXPECTED_TRAINED_HEAD_SHA"]:
-              raise SystemExit("model release target mismatch")
-          if bool(release.get("isDraft")) or bool(release.get("isPrerelease")):
-              raise SystemExit("model release must be final")
-          PY
-          mkdir -p build/frozen-model
-          gh release download "$MODEL_RELEASE_TAG"             --repo "$GITHUB_REPOSITORY"             --dir build/frozen-model
-          (
-            cd build/frozen-model
-            sha256sum -c MODEL_SHA256SUMS
-          )
+          python3 -B tools/verify_model_registry.py --registry-dir "$MODEL_REGISTRY_DIR"
           python3 - <<'PY'
           import hashlib
           import json
           import os
-          import pathlib
+          from pathlib import Path
 
-          def sha(path):
-              return hashlib.sha256(path.read_bytes()).hexdigest()
-
-          spec=json.loads(
-              pathlib.Path(os.environ["KWS_FROZEN_FAR_REPLAY_SPEC"])
-              .read_text(encoding="utf-8")
-          )
-          root=pathlib.Path("build/frozen-model")
-          if sha(root/"xiaowo-model.kwm") != spec["expected_model_sha256"]:
-              raise SystemExit("frozen model SHA differs from replay request")
-          if sha(root/"xiaowo-keywords.kwk") != spec["expected_keyword_pack_sha256"]:
-              raise SystemExit("frozen keyword pack SHA differs from replay request")
+          root = Path(os.environ["MODEL_REGISTRY_DIR"])
+          registry = json.loads((root / "registry.json").read_text(encoding="utf-8"))
+          baseline = json.loads(Path(os.environ["RESEARCH_BASELINE"]).read_text(encoding="utf-8"))
+          spec = json.loads(Path(os.environ["KWS_FROZEN_FAR_REPLAY_SPEC"]).read_text(encoding="utf-8"))
+          require = lambda ok, label: ok or (_ for _ in ()).throw(SystemExit(label))
+          digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
+          require(baseline["schema"] == "kws-research-model-baseline-v1", "research comparator schema drift")
+          require(baseline["policy"] == "frozen-historical-research-comparator", "research baseline policy drift")
+          require(root.name == baseline["model_tag"], "model registry identity drift")
+          require(registry["training"]["head_sha"] == baseline["training_source_sha"], "training source drift")
+          require(baseline["training_source_sha"] == os.environ["EXPECTED_TRAINED_HEAD_SHA"], "replay training-source drift")
+          require(baseline["dataset_status"] == "exposed-historical-synthetic-diagnostic", "historical evaluation status drift")
+          for key in ("actual_human_wav_evaluated", "independent_longstream_far_measured", "ssc305_measured"):
+              require(baseline[key] is False, "historical comparator acquired unmeasured authority: " + key)
+          for filename, research_key, request_key in (
+                  ("xiaowo-model.kwm", "model_sha256", "expected_model_sha256"),
+                  ("xiaowo-keywords.kwk", "keyword_pack_sha256", "expected_keyword_pack_sha256")):
+              actual = digest(root / filename)
+              require(actual == baseline[research_key], "research asset SHA drift: " + filename)
+              require(actual == spec[request_key], "frozen replay request SHA drift: " + filename)
           PY
+          mkdir -p build/frozen-model
+          cp -- "$MODEL_REGISTRY_DIR"/* build/frozen-model/
+          (cd build/frozen-model && sha256sum -c MODEL_SHA256SUMS)
+          # The historical FAR source/replay may still FAIL its acoustic gates;
+          # registry identity is not real-human or target-board qualification.
 
       - name: Render exact nightly source corpus
         shell: bash
@@ -450,7 +440,7 @@ jobs:
           name: frozen-far-source-replay-${{ github.event.pull_request.head.sha }}
           path: |
             .github/triggers/frozen-far-source-replay.json
-            build/model-release.json
+            build/frozen-model/registry.json
             build/historical-artifact-metadata.json
             build/historical-source-binding.json
             build/nightly-render-summary.log
