@@ -1,6 +1,6 @@
-# Real-human final-AFE qualification
+# Historical real-human final-AFE qualification procedure (not active research workflow)
 
-This document defines Phase A of product qualification for the frozen commercial candidate `deployment-c20f3eb88e43`. It does **not** authorize model retraining and it does **not** make the product shipping-approved. Phase B physical target-board evidence remains mandatory after Phase A passes.
+> **Historical release procedure.** The previous `real-human-qualification.yml` workflow has been retired from active GitHub Actions. Its legacy source/approval instructions below are retained for provenance only, **not for current execution**. Current independent corpus, AFE and FAR/FRR scorers remain available offline, subject to actual source permissions and private evidence. This document neither authorizes model retraining nor claims acoustic/board measurements.
 
 ## Frozen tuple
 
@@ -221,11 +221,11 @@ That marker contains hashes/identity only, never audio. Once the marker exists, 
 
 If the final AFE executable/config changes after the marker is created, the run fails and the corpus remains consumed.
 
-## Running the workflow
+## Historical workflow execution record (not an active instruction)
 
 The workflow must be dispatched from the exact current protected `main`; `governance/require_current_main.sh` rejects branch refs, stale main SHAs or weakened live rulesets before any held-out corpus is consumed.
 
-After the controlled self-hosted runner and private files are ready, dispatch `.github/workflows/real-human-qualification.yml` with only:
+The retired `.github/workflows/real-human-qualification.yml` previously accepted only these historical inputs (do not dispatch; the workflow no longer exists):
 
 - `deployment_tag=deployment-c20f3eb88e43`;
 - `qualification_id`, for example `q-2026-09-a001`;
