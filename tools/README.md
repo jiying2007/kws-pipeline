@@ -113,6 +113,7 @@ the separate model-smoke validation status.
 - [`run_zipformer_system.py`](run_zipformer_system.py) — Execute a pinned native Zipformer system on verified shared PCM, preserving per-clip claims and results.
 - [`run_d1_zipformer_system.py`](run_d1_zipformer_system.py) — Bind native D1 observations to a real completed preparation, retain every raw event, and separate known-label train/development diagnostics.
 - [`run_d1_zipformer_extension.py`](run_d1_zipformer_extension.py) — Account for all 256 planned cells, reuse the original 64 native observations, and call the fixed system once for each additional observable cell.
+- [`run_d1_zipformer_continuation.py`](run_d1_zipformer_continuation.py) — Continue only never-claimed native inputs after an immutable timeout, preserve consumed unknown predictions, and bind one separately budgeted attempt.
 - [`research_d1_native_coverage.py`](research_d1_native_coverage.py) — Verify the complete planned roster against observed rows, explicit returned exclusions, and consumed unknown calls without inventing audio or labels.
 - [`research_d1_previous_native.py`](research_d1_previous_native.py) — Read original native and queue evidence in a fresh isolated process with its exact frozen source hashes.
 - [Native accounted D1 guide](../docs/research-d1-zipformer-accounted-v3.md) — Authenticate partial observation provenance and report returned audio separately from consumed unknown calls.

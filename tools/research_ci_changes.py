@@ -21,6 +21,7 @@ EXACT = frozenset({
     'tools/run_d1_zipformer_system.py', 'tests/test_d1_zipformer_system.py',
     'docs/research-d1-zipformer-native.md',
     'tools/run_d1_zipformer_extension.py', 'tests/test_d1_zipformer_extension.py',
+    'tools/run_d1_zipformer_continuation.py',
     'tools/research_d1_native_coverage.py', 'tests/test_d1_native_coverage.py',
     'tools/research_d1_previous_native.py', 'docs/research-d1-zipformer-extension-v2.md',
     'docs/research-d1-zipformer-accounted-v3.md', 'docs/research-d1-partial-observation-v3.md',

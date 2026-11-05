@@ -4,6 +4,7 @@ from collections import Counter
 import copy
 import inspect
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -15,6 +16,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "tools"), str(ROOT / "tests")]
 import run_d1_zipformer_extension as target
+import run_d1_zipformer_continuation as continuation
 import test_research_d1 as fixture
 import test_d1_zipformer_system as old_fixture
 from research_d1_recipe import project_rows
@@ -186,6 +188,185 @@ class NativeExtensionContracts(unittest.TestCase):
         result = subprocess.run([sys.executable, "-I", "-S", "-B", str(ROOT / target.SOURCE_PATH), "--help"],
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
+
+
+class NativeContinuationContracts(unittest.TestCase):
+    """Fictional receipts exercise accounting; no fixture is a native model run."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.rows = full()[:-1]  # One separate generation absence, 255 legal inputs.
+        self.old_rows = old_fixture.projected()
+        self.new_rows = target.join_unchanged(self.old_rows, self.rows)
+        self.original = self.root / "original-output"
+        self.original.mkdir()
+        self.values = saved_native(self.original / "new", self.new_rows[:128], "partial-identity")
+        unknown = self.new_rows[128]
+        target.previous.native.write_new_json(self.original / "new/claims" / (unknown["source_id"] + ".json"),
+            {"schema": 1, "attempt": 1, "identity_sha256": "partial-identity",
+             "input": target.previous.input_binding(unknown), "fixture_not_model_call": True})
+        self.pending = [row["source_id"] for row in self.new_rows[129:]]
+
+    def job(self):
+        evidence = self.root / "fictional-evidence.json"
+        if not evidence.exists():
+            evidence.write_bytes(b'{"fixture":true,"no_model_calls":true}\n')
+        return {"schema": continuation.SCHEMA,
+            "failed_native": {"queue_root": str(self.root / "original-queue"), "job_id": "original",
+                              "receipt_sha256": "a" * 64},
+            "partial_inventory": {"path": str(evidence), "sha256": target.previous.training.sha_file(evidence)},
+            "partial_accounting": {"path": str(evidence), "sha256": target.previous.training.sha_file(evidence)},
+            "pending_source_ids": self.pending, "source_files": continuation.source_records(),
+            "timeout_seconds": 180, "maximum_attempts": 1}
+
+    def partition(self, pending=None):
+        return continuation.partition_partial(self.original, self.new_rows, "partial-identity",
+            self.pending if pending is None else pending)
+
+    def test_only_exact_never_claimed_prefix_complement_is_eligible(self):
+        proof = self.partition()
+        self.assertEqual((len(proof["returned_rows"]), len(proof["unknown_rows"]), len(proof["pending_rows"])), (128, 1, 62))
+        self.assertEqual(proof["observations"], self.values)
+        for replacement in (self.new_rows[0]["source_id"], self.new_rows[128]["source_id"]):
+            with self.subTest(replacement=replacement), self.assertRaisesRegex(ValueError, "EXACT_UNCLAIMED_COMPLEMENT"):
+                self.partition([replacement, *self.pending[1:]])
+        with self.assertRaisesRegex(ValueError, "EXACT_UNCLAIMED_COMPLEMENT"):
+            self.partition(self.pending[::-1])
+
+    def test_unknown_claim_cannot_be_deleted_to_reclassify_pending(self):
+        claim = self.original / "new/claims" / (self.new_rows[128]["source_id"] + ".json")
+        claim.unlink()
+        with self.assertRaisesRegex(ValueError, "129_CLAIMS_128_RETURNS_PREFIX"):
+            self.partition()
+
+    def test_partial_native_or_observation_tampering_is_not_repairable(self):
+        path = self.original / "new/native" / (self.new_rows[0]["source_id"] + ".json")
+        original = path.read_bytes()
+        value = json.loads(original); value["audio_samples"] += 1
+        path.write_bytes(target.io.canonical(value))
+        with self.assertRaises(ValueError):
+            self.partition()
+        path.write_bytes(original)
+        observations = self.original / "new/observations.jsonl"
+        observations.write_bytes(b"".join(target.io.canonical(value) for value in reversed(self.values)))
+        with self.assertRaisesRegex(ValueError, "ORIGINAL_OBSERVATIONS_CHANGED"):
+            self.partition()
+
+    def test_closed_partial_inventory_rejects_extra_missing_and_changed_bytes(self):
+        output = self.root / "small-partial"; output.mkdir()
+        (output / "original.json").write_bytes(b"original\n")
+        terminal = self.root / "terminal.json"; terminal.write_bytes(b"fictional timed out\n")
+        inventory = {"schema": "d1-native-partial-output-inventory-v1", "root": str(output),
+            "terminal": continuation.pin(terminal), "files": {"original.json": target.io.file_record(output / "original.json")},
+            "file_count": 1, "total_bytes": 9, "ml_imports": 0, "new_model_calls": 0,
+            "verification_scope": "byte_inventory_and_roster_only"}
+        path = self.root / "inventory.json"; path.write_bytes(target.io.canonical(inventory))
+        continuation.verify_inventory(path, output, terminal)
+        (output / "extra.json").write_bytes(b"unclaimed")
+        with self.assertRaisesRegex(ValueError, "PARTIAL_EXACT_ROSTER"):
+            continuation.verify_inventory(path, output, terminal)
+        (output / "extra.json").unlink(); (output / "original.json").write_bytes(b"changed!\n")
+        with self.assertRaisesRegex(ValueError, "PARTIAL_BYTES_CHANGED"):
+            continuation.verify_inventory(path, output, terminal)
+        (output / "original.json").unlink()
+        with self.assertRaisesRegex(ValueError, "PARTIAL_EXACT_ROSTER"):
+            continuation.verify_inventory(path, output, terminal)
+
+    def test_unknown_preserves_labels_without_events_and_never_enters_counts(self):
+        proof = self.partition()
+        unknown = proof["unknown_rows"][0]
+        # The observed absence is inference-only, never an unknown/negative label.
+        unknown.update(label_status="machine_candidate", quarantined=False, split="development",
+            keyword_targets=[0, 1], keyword_mask=[True, True], keyword_weight=[.5, .5])
+        old_values = saved_native(self.original / "reused/original-output", self.old_rows, "old-identity")
+        proof.update(output=self.original, rows=self.rows, terminal={"receipt_sha256": "a" * 64},
+            identity_sha256="partial-identity", old={"observations": old_values, "identity_sha256": "old-identity"})
+        output = self.root / "continuation-output"
+        new_values = saved_native(output / "new", proof["pending_rows"], "continuation-identity")
+        unavailable = continuation.unknown_predictions(proof)
+        self.assertEqual(len(unavailable), 1)
+        self.assertNotIn("events", unavailable[0])
+        self.assertEqual(unavailable[0]["original_projected_row"]["keyword_targets"], [0, 1])
+        self.assertEqual(unavailable[0]["label_binding_sha256"], target.previous.row_identity(unknown))
+        merged = continuation.merged_predictions(proof, new_values, output, "continuation-identity")
+        self.assertEqual(len(merged), 254)
+        self.assertNotIn(unknown["source_id"], {row["source_id"] for row in merged})
+        counts = continuation.counts(proof, merged)
+        for keyword in ("1", "2"):
+            self.assertEqual(counts["label_eligible_keyword_clips"]["development"][keyword],
+                counts["prediction_available"]["development"]["keywords"][keyword]["known_machine_weak_clips"] + 1)
+        reused = {row["source_id"]: row["observation"] for row in merged if row["origin"] == "original64"}
+        self.assertEqual(reused, {row["source_id"]: row for row in old_values})
+
+    def test_declaration_fixed_source_180_seconds_and_one_attempt(self):
+        job = self.job()
+        self.assertEqual(continuation.validate_job(job), job)
+        for key, changed in (("timeout_seconds", 181), ("timeout_seconds", 180.0),
+                             ("maximum_attempts", 2), ("source_files", {}),
+                             ("pending_source_ids", self.pending[:-1] + [self.pending[0]])):
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                continuation.validate_job({**job, key: changed})
+        self.assertEqual({k: v for k, v in continuation.source_records().items() if k != continuation.SOURCE_PATH},
+                         target.source_records())
+
+    def test_real_queue_producer_binding_and_cross_queue_single_registration(self):
+        job = self.job()
+        recipe_path = self.root / "continuation-recipe.json"
+        recipe_path.write_bytes(target.io.canonical(job))
+        probe = self.root / "stdlib-probe.py"
+        probe.write_text("\n".join((
+            "from pathlib import Path; import os,sys",
+            "sys.path.insert(0, " + repr(str(ROOT / "tools")) + ")",
+            "import run_d1_zipformer_continuation as c",
+            "recipe=Path(os.environ['KWS_RESEARCH_RECIPE']); output=Path(os.environ['KWS_RESEARCH_OUTPUT_DIR'])",
+            "job=c.validate_job(c.read(recipe))",
+            "with c.previous.heavy_model_slot(Path(sys.argv[1])) as lease:",
+            "    queue=c.current_queue_binding(recipe,output,job,lease)",
+            "    c.register(job,queue,recipe,output)",
+            "    for name in c.QUEUE_OUTPUTS: c.io.write_json(output/name, {'fictional_probe_only':True,'model_calls':0})",
+        )) + "\n")
+        lock = self.root / "heavy.lock"
+
+        def execute(name):
+            definition = {"job_id": "probe", "recipe": str(recipe_path), "recipe_sha256": target.previous.training.sha_file(recipe_path),
+                "argv": [sys.executable, "-I", "-S", "-B", str(probe), str(lock)], "cwd": str(self.root),
+                "depends_on": [], "timeout_minutes": 3, "outputs": list(continuation.QUEUE_OUTPUTS)}
+            request = self.root / (name + ".json")
+            request.write_bytes(target.io.canonical({"schema": target.io.SCHEMA, "queue_id": name,
+                "global_budget_minutes": 3, "jobs": [definition]}))
+            root = self.root / name
+            target.io.create(root, request, ROOT / "configs/research/active-plan-20261105.json", lock)
+            result = subprocess.run([sys.executable, "-I", "-S", "-B", str(ROOT / "tools/research_queue.py"),
+                "run", "--root", str(root)], capture_output=True, text=True, timeout=10)
+            return result, target.io.inspect(root)
+
+        first, status = execute("first")
+        self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+        self.assertEqual(status["jobs"]["probe"]["status"], "completed")
+        registration = continuation.registration_path(job)
+        retained = (registration.read_bytes(), registration.stat().st_ino, registration.stat().st_mtime_ns)
+        second, status = execute("second")
+        self.assertNotEqual(second.returncode, 0)
+        self.assertEqual(status["jobs"]["probe"]["status"], "failed")
+        self.assertIn("ALREADY_REGISTERED_NO_SECOND_ATTEMPT", (self.root / "second/jobs/probe/stderr.log").read_text())
+        self.assertEqual((registration.read_bytes(), registration.stat().st_ino, registration.stat().st_mtime_ns), retained)
+        self.assertFalse(any((self.root / "second/jobs/probe/outputs").iterdir()))
+
+    def test_readonly_import_guard_and_isolated_help(self):
+        guard = continuation.NoML()
+        sys.meta_path.insert(0, guard)
+        try:
+            for name in ("numpy", "torch", "sherpa_onnx"):
+                with self.subTest(name=name), self.assertRaisesRegex(RuntimeError, "READ_ONLY_FORBIDS_ML"):
+                    __import__(name)
+        finally:
+            sys.meta_path.remove(guard)
+        result = subprocess.run([sys.executable, "-I", "-S", "-B", str(ROOT / continuation.SOURCE_PATH), "--help"],
+            capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(any(name in sys.modules for name in target.previous.ML_MODULES))
 
 
 if __name__ == "__main__":
