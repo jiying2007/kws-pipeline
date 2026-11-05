@@ -399,6 +399,28 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
                 self.assertIn("tools/collect_runtime_soak.py", source)
                 self.assertIn("tools/collect_target_evidence.py", source)
 
+    def test_active_performance_guides_are_research_not_shipping_runbooks(self):
+        perf = (ROOT / "docs/PERFORMANCE.md").read_text(encoding="utf-8")
+        strategy = (ROOT / "docs/TESTING_STRATEGY.md").read_text(encoding="utf-8")
+        research = (ROOT / "research/README.md").read_text(encoding="utf-8")
+        integration = (ROOT / "docs/INTEGRATION.md").read_text(encoding="utf-8")
+        self.assertIn("Scope: technical research only", perf)
+        self.assertIn("Independent acoustic evidence", strategy)
+        self.assertIn("neither a shipping registry nor a `shipping_approved`", research)
+        self.assertIn("Preferred research integration path:", integration)
+        self.assertIn("## Research AFE adapter contract", integration)
+        for obsolete in (
+            "## Target-board certification checklist",
+            "shipping_approved=true",
+            "python3 tools/qualification_gate.py",
+            "product-sku-a",
+            "## Product-board evidence assembly",
+        ):
+            with self.subTest(obsolete=obsolete):
+                self.assertNotIn(obsolete, perf)
+        self.assertNotIn("release qualification: artifact", strategy)
+        self.assertNotIn("external shipping evidence:", strategy)
+
     def test_research_document_tracks_later_migration(self):
         doc = (ROOT / "docs/RESEARCH_ONLY_EXECUTION.md").read_text(encoding="utf-8")
         self.assertIn("Retired automatic publication surfaces", doc)
