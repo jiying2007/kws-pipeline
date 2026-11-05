@@ -113,6 +113,39 @@ soundfile；旧 core 环境缺少 soundfile，不能用于真实音频准备。
 环境预检加固覆盖。服务模板经过语法验证，但本次环境的 user systemd
 离线，没有声称已安装永久守护服务。
 
+2026-11-05 14:40 UTC，两条 driver 已在原声明上启动完整余量推进；
+启动时尚余 248 与 1,520 个 D2 请求。启动后的实际完成数必须从各自
+sealed `complete.json` 回读，不能使用声明数量代替。一个 campaign
+执行模型时，另一个与上下文补充队列等待同一锁；运行中任务的耗时
+在完成前标为 unresolved，不记作零。本环境的执行仍依赖会话计算
+资源可用，心跳不代表已经部署外部永久服务。
+
+## 独立上下文补充与超时保留
+
+上下文 v1 是与 D1、D2 cell ID 不相交的 16 条追加计划，覆盖句首、
+句中、句尾与连续呼叫。其原单批 10 分钟任务真实触发 deadline：
+13 个完整原生返回（12 技术完成、1 failed-native）、1 个已认领但
+无完整返回、2 个从未认领。实际记账为 600.218856553 秒，包含终止
+进程的收尾时间；原 `timed_out` 与 `exit_code=-9` 永久保留。
+匿名记录见
+[`context16-timeout-summary.json`](../research/active-d2-20261105/context16-timeout-summary.json)。
+
+独立的只读 partial exporter 先重放原 queue、claim、recipe、stage
+和全部源文件，再只导出具有完整终态的 13 个原 FLOAT WAV。它不会
+改写原结果或补发其未知调用；后续 ASR 是新的观察任务。消费该结果
+时必须先重放 partial proof，再重放弱包，不能把子集封包说成原
+16 条整批完成。见
+[`research-context-partial-observation.md`](research-context-partial-observation.md)。
+
+预检另发现 v1 某些请求含固定 2601 词表外的字。新 v2 显式绑定
+完整 v1 父计划、D2/D1 祖先与固定词表，追加 16 个独立 ID，四类
+上下文各四条，并在任何模型调用前检查请求全文可表示。它采用
+两批各八条、每批 10 分钟、总生成预算 20 分钟。v1 原文本和证据
+不变；v2 中相同措辞也明确标为新版本生成。请求的词表可表示性
+不等于实际发音正确，所有实际原音仍需完整 ASR 观察、OOV 检查
+与全文投影。字符位置和出现次数只用于文本覆盖统计，不能冒充
+声学事件时间。
+
 ## 训练消费与学习性分别验收
 
 [`research-d2-consumption-probe.md`](research-d2-consumption-probe.md) 定义

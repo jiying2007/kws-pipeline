@@ -221,13 +221,18 @@ class SupervisorTests(unittest.TestCase):
         self.assertFalse(self.heartbeat(state)["queue_snapshot"]["actual_total_is_complete"])
 
     def test_global_budget_exhaustion_is_terminal_and_not_reset_by_supervisor(self):
+        # Leave enough time for an optimized child interpreter to start on a
+        # loaded CI host; this case must exercise the running-command deadline,
+        # not the distinct pre-command budget-exhaustion failure path.
+        budget = .05
         root, state = self.init([self.job("long", code="import time;time.sleep(20)", timeout=1),
-                                 self.job("next")], budget=.004)
-        self.assertEqual(self.launch(root, state).wait(timeout=5), 3)
+                                 self.job("next")], budget=budget)
+        self.assertEqual(self.launch(root, state).wait(timeout=10), 3)
         observed = queue.inspect(root)
         receipt = observed["jobs"]["long"]
         self.assertEqual(receipt["status"], "timed_out")
-        self.assertEqual(receipt["allowed_runner_nanoseconds"], queue.minutes_ns(.004))
+        self.assertTrue((root / "jobs/long/command-started.json").is_file())
+        self.assertEqual(receipt["allowed_runner_nanoseconds"], queue.minutes_ns(budget))
         self.assertFalse((root / "jobs/next/claim.json").exists())
         self.assertEqual(self.launch(root, state).wait(timeout=5), 3)
         self.assertEqual(queue.inspect(root), observed)
