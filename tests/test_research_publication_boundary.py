@@ -237,6 +237,24 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
                         "historical target qualification CLI cannot be active Actions",
                     )
 
+    def test_legacy_manifest_and_human_qualification_clis_are_replay_only(self):
+        # Neither historical producer nor old deployment-tagged human scorer
+        # may become an active admission/publication tool.
+        for filename, denial in (
+            ("qualification_manifest.py", "retired qualification manifest CLI:"),
+            ("score_real_human_qualification.py", "retired real-human qualification CLI:"),
+        ):
+            with self.subTest(filename=filename):
+                source = (ROOT / "tools" / filename).read_text(encoding="utf-8")
+                self.assertIn('parser.add_argument("--historical-replay-only"', source)
+                self.assertIn("if not args.historical_replay_only:", source)
+                self.assertIn(denial, source)
+                for workflow in WORKFLOWS.glob("*.yml"):
+                    self.assertNotIn(
+                        "tools/" + filename, workflow.read_text(encoding="utf-8"),
+                        "retired qualification CLI must not be an active Actions path",
+                    )
+
     def test_legacy_push_publication_workflows_are_retired(self):
         for relative in (
             "release.yml",
