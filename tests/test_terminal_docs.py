@@ -239,6 +239,50 @@ def check_current_research_guidance() -> None:
         )
 
 
+TARGET_RESEARCH_REQUIRED = (
+    "Technical research only", "not product Shipping or certification authority",
+    "Hosted fixtures and QEMU cannot substitute for physical measurements",
+    "NOT_RUN", "BLOCKED", "tools/verify_model_registry.py",
+    "tools/collect_runtime_soak.py", "--hours", "--sample-seconds", "--output", "--command",
+    "process-cpu-one-core-v1", "process_cpu_seconds / wall_seconds * 100",
+    "100% means one fully occupied core", "Descendants are outside the sampler's scope",
+    "`audio_seconds` and `cpu_seconds_per_audio_second` remain null",
+    "actual post-AFE WAV", "RSS", "stack_high_water_bytes",
+    "actual instrument/CSV/calibration identity", "Recompute hashes independently at readback",
+    "attestation-verification receipt", "source identity, rights",
+)
+TARGET_RETIRED_COMMANDS = (
+    "python3 tools/qualification_manifest.py",
+    "python3 tools/qualification_gate.py",
+    "python3 tools/collect_target_evidence.py",
+    "--command ./product-kws-soak",
+)
+
+
+def validate_target_research_guidance(text: str) -> None:
+    # Explicit failures also exercise this boundary under -O and -OO.
+    for value in TARGET_RESEARCH_REQUIRED:
+        if value not in text:
+            raise AssertionError("current target research guidance missing: " + value)
+    for command in TARGET_RETIRED_COMMANDS:
+        if command in text:
+            raise AssertionError("retired target command in current guidance: " + command)
+
+
+def check_target_research_guidance() -> None:
+    text = (ROOT / "docs/TARGET_EVIDENCE.md").read_text(encoding="utf-8")
+    validate_target_research_guidance(text)
+    mutations = [text.replace(value, "") for value in TARGET_RESEARCH_REQUIRED]
+    mutations += [text + "\n```bash\n" + command + "\n```\n"
+                  for command in TARGET_RETIRED_COMMANDS]
+    for index, mutated in enumerate(mutations):
+        try:
+            validate_target_research_guidance(mutated)
+        except AssertionError:
+            continue
+        raise AssertionError(f"target guidance regression {index} was accepted")
+
+
 def main() -> int:
     check_current_research_guidance()
     check_target_bundle_docs()
@@ -279,7 +323,7 @@ def main() -> int:
     )
     # Retired qualification formats are still tested in their historical
     # documentation; current landing pages must not be a shipping CLI guide.
-    for relative in ("docs/TARGET_EVIDENCE.md", "docs/RELEASE_QUALIFICATION.md"):
+    for relative in ("docs/RELEASE_QUALIFICATION.md",):
         path = ROOT / relative
         require_all(path.read_text(encoding="utf-8"), path, required_evidence_cli)
 
@@ -306,7 +350,7 @@ def main() -> int:
     # The archived measurement protocol still requires exact raw external
     # attestation; current research guides describe the independent collector
     # without prescribing retired product-approval CLI arguments.
-    for relative in ("docs/TARGET_EVIDENCE.md", "docs/RELEASE_QUALIFICATION.md"):
+    for relative in ("docs/RELEASE_QUALIFICATION.md",):
         path = ROOT / relative
         require_all(
             path.read_text(encoding="utf-8"),
@@ -319,12 +363,14 @@ def main() -> int:
     assert not (ROOT / "configs/shipping.xiaowo.json").exists()
     assert (ROOT / "configs/research/two-keyword-synthetic-comparator.json").is_file()
 
-    target_evidence = ROOT / "docs" / "TARGET_EVIDENCE.md"
+    # Old schema/CLI identity belongs to the archive, not the current guide.
+    archived_evidence = ROOT / "docs" / "RELEASE_QUALIFICATION.md"
     require_all(
-        target_evidence.read_text(encoding="utf-8"),
-        target_evidence,
+        archived_evidence.read_text(encoding="utf-8"),
+        archived_evidence,
         ("schema v3", "process-cpu-one-core-v1", "--runtime-soak", "--power-raw", "external attestation"),
     )
+    check_target_research_guidance()
 
     baseline = json.loads(
         (ROOT / "configs/research-baseline.xiaowo.json").read_text(encoding="utf-8")
