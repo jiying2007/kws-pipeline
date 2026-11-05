@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""Historical deployment-format DUT scorer; no current Shipping authority.
+
+Exact old measurements and source hashes are preserved for explicit offline replay.
+Current SSC305 research uses separately authorized evidence, not this old tuple.
+"""
 from __future__ import annotations
 
 import argparse
@@ -177,6 +182,8 @@ def verify_external_attestation(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--historical-replay-only", action="store_true",
+                        help="replay retired deployment-format measurements; never product/research approval")
     parser.add_argument("--bundle", required=True, type=pathlib.Path)
     parser.add_argument("--policy", required=True, type=pathlib.Path)
     parser.add_argument("--phase-a-receipt", required=True, type=pathlib.Path)
@@ -186,6 +193,8 @@ def main() -> int:
     parser.add_argument("--keywords", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     args = parser.parse_args()
+    if not args.historical_replay_only:
+        raise ValueError("retired target-DUT qualification CLI: --historical-replay-only is required; not a current research or Shipping gate")
 
     bundle = args.bundle.resolve(strict=True)
     profile = load_json(require_bundle_file(bundle, "target-profile.json"))
