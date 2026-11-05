@@ -124,6 +124,112 @@ class QueueTests(unittest.TestCase):
         self.assertEqual(cli("status", "--root", str(root)), completed)
         self.assertEqual((receipt.read_bytes(), receipt.stat().st_ino, receipt.stat().st_mtime_ns), identity)
 
+    def test_max_jobs_cli_pauses_before_next_claim_and_resumes_the_same_request(self):
+        first_code = "\n".join((
+            "from pathlib import Path;import os",
+            "output=Path(os.environ['KWS_RESEARCH_OUTPUT_DIR'])",
+            "output.joinpath('executed-once').open('x').close()",
+            "output.joinpath('answer.json').write_text('prepared-for-verification')",
+        ))
+        next_code = "\n".join((
+            "from pathlib import Path;import os,json",
+            "deps=json.loads(Path(os.environ['KWS_RESEARCH_DEPENDENCIES']).read_text())",
+            "value=Path(deps['prepare']['outputs_root'],'answer.json').read_text()",
+            "output=Path(os.environ['KWS_RESEARCH_OUTPUT_DIR'])",
+            "output.joinpath('executed-once').open('x').close()",
+            "output.joinpath('answer.json').write_text(value+'-consumed')",
+        ))
+        request = {"schema": queue.SCHEMA, "queue_id": "bounded", "global_budget_minutes": 1,
+                   "jobs": [self.job("prepare", code=first_code),
+                            self.job("train", code=next_code, depends=["prepare"])]}
+        request_path = self.root / "bounded-request.json"
+        request_path.write_bytes(queue.canonical(request))
+        root = self.root / "bounded-queue"
+        optimization = ["-" + "O" * sys.flags.optimize] if sys.flags.optimize else []
+        prefix = [sys.executable, "-I", "-S", "-B", *optimization, str(self.command)]
+
+        def cli(*arguments):
+            result = subprocess.run([*prefix, *arguments], cwd=self.root, env=self.environment,
+                                    capture_output=True, text=True, timeout=5)
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            return json.loads(result.stdout)
+
+        cli("init", "--root", str(root), "--request", str(request_path),
+            "--plan", str(self.plan), "--heavy-lock", str(self.lock))
+        immutable = [request_path, root / "request.json", root / "queue.json", root / "active-plan.json",
+                     *sorted((root / "recipes").iterdir())]
+        frozen = {p: (p.read_bytes(), p.stat().st_ino, p.stat().st_mtime_ns) for p in immutable}
+        paused = cli("run", "--root", str(root), "--max-jobs", "1")
+        self.assertEqual(paused["status"], "incomplete")
+        self.assertEqual(paused["stop_reason"], "max_jobs_reached")
+        self.assertEqual(paused["max_jobs"], 1)
+        self.assertEqual(paused["jobs_started_this_invocation"], 1)
+        self.assertEqual(paused["started_job_ids"], ["prepare"])
+        self.assertEqual(paused["jobs"]["prepare"]["status"], "completed")
+        self.assertEqual(paused["jobs"]["train"]["status"], "pending")
+        # No next-job lock, claim, command, worker, output, or log has begun.
+        self.assertEqual({p.name for p in (root / "jobs/train").iterdir()}, {"outputs"})
+        self.assertEqual(list((root / "jobs/train/outputs").iterdir()), [])
+        self.assertEqual(queue.inspect(root)["status"], "incomplete")
+        first_folder = root / "jobs/prepare"
+        self.assertEqual((first_folder / "outputs/answer.json").read_text(), "prepared-for-verification")
+        first = {p: (p.read_bytes(), p.stat().st_ino, p.stat().st_mtime_ns)
+                 for p in first_folder.rglob("*") if p.is_file()}
+        first_ns = paused["jobs"]["prepare"]["actual_elapsed_ns"]
+        self.assertGreater(first_ns, 0)
+        self.assertEqual(paused["actual_known_job_nanoseconds"], first_ns)
+        self.assertEqual(paused["remaining_budget_nanoseconds"], queue.minutes_ns(1) - first_ns)
+        with heavy_model_slot(self.lock, environment=self.environment):
+            pass  # The pause leaves the real global slot free for verification.
+
+        # A caller can verify preparation here, then advance the same request.
+        completed = cli("run", "--root", str(root), "--max-jobs", "1")
+        self.assertEqual(completed["status"], "completed")
+        self.assertNotIn("stop_reason", completed)
+        self.assertEqual((root / "jobs/train/outputs/answer.json").read_text(),
+                         "prepared-for-verification-consumed")
+        second_ns = completed["jobs"]["train"]["actual_elapsed_ns"]
+        self.assertGreater(second_ns, 0)
+        self.assertEqual(completed["actual_known_job_nanoseconds"], first_ns + second_ns)
+        self.assertEqual(completed["remaining_budget_nanoseconds"], queue.minutes_ns(1) - first_ns - second_ns)
+        claim = json.loads((root / "jobs/train/claim.json").read_bytes())
+        self.assertEqual(claim["global_actual_before_nanoseconds"], first_ns)
+        for path, identity in {**frozen, **first}.items():
+            self.assertEqual((path.read_bytes(), path.stat().st_ino, path.stat().st_mtime_ns), identity)
+        self.assertEqual(cli("run", "--root", str(root)), completed)
+        self.assertEqual(cli("run", "--root", str(root), "--max-jobs", "1"), completed)
+
+    def test_max_jobs_rejects_nonpositive_or_noninteger_values_before_claiming(self):
+        root = self.init([self.job("untouched")])
+        for invalid in (0, -1, True, False, 1.5, "1"):
+            with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, "MAX_JOBS_POSITIVE_INTEGER_REQUIRED"):
+                queue.run(root, max_jobs=invalid)
+        optimization = ["-" + "O" * sys.flags.optimize] if sys.flags.optimize else []
+        for invalid in ("0", "-1", "1.5"):
+            result = subprocess.run([sys.executable, "-I", "-S", "-B", *optimization, str(self.command),
+                "run", "--root", str(root), "--max-jobs", invalid], cwd=self.root, env=self.environment,
+                capture_output=True, text=True, timeout=5)
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertFalse((root / "jobs/untouched/claim.json").exists())
+        self.assertEqual(queue.inspect(root)["actual_known_job_nanoseconds"], 0)
+
+    def test_max_jobs_does_not_turn_a_failed_job_into_success(self):
+        root = self.init([self.job("failed", code="import sys;sys.exit(7)"), self.job("next")])
+        status, code = queue.run(root, max_jobs=1)
+        self.assertEqual((status["status"], status["stop_reason"], code),
+                         ("incomplete", "max_jobs_reached", 1))
+        self.assertEqual(status["jobs"]["failed"]["exit_code"], 7)
+        self.assertFalse((root / "jobs/next/claim.json").exists())
+
+    def test_max_jobs_does_not_hide_global_budget_exhaustion(self):
+        root = self.init([self.job("long", code="import time;time.sleep(30)", timeout=1),
+                          self.job("next")], budget=.006)
+        status, code = queue.run(root, max_jobs=1)
+        self.assertEqual((status["status"], code), ("budget_exhausted", 3))
+        self.assertNotIn("stop_reason", status)
+        self.assertEqual(status["jobs"]["long"]["status"], "timed_out")
+        self.assertFalse((root / "jobs/next/claim.json").exists())
+
     def test_shell_metacharacters_are_literal_argv(self):
         job = self.job("literal", code="from pathlib import Path;import sys;Path(sys.argv[1],'answer.json').write_text(sys.argv[2])")
         literal = "$(touch SHOULD_NOT_EXIST); `printf surprise` *"
