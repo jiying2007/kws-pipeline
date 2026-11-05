@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 72716,
-      "sha256": "96ad04d56d4d4422957660e569dc8d08ec446917c1e021bf670b8b907f8686a7",
-      "git_blob_sha1": "f4dc51085eaf58b6ee86ecdc7c4a1cd646245802"
+      "bytes": 72918,
+      "sha256": "a02fa9c4bce62ca873a01575b396ef1273b98cc504270478a86b51bf1579c5a2",
+      "git_blob_sha1": "97f35a928da8a7b632b57eb2e5f8498c87bf4ee4"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -48156,6 +48156,247 @@
             "bytes": 24229,
             "sha256": "f626634016f9ee93c4ce154c671909eb7b29114042c54a39807d9f7b6509f57d",
             "git_blob_sha1": "3513a16f81569e20b46457c86c34822e6fbf602a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "d1-accounted-continuation-and-observed-inputs-20261105",
+      "date": "2026-11-05",
+      "base_commit": "66c07bc7fbd26b846c37bfe7627a58b12b1ff59d",
+      "base_tree": "045fd2f3458b1e132274730f70bd2896118c9c0f",
+      "workflow_source_changed": true,
+      "scope": "Continue only never-claimed frozen-plan cells after a preserved timeout and distinguish returned observations, invalid returns and consumed unknown calls across generation, training inputs and native coverage.",
+      "rationale": "Keep the original timed-out job and unknown call immutable, pause the same new queue after three jobs for actual source-bound recognition replay, and retain the original model, vocabulary, compute recipe and common development comparison. Source and synthetic contract tests do not claim completed expanded-cohort model results. Historical evidence and publication defaults remain retained.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 72716,
+            "sha256": "96ad04d56d4d4422957660e569dc8d08ec446917c1e021bf670b8b907f8686a7",
+            "git_blob_sha1": "f4dc51085eaf58b6ee86ecdc7c4a1cd646245802"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 72918,
+            "sha256": "a02fa9c4bce62ca873a01575b396ef1273b98cc504270478a86b51bf1579c5a2",
+            "git_blob_sha1": "97f35a928da8a7b632b57eb2e5f8498c87bf4ee4"
+          }
+        },
+        {
+          "path": "docs/research-d1-partial-observation-v3.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-d1-partial-observation-v3.md",
+            "mode": "100644",
+            "bytes": 3910,
+            "sha256": "587e3fb136ee551ce82fddb6c87f3d6302506286cb7d279b50abfbca726ec525",
+            "git_blob_sha1": "eae4b5589561c45dac5df4eb80ebacae6d8e115c"
+          }
+        },
+        {
+          "path": "docs/research-d1-zipformer-accounted-v3.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-d1-zipformer-accounted-v3.md",
+            "mode": "100644",
+            "bytes": 5233,
+            "sha256": "16e0529fc6efd3950b1fd1bb0cbff8895dea0513f6d95ffbf46ff31710a22239",
+            "git_blob_sha1": "c0acc6692abb22af26545e12c0e0d9d135dddb72"
+          }
+        },
+        {
+          "path": "docs/tts-accounted-checkpoint-v2.md",
+          "before": null,
+          "after": {
+            "path": "docs/tts-accounted-checkpoint-v2.md",
+            "mode": "100644",
+            "bytes": 7441,
+            "sha256": "67be525bbbac54e7930bb1d9612e2487ed04a5e727ce447c4908b89bd95a55fd",
+            "git_blob_sha1": "4784cda6528ccb688904baa858988952eb249b55"
+          }
+        },
+        {
+          "path": "tests/test_active_tts_continuation.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_active_tts_continuation.py",
+            "mode": "100644",
+            "bytes": 28017,
+            "sha256": "206206d493e65323eeec664929900c7a92b056741138d343e9e8388d00f63ef9",
+            "git_blob_sha1": "3750be25accaa2d09d6607cc9327442a14755cd4"
+          }
+        },
+        {
+          "path": "tests/test_d1_native_coverage.py",
+          "before": {
+            "path": "tests/test_d1_native_coverage.py",
+            "mode": "100644",
+            "bytes": 13212,
+            "sha256": "2ba067fff723803ee1a464513a87a0eb583e0fdcc7967c7411268f55e64adb1c",
+            "git_blob_sha1": "2db2b20c7cc237d2d440e8d5226845cca2912717"
+          },
+          "after": {
+            "path": "tests/test_d1_native_coverage.py",
+            "mode": "100644",
+            "bytes": 21225,
+            "sha256": "b4841c7ad8bc9ed7678e0f7189ada133d803d8bc4870d973dc5d1d6722329af6",
+            "git_blob_sha1": "5a76f175d16e57d87087416bb4e539c4c9a67434"
+          }
+        },
+        {
+          "path": "tests/test_research_ci_changes.py",
+          "before": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 12778,
+            "sha256": "2cdc07d0d4481cbbbc896c836566a975bc2673f7d26cb84acab056b8ac0cc4f7",
+            "git_blob_sha1": "365b6b8892eca06eeefb53c219cb3d1669447c99"
+          },
+          "after": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 13115,
+            "sha256": "160fe9ff565c6bcde7a3f38f5894fc63f9d7e556a24ddfeb151cadee97aa6386",
+            "git_blob_sha1": "95418414741a3e12fc57d16a9bd1a6e22b4b36cb"
+          }
+        },
+        {
+          "path": "tests/test_research_d1.py",
+          "before": {
+            "path": "tests/test_research_d1.py",
+            "mode": "100644",
+            "bytes": 41214,
+            "sha256": "45b62a1435e32a13d82a0fe68224b9d09a8c1eab287b0581d6a27204867d3015",
+            "git_blob_sha1": "38e6b9e70eff22916cfa3394d065979f3e212805"
+          },
+          "after": {
+            "path": "tests/test_research_d1.py",
+            "mode": "100644",
+            "bytes": 45023,
+            "sha256": "21bf038a85d66c62fac9fa1693fbcfd8470f5d257abf11d9210fc15983e32c05",
+            "git_blob_sha1": "29cc47ca571bed72c0f4df157d26c24f5867db28"
+          }
+        },
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 21490,
+            "sha256": "385fceb81919847f3ff00c4a25b2eec43a00ec1bcadde011c5d6a9430a941f23",
+            "git_blob_sha1": "8359d95801995d0646affe81baafd80841f15478"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 22658,
+            "sha256": "77cd99f12cae051652e187a3f993e1c4ddf96e7dcce3edd1a339b89d3ceef0df",
+            "git_blob_sha1": "cc029e7a9a68f9815cacf690a40023d06db016b0"
+          }
+        },
+        {
+          "path": "tools/active_tts_continuation.py",
+          "before": null,
+          "after": {
+            "path": "tools/active_tts_continuation.py",
+            "mode": "100644",
+            "bytes": 54740,
+            "sha256": "00bf7a91bbd7984a11341c93aa5b6fad0bb38f55a161764c73bf202d8ee57abb",
+            "git_blob_sha1": "4eba7961e486101dab0ae6b680f3d2eb295c475a"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 6337,
+            "sha256": "15e6c31f2aefbc430e771cd67803b829915a7de7941e24b187cf8f9646283054",
+            "git_blob_sha1": "9e09be645c79ff20612e704b0ad3528a9a3358db"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 6623,
+            "sha256": "7da78cdcd9780f5a87c48e96cb22dd6673f234c4cb483529d744c559b21a43bc",
+            "git_blob_sha1": "7bc11b33d04bdfbb1f9e4034ff55b63b03d2b4ef"
+          }
+        },
+        {
+          "path": "tools/research_d1_native_coverage.py",
+          "before": {
+            "path": "tools/research_d1_native_coverage.py",
+            "mode": "100644",
+            "bytes": 15550,
+            "sha256": "d43f2f2dc1d3ff417be35f5954b2b0164d09cb7ee5acc5655f1ff17392989d89",
+            "git_blob_sha1": "28ec2ced90f556ac22d3aff1336696dbc7bffb96"
+          },
+          "after": {
+            "path": "tools/research_d1_native_coverage.py",
+            "mode": "100644",
+            "bytes": 22420,
+            "sha256": "edb8b0e3f7ef6b1bbcbd6e68eaae94335cebb2a5c03ecea5fe44e082c49ee00d",
+            "git_blob_sha1": "d3ce6f7aa77778d34bd9cb64233db983b1f082e1"
+          }
+        },
+        {
+          "path": "tools/research_tts_handoff.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_tts_handoff.py",
+            "mode": "100644",
+            "bytes": 3913,
+            "sha256": "fbd8fef6b03ac9a0950e38cfc1ffe630e16ce030175b4fd11621e72b61383e25",
+            "git_blob_sha1": "b43e1b1a77c4cf9e287d1651b89480ac4e7f2ab5"
+          }
+        },
+        {
+          "path": "tools/research_tts_partial.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_tts_partial.py",
+            "mode": "100644",
+            "bytes": 12015,
+            "sha256": "2173092178b62aca0035bd2d6afbb5bd84b8c9ba8a111eb1de6e41b06d613215",
+            "git_blob_sha1": "a75c971453c5b00f97966d17625e5a5f77172161"
+          }
+        },
+        {
+          "path": "tools/run_d1_zipformer_extension.py",
+          "before": {
+            "path": "tools/run_d1_zipformer_extension.py",
+            "mode": "100644",
+            "bytes": 24229,
+            "sha256": "f626634016f9ee93c4ce154c671909eb7b29114042c54a39807d9f7b6509f57d",
+            "git_blob_sha1": "3513a16f81569e20b46457c86c34822e6fbf602a"
+          },
+          "after": {
+            "path": "tools/run_d1_zipformer_extension.py",
+            "mode": "100644",
+            "bytes": 24792,
+            "sha256": "b00941fb75fcb0449a481c5a72922fe6f618f376a383465a066048c431767336",
+            "git_blob_sha1": "408ddb5e2492fb75314d246ed53f05667dd3e940"
+          }
+        },
+        {
+          "path": "training/research_d1_inputs.py",
+          "before": {
+            "path": "training/research_d1_inputs.py",
+            "mode": "100644",
+            "bytes": 10409,
+            "sha256": "70e27c940c9c0d465b3c86740a64d9598998f78b1622c38859d5e75265b7acd1",
+            "git_blob_sha1": "2441327b91dca07c1caf687c3111c181cbb0d573"
+          },
+          "after": {
+            "path": "training/research_d1_inputs.py",
+            "mode": "100644",
+            "bytes": 10740,
+            "sha256": "3cfee7c3eb484fa2d4d5e293ff051f3fa39fd19ba5ebe5ba5c377020e2ce2480",
+            "git_blob_sha1": "c1c0e628e71773c6437578ffbb73b8cd15e59ded"
           }
         }
       ]
