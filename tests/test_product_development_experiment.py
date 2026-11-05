@@ -124,17 +124,18 @@ def main() -> int:
     materializer = (
         ROOT / "training/materialize_governed_product_base.sh"
     ).read_text(encoding="utf-8")
-    assert "retry_to_file()" in materializer
-    assert "retry_release_download()" in materializer
-    # Research source migration #733 can use the byte-identical archive without
-    # querying GitHub Releases, while the old fallback remains explicit debt.
-    assert 'research_archive="${KWS_RESEARCH_BASE_ARCHIVE:-}"' in materializer
+    # Historical synthetic reference is now sourced exclusively from the
+    # repository's exact, immutable hash-checked research archive.
+    assert 'research_archive="${KWS_RESEARCH_BASE_ARCHIVE:-research/legacy-source-bases/$archive}"' in materializer
     assert 'sha256sum -c --status' in materializer
-    assert 'cp -- "$research_archive" "$release_root/$archive"' in materializer
-    assert 'if [ -n "$research_archive" ]; then' in materializer
-    assert 'Historical fallback remains live until #733' in materializer
-    assert "KWS_DOWNLOAD_RETRY_ATTEMPTS" in materializer
-    assert "--clobber" in materializer
+    assert 'cp -- "$research_archive" "$stage_root/$archive"' in materializer
+    assert 'tar -xzf "$stage_root/$archive"' in materializer
+    assert "retry_release_download()" not in materializer
+    assert "retry_to_file()" not in materializer
+    assert "gh release " not in materializer
+    assert "gh api " not in materializer
+    assert "KWS_DOWNLOAD_RETRY_ATTEMPTS" not in materializer
+    assert "KWS_PRODUCT_RELEASE_ROOT" not in materializer
 
     subprocess.check_call(
         [

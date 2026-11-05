@@ -5,6 +5,8 @@ Python 3.8+, no network, training, TTS/ASR, or audio side effects.
 The historical publication commands remain available in Git history only.
 """
 from pathlib import Path
+import hashlib
+import json
 import re
 import unittest
 
@@ -51,8 +53,7 @@ def require_no_live_release_authority(source: str, path: str) -> None:
             raise AssertionError(path + ": publisher action is forbidden")
 
 
-# This is a debt detector, NOT a waiver of research-only execution. Issue #733
-# owns removal of the sole known historical Release-backed training input.
+# Research-only execution forbids indirect Release readers in every active job.
 SHELL_CALL_RE = re.compile(
     r"\b(?:bash|sh)[ \t]+((?:training|tools)/[A-Za-z0-9_./-]+\.sh)\b"
 )
@@ -60,7 +61,7 @@ RELEASE_READ_RE = re.compile(
     r"\bgh[ \t]+release[ \t]+(?:download|view)\b"
     r"|\bgh[ \t]+api[^\n]*?/releases(?:/|\b)"
 )
-KNOWN_RELEASE_READ_DEBT = frozenset({"training/materialize_governed_product_base.sh"})
+EXPECTED_INDIRECT_RELEASE_READERS = frozenset()
 
 
 def find_indirect_release_readers(workflows, scripts):
@@ -89,7 +90,7 @@ def require_no_new_indirect_release_readers(workflows, scripts, known_debt):
 
 class ResearchPublicationBoundaryTests(unittest.TestCase):
 
-    def test_indirect_release_reader_debt_cannot_expand(self):
+    def test_indirect_release_readers_are_zero(self):
         workflows = {
             p.name: p.read_text(encoding="utf-8")
             for p in WORKFLOWS.glob("*.yml")
@@ -100,11 +101,41 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
             for p in (ROOT / directory).rglob("*.sh")
         }
         actual = require_no_new_indirect_release_readers(
-            workflows, scripts, KNOWN_RELEASE_READ_DEBT
+            workflows, scripts, EXPECTED_INDIRECT_RELEASE_READERS
         )
-        # This explicit nonempty debt is a blocker, not terminal research PASS.
-        # Remove this assertion and allowlist only with #733's source migration.
-        self.assertEqual(actual, KNOWN_RELEASE_READ_DEBT)
+        self.assertEqual(actual, set(), "no active workflow may indirectly read GitHub Releases")
+
+    def test_exact_frozen_research_archive_and_non_admission_receipt(self):
+        root = ROOT / "research" / "legacy-source-bases"
+        contract = json.loads(
+            (ROOT / "configs/training/product-speech-like-base-v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        receipt = json.loads((root / "migration-receipt.json").read_text(encoding="utf-8"))
+        archive = root / "speech-like-base-5204b798033f.tar.gz"
+        digest = hashlib.sha256()
+        with archive.open("rb") as source:
+            for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                digest.update(chunk)
+        self.assertEqual(digest.hexdigest(), contract["release_archive_sha256"])
+        self.assertEqual(digest.hexdigest(), receipt["archive_sha256"])
+        self.assertEqual(archive.stat().st_size, receipt["archive_size_bytes"])
+        self.assertEqual(receipt["source_release_id"], 392032606)
+        self.assertEqual(receipt["source_asset_id"], 574584640)
+        self.assertEqual(receipt["archive_wav_count"], 384)
+        self.assertFalse(receipt["actual_speech_admitted"])
+        self.assertFalse(receipt["product_publication_authority"])
+        self.assertFalse(contract["protected_evidence_used"])
+
+        materializer = (ROOT / "training/materialize_governed_product_base.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("research/legacy-source-bases/$archive", materializer)
+        self.assertIn("sha256sum -c --status", materializer)
+        self.assertNotRegex(materializer, RELEASE_READ_RE)
+        self.assertNotIn("KWS_PRODUCT_RELEASE_ROOT", materializer)
+        self.assertFalse((WORKFLOWS / "research-legacy-base-one-shot.yml").exists())
 
     def test_indirect_release_reader_negative_and_clean_fixtures(self):
         workflows = {"live.yml": "jobs:\n  train:\n    steps:\n"

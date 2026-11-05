@@ -168,11 +168,12 @@ def main() -> int:
     if training.count(materializer_call) != 2:
         raise AssertionError("staged model-training must reuse the product materializer exactly twice")
     if "release_tag=\"$(jq -r '.release_tag'" in training:
-        raise AssertionError("model-training workflow duplicated product release materialization")
+        raise AssertionError("model-training workflow must not duplicate source acquisition")
     for needle in (
-        'gh api "repos/$GITHUB_REPOSITORY/releases/tags/$release_tag"',
-        '.immutable == true',
-        'digest "sha256:$archive_sha"',
+        'research/legacy-source-bases/$archive',
+        'research_archive="${KWS_RESEARCH_BASE_ARCHIVE:-',
+        'sha256sum -c --status',
+        'cp -- "$research_archive" "$stage_root/$archive"',
         'sha256sum -c SPEECH_LIKE_BASE_SHA256SUMS',
         'tools/bootstrap_speech_like_stage_a.py',
         '--provider-only',
@@ -180,7 +181,12 @@ def main() -> int:
         'training/verify_training_entry_contract.py',
         '--require-product-speech-like-base',
     ):
-        require(product_materializer, needle, "governed product base materializer")
+        require(product_materializer, needle, "frozen research base materializer")
+    for forbidden in ("gh release ", "gh api ", "retry_release_download()"):
+        if forbidden in product_materializer:
+            raise AssertionError(
+                "active research training must not read GitHub Releases: " + forbidden
+            )
 
     # The model-training workflow is intentionally split across two independently
     # bounded hosted jobs. The base job must never expose the formal seed.
