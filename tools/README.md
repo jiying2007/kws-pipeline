@@ -152,6 +152,7 @@ boundary testing, not product approval or publication.
 
 - [`export_artifacts.py`](export_artifacts.py) — Reject input/output aliases and stage model/provenance writes before per-file replacement.
 
+- [`materialize_model_registry.py`](materialize_model_registry.py) — Inert fail-closed tombstone retained solely because a frozen historical CI workflow still syntax-compiles this path. No GitHub Release, Shipping or model import behavior; original source remains in Git history.
 - [`model_family_resource_estimate.py`](model_family_resource_estimate.py)
 - [`model_provenance.py`](model_provenance.py)
 - [`verify_model_promotion_source.py`](verify_model_promotion_source.py) — Authenticate the governed training producer and safely verify/extract its exact artifact carrier.
