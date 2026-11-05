@@ -174,12 +174,12 @@ not create a GitHub schedule or retrospectively claim earlier model executions.
 - [`final_afe_identity.py`](final_afe_identity.py)
 - [`qualification_common.py`](qualification_common.py)
 - [`qualification_gate.py`](qualification_gate.py) — Historical-format offline replay only; its retained `shipping_approved` assertion is not a research acceptance gate. Exact original `--references`, `--detections` and `--board-audio` remain required to reproduce an old result.
-- [`qualification_manifest.py`](qualification_manifest.py)
+- [`qualification_manifest.py`](qualification_manifest.py) — Retired product-format manifest producer; explicitly requires `--historical-replay-only`, never current research acceptance.
 - [`qualification_metrics.py`](qualification_metrics.py)
 - [`run_dataset_iteration.py`](run_dataset_iteration.py)
 - [`run_final_afe_corpus.py`](run_final_afe_corpus.py)
 - [`runtime_soak_contract.py`](runtime_soak_contract.py) — Versioned single-core CPU evidence validation.
-- [`score_real_human_qualification.py`](score_real_human_qualification.py) — Retained strict old-format numeric scorer for independent source/AFE research; no current commercial publication.
+- [`score_real_human_qualification.py`](score_real_human_qualification.py) — Retained strict historical Phase-A numeric scorer, `--historical-replay-only` required; independent current human/AFE research is separately rights- and evidence-bound.
 - [`score_target_cohort.py`](score_target_cohort.py) — Retained physical multi-DUT evidence math, not Shipping promotion.
 - [`score_target_dut_qualification.py`](score_target_dut_qualification.py) — Historical deployment-format replay; no current active Actions publisher.
 - [`seal_real_human_corpus.py`](seal_real_human_corpus.py)
@@ -194,7 +194,7 @@ not create a GitHub schedule or retrospectively claim earlier model executions.
 - [`model_family_resource_estimate.py`](model_family_resource_estimate.py)
 - [`model_provenance.py`](model_provenance.py)
 - [`verify_model_promotion_source.py`](verify_model_promotion_source.py) — Authenticate the governed training producer and safely verify/extract its exact artifact carrier.
-- [`verify_model_promotion_bundle.py`](verify_model_promotion_bundle.py)
+- [`verify_model_promotion_bundle.py`](verify_model_promotion_bundle.py) — Retired product-promotion manifest/checksum CLI, `--historical-replay-only` required; original strict source and metric tests retained.
 - [`verify_model_registry.py`](verify_model_registry.py) — Current Git-registered immutable research comparator verifier; no Release import.
 - [`verify_research_model_assets.py`](verify_research_model_assets.py)
 
