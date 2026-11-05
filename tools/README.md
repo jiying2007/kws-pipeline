@@ -99,6 +99,11 @@ role's package pins, or run a script through the checked entry. See the
 [research runtime guide](../docs/RESEARCH_RUNTIME.md) for environment setup and
 the separate model-smoke validation status.
 
+[`research_python_entry.py`](research_python_entry.py) runs preserved research
+drivers after shared Python startup. It removes only the running interpreter's
+single library directory before entering the driver; preload, audit, empty and
+additional loader paths remain errors. The preserved driver guards stay intact.
+
 ## Disabled research plan metadata
 
 - [`validate_parallel_candidate_plan.py`](validate_parallel_candidate_plan.py) checks the

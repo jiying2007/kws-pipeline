@@ -7,6 +7,9 @@ import sys
 import tempfile
 import unittest
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
+from research_python_entry import clear_interpreter_library_path
+
 EXECUTE = False
 
 
@@ -41,6 +44,7 @@ class ResearchFsmnStreamTest(unittest.TestCase):
     def test_optin_profile_block2_public_matrix(self):
         if not EXECUTE:
             self.skipTest("explicit test entry --execute is required")
+        clear_interpreter_library_path()
         driver = Path(__file__).resolve().parents[1] / "research/fsmn2599-stream-c/check_profile.py"
         spec = importlib.util.spec_from_file_location("optin_matrix", driver)
         module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)

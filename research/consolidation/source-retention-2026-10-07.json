@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 69593,
-      "sha256": "b8bbbc0a95db68b89738593234254c484ce74b5f34564b8f88ff7640add68273",
-      "git_blob_sha1": "71bb4b295032e6b8080dc3d16f8fe7a1e352d4f3"
+      "bytes": 69842,
+      "sha256": "496f39c24b148fddb2086f10fa4feca1ffc30c583ef6e89f06c336ef82897019",
+      "git_blob_sha1": "c8336024da2a17a6133e503da28c472c1f3b2d23"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -45668,6 +45668,242 @@
           }
         }
       ]
+    },
+    {
+      "id": "kw1-historical-workflow-projection-python312-20261105",
+      "date": "2026-11-05",
+      "base_commit": "bbce727f140a6d459207acadf1ded0055a09c79d",
+      "base_tree": "4753ff76b571ece439b96c37e16307886ec6c50e",
+      "workflow_source_changed": true,
+      "scope": "Run unchanged KW1 saved-observation verification and tamper tests in an exact historical workflow projection with the active Python interpreter.",
+      "rationale": "The historical observation receipt binds the original 964-byte workflow. Archive and verify those exact bytes instead of rewriting the saved receipt when the active workflow changes.",
+      "files": [
+        {
+          "path": ".github/workflows/kw1-supplement-observation.yml",
+          "before": {
+            "path": ".github/workflows/kw1-supplement-observation.yml",
+            "mode": "100644",
+            "bytes": 1018,
+            "sha256": "9833d8a7325ed67fecc5ee8ecca59205eec88a454120fc5b791984b64967e36f",
+            "git_blob_sha1": "12dc33be1e483a374b810a73fcfb1a5ea8f452ec"
+          },
+          "after": {
+            "path": ".github/workflows/kw1-supplement-observation.yml",
+            "mode": "100644",
+            "bytes": 2940,
+            "sha256": "830b19d64b4584d5ff8ae589b589c5e71abbe5c85f21026964e9da44d6ec4a5e",
+            "git_blob_sha1": "a78c27e814f0add055daafddd4d8edc7e0a87590"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/workflow-revisions/python312-20261105/kw1-supplement-observation.yml.txt",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/workflow-revisions/python312-20261105/kw1-supplement-observation.yml.txt",
+            "mode": "100644",
+            "bytes": 964,
+            "sha256": "3882b9b5498c3479086c354eb393142339c1466ce468a25ad5efd19ec1dd0731",
+            "git_blob_sha1": "68472c1bc2837fb7243a2552d25060f7da270adc"
+          }
+        }
+      ]
+    },
+    {
+      "id": "python312-loader-and-original-workflow-retention-20261105",
+      "date": "2026-11-05",
+      "base_commit": "bbce727f140a6d459207acadf1ded0055a09c79d",
+      "base_tree": "4753ff76b571ece439b96c37e16307886ec6c50e",
+      "workflow_source_changed": true,
+      "scope": "Isolate the verified shared CPython loader directory at ARM research entry points, and retain the original native-A20 quality workflow separately from its active Python setup.",
+      "rationale": "Initial CI exposed historical loader guards and an original workflow hash. Unsafe loader overrides remain refused; original source identities and model evidence remain unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 69593,
+            "sha256": "b8bbbc0a95db68b89738593234254c484ce74b5f34564b8f88ff7640add68273",
+            "git_blob_sha1": "71bb4b295032e6b8080dc3d16f8fe7a1e352d4f3"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 69842,
+            "sha256": "496f39c24b148fddb2086f10fa4feca1ffc30c583ef6e89f06c336ef82897019",
+            "git_blob_sha1": "c8336024da2a17a6133e503da28c472c1f3b2d23"
+          }
+        },
+        {
+          "path": "research/consolidation/core-2026-10-07.json",
+          "before": {
+            "path": "research/consolidation/core-2026-10-07.json",
+            "mode": "100644",
+            "bytes": 44512,
+            "sha256": "200b539da039753f84c1f54790aec7584e81f9438666ab63914220dbf728ae8a",
+            "git_blob_sha1": "f3c2a8d5654b7fdcbd724130dbd2ef142b49805d"
+          },
+          "after": {
+            "path": "research/consolidation/core-2026-10-07.json",
+            "mode": "100644",
+            "bytes": 44614,
+            "sha256": "a1dd9998eb82daadcea155515ab8fa5d2a68e3aa18d9e31152526a1ade2c087d",
+            "git_blob_sha1": "7efcb977bd38ae08b057ac45fe3b87a83ae0d8d7"
+          }
+        },
+        {
+          "path": "research/consolidation/maintained-sources/pr-465/native-a20-quality-tools.yml",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/maintained-sources/pr-465/native-a20-quality-tools.yml",
+            "mode": "100644",
+            "bytes": 1355,
+            "sha256": "768bee0c5d499a375e75596a50f84fd103fe2c3fffbc02664706453d03d6ae42",
+            "git_blob_sha1": "a5ff424679ba72b6ec025a7c2d4ab39492d58355"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_research_consolidation.py",
+          "before": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 13174,
+            "sha256": "f7afaae51104c11fec21ee477eb2d75b3e98e6874007f45a0026fb139b00e37b",
+            "git_blob_sha1": "ccc86beb1e6875b1d300ed5b86abf20ea0c1df60"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 14389,
+            "sha256": "8c957e34a9607c5c46ea9fc61a7d84861dbf82210cea60088f236190b6a0ba2e",
+            "git_blob_sha1": "16e7e61762a9f8f88ed6bb1d1a2c6c00f996d1c6"
+          }
+        },
+        {
+          "path": "tests/run_research_fsmn_stream_arm_build.py",
+          "before": {
+            "path": "tests/run_research_fsmn_stream_arm_build.py",
+            "mode": "100644",
+            "bytes": 4299,
+            "sha256": "925418e3207a3c9ca54d1b461239d7cada004015135345fe0d76b224e36d793a",
+            "git_blob_sha1": "e7822b99a26b690d8a7c5e80f3947cbdb96d2e57"
+          },
+          "after": {
+            "path": "tests/run_research_fsmn_stream_arm_build.py",
+            "mode": "100644",
+            "bytes": 4323,
+            "sha256": "3ccc5f3dde9fa8ad281e2c37b755c572eb93101bdcbb791ee301e892cdbbd9ac",
+            "git_blob_sha1": "a1a2d4f365eacb16d55f9ce6af2bc1546efa81e5"
+          }
+        },
+        {
+          "path": "tests/test_causal_research_contract.py",
+          "before": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 2867,
+            "sha256": "69b5f9d529a2a83593591198bdf0e90f467527b1dab49602f4ac15e6a4316f34",
+            "git_blob_sha1": "217c674c101f5c782975cd525729f9ac7157ef6f"
+          },
+          "after": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 3158,
+            "sha256": "a8a1e9575b497715f064ffe53d4e84bdc2bc01aa173d52566a672e6bc1bb715f",
+            "git_blob_sha1": "159aaf8e2f855d0e94c56de1ef0004171813cd27"
+          }
+        },
+        {
+          "path": "tests/test_research_ci_changes.py",
+          "before": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 9103,
+            "sha256": "76b7f7db49e7ae24e541820899fecf61f0a8e97e782448ce9ee9abcdc6c01c3b",
+            "git_blob_sha1": "3871652e8f4ef85644901b5ef3db07c04b7b5d2e"
+          },
+          "after": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 9197,
+            "sha256": "432102bb1a0e59d08c17922be89444b0079f6129556589c08d7f39b66c4ceb4d",
+            "git_blob_sha1": "3c6e240685974eee9f9d59e937f4a92828dddef9"
+          }
+        },
+        {
+          "path": "tests/test_research_fsmn_stream.py",
+          "before": {
+            "path": "tests/test_research_fsmn_stream.py",
+            "mode": "100644",
+            "bytes": 3104,
+            "sha256": "64b096164e69462e00a1c77b05f0564cde9510a8b814ec75388b83ff6b9057d3",
+            "git_blob_sha1": "ec8cfab2a8f933aeebf8276f0a42f772f71ce4cd"
+          },
+          "after": {
+            "path": "tests/test_research_fsmn_stream.py",
+            "mode": "100644",
+            "bytes": 3282,
+            "sha256": "7319f1e6f80a2f88d8617a520e7042e7c4c6b29819e8c20832a7de447bb9c20c",
+            "git_blob_sha1": "e2e96f949afcb3e1b85846c9f2ccd7a88593625e"
+          }
+        },
+        {
+          "path": "tests/test_research_python_entry.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_python_entry.py",
+            "mode": "100644",
+            "bytes": 5873,
+            "sha256": "3356f22e630e6d8d5a6a7a67b1aeee0a0e5b0b19b706e545d7c099a4b040c031",
+            "git_blob_sha1": "85d4bf4481dbb7edabe1eb3b2c61a4e6f618ddbc"
+          }
+        },
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 16409,
+            "sha256": "2cad6452823395b4d4ff1c9187fd3a0fad97aaeb18e3689ddd56a636c5251a73",
+            "git_blob_sha1": "87a35379a584e1e29ad3c3006b8c2ea60900d969"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 16727,
+            "sha256": "8071d41152eb7558d4a4ce6ed8e60e01c26a58350faa968bc6bb085992488b20",
+            "git_blob_sha1": "08249db1ab5e2dd9f06d3924fec629e4f23ed9c9"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3805,
+            "sha256": "0f7afc3435805478d2a9175d6a0e81c394dc4644928447af4b0a060191b30b81",
+            "git_blob_sha1": "aef70fea13c5bd7b4bacb8cf319b1271d4ae9235"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3882,
+            "sha256": "a1f203812d3ae8c175314afc8f919e5d8b6fe19eacc3469f2904699d262c5450",
+            "git_blob_sha1": "ff53c15ca8bd8e0ef061d131208955b53a1df371"
+          }
+        },
+        {
+          "path": "tools/research_python_entry.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_python_entry.py",
+            "mode": "100644",
+            "bytes": 2373,
+            "sha256": "d98177f1f49d26fa359a9f43e221c1a5a60e9251a17561ca170ecdbdc1e2e338",
+            "git_blob_sha1": "1bcb58d0b3552dc3082a81929077009a52cde32b"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -45758,9 +45994,9 @@
     {
       "path": ".github/workflows/kw1-supplement-observation.yml",
       "mode": "100644",
-      "bytes": 1018,
-      "sha256": "9833d8a7325ed67fecc5ee8ecca59205eec88a454120fc5b791984b64967e36f",
-      "git_blob_sha1": "12dc33be1e483a374b810a73fcfb1a5ea8f452ec"
+      "bytes": 2940,
+      "sha256": "830b19d64b4584d5ff8ae589b589c5e71abbe5c85f21026964e9da44d6ec4a5e",
+      "git_blob_sha1": "a78c27e814f0add055daafddd4d8edc7e0a87590"
     },
     {
       "path": ".github/workflows/authorized-voice-clone-contracts.yml",

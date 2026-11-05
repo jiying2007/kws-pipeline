@@ -723,6 +723,9 @@ jobs:
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Test"'
       - name: Causal research stdlib and artificial oracle contracts
         run: |
+          python3 -S -B tests/test_research_python_entry.py
+          python3 -S -B -O tests/test_research_python_entry.py
+          python3 -S -B -OO tests/test_research_python_entry.py
           python3 -S -B tests/test_causal_research_contract.py
           python3 -S -B -O tests/test_causal_research_contract.py
           python3 -S -B -OO tests/test_causal_research_contract.py
@@ -1116,7 +1119,7 @@ jobs:
       - name: New independent ARM dependency and FP environment snapshot
         timeout-minutes: 6
         run: >-
-          python3 -S -B research/fsmn2599-stream-c/check_arm_dependencies.py
+          python3 -S -B tools/research_python_entry.py research/fsmn2599-stream-c/check_arm_dependencies.py
           --execute --sysroot "$KWS_ARM_SYSROOT" --emulator "$KWS_SYNTHETIC_QEMU"
           --output "$RUNNER_TEMP/arm-dependency-snapshot"
       - name: Retain ARM dependency snapshot including failed attempts
@@ -1130,7 +1133,7 @@ jobs:
       - name: Public synthetic ARM QEMU four-mode correctness only
         timeout-minutes: 6
         run: >-
-          python3 -S -B research/fsmn2599-stream-c/check_arm_synthetic.py
+          python3 -S -B tools/research_python_entry.py research/fsmn2599-stream-c/check_arm_synthetic.py
           --execute --emulator-sysroot "$KWS_ARM_SYSROOT" --emulator "$KWS_SYNTHETIC_QEMU"
       - name: Configure hosted reference build
         run: >-

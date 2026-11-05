@@ -65,13 +65,14 @@
       "source_commit": "71313a67ab6ef4bc6dede51e4897b305eb5577b3"
     },
     {
-      "path": ".github/workflows/native-a20-quality-tools.yml",
+      "path": "research/consolidation/maintained-sources/pr-465/native-a20-quality-tools.yml",
       "mode": "100644",
       "git_blob_sha1": "a5ff424679ba72b6ec025a7c2d4ab39492d58355",
       "sha256": "768bee0c5d499a375e75596a50f84fd103fe2c3fffbc02664706453d03d6ae42",
       "bytes": 1355,
       "source_pr": 465,
-      "source_commit": "d8453ae8b2b2c620716b32c96d9647834ce96746"
+      "source_commit": "d8453ae8b2b2c620716b32c96d9647834ce96746",
+      "source_path": ".github/workflows/native-a20-quality-tools.yml"
     },
     {
       "path": "research/consolidation/maintained-sources/native-a20-admission-audit-2026-10-11/.github/workflows/research-native-a20.yml",

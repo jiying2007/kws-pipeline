@@ -4,11 +4,13 @@ on:
     paths:
       - 'research/kw1-preset-supplement-observation-v1/**'
       - '.github/workflows/kw1-supplement-observation.yml'
+      - 'research/consolidation/archive/workflow-revisions/python312-20261105/kw1-supplement-observation.yml.txt'
   push:
     branches: [main]
     paths:
       - 'research/kw1-preset-supplement-observation-v1/**'
       - '.github/workflows/kw1-supplement-observation.yml'
+      - 'research/consolidation/archive/workflow-revisions/python312-20261105/kw1-supplement-observation.yml.txt'
 permissions:
   contents: read
 jobs:
@@ -24,7 +26,31 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          root=research/kw1-preset-supplement-observation-v1
+          # The saved observation binds the original verification workflow bytes.
+          # Check that unchanged source in a temporary tree using active Python.
+          python3 -I -S -B - "$RUNNER_TEMP/kw1-supplement-source" <<'PY'
+          import hashlib, json, pathlib, shutil, sys
+          relative = pathlib.Path('research/kw1-preset-supplement-observation-v1')
+          source = pathlib.Path.cwd() / relative
+          target = pathlib.Path(sys.argv[1])
+          retention = json.loads((source / 'source-retention.json').read_text())
+          names = {'README.md', 'observation.json', 'report.json', 'ledger.json',
+                   'manifest.json', 'verify_observation.py', 'test_verify_observation.py'}
+          if set(retention['files']) != names:
+              raise ValueError('unexpected saved observation inventory')
+          archived = pathlib.Path('research/consolidation/archive/workflow-revisions/python312-20261105/kw1-supplement-observation.yml.txt')
+          data = archived.read_bytes()
+          workflow = pathlib.Path('.github/workflows/kw1-supplement-observation.yml')
+          if retention['workflow'] != {'path': str(workflow), 'bytes': len(data),
+                                      'sha256': hashlib.sha256(data).hexdigest()}:
+              raise ValueError('original verification workflow identity changed')
+          (target / relative).mkdir(parents=True)
+          for name in sorted(names | {'source-retention.json'}):
+              shutil.copyfile(source / name, target / relative / name)
+          (target / workflow).parent.mkdir(parents=True)
+          (target / workflow).write_bytes(data)
+          PY
+          root="$RUNNER_TEMP/kw1-supplement-source/research/kw1-preset-supplement-observation-v1"
           for optimization in '' '-O' '-OO'; do
             python3 -I -S -B $optimization "$root/verify_observation.py"
             python3 -I -S -B $optimization "$root/test_verify_observation.py"

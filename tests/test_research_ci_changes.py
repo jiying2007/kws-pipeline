@@ -50,6 +50,7 @@ class ChangeSelectionTests(unittest.TestCase):
 
     def test_runtime_changes_select_research_dependencies(self):
         for path in ('configs/runtime/research-runtime.json', 'tools/research_runtime.py',
+                     'tools/research_python_entry.py', 'tests/test_research_python_entry.py',
                      'training/setup_core_runtime.sh', '.github/actions/setup-research-python/action.yml'):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
