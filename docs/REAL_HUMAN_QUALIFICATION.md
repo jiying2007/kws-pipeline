@@ -2,6 +2,8 @@
 
 > **Historical evidence procedure only.** The old `.github/workflows/real-human-qualification.yml` manual GitHub Release publisher is no longer active. The source/consent, private corpus, AFE and scoring tools remain valid for separately authorized research experiments; the historical deployment/Release commands below are *not runnable current research instructions*. No actual human recording, FRR/FAR or target result is claimed. See [research-only execution](RESEARCH_ONLY_EXECUTION.md).
 
+The historical `tools/score_real_human_qualification.py` is now **default-deny** and accepts `--historical-replay-only` solely for offline verification of preserved Phase-A-format evidence. Its frozen `deployment_tag`, `qualified` and `shipping_approved=false` values do not grant current research data admission or commercial permission. Independently authorized research may still use source/consent verification, `eval/score_events.py`, final-AFE identity and numeric checks without using a retired product publisher. The original dated procedure below remains unmodified for provenance.
+
 This document defines Phase A of product qualification for the frozen commercial candidate `deployment-c20f3eb88e43`. It does **not** authorize model retraining and it does **not** make the product shipping-approved. Phase B physical target-board evidence remains mandatory after Phase A passes.
 
 ## Frozen tuple
