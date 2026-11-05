@@ -143,6 +143,18 @@ jobs:
           python3 -I -S -B tests/test_research_d2_generate.py
           python3 -I -S -B -O tests/test_research_d2_generate.py
           python3 -I -S -B -OO tests/test_research_d2_generate.py
+          python3 -I -S -B tests/test_research_d2_campaign.py
+          python3 -I -S -B -O tests/test_research_d2_campaign.py
+          python3 -I -S -B -OO tests/test_research_d2_campaign.py
+          python3 -I -S -B tests/test_research_d2_consume.py
+          python3 -I -S -B -O tests/test_research_d2_consume.py
+          python3 -I -S -B -OO tests/test_research_d2_consume.py
+          python3 -I -S -B tests/test_research_context_generate.py
+          python3 -I -S -B -O tests/test_research_context_generate.py
+          python3 -I -S -B -OO tests/test_research_context_generate.py
+          python3 -I -S -B tests/test_research_context_inputs.py
+          python3 -I -S -B -O tests/test_research_context_inputs.py
+          python3 -I -S -B -OO tests/test_research_context_inputs.py
           python3 -I -S -B tests/test_research_d1_fit_diagnostic.py
           python3 -I -S -B -O tests/test_research_d1_fit_diagnostic.py
           python3 -I -S -B -OO tests/test_research_d1_fit_diagnostic.py

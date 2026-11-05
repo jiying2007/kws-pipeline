@@ -4,8 +4,8 @@ Description=Complete one declared KWS D2 campaign
 [Service]
 Type=simple
 WorkingDirectory=@PIPELINE_ROOT@
-Environment=LD_LIBRARY_PATH=@CORE_RUNTIME_LIB@
-ExecStart=@CORE_PYTHON@ -B @PIPELINE_ROOT@/tools/research_d2_campaign.py run --campaign @CAMPAIGN_JSON@
+Environment=LD_LIBRARY_PATH=@DRIVER_RUNTIME_LIB@
+ExecStart=@DRIVER_PYTHON@ -B @PIPELINE_ROOT@/tools/research_d2_campaign.py run --campaign @CAMPAIGN_JSON@
 Restart=on-failure
 RestartSec=5
 RestartPreventExitStatus=1 2 3 75 130 143

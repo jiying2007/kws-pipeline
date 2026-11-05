@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 from argparse import Namespace
 import importlib
+import importlib.metadata
 import json
 import os
 from pathlib import Path
@@ -44,6 +45,16 @@ def check_pin(value):
 
 def read(path):
     return queue.loads(queue.read_bytes(path))
+
+
+def driver_identity():
+    """Fail before TTS if this process cannot perform the audio preparation."""
+    batch.research_runtime.check_interpreter(batch.research_runtime.load_manifest())
+    try:
+        packages = {name: importlib.metadata.version(name) for name in ("numpy", "scipy", "soundfile")}
+    except importlib.metadata.PackageNotFoundError as error:
+        raise ValueError("D2_CAMPAIGN_DRIVER_AUDIO_PACKAGES_REQUIRED:" + str(error)) from error
+    return {"python": sys.version.split()[0], "executable": str(Path(sys.executable).absolute()), "packages": packages}
 
 
 def load_data(root):
@@ -94,6 +105,7 @@ def driver_lock(stage_path):
 def declare(args):
     """Freeze the complete allowed prefix once, optionally adopting its files."""
     stage_path, root = queue.safe_path(args.stage), queue.safe_path(args.output)
+    driver = driver_identity()
     stage, _prepared, _plan, _bulk = generation.load_stage(stage_path)
     qroot, qmeta, request, queue_sha = queue.load_queue(stage["queue_root"])
     queue.require(type(args.max_chunks) is int and 1 <= args.max_chunks <= len(stage["chunks"]),
@@ -120,6 +132,7 @@ def declare(args):
     value = {"schema": SCHEMA, "created_at": queue.utc(), "root": str(root), "stage": pin(stage_path),
              "generation_queue": {"path": str(qroot), "queue_sha256": queue_sha},
              "data_root": str(data_root), "data_files": producer, "pipeline_files": own,
+             "driver_runtime": driver,
              "asr_runtime": str(runtime), "asr_python": str(python), "policy": pin(policy),
              "fsmn_tokens": pin(args.fsmn_tokens) if args.fsmn_tokens else None,
              "job_ids": [job["job_id"] for job in request["jobs"][:args.max_chunks]],
@@ -152,6 +165,7 @@ def load(path):
     registration = read(registration_path(value["stage"]["path"]))
     queue.require(registration == {"schema": SCHEMA, "stage": value["stage"], "campaign": pin(path)},
                   "D2_CAMPAIGN_REGISTRATION_CHANGED")
+    queue.require(driver_identity() == value["driver_runtime"], "D2_CAMPAIGN_DRIVER_RUNTIME_CHANGED")
     for key, root in (("pipeline_files", ROOT), ("data_files", Path(value["data_root"]))):
         for name, expected in value[key].items():
             queue.require(queue.file_record(root / queue.relative(name)) == expected,

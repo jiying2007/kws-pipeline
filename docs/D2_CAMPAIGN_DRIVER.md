@@ -49,13 +49,16 @@ phase before reuse; it never guesses paths or silently replaces a declaration.
 
 ## Declare once, pause and continue
 
-Use the project's Python 3.12.16 core environment with its scientific packages.
-Do not use `-S` for a real campaign: audio preparation needs its installed NumPy,
-SciPy and soundfile. Set the matching interpreter's library path where needed.
+Use the existing Python 3.12.16 **ASR environment** to host the campaign. It has
+the required NumPy, SciPy and soundfile packages; the current core environment
+lacks soundfile. The declared generation jobs still use their frozen TTS Python.
+Do not use `-S` for a real campaign. Declaration and restart verify the driver
+interpreter/package identity before any model claim. Set the matching
+interpreter's library path where needed.
 
 ```sh
-env LD_LIBRARY_PATH=/absolute/core-runtime/lib \
-  /absolute/core-venv/bin/python -B tools/research_d2_campaign.py declare \
+env LD_LIBRARY_PATH=/absolute/python-runtime/lib \
+  /absolute/runtime-asr/venv/bin/python -B tools/research_d2_campaign.py declare \
   --stage /absolute/existing-eight-001/stage.json \
   --output /absolute/existing-eight-campaign-001 \
   --data-root /absolute/kws-data \
@@ -64,13 +67,13 @@ env LD_LIBRARY_PATH=/absolute/core-runtime/lib \
   --max-chunks 32 --total-minutes 480 \
   --asr-job-minutes 10 --asr-budget-seconds 570 --threads 4
 
-env LD_LIBRARY_PATH=/absolute/core-runtime/lib \
-  /absolute/core-venv/bin/python -B tools/research_d2_campaign.py run \
+env LD_LIBRARY_PATH=/absolute/python-runtime/lib \
+  /absolute/runtime-asr/venv/bin/python -B tools/research_d2_campaign.py run \
   --campaign /absolute/existing-eight-campaign-001/campaign.json \
   --max-chunks-this-call 1
 
-env LD_LIBRARY_PATH=/absolute/core-runtime/lib \
-  /absolute/core-venv/bin/python -B tools/research_d2_campaign.py run \
+env LD_LIBRARY_PATH=/absolute/python-runtime/lib \
+  /absolute/runtime-asr/venv/bin/python -B tools/research_d2_campaign.py run \
   --campaign /absolute/existing-eight-campaign-001/campaign.json
 ```
 

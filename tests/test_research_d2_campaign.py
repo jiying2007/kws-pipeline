@@ -68,6 +68,7 @@ class CampaignTests(unittest.TestCase):
                                     verify_view=self.verify_view)
         patches = (
             mock.patch.object(campaign, "ROOT", self.source),
+            mock.patch.object(campaign, "driver_identity", return_value={"fixture": True, "python": "3.12.16"}),
             mock.patch.object(campaign, "load_data", return_value=self.data),
             mock.patch.object(campaign.generation, "load_stage", side_effect=self.load_stage),
             mock.patch.object(campaign.generation, "export_job", side_effect=self.export_job),
@@ -251,6 +252,14 @@ class CampaignTests(unittest.TestCase):
         self.asr_script.write_text(self.asr_script.read_text() + "\n# changed\n")
         with self.assertRaisesRegex(ValueError, "SOURCE_CHANGED"):
             campaign.run(self.path)
+        self.assertEqual(self.event_rows(), [])
+
+    def test_changed_driver_runtime_blocks_before_any_model_claim(self):
+        self.make_generation_queue()
+        self.declare()
+        with mock.patch.object(campaign, "driver_identity", return_value={"fixture": "different runtime"}):
+            with self.assertRaisesRegex(ValueError, "DRIVER_RUNTIME_CHANGED"):
+                campaign.run(self.path)
         self.assertEqual(self.event_rows(), [])
 
     def test_cached_shared_data_module_must_match_the_declared_producer_bytes(self):
