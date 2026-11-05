@@ -101,6 +101,7 @@ the separate model-smoke validation status.
 
 - [`setup_asr_runtime.py`](setup_asr_runtime.py) — Install the shared ASR role from retained package, source and model hashes.
 - [`active_asr_batch.py`](active_asr_batch.py) — Bind existing audio and resume a bounded private ASR batch without repeating completed calls.
+- [`active_asr_selective.py`](active_asr_selective.py) — Run two audio-only primary recognizers and the predeclared selective Whisper audit with explicit unrequested observations.
 - [`active_asr_worker.py`](active_asr_worker.py) — Run one native recognizer process and retain its raw output and call claim.
 - [`summarize_active_asr_batch.py`](summarize_active_asr_batch.py) — Re-read the complete model/clip matrix and produce the file inventory and resource summary.
 - [Active ASR batch guide](../docs/ACTIVE_ASR_BATCH.md) — Decoder conditions, private output layout and weak-label boundaries.

@@ -1,0 +1,28 @@
+{
+  "agreement_audit": {
+    "hash_algorithm": "sha256",
+    "hash_input": "UTF8(namespace|seed|plan_sha256|source_id)",
+    "namespace": "kws-d1-whisper-agreement-audit-v2",
+    "probability_denominator": 5,
+    "probability_numerator": 1,
+    "seed": 20261105,
+    "selection": "int(hash,16)*5 < 2**256"
+  },
+  "human_gold": false,
+  "mandatory_reasons": [
+    "primary_incomplete",
+    "primary_quality_uncertain",
+    "primary_disagreement",
+    "source_quality_uncertain"
+  ],
+  "missing_requested_result_blocks_complete_audit": true,
+  "no_target_or_peer_text_to_native_worker": true,
+  "normalization": "reference-text-NFKC-casefold-punctuation-CJK-spaces-v1",
+  "primary_models": [
+    "qwen06",
+    "sensevoice"
+  ],
+  "quality_retries": 0,
+  "schema": "active-asr-selective-policy-v2",
+  "selective_model": "whisper"
+}
