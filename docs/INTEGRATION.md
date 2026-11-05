@@ -2,10 +2,10 @@
 
 > **Current authority: technical research only.** The frozen synthetic model and keyword source is `configs/research/two-keyword-synthetic-comparator.json`; it is not real-human FAR/FRR, a physical SSC305 measurement or commercial publication authority. Old product/Release terminology elsewhere on this page is historical context, not a workflow to execute.
 
-Preferred product chain:
+Preferred research integration path:
 
 ```text
-microphones -> audio-pipeline (BF/AEC/RES/NS/AGC as SKU requires)
+microphones -> audio-pipeline (BF/AEC/RES/NS/AGC chosen by experiment)
             -> mono PCM16 16 kHz
             -> kws-pipeline
             -> wake event
@@ -65,7 +65,7 @@ After `KWS_OK`, publish the candidate under the caller's existing single-owner
 synchronization. On failure, keep the active engine and reject the candidate;
 zero-initializing the temporary structures does not replace checking statuses.
 
-The deployable runtime artifact contract remains **KWSP model ABI v2 + KWKP keyword-pack ABI v3**. Their vocabulary fingerprints must match exactly. The keyword-pack object may be discarded after the setter returns; the model blob must remain alive because model tensors are zero-copy views into it and must satisfy the documented alignment requirement.
+The embeddable runtime artifact contract remains **KWSP model ABI v2 + KWKP keyword-pack ABI v3**. Their vocabulary fingerprints must match exactly. The keyword-pack object may be discarded after the setter returns; the model blob must remain alive because model tensors are zero-copy views into it and must satisfy the documented alignment requirement.
 
 For a firmware-linked generated C table use:
 
@@ -81,7 +81,7 @@ if (status != KWS_OK) {
 
 The generated-table path performs the same vocabulary identity check as `.kwk`.
 
-For overlapping phrases, KWKP v3 supports `min_trailing_blanks`, `priority`, `prefix_policy` and `grace_frames`. `keywords/zh_cn_overlap_example.tsv` is a **decoder contract fixture only**; `keywords/zh_cn_example.tsv` is the current shipping pack.
+For overlapping phrases, KWKP v3 supports `min_trailing_blanks`, `priority`, `prefix_policy` and `grace_frames`. `keywords/zh_cn_overlap_example.tsv` is a **decoder contract fixture only**; `keywords/zh_cn_example.tsv` is a historical pack example, not a measured current candidate.
 
 ## Audio calls
 
@@ -143,7 +143,7 @@ For long product soaks, copy stats on a non-real-time control path and combine t
 - `kws_engine_reset()` resets acoustic/decoder/refractory state while retaining configured keywords and monotonic lifetime telemetry.
 - `kws_engine_notify_discontinuity()` is the product-facing boundary for capture timeline breaks.
 
-## Shipping AFE adapter contract
+## Research AFE adapter contract
 
 Synthetic/measured-domain training can invoke the final `audio-pipeline` through the command AFE backend. The command must write both `{output}` and `{result}`. The result sidecar must contain `latency_samples`; it may additionally report `pipeline_sha256`, `source_sha` and `toolchain`.
 
