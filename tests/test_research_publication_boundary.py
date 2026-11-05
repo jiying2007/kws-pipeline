@@ -255,6 +255,26 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
                         "retired qualification CLI must not be an active Actions path",
                     )
 
+    def test_retired_model_promotion_bundle_cli_is_replay_only(self):
+        # This old CLI assembles a Release-named checksum/manifest from an
+        # artifact. Preserve the numerical verifier for historical fixtures,
+        # but do not permit default execution as current research approval.
+        source = (ROOT / "tools/verify_model_promotion_bundle.py").read_text(
+            encoding="utf-8")
+        self.assertIn('parser.add_argument("--historical-replay-only"', source)
+        self.assertIn("if not args.historical_replay_only:", source)
+        self.assertIn("retired model promotion bundle CLI:", source)
+        call = re.compile(
+            r"\bpython(?:3)?(?:\s+-[A-Za-z]+)*\s+tools/"
+            r"verify_model_promotion_bundle\.py\b"
+        )
+        self.assertIsNotNone(call.search(
+            "run: python3 -S -B tools/verify_model_promotion_bundle.py --dist /tmp/out"
+        ))
+        for workflow in WORKFLOWS.glob("*.yml"):
+            self.assertIsNone(call.search(workflow.read_text(encoding="utf-8")),
+                              "retired promotion bundle CLI executed by active workflow")
+
     def test_legacy_push_publication_workflows_are_retired(self):
         for relative in (
             "release.yml",
