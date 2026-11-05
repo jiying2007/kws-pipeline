@@ -913,6 +913,9 @@ jobs:
         run: python3 tools/check_runtime_purity.py --library build/libkws_pipeline.a
       - name: Verify tracked worktree after Runtime purity gate
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Runtime purity gate"'
+      - name: Install the pinned YAML parser for workflow checks
+        run: |
+          python3 -m pip install --disable-pip-version-check --no-deps --only-binary=:all: --require-hashes -r configs/runtime/host-tools.requirements.lock
       - name: Deferred verdict contract
         run: python3 tests/test_deferred_verdicts.py
       - name: Verify tracked worktree after Deferred verdict contract

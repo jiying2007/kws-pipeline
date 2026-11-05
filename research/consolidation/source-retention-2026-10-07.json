@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 69842,
-      "sha256": "496f39c24b148fddb2086f10fa4feca1ffc30c583ef6e89f06c336ef82897019",
-      "git_blob_sha1": "c8336024da2a17a6133e503da28c472c1f3b2d23"
+      "bytes": 70078,
+      "sha256": "24f6b4cfe4883ff9a34e2deadfe9142d08ee32e6616bef2c4e0bc54f5093e5ce",
+      "git_blob_sha1": "292fb9ef065940529374c9e333baa4104998233e"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -45901,6 +45901,62 @@
             "bytes": 2373,
             "sha256": "d98177f1f49d26fa359a9f43e221c1a5a60e9251a17561ca170ecdbdc1e2e338",
             "git_blob_sha1": "1bcb58d0b3552dc3082a81929077009a52cde32b"
+          }
+        }
+      ]
+    },
+    {
+      "id": "python312-pinned-workflow-yaml-dependency-20261105",
+      "date": "2026-11-05",
+      "base_commit": "2c0cfefa2ced90cfee89a445e1d4108997e2667e",
+      "base_tree": "2e48eb01d73af9d594c867242f43247a31161980",
+      "workflow_source_changed": true,
+      "scope": "Install the one hash-pinned YAML parser required by hosted workflow tests in the selected CPython 3.12 interpreter.",
+      "rationale": "The runner system Python previously supplied PyYAML implicitly. Its absence in the new exact interpreter made the redeemed-verdict fixture fail before checking a workflow.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 69842,
+            "sha256": "496f39c24b148fddb2086f10fa4feca1ffc30c583ef6e89f06c336ef82897019",
+            "git_blob_sha1": "c8336024da2a17a6133e503da28c472c1f3b2d23"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 70078,
+            "sha256": "24f6b4cfe4883ff9a34e2deadfe9142d08ee32e6616bef2c4e0bc54f5093e5ce",
+            "git_blob_sha1": "292fb9ef065940529374c9e333baa4104998233e"
+          }
+        },
+        {
+          "path": "configs/runtime/host-tools.requirements.lock",
+          "before": null,
+          "after": {
+            "path": "configs/runtime/host-tools.requirements.lock",
+            "mode": "100644",
+            "bytes": 228,
+            "sha256": "47bf11bf0468137be92910b121b76d9d0c8441543a43ae6c5110cb6465ba8381",
+            "git_blob_sha1": "510d26da9c7932658d669a3980d19ad16491c3bf"
+          }
+        },
+        {
+          "path": "docs/RESEARCH_RUNTIME.md",
+          "before": {
+            "path": "docs/RESEARCH_RUNTIME.md",
+            "mode": "100644",
+            "bytes": 5913,
+            "sha256": "7688d86df926523245bfcc15c71d8deb17a52558e8dc5d66e6faf39b914ce1a3",
+            "git_blob_sha1": "250bfa00d38595d5419e4266b02648322974f9f5"
+          },
+          "after": {
+            "path": "docs/RESEARCH_RUNTIME.md",
+            "mode": "100644",
+            "bytes": 6238,
+            "sha256": "4bf1746aca14bea6776ad73d7fab7b64f2fb54229b2b9cda819d28250817e273",
+            "git_blob_sha1": "27f52d1000d6b5ed4121dc4ade43e92eafda33f0"
           }
         }
       ]

@@ -23,6 +23,11 @@ pinned `actions/setup-python`, and verifies the resulting interpreter. It does
 not import Torch, download models, or install the ML dependency roles. This
 avoids relying on whichever `python3` happens to be in a runner image.
 
+The hosted compiler job also installs the single YAML parser used by workflow
+checks from [`host-tools.requirements.lock`](../configs/runtime/host-tools.requirements.lock).
+That CPython 3.12 / Linux x86_64 wheel is pinned by version and SHA256; the job
+does not rely on packages preinstalled for the runner's system Python.
+
 For a local environment, install the patch reported by the manifest and run:
 
 ```sh
