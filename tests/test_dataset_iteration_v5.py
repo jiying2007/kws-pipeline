@@ -55,7 +55,7 @@ def decimal_poisson_upper(count: int, hours: str) -> float:
         raise AssertionError("independent Decimal oracle failed to converge")
 
 
-def exact_card(*, count=0, hours=8.0, misses=20, model="a", code="c"):
+def exact_card(*, count=0, hours=8.0, misses=20, expected=100, model="a", code="c"):
     _, rate = iteration.negative_far_rate({
         "negative_recording_false_accepts": count,
         "negative_recording_audio_hours": hours,
@@ -70,8 +70,8 @@ def exact_card(*, count=0, hours=8.0, misses=20, model="a", code="c"):
             "seed": "1", "variable": "model", "comparison_mode": "ablation",
         },
         "exposure": {"negative_recordings": 1, "exposure_hours": hours},
-        "metrics": {"expected": 100, "matched": 100 - misses, "false_rejects": misses,
-                    "false_accepts": count, "frr": misses / 100,
+        "metrics": {"expected": expected, "matched": expected - misses, "false_rejects": misses,
+                    "false_accepts": count, "frr": misses / expected if expected else 0.0,
                     "far_per_hour": count / hours, "p95_post_end_latency_ms": 100.0},
         "far_rate": rate,
     }
@@ -99,11 +99,13 @@ class ExactFarTests(unittest.TestCase):
     def test_recall_gain_cannot_hide_zero_to_one_false_accept(self):
         before, after = exact_card(), exact_card(count=1, misses=10, model="b")
         result = comparison.compare(before, after, .5, 0, 800)
-        self.assertEqual(result["verdict"], "regressed")
+        self.assertEqual(result["verdict"], "inconclusive")
+        self.assertEqual(result["budget_status"]["far"]["candidate"]["status"], "not_demonstrated")
         self.assertGreater(result["deltas"]["far_upper_bound_95"], 0)
-        self.assertEqual(comparison.compare(before, after, 1, 0, 800)["verdict"], "neutral")
-        improved = comparison.compare(exact_card(count=1), exact_card(misses=10, model="b"), 1, 0, 800)
-        self.assertEqual(improved["verdict"], "improved")
+        self.assertEqual(comparison.compare(before, after, 1, 0, 800)["verdict"], "inconclusive")
+        small = comparison.compare(exact_card(count=1), exact_card(misses=10, model="b"), 1, 0, 800)
+        self.assertEqual(small["verdict"], "inconclusive")
+        self.assertEqual(small["frr_direction"], "lower")
 
     def test_legacy_policy_is_not_silently_upgraded_or_mixed(self):
         exact = exact_card()
@@ -168,6 +170,201 @@ class ExactFarTests(unittest.TestCase):
         for exposure in (True, None, float("nan"), float("inf"), 0, -1, 10 ** 400):
             with self.subTest(exposure=exposure), self.assertRaises(ValueError):
                 iteration.far_upper_bound_95(0, exposure)
+
+
+class ComparisonUncertaintyTests(unittest.TestCase):
+    def pair(self, n=1000, before=200, after=100, **kwargs):
+        return (exact_card(expected=n, misses=before, **kwargs),
+                exact_card(expected=n, misses=after, model="b", **kwargs))
+
+    def compare(self, before, after, *, far=1.0, margin=None, latency=800):
+        return comparison.compare(before, after, far, margin, latency)
+
+    def words(self, card, rows):
+        table = {str(key): {"expected": n, "matched": n - misses,
+                           "false_rejects": misses, "frr": misses / n if n else 0.0,
+                           "false_accepts": fa}
+                 for key, n, misses, fa in rows}
+        card["domains"] = {"overall": {**card["metrics"], "per_keyword": table}}
+        return card
+
+    def test_all_four_versioned_outcomes(self):
+        for n, left, right, verdict in ((1000, 200, 100, "improved"),
+                                       (1000, 100, 200, "regressed"),
+                                       (10000, 2000, 2000, "neutral"),
+                                       (100, 20, 10, "inconclusive")):
+            with self.subTest(verdict=verdict):
+                report = self.compare(*self.pair(n, left, right))
+                self.assertEqual(report["verdict"], verdict)
+                self.assertEqual(report["schema_version"], 3)
+                self.assertEqual(report["comparison_policy"], policy.COMPARISON_POLICY)
+                self.assertEqual(report["budgets"]["frr_tolerance"], .02)
+                self.assertEqual(bool(report["regressions"]), verdict == "regressed")
+
+    def test_intervals_match_independent_score_equation_inversion(self):
+        # Invert the binomial score equation by Decimal bisection rather than
+        # using the production quadratic Wilson expression/complement helper.
+        with localcontext() as context:
+            context.prec = 60
+            z2 = Decimal("2.2414027276049477") ** 2
+            for n, misses in ((20, 4), (100, 0), (100, 100), (1000, 200)):
+                observed = Decimal(misses) / n
+                def equation(p):
+                    return (observed - p) ** 2 - z2 * p * (1 - p) / n
+                bounds = []
+                for upper in (False, True):
+                    if (not upper and misses == 0) or (upper and misses == n):
+                        bounds.append(float(upper))
+                        continue
+                    low, high = (observed, Decimal(1)) if upper else (Decimal(0), observed)
+                    for _ in range(160):
+                        mid = (low + high) / 2
+                        if (equation(mid) > 0) == upper:
+                            high = mid
+                        else:
+                            low = mid
+                    bounds.append(float((low + high) / 2))
+                row = exact_card(expected=n, misses=misses)["metrics"]
+                actual = policy.frr_comparison(row, row, .02)["baseline"]["interval"]
+                for got, expected in zip(actual, bounds):
+                    self.assertAlmostEqual(got, expected, places=14)
+
+    def test_short_zero_fa_is_inconclusive_without_hiding_frr_gain(self):
+        before, after = self.pair(hours=.01)
+        report = self.compare(before, after)
+        self.assertEqual(report["verdict"], "inconclusive")
+        self.assertEqual(report["frr_direction"], "lower")
+        self.assertEqual(report["frr_assessment"]["verdict"], "improved")
+        self.assertEqual(report["budget_status"]["far"]["candidate"]["status"], "not_demonstrated")
+        self.assertEqual(report["regressions"], [])
+        self.assertTrue(report["research_continuation_allowed"])
+
+    def test_common_budget_checks_both_arms_and_keeps_observed_excess_separate(self):
+        before, after = self.pair()
+        before.update(exposure=exact_card(hours=.01)["exposure"], far_rate=exact_card(hours=.01)["far_rate"])
+        report = self.compare(before, after)
+        self.assertEqual(report["verdict"], "inconclusive")
+        self.assertEqual(report["budget_status"]["far"]["candidate"]["status"], "met")
+        self.assertFalse(report["budget_status"]["far"]["common_budget_demonstrated"])
+        before, after = self.pair(count=10)
+        report = self.compare(before, after)
+        self.assertEqual(report["budget_status"]["far"]["candidate"]["status"], "observed_rate_above_budget")
+        self.assertEqual(report["verdict"], "inconclusive")
+
+    def test_common_far_budget_does_not_require_identical_or_decreasing_bounds(self):
+        before, after = self.pair()
+        after["far_rate"] = exact_card(count=1)["far_rate"]
+        after["metrics"].update(false_accepts=1, far_per_hour=1 / 8)
+        report = self.compare(before, after)
+        self.assertGreater(report["deltas"]["far_upper_bound_95"], 0)
+        self.assertEqual(report["verdict"], "improved")
+        self.assertTrue(report["budget_status"]["far"]["common_budget_demonstrated"])
+
+    def test_latency_point_budget_is_not_a_statistical_regression(self):
+        before, after = self.pair()
+        after["metrics"]["p95_post_end_latency_ms"] = 900
+        report = self.compare(before, after)
+        self.assertEqual(report["verdict"], "inconclusive")
+        self.assertEqual(report["frr_assessment"]["verdict"], "improved")
+        self.assertEqual(report["budget_status"]["latency"]["candidate_status"], "observed_above_budget")
+        self.assertEqual(report["regressions"], [])
+
+    def test_count_types_ranges_and_frr_consistency_are_verified(self):
+        for side in (0, 1):
+            for field, bad in (("expected", True), ("expected", 1000.0),
+                               ("expected", 10 ** 400), ("matched", -1),
+                               ("matched", 1000), ("false_rejects", "100"),
+                               ("false_rejects", 1001), ("frr", .123)):
+                cards = list(self.pair())
+                cards[side]["metrics"][field] = bad
+                with self.subTest(side=side, field=field, bad=bad), self.assertRaises(ValueError):
+                    self.compare(*cards)
+        for field in ("expected", "matched", "false_rejects"):
+            cards = list(self.pair())
+            del cards[1]["metrics"][field]
+            with self.subTest(missing=field), self.assertRaises(ValueError):
+                self.compare(*cards)
+
+    def test_no_positive_support_and_small_zero_error_sample_are_inconclusive(self):
+        for n in (0, 1, 100):
+            report = self.compare(*self.pair(n, 0, 0))
+            self.assertEqual(report["verdict"], "inconclusive")
+        self.assertEqual(self.compare(*self.pair(0, 0, 0))["frr_direction"], "not_estimated")
+        self.assertEqual(self.compare(*self.pair(1000, 0, 0))["verdict"], "neutral")
+
+    def test_small_word_slice_and_one_false_accept_do_not_veto_aggregate(self):
+        before, after = self.pair(10000, 2000, 1000)
+        after["metrics"].update(false_accepts=1, far_per_hour=.1)
+        after["far_rate"] = exact_card(count=1)["far_rate"]
+        self.words(before, [(1, 9990, 2000, 0), (2, 10, 0, 0)])
+        self.words(after, [(1, 9990, 999, 0), (2, 10, 1, 1)])
+        report = self.compare(before, after)
+        self.assertEqual(report["verdict"], "improved")
+        self.assertEqual(report["per_keyword"]["2"]["direction"], "higher")
+        self.assertEqual(report["per_keyword"]["2"]["verdict"], "inconclusive")
+        self.assertEqual(report["per_keyword"]["2"]["false_accepts"]["candidate"], 1)
+
+    def test_per_word_counts_must_match_each_other_and_the_aggregate(self):
+        before, after = self.pair()
+        self.words(before, [(1, 500, 100, 0), (2, 500, 100, 0)])
+        self.words(after, [(1, 500, 50, 0), (2, 500, 50, 0)])
+        for field, value in (("expected", 499), ("false_rejects", True), ("frr", .9)):
+            forged = copy.deepcopy(after)
+            forged["domains"]["overall"]["per_keyword"]["1"][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                self.compare(before, forged)
+        forged = copy.deepcopy(after)
+        del forged["domains"]["overall"]["per_keyword"]["1"]
+        with self.assertRaisesRegex(ValueError, "sum to aggregate"):
+            self.compare(before, forged)
+        forged = self.words(copy.deepcopy(after), [(1, 499, 50, 0), (2, 501, 50, 0)])
+        with self.assertRaisesRegex(ValueError, "per-keyword denominators"):
+            self.compare(before, forged)
+        forged = copy.deepcopy(after)
+        forged["domains"]["overall"]["per_keyword"]["1"]["false_accepts"] = 1
+        with self.assertRaisesRegex(ValueError, "false accepts do not sum"):
+            self.compare(before, forged)
+
+    def test_dataset_identity_constrains_denominators_without_banning_dataset_ablation(self):
+        before, after = exact_card(expected=1000, misses=200), exact_card(expected=2000, misses=200, model="b")
+        with self.assertRaisesRegex(ValueError, "positive denominators"):
+            self.compare(before, after)
+        after["identity"].update(model_id=before["identity"]["model_id"], dataset_id="e" * 64, variable="dataset")
+        self.assertEqual(self.compare(before, after)["verdict"], "improved")
+
+    def test_missing_word_evidence_is_explicit_not_fabricated(self):
+        report = self.compare(*self.pair())
+        self.assertEqual(report["per_keyword_status"], "not_available_on_both_scorecards")
+        self.assertEqual(report["per_keyword"], {})
+
+    def test_nominal_scope_cannot_be_upgraded_to_independent_human_evidence(self):
+        before, after = self.pair()
+        after["independent_human_evidence"] = True
+        report = self.compare(before, after)
+        self.assertFalse(report["evidence_scope"]["independent_human_evidence"])
+        self.assertFalse(report["evidence_scope"]["independent_events_verified"])
+        self.assertFalse(report["statistical_policy"]["source_cluster_adjustment"])
+        self.assertIn("approximate", report["statistical_policy"]["confidence_scope"])
+        for budget in (0, 1e-320):
+            bounded = self.compare(before, after, far=budget)
+            self.assertEqual(bounded["verdict"], "inconclusive")
+            json.dumps(bounded, allow_nan=False)
+
+    def test_cli_defaults_aliases_and_inconclusive_exit_allow_research(self):
+        with tempfile.TemporaryDirectory() as directory:
+            paths = [Path(directory) / name for name in ("before.json", "after.json")]
+            output = Path(directory) / "comparison.json"
+            for n, left, right, verdict, code in ((100, 20, 10, "inconclusive", 0),
+                                                 (1000, 100, 200, "regressed", 1)):
+                for path, card in zip(paths, self.pair(n, left, right)):
+                    path.write_text(json.dumps(card))
+                argv = ["compare", "--baseline", str(paths[0]), "--candidate", str(paths[1]), "--output", str(output)]
+                for flag in ([], ["--frr-margin", ".02"], ["--frr-tolerance", ".02"]):
+                    with mock.patch.object(sys, "argv", argv + flag), contextlib.redirect_stdout(io.StringIO()):
+                        self.assertEqual(comparison.main(), code)
+                    report = json.loads(output.read_text())
+                    self.assertEqual(report["verdict"], verdict)
+                    self.assertEqual(report["statistical_policy"]["material_frr_margin"], .02)
 
 
 class SystemComparisonTests(unittest.TestCase):
@@ -248,7 +445,9 @@ class SystemComparisonTests(unittest.TestCase):
         after = self.produce("b", code="b", frontend="native-80-bin-transducer")
         result = self.compare(before, after)
         self.assertEqual(len(self.runner_calls), 6)
-        self.assertEqual(result["verdict"], "improved")
+        self.assertEqual(result["verdict"], "inconclusive")
+        self.assertEqual(result["frr_direction"], "lower")
+        self.assertEqual(set(result["per_keyword"]), {"1", "2"})
         self.assertEqual(result["comparison_mode"], "system")
         self.assertIn("code_sha", result["moved"])
         self.assertIn("native_frontend", result["moved"])
@@ -311,6 +510,14 @@ class SystemComparisonTests(unittest.TestCase):
         forged = copy.deepcopy(after)
         forged["metrics"]["frr"] = .123
         with self.assertRaisesRegex(ValueError, "score differs from saved events"):
+            self.compare(before, forged)
+        forged = copy.deepcopy(after)
+        forged["domains"]["overall"]["per_keyword"]["1"]["false_accepts"] = 1
+        with self.assertRaisesRegex(ValueError, "per-keyword scores differ from saved events"):
+            self.compare(before, forged)
+        forged = copy.deepcopy(after)
+        del forged["domains"]["overall"]["per_keyword"]
+        with self.assertRaisesRegex(ValueError, "per-keyword scores are missing"):
             self.compare(before, forged)
         forged = copy.deepcopy(after)
         forged["identity"]["model_id"] = "f" * 64
@@ -406,12 +613,12 @@ class SystemComparisonTests(unittest.TestCase):
                 "--mode", "system", "--far-budget", "1e9"]
         with mock.patch.object(sys, "argv", argv), contextlib.redirect_stdout(io.StringIO()) as out:
             self.assertEqual(comparison.main(), 0)
-        self.assertEqual(json.loads(out.getvalue())["verdict"], "improved")
+        self.assertEqual(json.loads(out.getvalue())["verdict"], "inconclusive")
         roots = [evidence_inputs.adjacent_evidence_root(path, card)
                  for path, card in zip(paths, (before, after))]
         result = comparison.compare(before, after, 1e9, 0, 800, mode="system",
                                     baseline_evidence_root=roots[0], candidate_evidence_root=roots[1])
-        self.assertEqual(result["verdict"], "improved")
+        self.assertEqual(result["verdict"], "inconclusive")
         self.assertEqual([path.read_bytes() for path in paths], originals)
         audio = next(roots[1].rglob("negative.wav"))
         audio.write_bytes(audio.read_bytes()[:-2] + b"\1\0")

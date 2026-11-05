@@ -366,6 +366,14 @@ def verify_system_evidence(card: dict, label: str, *, evidence_root: pathlib.Pat
     for field in ("expected", "matched", "false_rejects", "false_accepts", "frr",
                   "far_per_hour", "p95_post_end_latency_ms"):
         require(card["metrics"].get(field) == summary[field], label + " score differs from saved events: " + field)
+    domains = card.get("domains", {})
+    require(type(domains) is dict, label + " domains must be an object")
+    overall = domains.get("overall", {})
+    require(type(overall) is dict, label + " domain overall metrics must be an object")
+    require(type(overall.get("per_keyword")) is dict,
+            label + " per-keyword scores are missing")
+    require(overall["per_keyword"] == summary["per_keyword"],
+            label + " per-keyword scores differ from saved events")
     require(card["far_rate"].get("observed_false_accepts") == summary["negative_recording_false_accepts"] and
             card["exposure"].get("exposure_hours") == summary["negative_recording_audio_hours"],
             label + " negative population differs from saved events")

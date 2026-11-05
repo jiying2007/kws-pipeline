@@ -99,10 +99,28 @@ role's package pins, or run a script through the checked entry. See the
 [research runtime guide](../docs/RESEARCH_RUNTIME.md) for environment setup and
 the separate model-smoke validation status.
 
+- [`setup_asr_runtime.py`](setup_asr_runtime.py) — Install the shared ASR role from retained package, source and model hashes.
+- [`active_asr_batch.py`](active_asr_batch.py) — Bind existing audio and resume a bounded private ASR batch without repeating completed calls.
+- [`active_asr_worker.py`](active_asr_worker.py) — Run one native recognizer process and retain its raw output and call claim.
+- [`summarize_active_asr_batch.py`](summarize_active_asr_batch.py) — Re-read the complete model/clip matrix and produce the file inventory and resource summary.
+- [Active ASR batch guide](../docs/ACTIVE_ASR_BATCH.md) — Decoder conditions, private output layout and weak-label boundaries.
+- [`run_zipformer_system.py`](run_zipformer_system.py) — Execute a pinned native Zipformer system on verified shared PCM, preserving per-clip claims and results.
+- [`research_job_lock.py`](research_job_lock.py) — Share one explicit local heavy-model slot across direct and supervised workers.
+- [Native Zipformer system guide](../docs/ZIPFORMER_SYSTEM.md) — Fixed profile, actual D0 execution and limits on interpreting native events.
+
 [`research_python_entry.py`](research_python_entry.py) runs preserved research
 drivers after shared Python startup. It removes only the running interpreter's
 single library directory before entering the driver; preload, audit, empty and
 additional loader paths remain errors. The preserved driver guards stay intact.
+
+[`research_queue.py`](research_queue.py) freezes explicitly budgeted local jobs,
+advances on verified prerequisite outputs and preserves claims, logs and terminal
+receipts. [`research_job_lock.py`](research_job_lock.py) shares one configurable
+heavy-model flock with direct or supervised training/evaluation entrypoints.
+The [local queue guide](../docs/LOCAL_RESEARCH_QUEUE.md) explains completion,
+unknown outcomes, actual elapsed-time accounting and the inherited process-group
+contract. The remote hourly watchdog is **not deployed**; these local tools do
+not create a GitHub schedule or retrospectively claim earlier model executions.
 
 ## Disabled research plan metadata
 

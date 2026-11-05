@@ -4,8 +4,12 @@ Host tooling and new research workers use **CPython 3.12**. The exact active
 patch and the `core`, `tts`, and `asr` dependency roles are declared once in
 [`configs/runtime/research-runtime.json`](../configs/runtime/research-runtime.json).
 The current target is **3.12.16**. Selecting an interpreter and checking package
-metadata do not establish model quality or successful end-to-end inference;
-the manifest keeps that small-sample model validation explicitly pending.
+metadata do not establish model quality or successful end-to-end inference.
+The combined ASR role completed 192 native recognitions over 64 existing clips
+on this patch, with all 727 input/result files re-read and hash checked. The
+manifest records that scoped evidence separately; TTS model validation on this
+patch is still pending, so the overall model-smoke status remains pending.
+See the [active ASR guide](ACTIVE_ASR_BATCH.md) for conditions and limits.
 
 The device runtime remains pure C. It has no Python runtime dependency.
 Python is a host build, data, training and evaluation tool.

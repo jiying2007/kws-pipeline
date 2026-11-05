@@ -18,9 +18,19 @@ trade recall against false accepts, but that tradeoff does not mathematically
 rule out a zero-error sample. Report positive support, negative exposure and
 confidence bounds; rejecting everything still fails recall when positives exist.
 
-So this lane does not judge. It **measures**, in a form that can be compared.
+This lane records measurements and a versioned research comparison. Its verdict
+does not promote a model or require stopping further research.
 
-New runs produce schema-5 exact-Poisson scorecards. The [multilingual model tournament](KWS_MULTILINGUAL_MODEL_TOURNAMENT.md) accepts a homogeneous v4 or v5 ablation cohort and always ranks with exact FAR; it does not mix their input policies. For systems with different source code or native frontends, use the explicit system comparison below. These are research results, not real-human/SSC305 qualification.
+New runs produce schema-5 exact-Poisson scorecards. Their comparator now emits
+comparison-report schema 3 with policy
+`research-operating-point-wilson-bonferroni-nominal95-v1` and four possible
+outcomes. Scorecards 1–4 retain their historical comparison-report schema 1,
+three outcomes, and default FRR tolerance of zero; saved historical reports are
+not rewritten. The [multilingual model tournament](KWS_MULTILINGUAL_MODEL_TOURNAMENT.md)
+accepts a homogeneous v4 or v5 ablation cohort and retains its separate observed
+Pareto ranking policy. For systems with different source code or native
+frontends, use the explicit system comparison below. These are research results,
+not independent-human or SSC305 qualification.
 
 ## The two controlled variables
 
@@ -42,8 +52,9 @@ A run also records `code_sha`, `seed` and `protocol`.
 3. **Same protocol or no comparison.** Numbers from different protocols are not
    the same measurement.
 4. **Code changes confound.** If `code_sha` differs, re-baseline first.
-5. **False accepts are compared on the upper bound, not the point estimate.**
-   Zero over 30 seconds and zero over 30 hours are wildly different evidence.
+5. **Both systems must demonstrate the same FAR budget before an operating-point
+   conclusion.** The exact upper bounds may differ while both meet that budget.
+   Zero over 30 seconds and zero over 30 hours provide different evidence.
 
 ## Comparing complete systems
 
@@ -88,7 +99,7 @@ python tools/run_dataset_iteration.py \
 
 python tools/compare_dataset_iterations.py \
   --baseline "$BASE_CARD" --candidate "$CANDIDATE_CARD" \
-  --mode system --far-budget 0.13 --frr-tolerance 0.02 --latency-budget 500
+  --mode system --far-budget 0.13 --frr-margin 0.02 --latency-budget 500
 ```
 
 System comparison requires the same original/effective reference bytes, measured
@@ -132,24 +143,76 @@ research choices, not evidence that a candidate meets them. Compare separately
 calibrated systems at a common FAR budget; equal confidence scores across models
 are not required or assumed.
 
-### Research interpretation and accent recall
+### Four outcomes and the meaning of uncertainty
 
-The comparator's `improved`, `neutral` and `regressed` values describe observed
-aggregate results under the declared budgets. They are not tests of statistical
-significance or mandatory stop decisions for every research route. A FAR bound
-above a budget can mean insufficient negative exposure; it does not by itself
-show that the new model is worse. Report exposure, counts, deltas and uncertainty
-alongside the verdict, and gather more independent evidence before claiming a
-quality win. The current CLI does not implement a separate significance or
-`inconclusive` classifier.
+For schema-5 cards, choose an absolute FRR material-difference margin before
+examining candidate outcomes. The initial research default is **0.02**, meaning
+two percentage points, and is not claimed to be optimal. `--frr-margin` and its
+existing alias `--frr-tolerance` record that value. The tool cannot authenticate
+when an explicitly supplied margin was chosen.
 
-Use meaningful, predeclared FRR tolerances and report per-word and accent/scene
-slices. A small slice's point-estimate fluctuation does not automatically veto
-continued research. Complete accented, linked or lightly pronounced wake words
-remain positives; ASR disagreement alone must not turn them into negatives.
-Report near-sounding and partial-word challenges separately from natural
-continuous-background FAR. Existing historical failed experiments and frozen
-receipts retain their original interpretation; new research uses new cards.
+The comparator verifies integer expected/matched/missed counts, their sum and
+the exact `false_rejects / expected` FRR. The same evaluation dataset must have
+the same positive denominators. It constructs a two-sided **97.5% Wilson score
+interval** for each arm using the existing one-sided helper at 0.9875. If the
+baseline interval is `[L_b, U_b]` and candidate interval is `[L_c, U_c]`, the
+difference interval for candidate FRR minus baseline FRR is
+`[L_c - U_b, U_c - L_b]`. This is a Bonferroni construction with **approximate,
+nominal 95% coverage**, because the marginal Wilson coverage is approximate.
+It does not require independence between the two systems. See the NIST
+[Wilson interval formulas](https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm)
+and [Bonferroni inequality](https://www.itl.nist.gov/div898/handbook/prc/section4/prc473.htm).
+
+| FRR evidence result | Interval rule with margin `m` |
+| --- | --- |
+| `improved` | Entire difference interval is below `-m` |
+| `regressed` | Entire difference interval is above `+m` |
+| `neutral` | Entire difference interval lies within `[-m, +m]` |
+| `inconclusive` | Any remaining overlap, or no positive support on either side |
+
+`frr_direction` separately reports the observed point-estimate direction:
+`lower`, `higher`, `unchanged`, or `not_estimated`. `frr_assessment` retains the
+counts, marginal intervals, difference interval and FRR evidence result even
+when the final operating-point `verdict` is inconclusive.
+
+For example, a change from 20/100 misses to 10/100 misses has a lower observed
+FRR but remains inconclusive under this interval rule. At 200/1000 versus
+100/1000, the difference interval is approximately `[-0.1491, -0.0499]`, so its
+FRR evidence result is improved at margin 0.02. These are count examples,
+not claims about independent human recordings.
+
+The final verdict also requires both exact, one-sided 95% FAR upper bounds to
+meet the same declared budget and the candidate's latency point to meet its
+ceiling. Otherwise it is `inconclusive`. FAR budget status is reported separately
+for each arm as `met`, `not_demonstrated`, or `observed_rate_above_budget`.
+The last status describes an observed rate, not a proved population excess or
+candidate regression. With zero false accepts, the default 1 FA/h budget needs
+about 2.996 hours of qualifying negative exposure; shorter zero-error runs do
+not demonstrate that budget. The latency report has no confidence interval, so
+crossing its point-value ceiling is not called a statistical latency regression.
+
+These are conditional event-level research intervals. Independent Bernoulli
+events with a common miss probability within each arm are an assumption, not
+something an aggregate scorecard establishes. Repeated speakers, related source
+clips and synthetic voices can
+violate that assumption; the comparator does not count them as independent
+human evidence or apply a source-cluster correction. It also does not use paired
+event discordances or correct for repeated examination and candidate selection.
+Independent-human and final-target claims need their corresponding data and
+analysis. All new reports explicitly keep `independent_human_evidence=false`.
+
+The existing per-keyword table is retained with counts, intervals, observed
+direction and false accepts. Its positive counts must sum to the aggregate;
+system mode requires that table and rescores it from the saved events. Missing
+per-word evidence in a metadata-only ablation card is reported as unavailable.
+Per-word intervals are diagnostic,
+not a simultaneous guarantee across all words, and a small slice's fluctuation
+does not automatically veto the aggregate result. Report accent and scene
+slices alongside them. Complete accented, linked or lightly pronounced wake
+words remain positives; ASR disagreement alone must not turn them into negatives.
+Near-sounding and partial-word challenges remain separate from natural continuous
+background FAR; synthetic or repeated challenge duration cannot establish that
+natural-audio population. Historical results retain their original interpretation.
 
 ## Interpreting the exposure number
 
@@ -277,6 +340,8 @@ with all three backend commands mocked. A second normal-child fixture invokes
 the actual corpus, scorer and domain Python mains, mocking only the external
 runner on literal tiny PCM/TSV inputs. The v5 suite additionally covers an
 independent high-precision Poisson oracle, the zero-to-one FA counterexample,
+independent Decimal inversion of the binomial score equation, all four outcomes,
+count/denominator checks, separate budget status, and per-word diagnostics,
 mode separation, WAV-duration rechecking, unchanged-card bundle restoration,
 damaged evidence and output aliases, including under optimized interpreters.
 No real acoustic model or C timeline-parser execution is established by these
@@ -324,15 +389,18 @@ python3 tools/compare_dataset_iterations.py \
   --candidate card.json --far-budget 1.0
 ```
 
-Exit codes for the comparison: `0` no regression, `1` regression,
-`2` refused or unusable input.
+Exit codes for the comparison: `0` improved, neutral or inconclusive;
+`1` regressed; `2` refused or unusable input. An inconclusive result can proceed
+to the next research measurement; it does not claim that the budgets passed.
 
 ## What this lane does not do
 
 It does not qualify, freeze, or promote anything, and it consumes no protected
-evidence. A verdict of `improved` means the measured operating point moved in
-the right direction on this dataset under this protocol. Natural-speech and
-physical-target claims still need their corresponding measurements.
+evidence. A new-schema verdict of `improved` means the conditional FRR difference
+interval clears the predeclared margin while the common FAR condition and
+candidate latency point budget are met. It is not proof of generalization from
+synthetic or repeated-source observations. Natural-speech and physical-target
+claims still need their corresponding measurements.
 
 ## Recording
 
