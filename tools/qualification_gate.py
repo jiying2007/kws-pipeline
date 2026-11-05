@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""Historical product-format numerical replay only; not current research approval.
+
+The original legacy result fields remain byte-compatible for offline fixture audit.
+Explicit replay consent is required before any evidence file is opened or written.
+"""
 from __future__ import annotations
 
 from collections import Counter
@@ -424,6 +429,8 @@ def validate_manifest(manifest: dict, *, references: pathlib.Path | None = None,
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--historical-replay-only", action="store_true",
+                        help="explicitly replay old product-format evidence; never grants research or release approval")
     parser.add_argument("--manifest", required=True, type=pathlib.Path)
     parser.add_argument("--references", required=True, type=pathlib.Path)
     parser.add_argument("--detections", required=True, type=pathlib.Path)
@@ -431,6 +438,8 @@ def main() -> int:
     parser.add_argument("--policy", required=True, type=pathlib.Path)
     parser.add_argument("--output", type=pathlib.Path)
     args = parser.parse_args()
+    if not args.historical_replay_only:
+        raise ValueError("retired qualification CLI: --historical-replay-only is required for offline historical replay; no current research or product approval")
     manifest = load_json(args.manifest)
     policy = validate_policy(load_json(args.policy))
     measured = validate_manifest(manifest, references=args.references,
