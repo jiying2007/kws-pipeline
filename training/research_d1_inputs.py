@@ -24,6 +24,7 @@ DATA_SOURCE_PATHS = (
 RETAINED_SAMPLER_SHA256 = "5a6f5447b1f4e618f38e9f1bde0b79b1ba3b21db3fbab3fd0e237c622f39e288"
 D1_SOURCE_V1 = "kws-active-d1-frozen-plan-source-v1"
 D1_SOURCE_V2 = "kws-active-d1-frozen-plan-source-v2"
+D1_SOURCE_V3 = "kws-active-d1-partial-observation-source-v3"
 
 
 def sha(raw):
@@ -86,7 +87,7 @@ def aggregate_batches(packages, loader, *, expected_plan_sha256):
                 manifest.get("evidence/inputs.json") == sha(inputs_raw), "D1_PARENT_REPORT_BINDING")
         report, inputs = loader.loads(report_raw), loader.loads(inputs_raw)
         adapter = report.get("source_adapter")
-        require(type(adapter) is dict and adapter.get("schema") in (D1_SOURCE_V1, D1_SOURCE_V2) and
+        require(type(adapter) is dict and adapter.get("schema") in (D1_SOURCE_V1, D1_SOURCE_V2, D1_SOURCE_V3) and
                 adapter.get("plan_sha256") == expected_plan_sha256, "D1_COMMON_FROZEN_PLAN_REQUIRED")
         # Do not replace this with next(...), a count from a saved summary, or
         # direct report loading: OOV and uncertain rows must also be replayed.
@@ -119,7 +120,10 @@ def aggregate_batches(packages, loader, *, expected_plan_sha256):
             pcm_identities.add(clip["original_pcm"]["sha256"])
             loader.add_source_role(roles, source, clip, measured)
             row = loader.training_row(raw, "fsmn-fulltext")
-            if adapter["schema"] == D1_SOURCE_V2:
+            if adapter["schema"] in (D1_SOURCE_V2, D1_SOURCE_V3):
+                # The v3 loader authenticates partial-return provenance before
+                # this projection. Consumed calls without audio remain only in
+                # its accounted-coverage metadata; they are never weak rows.
                 outcome = source.get("generation_outcome")
                 require(outcome in ("completed", "failed-native"), "D1_EXPLICIT_GENERATION_OUTCOME_REQUIRED")
                 generation = source["original_generation_row"]
@@ -131,7 +135,7 @@ def aggregate_batches(packages, loader, *, expected_plan_sha256):
                 row.update(generation_outcome=outcome, original_generation_row=generation,
                            generation_receipt_sha256=source["generation_receipt_sha256"],
                            generation_start_receipt_sha256=source["generation_start_receipt_sha256"],
-                           source_adapter_schema=D1_SOURCE_V2, source_adapter_sha256=digest(adapter))
+                           source_adapter_schema=adapter["schema"], source_adapter_sha256=digest(adapter))
                 if outcome == "failed-native":
                     require(raw["decision"]["status"] == "uncertain" and row["full_text"] is None and
                             row["ctc_mask"] is False and row["ctc_weight"] == 0 and row["target_ids"] is None and
