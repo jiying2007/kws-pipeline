@@ -219,100 +219,27 @@ python3 training/audit_dataset.py \
 
 任何已经用于 tuning、hard-negative mining 或 false-reject replay 的录音，不能再作为 unbiased final qualification evidence。
 
-## Product-board 证据合同 — 框架已准备，物理执行后置
+## 真实设备独立科研测量（非产品准入门槛）
 
-后续实机阶段先让 collector 监督**真正的被测进程**：
+当前 KWS 数据准备、训练和成对声学研究**不以产品认证、Shipping
+发布身份或 GitHub Release 为前置条件**。真人最终麦克风/AFE、
+独立连续负流，以及物理 SSC305 的 CPU、RSS、栈、温升、功耗、
+音频连续性与延迟，应在具备合法授权和真实设备时单独采集；缺失
+实测时状态保持 **NOT_RUN**，不得由合成数据或 CI 成功推定通过。
 
-```bash
-python3 tools/collect_runtime_soak.py \
-  --hours 24 \
-  --sample-seconds 60 \
-  --output qualification/runtime-soak.json \
-  --command ./product-kws-soak --config qualification/product-config.json
-```
+保留的 `tools/collect_runtime_soak.py` 和
+`tools/collect_target_evidence.py` 可用于绑定真实原始测量、
+模型/固件/源码、工具链及仪器身份。Host/QEMU 结果、合成 WAV
+和人工构造的收据均不能代替设备实际测量。
 
-然后冻结 raw evidence 并组装 target identity：
-
-```bash
-python3 tools/collect_target_evidence.py \
-  --output qualification/evidence.json \
-  --target product-sku-a \
-  --board-revision A \
-  --soc cortex-a32 \
-  --toolchain arm-linux-gnueabihf-gcc-... \
-  --compiler-flags '-O3 -mcpu=cortex-a32 ...' \
-  --audio-frontend audio-pipeline-vX \
-  --audio-frontend-sha256 <sha256> \
-  --runtime-soak qualification/runtime-soak.json \
-  --stack-high-water-bytes <measured> \
-  --average-power-mw <measured> \
-  --raw-evidence qualification/stack-watermark.txt \
-  --raw-evidence qualification/board-summary.json \
-  --power-raw qualification/power.csv \
-  --evidence-raw qualification/evidence-raw.jsonl \
-  --attestation-verification qualification/attestation-verification.json \
-  --board-runner qualification/kws_board_bench.target \
-  --model release/base.kwm \
-  --keyword-pack release/xiaowo.kwk \
-  --board-audio qualification/board-audio.wav \
-  --sku product-sku-a \
-  --source-sha "$(git rev-parse HEAD)" \
-  --builder-id qualification-builder-01 \
-  --dut-id product-dut-01 \
-  --collector-id qualification-station-01 \
-  --instrument-id <meter-id> \
-  --calibration-id <calibration-id>
-```
-
-`builder-id` 与 `dut-id` 必须不同。CPU/RSS/thermal/soak 会从保留 raw samples 独立重算；power 需要保留仪器原始数据和 calibration identity。详见 `docs/TARGET_EVIDENCE.md`。
-
-## 制品绑定的最终 qualification
-
-后续最终真人/实机 evidence 仍走同一套 artifact-bound contract，不接受手工总结替代：
-
-```bash
-python3 tools/qualification_manifest.py \
-  --model release/base.kwm \
-  --model-provenance release/base.kwm.provenance.json \
-  --checkpoint release/base.pt \
-  --training-tokens release/training-tokens.txt \
-  --training-manifest data/train.jsonl \
-  --dataset-audit qualification/dataset-audit.json \
-  --keywords release/xiaowo.kwk \
-  --tokens release/tokens.txt \
-  --config release/runtime.json \
-  --eval-runner qualification/kws_wav.eval \
-  --references qualification/references.jsonl \
-  --eval-audio-root qualification/audio \
-  --detections qualification/detections.jsonl \
-  --eval-summary qualification/eval-summary.json \
-  --eval-provenance qualification/detections.provenance.json \
-  --board-summary qualification/board-summary.json \
-  --board-runner qualification/kws_board_bench.target \
-  --board-audio qualification/board-audio.wav \
-  --evidence qualification/evidence.json \
-  --evidence-collector tools/collect_target_evidence.py \
-  --evidence-raw qualification/evidence-raw.jsonl \
-  --attestation-verification qualification/attestation-verification.json \
-  --raw-evidence qualification/runtime-soak.json \
-  --raw-evidence qualification/stack-watermark.txt \
-  --raw-evidence qualification/board-summary.json \
-  --raw-evidence qualification/power.csv \
-  --source-sha "$(git rev-parse HEAD)" \
-  --sku product-sku-a \
-  --corpus-id home-kws-heldout-v1 \
-  --output qualification/qualification-manifest.json
-
-python3 tools/qualification_gate.py \
-  --references qualification/references.jsonl \
-  --detections qualification/detections.jsonl \
-  --board-audio qualification/board-audio.wav \
-  --manifest qualification/qualification-manifest.json \
-  --policy qualification/sku-policy.json \
-  --output qualification/gate-result.json
-```
-
-研究门禁保留 model ABI v2、keyword-pack ABI v3、frontend-spec v2、语料身份、数据审核和目标板来源完整性；真实人声/AFE、物理设备时延与资源测量需独立开展，不能转化为产品资格或伪造 PASS。
+旧的产品/Shipping 操作示例、Release 命名制品路径以及
+`tools/qualification_manifest.py` /
+`tools/qualification_gate.py` **不是当前科研执行教程**。
+这些历史格式工具默认拒绝，只有明确指定
+`--historical-replay-only` 才可离线审计旧证据；
+原说明保留于[历史资格文档](docs/RELEASE_QUALIFICATION.md)
+和[设备证据文档](docs/TARGET_EVIDENCE.md)。当前没有商用发布/
+产品审批流程，科研测量不产生产品批准权限。
 
 ## 验证边界
 
