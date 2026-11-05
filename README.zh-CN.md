@@ -245,7 +245,7 @@ python3 training/audit_dataset.py \
 
 CI 当前证明软件合同和 deterministic/synthetic regression：GCC/Clang、CTest、static analysis、coverage、ASan/UBSan、libFuzzer、Cortex-A32 cross-build（其 **CTest 套件实际在 `qemu-arm-static` 下执行**）以及 hosted-vs-Cortex-A32 的 int8 kernel 数值对拍门禁、frontend/decoder、corpus identity、自训练闭环、robustness/FAR regression、runtime-soak/target-evidence schema、SDK reproducibility、model supply-chain、冻结研究模型资产 SHA256 pin。
 
-它**不宣称真实商用声学和物理板级 qualification 已完成**。完成本轮 non-real-data 工程闭环后，产品证据阶段只剩两步：① 真实普通话经过最终麦克风/结构/AFE；② 物理目标板 performance/soak 并最终批准完整 deployment tuple。这两步在本仓库**均无法执行**：都需要硬件、真人受试者与 self-hosted runner，这两条旧的商用 Release 发布工作流均已退役，独立真机与真人实验须有真实输入和合法授权。
+它**不宣称独立真人声学效果或真实 SSC305 板端资源表现已经得到验证**。后续独立科研测量仍需合法授权的真人语音、最终麦克风/结构/AFE，以及实际设备的性能、连续运行和资源原始记录；无真实输入或设备时保持 NOT_RUN/BLOCKED，不阻塞当前数据准备、模型训练与成对科研评测。过去的 GitHub Release、产品/Shipping 审批发布器已退役，任何科研实验都不产生此类批准权限。
 
 详见 `docs/README.md`、`docs/CUSTOMIZATION.md`、`docs/RELEASE_QUALIFICATION.md`、`docs/TARGET_EVIDENCE.md`、`docs/CORPUS_IDENTITY.md`、`docs/AUDIO_DISCONTINUITY.md` 和 Issue #2。
 
