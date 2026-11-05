@@ -13,6 +13,8 @@
 
 Research: [reusable modules, retained results and independent evidence boundaries](research/README.md)
 
+Latest D1 checkpoint: [256 accounted cells, fixed-initialization comparison and native keyword observations](docs/KWS_D1_ACCOUNTED256_20261105.md). The 255 returned audio cells and one consumed unknown are reported separately.
+
 Current status: [model and engineering summary](docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status), checked 2026-10-29. The [historical engineering audit and earlier closure record](docs/KWS_PRODUCTION_CLOSURE_2026-10-29.md) binds merged repairs, new regressions, pending local acceptance and the remaining data, candidate, final-AFE and physical-board gates. Historical SKU, retained FSMN B/OR and posterior-only C keep their separate evidence scopes; no current model has independently measured real-human and physical SSC305 performance.
 
 Current archive delivery: [complete public archive, index and verified restoration](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md). The old expanded-copy target is cancelled; its historical status remains NOT_PUSHED. D20 numerical failure and D90 not yet tested, fixed50 inconclusive support and the old-model nightly failure remain separate; human/device qualification is deferred.

@@ -91,15 +91,38 @@
         "train_speakers": 6,
         "development_speakers": 2,
         "scope": "engineering learning curve",
-        "execution_status": "first64_generation_asr_nine_arm_training_development_and_native_system_checkpoint_complete;full256_continuation_in_progress",
-        "execution_evidence": "research/active-d1-20261105/tts-first64-summary.json",
-        "content_asr_evidence": "research/active-d1-20261105/first64-selective-asr-summary.json",
-        "observed_generation_cells": 64,
-        "technical_failures_retained": 5,
-        "training_evidence": "research/active-d1-20261105/first64-training-summary.json",
-        "native_system_evidence": "research/active-d1-20261105/first64-zipformer-summary.json",
-        "observed_generation_scope": "first fully audited64 checkpoint; subsequent frozen-prefix generation recorded separately",
-        "full256_complete": false
+        "execution_status": "accounted256_generation_asr_training_and_development_complete_native_predictions_accounted_with_two_distinct_unknowns",
+        "execution_evidence": "research/active-d1-20261105/accounted256-tts-summary.json",
+        "content_asr_evidence": "research/active-d1-20261105/accounted256-asr-summary.json",
+        "observed_generation_cells": 255,
+        "technical_failures_retained": 22,
+        "training_evidence": "research/active-d1-20261105/accounted256-training-summary.json",
+        "native_system_evidence": "research/active-d1-20261105/accounted256-zipformer-summary.json",
+        "observed_generation_scope": "All256 planned cells accounted;255 returned plus1 original consumed unknown; original64 evidence preserved separately",
+        "full256_complete": false,
+        "planned_generation_cells": 256,
+        "consumed_unobservable_generation_cells": 1,
+        "pending_generation_cells": 0,
+        "full256_accounting_complete": true,
+        "full256_complete_scope": "All256 planned generation calls returned audio; false because1 original consumed call remains unobservable",
+        "machine_weak_candidate_rows": 211,
+        "uncertain_observed_rows": 44,
+        "ctc_train_rows": 154,
+        "ctc_development_rows": 57,
+        "primary_cross_size_development_rows": 16,
+        "additional_development_observed_rows": 48,
+        "additional_development_evaluable_rows": 41,
+        "observed_cohort_training_and_development_complete": true,
+        "results_document": "docs/KWS_D1_ACCOUNTED256_20261105.md",
+        "native_prediction_rows": 254,
+        "native_consumed_unknown_predictions": 1,
+        "native_prediction_pending_rows": 0,
+        "native_known_label_and_prediction_rows": 210,
+        "native_known_train_rows": 154,
+        "native_known_development_rows": 56,
+        "additional_native_development_prediction_rows": 47,
+        "additional_native_development_evaluable_rows": 40,
+        "native_prediction_coverage_complete": false
       },
       {
         "stage": "D2",
@@ -120,15 +143,15 @@
       "role": "fresh same-data control",
       "initialization": "fresh",
       "enabled": true,
-      "execution_status": "d1_first64_three_near_ratios_actual_training_and_fixed_development_complete;full256_pending",
-      "execution_evidence": "research/active-d1-20261105/first64-training-summary.json"
+      "execution_status": "d1_first64_and_accounted255_ctc_three_near_ratios_actual_training_and_fixed_original16_development_complete",
+      "execution_evidence": "research/active-d1-20261105/accounted256-training-summary.json"
     },
     {
       "id": "fsmn_ctc",
       "role": "streaming CTC candidate",
       "enabled": true,
-      "execution_status": "d1_first64_three_near_ratios_actual_training_and_fixed_development_complete;full256_pending",
-      "execution_evidence": "research/active-d1-20261105/first64-training-summary.json"
+      "execution_status": "d1_first64_and_accounted255_ctc_three_near_ratios_actual_training_and_fixed_original16_development_complete",
+      "execution_evidence": "research/active-d1-20261105/accounted256-training-summary.json"
     },
     {
       "id": "c1_causal",
@@ -138,16 +161,16 @@
         "two-keyword direct"
       ],
       "enabled": true,
-      "execution_status": "d1_first64_three_near_ratios_actual_training_and_fixed_development_complete;full256_pending",
-      "execution_evidence": "research/active-d1-20261105/first64-training-summary.json"
+      "execution_status": "d1_first64_and_accounted255_ctc_three_near_ratios_actual_training_and_fixed_original16_development_complete",
+      "execution_evidence": "research/active-d1-20261105/accounted256-training-summary.json"
     },
     {
       "id": "zipformer_kws",
       "role": "sherpa-onnx native pretrained system evaluation first",
       "train_initially": false,
       "enabled": true,
-      "execution_status": "d0_and_d1_first64_native_inference_complete;independent_human_evaluation_pending",
-      "execution_evidence": "research/active-d1-20261105/first64-zipformer-summary.json"
+      "execution_status": "d0_first64_and_accounted256_native_observations_complete_with_one_native_prediction_unknown_and_one_generation_unknown",
+      "execution_evidence": "research/active-d1-20261105/accounted256-zipformer-summary.json"
     }
   ],
   "execution": {
@@ -167,6 +190,40 @@
     "past_d0_jobs_reclassified_as_queue_jobs": false,
     "local_queue_model_jobs_completed": 28,
     "first_tts_attempt_actual_seconds": null,
-    "local_queue_completion_scope": "through the fully completed first64 checkpoint, including preparation, training, development and independent native system queue"
+    "local_queue_completion_scope": "Historical count through the fully completed first64 checkpoint; phase-scoped later work is recorded separately and this field is not a current cumulative total",
+    "d1_accounted_training_completed_jobs": 19,
+    "d1_accounted_training_actual_elapsed_ns": 277281478210,
+    "d1_accounted_training_optimizer_steps": 1350,
+    "d1_accounted_development_forward_calls": 513,
+    "d1_native_original_extension": {
+      "status": "timed_out",
+      "actual_elapsed_ns": 120022119029,
+      "declared_budget_seconds": 120,
+      "new_native_returns": 128,
+      "consumed_without_return": 1,
+      "never_claimed_remaining": 62,
+      "original64_reused": 64,
+      "original_receipts_unchanged": true,
+      "count_scope": "Original120second timeout snapshot; its62 never-claimed inputs were subsequently handled only by the separate continuation"
+    },
+    "d1_native_unclaimed_continuation": {
+      "status": "completed_independently_audited_and_zero_call_cache_reentry_verified",
+      "maximum_attempts": 1,
+      "new_budget_seconds": 180,
+      "allowed_never_claimed_calls": 62,
+      "rerun_previous_claimed_calls": false,
+      "unknown_prediction_is_negative": false,
+      "unknown_prediction_is_false_negative": false,
+      "actual_elapsed_ns": 117422134976,
+      "actual_returned_native_calls": 62,
+      "actual_job_exit_code": 0,
+      "deadline_overrun_nanoseconds": 0,
+      "original_timeout_plus_continuation_actual_ns": 237444254005,
+      "known_original_cost_plus_new_budget_upper_ns": 300022119029,
+      "execution_public_commit": "f03e3a5655d2c587da1695545a25ba561d642fee",
+      "independent_audit_public_summary_sha256": "a21a2913b0a0b6e9c6c7a420f877b165dc3201e4e97dfda6a3c529303bad6ebc",
+      "cache_reentry_added_model_calls": 0,
+      "cache_reentry_changed_files": 0
+    }
   }
 }
