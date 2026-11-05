@@ -277,14 +277,25 @@ def main() -> int:
         "--dut-id",
         "--collector-id",
     )
-    for relative in ("README.md", "README.zh-CN.md", "docs/TARGET_EVIDENCE.md", "docs/RELEASE_QUALIFICATION.md"):
+    # Retired qualification formats are still tested in their historical
+    # documentation; current landing pages must not be a shipping CLI guide.
+    for relative in ("docs/TARGET_EVIDENCE.md", "docs/RELEASE_QUALIFICATION.md"):
         path = ROOT / relative
         require_all(path.read_text(encoding="utf-8"), path, required_evidence_cli)
 
     required_manifest_cli = ("--evidence-raw", "--attestation-verification", "--sku", "--corpus-id")
-    for relative in ("README.md", "README.zh-CN.md", "docs/RELEASE_QUALIFICATION.md"):
+    path = ROOT / "docs/RELEASE_QUALIFICATION.md"
+    require_all(path.read_text(encoding="utf-8"), path, required_manifest_cli)
+
+    for relative in ("README.md", "README.zh-CN.md"):
         path = ROOT / relative
-        require_all(path.read_text(encoding="utf-8"), path, required_manifest_cli)
+        source = path.read_text(encoding="utf-8")
+        require_all(source, path, (
+            "tools/collect_runtime_soak.py", "tools/collect_target_evidence.py",
+            "--historical-replay-only", "NOT_RUN", "docs/TARGET_EVIDENCE.md",
+        ))
+        assert "python3 tools/qualification_manifest.py" not in source, path
+        assert "python3 tools/qualification_gate.py" not in source, path
 
     workflow = (ROOT / ".github" / "workflows" / "training-integration.yml").read_text(encoding="utf-8")
     assert "vars.KWS_TRAINING_IMAGE" in workflow
@@ -292,15 +303,10 @@ def main() -> int:
         path = ROOT / relative
         assert "KWS_TRAINING_IMAGE" in path.read_text(encoding="utf-8"), f"{path}: training image variable drift"
 
-    # Product-board evidence is generated from retained measurements and external
-    # attestation; a hand-authored JSON example must not become an alternate
-    # authority. Keep the terminal docs bound to the canonical collector instead.
-    for relative in (
-        "README.md",
-        "README.zh-CN.md",
-        "docs/TARGET_EVIDENCE.md",
-        "docs/RELEASE_QUALIFICATION.md",
-    ):
+    # The archived measurement protocol still requires exact raw external
+    # attestation; current research guides describe the independent collector
+    # without prescribing retired product-approval CLI arguments.
+    for relative in ("docs/TARGET_EVIDENCE.md", "docs/RELEASE_QUALIFICATION.md"):
         path = ROOT / relative
         require_all(
             path.read_text(encoding="utf-8"),
