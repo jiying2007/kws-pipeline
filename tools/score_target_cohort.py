@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""Historical multi-DUT qualification receipt replay only; no product authority.
+
+The original strict CPU/RSS/soak/identity math is retained and requires opt-in.
+"""
 from __future__ import annotations
 
 import argparse
@@ -78,10 +82,14 @@ def current_policy_failures(item: dict, policy: dict) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--historical-replay-only", action="store_true",
+                        help="replay retired product-format cohort evidence, not authorize deployment")
     parser.add_argument("--policy", required=True, type=pathlib.Path)
     parser.add_argument("--summary", required=True, action="append", type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     args = parser.parse_args()
+    if not args.historical_replay_only:
+        raise ValueError("retired target-cohort qualification CLI: --historical-replay-only is required; no Shipping/research approval")
 
     policy = load(args.policy)
     if policy.get("schema_version") != 3:
