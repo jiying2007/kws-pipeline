@@ -2,6 +2,8 @@
 
 > **Historical record only.** The shipping-approval, target-cohort-promotion, real-human-qualification and target-dut-qualification workflows have been retired from active Actions. Current technical research measures CPU/RSS/soak/latency with independent evidence, without publishing commercial approval. The original procedure below is retained for provenance, not as executable research instructions. See [research execution boundary](RESEARCH_ONLY_EXECUTION.md).
 
+> The old `tools/score_target_dut_qualification.py` and `tools/score_target_cohort.py` now **refuse execution by default**. Add `--historical-replay-only` solely for intentional offline replay of an already-preserved product-format receipt. Even a successful replay is not live study admission, physical SSC305 qualification or commercial Shipping approval. Current research measurements must have independent source, device and runtime evidence.
+
 ## Frozen chain
 
 Every Phase-B and Phase-C receipt must remain bound to the same tuple:

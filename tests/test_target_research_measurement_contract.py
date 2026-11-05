@@ -352,9 +352,23 @@ def main() -> int:
         policy_path = root / "policy.json"
         policy_path.write_text(json.dumps(policy, indent=2) + "\n", encoding="utf-8")
         dut_summary = root / "dut-summary.json"
+        # The retired deployment-format CLI is denied *before* reading inputs
+        # or writing a qualification-looking output. Explicit replay preserves
+        # the original numerical negatives exercised below.
+        denied_dut = run(
+            sys.executable, "tools/score_target_dut_qualification.py",
+            "--bundle", str(bundle), "--policy", str(policy_path),
+            "--phase-a-receipt", str(phase_a_receipt),
+            "--phase-a-summary", str(phase_a_summary),
+            "--deployment-manifest", str(deployment),
+            "--model", str(model), "--keywords", str(keywords),
+            "--output", str(dut_summary), expect=2,
+        )
+        if "--historical-replay-only" not in denied_dut.stdout or dut_summary.exists():
+            raise AssertionError("legacy DUT scorer did not fail closed before output")
         run(
             sys.executable,
-            "tools/score_target_dut_qualification.py",
+            "tools/score_target_dut_qualification.py", "--historical-replay-only",
             "--bundle", str(bundle),
             "--policy", str(policy_path),
             "--phase-a-receipt", str(phase_a_receipt),
@@ -374,7 +388,7 @@ def main() -> int:
             forged_board[field] /= 2.0
         forged_board["p99_headroom"] *= 2.0
         summary_path.write_text(json.dumps(forged_board) + "\n", encoding="utf-8")
-        rejected = run(sys.executable, "tools/score_target_dut_qualification.py",
+        rejected = run(sys.executable, "tools/score_target_dut_qualification.py", "--historical-replay-only",
             "--bundle", str(bundle), "--policy", str(policy_path),
             "--phase-a-receipt", str(phase_a_receipt),
             "--phase-a-summary", str(phase_a_summary),
@@ -435,7 +449,7 @@ def main() -> int:
                 afe_sha=afe_executable, afe_identity=afe_identity,
                 cpu_percent=percent, capacity=capacity, threads=threads)
             case_output = case_root / "dut-summary.json"
-            run(sys.executable, "tools/score_target_dut_qualification.py",
+            run(sys.executable, "tools/score_target_dut_qualification.py", "--historical-replay-only",
                 "--bundle", str(case_bundle), "--policy", str(policy_path),
                 "--phase-a-receipt", str(phase_a_receipt),
                 "--phase-a-summary", str(phase_a_summary),
@@ -457,7 +471,7 @@ def main() -> int:
         drift_path.write_text(json.dumps(drift, indent=2) + "\n", encoding="utf-8")
         run(
             sys.executable,
-            "tools/score_target_dut_qualification.py",
+            "tools/score_target_dut_qualification.py", "--historical-replay-only",
             "--bundle", str(bundle),
             "--policy", str(policy_path),
             "--phase-a-receipt", str(phase_a_receipt),
@@ -483,11 +497,20 @@ def main() -> int:
             path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
             cohort_paths.append(path)
         cohort_out = root / "cohort.json"
-        args = [sys.executable, "tools/score_target_cohort.py", "--policy", str(policy_path)]
+        args = [sys.executable, "tools/score_target_cohort.py", "--historical-replay-only", "--policy", str(policy_path)]
         for path in cohort_paths:
             args.extend(["--summary", str(path)])
         args.extend(["--output", str(cohort_out)])
+        without_replay = [arg for arg in args if arg != "--historical-replay-only"]
+        denied_cohort = run(*without_replay, expect=2)
+        if "--historical-replay-only" not in denied_cohort.stdout or cohort_out.exists():
+            raise AssertionError("legacy cohort scorer did not fail closed before output")
         run(*args)
+        expected_cohort_bytes = cohort_out.read_bytes()
+        denied_cohort = run(*without_replay, expect=2)
+        if ("--historical-replay-only" not in denied_cohort.stdout or
+                cohort_out.read_bytes() != expected_cohort_bytes):
+            raise AssertionError("denied legacy cohort scorer changed a prior result")
         cohort = json.loads(cohort_out.read_text(encoding="utf-8"))
         assert cohort["qualified"] is True
         assert cohort["dut_count"] == 3
