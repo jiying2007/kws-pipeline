@@ -425,6 +425,7 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
         """Keep runnable evaluation guidance independent of legacy publication."""
         evaluation = (ROOT / "docs/EVALUATION.md").read_text(encoding="utf-8")
         bridge = (ROOT / "src/kws_debug.h").read_text(encoding="utf-8")
+        target = (ROOT / "docs/TARGET_EVIDENCE.md").read_text(encoding="utf-8")
         self.assertIn("Current scope: technical research", evaluation)
         self.assertIn("## Reproducible research evidence", evaluation)
         self.assertIn("## Recommended research domains", evaluation)
@@ -438,6 +439,13 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
         self.assertIn("Development-only, repo-internal", bridge)
         self.assertIn("runtime decoder/event path", bridge)
         self.assertNotIn("shipping decoder/event path", bridge)
+        self.assertIn("## CPU units and unavailable audio exposure", target)
+        self.assertIn("process-cpu-one-core-v1", target)
+        self.assertIn("not product Shipping or certification authority", target)
+        self.assertNotIn("--command ./product-kws-soak", target)
+        self.assertNotIn("--model release/base.kwm", target)
+        self.assertNotIn("--sku product-sku-a", target)
+        self.assertNotIn("python3 tools/qualification_manifest.py", target)
 
     def test_research_document_tracks_later_migration(self):
         doc = (ROOT / "docs/RESEARCH_ONLY_EXECUTION.md").read_text(encoding="utf-8")
