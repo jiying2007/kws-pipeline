@@ -120,6 +120,12 @@ the separate model-smoke validation status.
 - [D1 partial observation inputs](../docs/research-d1-partial-observation-v3.md) — Keep the fixed training recipe and original development comparison while admitting only actual observed audio.
 - [Historical native D1 extension guide](../docs/research-d1-zipformer-extension-v2.md) — Separate original and new execution identities, retain failures, and report the common development subset independently.
 - [`research_job_lock.py`](research_job_lock.py) — Share one explicit local heavy-model slot across direct and supervised workers.
+- [`research_queue_supervisor.py`](research_queue_supervisor.py) — Supervise an immutable local queue with heartbeat evidence and preserve failed or unknown model claims.
+- [`research_d2_generate.py`](research_d2_generate.py) — Generate only declared D2 additions and authenticate native returns before ASR export.
+- [`research_d2_campaign.py`](research_d2_campaign.py) — Complete each bounded generation, selective-ASR and weak-view chunk before advancing the same frozen campaign.
+- [`research_context_generate.py`](research_context_generate.py) — Run independently declared context supplements without repeating D1 or D2 cells.
+- [`research_context_v2_generate.py`](research_context_v2_generate.py) — Generate an explicit fixed-vocabulary context revision in separate bounded chunks while retaining its original parent.
+- [`research_context_partial.py`](research_context_partial.py) — Authenticate only the complete native returns of a preserved timed-out context job without generating another utterance.
 - [Native Zipformer system guide](../docs/ZIPFORMER_SYSTEM.md) — Fixed profile, actual D0 execution and limits on interpreting native events.
 - [`setup_tts_runtime.py`](setup_tts_runtime.py) — Install and verify the isolated TTS environment and fixed Base model assets.
 - [`active_tts_smoke.py`](active_tts_smoke.py) — Freeze eight source-bound D1 cells and retain raw generation output before technical checks.

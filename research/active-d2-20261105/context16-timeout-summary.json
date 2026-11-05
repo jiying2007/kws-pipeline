@@ -1,0 +1,32 @@
+{
+  "schema": "kws-context16-timeout-public-summary-v1",
+  "scope": "anonymous preserved original context generation; not the separate v2 revision",
+  "planned_cells": 16,
+  "native_calls_started": 14,
+  "native_returns": 13,
+  "technical_completed": 12,
+  "failed_native": 1,
+  "consumed_unknown": 1,
+  "never_claimed": 2,
+  "original_queue_status": "timed_out",
+  "original_exit_code": -9,
+  "declared_job_minutes": 10,
+  "actual_elapsed_nanoseconds": 600218856553,
+  "actual_elapsed_minutes": 10.003647609216667,
+  "automatic_retries": 0,
+  "human_gold": false,
+  "newly_observed_training_admissions": null,
+  "source_result_sha256": "6f45fa45d32323a01bd5eb2cbd7adde9b533b4b02a26fddff1258826fee468a8",
+  "observation_sha256": "ab3e164053fa0c789905ca07dfe86378f0e5f1fa9a0e7fd38ca73b94d25ebe15",
+  "future_partial_asr_is_separate": true,
+  "v2_revision": {
+    "planned_new_cells": 16,
+    "chunks": 2,
+    "cells_per_chunk": 8,
+    "generation_global_minutes": 20,
+    "job_minutes": 10,
+    "canonical_plan_sha256": "5c35ddd0c7725ead0747388144736497f47ba0ddf45b37543acbfc3daef94448",
+    "complete_requested_text_in_fixed_full2601": true,
+    "actual_observed_coverage": null
+  }
+}

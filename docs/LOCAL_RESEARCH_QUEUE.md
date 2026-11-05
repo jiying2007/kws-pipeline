@@ -175,12 +175,107 @@ not previously recorded D0 training code or checkpoints.
 ## Actual deployment gap
 
 The GitHub hourly watchdog is **not deployed**. No new Actions schedule,
-paid interface or remote worker has been enabled. The local command does not
-install an always-on service. A host loss, simultaneous controller/worker death,
-or an entrypoint violating the group/descriptor contract can leave ambiguous
-or still-live work requiring inspection. Surviving inherited locks prevent new
-cooperating model work; missing terminal receipts never become success.
-The watchdog gap cannot be represented as automatic remote recovery.
+paid interface or remote worker has been enabled. The hosting entrypoint below
+is available, but committing it or a service template does not install a live
+service. A host loss, simultaneous controller/worker death, or an entrypoint
+violating the group/descriptor contract can leave ambiguous or still-live work
+requiring inspection. Surviving inherited locks prevent new cooperating model
+work; missing terminal receipts never become success. A heartbeat establishes
+local process liveness, not remote recovery or measured model progress.
+
+## Host one declared queue continuously
+
+`tools/research_queue_supervisor.py` hosts the existing controller. It does not
+build job requests, discover other queues, select models, change budgets or
+retry model work. Attach it only to the intended, already prepared declaration;
+do not scan old queue roots and restart superseded experiments. An intentional
+`--max-jobs` preparation pause must be reviewed before attaching the supervisor,
+because ordinary queue execution advances all ready jobs.
+
+```sh
+python3.12 -I -S -B tools/research_queue_supervisor.py run \
+  --root /private/research/queue-001 \
+  --state-dir /private/research/queue-001-supervisor
+```
+
+The state directory must be separate from the queue and either new or bound to
+that exact queue and supervisor source. Keep the matching `research_queue.py`,
+`research_job_lock.py` and supervisor in a retained source snapshot; a running
+checkout must not change beneath them. The queue's existing source validation
+is unchanged. A source change needs its own reviewed invocation/state, never a
+rewrite of the old binding or queue receipts.
+
+Normal job completion immediately advances dependencies inside `research_queue`.
+When an existing controller, live worker or another queue owns the shared model
+slot, the supervisor waits and emits a heartbeat. It checks locks once per
+second by default; it does not rehash all completed model artifacts every second.
+The controller still validates source, prior outputs and actual remaining job
+budget before dispatch. A lock race is handled by its existing exit code 75.
+
+The replaceable `heartbeat.json` is written atomically every five seconds and
+on state changes. It records supervisor identity, controller PID and the last
+controller report, with an explicit observation time. That report is a snapshot,
+not a live validation of artifacts. Per-invocation controller logs and terminal
+results are retained under `sessions/`; immutable queue receipts remain in the
+queue. A second supervisor using the same state directory exits 75 without
+overwriting the active heartbeat.
+
+```sh
+python3.12 -I -S -B tools/research_queue_supervisor.py status \
+  --state-dir /private/research/queue-001-supervisor
+```
+
+`status` reports lock-based liveness and heartbeat age without starting a model
+or queue. An inactive process with an old `controller_running` heartbeat is not
+a live supervisor. Read the actual queue with its retained controller when
+checking artifact integrity or deciding how to handle missing evidence.
+
+### Stop and restart behavior
+
+- SIGTERM/SIGINT stops this supervisor's owned controller from dispatching
+  more jobs. It does not signal the worker's separate group. The already started
+  worker retains its original deadline, lock and cost accounting. It may finish
+  after the supervisor exits; a later restart waits for it before advancing.
+- If the supervisor is killed unexpectedly, its controller may survive. A
+  restarted supervisor observes the existing lock and waits, rather than
+  launching overlapping work. One unexpected controller-process recovery is
+  allowed per invocation; the original queue decides whether any job may run.
+- Completed outputs are reused. `unknown`, failed/blocked, invalid declarations
+  and exhausted/overrun budgets terminate supervision. No model outcome is reset
+  and no new attempt is fabricated. Host reboot can remove both controller and
+  worker; an unclosed claim then remains `unknown`, requiring evidence-based
+  recovery instead of an automatic repeat.
+
+Exit codes are 0 for completed, 1 for failed/blocked/unknown, 2 for invalid
+input/source, 3 for budget exhaustion/overrun, 75 for an already active supervisor,
+130 for SIGINT and 143 for SIGTERM. Queue runner minutes remain the sum of its
+actual job receipts. Supervisor waiting time is separate host wall time; a
+hosted CI runner can still charge for waiting, so use a persistent local worker
+for this service rather than parking a billed Actions runner.
+
+### Optional user service
+
+[`templates/kws-research-queue.service`](templates/kws-research-queue.service)
+is an installation template for a host with a working systemd user manager.
+Replace all `@...@` values with the retained interpreter, source and explicit
+queue/state paths, then install it in the intended user's service directory.
+Use the interpreter's required dynamic-library environment if applicable; for
+the retained standalone Python build this includes its actual `lib` directory.
+The example line is commented until filled with that verified path.
+
+After installing the concrete unit, the operator can use
+`systemctl --user daemon-reload` and
+`systemctl --user enable --now kws-research-queue.service`. Verify the running
+unit and a changing heartbeat before reporting deployment. Startup at boot or
+after logout additionally depends on the host's user-manager policy. If the
+host has no service manager, the foreground command works only while its host
+process remains available; do not describe that as permanent hosting.
+
+The unit uses `KillMode=process` deliberately: stopping the service addresses the
+supervisor, which stops only its controller. The existing bounded worker must
+retain its independent deadline and locks across a supervisor restart. It also
+prevents automatic restart on terminal research outcomes; unexpected supervisor
+death can restart, while unknown model work still cannot be retried.
 
 The offline CI contracts use real, bounded, stdlib-only dummy commands. They
 cover dependencies, successful reuse, failed exit, missing output, actual
@@ -188,3 +283,8 @@ budget exhaustion, two competing queues, controller death with surviving
 worker, worker death with an unknown result, literal argv and the maintained
 trainer's nested process-group boundary. They do not execute a model or claim
 that earlier real experiments were scheduled by this controller.
+
+`tests/test_research_queue_supervisor.py` additionally kills/restarts real
+supervisor and worker subprocesses, verifies surviving-owner waits and exact
+output reuse, and checks heartbeat ownership, unknown outcomes and unchanged
+aggregate budgets. These tests do not install the user service.
