@@ -2,6 +2,10 @@
 
 > **Pure technical research.** This document preserves older source, label and model-evidence terminology, not an active shipping or publication requirement. The live training entry is the research-only source-admitted workflow, and the historical model-promotion publisher has been retired. Real label/rights checks and reproducible model identity remain required for technical correctness.
 
+## Current research materialization (2026-11-05)
+
+[PR #737](https://github.com/jiying2007/kws-pipeline/pull/737) removed the last active GitHub Release download from the training-base materializer. The historical synthetic comparator archive now resides at `research/legacy-source-bases/` with an independently verified immutable SHA256. Active training scripts verify the local bytes and source receipt before use; they do **not** call `gh release download` or a Releases API. This is historical diagnostic input, not independently reviewed actual-label speech, real-human FAR/FRR evidence or training admission. The dated Release-download steps below describe the **retired workflow**, not a command to execute today.
+
 The embedded-format model trainer must not silently fall back to the legacy tone
 generator.
 
