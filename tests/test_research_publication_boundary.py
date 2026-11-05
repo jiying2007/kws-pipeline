@@ -90,6 +90,19 @@ def require_no_new_indirect_release_readers(workflows, scripts, known_debt):
 
 class ResearchPublicationBoundaryTests(unittest.TestCase):
 
+    def test_orphan_release_registry_importer_is_retired(self):
+        self.assertFalse((ROOT / "tools/materialize_model_registry.py").exists())
+        self.assertTrue((ROOT / "tools/verify_model_registry.py").is_file())
+        registry_ci = (WORKFLOWS / "model-registry-contract.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("materialize_model_registry.py", registry_ci)
+        self.assertIn("python3 -m py_compile tools/verify_model_registry.py", registry_ci)
+        index = (ROOT / "tools/README.md").read_text(encoding="utf-8")
+        self.assertNotIn("materialize_model_registry.py", index)
+        self.assertIn("Historical-format offline replay only", index)
+
+
     def test_indirect_release_readers_are_zero(self):
         workflows = {
             p.name: p.read_text(encoding="utf-8")
