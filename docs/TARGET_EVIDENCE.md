@@ -31,6 +31,16 @@ For any physical study, retain an exact manifest of actual raw traces, hashes an
 
 Generic Linux does not expose a portable and trustworthy stack high-water mark for arbitrary threads; report `stack_high_water_bytes` only with separately documented instrumentation and retain its raw measurements. Power measurements require actual instrument/CSV/calibration identity, not a guessed milliwatt average. Keep process and algorithm resource measurements separate from acoustic FAR/FRR. If downstream audio-pipeline exposes XRUN/backpressure counters, preserve the actual snapshots and `kws_engine_get_stats()` discontinuity telemetry alongside the tested AFE identity.
 
+## Qualification binding (historical reference only)
+
+Historical Phase-B formats attached a raw-manifest hash, original model/keyword
+pack bytes, an independent attestation-verification receipt and a final-AFE
+identity to the same measured target. Those historical artifacts may still be
+inspected for provenance. The former product-qualification entrypoints are
+retired and must **not** be used to authorize current model training, research
+evaluation or real-board performance claims. Preserve original measurements,
+source identity, rights and any previously failed/incomplete status unchanged.
+
 ## Independent scientific interpretation
 
 Reserved independent human speech, far-field 3–5 m, challenging near-homophones and continuous negative streams are measured under their own identities and may not be fed back to training while still called held-out. A successful hosted test, model-hash verification, source-only DUT-contract fixture or synthetic replay is **not** a claim that the SSC305 board, real microphones, true audio exposure, physical thermal/power budget or wake-up error rate was measured.
