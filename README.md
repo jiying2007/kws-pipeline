@@ -230,106 +230,35 @@ python3 training/audit_dataset.py \
 
 Recordings used for tuning, hard-negative mining or false-reject replay may not later be reused as unbiased final qualification evidence.
 
-## Product-board evidence contract — prepared, physical execution deferred
+## Independent physical-device research measurements
 
-The repository already has a fail-closed evidence schema for the later physical-board phase. First supervise the actual product process:
+Current KWS training, data provenance and paired acoustic experiments do **not**
+require product certification, a shipping tuple or a GitHub Release. Physical
+measurement is a separate, source-pinned research track. When the actual target
+and authorized recordings are available, collect final microphone/AFE speech,
+continuous negatives, real SSC305 CPU/RSS/stack/temperature/power, audio
+continuity and measured latency; missing observations remain **NOT_RUN**.
 
-```bash
-python3 tools/collect_runtime_soak.py \
-  --hours 24 \
-  --sample-seconds 60 \
-  --output qualification/runtime-soak.json \
-  --command ./product-kws-soak --config qualification/product-config.json
-```
+The existing `tools/collect_runtime_soak.py` and
+`tools/collect_target_evidence.py` can retain original device traces and exact
+model/firmware/source/toolchain/measurement identities. Do not substitute host
+QEMU, synthetic WAVs or manufactured receipts for real device execution.
+A collector schema and a successful code test are not acoustic qualification.
 
-Then freeze raw evidence and assemble target identity:
-
-```bash
-python3 tools/collect_target_evidence.py \
-  --output qualification/evidence.json \
-  --target product-sku-a \
-  --board-revision A \
-  --soc cortex-a32 \
-  --toolchain arm-linux-gnueabihf-gcc-... \
-  --compiler-flags '-O3 -mcpu=cortex-a32 ...' \
-  --audio-frontend audio-pipeline-vX \
-  --audio-frontend-sha256 <sha256> \
-  --runtime-soak qualification/runtime-soak.json \
-  --stack-high-water-bytes <measured> \
-  --average-power-mw <measured> \
-  --raw-evidence qualification/stack-watermark.txt \
-  --raw-evidence qualification/board-summary.json \
-  --power-raw qualification/power.csv \
-  --evidence-raw qualification/evidence-raw.jsonl \
-  --attestation-verification qualification/attestation-verification.json \
-  --board-runner qualification/kws_board_bench.target \
-  --model release/base.kwm \
-  --keyword-pack release/xiaowo.kwk \
-  --board-audio qualification/board-audio.wav \
-  --sku product-sku-a \
-  --source-sha "$(git rev-parse HEAD)" \
-  --builder-id qualification-builder-01 \
-  --dut-id product-dut-01 \
-  --collector-id qualification-station-01 \
-  --instrument-id <meter-id> \
-  --calibration-id <calibration-id>
-```
-
-`builder-id` and `dut-id` must be distinct. CPU/RSS/thermal/soak summaries are recomputed from retained raw samples; power requires original instrument evidence and calibration identity. See `docs/TARGET_EVIDENCE.md`.
-
-## Artifact-bound release qualification
-
-Final human/device shipping qualification uses the same exact artifact contract rather than hand-written summaries:
-
-```bash
-python3 tools/qualification_manifest.py \
-  --model release/base.kwm \
-  --model-provenance release/base.kwm.provenance.json \
-  --checkpoint release/base.pt \
-  --training-tokens release/training-tokens.txt \
-  --training-manifest data/train.jsonl \
-  --dataset-audit qualification/dataset-audit.json \
-  --keywords release/xiaowo.kwk \
-  --tokens release/tokens.txt \
-  --config release/runtime.json \
-  --eval-runner qualification/kws_wav.eval \
-  --references qualification/references.jsonl \
-  --eval-audio-root qualification/audio \
-  --detections qualification/detections.jsonl \
-  --eval-summary qualification/eval-summary.json \
-  --eval-provenance qualification/detections.provenance.json \
-  --board-summary qualification/board-summary.json \
-  --board-runner qualification/kws_board_bench.target \
-  --board-audio qualification/board-audio.wav \
-  --evidence qualification/evidence.json \
-  --evidence-collector tools/collect_target_evidence.py \
-  --evidence-raw qualification/evidence-raw.jsonl \
-  --attestation-verification qualification/attestation-verification.json \
-  --raw-evidence qualification/runtime-soak.json \
-  --raw-evidence qualification/stack-watermark.txt \
-  --raw-evidence qualification/board-summary.json \
-  --raw-evidence qualification/power.csv \
-  --source-sha "$(git rev-parse HEAD)" \
-  --sku product-sku-a \
-  --corpus-id home-kws-heldout-v1 \
-  --output qualification/qualification-manifest.json
-
-python3 tools/qualification_gate.py \
-  --references qualification/references.jsonl \
-  --detections qualification/detections.jsonl \
-  --board-audio qualification/board-audio.wav \
-  --manifest qualification/qualification-manifest.json \
-  --policy qualification/sku-policy.json \
-  --output qualification/gate-result.json
-```
-
-Technical research preserves model ABI v2, keyword-pack ABI v3, frontend-spec v2, corpus identity and dataset-audit checks. Actual human/AFE and physical board performance are separate independent experiments; neither Git status nor synthetic validation can turn them into measured PASS.
+The old product/Shipping how-to, Release-named example artifact paths and
+`tools/qualification_manifest.py` / `tools/qualification_gate.py` invocation
+are **not current research instructions**. Those historical CLI formats are
+default-deny and may be replayed only with explicit
+`--historical-replay-only`; their archived explanations remain in
+[historical release qualification](docs/RELEASE_QUALIFICATION.md) and
+[device evidence](docs/TARGET_EVIDENCE.md). No shipping/release publisher is
+active and no product approval is implied by a research measurement.
 
 ## Validation boundary
 
 CI proves software contracts and deterministic/synthetic regressions: GCC/Clang, CTest, static analysis, coverage, ASan/UBSan, libFuzzer, a Cortex-A32 cross-build **whose CTest suite is actually executed under `qemu-arm-static`** alongside a hosted-vs-Cortex-A32 numerical parity gate on the int8 kernel, frontend/decoder contracts, corpus identity, self-training, robustness/FAR regression, runtime-soak/target-evidence schema validation, SDK reproducibility, model supply-chain integrity and frozen research model asset SHA-256 pins.
 
-It does **not** claim final commercial acoustic or physical-board qualification. After the non-real-data engineering closure, the only product-evidence phase intentionally left is: (1) real Mandarin through the final microphones/enclosure/AFE, then (2) physical target-board performance/soak and final tuple approval. Those old manual Release publishers are retired. Real measurements require separately authorized human audio, actual final AFE and physical target; missing evidence remains NOT_RUN or BLOCKED.
+It does **not** claim independent real-human acoustic performance or physical SSC305 results. Future physical research measurements require separately authorized human audio, actual final microphones/enclosure/AFE and measured target-board performance/soak. Missing external evidence remains NOT_RUN or BLOCKED and does not block current data preparation, training or paired research evaluation. The former GitHub Release and product/shipping approval publishers are retired; no current experiment produces their approval authority.
 
 See `docs/README.md`, `docs/CUSTOMIZATION.md`, `docs/RELEASE_QUALIFICATION.md`, `docs/TARGET_EVIDENCE.md`, `docs/CORPUS_IDENTITY.md`, `docs/AUDIO_DISCONTINUITY.md` and Issue #2.
 
