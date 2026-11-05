@@ -55,8 +55,44 @@ class ChangeSelectionTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
 
+    def test_active_asr_changes_select_research_dependencies(self):
+        for path in ('tools/setup_asr_runtime.py', 'tools/active_asr_batch.py',
+                     'tools/active_asr_worker.py', 'tools/summarize_active_asr_batch.py',
+                     'tests/test_active_asr_batch.py', 'tests/test_active_asr_supervision.py',
+                     'docs/ACTIVE_ASR_BATCH.md'):
+            with self.subTest(path=path):
+                self.assertTrue(changes.relevant([path]))
+
     def test_conditioned_queue_selects_all_incremental_paths(self):
         for path in ('docs/language-conditioned-weak-import.md', 'tests/test_language_conditioned_queue.py', 'tools/import_language_conditioned_result.py', 'tools/language_conditioned_vote.py', 'tools/speech_data_queue.py', 'tools/speech_history_evidence.py', 'training/weak_speech_dataset.py'):
+            with self.subTest(path=path):
+                self.assertTrue(changes.relevant([path]))
+
+    def test_native_zipformer_paths_select_existing_research_checks(self):
+        for path in ('tools/research_job_lock.py', 'tests/test_research_job_lock.py',
+                     'tools/run_zipformer_system.py', 'tests/test_zipformer_system.py',
+                     'configs/research/zipformer-system-20261105.lock.json', 'docs/ZIPFORMER_SYSTEM.md'):
+            with self.subTest(path=path):
+                self.assertTrue(changes.relevant([path]))
+
+    def test_active_execution_changes_select_research_dependencies(self):
+        for path in ('tools/research_queue.py', 'tests/test_research_queue.py',
+                     'tools/research_no_network.py', 'tests/test_research_no_network.py',
+                     'tools/setup_tts_runtime.py', 'tests/test_active_tts_runtime.py',
+                     'configs/runtime/qwen-base-tts-model-lock.json',
+                     'tools/active_tts_smoke.py', 'tests/test_active_tts_smoke.py',
+                     'tools/active_tts_pair.py', 'tests/test_active_tts_pair.py',
+                     'training/research_weak_recipe.py', 'training/research_weak_train.py',
+                     'training/research_fsmn_weak.py', 'configs/runtime/fsmn-fulltext-sources.json',
+                     'tests/test_research_weak_training.py', 'tests/test_research_fsmn_weak.py',
+                     'docs/research-weak-training.md', 'docs/LOCAL_RESEARCH_QUEUE.md',
+                     'docs/active-tts-smoke.md', 'configs/research/active-plan-20261105.json',
+                     'docs/KWS_ACTIVE_EXECUTION_20261105.md',
+                     'training/research_d1_vocab.py', 'training/research_d1_inputs.py',
+                     'training/research_d1_recipe.py', 'training/research_d1_models.py',
+                     'tests/test_research_d1.py', 'tests/fixtures/d1-fulltext/fsmn-official-tokens.txt',
+                     'tests/fixtures/d1-fulltext/research_weak_sampling_v1.py',
+                     'tests/fixtures/d1-fulltext/README.md', 'docs/research-d1-fulltext-v2.md'):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
 

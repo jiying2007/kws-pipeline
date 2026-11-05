@@ -6,9 +6,10 @@ mode permits different models/code/native frontends only after rechecking shared
 input bytes, corpus provenance and the common scoring protocol. Its result does
 not attribute a difference to one particular implementation change.
 
-Schema 5 uses exact one-sided Poisson bounds. Schemas 1--4 retain historical
-interpretation and cannot be mixed with the new policy. No verdict qualifies a
-model or establishes statistical significance.
+Schema 5 uses exact one-sided Poisson FAR bounds and versioned, approximate
+event-level FRR intervals. Schemas 1--4 retain historical interpretation and
+cannot be mixed with the new policy. No verdict qualifies a model or proves
+generalization to independent human speakers.
 """
 from __future__ import annotations
 
@@ -20,7 +21,9 @@ import sys
 
 from dataset_iteration_policy import (
     APPROX_FAR_POLICY, CONFIDENCE, DATASET_IDENTITY_POLICY, FAR_POLICY, MAX_FA_EVENTS,
-    far_upper_bound_95, historical_far_upper_bound_95,
+    COMPARISON_POLICY, COMPARISON_SCHEMA_VERSION, DEFAULT_FRR_MARGIN,
+    FRR_INTERVAL_CONFIDENCE, FRR_ARM_INTERVAL_CONFIDENCE, FRR_BOUND_CONFIDENCE,
+    far_upper_bound_95, historical_far_upper_bound_95, positive_counts, frr_comparison,
 )
 from dataset_iteration_inputs import (
     adjacent_evidence_root, system_input_paths, validate_output_paths, verify_system_evidence,
@@ -203,10 +206,143 @@ def framing(before: dict, after: dict, *, mode: str = "ablation",
     return {"variable": variable, "moved": moved[0], "mode": mode}
 
 
-def compare(before: dict, after: dict, far_budget: float, frr_tolerance: float,
+def keyword_counts(card: dict, label: str) -> dict | None:
+    """Read the existing scorer's per-word table, without inventing missing data."""
+    domains = card.get("domains", {})
+    if type(domains) is not dict:
+        raise ValueError(label + ": domains must be an object")
+    overall = domains.get("overall", {})
+    if type(overall) is not dict:
+        raise ValueError(label + ": domain overall metrics must be an object")
+    if "per_keyword" not in overall:
+        return None
+    table = overall["per_keyword"]
+    if type(table) is not dict:
+        raise ValueError(label + ": per_keyword must be an object")
+    total = positive_counts(card["metrics"], label)
+    if positive_counts(overall, label + ".domains.overall") != total:
+        raise ValueError(label + ": domain overall counts differ from metrics")
+    result = {}
+    for key, row in table.items():
+        if (type(key) is not str or not key.isascii() or not key.isdecimal()
+                or len(key) > 10 or not 0 < int(key) <= 0xffffffff or str(int(key)) != key):
+            raise ValueError(label + ": invalid per-keyword ID")
+        result[key] = positive_counts(row, label + ".per_keyword." + key)
+        false_accepts = row.get("false_accepts")
+        if type(false_accepts) is not int or false_accepts < 0:
+            raise ValueError(label + ": per-keyword false accepts must be non-negative integers")
+        result[key]["false_accepts"] = false_accepts
+    for name in ("expected", "matched", "false_rejects"):
+        if sum(row[name] for row in result.values()) != total[name]:
+            raise ValueError(label + ": per-keyword counts do not sum to aggregate " + name)
+    false_accepts = number(card["metrics"].get("false_accepts"), label + ".false_accepts")
+    if (sum(row["false_accepts"] for row in result.values()) != false_accepts
+            or overall.get("false_accepts") != false_accepts):
+        raise ValueError(label + ": per-keyword false accepts do not sum to aggregate")
+    return result
+
+
+def current_assessment(before: dict, after: dict, far_budget: float,
+                       margin: float, latency_budget: float) -> dict:
+    aggregate = frr_comparison(before["metrics"], after["metrics"], margin)
+    words_before, words_after = keyword_counts(before, "before"), keyword_counts(after, "after")
+    same_dataset = before["identity"]["dataset_id"] == after["identity"]["dataset_id"]
+    if same_dataset and aggregate["baseline"]["expected"] != aggregate["candidate"]["expected"]:
+        raise ValueError("same evaluation dataset has inconsistent positive denominators")
+    per_keyword = {}
+    empty = {"expected": 0, "matched": 0, "false_rejects": 0, "frr": 0.0, "false_accepts": 0}
+    if words_before is not None and words_after is not None:
+        for key in sorted(words_before.keys() | words_after.keys(), key=int):
+            left, right = words_before.get(key, empty), words_after.get(key, empty)
+            if same_dataset and left["expected"] != right["expected"]:
+                raise ValueError("same evaluation dataset has inconsistent per-keyword denominators")
+            per_keyword[key] = {
+                **frr_comparison(left, right, margin),
+                "false_accepts": {"baseline": left["false_accepts"], "candidate": right["false_accepts"]},
+                "scope": "per-word diagnostic only; no automatic aggregate veto",
+            }
+
+    def far_status(card, label):
+        point = number(card["far_rate"]["point_estimate_per_hour"], label + ".far_point")
+        upper = far_bound(card, label)
+        status = ("met" if upper <= far_budget else
+                  "observed_rate_above_budget" if point > far_budget else "not_demonstrated")
+        return {"status": status, "observed_false_accepts": card["far_rate"]["observed_false_accepts"],
+                "exposure_hours": number(card["exposure"]["exposure_hours"], label + ".hours"),
+                "point_estimate_per_hour": point, "upper_bound_95_per_hour": upper}
+
+    far_before, far_after = far_status(before, "before"), far_status(after, "after")
+    common_far = far_before["status"] == far_after["status"] == "met"
+    latency_before = metric(before, "p95_post_end_latency_ms")
+    latency_after = metric(after, "p95_post_end_latency_ms")
+    latency_met = latency_after <= latency_budget
+    zero_event_hours = -math.log(1 - CONFIDENCE) / far_budget if far_budget else None
+    if zero_event_hours is not None and not math.isfinite(zero_event_hours):
+        zero_event_hours = None
+    reasons = []
+    if not common_far:
+        reasons.append("common FAR budget not demonstrated on both sides; this is not proof of regression")
+    if not latency_met:
+        reasons.append("candidate latency point exceeds budget; no latency uncertainty estimate is available")
+    if aggregate["verdict"] == "inconclusive":
+        reasons.append("positive support or FRR interval cannot resolve the predeclared material margin")
+    verdict = aggregate["verdict"] if common_far and latency_met else "inconclusive"
+    return {
+        "comparison_policy": COMPARISON_POLICY,
+        "frr_direction": aggregate["direction"],
+        "frr_assessment": aggregate,
+        "per_keyword": per_keyword,
+        "per_keyword_status": ("available" if words_before is not None and words_after is not None
+                               else "not_available_on_both_scorecards"),
+        "statistical_policy": {
+            "method": "difference of Bonferroni-adjusted marginal Wilson intervals",
+            "confidence_scope": "approximate nominal coverage conditional on independent Bernoulli events with a common miss probability within each arm",
+            "nominal_difference_confidence": FRR_INTERVAL_CONFIDENCE,
+            "marginal_two_sided_confidence": FRR_ARM_INTERVAL_CONFIDENCE,
+            "one_sided_bound_confidence": FRR_BOUND_CONFIDENCE,
+            "material_frr_margin": margin,
+            "margin_selection_timing_authenticated": False,
+            "paired_discordances_used": False,
+            "source_cluster_adjustment": False,
+            "per_keyword_familywise_adjustment": False,
+        },
+        "budget_status": {
+            "far": {"baseline": far_before, "candidate": far_after,
+                    "common_budget_demonstrated": common_far,
+                    "zero_event_hours_required": zero_event_hours},
+            "latency": {"baseline_p95_ms": latency_before, "candidate_p95_ms": latency_after,
+                        "candidate_status": "met" if latency_met else "observed_above_budget",
+                        "uncertainty_available": False,
+                        "coordinate": "post-reference-end sample time; not callback wall time"},
+        },
+        "evidence_scope": {
+            "statistical_unit": "annotated wake event in the measured research corpus",
+            "independent_events_verified": False,
+            "independent_human_evidence": False,
+            "natural_negative_population_authenticated": False,
+            "qualification_allowed": False,
+        },
+        "limitations": [
+            "Wilson intervals have approximate coverage; the Bonferroni construction is nominal, not an exact guarantee.",
+            "Shared speakers, repeated sources and synthetic material are not independent human observations; event clustering can invalidate these intervals.",
+            "The comparison uses marginal counts, not matched-event discordances, and does not adjust for repeated looks or candidate selection.",
+            "Per-word intervals are diagnostics, not simultaneous evidence across all words or a requirement that every slice improve.",
+            "FAR applies only to the recorded negative population; synthetic or challenge-clip duration does not establish natural continuous-audio FAR.",
+        ],
+        "inconclusive_reasons": reasons,
+        "regressions": (["FRR difference interval is entirely above the declared material margin"]
+                        if verdict == "regressed" else []),
+        "research_continuation_allowed": True,
+        "verdict": verdict,
+    }
+
+
+def compare(before: dict, after: dict, far_budget: float, frr_tolerance: float | None,
             latency_budget: float, *, mode: str = "ablation",
             baseline_evidence_root: pathlib.Path | None = None,
             candidate_evidence_root: pathlib.Path | None = None) -> dict:
+    if frr_tolerance is None:
+        frr_tolerance = DEFAULT_FRR_MARGIN if after.get("schema_version") == 5 else 0.0
     if any(isinstance(value, bool) or not math.isfinite(value) for value in
            (far_budget, frr_tolerance, latency_budget)) or (
             far_budget < 0 or not 0 <= frr_tolerance <= 1 or latency_budget <= 0):
@@ -224,30 +360,28 @@ def compare(before: dict, after: dict, far_budget: float, frr_tolerance: float,
     after_bound = far_bound(after, "after")
     after_latency = metric(after, "p95_post_end_latency_ms")
 
-    # A regression is measured, not absolute: worse recall, a false-accept bound
-    # pushed past the declared budget, or latency past its ceiling.
+    # Preserve the historical point-estimate/budget interpretation for schemas
+    # 1--4. Schema 5 receives the separately versioned assessment below.
     regressions: list[str] = []
-    if after_frr > before_frr + frr_tolerance:
-        regressions.append(
-            f"frr regressed: {before_frr:g} -> {after_frr:g} "
-            f"(tolerance {frr_tolerance:g})"
-        )
-    if after_bound > far_budget:
-        regressions.append(
-            f"far upper bound {after_bound:g}/h exceeds budget {far_budget:g}/h"
-        )
-    if after_latency > latency_budget:
-        regressions.append(
-            f"p95 latency {after_latency:g} ms exceeds budget {latency_budget:g} ms"
-        )
-
-    improved = (
-        not regressions
-        and after_frr < before_frr - frr_tolerance
-        and after_bound <= before_bound
-    )
-    return {
-        "schema_version": 2 if after["schema_version"] == 5 else 1,
+    improved = False
+    if after["schema_version"] < 5:
+        if after_frr > before_frr + frr_tolerance:
+            regressions.append(
+                f"frr regressed: {before_frr:g} -> {after_frr:g} "
+                f"(tolerance {frr_tolerance:g})"
+            )
+        if after_bound > far_budget:
+            regressions.append(
+                f"far upper bound {after_bound:g}/h exceeds budget {far_budget:g}/h"
+            )
+        if after_latency > latency_budget:
+            regressions.append(
+                f"p95 latency {after_latency:g} ms exceeds budget {latency_budget:g} ms"
+            )
+        improved = (not regressions and after_frr < before_frr - frr_tolerance
+                    and after_bound <= before_bound)
+    report = {
+        "schema_version": COMPARISON_SCHEMA_VERSION if after["schema_version"] == 5 else 1,
         "protocol": after["identity"]["protocol"],
         "comparison_mode": frame["mode"],
         "comparison_scope": ("system-quality-without-single-change-attribution" if mode == "system"
@@ -274,6 +408,9 @@ def compare(before: dict, after: dict, far_budget: float, frr_tolerance: float,
         "regressions": regressions,
         "verdict": "regressed" if regressions else ("improved" if improved else "neutral"),
     }
+    if after["schema_version"] == 5:
+        report.update(current_assessment(before, after, far_budget, frr_tolerance, latency_budget))
+    return report
 
 
 def main() -> int:
@@ -290,14 +427,15 @@ def main() -> int:
                         help="restored candidate origin_root tree; scorecard bytes remain unchanged")
     parser.add_argument("--far-budget", type=float, default=1.0,
                         help="ceiling on the 95%% upper bound of false accepts per hour")
-    parser.add_argument("--frr-tolerance", type=float, default=0.0,
-                        help="FRR increase that is still called neutral (default 0)")
+    parser.add_argument("--frr-margin", "--frr-tolerance", dest="frr_tolerance", type=float, default=None,
+                        help="predeclared material FRR margin (schema 5 default 0.02; historical schemas default 0)")
     parser.add_argument("--latency-budget", type=float, default=800.0,
                         help="ceiling on p95 post-end latency in ms")
     parser.add_argument("--output", type=pathlib.Path, default=None)
     args = parser.parse_args()
 
-    if args.far_budget < 0.0 or args.frr_tolerance < 0.0 or args.latency_budget <= 0.0:
+    if (args.far_budget < 0.0 or (args.frr_tolerance is not None and args.frr_tolerance < 0.0)
+            or args.latency_budget <= 0.0):
         raise ValueError("budgets must be non-negative and latency budget positive")
 
     before, after = load(args.baseline), load(args.candidate)
