@@ -89,7 +89,7 @@ class PromotionAdmissionTests(unittest.TestCase):
             self.assertEqual(denied.returncode, 2)
             self.assertIn('--historical-replay-only', denied.stdout)
             self.assertFalse((root / 'dist').exists())
-            replay = command[:5] + ['--historical-replay-only'] + command[5:]
+            replay = command + ['--historical-replay-only']
             result = subprocess.run(replay, env=environment, check=True,
                                     capture_output=True, text=True)
             self.assertEqual(json.loads(result.stdout)['source']['head_tree_sha'], fixtures.TREE)
