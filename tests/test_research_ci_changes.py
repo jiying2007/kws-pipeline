@@ -86,6 +86,10 @@ class ChangeSelectionTests(unittest.TestCase):
 
     def test_active_execution_changes_select_research_dependencies(self):
         for path in ('tools/research_queue.py', 'tests/test_research_queue.py',
+                     'tools/research_queue_supervisor.py', 'tests/test_research_queue_supervisor.py',
+                     'tools/research_d2_generate.py', 'tests/test_research_d2_generate.py',
+                     'tools/research_d2_campaign.py', 'tests/test_research_d2_campaign.py',
+                     'training/research_d1_fit_diagnostic.py', 'tests/test_research_d1_fit_diagnostic.py',
                      'tools/research_no_network.py', 'tests/test_research_no_network.py',
                      'tools/setup_tts_runtime.py', 'tests/test_active_tts_runtime.py',
                      'configs/runtime/qwen-base-tts-model-lock.json',

@@ -1,0 +1,19 @@
+[Unit]
+Description=Host one declared KWS research queue
+
+[Service]
+Type=simple
+ExecStart="@PYTHON_EXECUTABLE@" -I -S -B "@RETAINED_SOURCE@/tools/research_queue_supervisor.py" run --root "@QUEUE_ROOT@" --state-dir "@SUPERVISOR_STATE@"
+# Uncomment only when the selected interpreter requires this concrete library path.
+# Environment="LD_LIBRARY_PATH=@PYTHON_LIBRARY_DIRECTORY@"
+Restart=on-failure
+RestartPreventExitStatus=1 2 3 75 130 143
+RestartSec=5s
+# The supervisor stops its controller. Existing workers retain their deadlines.
+KillMode=process
+TimeoutStopSec=5s
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

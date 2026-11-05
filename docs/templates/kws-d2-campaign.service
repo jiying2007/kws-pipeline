@@ -1,0 +1,19 @@
+[Unit]
+Description=Complete one declared KWS D2 campaign
+
+[Service]
+Type=simple
+WorkingDirectory=@PIPELINE_ROOT@
+Environment=LD_LIBRARY_PATH=@CORE_RUNTIME_LIB@
+ExecStart=@CORE_PYTHON@ -B @PIPELINE_ROOT@/tools/research_d2_campaign.py run --campaign @CAMPAIGN_JSON@
+Restart=on-failure
+RestartSec=5
+RestartPreventExitStatus=1 2 3 75 130 143
+# The queue's independent bounded worker owns its deadline and inherited locks.
+KillMode=process
+TimeoutStopSec=10
+NoNewPrivileges=true
+UMask=0077
+
+[Install]
+WantedBy=default.target
