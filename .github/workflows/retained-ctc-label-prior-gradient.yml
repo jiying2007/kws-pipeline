@@ -34,6 +34,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
 
       - name: Resolve retained label-prior CTC audit
         id: resolve
@@ -104,6 +105,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
 
       - name: Download retained product-development evidence
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8

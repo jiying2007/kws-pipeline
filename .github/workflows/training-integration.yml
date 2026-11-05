@@ -21,6 +21,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Staged model-training handoff contract
         run: |
           python3 tests/test_training_stage_handoff.py
@@ -100,6 +101,7 @@ jobs:
             -e KWS_TRAINING_IMAGE_DIGEST="$TRAINING_DIGEST" \
             -v "$PWD:/workspace" -w /workspace \
             "$TRAINING_IMAGE" \
+            tools/research_runtime.py run --role core --packages -- \
             training/iterate_domain.py \
               --synthetic-contract-test-only \
               --config build/torch-ctc-integration.json \

@@ -1,25 +1,15 @@
 # Dataset-driven iteration lane
 
-> **Current authority: technical research only.** The frozen synthetic model and keyword source is `configs/research/two-keyword-synthetic-comparator.json`; it is not real-human FAR/FRR, a physical SSC305 measurement or commercial publication authority. Old product/Release terminology elsewhere on this page is historical context, not a workflow to execute.
+> **Current scope: technical research only.** The frozen synthetic model and keyword source is `configs/research/two-keyword-synthetic-comparator.json`. Synthetic results do not establish natural-speech FAR/FRR or physical SSC305 measurements. Historical restrictions in archived plans do not govern this active research lane.
 
-This is the fourth lane, alongside Research, Confirm and Qualification.
+This lane measures data and model iterations under an explicit comparison protocol.
 
 ## Why it exists
 
-The governed qualification gate asks for this:
-
-```json
-"domain_gates": {
-  "max_frr": 0.0, "max_far_per_hour": 0.0,
-  "max_p95_latency_ms": 800.0, "max_far_frr": 0.0
-}
-```
-
-`max_far_per_hour: 0.0` is not a measurable target. Observing zero false accepts
-over `T` hours does not establish a rate of zero; it establishes an upper bound
-of roughly `3/T` per hour at 95% confidence. Measured on this repository's own
-fixtures, **12 seconds of negative exposure produces an upper bound of about
-900 false accepts per hour** -- reported by the governed gate as a clean `0.0`.
+Observing zero false accepts over `T` hours does not establish a population rate
+of zero; it establishes an upper bound of roughly `3/T` per hour at 95%
+confidence. For example, **12 seconds of negative exposure produces an upper
+bound of about 900 false accepts per hour**, even when the point estimate is zero.
 
 Zero observed false rejects *and* zero observed false accepts can coexist on a
 finite, separable dataset. Such a result does not establish zero population
@@ -30,11 +20,11 @@ confidence bounds; rejecting everything still fails recall when positives exist.
 
 So this lane does not judge. It **measures**, in a form that can be compared.
 
-After producing genuine immutable v4 scorecards under one frozen development dataset, use [the multilingual model tournament](KWS_MULTILINGUAL_MODEL_TOURNAMENT.md) to automatically reject comparable candidates with worse FAR/FRR confidence or excessive latency/resources. This is research-only, never independent real-human/SSC305 release authority.
+New runs produce schema-5 exact-Poisson scorecards. The [multilingual model tournament](KWS_MULTILINGUAL_MODEL_TOURNAMENT.md) accepts a homogeneous v4 or v5 ablation cohort and always ranks with exact FAR; it does not mix their input policies. For systems with different source code or native frontends, use the explicit system comparison below. These are research results, not real-human/SSC305 qualification.
 
 ## The two controlled variables
 
-Every run declares exactly two things and which of them is under test:
+An ablation declares these identities and which one is under test:
 
 | Variable | Identity | Meaning |
 | --- | --- | --- |
@@ -43,17 +33,123 @@ Every run declares exactly two things and which of them is under test:
 
 A run also records `code_sha`, `seed` and `protocol`.
 
-## Rules
+## Default ablation rules
 
 1. **One variable at a time.** If both `dataset_id` and `model_id` move, the
    delta has no interpretation and the comparison is refused.
 2. **The declared variable must be the one that moved.** Declaring `dataset`
-   and shipping a new model is refused.
+   and evaluating a new model is refused.
 3. **Same protocol or no comparison.** Numbers from different protocols are not
    the same measurement.
 4. **Code changes confound.** If `code_sha` differs, re-baseline first.
 5. **False accepts are compared on the upper bound, not the point estimate.**
    Zero over 30 seconds and zero over 30 hours are wildly different evidence.
+
+## Comparing complete systems
+
+`--mode system` allows different model tuples, source revisions, runners and
+native frontends. It is a system-quality comparison, without attributing a delta
+to one particular code or architecture change. The default `ablation` mode keeps
+the single-variable and identical-code checks; neither mode is inferred from
+which identities happen to differ.
+
+Produce both cards with `--mode system --variable system`, a native-frontend
+description and the same `--system-context` JSON, for example:
+
+```json
+{
+  "sample_rate_hz": 16000,
+  "feed_chunk_samples": 160,
+  "reset": "per-recording",
+  "appended_context_samples": 0,
+  "eof": "no-extra-audio",
+  "event_time": "input-wav-sample-seconds",
+  "keyword_map": {"1": "你好小窝", "2": "小窝小窝"}
+}
+```
+
+This is the runner's declared **input/event contract**, not its internal feature
+geometry. Each adapter must implement that contract; native acoustic hops,
+lookahead, models, decoding and calibrated thresholds may differ. This tool does
+not reconfigure or attest the inside of an arbitrary runner. It currently uses
+the existing `run_corpus.py` direct-runner interface; a new multi-file model
+runtime still needs its adapter and complete model-package binding.
+The hosted iteration workflow uses the built-in `kws_wav` default 160-sample
+block and rejects any other declared block size. Other adapters must document
+and implement their own actual feed contract.
+
+```sh
+python tools/run_dataset_iteration.py \
+  --runner "$RUNNER" --model "$MODEL" --keywords "$KEYWORDS" \
+  --references "$REFERENCES" --audio-root "$AUDIO_ROOT" \
+  --work-dir "$WORK" --output "$CARD" \
+  --mode system --variable system --system-context "$CONTEXT" \
+  --native-frontend "native-80-bin-v1"
+
+python tools/compare_dataset_iterations.py \
+  --baseline "$BASE_CARD" --candidate "$CANDIDATE_CARD" \
+  --mode system --far-budget 0.13 --frr-tolerance 0.02 --latency-budget 500
+```
+
+System comparison requires the same original/effective reference bytes, measured
+WAV/PCM inputs, verified AFE metadata and scoring protocol. It reopens the saved
+input/provenance/detection files and recomputes event metrics. Matching a manually
+chosen `dataset_id`, protocol name or metrics table is insufficient. Preserve the
+private files referenced by `system_evaluation`; missing or changed evidence is
+an error. These pre/post checks are not an atomic filesystem snapshot or an
+attestation of native frontend execution. Scorecards from ablation mode cannot
+be passed as system results merely by adding the comparison CLI flag.
+
+### Saving and restoring the measured inputs
+
+System runs automatically copy the required replay inputs into
+`<scorecard-directory>/evidence/<run_id>/`. The bundle contains original/effective
+references, saved events, corpus provenance, WAV and AFE files. It does not copy
+model weights or runner binaries: those are needed for new inference, while this
+comparison rescoring uses the saved events. Keep the actual model artifacts in
+the experiment's separate checkpoint record.
+
+`system_evaluation.origin_root` is the common ancestor of the bound files. The
+bundle mirrors paths relative to that root, including absolute audio/AFE paths
+from the references. Inputs outside the checkout can make the root broader,
+even `/`; only the listed files are copied, never the entire root. Copies are
+hashed before/after and fully rescored before the completed bundle is exposed.
+An existing bundle is reverified and is not overwritten with different bytes.
+
+Move the card and its sibling `evidence/` directory together. The comparison CLI
+automatically uses that sibling bundle. To recover a differently placed bundle,
+pass `--baseline-evidence-root /restore/baseline` and/or
+`--candidate-evidence-root /restore/candidate`, each naming the directory that
+mirrors the recorded `origin_root`. Scorecard, reference and provenance bytes
+remain unchanged. Missing or altered restored inputs fail verification. Producer
+and comparator reject output aliases to their inputs, including symlinks and
+hardlinks, and publish the final JSON by atomic replacement after validation.
+These checks assume no concurrent writer replaces paths between checks.
+
+The latency budget still applies to the existing reference-end sample-coordinate
+metric, not application callback wall time. The example budgets are explicit
+research choices, not evidence that a candidate meets them. Compare separately
+calibrated systems at a common FAR budget; equal confidence scores across models
+are not required or assumed.
+
+### Research interpretation and accent recall
+
+The comparator's `improved`, `neutral` and `regressed` values describe observed
+aggregate results under the declared budgets. They are not tests of statistical
+significance or mandatory stop decisions for every research route. A FAR bound
+above a budget can mean insufficient negative exposure; it does not by itself
+show that the new model is worse. Report exposure, counts, deltas and uncertainty
+alongside the verdict, and gather more independent evidence before claiming a
+quality win. The current CLI does not implement a separate significance or
+`inconclusive` classifier.
+
+Use meaningful, predeclared FRR tolerances and report per-word and accent/scene
+slices. A small slice's point-estimate fluctuation does not automatically veto
+continued research. Complete accented, linked or lightly pronounced wake words
+remain positives; ASR disagreement alone must not turn them into negatives.
+Report near-sounding and partial-word challenges separately from natural
+continuous-background FAR. Existing historical failed experiments and frozen
+receipts retain their original interpretation; new research uses new cards.
 
 ## Interpreting the exposure number
 
@@ -65,25 +161,32 @@ A run also records `code_sha`, `seed` and `protocol`.
 | 10 h | ~0.3 / h |
 
 Treat the bound, not the point estimate, as the measurement. A dataset too small
-to support the product's false-accept budget cannot demonstrate that budget --
+to support the experiment's false-accept budget cannot demonstrate that budget --
 that is a property of the dataset, not of the model.
 
 ## FAR populations and scorecard compatibility
 
-New scorecards use schema 4, default protocol `dataset-iteration-v4`, and the
-fixed FAR identity policy `negative-only-recordings-iteration-approx95-v1`.
+New scorecards use schema 5, default protocol `dataset-iteration-v5`, and the
+fixed FAR identity policy `negative-only-recordings-exact-poisson-one-sided95-v1`.
 The policy is part of `run_id` even with a custom `--protocol` label.
 
 `far_rate` uses only complete recordings with `expected: []`: its
 `observed_false_accepts`, `point_estimate_per_hour` and upper bound all use that
 population and `exposure.exposure_hours`. Missing negative metrics or zero
-negative exposure are errors, not zero FAR. The upper-bound calculation is
-unchanged: `2.9957 / T` for zero events, otherwise
-`(N + 1.959964 * sqrt(N)) / T`, labelled as a normal approximation. It does not
-switch to the scorer's separate exact-Poisson upper bound. Schema-2/3/4 comparison
-checks that the point and bound exactly match this count/exposure calculation;
-do not round stored values. A non-finite computed bound is rejected, including
-when a finite positive exposure is too small to represent its bound.
+negative exposure are errors, not zero FAR. Producer and comparator both use
+`tools/statistical_bounds.py:poisson_rate_upper` with confidence 0.95. For zero
+events the bound is `-ln(0.05)/T`; otherwise the helper solves the one-sided
+Poisson CDF equation. The count is an integer in [0,10000], bounding work on
+untrusted scorecards. Do not round stored values; the comparator checks the exact
+count/exposure calculation and rejects non-finite bounds.
+
+Historical schemas 2--4 retain `2.9957/T` for zero and
+`(N + 1.959964*sqrt(N))/T` otherwise, under their original approximate policy.
+That approximation incorrectly decreases from zero to one event. Old card bytes
+are not rewritten and their replay reports include `historical_statistics: true`;
+use schema 5 for new iteration decisions. A v4/v5 pair is rejected even with
+identical custom protocol labels. Regenerate both cards from original inputs to
+move a comparison to the exact policy.
 
 `metrics.false_accepts` and `metrics.far_per_hour` remain the scorer's global
 all-recording diagnostics, including unmatched detections in positive
@@ -122,7 +225,7 @@ metadata, declared exposure or timing field is bound by `dataset_id`.
 
 ## Verified AFE sidecar dataset identity
 
-Schema 4 fixes `identity.dataset_identity_policy` to
+Schemas 4 and 5 fix `identity.dataset_identity_policy` to
 `effective-domain-keys-verified-afe-v2`, even with a custom `--protocol`. Each
 entry also contains `afe_metadata: {"present": false}` when both metadata keys
 are absent, or `afe_metadata: {"present": true, "sha256": "..."}` for a present
@@ -152,8 +255,8 @@ are unchanged; the identity helper does not replace runtime timeline validation.
 The comparator retains schema-1/schema-1 historical mixed-population FAR,
 schema-2/schema-2 fixed-FAR, and schema-3/schema-3 effective-domain contracts,
 including matching custom protocols. Schemas 1/2 retain legacy top-level-distance
-identity; schema 3 requires exactly `effective-domain-keys-v1`. Schema 4 requires
-its exact AFE-aware policy. Schemas 2/3/4 share all fixed negative-only FAR tuple
+identity; schema 3 requires exactly `effective-domain-keys-v1`. Schemas 4 and 5 require
+the same AFE-aware identity policy. Schemas 2/3/4 share all fixed negative-only FAR tuple
 and bound checks. Schema-1/schema-2 pairs still fail FAR-policy compatibility.
 
 Mixed dataset policies, unknown/missing policies, unexpected policy fields on
@@ -172,10 +275,13 @@ Strict unittest assertions and comparator children run in normal, `-O` and
 `-OO` modes. The main-assembly fixture always uses a normal-interpreter child
 with all three backend commands mocked. A second normal-child fixture invokes
 the actual corpus, scorer and domain Python mains, mocking only the external
-runner on literal tiny PCM/TSV inputs. Neither is optimized-main or acoustic
-evidence; no model or C timeline-parser execution is established. The existing RUN CLI `-OO` startup/docstring limitation is not changed.
-These focused checks do not replace the repository's full required checks or
-hosted/product qualification.
+runner on literal tiny PCM/TSV inputs. The v5 suite additionally covers an
+independent high-precision Poisson oracle, the zero-to-one FA counterexample,
+mode separation, WAV-duration rechecking, unchanged-card bundle restoration,
+damaged evidence and output aliases, including under optimized interpreters.
+No real acoustic model or C timeline-parser execution is established by these
+fixtures. These checks supplement the repository's required CI and later real
+speech/device measurements.
 
 ## Running it
 
@@ -185,10 +291,25 @@ under test.
 
 Leave `model_path` and `keywords_path` empty to use the model tuple pinned by
 `configs/research/two-keyword-synthetic-comparator.json` and mirrored under `models/registry/`. This is
-the default product-facing path. To compare another deployable model, supply
+the default frozen research baseline. To compare another deployable model, supply
 **both** paths explicitly; supplying only one is refused.
 
-Optionally point `baseline_card` at a previously recorded scorecard.
+Optionally point `baseline_card` at a previously recorded scorecard. For a
+system comparison, also supply `baseline_artifact_run_id` so the complete saved
+input bundle is restored into a directory separate from the new candidate.
+If both inputs are supplied, the downloaded card must match `baseline_card`
+byte for byte. Supplying only the explicit artifact run ID selects the card
+from that completed main-branch iteration.
+
+Set `variable=system`, `system_context_path`, and `native_frontend` for a system
+comparison; dataset/model choices retain the causal-ablation mode. Set
+`resume_artifact_run_id` to finish publication from a completed iteration's
+saved outputs without building the runner or repeating measurements.
+
+The full evidence is uploaded before publication and after computation failures
+when partial output exists. The artifact retention window is 90 days. Preserve
+valuable replay bundles in a durable authorized location before that window
+expires; a public scorecard alone is insufficient for future system rescoring.
 
 Locally the same thing is two commands:
 
@@ -210,13 +331,16 @@ Exit codes for the comparison: `0` no regression, `1` regression,
 
 It does not qualify, freeze, or promote anything, and it consumes no protected
 evidence. A verdict of `improved` means the measured operating point moved in
-the right direction on this dataset under this protocol -- nothing more. Product
-claims still need real-human and physical-target evidence.
+the right direction on this dataset under this protocol. Natural-speech and
+physical-target claims still need their corresponding measurements.
 
 ## Recording
 
 Scorecards are committed to `evidence/dataset-iterations/<dataset-id>/<run-id>.json`
 so results outlive artifact retention and remain reviewable.
+For system runs, preserve the replay bundle as well; a scorecard hash cannot
+replace its audio, events or references. The bundle can contain private
+evaluation audio and must remain in the dataset's authorized storage scope.
 
 Because `main` is protected and has no bypass actors, the workflow never pushes
 evidence directly to `main`. It creates a deterministic

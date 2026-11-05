@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "python": {
+    "implementation": "CPython",
+    "minor": "3.12",
+    "version": "3.12.16"
+  },
+  "validation": {
+    "model_smoke": "pending",
+    "historical_prepare_python": "3.12.14",
+    "historical_prepare_run": "https://github.com/jiying2007/kws-pipeline/actions/runs/41850542316",
+    "note": "The historical three-model preparation used separate primary and Whisper environments. Python 3.12.16 and the combined ASR role require new small-sample model evidence."
+  },
+  "indexes": {
+    "pypi": "https://pypi.org/simple",
+    "pytorch_cpu": "https://download.pytorch.org/whl/cpu"
+  },
+  "roles": {
+    "core": {
+      "purpose": "Host tools, KWS training, evaluation and C export; tools need not import ML packages.",
+      "packages": {
+        "numpy": "2.3.2",
+        "scipy": "1.17.1",
+        "torch": "2.13.0+cpu"
+      },
+      "reference_locks": []
+    },
+    "tts": {
+      "purpose": "Qwen TTS in its own process and environment.",
+      "packages": {
+        "qwen-tts": "0.1.1",
+        "torch": "2.11.0+cpu",
+        "torchaudio": "2.11.0+cpu",
+        "transformers": "4.57.3",
+        "numpy": "1.26.4",
+        "scipy": "1.17.1",
+        "soundfile": "0.13.1"
+      },
+      "reference_locks": [
+        {
+          "path": "research/qwen6_tts/runtime-lock.json",
+          "sha256": "6a707c2fa2c2ae8f842176a7f9c8301186d51fddef167c413160c7f2816613de"
+        }
+      ]
+    },
+    "asr": {
+      "purpose": "Qwen ASR, SenseVoice and locked native Whisper; keep model processes separate.",
+      "packages": {
+        "qwen-asr": "0.0.6",
+        "funasr": "1.4.16",
+        "torch": "2.12.1+cpu",
+        "transformers": "4.57.6",
+        "numpy": "1.26.4",
+        "scipy": "1.17.1",
+        "soundfile": "0.14.0"
+      },
+      "reference_locks": [
+        {
+          "path": "research/qwen6_asr/runtime-lock.json",
+          "sha256": "2d496a76bd0e044a6812bfc9afdd8965474bf135bd21f3a24f71695638d1183f"
+        },
+        {
+          "path": "research/source-screen32-whisper-v1/runtime-lock.json",
+          "sha256": "881443c6e66acb99223137bd8342788468f814d0a1c3e73ba33a27da3ad1fe6d"
+        }
+      ]
+    }
+  }
+}

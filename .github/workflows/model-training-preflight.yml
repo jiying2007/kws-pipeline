@@ -36,6 +36,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Resolve request change
         id: diff
         env:
@@ -74,6 +75,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
 
       - name: Verify versioned training request
         run: >-
@@ -140,10 +142,7 @@ jobs:
 
       - name: Install pinned CPU training runtime
         run: |
-          python3 -m venv .venv
-          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
-          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
-            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+          bash training/setup_core_runtime.sh .venv
 
       - name: Verify decoder-aligned training objectives
         run: .venv/bin/python training/test_sequence_margin.py
@@ -276,6 +275,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
 
       - name: Verify versioned training request
         run: >-
@@ -329,10 +329,7 @@ jobs:
 
       - name: Install pinned CPU training runtime
         run: |
-          python3 -m venv .venv
-          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
-          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
-            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+          bash training/setup_core_runtime.sh .venv
 
       - name: Verify decoder-aligned training objectives
         run: .venv/bin/python training/test_sequence_margin.py

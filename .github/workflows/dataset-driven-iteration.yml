@@ -1,6 +1,6 @@
 name: research-dataset-iteration
 
-# Technical KWS research: one-variable dataset/model measurement on protected main.
+# Technical KWS research: declared ablation or system measurement on protected main.
 # The default historical model is pinned by a research-only baseline manifest.
 # No release, publication, or external-approval gate is consulted.
 on:
@@ -8,7 +8,7 @@ on:
     inputs:
       dataset_path:
         description: Path to references.jsonl inside the repo
-        required: true
+        required: false
       model_path:
         description: Optional .kwm path; leave empty to use the pinned Git-registry model
         required: false
@@ -18,13 +18,17 @@ on:
         required: false
         default: ""
       variable:
-        description: Which controlled variable is under test
+        description: Dataset/model ablation, or complete-system comparison
         required: true
         type: choice
-        options: [dataset, model]
+        options: [dataset, model, system]
       baseline_card:
         description: Scorecard to compare against (empty for the first run)
         required: false
+      baseline_artifact_run_id:
+        description: Earlier main iteration run containing baseline card and complete evidence
+        required: false
+        default: ""
       far_budget:
         description: Ceiling on the 95% upper bound of false accepts per hour
         required: false
@@ -33,8 +37,21 @@ on:
         description: Seed label recorded in the identity block
         required: false
         default: "dataset-iteration"
+      resume_artifact_run_id:
+        description: Optional earlier run ID; publish its saved evidence without recomputing
+        required: false
+        default: ""
+      system_context_path:
+        description: Explicit common streaming context JSON for system comparisons
+        required: false
+        default: ""
+      native_frontend:
+        description: Native frontend description for system comparisons
+        required: false
+        default: ""
 
 permissions:
+  actions: read
   contents: write
   pull-requests: write
 
@@ -54,11 +71,63 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - uses: ./.github/actions/setup-research-python
+
       - name: Require exact current protected main
         run: bash governance/require_current_main.sh
 
+      - name: Restore saved evidence for publication recovery
+        if: inputs.resume_artifact_run_id != ''
+        env:
+          RESUME_RUN_ID: ${{ inputs.resume_artifact_run_id }}
+        run: |
+          set -euo pipefail
+          [[ "$RESUME_RUN_ID" =~ ^[1-9][0-9]*$ ]] || exit 2
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RESUME_RUN_ID" > "$RUNNER_TEMP/resume-run.json"
+          python3 - "$RUNNER_TEMP/resume-run.json" <<'PY'
+          import json, sys
+          run = json.load(open(sys.argv[1]))
+          if run.get('path', '').split('@')[0] != '.github/workflows/dataset-driven-iteration.yml':
+              raise SystemExit('resume run is not a dataset iteration')
+          if run.get('event') != 'workflow_dispatch' or run.get('head_branch') != 'main':
+              raise SystemExit('resume evidence must originate from a main-branch dispatch')
+          if run.get('status') != 'completed':
+              raise SystemExit('resume source must have completed before its evidence is reused')
+          PY
+          gh run download "$RESUME_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name dataset-iteration-evidence --dir build/dataset-iteration
+          test -s build/dataset-iteration/scorecard.json
+
+      - name: Restore the declared baseline with its evidence
+        if: inputs.resume_artifact_run_id == '' && inputs.baseline_artifact_run_id != ''
+        env:
+          BASELINE_ARTIFACT_RUN_ID: ${{ inputs.baseline_artifact_run_id }}
+          BASELINE_CARD: ${{ inputs.baseline_card }}
+        run: |
+          set -euo pipefail
+          [[ "$BASELINE_ARTIFACT_RUN_ID" =~ ^[1-9][0-9]*$ ]] || exit 2
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BASELINE_ARTIFACT_RUN_ID" > "$RUNNER_TEMP/baseline-run.json"
+          python3 - "$RUNNER_TEMP/baseline-run.json" <<'PY'
+          import json, sys
+          run = json.load(open(sys.argv[1]))
+          if (run.get('path', '').split('@')[0] != '.github/workflows/dataset-driven-iteration.yml'
+                  or run.get('event') != 'workflow_dispatch' or run.get('head_branch') != 'main'
+                  or run.get('status') != 'completed'):
+              raise SystemExit('baseline evidence must be from a completed main dataset iteration')
+          PY
+          gh run download "$BASELINE_ARTIFACT_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name dataset-iteration-evidence --dir "$RUNNER_TEMP/baseline-iteration"
+          test -s "$RUNNER_TEMP/baseline-iteration/scorecard.json"
+          if [[ -n "$BASELINE_CARD" ]]; then
+            cmp --silent "$BASELINE_CARD" "$RUNNER_TEMP/baseline-iteration/scorecard.json" || {
+              echo 'downloaded baseline differs from the declared baseline_card' >&2
+              exit 2
+            }
+          fi
+
       - name: Resolve exact research model tuple
         id: tuple
+        if: inputs.resume_artifact_run_id == ''
         env:
           INPUT_MODEL_PATH: ${{ inputs.model_path }}
           INPUT_KEYWORDS_PATH: ${{ inputs.keywords_path }}
@@ -102,11 +171,13 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Build the real C runtime
+        if: inputs.resume_artifact_run_id == ''
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
           cmake --build build --parallel --target kws_wav
 
       - name: Run the dataset iteration
+        if: inputs.resume_artifact_run_id == ''
         env:
           MODEL_PATH: ${{ steps.tuple.outputs.model_path }}
           KEYWORDS_PATH: ${{ steps.tuple.outputs.keywords_path }}
@@ -114,8 +185,27 @@ jobs:
           CONTROLLED_VARIABLE: ${{ inputs.variable }}
           MODEL_LABEL: ${{ steps.tuple.outputs.model_label }}
           SEED: ${{ inputs.seed }}
+          SYSTEM_CONTEXT_PATH: ${{ inputs.system_context_path }}
+          NATIVE_FRONTEND: ${{ inputs.native_frontend }}
         run: |
           set -euo pipefail
+          mode_args=(--mode ablation)
+          if [[ "$CONTROLLED_VARIABLE" == system ]]; then
+            [[ -n "$SYSTEM_CONTEXT_PATH" && -n "$NATIVE_FRONTEND" ]] || {
+              echo 'system comparison requires system_context_path and native_frontend' >&2
+              exit 2
+            }
+            python3 - "$SYSTEM_CONTEXT_PATH" <<'PY'
+          import json, sys
+          context = json.load(open(sys.argv[1]))
+          if context.get('feed_chunk_samples') != 160:
+              raise SystemExit('this workflow uses kws_wav default block size: feed_chunk_samples must be 160')
+          PY
+            mode_args=(--mode system --system-context "$SYSTEM_CONTEXT_PATH" --native-frontend "$NATIVE_FRONTEND")
+          elif [[ -n "$SYSTEM_CONTEXT_PATH" || -n "$NATIVE_FRONTEND" ]]; then
+            echo 'system context and frontend require variable=system' >&2
+            exit 2
+          fi
           python3 tools/run_dataset_iteration.py \
             --runner build/kws_wav \
             --model "$MODEL_PATH" \
@@ -127,24 +217,34 @@ jobs:
             --variable "$CONTROLLED_VARIABLE" \
             --dataset-label "$DATASET_PATH" \
             --model-label "$MODEL_LABEL" \
-            --seed "$SEED"
+            --seed "$SEED" \
+            "${mode_args[@]}"
 
       - name: Compare against the declared baseline
         id: compare
-        if: inputs.baseline_card != ''
+        if: inputs.resume_artifact_run_id == '' && (inputs.baseline_card != '' || inputs.baseline_artifact_run_id != '')
         continue-on-error: true
         env:
           BASELINE_CARD: ${{ inputs.baseline_card }}
+          BASELINE_ARTIFACT_RUN_ID: ${{ inputs.baseline_artifact_run_id }}
           FAR_BUDGET: ${{ inputs.far_budget }}
+          CONTROLLED_VARIABLE: ${{ inputs.variable }}
         run: |
+          set -euo pipefail
+          mode=ablation
+          if [[ "$CONTROLLED_VARIABLE" == system ]]; then mode=system; fi
+          if [[ -n "$BASELINE_ARTIFACT_RUN_ID" ]]; then
+            BASELINE_CARD="$RUNNER_TEMP/baseline-iteration/scorecard.json"
+          fi
           python3 tools/compare_dataset_iterations.py \
             --baseline "$BASELINE_CARD" \
             --candidate build/dataset-iteration/scorecard.json \
             --far-budget "$FAR_BUDGET" \
+            --mode "$mode" \
             --output build/dataset-iteration/comparison.json
 
       - name: Show the comparison
-        if: inputs.baseline_card != ''
+        if: inputs.baseline_card != '' || inputs.baseline_artifact_run_id != '' || inputs.resume_artifact_run_id != ''
         run: |
           echo '## Dataset iteration comparison' >>"$GITHUB_STEP_SUMMARY"
           if [ -f build/dataset-iteration/comparison.json ]; then
@@ -153,59 +253,110 @@ jobs:
             echo 'comparison was refused or failed; see the job log' >>"$GITHUB_STEP_SUMMARY"
           fi
 
+      - name: Upload the full evidence before publication
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dataset-iteration-evidence
+          path: build/dataset-iteration
+          if-no-files-found: warn
+          retention-days: 90
+
       - name: Record scorecard through a protected-main PR
-        env:
-          CONTROLLED_VARIABLE: ${{ inputs.variable }}
-          MODEL_LABEL: ${{ steps.tuple.outputs.model_label }}
         run: |
           set -euo pipefail
           card=build/dataset-iteration/scorecard.json
           dataset="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["identity"]["dataset_id"])' "$card")"
           run_id="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["run_id"])' "$card")"
+          [[ "$dataset" =~ ^[0-9a-f]{64}$ && "$run_id" =~ ^[0-9a-f]{16}$ ]] || {
+            echo 'invalid scorecard identity' >&2
+            exit 2
+          }
           target="evidence/dataset-iterations/$dataset/$run_id.json"
           comparison_target="evidence/dataset-iterations/$dataset/$run_id.comparison.json"
+          comparison=build/dataset-iteration/comparison.json
+
+          verify_comparison() {
+            local recorded="$1"
+            if [[ -f "$comparison" || -f "$recorded" ]]; then
+              cmp --silent "$comparison" "$recorded" || {
+                echo 'comparison identity collision or missing comparison' >&2
+                exit 2
+              }
+            fi
+          }
 
           if [[ -f "$target" ]]; then
             cmp --silent "$card" "$target" || {
               echo "scorecard identity collision with different bytes: $target" >&2
               exit 2
             }
+            verify_comparison "$comparison_target"
             echo "scorecard $run_id is already recorded on main" >>"$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
-          mkdir -p "$(dirname "$target")"
-          cp "$card" "$target"
-          if [[ -f build/dataset-iteration/comparison.json ]]; then
-            cp build/dataset-iteration/comparison.json "$comparison_target"
-          fi
-
           branch="dataset-iteration/$run_id"
-          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
-            echo "dataset iteration branch already exists: $branch" >&2
-            exit 2
+          gh auth setup-git
+          # A failed remote lookup is not evidence that a branch is absent.
+          remote_head="$(git ls-remote --heads origin "refs/heads/$branch")"
+          if [[ -n "$remote_head" ]]; then
+            git fetch --no-tags origin "refs/heads/$branch:refs/remotes/origin/$branch"
+            git show "refs/remotes/origin/$branch:$target" > "$RUNNER_TEMP/recorded-scorecard.json"
+            cmp --silent "$card" "$RUNNER_TEMP/recorded-scorecard.json" || {
+              echo 'existing evidence branch has different scorecard bytes' >&2
+              exit 2
+            }
+            rm -f "$RUNNER_TEMP/recorded-comparison.json"
+            if git cat-file -e "refs/remotes/origin/$branch:$comparison_target"; then
+              git show "refs/remotes/origin/$branch:$comparison_target" > "$RUNNER_TEMP/recorded-comparison.json"
+            fi
+            verify_comparison "$RUNNER_TEMP/recorded-comparison.json"
+          else
+            mkdir -p "$(dirname "$target")"
+            cp "$card" "$target"
+            if [[ -f "$comparison" ]]; then
+              cp "$comparison" "$comparison_target"
+            fi
+            git switch --create "$branch"
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add "$target"
+            if [[ -f "$comparison" ]]; then git add "$comparison_target"; fi
+            git commit -m "evidence(dataset): record $run_id for $dataset"
+            git push origin "$branch"
           fi
 
-          git switch --create "$branch"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add evidence/dataset-iterations
-          git commit -m "evidence(dataset): record $run_id for $dataset"
-          gh auth setup-git
-          git push origin "$branch"
+          gh pr list --repo "$GITHUB_REPOSITORY" --base main --head "$branch" \
+            --state all --json state,url > "$RUNNER_TEMP/recorded-prs.json"
+          existing="$(python3 - "$RUNNER_TEMP/recorded-prs.json" <<'PY'
+          import json, sys
+          prs = json.load(open(sys.argv[1]))
+          reusable = [p for p in prs if p['state'] in ('OPEN', 'MERGED')]
+          if reusable:
+              print(reusable[0]['url'])
+          elif prs:
+              raise SystemExit('evidence PR was closed without merging; explicit review is required')
+          PY
+          )"
+          if [[ -n "$existing" ]]; then
+            echo "scorecard PR already recorded: $existing" >>"$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
 
           DATASET_ID="$dataset" DATASET_RUN_ID="$run_id" python3 - <<'PYBODY'
-          import os
+          import json, os
           from pathlib import Path
 
+          card = json.loads(Path('build/dataset-iteration/scorecard.json').read_text())
           body = (
               "Dataset-driven KWS measurement.\n\n"
               f"- dataset id: `{os.environ['DATASET_ID']}`\n"
               f"- run id: `{os.environ['DATASET_RUN_ID']}`\n"
-              f"- controlled variable: `{os.environ['CONTROLLED_VARIABLE']}`\n"
-              f"- model: `{os.environ['MODEL_LABEL']}`\n\n"
+              f"- controlled variable: `{card['identity']['variable']}`\n"
+              f"- model: `{card['labels']['model']}`\n\n"
               "The scorecard is research evidence only. Independent audio and\n"
-              "target-board measurements are required before scientific acceptance.\n"
+              "target-board measurements are reported separately when available.\n"
           )
           (Path(os.environ['RUNNER_TEMP']) / 'dataset-iteration-pr.md').write_text(body, encoding='utf-8')
           PYBODY
@@ -216,11 +367,3 @@ jobs:
             --title "evidence(dataset): record $run_id" \
             --body-file "$RUNNER_TEMP/dataset-iteration-pr.md")"
           echo "scorecard PR: $pr_url" >>"$GITHUB_STEP_SUMMARY"
-
-      - name: Upload the full evidence
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: dataset-iteration-evidence
-          path: build/dataset-iteration
-          if-no-files-found: error
-          retention-days: 90

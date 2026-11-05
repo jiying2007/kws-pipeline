@@ -30,6 +30,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
 
       - name: Self-test retained frozen FAR context path summary
         run: python3 tools/summarize_frozen_far_context_path.py --self-test
@@ -73,6 +74,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
 
       - name: Download exact retained stream-context artifact
         env:

@@ -16,23 +16,15 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /workspace
 COPY training/requirements.lock /tmp/kws-requirements.lock
+COPY configs/runtime/research-runtime.json /tmp/kws-research-runtime.json
+COPY tools/research_runtime.py /tmp/kws-research-runtime.py
 
 # The complete Python dependency tree is supplied by one immutable OCI base
 # image (`name@sha256:<digest>`), validated by training/build_container.py.
 # Do not resolve or upgrade packages while constructing a qualification image.
-RUN python - <<'PY'
-import pathlib
-import platform
-import torch
-expected = {}
-for raw in pathlib.Path('/tmp/kws-requirements.lock').read_text(encoding='utf-8').splitlines():
-    line = raw.strip()
-    if not line or line.startswith('#'):
-        continue
-    name, version = line.split('==', 1)
-    expected[name.strip()] = version.strip()
-assert platform.python_version() == expected['python'], (platform.python_version(), expected['python'])
-assert str(torch.__version__).split('+', 1)[0] == expected['torch'], (torch.__version__, expected['torch'])
-PY
+RUN python /tmp/kws-research-runtime.py --manifest /tmp/kws-research-runtime.json \
+      training-lock --check /tmp/kws-requirements.lock \
+    && python /tmp/kws-research-runtime.py --manifest /tmp/kws-research-runtime.json \
+      check --role core --packages
 
 ENTRYPOINT ["python", "training/train_ctc.py"]

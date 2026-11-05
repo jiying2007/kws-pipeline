@@ -48,6 +48,12 @@ class ChangeSelectionTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
 
+    def test_runtime_changes_select_research_dependencies(self):
+        for path in ('configs/runtime/research-runtime.json', 'tools/research_runtime.py',
+                     'training/setup_core_runtime.sh', '.github/actions/setup-research-python/action.yml'):
+            with self.subTest(path=path):
+                self.assertTrue(changes.relevant([path]))
+
     def test_conditioned_queue_selects_all_incremental_paths(self):
         for path in ('docs/language-conditioned-weak-import.md', 'tests/test_language_conditioned_queue.py', 'tools/import_language_conditioned_result.py', 'tools/language_conditioned_vote.py', 'tools/speech_data_queue.py', 'tools/speech_history_evidence.py', 'training/weak_speech_dataset.py'):
             with self.subTest(path=path):

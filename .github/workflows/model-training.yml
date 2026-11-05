@@ -53,6 +53,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Verify versioned training request
         if: github.event_name == 'push'
         run: >-
@@ -105,16 +106,7 @@ jobs:
           ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
       - name: Install pinned CPU training runtime
         run: |
-          python3 -m venv .venv
-          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
-          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
-            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
-          .venv/bin/python - <<'PY'
-          import numpy
-          import torch
-          assert numpy.__version__ == '2.3.2'
-          assert str(torch.__version__).split('+', 1)[0] == '2.13.0'
-          PY
+          bash training/setup_core_runtime.sh .venv
       - name: Verify decoder-aligned training objectives
         run: .venv/bin/python training/test_sequence_margin.py
       - name: Train and iterate domain rounds
@@ -168,6 +160,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Materialize governed product speech-like training base
         env:
           GH_TOKEN: ${{ github.token }}
@@ -190,10 +183,7 @@ jobs:
           ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
       - name: Install pinned CPU training runtime
         run: |
-          python3 -m venv .venv
-          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
-          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
-            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+          bash training/setup_core_runtime.sh .venv
       - name: Verify decoder-aligned training objectives
         run: .venv/bin/python training/test_sequence_margin.py
       - name: Download exact base-domain state

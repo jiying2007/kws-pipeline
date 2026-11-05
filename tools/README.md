@@ -90,6 +90,15 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`batch-source-contract.json`](batch-source-contract.json) — Public source/model identities and explicit tokenizer metadata map.
 - [Bounded batch weak-import guide](../docs/batch-weak-import.md) — Restricted Dylan/Serena source review, original split and full transcript preservation; current experiment admission remains false.
 
+## Active research runtime
+
+Active host Python and the `core`, `tts`, and `asr` dependency roles are defined
+in [`research-runtime.json`](../configs/runtime/research-runtime.json). Use
+[`research_runtime.py`](research_runtime.py) to check the interpreter, inspect a
+role's package pins, or run a script through the checked entry. See the
+[research runtime guide](../docs/RESEARCH_RUNTIME.md) for environment setup and
+the separate model-smoke validation status.
+
 ## Disabled research plan metadata
 
 - [`validate_parallel_candidate_plan.py`](validate_parallel_candidate_plan.py) checks the
@@ -106,6 +115,8 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`build_decoder_boundary_references.py`](build_decoder_boundary_references.py)
 - [`build_training_diagnostics.py`](build_training_diagnostics.py)
 - [`compare_dataset_iterations.py`](compare_dataset_iterations.py)
+- [`dataset_iteration_inputs.py`](dataset_iteration_inputs.py) — Preserve and verify the input bundle used to rescore a saved system comparison.
+- [`dataset_iteration_policy.py`](dataset_iteration_policy.py) — Apply the versioned FAR confidence-bound and comparison policy without changing historical cards.
 - [`select_multilingual_kws_models.py`](select_multilingual_kws_models.py) — Rank only paired same-corpus zh/en development KWS model results by FAR/FRR confidence and CPU/RSS/latency Pareto, never shipping. [Model tournament](../docs/KWS_MULTILINGUAL_MODEL_TOURNAMENT.md).
 - [`diagnose_acoustic_alignment.py`](diagnose_acoustic_alignment.py)
 - [`diagnose_acoustic_boundary_segmentation.py`](diagnose_acoustic_boundary_segmentation.py)

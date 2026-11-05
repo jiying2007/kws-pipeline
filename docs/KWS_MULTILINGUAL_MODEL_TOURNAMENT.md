@@ -1,7 +1,7 @@
 # Source-bound multilingual KWS development candidate tournament
 
-A deterministic **development-only** model selector for the existing
-`dataset-iteration-v4` result cards. This is the evaluation/selection
+A deterministic **development-only** model selector for homogeneous v4 or v5
+dataset-iteration result cards. This is the evaluation/selection
 layer after genuine KWS training and measured same-runner development
 replay. It is *not* a new training runner, TTS/ASR provider or model
 promotion mechanism. Run it as often as new frozen candidate scorecards
@@ -11,18 +11,23 @@ Entry point: `tools/select_multilingual_kws_models.py`.
 
 ## Why this matters
 
-- The frozen product still has two exact Mandarin words:
+- The frozen research baseline has two complete Mandarin wake words:
   **你好小窝** and **小窝小窝**, with standalone **小窝** forbidden.
 - The 2026-11-03 frozen synthetic nightly regression remains
   **2 false accepts / 8 hours = 0.25/h, 95% upper ≈0.787/h**.
   Lowering nightly FAR thresholds or modifying labels cannot fix this.
 - Current `kws-data` contains infrastructure for authorized multi-speaker
   Qwen TTS / local 3-ASR machine screening; generated clip count, 3/3 ASR
-  strings, and replay CI PASS are not product error metrics.
-- The existing governed `tools/compare_dataset_iterations.py` already
+  strings, and replay CI PASS are not natural-speech quality metrics.
+- `tools/compare_dataset_iterations.py` in default ablation mode
   enforces one variable, pinned scorecard protocol and exposure-aware FAR.
   Keep that historical calculator for v4 receipt validation and legacy diagnostics.
   Selection uses the existing exact Poisson helper under the explicit v2 policy.
+
+For architecture/native-frontend comparisons across different source revisions,
+use [the explicit system mode](DATASET_ITERATION.md#comparing-complete-systems).
+This tournament remains the fixed-code model-ablation selector. It does not
+silently reinterpret a system comparison as a causal single-change experiment.
 
 This addition selects among up to **8 already-evaluated model candidates**,
 all measured against the **same independent frozen development dataset**,
@@ -33,10 +38,12 @@ both change, stop and run an explicit paired rebaseline.
 
 ## Selection dimensions
 
-The selector verifies `schema_version=4` v4 scorecards, the producer's
-`negative-only-recordings-iteration-approx95-v1` FAR identity/point/bound
-math, exact file SHA256, and internal positive `expected/matched/FRR`
-consistency. V2 retains those historical fields unchanged but computes a separate
+The selector verifies schema 4 or 5 scorecards, exact file SHA256, internal
+positive `expected/matched/FRR` consistency and each schema's FAR policy/math.
+All cards in a cohort must use the same policy, even with matching custom
+protocol labels. V4 uses `negative-only-recordings-iteration-approx95-v1`;
+v5 uses `negative-only-recordings-exact-poisson-one-sided95-v1`. V2 retains
+historical card bytes unchanged and computes a separate
 `selection_far_upper_95_per_hour` using `statistical_bounds.poisson_rate_upper`
 with confidence 0.95 and the same negative-only-recording count/exposure. The
 explicit selection policy is `negative-only-recordings-exact-poisson-one-sided95-v1`.
@@ -86,22 +93,24 @@ A candidate must strictly Pareto-dominate the eligible baseline over these six
 aggregate/resource metrics before entering this set. Exact ties retain the
 champion and produce no challenger. Choose a deterministic *research leader*
 from the remaining non-dominated set. This is observed dominance, not statistical
-significance. Old v4 comparison verdicts remain diagnostic and cannot override
-the exact selection decision.
+significance. `scorecard_comparison` holds the versioned comparison, and
+`legacy_v4_comparison` is populated only for v4 inputs. Historical approximate
+verdicts cannot override the exact selection decision.
 
 If there is no eligible model, output `research_leader_id=null`;
 **never** choose a winner merely because some experiments finished.
-A development model cannot be automatically shipped based on this
-ranking. Missing per-keyword true labels / source family separation and
-actual independent long-stream/AFE evidence remain required product
-blockers, even if an aggregate score looks good.
+A ranking describes the measured development cohort. Missing per-keyword labels,
+source separation or independent long-stream/AFE evidence limits the claims that
+can be made. Those gaps do not stop unrelated authorized model/data research.
+The selector has no per-slice zero-regression veto; `NOT_VERIFIED` per-keyword
+support is reported honestly rather than treated as aggregate proof.
 
 
 The \`language_binding\` is also a *private, hash-bound* original cohort
 declaration: \`policy=kws-development-language-cohort-binding-v1\`,
 \`schema_version=1\`, \`locale=zh-CN\` or \`en-US\`, the **same** pinned
 \`dataset_id\`, \`references_sha256\`, \`code_sha\`, \`protocol\`, and
-\`seed\` from the v4 baseline, with \`source_role=development-only\`,
+\`seed\` from the baseline, with \`source_role=development-only\`,
 \`independent_language_verified=false\`,
 \`sealed_or_formal_data_used=false\`, \`training_admitted=false\` and
 \`qualification_allowed=false\`. The selector verifies its exact bytes
@@ -175,10 +184,9 @@ counts. Reusing development data repeatedly does not turn it into independent
 test evidence. Exact arithmetic is bounded to 10,000 negative events and
 1,000,000,000 positive events per card.
 
-Values are illustrative *research-development* budgets, not new
-commercial shipping limits. Placeholder hashes deliberately fail.
-`locale=en-US` is also accepted but cannot enable an English
-shipping product or invent its wake phrase. Each language runs a
+Values are illustrative *research-development* budgets. Placeholder hashes
+deliberately fail. `locale=en-US` is also accepted; its actual wake phrases
+must come from the separately bound English cohort. Each language runs a
 **separate** tournament. English and Mandarin scorecards are never
 compared across language populations.
 
@@ -211,15 +219,15 @@ model inference, network, license, source admission or deployment calls**.
 3. Pre-registered control/candidate models train under bounded public/free
    runner budgets, no sweep over sealed results. Both are evaluated under
    the **same** frozen development corpus/code/AFE.
-4. This selector automatically rejects regressions and reports the Pareto
-   research frontier. The next training round can be proposed from its
-   retained report, only if independently authorized and with a new
-   causal data/loss hypothesis. Keep earlier unsuccessful runs unchanged.
-5. The final product acceptance remains the existing **Phase A** real-human
-   40 speaker / 2 session / 1200 wake / 24h negative policy and its
-   confidence bounds, followed by **Phase B** same-device physical SSC305
-   constraints and **Phase C** reviewed immutable release. A
-   development Pareto winner **never changes** shipping approval.
+4. This selector excludes candidates from this declared ranking when its
+   budgets are unmet and reports the observed Pareto frontier. Small samples
+   may be insufficient for ranking while still useful for research. Retain all
+   attempts, expose the reason and continue the approved plan within its budget.
+   Routine steps already authorized by that plan do not require another approval.
+5. Confirm promising candidates on unseen speakers and independent continuous
+   backgrounds. Measure physical SSC305 CPU/memory, stability and actual callback
+   latency before drawing target-device conclusions. Archived Phase A/B/C plans
+   are historical evidence, not prerequisites for new research iterations.
 
 Observed resource improvements on x86 are *not* device certification.
 The user requires low-compute on the SSC305, so final deployment decisions

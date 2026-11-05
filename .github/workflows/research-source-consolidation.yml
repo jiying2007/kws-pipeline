@@ -4,6 +4,11 @@ on:
   push:
     branches: ['consolidate/**']
     paths:
+      - "configs/runtime/research-runtime.json"
+      - "tools/research_runtime.py"
+      - "training/setup_core_runtime.sh"
+      - ".github/actions/setup-research-python/action.yml"
+      - "tests/test_research_runtime.py"
       - 'research/**'
       - 'tools/verify_research_sources.py'
       - 'tools/verify_research_publication.py'
@@ -29,9 +34,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
-        with:
-          python-version: '3.12'
+      - uses: ./.github/actions/setup-research-python
       - name: Verify publication index with pinned public metadata
         run: |
           python3 -B tools/verify_research_publication.py --fetch-metadata
@@ -70,6 +73,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Test strict opt-in scratch under both compilers
         env:
           CC: ${{ matrix.cc }}

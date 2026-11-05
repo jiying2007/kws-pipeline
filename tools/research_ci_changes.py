@@ -7,6 +7,9 @@ from pathlib import Path
 import subprocess
 
 EXACT = frozenset({
+    'configs/runtime/research-runtime.json', 'tools/research_runtime.py',
+    'training/setup_core_runtime.sh', '.github/actions/setup-research-python/action.yml',
+    'tests/test_research_runtime.py',
     'tests/test_causal_research_contract.py',
     'tests/test_research_three_window_c.py',
     'tools/verify_research_sources.py', 'tools/verify_research_publication.py',

@@ -27,6 +27,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Verify pinned research comparator and historical registry identity
         run: |
           python3 -B - <<'PY'

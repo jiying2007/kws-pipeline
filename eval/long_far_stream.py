@@ -215,7 +215,8 @@ def main() -> int:
         parser.error("--seconds must be > 0")
     if args.max_far_per_hour < 0.0 or not math.isfinite(args.max_far_per_hour):
         parser.error("--max-far-per-hour must be finite and >= 0")
-    if args.capture_context_seconds < 0.0 or args.capture_context_seconds > 10.0:
+    if (not math.isfinite(args.capture_context_seconds)
+            or args.capture_context_seconds < 0.0 or args.capture_context_seconds > 10.0):
         parser.error("--capture-context-seconds must be in [0,10]")
     if (
         args.hard_negative_rate_per_minute < 0.0

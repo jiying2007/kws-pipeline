@@ -153,7 +153,7 @@ def training_environment(checkpoint: dict) -> dict:
             if not isinstance(item, dict) or not item:
                 raise ValueError(f"checkpoint training_environment.{key} must be a non-empty object")
             result[key] = json.loads(json.dumps(item, allow_nan=False))
-    for key in ("requirements_lock_sha256", "dockerfile_sha256"):
+    for key in ("requirements_lock_sha256", "dockerfile_sha256", "runtime_manifest_sha256"):
         item = value.get(key)
         result[key] = None if item is None else checkpoint_sha(item, f"training_environment.{key}")
     code = value.get("training_code_sha256")

@@ -197,7 +197,8 @@ def main() -> int:
     assert "FROM ${KWS_TRAINING_BASE}" in dockerfile
     assert "pip install" not in dockerfile
     assert "pip install --upgrade" not in dockerfile
-    assert "python==3.12.11" in lock
+    runtime_manifest = json.loads((ROOT / "configs/runtime/research-runtime.json").read_text())
+    assert f"python=={runtime_manifest['python']['version']}" in lock
     assert "torch==2.13.0" in lock
 
     for source in (site_source, model_source):

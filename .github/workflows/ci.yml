@@ -25,6 +25,12 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 2
+      - uses: ./.github/actions/setup-research-python
+      - name: Research Python runtime contract
+        run: |
+          python3 -B tests/test_research_runtime.py
+          python3 -B tools/research_runtime.py check-locks
+          python3 -B tools/research_runtime.py training-lock --check training/requirements.lock
       - name: Install tracked-worktree integrity guard
         run: |
           set -euo pipefail
@@ -580,6 +586,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Read-only ASR evidence acceptance contracts
         run: |
           set -euo pipefail
@@ -653,6 +660,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Install tracked-worktree integrity guard
         run: |
           set -euo pipefail
@@ -907,7 +915,10 @@ jobs:
       - name: Verify tracked worktree after Deferred verdict contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Deferred verdict contract"'
       - name: Dataset iteration contract
-        run: python3 tests/test_dataset_iteration.py
+        run: |
+          python3 tests/test_dataset_iteration.py
+          python3 -B tests/test_dataset_iteration_publication.py
+          python3 -B tests/test_dataset_iteration_v5.py
       - name: Verify tracked worktree after Dataset iteration contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Dataset iteration contract"'
       - name: Multilingual model tournament source contracts
@@ -990,6 +1001,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Configure coverage build
         run: >-
           cmake -S . -B build-coverage -DCMAKE_BUILD_TYPE=Debug
@@ -1019,6 +1031,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Configure ASan/UBSan
         run: >-
           cmake -S . -B build-san -DCMAKE_BUILD_TYPE=Debug
@@ -1036,6 +1049,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Verify parser instrumentation and SDK isolation
         run: python3 tests/test_fuzz_instrumentation.py
       - name: Configure Clang libFuzzer + ASan/UBSan
@@ -1063,6 +1077,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Install cross compiler and ARM user-mode emulator
         timeout-minutes: 8
         # Root supervisor can clean up root APT children; install is never retried.

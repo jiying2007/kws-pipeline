@@ -263,6 +263,7 @@ def training_environment() -> dict:
         "requirements_lock_sha256": optional_sha256(
             ROOT / "training" / "requirements.lock"
         ),
+        "runtime_manifest_sha256": optional_sha256(ROOT / "configs/runtime/research-runtime.json"),
         "dockerfile_sha256": optional_sha256(ROOT / "training" / "Dockerfile"),
         "training_code_sha256": code,
     }

@@ -26,30 +26,26 @@ import hashlib
 import json
 import math
 import pathlib
+import re
 import subprocess
 import sys
-import wave
 
-from corpus_identity import canonical_audio_path, verified_afe_metadata
+from dataset_iteration_inputs import (
+    bundle_system_evidence, dataset_identity, dataset_input_paths, load_jsonl, system_evidence,
+    validate_output_paths, validate_runner_context, verify_system_evidence,
+)
+from export_artifacts import write_export_artifacts
+from dataset_iteration_policy import (
+    CONFIDENCE, DATASET_IDENTITY_POLICY, FAR_POLICY, PROTOCOL, SCHEMA_VERSION,
+    far_upper_bound_95,
+)
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 EVAL = ROOT / "eval"
 sys.path.insert(0, str(EVAL))
 from domain_metrics import domain_keys  # noqa: E402
 
-PROTOCOL = "dataset-iteration-v4"
-DATASET_IDENTITY_POLICY = "effective-domain-keys-verified-afe-v2"
-FAR_POLICY = "negative-only-recordings-iteration-approx95-v1"
-VARIABLES = ("dataset", "model")
-
-# chi-square with 2 degrees of freedom at 95% is 5.991, and the Poisson upper
-# bound for zero observed events over exposure T is chi2/(2T) ~= 3/T.
-ZERO_COUNT_UPPER_BOUND = 2.9957
-# Normal approximation to Poisson for a non-zero count. Deliberately an
-# approximation, and labelled as one in the output: the exact bound needs an
-# incomplete gamma function, and the value that actually drives decisions is the
-# zero-count case below.
-NORMAL_Z95 = 1.959964
+VARIABLES = ("dataset", "model", "system")
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -64,69 +60,6 @@ def canonical_hash(value: object) -> str:
     encoded = json.dumps(value, ensure_ascii=False, sort_keys=True,
                          separators=(",", ":"), allow_nan=False).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
-
-
-def load_jsonl(path: pathlib.Path) -> list[dict]:
-    rows: list[dict] = []
-    for number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        line = raw.strip()
-        if not line:
-            continue
-        try:
-            value = json.loads(line)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"{path}:{number}: invalid JSON: {exc}") from None
-        if not isinstance(value, dict):
-            raise ValueError(f"{path}:{number}: expected an object")
-        rows.append(value)
-    if not rows:
-        raise ValueError(f"{path}: no rows")
-    return rows
-
-
-def wav_duration_s(path: pathlib.Path) -> float:
-    with wave.open(str(path), "rb") as reader:
-        return reader.getnframes() / float(reader.getframerate())
-
-
-def dataset_identity(references: pathlib.Path, audio_root: pathlib.Path) -> tuple[str, dict]:
-    """Content hash of the dataset: audio bytes + what is expected of them.
-
-    Two datasets that differ only in expectations are different datasets, and so
-    are two that share expectations but differ in audio. Both halves are in the
-    hash on purpose. Effective scoring slices come from domain_keys verbatim;
-    ignored metadata and within-slice changes do not change this identity.
-    AFE sidecar presence and verified bytes are execution inputs; paths are not.
-    """
-    rows = load_jsonl(references)
-    entries = []
-    for row in rows:
-        name = str(row.get("recording", ""))
-        if not name:
-            raise ValueError("reference row is missing 'recording'")
-        relative = canonical_audio_path(row, name)
-        audio = pathlib.Path(relative)
-        if not audio.is_absolute():
-            audio = audio_root / audio
-        if not audio.is_file():
-            raise ValueError(f"{name}: audio file is missing: {audio}")
-        metadata, metadata_sha256 = verified_afe_metadata(row, audio_root)
-        entries.append(
-            {
-                "recording": name,
-                "wav_sha256": sha256_file(audio),
-                "duration_s": round(wav_duration_s(audio), 6),
-                "expected": row.get("expected", []),
-                "domains": sorted(domain_keys(row)),
-                "afe_metadata": ({"present": False} if metadata is None else
-                                 {"present": True, "sha256": metadata_sha256}),
-            }
-        )
-    if not entries:
-        raise ValueError("reference file contains no recordings")
-    entries.sort(key=lambda item: item["recording"])
-    return canonical_hash({"dataset_identity_policy": DATASET_IDENTITY_POLICY,
-                           "entries": entries}), {"recordings": len(entries)}
 
 
 def model_identity(model: pathlib.Path, keywords: pathlib.Path) -> str:
@@ -158,16 +91,8 @@ def exposure_hours(references: pathlib.Path) -> tuple[float, int]:
     return total / 3600.0, negatives
 
 
-def far_upper_bound_95(false_accepts: float, hours: float) -> float:
-    if hours <= 0.0:
-        raise ValueError("negative exposure is zero: FAR/hour is undefined")
-    if false_accepts <= 0.0:
-        return ZERO_COUNT_UPPER_BOUND / hours
-    return (false_accepts + NORMAL_Z95 * math.sqrt(false_accepts)) / hours
-
-
 def negative_far_rate(summary: dict) -> tuple[float, dict]:
-    """Use one scorer population, retaining this lane's existing approximation."""
+    """Use negative-only exposure and the shared exact one-sided 95% bound."""
     fields = ("negative_recording_false_accepts", "negative_recording_audio_hours",
               "negative_recording_far_per_hour")
     for field in fields:
@@ -193,8 +118,8 @@ def negative_far_rate(summary: dict) -> tuple[float, dict]:
         "observed_false_accepts": count,
         "point_estimate_per_hour": point,
         "upper_bound_95_per_hour": bound,
-        "basis": ("zero observed: chi-square(2) 95% / (2T)" if count == 0
-                  else "non-zero count: normal approximation to Poisson"),
+        "confidence_level": CONFIDENCE,
+        "basis": "exact one-sided Poisson upper confidence bound",
     }
 
 
@@ -216,7 +141,7 @@ def git_head() -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description="Measure one dataset iteration and bind its inputs.")
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     parser.add_argument("--model", required=True, type=pathlib.Path)
     parser.add_argument("--keywords", required=True, type=pathlib.Path)
@@ -225,7 +150,12 @@ def main() -> int:
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     parser.add_argument("--variable", required=True, choices=list(VARIABLES),
-                        help="which of the two controlled variables is under test")
+                        help="controlled variable, or system for an explicit system comparison")
+    parser.add_argument("--mode", choices=("ablation", "system"), default="ablation")
+    parser.add_argument("--system-context", type=pathlib.Path,
+                        help="common declared runner input/event context JSON; system mode only")
+    parser.add_argument("--native-frontend", default="",
+                        help="native frontend description; system mode only, not forced equal")
     parser.add_argument("--dataset-label", default="")
     parser.add_argument("--model-label", default="")
     parser.add_argument("--seed", default="")
@@ -233,26 +163,56 @@ def main() -> int:
     parser.add_argument("--protocol", default=PROTOCOL)
     args = parser.parse_args()
 
+    code_sha = args.code_sha or git_head()
+    context = None
+    if args.mode == "system":
+        if args.variable != "system" or args.system_context is None or not args.native_frontend.strip():
+            raise ValueError("system mode requires --variable system, --system-context and --native-frontend")
+        if re.fullmatch(r"[0-9a-f]{40}", code_sha) is None:
+            raise ValueError("system mode requires a full source revision in --code-sha")
+        context = validate_runner_context(json.loads(args.system_context.read_text(encoding="utf-8")))
+        context_sha256 = sha256_file(args.system_context)
+    elif args.variable == "system" or args.system_context is not None or args.native_frontend:
+        raise ValueError("system declarations require --mode system")
+
     for label, path in (("runner", args.runner), ("model", args.model),
                         ("keywords", args.keywords), ("references", args.references)):
         if not path.is_file():
             raise ValueError(f"{label} not found: {path}")
-
-    work = args.work_dir.resolve()
-    work.mkdir(parents=True, exist_ok=True)
+    execution_files = {str(path): sha256_file(path) for path in
+                       (args.runner, args.model, args.keywords)} if context is not None else {}
 
     # eval/run_corpus.py resolves audio through `_execution_path`, an internal
     # field that the domain renderer happens to add. A plain references file
     # does not have it, so fill it in here rather than making callers learn an
     # implementation detail of the evaluation chain.
     rows = load_jsonl(args.references)
+    work = args.work_dir.resolve()
+    effective_references = work / "references.effective.jsonl"
+    detections = work / "detections.jsonl"
+    provenance = work / "detections.provenance.json"
+    summary = work / "summary.json"
+    domains = work / "domains.json"
+    false_positives = work / "false-positives.jsonl"
+    false_rejects = work / "false-rejects.jsonl"
+    outputs = {
+        "effective references": effective_references, "detections": detections,
+        "provenance": provenance, "summary": summary, "domains": domains,
+        "false positives": false_positives, "false rejects": false_rejects,
+        "scorecard": args.output,
+    }
+    inputs = [args.runner, args.model, args.keywords, args.references,
+              *dataset_input_paths(rows, args.audio_root)]
+    if args.system_context is not None:
+        inputs.append(args.system_context)
+    validate_output_paths(outputs, inputs)
+    work.mkdir(parents=True, exist_ok=True)
     enriched = []
     for row in rows:
         item = dict(row)
         if not str(item.get("_execution_path") or ""):
             item["_execution_path"] = str(item.get("path") or "")
         enriched.append(item)
-    effective_references = work / "references.effective.jsonl"
     effective_references.write_text(
         "".join(
             json.dumps(item, ensure_ascii=False, sort_keys=True, allow_nan=False) + "\n"
@@ -260,13 +220,6 @@ def main() -> int:
         ),
         encoding="utf-8",
     )
-
-    detections = work / "detections.jsonl"
-    provenance = work / "detections.provenance.json"
-    summary = work / "summary.json"
-    domains = work / "domains.json"
-    false_positives = work / "false-positives.jsonl"
-    false_rejects = work / "false-rejects.jsonl"
 
     # Bind verified inputs before execution. Recheck the effective and original
     # references after evaluation before issuing a card. Corpus retains its own
@@ -311,12 +264,13 @@ def main() -> int:
         "dataset_identity_policy": DATASET_IDENTITY_POLICY,
         "dataset_id": dataset_id,
         "model_id": model_id,
-        "code_sha": args.code_sha or git_head(),
+        "code_sha": code_sha,
         "seed": args.seed,
         "variable": args.variable,
+        "comparison_mode": args.mode,
     }
     scorecard = {
-        "schema_version": 4,
+        "schema_version": SCHEMA_VERSION,
         "protocol": args.protocol,
         "run_id": canonical_hash(identity)[:16],
         "identity": identity,
@@ -342,11 +296,25 @@ def main() -> int:
             "references_sha256": sha256_file(args.references),
         },
     }
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
-        json.dumps(scorecard, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
-        encoding="utf-8",
-    )
+    if context is not None:
+        if (sha256_file(args.system_context) != context_sha256 or
+                any(sha256_file(pathlib.Path(path)) != digest for path, digest in execution_files.items())):
+            raise ValueError("system context or runner/model/keyword bytes changed during evaluation")
+        evidence = system_evidence(
+            references=effective_references, source_references=args.references,
+            detections=detections, provenance=provenance, audio_root=args.audio_root, context=context,
+        )
+        identity.update(native_frontend=args.native_frontend.strip(),
+                        runner_sha256=execution_files[str(args.runner)],
+                        evaluation_protocol_id=canonical_hash(evidence["protocol"]))
+        scorecard["system_evaluation"] = evidence
+        scorecard["artifacts"]["provenance_sha256"] = sha256_file(provenance)
+        scorecard["run_id"] = canonical_hash(identity)[:16]
+        verify_system_evidence(scorecard, "produced")
+        bundle_system_evidence(scorecard, args.output.parent / "evidence" / scorecard["run_id"])
+    validate_output_paths(outputs, inputs)
+    text = json.dumps(scorecard, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    write_export_artifacts({args.output: text.encode("utf-8")})
     print(
         "run_dataset_iteration: ok "
         f"run={scorecard['run_id']} dataset={dataset_id[:12]} model={model_id[:12]} "
