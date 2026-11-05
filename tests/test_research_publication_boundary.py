@@ -387,6 +387,18 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
         self.assertFalse(comparator["independent_measurement_requirements"]["actual_ssc305_measured"])
         self.assertTrue((ROOT / "tools/verify_research_model_assets.py").is_file())
 
+    def test_current_readmes_do_not_offer_retired_shipping_commands(self):
+        # The old qualification CLIs now default-deny; their runnable how-to
+        # belongs to immutable history, not the research landing page.
+        for relative in ("README.md", "README.zh-CN.md"):
+            with self.subTest(relative=relative):
+                source = (ROOT / relative).read_text(encoding="utf-8")
+                self.assertNotIn("python3 tools/qualification_manifest.py", source)
+                self.assertNotIn("python3 tools/qualification_gate.py", source)
+                self.assertIn("--historical-replay-only", source)
+                self.assertIn("tools/collect_runtime_soak.py", source)
+                self.assertIn("tools/collect_target_evidence.py", source)
+
     def test_research_document_tracks_later_migration(self):
         doc = (ROOT / "docs/RESEARCH_ONLY_EXECUTION.md").read_text(encoding="utf-8")
         self.assertIn("Retired automatic publication surfaces", doc)
