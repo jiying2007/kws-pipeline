@@ -1,6 +1,8 @@
 # Continuous-audio evaluation
 
-KWS release quality is measured on continuous recordings, not isolated clip accuracy. In `v0.3.x`, evaluation evidence is also bound to the **actual WAV bytes**, not only to a reference JSONL file.
+**Current scope: technical research.** Evaluate actual WAV/PCM, independent source and label evidence, model/keyword/AFE identity and optional physical-target observations. Historical product/Release policies are not research-admission gates; preserve their original evidence separately.
+
+KWS research effectiveness is measured on continuous recordings, not isolated clip accuracy. In `v0.3.x`, evaluation evidence is also bound to the **actual WAV bytes**, not only to a reference JSONL file.
 
 ## Reference and audio contract
 
@@ -48,7 +50,7 @@ existing RIFF/header parsing policy.
 
 The declared `duration_s` must match the real WAV duration. This prevents FAR exposure from being inflated by declaring a short file as many hours of audio.
 
-Keep speakers, sessions, source recordings and device sessions disjoint across train/calibration/test/qualification. Final human qualification should require speaker/session/source metadata through `training/audit_dataset.py`.
+Keep speakers, sessions, source recordings and device sessions disjoint across train/calibration/test/qualification. Independent human-speech evaluation should require speaker/session/source metadata through `training/audit_dataset.py`.
 
 ### Development split roles
 
@@ -58,9 +60,9 @@ The historical split names remain stable for artifact and consumer compatibility
 - `calibration` = **development-calibration**;
 - `test` = **development-feedback**.
 
-The development `test` split is **not** an independent held-out product test: its metrics may feed curriculum, replay, candidate selection and subsequent development decisions. Once evidence from that split influences training or policy, it must continue to be treated as development feedback.
+The development `test` split is **not** an independent held-out research test: its metrics may feed curriculum, replay, candidate selection and subsequent development decisions. Once evidence from that split influences training or policy, it must continue to be treated as development feedback.
 
-Reserved held-out/protected authority belongs to qualification stages that do not feed the same evidence back into training, including synthetic qualification where applicable and, for shipping authority, the governed real-human and target-DUT/cohort lanes. The file/key name `test` is retained only for compatibility; new diagnostics should expose the canonical role `development-feedback`.
+Reserved independent evidence must not feed back into training or threshold selection. Synthetic stress tests, independent natural human speech and actual SSC305 resource/acoustic measurements have separate experimental identities; historical product-qualification formats are not current research permission. The file/key name `test` is retained only for compatibility; new diagnostics should expose the canonical role `development-feedback`.
 
 Runtime detections are JSONL:
 
@@ -73,8 +75,8 @@ Runtime detections are JSONL:
 ```bash
 python3 eval/run_corpus.py \
   --runner ./build/kws_wav \
-  --model release/base.kwm \
-  --keywords release/xiaowo.kwk \
+  --model models/registry/model-749187ec1d66/xiaowo-model.kwm \
+  --keywords models/registry/model-749187ec1d66/xiaowo-keywords.kwk \
   --references qualification/references.jsonl \
   --audio-root qualification/audio \
   --detections qualification/detections.jsonl \
@@ -137,13 +139,13 @@ python3 eval/domain_metrics.py \
 
 The report includes available buckets such as distance, azimuth, RT60, noise, local playback, composite domain ids and keyword confusion/miss matrices. Aggregate FRR must not hide a weak far/side/reverb/motor/playback domain.
 
-Synthetic calibration/test/qualification rendering rotates positive domains `far -> mid -> near` to prevent accidental absence of far positives. That is a deterministic software/data-orchestration contract only; a real product corpus must independently contain enough genuine samples in every claimed bucket.
+Synthetic calibration/test/qualification rendering rotates positive domains `far -> mid -> near` to prevent accidental absence of far positives. That is a deterministic software/data-orchestration contract only; an independent natural-speech corpus must independently contain enough genuine samples in every claimed bucket.
 
 ## Long continuous FAR
 
 `kws_raw_stream` consumes raw PCM16 blocks through the same C engine without per-clip resets. `eval/long_far_stream.py` exercises continuous negative streams and preserves false-accept evidence.
 
-`.github/workflows/far-nightly.yml` is a recurring hosted/synthetic regression. It may detect state accumulation regressions, but its generated exposure is **not** a shipping FAR/hour measurement. Shipping FAR needs long real continuous background audio through the final microphone/enclosure/AFE path and those original WAV bytes must be retained/bound by evaluation provenance.
+`.github/workflows/far-nightly.yml` is a recurring hosted/synthetic regression. It may detect state accumulation regressions, but its generated exposure is **not** an independent natural-speech FAR/hour measurement. Natural-speech FAR evidence needs long real continuous background audio through the final microphone/enclosure/AFE path and those original WAV bytes must be retained/bound by evaluation provenance.
 
 ## Current diagnostic priority and admission boundary
 
@@ -173,18 +175,18 @@ training run or product qualification claim.
 
 ## Audio discontinuities
 
-A production capture pipeline can lose timeline continuity because of XRUN, device/route changes, clock resets or suspend/resume. The product integration must call `kws_engine_notify_discontinuity()` at those boundaries so pre-gap frontend/RNN/decoder state cannot be joined to post-gap audio.
+An actual device capture pipeline can lose timeline continuity because of XRUN, device/route changes, clock resets or suspend/resume. The runtime integration must call `kws_engine_notify_discontinuity()` at those boundaries so pre-gap frontend/RNN/decoder state cannot be joined to post-gap audio.
 
-A qualification recording itself must represent the intended continuous timeline. If the capture system reports an XRUN, retain that event in the acquisition metadata and either reject the recording from strict qualification or replay the exact discontinuity behavior through the product integration path.
+A qualification recording itself must represent the intended continuous timeline. If the capture system reports an XRUN, retain that event in the acquisition metadata and either reject the recording from strict qualification or replay the exact discontinuity behavior through the runtime integration path.
 
-## Required product domains
+## Recommended research domains
 
 At minimum include:
 
 - normal home conversation, near-homophones and partial wake phrases;
 - repeated syllables and shared-prefix phrases;
 - television/phone/smart-speaker playback;
-- own-device TTS/music through shipping AEC;
+- own-device TTS/music through the measured research AEC configuration;
 - AEC residual/double-talk;
 - robot motor, gearbox, fan, pump and chassis vibration;
 - silence/impulses/microphone handling;
@@ -220,20 +222,20 @@ False rejects may be replayed with `eval/mine_false_rejects.py`. Retraining must
 
 Never mine from the final qualification-heldout corpus and then report those same source recordings as unbiased final evidence. A held-out corpus stops being held-out once its failures influence model, threshold or keyword-policy tuning.
 
-## Release evidence
+## Reproducible research evidence
 
-For every shipping model/pack tuple retain:
+For each evaluated model, keyword pack and AFE tuple retain:
 
 - KWSP v2 + model provenance schema v3;
 - KWKP v3;
 - exact checkpoint/training tokens/training manifests and real training-corpus identity;
 - clean dataset audit;
-- release tokens/config and frontend identity;
+- token/config and frontend identity;
 - exact evaluation runner/references/**original evaluation WAVs**/detections/provenance/summary;
 - domain metrics and failure-replay outputs;
 - corpus identity/version;
 - target-board benchmark and machine/raw target evidence;
-- approved SKU policy;
-- qualification manifest schema v3 and gate result schema v4.
+- declared research resource/acoustic measurement policy, if applicable;
+- exact evaluation manifest, observed outcomes and protocol version; historical qualification schemas remain separate archived evidence.
 
-Hosted CI and cross compilation are software correctness signals, not target-board acoustic qualification.
+Hosted CI and cross compilation are software correctness signals, not actual-target acoustic measurements.
