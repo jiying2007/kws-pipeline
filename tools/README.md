@@ -108,6 +108,10 @@ the separate model-smoke validation status.
 - [Active ASR batch guide](../docs/ACTIVE_ASR_BATCH.md) — Decoder conditions, private output layout and weak-label boundaries.
 - [`run_zipformer_system.py`](run_zipformer_system.py) — Execute a pinned native Zipformer system on verified shared PCM, preserving per-clip claims and results.
 - [`run_d1_zipformer_system.py`](run_d1_zipformer_system.py) — Bind native D1 observations to a real completed preparation, retain every raw event, and separate known-label train/development diagnostics.
+- [`run_d1_zipformer_extension.py`](run_d1_zipformer_extension.py) — Close the 256-cell plan, reuse the original 64 native observations, and call the fixed system once for each additional observable cell.
+- [`research_d1_native_coverage.py`](research_d1_native_coverage.py) — Verify the complete planned roster against observed rows and explicit original generation exclusions.
+- [`research_d1_previous_native.py`](research_d1_previous_native.py) — Read original native and queue evidence in a fresh isolated process with its exact frozen source hashes.
+- [Native D1 extension guide](../docs/research-d1-zipformer-extension-v2.md) — Separate original and new execution identities, retain failures, and report the common development subset independently.
 - [`research_job_lock.py`](research_job_lock.py) — Share one explicit local heavy-model slot across direct and supervised workers.
 - [Native Zipformer system guide](../docs/ZIPFORMER_SYSTEM.md) — Fixed profile, actual D0 execution and limits on interpreting native events.
 - [`setup_tts_runtime.py`](setup_tts_runtime.py) — Install and verify the isolated TTS environment and fixed Base model assets.

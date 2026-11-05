@@ -41,6 +41,12 @@ jobs:
           python3 -I -S -B tests/test_d1_zipformer_system.py
           python3 -I -S -B -O tests/test_d1_zipformer_system.py
           python3 -I -S -B -OO tests/test_d1_zipformer_system.py
+          python3 -I -S -B tests/test_d1_zipformer_extension.py
+          python3 -I -S -B -O tests/test_d1_zipformer_extension.py
+          python3 -I -S -B -OO tests/test_d1_zipformer_extension.py
+          python3 -I -S -B tests/test_d1_native_coverage.py
+          python3 -I -S -B -O tests/test_d1_native_coverage.py
+          python3 -I -S -B -OO tests/test_d1_native_coverage.py
           python3 -B tests/test_active_tts_runtime.py
           python3 -B tests/test_active_tts_smoke.py
           python3 -B tests/test_active_tts_pair.py
