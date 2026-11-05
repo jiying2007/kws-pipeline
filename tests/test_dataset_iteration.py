@@ -1149,7 +1149,7 @@ class VerifiedAfeIdentityTests(unittest.TestCase):
 
 
 def main() -> int:
-    from test_dataset_iteration_v5 import ExactFarTests, SystemComparisonTests
+    from test_dataset_iteration_v5 import ExactFarTests, ComparisonUncertaintyTests, SystemComparisonTests
     strict = unittest.TextTestRunner(verbosity=2).run(
         unittest.TestSuite([
             unittest.defaultTestLoader.loadTestsFromTestCase(RequiredMetricTests),
@@ -1159,10 +1159,11 @@ def main() -> int:
             unittest.defaultTestLoader.loadTestsFromTestCase(DomainPolicyCompatibilityTests),
             unittest.defaultTestLoader.loadTestsFromTestCase(VerifiedAfeIdentityTests),
             unittest.defaultTestLoader.loadTestsFromTestCase(ExactFarTests),
+            unittest.defaultTestLoader.loadTestsFromTestCase(ComparisonUncertaintyTests),
             unittest.defaultTestLoader.loadTestsFromTestCase(SystemComparisonTests),
         ])
     )
-    if strict.testsRun != 56 or strict.skipped or not strict.wasSuccessful():
+    if strict.testsRun != 70 or strict.skipped or not strict.wasSuccessful():
         return 1
 
     with tempfile.TemporaryDirectory() as td:

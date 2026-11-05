@@ -101,6 +101,7 @@ class CandidateEncoderSourceTests(unittest.TestCase):
         self.assertEqual([ast.unparse(node) for node in imports], [
             "from __future__ import annotations", "from .contract import EncoderSpec",
             "import torch", "from torch import nn",
+            "from .fulltext_contract import FullTextEncoderSpec",
         ])
         factory = definition(self.tree, "build_encoder")
         self.assertTrue(all(node in list(ast.walk(factory)) for node in imports[2:]))
@@ -116,6 +117,7 @@ class CandidateEncoderSourceTests(unittest.TestCase):
                            if isinstance(node, ast.Import))
         before_import = ast.unparse(ast.Module(factory.body[:torch_index], type_ignores=[]))
         self.assertIn("type(spec) is not EncoderSpec", before_import)
+        self.assertIn("type(spec) is not FullTextEncoderSpec", before_import)
         self.assertIn("spec.architecture == 'rnn64_control' and rnn_model is None", before_import)
         self.assertIn("spec.architecture == 'causal_ds_tcn_ctc' and rnn_model is not None",
                       before_import)

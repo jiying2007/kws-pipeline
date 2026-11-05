@@ -6,10 +6,46 @@
     "version": "3.12.16"
   },
   "validation": {
-    "model_smoke": "pending",
+    "model_smoke": "passed",
     "historical_prepare_python": "3.12.14",
     "historical_prepare_run": "https://github.com/jiying2007/kws-pipeline/actions/runs/41850542316",
-    "note": "The historical three-model preparation used separate primary and Whisper environments. Python 3.12.16 and the combined ASR role require new small-sample model evidence."
+    "note": "Historical preparation retains Python 3.12.14 evidence. New Python 3.12.16 execution is recorded separately: 192 D0 ASR calls plus 24 reference calls; actual RNN64/C1/FSMN consumption and native Zipformer inference; eight TTS smoke calls and four separately predeclared paired calls. These validate actual execution, not independent content/voice/KWS quality.",
+    "asr_model_smoke": {
+      "status": "passed",
+      "python": "3.12.16",
+      "completed_at": "2026-11-05T04:49:49.269449+00:00",
+      "clips": 64,
+      "native_recognition_calls": 192,
+      "duplicate_calls": 0,
+      "input_manifest_sha256": "aa235c3e8dc840ca4002c1c37624d4c4566dec58bcbd780dd94a76251da58272",
+      "final_summary_sha256": "8c65e59d2da86a04163dbb650290d0b624038eaa162da316605609c447022570",
+      "file_inventory_sha256": "ab84afceb8531e0e98eb503ecb836ff1ed7058e4d7d4614bd6e161cfdc611ce3",
+      "verified_files": 727,
+      "evidence_scope": "private preserved synthetic train-only audio and native transcripts; execution and identity evidence, not human transcription accuracy or KWS quality"
+    },
+    "core_model_smoke": {
+      "status": "passed",
+      "python": "3.12.16",
+      "evidence": "research/active-d0-20261105/execution-summary.json",
+      "rnn_c1_audit_summary_sha256": "29a8a030f4ff1fe30f3f827a8f801372ee69d4d20aa4dfbcf4191da76d5e72b7",
+      "fsmn_audit_summary_sha256": "8a6923e52961fb9a4a2bab5df0d7798a918ddf7aab1b3eeb3544fe50e810b6bc",
+      "zipformer_identity_sha256": "4855e58cc44c189c48a8dc51a20a6add1aee1c0858584bf21435065465811782",
+      "scope": "Actual synthetic train-only execution; no independent model-quality or target-hardware claim"
+    },
+    "tts_model_smoke": {
+      "status": "passed",
+      "python": "3.12.16",
+      "evidence": "research/active-tts-20261105/execution-summary.json",
+      "readback_summary_sha256": "42de161437275394a45df2831b699592c36be167f3a4ae2e7dee3e15612b69b7",
+      "smoke_generation_calls": 8,
+      "smoke_technical_pass": 8,
+      "separate_paired_calls": 4,
+      "separate_paired_technical_pass": 3,
+      "separate_paired_failures_retained": 1,
+      "generated_audio_asr_pending": true,
+      "initial_attempt_actual_seconds": null,
+      "scope": "Verified raw waveform return and create-only source/receipt identity with native network disabled; not independent quality evidence"
+    }
   },
   "indexes": {
     "pypi": "https://pypi.org/simple",

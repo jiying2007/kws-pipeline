@@ -1,0 +1,194 @@
+{
+  "schema": 1,
+  "id": "zipformer-zh-en-3m-chunk8-fp32-native-defaults-20261105",
+  "scope": "Native system diagnostic on shared PCM; no device qualification or causal single-variable comparison.",
+  "source": {
+    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2",
+    "asset_id": 331699066,
+    "bytes": 32885699,
+    "sha256": "68447f4fbc67e70eee3a93961f36e81e98f47aef73ce7e7ca00885c6cd3616a6"
+  },
+  "assets": {
+    "encoder": {
+      "filename": "encoder-epoch-13-avg-2-chunk-8-left-64.onnx",
+      "bytes": 11976951,
+      "sha256": "307e2f5e87e9d6df4fd058239f4437b6236db7699b9c61decb490f89fb4226d0"
+    },
+    "decoder": {
+      "filename": "decoder-epoch-13-avg-2-chunk-8-left-64.onnx",
+      "bytes": 759829,
+      "sha256": "63a22dd60f40fff082ac3e09afa507f6787da36df76ded2fbe145fa233e22c21"
+    },
+    "joiner": {
+      "filename": "joiner-epoch-13-avg-2-chunk-8-left-64.onnx",
+      "bytes": 338154,
+      "sha256": "76f7a24ed0c08633af14b2ee377f747af880d3b65eeba2cd3f31f3380fb73e8d"
+    },
+    "tokens": {
+      "filename": "tokens.txt",
+      "bytes": 1928,
+      "sha256": "2d3f32311f9b692b964da3c90e830258d3e78e013cb0c992dbfb15cd5a1a71b0"
+    },
+    "lexicon": {
+      "filename": "en.phone",
+      "bytes": 3330061,
+      "sha256": "f7000ec3a90544c0c7c16090d8951779c2b322e14dad5006290f498567d439ea"
+    }
+  },
+  "runtime": {
+    "python": "3.12.16",
+    "numpy": "2.3.2",
+    "packages": {
+      "sherpa-onnx": {
+        "version": "2.0.1",
+        "requires_dist": [
+          "sherpa-onnx-core==2.0.1"
+        ],
+        "wheels": [
+          {
+            "filename": "sherpa_onnx-2.0.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/32/3f/b47ec3a66e53bb6a70391b27acc9086bba8b56986b365f239e4426868efe/sherpa_onnx-2.0.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+            "sha256": "c7780d8af6921c18e8e920376b32d7707294e5cd3838f4762cf746ab919bcc40",
+            "size": 4256114
+          }
+        ]
+      },
+      "sherpa-onnx-core": {
+        "version": "2.0.1",
+        "requires_dist": null,
+        "wheels": [
+          {
+            "filename": "sherpa_onnx_core-2.0.1-py3-none-manylinux2014_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/9a/4e/d946cc081864c8c242e787a73dd2ea61f861445f3d4207787d873e4dc65d/sherpa_onnx_core-2.0.1-py3-none-manylinux2014_x86_64.whl",
+            "sha256": "f4ee0ab91c4ae596e0e49d7de32522a946295e038a652f1c1884d89014ee4ec2",
+            "size": 10544878
+          }
+        ]
+      },
+      "pypinyin": {
+        "version": "0.55.0",
+        "requires_dist": [
+          "argparse; python_version < \"2.7\"",
+          "enum34; python_version < \"3.4\"",
+          "typing; python_version < \"3.5\""
+        ],
+        "wheels": [
+          {
+            "filename": "pypinyin-0.55.0-py2.py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/b9/7b/4cabc76fcc21c3c7d5c671d8783984d30ac9d3bb387c4ba784fca3cdfa3a/pypinyin-0.55.0-py2.py3-none-any.whl",
+            "sha256": "d53b1e8ad2cdb815fb2cb604ed3123372f5a28c6f447571244aca36fc62a286f",
+            "size": 840203
+          }
+        ]
+      },
+      "sentencepiece": {
+        "version": "0.2.2",
+        "requires_dist": [
+          "numpy; extra == \"numpy\"",
+          "protobuf; extra == \"protobuf\"",
+          "pytest; extra == \"test\"",
+          "numpy; extra == \"test\"",
+          "protobuf; extra == \"test\""
+        ],
+        "wheels": [
+          {
+            "filename": "sentencepiece-0.2.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/b6/2d/37e3da037318a70066ded0d51bc2a7f35491ae6338dd993d5eb1503fc3b5/sentencepiece-0.2.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+            "sha256": "c8a168b040bc61681293f79a949b5d911c8e25086f4260285b8d97ab5f1195da",
+            "size": 1397736
+          }
+        ]
+      }
+    },
+    "bound_files": [
+      {
+        "distribution": "sherpa-onnx",
+        "path": "sherpa_onnx/keyword_spotter.py",
+        "bytes": 9526,
+        "sha256": "6b8ed936d10e98c066a993e8dc58342aa8f4f0f04083706b178e3fe7fb5a4452"
+      },
+      {
+        "distribution": "sherpa-onnx",
+        "path": "sherpa_onnx/lib/_sherpa_onnx.cpython-312-x86_64-linux-gnu.so",
+        "bytes": 5922273,
+        "sha256": "501b153b863912521f2ccf8e11c7e4566740d0543849a2096dbdea50a674f780"
+      },
+      {
+        "distribution": "sherpa-onnx",
+        "path": "sherpa_onnx.libs/libasound-fb5348bf.so.2.0.0",
+        "bytes": 5509193,
+        "sha256": "887ee61e5644956d5f29121ebee8af1b58904ae7a2cb0388fd497f8fc2303914"
+      },
+      {
+        "distribution": "sherpa-onnx-core",
+        "path": "sherpa_onnx/lib/libsherpa-onnx-c-api.so",
+        "bytes": 4892512,
+        "sha256": "250bf877faccc35d311041f7da84ad652772857be935eaa789f4c621a1d56e3e"
+      },
+      {
+        "distribution": "sherpa-onnx-core",
+        "path": "sherpa_onnx/lib/libsherpa-onnx-cxx-api.so",
+        "bytes": 266872,
+        "sha256": "8b0e8078aa1c318aa14cae428dee36a90f05d066e37303eaf98f91cea9b1a2b0"
+      },
+      {
+        "distribution": "sherpa-onnx-core",
+        "path": "sherpa_onnx/lib/libonnxruntime.so",
+        "bytes": 27026609,
+        "sha256": "4b3607aebd1784b26b6f9b20e4bd974c7ab8287043e4d095cb7d2cb40b5e566e"
+      }
+    ]
+  },
+  "inference": {
+    "provider": "cpu",
+    "num_threads": 1,
+    "sample_rate": 16000,
+    "feature_dim": 80,
+    "low_freq": 20,
+    "high_freq": -400,
+    "dither": 0,
+    "normalize_samples": true,
+    "snip_edges": false,
+    "max_active_paths": 4,
+    "num_trailing_blanks": 1,
+    "keywords_score": 1.0,
+    "keywords_threshold": 0.25,
+    "feed_samples": 160,
+    "automatic_padding_samples": 0,
+    "input_finished_calls_per_clip": 1,
+    "reset_after_detection": true,
+    "encoder_chunk": 8
+  },
+  "keywords": [
+    {
+      "id": 1,
+      "text": "你好小窝",
+      "tokens": [
+        "n",
+        "ǐ",
+        "h",
+        "ǎo",
+        "x",
+        "iǎo",
+        "w",
+        "ō"
+      ]
+    },
+    {
+      "id": 2,
+      "text": "小窝小窝",
+      "tokens": [
+        "x",
+        "iǎo",
+        "w",
+        "ō",
+        "x",
+        "iǎo",
+        "w",
+        "ō"
+      ]
+    }
+  ],
+  "keyword_encoding": "sherpa_onnx.text2token phone+ppinyin with exact pinned pypinyin and source lexicon; verified before inference",
+  "label_use": "No ASR text, intended label or weak label is used to tune this fixed decoder."
+}

@@ -59,7 +59,8 @@
         "sensevoice",
         "whisper"
       ],
-      "generation_prompts_are_observed_labels": false
+      "generation_prompts_are_observed_labels": false,
+      "asr_execution_status": "192_native_calls_complete_original_audio_retained"
     },
     "later_batches": {
       "primary_asr_count": 2,
@@ -81,7 +82,9 @@
         "clips_per_speaker": 32,
         "train_speakers": 6,
         "development_speakers": 2,
-        "scope": "engineering learning curve"
+        "scope": "engineering learning curve",
+        "execution_status": "first_8_generated_content_asr_pending_remaining_248_not_generated",
+        "execution_evidence": "research/active-tts-20261105/execution-summary.json"
       },
       {
         "stage": "D2",
@@ -97,13 +100,15 @@
       "role": "fresh same-data control",
       "initialization": "fresh",
       "enabled": true,
-      "execution_status": "planned_not_executed"
+      "execution_status": "d0_same_data_consumption_executed_d1_pending",
+      "execution_evidence": "research/active-d0-20261105/execution-summary.json"
     },
     {
       "id": "fsmn_ctc",
       "role": "streaming CTC candidate",
       "enabled": true,
-      "execution_status": "planned_not_executed"
+      "execution_status": "d0_official_full_text_adaptation_executed_d1_pending",
+      "execution_evidence": "research/active-d0-20261105/execution-summary.json"
     },
     {
       "id": "c1_causal",
@@ -113,14 +118,16 @@
         "two-keyword direct"
       ],
       "enabled": true,
-      "execution_status": "planned_not_executed"
+      "execution_status": "d0_ctc_and_frozen_keyword_probe_executed_d1_pending",
+      "execution_evidence": "research/active-d0-20261105/execution-summary.json"
     },
     {
       "id": "zipformer_kws",
       "role": "sherpa-onnx native pretrained system evaluation first",
       "train_initially": false,
       "enabled": true,
-      "execution_status": "planned_not_executed"
+      "execution_status": "d0_native_inference_executed_independent_evaluation_pending",
+      "execution_evidence": "research/active-d0-20261105/execution-summary.json"
     }
   ],
   "execution": {
@@ -136,6 +143,9 @@
     "paid_model_apis_allowed": false,
     "external_codex_shared_quota_allowed": false,
     "increase_concurrency_when": "measured peak memory and available compute support the sum of active workers",
-    "controller_deployment_status": "pending"
+    "controller_deployment_status": "local_queue_implemented_remote_watchdog_pending",
+    "past_d0_jobs_reclassified_as_queue_jobs": false,
+    "local_queue_model_jobs_completed": 2,
+    "first_tts_attempt_actual_seconds": null
   }
 }
