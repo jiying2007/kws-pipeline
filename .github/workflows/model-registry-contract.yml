@@ -5,6 +5,7 @@ on:
     branches: [main, "ops/model-registry-v1", "model-registry/**"]
     paths:
       - "models/**"
+      - "tools/materialize_model_registry.py"
       - "tools/verify_model_registry.py"
       - ".github/workflows/model-registry-contract.yml"
       - "configs/research-baseline.xiaowo.json"
@@ -12,6 +13,7 @@ on:
   pull_request:
     paths:
       - "models/**"
+      - "tools/materialize_model_registry.py"
       - "tools/verify_model_registry.py"
       - ".github/workflows/model-registry-contract.yml"
       - "configs/research-baseline.xiaowo.json"
@@ -28,7 +30,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Python syntax
-        run: python3 -m py_compile tools/verify_model_registry.py
+        run: python3 -m py_compile tools/materialize_model_registry.py tools/verify_model_registry.py
       - name: Verify all registry entries and pinned model
         run: |
           set -euo pipefail
