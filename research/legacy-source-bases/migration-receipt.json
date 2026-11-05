@@ -1,0 +1,16 @@
+{
+  "actual_speech_admitted": false,
+  "archive": "speech-like-base-5204b798033f.tar.gz",
+  "archive_file_count": 397,
+  "archive_sha256": "18c0401b6b8d2d4a01d6b28f3d17ffbacb33a6c359e50e890d7882f478e4bfd6",
+  "archive_size_bytes": 8988214,
+  "archive_wav_count": 384,
+  "frozen_base_identity": "5204b798033fe46e5381c743accf638ab7f16d4e4367f42cba38a6bb44c97b35",
+  "product_publication_authority": false,
+  "scope": "historical-synthetic-research-only",
+  "source_asset_id": 574584640,
+  "source_commit_sha": "46e6cc78634a16c90e1bfdadfe794f78db7994a6",
+  "source_declared_recordings": 384,
+  "source_release_id": 392032606,
+  "source_run_id": 35318933124
+}

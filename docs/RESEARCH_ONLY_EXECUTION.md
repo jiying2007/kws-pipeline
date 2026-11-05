@@ -117,24 +117,41 @@ model/data experiments. The old tagged commercial bootstrap helper is retired
 from the active tree; its Git source remains historical and may be inspected,
 but does not determine current research admission or model provenance.
 
-## Pinned local research training base (migration in progress)
+## Frozen Git research archive (2026-11-05)
 
-The historical training-base source may be supplied explicitly as
-`KWS_RESEARCH_BASE_ARCHIVE=/absolute/path/to/verified-archive.tar.gz`
-when running `training/materialize_governed_product_base.sh`. Before any
-generated output is deleted, the script verifies the exact frozen archive
-SHA256 from `configs/training/product-speech-like-base-v1.json`, rejects
-missing or mismatched files, and refuses a source under generated output.
-The local path performs **no GitHub Release lookup or download**. It still
-runs the existing provider, bundle, config and training-entry checks.
+The 384-WAV historical synthetic source is now checked into
+`research/legacy-source-bases/speech-like-base-5204b798033f.tar.gz`
+as a byte-identical, SHA256-verified copy of the original public immutable
+asset. See [archive provenance](../research/legacy-source-bases/README.md)
+and `migration-receipt.json`: 8,988,214 bytes, 397 regular files,
+384 WAVs, original asset ID 574584640 and source run 35318933124.
 
-This option is not evidence that the archive is currently accessible in
-CI or that its dataset rights have been re-reviewed. Current Actions do
-not set `KWS_RESEARCH_BASE_ARCHIVE`; their old fallback remains a
-**known live Release dependency** tracked by [#733](https://github.com/jiying2007/kws-pipeline/issues/733).
-Do not claim full research-only terminal completion until a real
-rights-reviewed source is available to every live training workflow,
-the fallback is removed, and all exact-head and fresh-main gates pass.
+`training/materialize_governed_product_base.sh` now defaults to that
+Git-tracked archive. It checks its original frozen SHA256 from
+`configs/training/product-speech-like-base-v1.json` **before** touching
+generated output. It still accepts `KWS_RESEARCH_BASE_ARCHIVE` only as an
+explicit byte-identical local override; a missing/mismatched input fails
+closed. The same existing provider, corpus-index, speaker role, config and
+training-entry checks remain mandatory. There is **no active GitHub Release
+API or `gh release download` fallback** in this materialization path.
+
+The original Release ID/tag and frozen contract fields remain immutable
+historical *source identifiers*, not present model-publication authority.
+The archive is synthetic and was not newly reviewed as actual source speech;
+no real-label admission, independent FAR/FRR, physical SSC305 qualification,
+redistribution-right expansion or new data consent can be inferred from its
+availability or hash alone. Actual new model optimization continues to
+require separately audited real-source and label evidence; false-green
+synthetic comparisons remain explicitly unsuccessful evidence.
+
+The one-time migration workflow was deleted after its own source SHA,
+archive digest, tar structure and provenance checks succeeded.
+`tests/test_research_publication_boundary.py` now enforces **zero**
+indirect Release readers from active YAML to called shell scripts, as
+well as a matching actual Git archive hash and non-admission receipt.
+Issue [#733](https://github.com/jiying2007/kws-pipeline/issues/733)
+is closed only after exact-head and fresh-main validation confirms
+all live research entrypoints remain independent of Release APIs.
 
 ## Retired GitHub Release-backed base recovery (2026-11-04)
 
