@@ -1,0 +1,95 @@
+name: One-time frozen synthetic research archive migration
+
+on:
+  push:
+    branches:
+      - research/retire-release-base-asset-20261105
+    paths:
+      - .github/workflows/research-legacy-base-one-shot.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate-frozen-source:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.ref == 'refs/heads/research/retire-release-base-asset-20261105'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+      - name: Authenticate exact historical provenance and stage byte-identical research copy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag='speech-like-base-5204b798033f'
+          asset='speech-like-base-5204b798033f.tar.gz'
+          expected='18c0401b6b8d2d4a01d6b28f3d17ffbacb33a6c359e50e890d7882f478e4bfd6'
+          dest='research/legacy-source-bases'
+          mkdir -p "$dest" "$RUNNER_TEMP/research-source"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" > "$RUNNER_TEMP/immutable-release-metadata.json"
+          jq -e --arg tag "$tag" --arg sha "$expected" '
+            .id == 392032606
+            and .tag_name == $tag
+            and .immutable == true
+            and .draft == false
+            and .prerelease == false
+            and .target_commitish == "46e6cc78634a16c90e1bfdadfe794f78db7994a6"
+            and ([.assets[] | select(.id == 574584640 and .name == ($tag + ".tar.gz")
+               and .size == 8988214 and .digest == ("sha256:" + $sha))] | length == 1)
+          ' "$RUNNER_TEMP/immutable-release-metadata.json" > /dev/null
+          gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern "$asset" --dir "$RUNNER_TEMP/research-source"
+          printf '%s  %s\n' "$expected" "$RUNNER_TEMP/research-source/$asset" | sha256sum -c -
+          test "$(stat -c '%s' "$RUNNER_TEMP/research-source/$asset")" = 8988214
+          python3 - "$RUNNER_TEMP/research-source/$asset" "$dest" <<'PY'
+          import json, pathlib, sys, tarfile
+          archive = pathlib.Path(sys.argv[1])
+          target = pathlib.Path(sys.argv[2])
+          contract = json.loads(pathlib.Path("configs/training/product-speech-like-base-v1.json").read_text())
+          assert contract["release_archive_sha256"] == "18c0401b6b8d2d4a01d6b28f3d17ffbacb33a6c359e50e890d7882f478e4bfd6"
+          assert contract["source_repro_run_id"] == 35318933124
+          assert contract["external_base_bundle_sha256"] == "5204b798033fe46e5381c743accf638ab7f16d4e4367f42cba38a6bb44c97b35"
+          assert contract["recordings"] == 384
+          assert contract["protected_evidence_used"] is False
+          assert contract["tone_backend_used"] is False
+          files = []
+          with tarfile.open(archive, mode="r:gz") as tf:
+              for member in tf:
+                  parts = pathlib.PurePosixPath(member.name).parts
+                  assert parts and not pathlib.PurePosixPath(member.name).is_absolute() and ".." not in parts, member.name
+                  assert member.isfile() or member.isdir(), member.name
+                  if member.isfile():
+                      files.append({"name": member.name, "size": member.size})
+          assert files and len(files) < 3000, "unexpected archive structure"
+          assert sum(f["size"] for f in files) < 120 * 1024 * 1024, "expanded archive exceeds limit"
+          receipt = {
+              "scope": "historical-synthetic-research-only",
+              "product_publication_authority": False,
+              "actual_speech_admitted": False,
+              "source_release_id": 392032606,
+              "source_run_id": 35318933124,
+              "source_commit_sha": "46e6cc78634a16c90e1bfdadfe794f78db7994a6",
+              "source_asset_id": 574584640,
+              "archive": archive.name,
+              "archive_sha256": contract["release_archive_sha256"],
+              "archive_size_bytes": archive.stat().st_size,
+              "frozen_base_identity": contract["external_base_bundle_sha256"],
+              "source_declared_recordings": contract["recordings"],
+              "archive_file_count": len(files),
+              "archive_wav_count": sum(f["name"].lower().endswith(".wav") for f in files),
+          }
+          (target / "migration-receipt.json").write_text(
+              json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+          )
+          print(json.dumps(receipt, sort_keys=True))
+          PY
+          cp -- "$RUNNER_TEMP/research-source/$asset" "$dest/$asset"
+          sha256sum "$dest/$asset" | grep -F "$expected"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- "$dest/$asset" "$dest/migration-receipt.json"
+          git commit -m 'data(research): retain hash-identical historical synthetic base'
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
