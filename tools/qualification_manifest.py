@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""Retired product-format qualification manifest assembler, historical replay only.
+
+The original evidence identity and validation math remain reproducible; this
+entry is not current KWS research admission or publication authority.
+"""
 from __future__ import annotations
 
 import argparse
@@ -204,6 +209,8 @@ def raw_manifest_identity(path: pathlib.Path) -> set[tuple[str, str, int]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--historical-replay-only", action="store_true",
+                        help="explicit old product-format evidence replay; no scientific or release approval")
     parser.add_argument("--model", required=True, type=pathlib.Path)
     parser.add_argument("--model-provenance", required=True, type=pathlib.Path)
     parser.add_argument("--checkpoint", required=True, type=pathlib.Path)
@@ -232,6 +239,8 @@ def main() -> int:
     parser.add_argument("--corpus-id", required=True)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     args = parser.parse_args()
+    if not args.historical_replay_only:
+        raise ValueError("retired qualification manifest CLI: --historical-replay-only is required; current research and publication authority are absent")
 
     source_sha = args.source_sha.strip().lower()
     if SOURCE_SHA_RE.fullmatch(source_sha) is None:
