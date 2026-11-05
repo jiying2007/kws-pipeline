@@ -19,6 +19,9 @@ FROZEN_FILES = frozenset({
     'tools/kws_trace_io.c', 'tools/kws_trace_io.h',
     'tools/kws_decoder_replay.c',
     'tools/tool_io.c',
+    # Original debug-header bytes belong to the frozen source closure, not
+    # current runtime comments. Existing fixture-drift negatives cover this.
+    'src/kws_debug.h',
 })
 OVERLAY = 'research/near_pronunciation_v1/decoder_overlay.json'
 FIXTURES = 'tests/fixtures/near_pronunciation_v1'
