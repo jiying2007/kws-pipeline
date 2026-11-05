@@ -618,6 +618,7 @@ def main() -> int:
         command = [
             *PYTHON,
             str(ROOT / "tools" / "qualification_manifest.py"),
+            "--historical-replay-only",
             "--model", str(model),
             "--model-provenance", str(model_provenance),
             "--checkpoint", str(checkpoint),
@@ -649,7 +650,19 @@ def main() -> int:
             "--corpus-id", "home-kws-heldout-fixture-v2",
             "--output", str(manifest),
         ]
+        # A retired product-format manifest cannot be assembled accidentally,
+        # even from already-present fixture inputs. Denial never creates or
+        # rewrites a qualification-looking artifact.
+        without_replay = [arg for arg in command if arg != "--historical-replay-only"]
+        assert not manifest.exists()
+        denied = subprocess.run(without_replay, capture_output=True, text=True, check=False)
+        assert denied.returncode == 2 and "--historical-replay-only" in denied.stderr
+        assert not manifest.exists()
         subprocess.check_call(command)
+        manifest_bytes = manifest.read_bytes()
+        denied = subprocess.run(without_replay, capture_output=True, text=True, check=False)
+        assert denied.returncode == 2 and "--historical-replay-only" in denied.stderr
+        assert manifest.read_bytes() == manifest_bytes
         result = json.loads(manifest.read_text(encoding="utf-8"))
         assert result["schema_version"] == 3
         assert result["sku"] == "fixture-sku"

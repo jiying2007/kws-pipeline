@@ -74,16 +74,33 @@ class PromotionAdmissionTests(unittest.TestCase):
                 f'print(json.dumps({{"tree": {{"sha": "{fixtures.TREE}"}}}}))\n')
             gh.chmod(0o755)
             mode = ['-' + 'O' * sys.flags.optimize] if sys.flags.optimize else []
-            result = subprocess.run([sys.executable, '-S', '-B', *mode,
+            command = [sys.executable, '-S', '-B', *mode,
                 str(ROOT / 'tools/verify_model_promotion_bundle.py'),
                 '--artifact-root', str(root / 'artifact'), '--dist', str(root / 'dist'),
                 '--repository', 'jiying2007/kws-pipeline', '--training-run-id', '123',
                 '--expected-head-sha', fixtures.HEAD, '--artifact-id', '456',
-                '--artifact-digest', 'sha256:' + 'c' * 64, '--artifact-size', '42'],
-                env=dict(os.environ, PATH=str(root / 'bin') + os.pathsep + os.environ.get('PATH', '')),
-                check=True, capture_output=True, text=True)
+                '--artifact-digest', 'sha256:' + 'c' * 64, '--artifact-size', '42']
+            environment = dict(os.environ,
+                PATH=str(root / 'bin') + os.pathsep + os.environ.get('PATH', ''))
+            # Default invocation is rejected before creating a promotion-looking
+            # output, even though all fixture bytes are present and valid.
+            denied = subprocess.run(command, env=environment, check=False,
+                                    capture_output=True, text=True)
+            self.assertEqual(denied.returncode, 2)
+            self.assertIn('--historical-replay-only', denied.stdout)
+            self.assertFalse((root / 'dist').exists())
+            replay = command + ['--historical-replay-only']
+            result = subprocess.run(replay, env=environment, check=True,
+                                    capture_output=True, text=True)
             self.assertEqual(json.loads(result.stdout)['source']['head_tree_sha'], fixtures.TREE)
-            self.assertTrue((root / 'dist/MODEL_SHA256SUMS').is_file())
+            sums = root / 'dist/MODEL_SHA256SUMS'
+            self.assertTrue(sums.is_file())
+            original_sums = sums.read_bytes()
+            denied = subprocess.run(command, env=environment, check=False,
+                                    capture_output=True, text=True)
+            self.assertEqual(denied.returncode, 2)
+            self.assertIn('--historical-replay-only', denied.stdout)
+            self.assertEqual(sums.read_bytes(), original_sums)
 
     def test_every_recorded_boolean_rejects_coercions(self):
         original = fixtures.documents(product=True)

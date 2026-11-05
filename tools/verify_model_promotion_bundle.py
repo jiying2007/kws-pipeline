@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""Historical model-promotion bundle verifier, offline replay only.
+
+Original numerical/source checks remain available for immutable fixture audit;
+no current KWS research admission, Release or Shipping authority is provided.
+"""
 from __future__ import annotations
 
 import argparse
@@ -937,6 +942,8 @@ def verify(args: argparse.Namespace) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--historical-replay-only", action="store_true",
+                        help="explicit old promotion-bundle replay; not current research or release authority")
     parser.add_argument("--artifact-root", required=True, type=pathlib.Path)
     parser.add_argument("--dist", required=True, type=pathlib.Path)
     parser.add_argument("--repository", required=True)
@@ -946,6 +953,8 @@ def main() -> int:
     parser.add_argument("--artifact-digest", default="")
     parser.add_argument("--artifact-size", type=int, default=0)
     args = parser.parse_args()
+    if not args.historical_replay_only:
+        raise ValueError("retired model promotion bundle CLI: --historical-replay-only is required; no current research or product approval")
     if len(args.expected_head_sha) != 40 or any(ch not in HEX for ch in args.expected_head_sha):
         raise ValueError("expected head SHA must be 40 lowercase hex")
     manifest = verify(args)

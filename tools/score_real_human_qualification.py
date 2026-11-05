@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""Historical product Phase-A scoring protocol, explicit offline replay only.
+
+Preserves source/consent, independent-label, AFE, acoustic and numeric checks;
+there is no current product or research-admission authority in this CLI.
+"""
 from __future__ import annotations
 
 import argparse
@@ -90,6 +95,8 @@ def in_slice(row: dict, rule: dict) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--historical-replay-only", action="store_true",
+                        help="replay preserved Phase-A format only; never Shipping or current research admission")
     parser.add_argument("--manifest", required=True, type=pathlib.Path)
     parser.add_argument("--policy", required=True, type=pathlib.Path)
     parser.add_argument("--intake-summary", required=True, type=pathlib.Path)
@@ -101,6 +108,8 @@ def main() -> int:
     parser.add_argument("--detections", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     args = parser.parse_args()
+    if not args.historical_replay_only:
+        raise ValueError("retired real-human qualification CLI: --historical-replay-only is required; no current research or commercial approval")
 
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
     policy = json.loads(args.policy.read_text(encoding="utf-8"))

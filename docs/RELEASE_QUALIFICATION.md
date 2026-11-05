@@ -2,7 +2,9 @@
 
 > **Historical record only; not an active KWS technical-research execution or publishing gate.** This page retains original schema identities, CLI examples and negative evidence for reproducibility. Do not use an old product/Shipping policy, deployment tag, certificate or Release as current model/data admission. The active research authority is [RESEARCH_ONLY_EXECUTION.md](RESEARCH_ONLY_EXECUTION.md). Real-person audio, AFE and physical device measurements require independent source rights, actual hardware and scientific evaluation; without them results remain NOT_RUN/BLOCKED.
 
-For **offline historical fixture replay only**, `tools/qualification_gate.py` now requires the explicit `--historical-replay-only` argument before reading evidence or writing an old-format result. Omitting it fails closed; even a successful replay is not current scientific data admission, model approval or a deployment credential.
+For **offline historical fixture replay only**, both `tools/qualification_manifest.py` (old product manifest producer) and `tools/qualification_gate.py` (old product-certified scorer) require the explicit `--historical-replay-only` argument **before reading evidence or writing an old-format result**. Omitting it fails closed; even a successful replay is not current scientific data admission, model approval or a deployment credential. Current research uses independently sourced/rights-reviewed data and separate evidence scoring.
+
+The retired `tools/verify_model_promotion_bundle.py` also requires `--historical-replay-only` before it can assemble an old Release-named manifest or `MODEL_SHA256SUMS`; those artifacts are provenance replay, **not** a new model-promotion or Shipping decision.
 
 The old product certification plan required artifact-bound lineage, original audio bytes and trusted physical-target evidence. The procedures below are **not current runnable research instructions**.
 

@@ -765,6 +765,7 @@ def main() -> int:
         )
         final = tmp / "qualification.json"
         gate_args = (
+            "--historical-replay-only",
             "--manifest",
             str(manifest_path),
             "--policy",
@@ -786,7 +787,20 @@ def main() -> int:
             "--output",
             str(final),
         )
+        # This old deployment-tagged Phase-A scorer is for immutable
+        # historical fixture replay, never current real-person authorization.
+        without_replay = gate_args[1:]
+        assert not final.exists()
+        denied = run("python3", "tools/score_real_human_qualification.py",
+                     *without_replay, expect=2)
+        assert "--historical-replay-only" in denied.stdout
+        assert not final.exists()
         run("python3", "tools/score_real_human_qualification.py", *gate_args)
+        old_output = final.read_bytes()
+        denied = run("python3", "tools/score_real_human_qualification.py",
+                     *without_replay, expect=2)
+        assert "--historical-replay-only" in denied.stdout
+        assert final.read_bytes() == old_output
         result = json.loads(final.read_text(encoding="utf-8"))
         assert result["qualified"] is True
         assert result["shipping_approved"] is False
