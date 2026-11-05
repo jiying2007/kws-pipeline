@@ -219,6 +219,24 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
                              path.read_text(encoding="utf-8"),
                              "old product-certified CLI must not be in active research Actions")
 
+    def test_legacy_target_qualification_clis_are_replay_only(self):
+        # Old deployment-format scorers may replay numerical records but are
+        # never an active research acceptance or Shipping publisher path.
+        for name, denied in (
+            ("score_target_dut_qualification.py", "retired target-DUT qualification CLI:"),
+            ("score_target_cohort.py", "retired target-cohort qualification CLI:"),
+        ):
+            with self.subTest(name=name):
+                source = (ROOT / "tools" / name).read_text(encoding="utf-8")
+                self.assertIn('parser.add_argument("--historical-replay-only"', source)
+                self.assertIn("if not args.historical_replay_only:", source)
+                self.assertIn(denied, source)
+                for path in WORKFLOWS.glob("*.yml"):
+                    self.assertNotIn(
+                        "tools/" + name, path.read_text(encoding="utf-8"),
+                        "historical target qualification CLI cannot be active Actions",
+                    )
+
     def test_legacy_push_publication_workflows_are_retired(self):
         for relative in (
             "release.yml",
