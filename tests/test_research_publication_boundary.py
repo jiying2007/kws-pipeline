@@ -90,16 +90,23 @@ def require_no_new_indirect_release_readers(workflows, scripts, known_debt):
 
 class ResearchPublicationBoundaryTests(unittest.TestCase):
 
-    def test_orphan_release_registry_importer_is_retired(self):
-        self.assertFalse((ROOT / "tools/materialize_model_registry.py").exists())
+    def test_orphan_release_registry_importer_is_fail_closed(self):
+        path = ROOT / "tools/materialize_model_registry.py"
+        self.assertTrue(path.is_file())
+        source = path.read_text(encoding="utf-8")
+        self.assertLess(len(source), 500)
+        self.assertIn('raise SystemExit("Retired Release importer:', source)
+        self.assertNotIn("shipping_approved", source)
+        self.assertNotIn("gh release", source)
+        self.assertNotIn("import requests", source)
         self.assertTrue((ROOT / "tools/verify_model_registry.py").is_file())
         registry_ci = (WORKFLOWS / "model-registry-contract.yml").read_text(
             encoding="utf-8"
         )
-        self.assertNotIn("materialize_model_registry.py", registry_ci)
-        self.assertIn("python3 -m py_compile tools/verify_model_registry.py", registry_ci)
+        self.assertIn("python3 -m py_compile tools/materialize_model_registry.py", registry_ci)
+        self.assertIn("tools/verify_model_registry.py", registry_ci)
         index = (ROOT / "tools/README.md").read_text(encoding="utf-8")
-        self.assertNotIn("materialize_model_registry.py", index)
+        self.assertIn("Inert fail-closed tombstone", index)
         self.assertIn("Historical-format offline replay only", index)
 
 
