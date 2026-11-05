@@ -447,7 +447,7 @@ class AggregateContracts(unittest.TestCase):
                   "reference_wav_sha256": "reference-wav-" + row["source_family_id"],
                   "reference_pcm_sha256": "reference-pcm-" + row["source_family_id"]}
         source.update(source_override or {})
-        if adapter_schema == inputs_module.D1_SOURCE_V2:
+        if adapter_schema in (inputs_module.D1_SOURCE_V2, inputs_module.D1_SOURCE_V3):
             outcome = source.setdefault("generation_outcome", "completed")
             source.setdefault("original_generation_row", {
                 "schema": "kws-bulk-clone-complete-v1" if outcome == "completed" else "kws-bulk-clone-failure-v1",
@@ -541,6 +541,50 @@ class AggregateContracts(unittest.TestCase):
         unknown = self.package("unknown-schema", 7, adapter_schema="kws-active-d1-frozen-plan-source-v3")
         with self.assertRaisesRegex(ValueError, "D1_COMMON_FROZEN_PLAN_REQUIRED"):
             inputs_module.aggregate_batches([unknown], self.loader, expected_plan_sha256=self.plan_sha)
+
+    def test_explicit_partial_v3_replays_observed_rows_and_keeps_loss_rules(self):
+        packages = [self.package("old-v1", 0), self.package("old-v2", 5, adapter_schema=inputs_module.D1_SOURCE_V2),
+                    self.package("partial-return", 47, adapter_schema=inputs_module.D1_SOURCE_V3),
+                    self.package("partial-failure", 7, adapter_schema=inputs_module.D1_SOURCE_V3,
+                        source_override={"generation_outcome": "failed-native"},
+                        row_override={"label_status": "uncertain", "full_text": None, "target_ids": None,
+                                      "ctc_mask": False, "ctc_weight": 0, "keyword_targets": [None, None],
+                                      "keyword_mask": [False, False], "keyword_weight": [0, 0]})]
+        rows, receipt = inputs_module.aggregate_batches(packages, self.loader, expected_plan_sha256=self.plan_sha)
+        self.assertEqual((len(self.replayed), len(self.role_checks), receipt["observed_items"]), (4, 4, 4))
+        self.assertFalse(receipt["complete_plan_coverage"])
+        self.assertEqual(receipt["failed_native_items"], 1)
+        by_id = {row["source_id"]: row for row in recipes.project_rows(rows, vocabulary())}
+        observed, failed = [by_id[self.rows[index]["source_id"]] for index in (47, 7)]
+        self.assertEqual(observed["source_adapter_schema"], inputs_module.D1_SOURCE_V3)
+        self.assertEqual(observed["full_text"], self.rows[47]["full_text"])
+        self.assertIn(2599, observed["target_ids"])
+        self.assertEqual(observed["original_generation_row"]["status"], "GENERATED_PENDING_ASR")
+        self.assertEqual(failed["source_adapter_schema"], inputs_module.D1_SOURCE_V3)
+        self.assertFalse(failed["ctc_mask"] or failed["keyword_eligible"])
+        self.assertEqual(failed["keyword_targets"], [None, None])
+        self.assertEqual(len(recipes.cohort_rows(list(by_id.values()))), 3)
+
+    def test_partial_v3_cannot_create_unknown_rows_or_bypass_other_protections(self):
+        unknown = self.package("unknown-is-not-a-weak-row", 7, adapter_schema=inputs_module.D1_SOURCE_V3,
+            source_override={"generation_outcome": "unobservable-consumed"},
+            row_override={"label_status": "uncertain", "full_text": None, "target_ids": None,
+                          "ctc_mask": False, "ctc_weight": 0, "keyword_targets": [None, None],
+                          "keyword_mask": [False, False], "keyword_weight": [0, 0]})
+        with self.assertRaisesRegex(ValueError, "D1_EXPLICIT_GENERATION_OUTCOME_REQUIRED"):
+            inputs_module.aggregate_batches([unknown], self.loader, expected_plan_sha256=self.plan_sha)
+        promoted = self.package("promoted-partial-failure", 7, adapter_schema=inputs_module.D1_SOURCE_V3,
+                               source_override={"generation_outcome": "failed-native"})
+        with self.assertRaisesRegex(ValueError, "D1_FAILED_NATIVE_MUST_HAVE_ZERO_LOSS"):
+            inputs_module.aggregate_batches([promoted], self.loader, expected_plan_sha256=self.plan_sha)
+        packages = [self.package("old-global-id", 5),
+                    self.package("partial-duplicate", 5, adapter_schema=inputs_module.D1_SOURCE_V3)]
+        with self.assertRaisesRegex(ValueError, "D1_DUPLICATE_GLOBAL_CELL"):
+            inputs_module.aggregate_batches(packages, self.loader, expected_plan_sha256=self.plan_sha)
+        packages = [packages[0], self.package("partial-role-leak", 224, adapter_schema=inputs_module.D1_SOURCE_V3,
+            source_override={"parent_source_sha256": "parent-synthetic-family-0"})]
+        with self.assertRaisesRegex(ValueError, "SOURCE_IDENTITY_SPLIT_LEAK:parent"):
+            inputs_module.aggregate_batches(packages, self.loader, expected_plan_sha256=self.plan_sha)
 
 
 class NumericContracts(unittest.TestCase):

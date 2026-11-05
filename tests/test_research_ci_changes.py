@@ -78,6 +78,7 @@ class ChangeSelectionTests(unittest.TestCase):
                      'tools/run_d1_zipformer_extension.py', 'tests/test_d1_zipformer_extension.py',
                      'tools/research_d1_native_coverage.py', 'tests/test_d1_native_coverage.py',
                      'tools/research_d1_previous_native.py', 'docs/research-d1-zipformer-extension-v2.md',
+                     'docs/research-d1-zipformer-accounted-v3.md', 'docs/research-d1-partial-observation-v3.md',
                      'configs/research/zipformer-system-20261105.lock.json', 'docs/ZIPFORMER_SYSTEM.md'):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
@@ -90,6 +91,8 @@ class ChangeSelectionTests(unittest.TestCase):
                      'tools/active_tts_smoke.py', 'tests/test_active_tts_smoke.py',
                      'tools/active_tts_pair.py', 'tests/test_active_tts_pair.py',
                      'tools/active_tts_expand.py', 'tests/test_active_tts_expand.py', 'docs/research-tts-continuation.md',
+                     'tools/active_tts_continuation.py', 'tools/research_tts_partial.py', 'tools/research_tts_handoff.py',
+                     'tests/test_active_tts_continuation.py', 'docs/tts-accounted-checkpoint-v2.md',
                      'training/research_weak_recipe.py', 'training/research_weak_train.py',
                      'training/research_fsmn_weak.py', 'configs/runtime/fsmn-fulltext-sources.json',
                      'tests/test_research_weak_training.py', 'tests/test_research_fsmn_weak.py',

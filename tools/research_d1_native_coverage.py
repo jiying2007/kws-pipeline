@@ -2,6 +2,8 @@
 
 No mutable generation ledger, private operator module, waveform synthesis or
 machine-learning import is used. An exclusion is evidence, never a PCM row.
+The explicit accounted branch delegates original partial-job authentication to
+the retained, source-pinned data loader, then independently closes the roster.
 """
 from __future__ import annotations
 
@@ -14,6 +16,9 @@ import research_queue as io
 
 require = io.require
 SCHEMA = "kws-d1-native-terminal-coverage-v1"
+ACCOUNTED_SCHEMA = "kws-d1-native-accounted-coverage-v2"
+ACCOUNTED_PRIOR = "d1-accounted-prior-evidence-v2"
+ACCOUNTED_VERIFICATION = "kws-d1-accounted-prior-verification-v2"
 SOURCE_REVISION = "43ffea59304121691a84424236543c00a56de588"
 TRANSITIONS = ((8, 64), (64, 120), (120, 176), (176, 232), (232, 256))
 
@@ -223,8 +228,99 @@ def close_roster(plan, rows, excluded, previous_ids):
         "unobservable": unobservable, "complete_terminal_coverage": True}
 
 
-def bind(job, record, rows, previous_ids, queue_reader):
+def close_accounted_roster(plan, rows, excluded, unknown, previous_ids):
+    """Close accounted cells without turning a consumed unknown into a return."""
+    cells = {cell["cell_id"]: cell for cell in plan["cells"]}
+    observed = {row["source_id"] for row in rows}
+    omitted = {item["source_id"] for item in excluded}
+    consumed = {item["source_id"] for item in unknown}
+    require(len(cells) == len(plan["cells"]) == 256 and len(observed) == len(rows)
+        and len(omitted) == len(excluded) and len(consumed) == len(unknown)
+        and not observed & omitted and not observed & consumed and not omitted & consumed
+        and observed | omitted | consumed == set(cells), "D1_ACCOUNTED_EXACT_DISJOINT_PARTITION")
+    require(len(previous_ids) == len(set(previous_ids)) == 64 and set(previous_ids) <= observed
+        and set(previous_ids) == {cell["cell_id"] for cell in plan["cells"][:64]},
+        "D1_ACCOUNTED_PREVIOUS64_MUST_REMAIN_OBSERVABLE")
+    for row in rows:
+        cell = cells[row["source_id"]]
+        require(row["source_family_id"] == cell["source_family_id"] and row["source_role"] == cell["role"]
+            and row["split"] == ("train" if cell["role"] == "train-candidate" else "development"),
+            "D1_ACCOUNTED_OBSERVED_SOURCE_ROLE")
+    unobservable = []
+    for values, status in ((excluded, "returned-unrecognizable"), (unknown, "unobservable-consumed")):
+        for item in values:
+            cell = cells[item["source_id"]]
+            require(item["status"] == status and item["source_family_id"] == cell["source_family_id"]
+                and item["source_role"] == cell["role"] and item["asr_calls"] == 0
+                and item["observed_text"] is None and item["training_admitted"] is False
+                and type(item["reason"]) is str and bool(item["reason"])
+                and type(item["original_proof"]) is dict and bool(item["original_proof"]),
+                "D1_ACCOUNTED_UNOBSERVABLE_RECORD")
+            # The data verifier authenticates the complete original proof. These
+            # are coverage entries only: no PCM, target or observation is made.
+            unobservable.append({"source_id": item["source_id"], "source_family_id": cell["source_family_id"],
+                "source_role": cell["role"],
+                "split": "train" if cell["role"] == "train-candidate" else "development",
+                "status": status, "reason": item["reason"], "new_native_call": False,
+                "asr_calls": 0, "observed_text": None, "training_admitted": False,
+                "keyword_known": [False, False], "keyword_weight": [0, 0],
+                "original_proof": item["original_proof"]})
+    return {"planned_cells": 256, "accounted_cells": len(observed | omitted | consumed),
+        "observable_cells": len(rows), "returned_generation_cells": len(rows) + len(excluded),
+        "excluded_returned_cells": len(excluded), "consumed_unknown_cells": len(unknown),
+        "unobservable_cells": len(excluded) + len(unknown), "reused_native_cells": 64,
+        "new_native_cells": len(rows) - 64, "observed_source_ids": sorted(observed),
+        "excluded_source_ids": sorted(omitted), "consumed_unknown_source_ids": sorted(consumed),
+        "unobservable_by_split": dict(Counter(row["split"] for row in unobservable)),
+        "unobservable": unobservable, "accounted_complete": True,
+        "complete_terminal_coverage": not unknown}
+
+
+def bind_accounted(job, record, rows, previous_ids, loader):
+    require(callable(getattr(loader, "verify_accounted_prior", None)), "D1_ACCOUNTED_RETAINED_VERIFIER_REQUIRED")
+    binding = job["final_prior_evidence"]
+    verified = loader.verify_accounted_prior(binding["path"], binding["sha256"], expected_count=256)
+    require(type(verified) is dict and verified["schema"] == ACCOUNTED_VERIFICATION
+        and verified["plan_sha256"] == job["plan_sha256"] and verified["accounted_prefix_count"] == 256
+        and verified["pending_ids"] == [] and verified["accounted_complete"] is True
+        and type(verified["ml_imports"]) is int and verified["ml_imports"] == 0
+        and type(verified["new_model_calls"]) is int and verified["new_model_calls"] == 0,
+        "D1_ACCOUNTED_REAL_CLOSED_PRIOR_REQUIRED")
+    plan = verified["plan"]
+    require(plain_digest(plan) == job["plan_sha256"] and sorted(cell["cell_id"] for cell in plan["cells"]) ==
+        job["source_ids"], "D1_ACCOUNTED_ORIGINAL_PLAN_CHANGED")
+    parents = [{key: value[key] for key in ("path", "manifest_sha256")} for value in record["aggregate"]["parents"]]
+    require(verified["views"] == parents, "D1_ACCOUNTED_PREPARED_PARENTS_CHANGED")
+    ids = verified["observed_ids"]
+    require(type(ids) is list and len(ids) == len(set(ids)) == len(rows)
+        and set(ids) == {row["source_id"] for row in rows}
+        and ids == [cell["cell_id"] for cell in plan["cells"] if cell["cell_id"] in set(ids)],
+        "D1_ACCOUNTED_OBSERVATION_ROSTER_CHANGED")
+    excluded, unknown = verified["excluded_returned"], verified["unobservable_consumed"]
+    require(type(excluded) is list and type(unknown) is list, "D1_ACCOUNTED_UNOBSERVABLE_LISTS")
+    closed = close_accounted_roster(plan, rows, excluded, unknown, previous_ids)
+    require(type(verified["complete_terminal_coverage"]) is bool
+        and verified["complete_terminal_coverage"] == closed["complete_terminal_coverage"],
+        "D1_ACCOUNTED_UNKNOWN_IS_NOT_GENERATION_TERMINAL")
+    evidence, by_path = [pin(binding["path"])], {}
+    require(type(verified["evidence_files"]) is list and verified["evidence_files"],
+        "D1_ACCOUNTED_ORIGINAL_EVIDENCE_REQUIRED")
+    for entry in evidence + verified["evidence_files"]:
+        require(type(entry) is dict and set(entry) == {"path", "bytes", "sha256"}
+            and type(entry["path"]) is str and Path(entry["path"]).is_absolute(), "D1_ACCOUNTED_EVIDENCE_PIN")
+        actual = pin(entry["path"])
+        require(actual == entry and (entry["path"] not in by_path or by_path[entry["path"]] == entry),
+            "D1_ACCOUNTED_ORIGINAL_EVIDENCE_CHANGED")
+        by_path[entry["path"]] = entry
+    return {"schema": ACCOUNTED_SCHEMA, "final_prior_evidence": binding,
+        "plan_sha256": job["plan_sha256"], "views": parents, "evidence_files": list(by_path.values()),
+        "source_verifier_schema": verified["schema"], "ml_imports": 0, "new_model_calls": 0, **closed}
+
+
+def bind(job, record, rows, previous_ids, queue_reader, *, loader=None):
     spec = pinned(job["final_prior_evidence"])
+    if type(spec) is dict and spec.get("schema") == ACCOUNTED_PRIOR:
+        return bind_accounted(job, record, rows, previous_ids, loader)
     require(type(spec) is dict and set(spec) == {"schema", "plan_sha256", "prefix_count", "views", "excluded_exports"}
         and spec["schema"] == "d1-sealed-prior-evidence-v1" and spec["prefix_count"] == 256
         and spec["plan_sha256"] == job["plan_sha256"], "D1_COVERAGE_FINAL_CLOSED_PRIOR")
