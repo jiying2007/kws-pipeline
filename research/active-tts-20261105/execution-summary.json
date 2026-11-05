@@ -85,10 +85,11 @@
   "native_network_policy": "Initialization telemetry disabled in process environment before ML imports; additional Linux x86_64 seccomp denies new socket communication and io_uring; existing sockets and threads rejected before installation",
   "network_attempt_count": null,
   "network_attempt_count_note": "Native denial was enforced; attempted requests are not counted",
-  "generated_audio_asr_pending": true,
+  "generated_audio_asr_pending": false,
   "quality_winner_claimed": false,
   "independent_human_evidence": false,
   "training_admitted": false,
   "frozen_256_roster_remaining": 248,
-  "interpretation": "Technical waveform checks and source binding are not content accuracy, voice-similarity or independent KWS evaluation. The paired experiment is separate from the D1 256-cell roster."
+  "interpretation": "Technical waveform checks and source binding are not content accuracy, voice-similarity or independent KWS evaluation. The paired experiment is separate from the D1 256-cell roster.",
+  "generated_audio_asr_evidence": "research/active-generated-asr-20261105/execution-summary.json"
 }

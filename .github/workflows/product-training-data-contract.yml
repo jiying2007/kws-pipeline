@@ -424,11 +424,15 @@ on:
       - "training/research_d1_inputs.py"
       - "training/research_d1_recipe.py"
       - "training/research_d1_models.py"
+      - "training/research_d1_train.py"
+      - "training/research_d1_evaluate.py"
+      - "tests/test_research_d1_evaluate.py"
       - "tests/test_research_d1.py"
       - "tests/fixtures/d1-fulltext/fsmn-official-tokens.txt"
       - "tests/fixtures/d1-fulltext/research_weak_sampling_v1.py"
       - "tests/fixtures/d1-fulltext/README.md"
       - "docs/research-d1-fulltext-v2.md"
+      - "docs/research-d1-development-v2.md"
       - "configs/runtime/fsmn-fulltext-sources.json"
       - "tests/test_research_fsmn_weak.py"
       - "tools/research_job_lock.py"
@@ -865,11 +869,15 @@ on:
       - "training/research_d1_inputs.py"
       - "training/research_d1_recipe.py"
       - "training/research_d1_models.py"
+      - "training/research_d1_train.py"
+      - "training/research_d1_evaluate.py"
+      - "tests/test_research_d1_evaluate.py"
       - "tests/test_research_d1.py"
       - "tests/fixtures/d1-fulltext/fsmn-official-tokens.txt"
       - "tests/fixtures/d1-fulltext/research_weak_sampling_v1.py"
       - "tests/fixtures/d1-fulltext/README.md"
       - "docs/research-d1-fulltext-v2.md"
+      - "docs/research-d1-development-v2.md"
       - "configs/runtime/fsmn-fulltext-sources.json"
       - "tests/test_research_fsmn_weak.py"
       - "tools/research_job_lock.py"
@@ -1100,6 +1108,7 @@ jobs:
           .venv-objective/bin/python -B tests/test_research_weak_training.py --numeric
           .venv-objective/bin/python -B tests/test_research_fsmn_weak.py --numeric
           .venv-objective/bin/python -B tests/test_research_d1.py --numeric
+          .venv-objective/bin/python -B tests/test_research_d1_evaluate.py --numeric
       - name: Direct fit checkpoint and registry software fixtures
         if: ${{ needs.select-scope.outputs.candidate_required == 'true' }}
         timeout-minutes: 5

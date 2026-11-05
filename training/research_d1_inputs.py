@@ -22,6 +22,8 @@ DATA_SOURCE_PATHS = (
     "research/auto-tts-voice-clone-20261102/bulk_pool.py",
 )
 RETAINED_SAMPLER_SHA256 = "5a6f5447b1f4e618f38e9f1bde0b79b1ba3b21db3fbab3fd0e237c622f39e288"
+D1_SOURCE_V1 = "kws-active-d1-frozen-plan-source-v1"
+D1_SOURCE_V2 = "kws-active-d1-frozen-plan-source-v2"
 
 
 def sha(raw):
@@ -84,7 +86,7 @@ def aggregate_batches(packages, loader, *, expected_plan_sha256):
                 manifest.get("evidence/inputs.json") == sha(inputs_raw), "D1_PARENT_REPORT_BINDING")
         report, inputs = loader.loads(report_raw), loader.loads(inputs_raw)
         adapter = report.get("source_adapter")
-        require(type(adapter) is dict and adapter.get("schema") == "kws-active-d1-frozen-plan-source-v1" and
+        require(type(adapter) is dict and adapter.get("schema") in (D1_SOURCE_V1, D1_SOURCE_V2) and
                 adapter.get("plan_sha256") == expected_plan_sha256, "D1_COMMON_FROZEN_PLAN_REQUIRED")
         # Do not replace this with next(...), a count from a saved summary, or
         # direct report loading: OOV and uncertain rows must also be replayed.
@@ -117,6 +119,25 @@ def aggregate_batches(packages, loader, *, expected_plan_sha256):
             pcm_identities.add(clip["original_pcm"]["sha256"])
             loader.add_source_role(roles, source, clip, measured)
             row = loader.training_row(raw, "fsmn-fulltext")
+            if adapter["schema"] == D1_SOURCE_V2:
+                outcome = source.get("generation_outcome")
+                require(outcome in ("completed", "failed-native"), "D1_EXPLICIT_GENERATION_OUTCOME_REQUIRED")
+                generation = source["original_generation_row"]
+                require(type(generation) is dict and generation.get("cell_id") == source["source_id"] and
+                        generation.get("schema") == ("kws-bulk-clone-complete-v1" if outcome == "completed"
+                                                     else "kws-bulk-clone-failure-v1") and
+                        generation.get("status") == ("GENERATED_PENDING_ASR" if outcome == "completed"
+                                                     else "FAILED_NO_RETRY"), "D1_GENERATION_OUTCOME_RECEIPT")
+                row.update(generation_outcome=outcome, original_generation_row=generation,
+                           generation_receipt_sha256=source["generation_receipt_sha256"],
+                           generation_start_receipt_sha256=source["generation_start_receipt_sha256"],
+                           source_adapter_schema=D1_SOURCE_V2, source_adapter_sha256=digest(adapter))
+                if outcome == "failed-native":
+                    require(raw["decision"]["status"] == "uncertain" and row["full_text"] is None and
+                            row["ctc_mask"] is False and row["ctc_weight"] == 0 and row["target_ids"] is None and
+                            row["keyword_targets"] == [None, None] and
+                            all(mask is False for mask in row["keyword_mask"]) and
+                            row["keyword_weight"] == [0, 0], "D1_FAILED_NATIVE_MUST_HAVE_ZERO_LOSS")
             row.update(
                 audio=str(package / loader.relative(raw["audio"])),
                 audio_path=str(package / loader.relative(raw["audio"])),
@@ -125,6 +146,7 @@ def aggregate_batches(packages, loader, *, expected_plan_sha256):
                 parent_manifest_sha256=manifest_sha, parent_report_sha256=sha(report_raw),
                 parent_inputs_sha256=sha(inputs_raw), global_source_key=list(key),
                 source_role=source["role"], parent_source_sha256=source["parent_source_sha256"],
+                intended_keyword_id=source.get("intended_keyword_id"),
                 reference_wav_sha256=source["reference_wav_sha256"],
                 reference_pcm_sha256=source["reference_pcm_sha256"],
                 asr_transcripts=raw["asr"], retained_row_sha256=digest(raw),
@@ -132,12 +154,14 @@ def aggregate_batches(packages, loader, *, expected_plan_sha256):
             rows.append(row)
         parents.append({"path": str(package), "manifest_sha256": manifest_sha,
                         "report_sha256": sha(report_raw), "inputs_sha256": sha(inputs_raw),
+                        "source_adapter_schema": adapter["schema"], "source_adapter_sha256": digest(adapter),
                         "observed_items": len(report["items"])})
     require(len(rows) <= 256, "D1_AGGREGATE_SIZE")
     rows.sort(key=lambda row: (row["source_family_id"], row["source_id"]))
     return rows, {
         "schema": "kws-d1-verified-batch-aggregate-v2", "plan_sha256": expected_plan_sha256,
         "parents": parents, "planned_items": 256, "observed_items": len(rows),
+        "failed_native_items": sum(row.get("generation_outcome") == "failed-native" for row in rows),
         "complete_plan_coverage": set(row["source_id"] for row in rows) == plan_cells,
         "global_identity": "frozen-plan-sha256 plus cell/source-id; local clip IDs may repeat",
         "all_rows_replayed_before_vocabulary_projection": True,

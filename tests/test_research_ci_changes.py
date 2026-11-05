@@ -59,6 +59,8 @@ class ChangeSelectionTests(unittest.TestCase):
         for path in ('tools/setup_asr_runtime.py', 'tools/active_asr_batch.py',
                      'tools/active_asr_worker.py', 'tools/summarize_active_asr_batch.py',
                      'tests/test_active_asr_batch.py', 'tests/test_active_asr_supervision.py',
+                     'tools/active_asr_selective.py', 'tests/test_active_asr_selective.py',
+                     'configs/research/selective-asr-v2.json', 'docs/ACTIVE_ASR_SELECTIVE_V2.md',
                      'docs/ACTIVE_ASR_BATCH.md'):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
@@ -82,6 +84,7 @@ class ChangeSelectionTests(unittest.TestCase):
                      'configs/runtime/qwen-base-tts-model-lock.json',
                      'tools/active_tts_smoke.py', 'tests/test_active_tts_smoke.py',
                      'tools/active_tts_pair.py', 'tests/test_active_tts_pair.py',
+                     'tools/active_tts_expand.py', 'tests/test_active_tts_expand.py', 'docs/research-tts-continuation.md',
                      'training/research_weak_recipe.py', 'training/research_weak_train.py',
                      'training/research_fsmn_weak.py', 'configs/runtime/fsmn-fulltext-sources.json',
                      'tests/test_research_weak_training.py', 'tests/test_research_fsmn_weak.py',
@@ -90,9 +93,12 @@ class ChangeSelectionTests(unittest.TestCase):
                      'docs/KWS_ACTIVE_EXECUTION_20261105.md',
                      'training/research_d1_vocab.py', 'training/research_d1_inputs.py',
                      'training/research_d1_recipe.py', 'training/research_d1_models.py',
+                     'training/research_d1_train.py',
+                     'training/research_d1_evaluate.py', 'tests/test_research_d1_evaluate.py',
                      'tests/test_research_d1.py', 'tests/fixtures/d1-fulltext/fsmn-official-tokens.txt',
                      'tests/fixtures/d1-fulltext/research_weak_sampling_v1.py',
-                     'tests/fixtures/d1-fulltext/README.md', 'docs/research-d1-fulltext-v2.md'):
+                     'tests/fixtures/d1-fulltext/README.md', 'docs/research-d1-fulltext-v2.md',
+                     'docs/research-d1-development-v2.md'):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
 
