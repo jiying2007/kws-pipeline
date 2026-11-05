@@ -4,6 +4,8 @@
 
 For **offline historical fixture replay only**, both `tools/qualification_manifest.py` (old product manifest producer) and `tools/qualification_gate.py` (old product-certified scorer) require the explicit `--historical-replay-only` argument **before reading evidence or writing an old-format result**. Omitting it fails closed; even a successful replay is not current scientific data admission, model approval or a deployment credential. Current research uses independently sourced/rights-reviewed data and separate evidence scoring.
 
+The retired `tools/verify_model_promotion_bundle.py` also requires `--historical-replay-only` before it can assemble an old Release-named manifest or `MODEL_SHA256SUMS`; those artifacts are provenance replay, **not** a new model-promotion or Shipping decision.
+
 The old product certification plan required artifact-bound lineage, original audio bytes and trusted physical-target evidence. The procedures below are **not current runnable research instructions**.
 
 `v0.3.x` deliberately hard-cuts the evidence schemas. Older qualification manifests/provenance are not accepted as v0.3 shipping evidence.
