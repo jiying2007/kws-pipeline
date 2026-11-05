@@ -10,8 +10,8 @@
  * Development-only, repo-internal acoustic/decoder bridge.
  *
  * This header is intentionally not installed.  It exists so hosted diagnostic
- * tools can capture the exact int8 acoustic logits produced by the shipping
- * engine and replay those frames through the exact shipping decoder/event path
+ * tools can capture the exact int8 acoustic logits produced by the runtime
+ * engine and replay those frames through the same runtime decoder/event path
  * without re-running frontend or model inference.
  */
 
