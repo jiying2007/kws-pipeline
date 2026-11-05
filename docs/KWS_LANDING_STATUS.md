@@ -6,7 +6,7 @@
 
 ## Current model and engineering status
 
-Current engineering checkpoint: **2026-10-31**, verified main
+Historical engineering checkpoint: **2026-10-31**, verified main
 `1e21c5e737b0edd77a609b90e52aa4ef155b0c8f`.
 The WAV/JSONL/hard-negative repairs (#660–#663 and #655) remain integrated.
 [PR #664](https://github.com/jiying2007/kws-pipeline/pull/664) completed the
@@ -21,20 +21,15 @@ The #664 receipt records actual hosted Actions acceptance, not a Dot-local run.
 The later [PR #678](https://github.com/jiying2007/kws-pipeline/pull/678) binds
 verified AFE-sidecar presence/content to dataset identity; its
 [fresh main CI](https://github.com/jiying2007/kws-pipeline/actions/runs/41157228893)
-passed on the current checkpoint above. These are software integration results,
+passed on that historical checkpoint. These are software integration results,
 not new model training, acoustic gains or final-AFE/physical-board qualification.
 Earlier failed or inconclusive evidence remains retained; later CI success does
 not rewrite those observations.
 
-**A new production model is not yet qualified.** The governed training entry
-rejects the historical frozen base for new product training. Retained FSMN B/OR
-evidence does not establish a deployable replacement, and real-human final-AFE
-plus physical-board qualification remain outstanding.
+**No new model has independent real-speech and SSC305 research acceptance evidence from these dated results.** The governed training entry rejects the historical frozen base as newly reviewed actual-label data. Retained FSMN B/OR evidence does not establish a measured replacement; real-human final-AFE and physical-board measurements remain separate research tasks.
 
 See the [2026-10-29 implementation and production closure record](KWS_PRODUCTION_CLOSURE_2026-10-29.md)
-for source/run identities, the next data gate, integration receipts and exact
-Phase A/Phase B completion requirements. Shipping/recalibration authority stays
-in `configs/research/two-keyword-synthetic-comparator.json` and `commercial/*.policy.json`.
+for dated source/run identities and historical Phase A/Phase B measurement limits. The retired `commercial/` and `configs/shipping.xiaowo.json` paths are **not** current research gates. Current frozen source comparison uses `configs/research/two-keyword-synthetic-comparator.json`; new experiments still require genuine rights, source identity, independent speech/AFE and SSC305 evidence.
 
 ### Retained model snapshot: 2026-10-19
 
@@ -344,5 +339,4 @@ target-board evidence across multiple DUTs, including CPU/RTF, RSS/stack, therma
 power, audio continuity and long soak. These are deferred external qualification
 requirements; their absence does not establish a failure of ordinary software tests.
 
-Private raw human audio remains outside the public Git repository. The promoted
-model tuple and non-audio evidence have their own explicit retention policies.
+Private raw human audio remains outside the public Git repository. The frozen historical comparator identity and non-audio evidence have their own explicit retention policies.
