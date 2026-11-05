@@ -1,0 +1,103 @@
+{
+  "schema": "kws-d1-first64-zipformer-native-summary-v1",
+  "date": "2026-11-05",
+  "status": "completed_native_observations_and_independent_readback",
+  "execution_source": {
+    "local_commit": "3c57f6756ffea8fa2c2b234128e330b0bb290ecd",
+    "public_commit": "1f55302218a58c83831518241a03adda139c17d5",
+    "exact_tree": "db9fe51fa5539ce53f18acd620cec7bb2cf2dbbe"
+  },
+  "completed_preparation_manifest_sha256": "20106479fd56135e2802ebc961746df76b03ce97d3e3332296b655ff36d321d4",
+  "projected_rows_sha256": "b0647efad6f85917b7bee864535b949647ea9f55388d616336460b47be5d26e3",
+  "queue_terminal_sha256": "f59d19608d1930a58a0eda1cb5d0273d619aa9b6387d1a5864628e1f8e7a49e3",
+  "raw_native_calls": 64,
+  "queue_actual_elapsed_ns": 5567424379,
+  "native_inference_seconds": 3.8197424850186508,
+  "model_load_seconds": 0.6689923949998047,
+  "peak_rss_kib": 93920,
+  "by_split": {
+    "development": {
+      "formal_qualification_denominator": 0,
+      "keywords": {
+        "1": {
+          "excluded_clips_by_reason": {},
+          "known_machine_weak_clips": 16,
+          "no_trigger_negative_clips": 11,
+          "no_trigger_positive_clips": 2,
+          "triggered_negative_clips": 1,
+          "triggered_positive_clips": 2,
+          "weak_negative_clips": 12,
+          "weak_positive_clips": 4
+        },
+        "2": {
+          "excluded_clips_by_reason": {},
+          "known_machine_weak_clips": 16,
+          "no_trigger_negative_clips": 12,
+          "no_trigger_positive_clips": 4,
+          "triggered_negative_clips": 0,
+          "triggered_positive_clips": 0,
+          "weak_negative_clips": 12,
+          "weak_positive_clips": 4
+        }
+      },
+      "raw_clips_with_events": 3,
+      "raw_native_events": 3,
+      "raw_observed_clips": 16
+    },
+    "train": {
+      "formal_qualification_denominator": 0,
+      "keywords": {
+        "1": {
+          "excluded_clips_by_reason": {
+            "failed-native": 5,
+            "uncertain-label": 3
+          },
+          "known_machine_weak_clips": 40,
+          "no_trigger_negative_clips": 30,
+          "no_trigger_positive_clips": 3,
+          "triggered_negative_clips": 1,
+          "triggered_positive_clips": 6,
+          "weak_negative_clips": 31,
+          "weak_positive_clips": 9
+        },
+        "2": {
+          "excluded_clips_by_reason": {
+            "failed-native": 5,
+            "uncertain-label": 3
+          },
+          "known_machine_weak_clips": 40,
+          "no_trigger_negative_clips": 29,
+          "no_trigger_positive_clips": 5,
+          "triggered_negative_clips": 0,
+          "triggered_positive_clips": 6,
+          "weak_negative_clips": 29,
+          "weak_positive_clips": 11
+        }
+      },
+      "raw_clips_with_events": 14,
+      "raw_native_events": 14,
+      "raw_observed_clips": 48
+    }
+  },
+  "model_call_retries": 0,
+  "readback": {
+    "status": "verified",
+    "raw_observed_clips": 64,
+    "new_model_calls": 0,
+    "manifest_sha256": "5caac021b0deec904f4f959be4fa1ba2cb10879b7a0a1b0f57a6b9c011979ed2",
+    "summary_sha256": "a99b8f9276c23591df3fcc669bc0ac24aef1e80789b9f2611c52d8ed5ad1e5c0"
+  },
+  "private_package": {
+    "name": "zipformer-d1-first64-private-evidence-20261105.zip",
+    "sha256": "7bfeeb158b2a8855c7b4b51002cfa5547b13fc6fd069cc3fe5a4e1868d987198",
+    "bytes": 13300808
+  },
+  "human_gold": false,
+  "independent_human_test": false,
+  "formal_qualification_denominator": 0,
+  "thresholds_tuned": false,
+  "quality_winner": null,
+  "scope": "Native keyword-event observations on synthetic source-group train/dev with machine-weak labels.",
+  "comparison_boundary": "No shared CTC token score or causal single-variable comparison with the three trained CTC candidates.",
+  "timing_boundary": "Native timestamps and supplied PCM coordinates, not acoustic completion or device latency."
+}

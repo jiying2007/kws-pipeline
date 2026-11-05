@@ -1,0 +1,198 @@
+{
+  "schema": "kws-d1-first64-selective-asr-summary-v2",
+  "date": "2026-11-05",
+  "scope": "56 newly generated D1 cells; previous8 retained under original full-three-model policy",
+  "execution_local_source_commit": "245a07329ff36b89f52804701defb6d445b755f8",
+  "execution_public_source_commit": "416a44e7040eefcfeae2ec845b533778590b2f7b",
+  "policy_sha256": "5cba6043b6c7e39aaa39482b31e0e14ae478cd5485b386e7d87f5bec78a3c501",
+  "decoder_source_sha256": "f13dce8464dc1fe2deae099e2e5c468f4fb4ce4f3b619f70f5e0e95e1c421666",
+  "data_source_commit": "a1ce59045435567c441492d54071991bb75ed5fe",
+  "new_audio_inputs": 56,
+  "original_recognition_calls": 137,
+  "by_model_calls": {
+    "qwen06": 56,
+    "sensevoice": 56,
+    "whisper": 25
+  },
+  "not_requested_whisper": 31,
+  "call_cap": 168,
+  "duplicate_calls": 0,
+  "resume_new_calls": 0,
+  "resume_changed_existing_files": 0,
+  "completed_resume_audit_sha256": "1fdfab51acbb9e1a37e593578b906d37075af49577832ea05e517b422b468097",
+  "actual_queue_nanoseconds": 511810086956,
+  "global_budget_seconds": 1200,
+  "maximum_job_seconds": 600,
+  "model_concurrency": 1,
+  "routing_reason_counts": {
+    "primary_disagreement": 9,
+    "two_primary_agree_not_sampled": 31,
+    "deterministic_20pct": 11,
+    "source_quality_uncertain": 5
+  },
+  "agreement_audit_probability": 0.2,
+  "agreement_audit_realized_selected": 11,
+  "otherwise_agreeing_quality_clear_inputs": 42,
+  "agreement_audit_is_exact_quota": false,
+  "new_machine_weak_candidates": 49,
+  "new_machine_weak_tiers": {
+    "machine-weak-two": 41,
+    "machine-weak-three": 8
+  },
+  "new_uncertain_inputs": 7,
+  "new_failed_native_zero_loss_inputs": 5,
+  "new_nonfailure_no_confirmed_fulltext": 2,
+  "confirmed_transcripts_different_from_normalized_intent": 1,
+  "generation_intent_replaces_recognized_text": false,
+  "groups": [
+    {
+      "job": "chunk-001",
+      "inputs": 28,
+      "requested_model_clip_pairs": 70,
+      "verified_model_clip_pairs": 70,
+      "not_requested_whisper": 14,
+      "models": {
+        "qwen06": {
+          "claims": 28,
+          "not_requested": 0,
+          "requested": 28,
+          "verified": 28,
+          "worker_new_calls": 28
+        },
+        "sensevoice": {
+          "claims": 28,
+          "not_requested": 0,
+          "requested": 28,
+          "verified": 28,
+          "worker_new_calls": 28
+        },
+        "whisper": {
+          "claims": 14,
+          "not_requested": 14,
+          "requested": 14,
+          "verified": 14,
+          "worker_new_calls": 14
+        }
+      },
+      "routing_reason_counts": {
+        "primary_disagreement": 5,
+        "two_primary_agree_not_sampled": 14,
+        "deterministic_20pct": 7,
+        "source_quality_uncertain": 2
+      },
+      "native_audit_sha256": "d042b184119dd1ab01ccc32833c91bb084a7c9ab9bebf676dcf4b2b77c4ed37e",
+      "inventory_sha256": "efa2f382c545ca093fcc6af16318974dedeade5f24b2d1c801f41a8d4c08aa5e",
+      "routing_sha256": "74ea76e2a1268efdcb0b8a330cb4c0a45e800095f7f068b7779d0e6a105f5a39",
+      "queue_terminal_sha256": "fcda4360b3c44a8a2f08f32b419361b27a1b4368822267e06c47bafc1d4abbd7",
+      "actual_queue_nanoseconds": 261323071882,
+      "weak_view_manifest_sha256": "0951cbefcf5cd788b849b44ec455a2a1ec36ff9686b102d2f35e4a3bdf615c47",
+      "weak_view_statistics": {
+        "completed_asr_results": 70,
+        "development": 7,
+        "disagreement": 7,
+        "machine_candidates": 25,
+        "not_requested_asr_results": 14,
+        "source_families": 8,
+        "source_items": 28,
+        "train_only": 21,
+        "uncertain": 3
+      }
+    },
+    {
+      "job": "chunk-002",
+      "inputs": 28,
+      "requested_model_clip_pairs": 67,
+      "verified_model_clip_pairs": 67,
+      "not_requested_whisper": 17,
+      "models": {
+        "qwen06": {
+          "claims": 28,
+          "not_requested": 0,
+          "requested": 28,
+          "verified": 28,
+          "worker_new_calls": 28
+        },
+        "sensevoice": {
+          "claims": 28,
+          "not_requested": 0,
+          "requested": 28,
+          "verified": 28,
+          "worker_new_calls": 28
+        },
+        "whisper": {
+          "claims": 11,
+          "not_requested": 17,
+          "requested": 11,
+          "verified": 11,
+          "worker_new_calls": 11
+        }
+      },
+      "routing_reason_counts": {
+        "deterministic_20pct": 4,
+        "primary_disagreement": 4,
+        "two_primary_agree_not_sampled": 17,
+        "source_quality_uncertain": 3
+      },
+      "native_audit_sha256": "a31ec40ae49c0166fb5898bf3e8429fadde44ffb357f4ee3643b5d7e35c37a7b",
+      "inventory_sha256": "ef1de2e07828f17e7427470807c315f39d9f03a2a97b7d6e5edc33052be4cfb9",
+      "routing_sha256": "1a7a394d1398e63c77dbefa6369262bef0dc6de0805dcf3a4b8af29aff11c16a",
+      "queue_terminal_sha256": "ef03653f8dc4a58ffe996e4885fafec9f7ebc149c517d4df0e7bad6b65f49569",
+      "actual_queue_nanoseconds": 250487015074,
+      "weak_view_manifest_sha256": "a6486cf57acc24366b3ab462989233c8f4511665736bbd1d8a0c5e3834fcc5ea",
+      "weak_view_statistics": {
+        "completed_asr_results": 67,
+        "development": 7,
+        "disagreement": 7,
+        "machine_candidates": 24,
+        "not_requested_asr_results": 17,
+        "source_families": 8,
+        "source_items": 28,
+        "train_only": 21,
+        "uncertain": 4
+      }
+    }
+  ],
+  "aggregate_first64": {
+    "observed_inputs": 64,
+    "training_source_rows": 48,
+    "development_source_rows": 16,
+    "machine_weak_candidates": 56,
+    "uncertain_rows": 8,
+    "failed_native_zero_loss_rows": 5,
+    "no_confirmed_fulltext_rows": 3,
+    "common_ctc_train_rows": 40,
+    "common_ctc_development_rows": 16,
+    "intent_conflict_quarantines": 0,
+    "available_near_ratios": [
+      0,
+      5,
+      10
+    ],
+    "full_d1_256_complete": false
+  },
+  "independent_human_evidence": false,
+  "quality_winner": null,
+  "interpretation": "Requested original native recognitions are complete. Unrequested Whisper adds no vote, and technical failures stay zero-loss despite recognition. The 20% agreement rule is a deterministic probability rule, not a realized quota. Full transcripts remain observed machine evidence, not generation intent or human gold.",
+  "private_complete_package": [
+    {
+      "name": "d1-next56-selective-asr-private-20261105-index.json",
+      "bytes": 468322,
+      "sha256": "021f4a5a18c8e0747f7de9ba815b777999ca6f760b2375f449d99258f0043da9"
+    },
+    {
+      "name": "d1-next56-selective-asr-private-20261105-part-001.zip",
+      "bytes": 26066246,
+      "sha256": "6888912fe23b11c0f138c01bcfb35409df7fba964d6b7d483e2180f05eb341e3"
+    },
+    {
+      "name": "d1-next56-selective-asr-private-20261105-part-002.zip",
+      "bytes": 28617386,
+      "sha256": "a9ba5fa815af270e01eb7b3932893feee5b5cf95bddc77a787713211b3364a27"
+    },
+    {
+      "name": "d1-next56-selective-asr-private-20261105-part-003.zip",
+      "bytes": 28942600,
+      "sha256": "a2fb189391286a43980ee69925efccabf848182966961b2e3c9d6aac08535ae5"
+    }
+  ]
+}

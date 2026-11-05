@@ -9,7 +9,7 @@
     "model_smoke": "passed",
     "historical_prepare_python": "3.12.14",
     "historical_prepare_run": "https://github.com/jiying2007/kws-pipeline/actions/runs/41850542316",
-    "note": "Historical preparation retains Python 3.12.14 evidence. New Python 3.12.16 execution is recorded separately: 192 D0 ASR calls plus 24 reference calls and 36 generated-audio calls; actual RNN64/C1/FSMN consumption and native Zipformer inference; eight TTS smoke calls, four separate paired calls and 56 additional frozen D1 calls. These validate actual execution, not independent content/voice/KWS quality.",
+    "note": "Historical preparation retains Python 3.12.14 evidence. New Python 3.12.16 execution is recorded separately: 192 D0 ASR calls plus 24 reference calls and 36 generated-audio calls; actual RNN64/C1/FSMN consumption and native Zipformer inference; eight TTS smoke calls, four separate paired calls and 56 additional frozen D1 calls. These validate actual execution, not independent content/voice/KWS quality. The first64 D1 checkpoint additionally completed 137 selective ASR calls, 1350 optimizer steps across nine arms, 144 fixed development observations, and64 native system observations.",
     "asr_model_smoke": {
       "status": "passed",
       "python": "3.12.16",
@@ -68,8 +68,44 @@
       "aggregate_terminal_cells": 64,
       "duplicate_generation_calls": 0,
       "remaining_frozen_cells": 192,
-      "content_asr_status": "separately_declared_selective_queue_in_progress",
+      "content_asr_status": "completed_137_calls_selective_policy_preserved",
       "scope": "Exact native array and FLOAT WAV readback with failed audio retained; technical completion is not weak-label admission or independent KWS quality."
+    },
+    "d1_first64_selective_asr": {
+      "status": "passed",
+      "python": "3.12.16",
+      "evidence": "research/active-d1-20261105/first64-selective-asr-summary.json",
+      "native_recognition_calls": 137,
+      "explicit_whisper_not_requested": 31,
+      "duplicate_calls": 0,
+      "resume_new_calls": 0,
+      "uncertain_zero_weight_rows_full64": 8
+    },
+    "d1_first64_training_development": {
+      "status": "actual_execution_and_immutable_readback_passed",
+      "python": "3.12.16",
+      "evidence": "research/active-d1-20261105/first64-training-summary.json",
+      "completed_queue_jobs": 19,
+      "actual_queue_seconds": 202.502359731,
+      "training_arms": 9,
+      "optimizer_steps_per_arm": 150,
+      "sample_draws_per_arm": 600,
+      "common_ctc_training_rows": 40,
+      "fixed_development_rows": 16,
+      "fixed_development_target_tokens": 70,
+      "greedy_empty_on_all_dev_clips": {
+        "rnn64_arms": 3,
+        "c1_arms": 3
+      },
+      "scope": "Machine-weak engineering diagnostics; successful execution does not establish effective fresh full-text recognition or a quality winner."
+    },
+    "d1_first64_zipformer": {
+      "status": "actual_native_execution_and_readback_passed",
+      "python": "3.12.16",
+      "evidence": "research/active-d1-20261105/first64-zipformer-summary.json",
+      "native_calls": 64,
+      "actual_queue_seconds": 5.567424379,
+      "scope": "Fixed native keyword events, separate train/development known-mask counts; no common CTC score or formal qualification."
     }
   },
   "indexes": {
