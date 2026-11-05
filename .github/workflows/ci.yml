@@ -53,6 +53,9 @@ jobs:
           python3 -I -S -B tests/test_active_tts_expand.py
           python3 -I -S -B -O tests/test_active_tts_expand.py
           python3 -I -S -B -OO tests/test_active_tts_expand.py
+          python3 -I -S -B tests/test_active_tts_continuation.py
+          python3 -I -S -B -O tests/test_active_tts_continuation.py
+          python3 -I -S -B -OO tests/test_active_tts_continuation.py
           python3 -B tests/test_research_no_network.py
           python3 -B tests/test_research_weak_training.py
           python3 -B tests/test_research_fsmn_weak.py

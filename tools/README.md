@@ -103,15 +103,21 @@ the separate model-smoke validation status.
 - [`active_asr_batch.py`](active_asr_batch.py) — Bind existing audio and resume a bounded private ASR batch without repeating completed calls.
 - [`active_asr_selective.py`](active_asr_selective.py) — Run two audio-only primary recognizers and the predeclared selective Whisper audit with explicit unrequested observations.
 - [`active_tts_expand.py`](active_tts_expand.py) — Continue the frozen D1 roster in bounded jobs while retaining raw failures and preventing repeated generation calls.
+- [`active_tts_continuation.py`](active_tts_continuation.py) — Continue only never-claimed cells after a preserved timeout, pause for verified recognition, and keep returned audio separate from consumed unknown calls.
+- [`research_tts_partial.py`](research_tts_partial.py) — Verify the original timed-out generation job in its exact isolated source environment without a model call.
+- [`research_tts_handoff.py`](research_tts_handoff.py) — Replay the actual recognition seal with the retained data verifier before allowing the final generation jobs.
+- [Accounted TTS checkpoint contract](../docs/tts-accounted-checkpoint-v2.md) — Bind partial returns and completed continuation jobs to immutable owners.
 - [`active_asr_worker.py`](active_asr_worker.py) — Run one native recognizer process and retain its raw output and call claim.
 - [`summarize_active_asr_batch.py`](summarize_active_asr_batch.py) — Re-read the complete model/clip matrix and produce the file inventory and resource summary.
 - [Active ASR batch guide](../docs/ACTIVE_ASR_BATCH.md) — Decoder conditions, private output layout and weak-label boundaries.
 - [`run_zipformer_system.py`](run_zipformer_system.py) — Execute a pinned native Zipformer system on verified shared PCM, preserving per-clip claims and results.
 - [`run_d1_zipformer_system.py`](run_d1_zipformer_system.py) — Bind native D1 observations to a real completed preparation, retain every raw event, and separate known-label train/development diagnostics.
-- [`run_d1_zipformer_extension.py`](run_d1_zipformer_extension.py) — Close the 256-cell plan, reuse the original 64 native observations, and call the fixed system once for each additional observable cell.
-- [`research_d1_native_coverage.py`](research_d1_native_coverage.py) — Verify the complete planned roster against observed rows and explicit original generation exclusions.
+- [`run_d1_zipformer_extension.py`](run_d1_zipformer_extension.py) — Account for all 256 planned cells, reuse the original 64 native observations, and call the fixed system once for each additional observable cell.
+- [`research_d1_native_coverage.py`](research_d1_native_coverage.py) — Verify the complete planned roster against observed rows, explicit returned exclusions, and consumed unknown calls without inventing audio or labels.
 - [`research_d1_previous_native.py`](research_d1_previous_native.py) — Read original native and queue evidence in a fresh isolated process with its exact frozen source hashes.
-- [Native D1 extension guide](../docs/research-d1-zipformer-extension-v2.md) — Separate original and new execution identities, retain failures, and report the common development subset independently.
+- [Native accounted D1 guide](../docs/research-d1-zipformer-accounted-v3.md) — Authenticate partial observation provenance and report returned audio separately from consumed unknown calls.
+- [D1 partial observation inputs](../docs/research-d1-partial-observation-v3.md) — Keep the fixed training recipe and original development comparison while admitting only actual observed audio.
+- [Historical native D1 extension guide](../docs/research-d1-zipformer-extension-v2.md) — Separate original and new execution identities, retain failures, and report the common development subset independently.
 - [`research_job_lock.py`](research_job_lock.py) — Share one explicit local heavy-model slot across direct and supervised workers.
 - [Native Zipformer system guide](../docs/ZIPFORMER_SYSTEM.md) — Fixed profile, actual D0 execution and limits on interpreting native events.
 - [`setup_tts_runtime.py`](setup_tts_runtime.py) — Install and verify the isolated TTS environment and fixed Base model assets.

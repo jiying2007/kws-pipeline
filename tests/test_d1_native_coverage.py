@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "tools"), str(ROOT / "tests")]
@@ -188,6 +189,118 @@ class ClosedTerminalContracts(unittest.TestCase):
                 verify(original_pin)
             with self.assertRaisesRegex(ValueError, "EXCLUDED_TERMINAL_HASH"):
                 verify()
+
+
+class AccountedCoverageContracts(unittest.TestCase):
+    """Adapter and independent roster contracts, never generation evidence."""
+    def accounted_fixture(self):
+        plan, rows, old = plan_fixture()
+        missing = next(row for row in rows if row["source_id"] not in old and row["split"] == "train")
+        unknown = {key: missing[key] for key in ("source_id", "source_family_id", "source_role")}
+        unknown.update(status="unobservable-consumed", reason="fixture consumed without return",
+            asr_calls=0, observed_text=None, training_admitted=False,
+            original_proof={"fixture_not_real_generation": True, "status": "timed_out"})
+        retained = [row for row in rows if row["source_id"] != missing["source_id"]]
+        return plan, rows, retained, old, unknown
+
+    def test_255_returned_plus_one_unknown_is_accounted_not_terminal_complete(self):
+        plan, _, retained, old, unknown = self.accounted_fixture()
+        closed = coverage.close_accounted_roster(plan, retained, [], [unknown], old)
+        self.assertEqual((closed["planned_cells"], closed["accounted_cells"], closed["returned_generation_cells"],
+            closed["observable_cells"], closed["new_native_cells"], closed["consumed_unknown_cells"]),
+            (256, 256, 255, 255, 191, 1))
+        self.assertTrue(closed["accounted_complete"])
+        self.assertFalse(closed["complete_terminal_coverage"])
+        self.assertEqual(closed["unobservable_by_split"], {"train": 1})
+        item = closed["unobservable"][0]
+        self.assertFalse(item["new_native_call"])
+        self.assertEqual(item["keyword_known"], [False, False])
+        self.assertEqual(item["keyword_weight"], [0, 0])
+        self.assertEqual(item["original_proof"], unknown["original_proof"])
+        self.assertFalse(any(key in item for key in ("pcm", "audio", "keyword_targets", "full_text")))
+        self.assertEqual(len(fixture.target.join_unchanged(fixture.old_fixture.projected(), retained)), 191)
+
+    def test_returned_invalid_and_consumed_unknown_have_distinct_counts(self):
+        plan, _, retained, old, unknown = self.accounted_fixture()
+        removed = next(row for row in retained if row["source_id"] not in old)
+        excluded = {key: removed[key] for key in ("source_id", "source_family_id", "source_role")}
+        excluded.update(status="returned-unrecognizable", reason="fixture invalid returned dimensions",
+            asr_calls=0, observed_text=None, training_admitted=False,
+            original_proof={"fixture_not_real_generation": True, "returned": True})
+        observed = [row for row in retained if row["source_id"] != removed["source_id"]]
+        closed = coverage.close_accounted_roster(plan, observed, [excluded], [unknown], old)
+        self.assertEqual((closed["observable_cells"], closed["returned_generation_cells"],
+            closed["excluded_returned_cells"], closed["consumed_unknown_cells"], closed["unobservable_cells"]),
+            (254, 255, 1, 1, 2))
+        self.assertEqual(fixture.target.coverage_counts(closed)["returned_generation_cells"], 255)
+        self.assertFalse(closed["complete_terminal_coverage"])
+
+    def test_missing_overlapping_duplicate_and_old_unknown_are_rejected(self):
+        plan, rows, retained, old, unknown = self.accounted_fixture()
+        for observed, excluded, consumed in ((retained, [], []), (rows, [], [unknown]),
+                (retained, [], [unknown, unknown]), (retained, [unknown], [unknown])):
+            with self.subTest(count=len(observed)), self.assertRaisesRegex(ValueError, "EXACT_DISJOINT_PARTITION"):
+                coverage.close_accounted_roster(plan, observed, excluded, consumed, old)
+        old_row = next(row for row in rows if row["source_id"] == old[0])
+        old_unknown = {**unknown, **{key: old_row[key] for key in ("source_id", "source_family_id", "source_role")}}
+        with self.assertRaisesRegex(ValueError, "PREVIOUS64_MUST_REMAIN_OBSERVABLE"):
+            coverage.close_accounted_roster(plan, [row for row in rows if row["source_id"] != old[0]], [], [old_unknown], old)
+        for key, value in (("observed_text", "invented negative"), ("training_admitted", True),
+                ("asr_calls", 1), ("status", "returned-unrecognizable"), ("source_role", "development-candidate"),
+                ("original_proof", {})):
+            with self.subTest(key=key), self.assertRaisesRegex(ValueError, "UNOBSERVABLE_RECORD"):
+                coverage.close_accounted_roster(plan, retained, [], [{**unknown, key: value}], old)
+
+    def test_accounted_adapter_calls_retained_verifier_and_checks_original_evidence(self):
+        plan, _, retained, old, unknown = self.accounted_fixture()
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            prior, proof = root / "accounted-prior.json", root / "synthetic-proof.json"
+            io.write_json(prior, {"schema": coverage.ACCOUNTED_PRIOR, "fixture_not_evidence": True})
+            io.write_json(proof, {"fixture_not_evidence": True})
+            views = [{"path": "/synthetic/view", "manifest_sha256": "a" * 64}]
+            verified = {"schema": coverage.ACCOUNTED_VERIFICATION, "plan": plan,
+                "plan_sha256": coverage.plain_digest(plan), "accounted_prefix_count": 256,
+                "observed_ids": [cell["cell_id"] for cell in plan["cells"] if cell["cell_id"] != unknown["source_id"]],
+                "excluded_returned": [], "unobservable_consumed": [unknown], "pending_ids": [], "views": views,
+                "evidence_files": [coverage.pin(proof)], "accounted_complete": True,
+                "complete_terminal_coverage": False, "ml_imports": 0, "new_model_calls": 0}
+            job = {"plan_sha256": coverage.plain_digest(plan), "source_ids": sorted(cell["cell_id"] for cell in plan["cells"]),
+                   "final_prior_evidence": {"path": str(prior), "sha256": coverage.pin(prior)["sha256"]}}
+            record = {"aggregate": {"parents": views}}
+            calls = []
+            def replay(path, expected_sha, *, expected_count):
+                calls.append((path, expected_sha, expected_count))
+                return verified
+            loader = SimpleNamespace(verify_accounted_prior=replay)
+            def bind(selected_loader=loader):
+                return coverage.bind(job, record, retained, old,
+                    lambda _: self.fail("old excluded-terminal parser must not handle accounted prior"), loader=selected_loader)
+            closed = bind()
+            self.assertEqual(calls, [(str(prior), coverage.pin(prior)["sha256"], 256)])
+            self.assertEqual(closed["schema"], coverage.ACCOUNTED_SCHEMA)
+            self.assertEqual(closed["evidence_files"], [coverage.pin(prior), coverage.pin(proof)])
+            with self.assertRaisesRegex(ValueError, "RETAINED_VERIFIER_REQUIRED"):
+                bind(None)
+            original = copy.deepcopy(verified)
+            mutations = (("pending_ids", [unknown["source_id"]]), ("accounted_complete", False),
+                ("complete_terminal_coverage", True), ("observed_ids", verified["observed_ids"][::-1]),
+                ("ml_imports", 1), ("new_model_calls", 1), ("views", []))
+            for key, value in mutations:
+                verified.clear()
+                verified.update(copy.deepcopy(original))
+                verified[key] = value
+                with self.subTest(key=key), self.assertRaises(ValueError):
+                    bind()
+            verified.clear()
+            verified.update(original)
+            proof.write_bytes(b"changed after verified receipt")
+            with self.assertRaisesRegex(ValueError, "ORIGINAL_EVIDENCE_CHANGED"):
+                bind()
+            def rejected(*args, **kwargs):
+                raise ValueError("fixture original partial proof rejected")
+            with self.assertRaisesRegex(ValueError, "original partial proof rejected"):
+                bind(SimpleNamespace(verify_accounted_prior=rejected))
 
 
 if __name__ == "__main__":
