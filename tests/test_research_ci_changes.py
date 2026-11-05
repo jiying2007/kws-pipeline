@@ -73,6 +73,8 @@ class ChangeSelectionTests(unittest.TestCase):
     def test_native_zipformer_paths_select_existing_research_checks(self):
         for path in ('tools/research_job_lock.py', 'tests/test_research_job_lock.py',
                      'tools/run_zipformer_system.py', 'tests/test_zipformer_system.py',
+                     'tools/run_d1_zipformer_system.py', 'tests/test_d1_zipformer_system.py',
+                     'docs/research-d1-zipformer-native.md',
                      'configs/research/zipformer-system-20261105.lock.json', 'docs/ZIPFORMER_SYSTEM.md'):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))

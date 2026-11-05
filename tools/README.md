@@ -107,6 +107,7 @@ the separate model-smoke validation status.
 - [`summarize_active_asr_batch.py`](summarize_active_asr_batch.py) — Re-read the complete model/clip matrix and produce the file inventory and resource summary.
 - [Active ASR batch guide](../docs/ACTIVE_ASR_BATCH.md) — Decoder conditions, private output layout and weak-label boundaries.
 - [`run_zipformer_system.py`](run_zipformer_system.py) — Execute a pinned native Zipformer system on verified shared PCM, preserving per-clip claims and results.
+- [`run_d1_zipformer_system.py`](run_d1_zipformer_system.py) — Bind native D1 observations to a real completed preparation, retain every raw event, and separate known-label train/development diagnostics.
 - [`research_job_lock.py`](research_job_lock.py) — Share one explicit local heavy-model slot across direct and supervised workers.
 - [Native Zipformer system guide](../docs/ZIPFORMER_SYSTEM.md) — Fixed profile, actual D0 execution and limits on interpreting native events.
 - [`setup_tts_runtime.py`](setup_tts_runtime.py) — Install and verify the isolated TTS environment and fixed Base model assets.

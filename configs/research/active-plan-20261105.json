@@ -80,7 +80,6 @@
       "unrequested_is_not_an_agreement": true
     },
     "unknown_labels_are_negative": false,
-    "weak_labels_train_only": true,
     "split_registry": "persistent canonical dataset and source-speaker identity",
     "hmac_key_controls_split": false,
     "development_data_in_training": false,
@@ -92,11 +91,15 @@
         "train_speakers": 6,
         "development_speakers": 2,
         "scope": "engineering learning curve",
-        "execution_status": "first64_generation_complete;original8_native_asr_complete;new56_selective_asr_running;remaining192_not_generated",
+        "execution_status": "first64_generation_asr_nine_arm_training_development_and_native_system_checkpoint_complete;full256_continuation_in_progress",
         "execution_evidence": "research/active-d1-20261105/tts-first64-summary.json",
-        "content_asr_evidence": "research/active-generated-asr-20261105/execution-summary.json",
+        "content_asr_evidence": "research/active-d1-20261105/first64-selective-asr-summary.json",
         "observed_generation_cells": 64,
-        "technical_failures_retained": 5
+        "technical_failures_retained": 5,
+        "training_evidence": "research/active-d1-20261105/first64-training-summary.json",
+        "native_system_evidence": "research/active-d1-20261105/first64-zipformer-summary.json",
+        "observed_generation_scope": "first fully audited64 checkpoint; subsequent frozen-prefix generation recorded separately",
+        "full256_complete": false
       },
       {
         "stage": "D2",
@@ -104,7 +107,12 @@
         "clips_per_speaker": 64,
         "advance_when": "source coverage and D1 learning evidence justify expansion"
       }
-    ]
+    ],
+    "weak_labels_allowed_for": [
+      "training",
+      "predeclared_engineering_development"
+    ],
+    "weak_labels_are_independent_human_truth": false
   },
   "candidates": [
     {
@@ -112,15 +120,15 @@
       "role": "fresh same-data control",
       "initialization": "fresh",
       "enabled": true,
-      "execution_status": "d0_same_data_consumption_executed_d1_pending",
-      "execution_evidence": "research/active-d0-20261105/execution-summary.json"
+      "execution_status": "d1_first64_three_near_ratios_actual_training_and_fixed_development_complete;full256_pending",
+      "execution_evidence": "research/active-d1-20261105/first64-training-summary.json"
     },
     {
       "id": "fsmn_ctc",
       "role": "streaming CTC candidate",
       "enabled": true,
-      "execution_status": "d0_official_full_text_adaptation_executed_d1_pending",
-      "execution_evidence": "research/active-d0-20261105/execution-summary.json"
+      "execution_status": "d1_first64_three_near_ratios_actual_training_and_fixed_development_complete;full256_pending",
+      "execution_evidence": "research/active-d1-20261105/first64-training-summary.json"
     },
     {
       "id": "c1_causal",
@@ -130,16 +138,16 @@
         "two-keyword direct"
       ],
       "enabled": true,
-      "execution_status": "d0_ctc_and_frozen_keyword_probe_executed_d1_pending",
-      "execution_evidence": "research/active-d0-20261105/execution-summary.json"
+      "execution_status": "d1_first64_three_near_ratios_actual_training_and_fixed_development_complete;full256_pending",
+      "execution_evidence": "research/active-d1-20261105/first64-training-summary.json"
     },
     {
       "id": "zipformer_kws",
       "role": "sherpa-onnx native pretrained system evaluation first",
       "train_initially": false,
       "enabled": true,
-      "execution_status": "d0_native_inference_executed_independent_evaluation_pending",
-      "execution_evidence": "research/active-d0-20261105/execution-summary.json"
+      "execution_status": "d0_and_d1_first64_native_inference_complete;independent_human_evaluation_pending",
+      "execution_evidence": "research/active-d1-20261105/first64-zipformer-summary.json"
     }
   ],
   "execution": {
@@ -157,7 +165,8 @@
     "increase_concurrency_when": "measured peak memory and available compute support the sum of active workers",
     "controller_deployment_status": "local_queue_implemented_remote_watchdog_pending",
     "past_d0_jobs_reclassified_as_queue_jobs": false,
-    "local_queue_model_jobs_completed": 6,
-    "first_tts_attempt_actual_seconds": null
+    "local_queue_model_jobs_completed": 28,
+    "first_tts_attempt_actual_seconds": null,
+    "local_queue_completion_scope": "through the fully completed first64 checkpoint, including preparation, training, development and independent native system queue"
   }
 }

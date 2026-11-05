@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 72140,
-      "sha256": "c29806a23ac5bbd99e38a43e211fbb6cb82a4f021f1a459e7c3738a9e235cc28",
-      "git_blob_sha1": "411a0f7ef121b2e5058da802c9fe7cab20b68abf"
+      "bytes": 72330,
+      "sha256": "7ed74e858ba89c37d1614cba7e03535139119736af4c22bd7896060595338718",
+      "git_blob_sha1": "84262fa6d12dfc421796795cd0ac931ab964b1b0"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -47753,6 +47753,213 @@
             "bytes": 31033,
             "sha256": "b9ce914378463764b2bce50f0234078b44a202ba9d1f1e3352c12ac49e581398",
             "git_blob_sha1": "da398322c2aa8c8e915c8b9b8d1296120637b775"
+          }
+        }
+      ]
+    },
+    {
+      "id": "d1-first64-actual-training-and-native-system-checkpoint-20261105",
+      "date": "2026-11-05",
+      "base_commit": "5ef5cba3b5e5067032594f118c9bb12ffb8c2120",
+      "base_tree": "19e04f702c8c5a27f7ed43736750a3468ed2d7ad",
+      "workflow_source_changed": true,
+      "scope": "Bind the completed first64 selective ASR, nine-arm training and frozen development metrics; integrate a separately bounded native Zipformer system entry and its three-mode stdlib checks.",
+      "rationale": "Record actual observed outcomes including empty fresh-model greedy output, preserve all native/float evidence and the common16 development comparison, and authenticate real external completed preparation without changing prior queue receipts or retained historical sources. Machine-weak diagnostics do not establish independent human quality or choose a winner.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 72140,
+            "sha256": "c29806a23ac5bbd99e38a43e211fbb6cb82a4f021f1a459e7c3738a9e235cc28",
+            "git_blob_sha1": "411a0f7ef121b2e5058da802c9fe7cab20b68abf"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 72330,
+            "sha256": "7ed74e858ba89c37d1614cba7e03535139119736af4c22bd7896060595338718",
+            "git_blob_sha1": "84262fa6d12dfc421796795cd0ac931ab964b1b0"
+          }
+        },
+        {
+          "path": "configs/research/active-plan-20261105.json",
+          "before": {
+            "path": "configs/research/active-plan-20261105.json",
+            "mode": "100644",
+            "bytes": 5885,
+            "sha256": "67c4fddd8a2d9a124a1b92ff9ffa2e4187d7eefbc41ef53add0422f931a8b415",
+            "git_blob_sha1": "02a73624521d3c6f30feb6c8b12ff212bc36f64b"
+          },
+          "after": {
+            "path": "configs/research/active-plan-20261105.json",
+            "mode": "100644",
+            "bytes": 6713,
+            "sha256": "30635554fcd6e24546dcd7a69dbdd3d1ef46270d5354ff072de260c4b2b69bb9",
+            "git_blob_sha1": "e68cb0ed3abb01a24c520cc22a9553a43df0ca18"
+          }
+        },
+        {
+          "path": "configs/runtime/research-runtime.json",
+          "before": {
+            "path": "configs/runtime/research-runtime.json",
+            "mode": "100644",
+            "bytes": 5647,
+            "sha256": "8f25c4dc5dbea69a41d5a83c6f98a1952cd7b557c6abdeb604baaa4c1285f00f",
+            "git_blob_sha1": "d46bae0d9803ce40b8ed13056a25e6fa8fa91554"
+          },
+          "after": {
+            "path": "configs/runtime/research-runtime.json",
+            "mode": "100644",
+            "bytes": 7372,
+            "sha256": "ce30db673a770dbc02a81c108130af915afe77b60e4daba24aac4792ad2e5a58",
+            "git_blob_sha1": "e298fb1e6b8f9fc1a14f70dce242caeb1801a2a9"
+          }
+        },
+        {
+          "path": "docs/KWS_ACTIVE_EXECUTION_20261105.md",
+          "before": {
+            "path": "docs/KWS_ACTIVE_EXECUTION_20261105.md",
+            "mode": "100644",
+            "bytes": 11259,
+            "sha256": "731ad6f53f14b2f5352c2d4dd6be52e642315723966040d5d601e49b9f6659f6",
+            "git_blob_sha1": "6e7abd30e7de7c9e85c460918f98c2c8e1bcbbbb"
+          },
+          "after": {
+            "path": "docs/KWS_ACTIVE_EXECUTION_20261105.md",
+            "mode": "100644",
+            "bytes": 14063,
+            "sha256": "48f9aca65128417f18ac12dccaf36a52f7b3baa706b1a137c8e90d581477e214",
+            "git_blob_sha1": "3821f2198c2065173ff4ed2d50df5d28a4b972c3"
+          }
+        },
+        {
+          "path": "docs/research-d1-zipformer-native.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-d1-zipformer-native.md",
+            "mode": "100644",
+            "bytes": 5733,
+            "sha256": "6f9226a1926edf6827ba2909eb99a405c997b48f3ff3448c8e0423b3fcd65e11",
+            "git_blob_sha1": "cd8e88863d368343386db08bbb3e0bef3f5d5833"
+          }
+        },
+        {
+          "path": "research/active-d1-20261105/first64-selective-asr-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/active-d1-20261105/first64-selective-asr-summary.json",
+            "mode": "100644",
+            "bytes": 7025,
+            "sha256": "e093d8666f5b66131a159a844bd7a7a01faa608d5bbabbd8cf916f142e38af8a",
+            "git_blob_sha1": "801411570eef2de02754de9506180950ed1ccfb9"
+          }
+        },
+        {
+          "path": "research/active-d1-20261105/first64-training-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/active-d1-20261105/first64-training-summary.json",
+            "mode": "100644",
+            "bytes": 19727,
+            "sha256": "a4aba17f8b1ad7d37a4652f9d6939afc22b331830b1ea4fc019e0a4cb31ab7b9",
+            "git_blob_sha1": "5daa22434f715668dd838b0840b9ee59207bfc3d"
+          }
+        },
+        {
+          "path": "research/active-d1-20261105/first64-zipformer-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/active-d1-20261105/first64-zipformer-summary.json",
+            "mode": "100644",
+            "bytes": 3835,
+            "sha256": "acbca8b12a0e52a8fd56b1badb68f5b8a976e307fc84d2a150c7e86f8fa5a5e1",
+            "git_blob_sha1": "1d36e10a4a45b9ceb2c11f988e3c590579b2127a"
+          }
+        },
+        {
+          "path": "tests/test_d1_zipformer_system.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_d1_zipformer_system.py",
+            "mode": "100644",
+            "bytes": 15920,
+            "sha256": "9ad21ac1047fe89a118095f40eed74551e56522a16cd6a333369138b9e33c2f3",
+            "git_blob_sha1": "7b334fc09f64c413e4d023d43dbaa9f4ba6d783e"
+          }
+        },
+        {
+          "path": "tests/test_research_ci_changes.py",
+          "before": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 12319,
+            "sha256": "fc8028fa442b21c3666f6a91ba3439d39e67c2a6037d8bead632e174882f2ecd",
+            "git_blob_sha1": "0c6812d2d8689f4246c2e3cc6f1bc89e9208702f"
+          },
+          "after": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 12474,
+            "sha256": "e89df2f6a722f4e3d55e130b14afc4985e2e343c4842959e705118fb402c2379",
+            "git_blob_sha1": "e41876de6bdc7e378d9ab0683814d1f23f59e4fa"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 5963,
+            "sha256": "d7763de16a67c86230545722ed189b262bb511695280f301c590cba7a72bad36",
+            "git_blob_sha1": "091439b4a73348af59d07eb2ec6a04cc8d291641"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 6084,
+            "sha256": "579de01ce499eb90802766933c35bdfa79eacbabb6771ee5c1885c87bfe0f7ee",
+            "git_blob_sha1": "404fe4078d7bbd78be940f1f30e8bcbcd0d8b78b"
+          }
+        },
+        {
+          "path": "tools/run_d1_zipformer_system.py",
+          "before": null,
+          "after": {
+            "path": "tools/run_d1_zipformer_system.py",
+            "mode": "100644",
+            "bytes": 22669,
+            "sha256": "e632d9f4d6973b1ee42426aabc491ee8eb07c5ca844dbfec00473e0b3ec4dd45",
+            "git_blob_sha1": "2f05a2a96851ab2fa67c953e55d55fd5e011be0c"
+          }
+        }
+      ]
+    },
+    {
+      "id": "d1-native-tool-navigation-completion-20261105",
+      "date": "2026-11-05",
+      "base_commit": "319889c17579147bd5fbd7e6bf6d80e114349cc5",
+      "base_tree": "56c6c215605e648c2d5796f757653dceb56a3bc4",
+      "workflow_source_changed": false,
+      "scope": "Register the added native D1 entry in the complete engineering-tool navigation index.",
+      "rationale": "The mandatory terminal-documentation contract correctly found the missing index entry; add that entry without weakening the check or changing any measured result, frozen source, or prior maintenance record.",
+      "files": [
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 20522,
+            "sha256": "dfb7c166f5c72b42127d8ded80b0633bbaf8f25d7263ae2cb38b272cf8a6b0dc",
+            "git_blob_sha1": "da321938db9b2e1ba3f8d6b4b86ebd2ef2c9b68d"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 20728,
+            "sha256": "e4f53c89d00316b52d01167fcb67c89309502421ec143a4c3cc07e6596cd4e51",
+            "git_blob_sha1": "03fe3178493e7d33142ae5682c63b6e69b0071a1"
           }
         }
       ]

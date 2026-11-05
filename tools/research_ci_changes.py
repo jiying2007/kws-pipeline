@@ -18,6 +18,8 @@ EXACT = frozenset({
     'configs/research/selective-asr-v2.json', 'docs/ACTIVE_ASR_SELECTIVE_V2.md',
     'tools/research_job_lock.py', 'tests/test_research_job_lock.py',
     'tools/run_zipformer_system.py', 'tests/test_zipformer_system.py',
+    'tools/run_d1_zipformer_system.py', 'tests/test_d1_zipformer_system.py',
+    'docs/research-d1-zipformer-native.md',
     'configs/research/zipformer-system-20261105.lock.json', 'docs/ZIPFORMER_SYSTEM.md',
     'tools/research_queue.py', 'tests/test_research_queue.py', 'docs/LOCAL_RESEARCH_QUEUE.md',
     'tools/research_no_network.py', 'tests/test_research_no_network.py',
