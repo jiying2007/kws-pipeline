@@ -666,6 +666,7 @@ def main() -> int:
             [
                 *PYTHON,
                 str(ROOT / "tools" / "qualification_gate.py"),
+                "--historical-replay-only",
                 "--manifest", str(manifest),
                 "--references", str(references), "--detections", str(detections),
                 "--board-audio", str(board_audio),
@@ -679,9 +680,23 @@ def main() -> int:
         assert gate_result["training_corpus_sha256"] == result["model_lineage"]["training_corpus_sha256"]
         assert gate_result["evaluation_corpus_sha256"] == eval_corpus["corpus_sha256"]
         gate_command = [*PYTHON, str(ROOT / "tools" / "qualification_gate.py"),
+                "--historical-replay-only",
                         "--manifest", str(manifest),
                 "--references", str(references), "--detections", str(detections),
                 "--board-audio", str(board_audio), "--policy", str(policy)]
+        # Direct invocation must fail before reading inputs or writing a
+        # qualification-looking result. Only explicit *historical* replay is valid.
+        without_replay = [arg for arg in gate_command if arg != "--historical-replay-only"]
+        original_gate_bytes = gate.read_bytes()
+        denied = subprocess.run(
+            without_replay + ["--output", str(gate)],
+            capture_output=True, text=True, check=False,
+        )
+        require(denied.returncode == 2 and "--historical-replay-only" in denied.stderr,
+                "legacy product qualification CLI did not reject current execution")
+        require(gate.read_bytes() == original_gate_bytes,
+                "legacy qualification CLI wrote output before historical-replay authorization")
+
         def gate_exit(expected: int) -> None:
             checked = subprocess.run(gate_command, capture_output=True, text=True, check=False)
             require(checked.returncode == expected, checked.stdout + checked.stderr)
@@ -787,6 +802,7 @@ def main() -> int:
             [
                 *PYTHON,
                 str(ROOT / "tools" / "qualification_gate.py"),
+                "--historical-replay-only",
                 "--manifest", str(manifest),
                 "--references", str(references), "--detections", str(detections),
                 "--board-audio", str(board_audio),
