@@ -9,7 +9,7 @@
     "model_smoke": "passed",
     "historical_prepare_python": "3.12.14",
     "historical_prepare_run": "https://github.com/jiying2007/kws-pipeline/actions/runs/41850542316",
-    "note": "Historical preparation retains Python 3.12.14 evidence. New Python 3.12.16 execution is recorded separately: 192 D0 ASR calls plus 24 reference calls; actual RNN64/C1/FSMN consumption and native Zipformer inference; eight TTS smoke calls and four separately predeclared paired calls. These validate actual execution, not independent content/voice/KWS quality.",
+    "note": "Historical preparation retains Python 3.12.14 evidence. New Python 3.12.16 execution is recorded separately: 192 D0 ASR calls plus 24 reference calls and 36 generated-audio calls; actual RNN64/C1/FSMN consumption and native Zipformer inference; eight TTS smoke calls, four separate paired calls and 56 additional frozen D1 calls. These validate actual execution, not independent content/voice/KWS quality.",
     "asr_model_smoke": {
       "status": "passed",
       "python": "3.12.16",
@@ -42,9 +42,34 @@
       "separate_paired_calls": 4,
       "separate_paired_technical_pass": 3,
       "separate_paired_failures_retained": 1,
-      "generated_audio_asr_pending": true,
+      "generated_audio_asr_pending": false,
       "initial_attempt_actual_seconds": null,
       "scope": "Verified raw waveform return and create-only source/receipt identity with native network disabled; not independent quality evidence"
+    },
+    "generated_audio_asr": {
+      "status": "passed",
+      "python": "3.12.16",
+      "evidence": "research/active-generated-asr-20261105/execution-summary.json",
+      "native_recognition_calls": 36,
+      "duplicate_calls": 0,
+      "resume_new_calls": 0,
+      "delivery_audit_sha256": "25a4368d36ef8c5248af156653e6bc7a1a6a100f6766aac8b8569ccd5deb2448",
+      "scope": "Complete native audio-only recognition and immutable readback of the eight D1 smoke clips and separate four paired-mode diagnostics; not independent quality evidence"
+    },
+    "d1_tts_extension": {
+      "status": "passed",
+      "python": "3.12.16",
+      "evidence": "research/active-d1-20261105/tts-first64-summary.json",
+      "new_native_generation_calls": 56,
+      "raw_arrays_retained": 56,
+      "technical_pass": 51,
+      "technical_failures_retained": 5,
+      "original_cells_reused": 8,
+      "aggregate_terminal_cells": 64,
+      "duplicate_generation_calls": 0,
+      "remaining_frozen_cells": 192,
+      "content_asr_status": "separately_declared_selective_queue_in_progress",
+      "scope": "Exact native array and FLOAT WAV readback with failed audio retained; technical completion is not weak-label admission or independent KWS quality."
     }
   },
   "indexes": {

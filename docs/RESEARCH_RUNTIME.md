@@ -7,16 +7,21 @@ The current target is **3.12.16**. Selecting an interpreter and checking package
 metadata do not establish model quality or successful end-to-end inference.
 The combined ASR role completed 192 native recognitions over 64 existing clips
 on this patch, with all 727 input/result files re-read and hash checked, followed
-by 24 native reference-audio recognitions. Core executed real D0 RNN64/C1/FSMN
+by 24 native reference-audio recognitions and 36 recognitions of the generated
+smoke and paired audio. Completed queue replay made zero new calls. Core executed real D0 RNN64/C1/FSMN
 consumption and native Zipformer inference. TTS completed eight source-bound
 smoke generations and four separately predeclared mode-comparison generations
-with native networking disabled. All 12 raw returns were verified; one paired
+with native networking disabled, then 56 additional fixed D1 cells. The new
+56 raw returns include 51 technical passes and five retained failures. Together
+with the original eight, D1 has 64 terminal cells and 192 still ungenerated.
+All original 12 raw returns were verified; one paired
 output retained its low-RMS technical failure without a retry or gain repair.
 The manifest marks actual model execution as passed and records each role's
 scope separately. These runs do not establish independent content, voice or KWS
 quality. See the [active ASR guide](ACTIVE_ASR_BATCH.md),
 [D0 execution evidence](../research/active-d0-20261105/execution-summary.json) and
-[TTS execution evidence](../research/active-tts-20261105/execution-summary.json).
+[TTS execution evidence](../research/active-tts-20261105/execution-summary.json), and
+[generated-audio ASR evidence](../research/active-generated-asr-20261105/execution-summary.json).
 
 The device runtime remains pure C. It has no Python runtime dependency.
 Python is a host build, data, training and evaluation tool.

@@ -1,0 +1,72 @@
+{
+  "schema": "kws-generated-audio-asr-execution-summary-v1",
+  "date": "2026-11-05",
+  "source_snapshot_git_head": "34ac0adc3000273086557cac0b33452394f2a503",
+  "wrapper_sha256": "9158bc87576fb14d24391a5a1658ed735d550db42041263fcc1b052d72aa07f5",
+  "decoder_source_sha256": "f13dce8464dc1fe2deae099e2e5c468f4fb4ce4f3b619f70f5e0e95e1c421666",
+  "delivery_audit_sha256": "25a4368d36ef8c5248af156653e6bc7a1a6a100f6766aac8b8569ccd5deb2448",
+  "private_evidence_archive_sha256": "61f168586ded2f553a6de965fcbcb4b1f0f1823c4a695cbd32633459177a8f1d",
+  "original_recognition_calls": 36,
+  "duplicate_calls": 0,
+  "resume_new_calls": 0,
+  "completed_queue_replay_changed_files": 0,
+  "actual_queue_seconds": 576.723563253,
+  "global_queue_budget_seconds": 1200,
+  "maximum_job_seconds": 600,
+  "model_concurrency": 1,
+  "groups": [
+    {
+      "group": "d1-smoke8",
+      "inputs_sha256": "13b9150c99dc322316c3ca0d6ba7ce99a0cfa8b1023d51d27f6b2bacb45773f9",
+      "inventory_files": 117,
+      "inventory_sha256": "da107db48ff5eb9bc8cb15cc0a880f575a4375efcc0e10e2dafe6d410324e26a",
+      "native_audit_sha256": "1d5d34c94e3cabcf9dce32d7e0a037e12d6390b4e0854f320a4a9c8a5f54a90e",
+      "verified_original_calls": 24,
+      "all_three_normalized_agreement": 6,
+      "resume_new_calls": 0,
+      "actual_queue_seconds": 311.985652609,
+      "recipe_sha256": "fc1dc114261c5f102d15e4f20530066f2c836b7249ddc26198667f32e6fd6f66",
+      "queue_terminal_sha256": "4f118758c39dbbf5dd311b4c2b545707e3d88b1316749f82052c13ec676bbea1",
+      "completed_clips": 8,
+      "technical_failures_retained": 0
+    },
+    {
+      "group": "paired4",
+      "inputs_sha256": "78f79a5b379dde1c0b7919b1f86eb71e0a99787bf4193dd7470efd4b95d09b36",
+      "inventory_files": 73,
+      "inventory_sha256": "578c5274cc8a304ffb924ad3dd7e2499f62742db054959e2868858a7d3bb5564",
+      "native_audit_sha256": "2e9132afe613db07155416cfc56e890df35125ca1d34f53fcec11208b4e975e5",
+      "verified_original_calls": 12,
+      "all_three_normalized_agreement": 0,
+      "resume_new_calls": 0,
+      "actual_queue_seconds": 264.737910644,
+      "recipe_sha256": "9b57a1ff9c35fb80c00714f3ab9217d348dd9a56c7dd45ceda6ee28a935e7e57",
+      "queue_terminal_sha256": "cc6a01ec3bbcc5df53c0b77af1b10557927cc4fa2eb44d9b8d399524db27b6f8",
+      "completed_clips": 4,
+      "technical_failures_retained": 1
+    }
+  ],
+  "d1_smoke8_weak_view": {
+    "manifest_sha256": "f0d39b1464b9f80a86b3170406f103ba24eac4f125f06fff9e24788f33329a4a",
+    "machine_weak_candidates": 7,
+    "uncertain": 1,
+    "three_way_fulltext_matches": 6,
+    "two_way_partial_match": 1,
+    "d1_v2_ctc_train_rows": 5,
+    "d1_v2_ctc_development_rows": 2,
+    "unknown_is_negative": false
+  },
+  "paired4_interpretation": {
+    "reference_sources": 2,
+    "modes_per_source": 2,
+    "three_way_fulltext_matches": 0,
+    "low_amplitude_failure_preserved": 1,
+    "gain_repair": false,
+    "quality_retry": false,
+    "quality_winner_selected": false
+  },
+  "human_gold": false,
+  "independent_kws_quality_evidence": false,
+  "new_training_runs": 0,
+  "interpretation": "ASR/intended-text agreement is machine evidence; differences may arise from synthesis or recognition. Paired n=2 references does not establish a quality winner."
+}

@@ -68,7 +68,16 @@
         "disagreement",
         "uncertain",
         "random agreement audit"
-      ]
+      ],
+      "primary_models": [
+        "qwen06",
+        "sensevoice"
+      ],
+      "selective_model": "whisper",
+      "selective_policy": "configs/research/selective-asr-v2.json",
+      "agreement_audit_probability": 0.2,
+      "agreement_audit_seed": 20261105,
+      "unrequested_is_not_an_agreement": true
     },
     "unknown_labels_are_negative": false,
     "weak_labels_train_only": true,
@@ -83,8 +92,11 @@
         "train_speakers": 6,
         "development_speakers": 2,
         "scope": "engineering learning curve",
-        "execution_status": "first_8_generated_content_asr_pending_remaining_248_not_generated",
-        "execution_evidence": "research/active-tts-20261105/execution-summary.json"
+        "execution_status": "first64_generation_complete;original8_native_asr_complete;new56_selective_asr_running;remaining192_not_generated",
+        "execution_evidence": "research/active-d1-20261105/tts-first64-summary.json",
+        "content_asr_evidence": "research/active-generated-asr-20261105/execution-summary.json",
+        "observed_generation_cells": 64,
+        "technical_failures_retained": 5
       },
       {
         "stage": "D2",
@@ -145,7 +157,7 @@
     "increase_concurrency_when": "measured peak memory and available compute support the sum of active workers",
     "controller_deployment_status": "local_queue_implemented_remote_watchdog_pending",
     "past_d0_jobs_reclassified_as_queue_jobs": false,
-    "local_queue_model_jobs_completed": 2,
+    "local_queue_model_jobs_completed": 6,
     "first_tts_attempt_actual_seconds": null
   }
 }

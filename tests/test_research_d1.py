@@ -7,11 +7,16 @@ import copy
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
+import time
 import unittest
+import struct
+import wave
 from types import SimpleNamespace
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT / "training")]
@@ -19,6 +24,7 @@ import research_d1_inputs as inputs_module
 import research_d1_models as models
 import research_d1_recipe as recipes
 import research_d1_vocab as vocab_module
+import research_d1_train as trainer
 from research.candidate_encoders.contract import EncoderSpec
 from research.candidate_encoders.fulltext_contract import c1_fulltext_spec, rnn64_fulltext_spec
 
@@ -71,6 +77,77 @@ def raw_rows():
                 "pcm_sha256": hashlib.sha256((str(index) + "pcm").encode()).hexdigest(),
             })
     return result
+
+
+def synthetic_preparation(root, torch):
+    """Exercise real prepare/cache/checkpoint IO; no speech or official weights.
+
+    Data replay and the official donor/frontend are explicit interface fixtures.
+    Fresh RNN/C1 construction, PCM copies, logmel, recipes, cache serialization,
+    checkpoint serialization and closed preparation readback are real code.
+    """
+    from research_job_lock import heavy_model_slot, PATH_ENV, SUPERVISED_ENV
+    import research_fsmn_weak
+    rows = [copy.deepcopy(raw_rows()[index]) for index in (0, 1, 2, 7, 192, 224)]
+    audio = root / "synthetic-audio"
+    audio.mkdir()
+    for index, row in enumerate(rows):
+        pcm = struct.pack("<16000h", *([100 + index, -100 - index] * 8000))
+        path = audio / (row["source_id"] + ".wav")
+        with wave.open(str(path), "wb") as stream:
+            stream.setnchannels(1); stream.setsampwidth(2); stream.setframerate(16000)
+            stream.writeframes(pcm)
+        row.update(audio=str(path), audio_path=str(path), file_sha256=trainer.sha_file(path),
+                   pcm_sha256=hashlib.sha256(pcm).hexdigest())
+    official = root / "fixture-official-interface"
+    official.mkdir()
+    (official / "tokens.txt").write_bytes((FIXTURES / "fsmn-official-tokens.txt").read_bytes())
+    data_root = root / "fixture-data-source"
+    data_root.mkdir()
+    (data_root / "fixture.py").write_text("# Test interface only; no real data or model execution.\n")
+    data_source = {"root": str(data_root), "files": {"fixture.py": trainer.sha_file(data_root / "fixture.py")}}
+    request = {"schema": trainer.PREP_SCHEMA, "packages": [{"fixture": "no real audio"}],
+               "plan_sha256": "a" * 64, "view_loader": str(data_root / "fixture.py"),
+               "original_tokens": str(official / "tokens.txt"), "official_fsmn_sources": str(official)}
+    request_path = root / "preparation-request.json"
+    trainer.io_contract.write_json(request_path, request)
+
+    def compute_fbank(data, **kwargs):
+        if kwargs != {"num_mel_bins": 80, "frame_length": 25, "frame_shift": 10, "dither": 0.0}:
+            raise ValueError("fixture frontend options differ")
+        return data
+
+    def context(data, *, left, right):
+        if (left, right) != (2, 2):
+            raise ValueError("fixture context differs")
+        return data
+
+    def skip(data, *, skip_rate):
+        if skip_rate != 3:
+            raise ValueError("fixture skip differs")
+        for row in data:
+            frames = (1 + (row["wav"].shape[1] - 400) // 160) // 3
+            yield {"feat": torch.linspace(-.1, .1, frames * 400).reshape(frames, 400)}
+
+    processor = {"compute_fbank": compute_fbank, "context_expansion": context, "frame_skip": skip}
+    output = root / "prepared"
+    lock = Path(os.environ.get(PATH_ENV, str(root / "fixture-heavy.lock")))
+    with heavy_model_slot(lock) as lease:
+        environment = lease.child_environment()
+        environment.update({SUPERVISED_ENV: "1", "KWS_RESEARCH_RECIPE_SHA256": trainer.sha_file(request_path)})
+        with patch.dict(os.environ, environment), \
+                patch.object(trainer.research_runtime, "check_interpreter"), \
+                patch.object(trainer.research_runtime, "check_packages"), \
+                patch.object(trainer, "load_data_modules", return_value=(None, sampler(), data_source)), \
+                patch.object(trainer, "aggregate_batches", return_value=(rows, {"observed_items": 6, "fixture": True})), \
+                patch.object(research_fsmn_weak, "verify_sources"), \
+                patch.object(research_fsmn_weak, "source_lock", return_value={"files": [
+                    {"path": "tokens.txt", "sha256": trainer.sha_file(official / "tokens.txt")}]}), \
+                patch.object(research_fsmn_weak, "load_upstream", return_value=(None, None, processor)), \
+                patch.object(trainer, "build_extended_fsmn", side_effect=lambda *_:
+                    (torch.nn.Linear(400, 2601), processor, {"fixture": "no official weights"})):
+            result = trainer.prepare(request_path, output, lock)
+    return output, result
 
 
 class VocabularyContracts(unittest.TestCase):
@@ -194,6 +271,134 @@ class RecipeContracts(unittest.TestCase):
         self.assertEqual(projected[0]["ctc_reason"], "common_unpadded_ctc_geometry_infeasible")
         self.assertEqual(projected[0]["expected_output_frames"], {"rnn64": 1, "c1": 1, "fsmn": 0})
 
+    def test_failed_native_cannot_be_promoted_by_asr_agreement(self):
+        row = raw_rows()[5]
+        row.update(generation_outcome="failed-native", label_status="uncertain", full_text=None,
+                   ctc_mask=False, ctc_weight=0, target_ids=None, keyword_targets=[None, None],
+                   keyword_mask=[False, False], keyword_weight=[0, 0],
+                   asr_transcripts=[{"model": model, "status": "complete", "text": "请把灯打开", "usable": True}
+                                    for model in ("qwen06", "sensevoice", "whisper")])
+        projected = recipes.project_rows([row], vocabulary())[0]
+        self.assertFalse(projected["ctc_mask"] or projected["keyword_eligible"])
+        self.assertEqual(projected["ctc_reason"], "failed_native_generation_audit_only")
+        self.assertEqual(projected["asr_transcripts"], row["asr_transcripts"])
+        self.assertIsNone(projected["full_text"])
+        self.assertFalse(projected["quarantined"])
+        promoted = {**raw_rows()[5], "generation_outcome": "failed-native"}
+        with self.assertRaisesRegex(ValueError, "D1_FAILED_NATIVE_MUST_HAVE_ZERO_LOSS"):
+            recipes.project_rows([promoted], vocabulary())
+
+    def test_intent_weak_label_conflicts_are_preserved_and_quarantined(self):
+        rows = raw_rows()
+        rows[0].update(full_text="好小窝", keyword_targets=[0, 0], intended_keyword_id=1)
+        rows[7].update(full_text="你好小窝", keyword_targets=[1, 0])
+        projected = recipes.project_rows(rows, vocabulary())
+        for index, original_targets in ((0, [0, 0]), (7, [1, 0])):
+            self.assertTrue(projected[index]["quarantined"])
+            self.assertFalse(projected[index]["ctc_mask"] or projected[index]["keyword_eligible"])
+            self.assertEqual(projected[index]["full_text"], rows[index]["full_text"])
+            self.assertEqual(projected[index]["generation_category"], rows[index]["generation_category"])
+            self.assertEqual(projected[index]["label_keyword_targets"], original_targets)
+            self.assertEqual(projected[index]["keyword_targets"], [None, None])
+            self.assertEqual(projected[index]["keyword_mask"], [False, False])
+            self.assertEqual(projected[index]["keyword_weight"], [0, 0])
+            self.assertIsNone(projected[index]["target_ids"])
+        available, report = recipes.available_recipes(projected, vocabulary(), sampler())
+        self.assertEqual(report["quarantined_items"], 2)
+        self.assertEqual(set(available), {"0", "5", "10"})
+        for recipe in available.values():
+            self.assertEqual(recipe["total_exposures"], 600)
+            self.assertNotIn(rows[0]["source_id"], recipe["exposures_by_source"])
+            self.assertNotIn(rows[7]["source_id"], recipe["exposures_by_source"])
+
+    def test_near_conflicts_block_only_near_arms_and_no_target_is_invented(self):
+        rows = raw_rows()
+        for row in rows:
+            if row["generation_category"] == "near-negative":
+                row.update(full_text="你好小窝", keyword_targets=[1, 0])
+        available, report = recipes.available_recipes(recipes.project_rows(rows, vocabulary()), vocabulary(), sampler())
+        self.assertEqual(set(available), {"0"})
+        self.assertEqual(report["available"], [0])
+        self.assertEqual(set(report["blocked"]), {"5", "10"})
+        self.assertEqual(report["blocked"]["5"]["reason"], "MISSING_SAMPLING_POOL:near-negative")
+        self.assertFalse(report["automatic_pool_filling"])
+
+
+class EntryContracts(unittest.TestCase):
+    def test_job_shape_timeout_and_candidate_identity(self):
+        job = {"schema": trainer.JOB_SCHEMA, "candidate": "rnn64-ctc2601", "near_percent": 0,
+               "timeout_seconds": 600, "prepared_from_dependency": "prepare"}
+        self.assertEqual(trainer.validate_job(job), job)
+        for field, value in (("timeout_seconds", True), ("timeout_seconds", 60000),
+                             ("candidate", "fsmn2599"), ("near_percent", 1), ("near_percent", True)):
+            with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                trainer.validate_job({**job, field: value})
+        with self.assertRaises(ValueError):
+            trainer.validate_job({**job, "prepared": "/pretend"})
+
+    def test_new_or_empty_output_never_reuses_partial_run(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "output"
+            trainer.output_directory(path)
+            trainer.output_directory(path)
+            (path / "partial").write_text("already claimed")
+            with self.assertRaisesRegex(ValueError, "D1_OUTPUT_MUST_BE_NEW_OR_EMPTY"):
+                trainer.output_directory(path)
+
+    def test_real_dummy_queue_resolves_completed_preparation_receipt(self):
+        # No Torch, feature construction or model is imported by this real
+        # queue -> supervised command -> completed-dependency path.
+        queue = trainer.io_contract
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            first_recipe = root / "prepare.json"
+            first_recipe.write_text('{"fixture":"stdlib only","model_calls":0}')
+            job = {"schema": trainer.JOB_SCHEMA, "candidate": "rnn64-ctc2601", "near_percent": 0,
+                   "timeout_seconds": 600, "prepared_from_dependency": "prepare"}
+            second_recipe = root / "run.json"
+            second_recipe.write_bytes(vocab_module.canonical(job))
+            prepare_code = "import os;from pathlib import Path;Path(os.environ['KWS_RESEARCH_OUTPUT_DIR'],'MANIFEST.json').write_text('{}')"
+            consume_code = "\n".join((
+                "import os,sys,json;from pathlib import Path",
+                "sys.path[:0]=[sys.argv[1],str(Path(sys.argv[1])/'training'),str(Path(sys.argv[1])/'tools')]",
+                "from research_d1_train import read_json,validate_job,resolve_prepared,queue_binding",
+                "from research_job_lock import heavy_model_slot,PATH_ENV",
+                "with heavy_model_slot(os.environ[PATH_ENV]) as lease:",
+                " recipe=Path(os.environ['KWS_RESEARCH_RECIPE'])",
+                " queue_binding(recipe,lease)",
+                " root,sha,binding=resolve_prepared(validate_job(read_json(recipe)))",
+                " Path(os.environ['KWS_RESEARCH_OUTPUT_DIR'],'answer.json').write_text(json.dumps({'manifest_sha256':sha,'binding':binding,'model_calls':0}))",
+            ))
+            jobs = []
+            for name, recipe, code, deps, outputs in (("prepare", first_recipe, prepare_code, [], ["MANIFEST.json"]),
+                                                     ("run", second_recipe, consume_code, ["prepare"], ["answer.json"])):
+                jobs.append({"job_id": name, "recipe": str(recipe), "recipe_sha256": hashlib.sha256(recipe.read_bytes()).hexdigest(),
+                    "argv": [sys.executable, "-I", "-S", "-B", "-c", code, str(ROOT)], "cwd": str(root),
+                    "depends_on": deps, "timeout_minutes": .1, "outputs": outputs})
+            request = root / "request.json"
+            request.write_bytes(vocab_module.canonical({"schema": queue.SCHEMA, "queue_id": "d1-handoff",
+                                                       "global_budget_minutes": 1, "jobs": jobs}))
+            queue_root = root / "queue"
+            queue.create(queue_root, request, ROOT / "configs/research/active-plan-20261105.json", root / "slot.lock")
+            from research_job_lock import FD_ENV, PATH_ENV, SUPERVISED_ENV
+            environment = {key: value for key, value in os.environ.items() if key not in (FD_ENV, PATH_ENV, SUPERVISED_ENV)}
+            # A numeric test may itself own the real shared model slot. Keep
+            # that open descriptor, but do not describe it as this independent
+            # no-model dummy queue's inherited temporary slot.
+            with patch.dict(os.environ, environment, clear=True):
+                status, code = queue.run(queue_root)
+            self.assertEqual((status["status"], code), ("completed", 0))
+            answer = json.loads((queue_root / "jobs/run/outputs/answer.json").read_text())
+            self.assertEqual(answer["manifest_sha256"], hashlib.sha256(b"{}").hexdigest())
+            self.assertEqual(answer["binding"]["job_id"], "prepare")
+            self.assertEqual(answer["model_calls"], 0)
+            with patch.dict(os.environ, environment, clear=True):
+                self.assertEqual(queue.run(queue_root)[1], 0)
+            # The original completed output binding cannot accept later bytes.
+            (queue_root / "jobs/prepare/outputs/MANIFEST.json").write_text("changed")
+            with self.assertRaisesRegex(ValueError, "D1_DEPENDENCY_MANIFEST_CHANGED"):
+                trainer.resolve_prepared(job, dependencies_path=queue_root / "jobs/run/dependencies.json")
+
 
 class AggregateContracts(unittest.TestCase):
     """Exercise cross-package orchestration with an explicit replay test double.
@@ -232,20 +437,30 @@ class AggregateContracts(unittest.TestCase):
             canonical=vocab_module.canonical, load_training_rows=replay, SourceRoles=dict,
             add_source_role=add_role, relative=Path, training_row=lambda raw, consumer: dict(raw["training"]))
 
-    def package(self, name, index, *, source_override=None):
+    def package(self, name, index, *, source_override=None, row_override=None,
+                adapter_schema=inputs_module.D1_SOURCE_V1, observations=None):
         row = copy.deepcopy(self.rows[index])
         row.update(source_plan_sha256=self.plan_sha, global_source_key=[self.plan_sha, row["source_id"]], item_id="clip-000")
+        row.update(row_override or {})
         source = {**row, "source_kind": "synthetic-reference-clone", "role": row["source_role"],
                   "parent_source_sha256": "parent-" + row["source_family_id"],
                   "reference_wav_sha256": "reference-wav-" + row["source_family_id"],
                   "reference_pcm_sha256": "reference-pcm-" + row["source_family_id"]}
         source.update(source_override or {})
+        if adapter_schema == inputs_module.D1_SOURCE_V2:
+            outcome = source.setdefault("generation_outcome", "completed")
+            source.setdefault("original_generation_row", {
+                "schema": "kws-bulk-clone-complete-v1" if outcome == "completed" else "kws-bulk-clone-failure-v1",
+                "status": "GENERATED_PENDING_ASR" if outcome == "completed" else "FAILED_NO_RETRY",
+                "cell_id": row["source_id"], "training_admitted": False})
+            source.setdefault("generation_receipt_sha256", "b" * 64)
+            source.setdefault("generation_start_receipt_sha256", "c" * 64)
         clip = {"id": "clip-000", "original_pcm": {"sha256": "original-pcm-" + str(index)}}
         raw = {"item_id": "clip-000", "source": source, "input": clip,
                "audio_derivation": {"pcm_sha256": row["pcm_sha256"]}, "audio": "audio/clip-000.wav",
                "decision": {"status": row["label_status"], "reason": row["label_reason"]},
-               "asr": [{"fixture": True}], "training": row}
-        report = {"source_adapter": {"schema": "kws-active-d1-frozen-plan-source-v1", "plan_sha256": self.plan_sha},
+               "asr": [{"fixture": True}] if observations is None else observations, "training": row}
+        report = {"source_adapter": {"schema": adapter_schema, "plan_sha256": self.plan_sha},
                   "items": [raw], "test_package": name}
         files = {"report.json": report, "evidence/inputs.json": {"clips": [clip]},
                  "evidence/source/d1/plan.json": self.plan}
@@ -285,6 +500,48 @@ class AggregateContracts(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "D1_PACKAGE_CHANGED_DURING_REPLAY"):
             inputs_module.aggregate_batches([package], self.loader, expected_plan_sha256=self.plan_sha)
 
+    def test_explicit_v2_keeps_failed_audio_and_sparse_observations_out_of_loss(self):
+        observations = [
+            {"model": "qwen06", "status": "complete", "usable": True, "text": "请把灯打开"},
+            {"model": "sensevoice", "status": "complete", "usable": True, "text": "请把灯打开"},
+            {"model": "whisper", "status": "not_requested", "usable": False, "text": None,
+             "routing_sha256": "d" * 64}]
+        packages = [self.package("legacy", 0),
+                    self.package("sparse", 5, adapter_schema=inputs_module.D1_SOURCE_V2,
+                                 observations=observations, row_override={"ctc_weight": .5, "keyword_weight": [.5, .5]}),
+                    self.package("failed", 7, adapter_schema=inputs_module.D1_SOURCE_V2,
+                                 source_override={"generation_outcome": "failed-native"}, observations=observations,
+                                 row_override={"label_status": "uncertain", "full_text": None, "target_ids": None,
+                                               "ctc_mask": False, "ctc_weight": 0, "keyword_targets": [None, None],
+                                               "keyword_mask": [False, False], "keyword_weight": [0, 0]})]
+        rows, receipt = inputs_module.aggregate_batches(packages, self.loader, expected_plan_sha256=self.plan_sha)
+        self.assertEqual((len(self.replayed), len(self.role_checks), receipt["observed_items"]), (3, 3, 3))
+        self.assertFalse(receipt["complete_plan_coverage"])
+        self.assertEqual(receipt["failed_native_items"], 1)
+        by_id = {row["source_id"]: row for row in recipes.project_rows(rows, vocabulary())}
+        legacy, sparse, failed = [by_id[self.rows[index]["source_id"]] for index in (0, 5, 7)]
+        self.assertNotIn("generation_outcome", legacy)
+        self.assertEqual(sparse["asr_transcripts"], observations)
+        self.assertEqual(sparse["ctc_weight"], .5)
+        self.assertIn(2600, sparse["target_ids"])
+        self.assertEqual(failed["asr_transcripts"], observations)
+        self.assertFalse(failed["ctc_mask"] or failed["keyword_eligible"])
+        self.assertEqual(failed["original_generation_row"]["status"], "FAILED_NO_RETRY")
+        self.assertEqual(failed["generation_receipt_sha256"], "b" * 64)
+        self.assertEqual(len(recipes.cohort_rows(list(by_id.values()))), 2)
+
+    def test_v2_does_not_relax_global_identity_or_accept_failed_labels(self):
+        packages = [self.package("legacy", 5), self.package("duplicate-v2", 5, adapter_schema=inputs_module.D1_SOURCE_V2)]
+        with self.assertRaisesRegex(ValueError, "D1_DUPLICATE_GLOBAL_CELL"):
+            inputs_module.aggregate_batches(packages, self.loader, expected_plan_sha256=self.plan_sha)
+        failed = self.package("promoted-failure", 7, adapter_schema=inputs_module.D1_SOURCE_V2,
+                              source_override={"generation_outcome": "failed-native"})
+        with self.assertRaisesRegex(ValueError, "D1_FAILED_NATIVE_MUST_HAVE_ZERO_LOSS"):
+            inputs_module.aggregate_batches([failed], self.loader, expected_plan_sha256=self.plan_sha)
+        unknown = self.package("unknown-schema", 7, adapter_schema="kws-active-d1-frozen-plan-source-v3")
+        with self.assertRaisesRegex(ValueError, "D1_COMMON_FROZEN_PLAN_REQUIRED"):
+            inputs_module.aggregate_batches([unknown], self.loader, expected_plan_sha256=self.plan_sha)
+
 
 class NumericContracts(unittest.TestCase):
     @classmethod
@@ -305,6 +562,28 @@ class NumericContracts(unittest.TestCase):
             loss.backward()
             self.assertTrue(all(p.grad is not None and bool(torch.isfinite(p.grad).all()) for p in model.parameters()))
             self.assertEqual(spec["vocabulary_sha256"], vocab_module.digest(vocabulary()))
+
+    def test_real_prepare_saves_frontend_cache_and_closed_manifest_without_optimizer(self):
+        torch = self.torch
+        with tempfile.TemporaryDirectory() as temporary:
+            output, result = synthetic_preparation(Path(temporary), torch)
+            record, vocab, rows = trainer.verify_prepared(output, result["manifest_sha256"])
+            self.assertEqual((record["optimizer_steps"], record["model_forward_calls"]), (0, 0))
+            self.assertEqual((record["observed_rows"], len(rows)), (6, 4))
+            path = output / "features.pt"
+            retained = torch.load(path, weights_only=True, map_location="cpu")
+            self.assertEqual(set(retained), {"fresh", "fsmn"})
+            observations = trainer.read_json(output / "feature-observations.json")
+            self.assertEqual(len(observations), 4)
+            for kind, width in (("fresh", 32), ("fsmn", 400)):
+                self.assertEqual(len(retained[kind]), 4)
+                for feature, observed in zip(retained[kind], observations):
+                    self.assertEqual(tuple(feature.shape), (observed[kind + "_frames"], width))
+                    self.assertEqual(trainer.tensor_sha(feature), observed[kind + "_feature_sha256"])
+            original = path.read_bytes()
+            with self.assertRaises(FileExistsError):
+                trainer.save_feature_cache(retained, path)
+            self.assertEqual(path.read_bytes(), original)
 
     def test_extension_copies_all_old_rows_and_tensors_bitwise(self):
         torch = self.torch
@@ -343,13 +622,38 @@ class NumericContracts(unittest.TestCase):
         loss.backward()
         self.assertEqual(logits.grad.abs().sum().item(), 0)
 
+    def test_actual_training_consumer_updates_weights_and_records_each_draw(self):
+        torch = self.torch
+        projected = recipes.project_rows(raw_rows(), vocabulary())
+        recipe, rows = recipes.make_recipe(projected, vocabulary(), sampler(), near_percent=5)
+        # A four-draw software fixture exercises the actual loop. The public
+        # run() still requires its sealed 600-draw/150-step budget exactly.
+        recipe = copy.deepcopy(recipe)
+        recipe["exposure_plan"]["draws"] = recipe["exposure_plan"]["draws"][:4]
+        torch.manual_seed(recipes.SEED)
+        model, _ = models.build_fresh("rnn64-ctc2601", vocabulary(), self.reference)
+        original = [parameter.detach().clone() for parameter in model.parameters()]
+        features = [torch.linspace(-.1, .1, 8 * 32).reshape(8, 32) for _ in rows]
+        optimizer = torch.optim.AdamW(model.parameters(), lr=.001)
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            result = trainer.train_batches(model, features, rows, recipe, optimizer, output=output, deadline=time.monotonic()+10)
+            self.assertEqual((result["optimizer_steps"], result["sample_exposures"]), (1, 4))
+            ledger = json.loads((output / "consumption.jsonl").read_text())
+            self.assertEqual([draw["source_id"] for draw in ledger["draws"]],
+                             [draw["source_id"] for draw in recipe["exposure_plan"]["draws"]])
+            self.assertEqual([draw["ctc_weight"] for draw in ledger["draws"]],
+                             [draw["ctc_weight"] for draw in recipe["exposure_plan"]["draws"]])
+            self.assertTrue(all(draw["ctc_mask"] and not draw["keyword_loss_used"] for draw in ledger["draws"]))
+            self.assertTrue(any(not torch.equal(before, after) for before, after in zip(original, model.parameters())))
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--numeric", action="store_true")
     args = parser.parse_args()
     suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
-                               for case in (VocabularyContracts, RecipeContracts, AggregateContracts))
+                               for case in (VocabularyContracts, RecipeContracts, AggregateContracts, EntryContracts))
     if args.numeric:
         suite.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(NumericContracts))
     return 0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1

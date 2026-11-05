@@ -43,10 +43,11 @@ class CandidateNumericCIContracts(unittest.TestCase):
                      "configs/runtime/fsmn-fulltext-sources.json", "tools/research_job_lock.py",
                      "tests/test_research_job_lock.py", "training/research_d1_vocab.py",
                      "training/research_d1_inputs.py", "training/research_d1_recipe.py",
-                     "training/research_d1_models.py", "tests/test_research_d1.py",
+                     "training/research_d1_models.py", "training/research_d1_train.py", "tests/test_research_d1.py",
+                     "training/research_d1_evaluate.py", "tests/test_research_d1_evaluate.py",
                      "tests/fixtures/d1-fulltext/fsmn-official-tokens.txt",
                      "tests/fixtures/d1-fulltext/research_weak_sampling_v1.py",
-                     "docs/research-d1-fulltext-v2.md"):
+                     "docs/research-d1-fulltext-v2.md", "docs/research-d1-development-v2.md"):
             self.assertEqual(changes.scopes([path]), (False, True))
         step = self.workflow.split("      - name: Weak-label weight and mask gradient contracts\n", 1)[1].split("      - name:", 1)[0]
         self.assertIn("needs.select-scope.outputs.candidate_required == 'true'", step)
@@ -54,6 +55,7 @@ class CandidateNumericCIContracts(unittest.TestCase):
         self.assertIn("tests/test_research_weak_training.py --numeric", step)
         self.assertIn("tests/test_research_fsmn_weak.py --numeric", step)
         self.assertIn("tests/test_research_d1.py --numeric", step)
+        self.assertIn("tests/test_research_d1_evaluate.py --numeric", step)
         self.assertNotIn("continue-on-error", step)
 
     def test_direct_only_and_shared_scorer_scopes(self):
