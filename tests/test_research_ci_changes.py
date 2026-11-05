@@ -75,6 +75,9 @@ class ChangeSelectionTests(unittest.TestCase):
                      'tools/run_zipformer_system.py', 'tests/test_zipformer_system.py',
                      'tools/run_d1_zipformer_system.py', 'tests/test_d1_zipformer_system.py',
                      'docs/research-d1-zipformer-native.md',
+                     'tools/run_d1_zipformer_extension.py', 'tests/test_d1_zipformer_extension.py',
+                     'tools/research_d1_native_coverage.py', 'tests/test_d1_native_coverage.py',
+                     'tools/research_d1_previous_native.py', 'docs/research-d1-zipformer-extension-v2.md',
                      'configs/research/zipformer-system-20261105.lock.json', 'docs/ZIPFORMER_SYSTEM.md'):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))

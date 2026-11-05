@@ -85,11 +85,44 @@ within the plan's maximum two infrastructure attempts; it does not implement a
 new automatic second-attempt policy. A new attempt needs explicit review and a
 new declaration. Existing claims, receipts and artifacts are never reset.
 
-`run` returns 0 for completed jobs, 1 for failure/blocked/unknown outcomes,
+`run` returns 0 for a completed queue or a successful bounded pause,
+1 for failure/blocked/unknown outcomes,
 2 for invalid identities or artifacts, 3 for exhausted or exceeded budget,
 and 75 for an active controller/worker or occupied heavy-model slot. `status`
 reads current evidence without starting work. Reinvoking `run` persists an
 orphaned claim as `unknown`; live locks protect against premature recovery.
+
+## Pause after preparation
+
+For a new queue containing preparation followed by training, the optional
+positive integer `--max-jobs N` limits new claims in one invocation. For example:
+
+```sh
+python3.12 -I -S -B tools/research_queue.py run \
+  --root /private/research/queue-001 --max-jobs 1
+```
+
+After preparation completes, the controller returns `status=incomplete` and
+`stop_reason=max_jobs_reached`, releases the shared model slot, and leaves the
+next job without a lock, claim, worker, command or output. The caller can now
+verify the actual saved vocabulary and initial float states. A later ordinary
+`run` advances the same frozen request with the same remaining budget:
+
+```sh
+python3.12 -I -S -B tools/research_queue.py run --root /private/research/queue-001
+```
+
+Completed jobs are verified and reused; they do not consume the per-invocation
+limit. Actual elapsed nanoseconds remain cumulative across invocations. A
+failed newly claimed job still returns nonzero, and unresolved work or exhausted
+budget takes precedence over the optional pause. Omitting `--max-jobs` retains
+the existing completion-driven behavior. A zero exit code at a bounded pause
+does not mean the entire queue is complete; inspect the returned status.
+
+The controller identity remains strict. Existing queues must be read and
+resumed with their original frozen source snapshot. This option belongs to a
+newly declared queue using the new controller; it does not migrate historical
+queues, rewrite receipts or bypass their source checks.
 
 ## Actual minutes and process lifetime
 
