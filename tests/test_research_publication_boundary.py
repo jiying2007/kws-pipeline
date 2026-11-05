@@ -209,6 +209,16 @@ class ResearchPublicationBoundaryTests(unittest.TestCase):
             "fixture-clean",
         )
 
+    def test_legacy_product_qualification_cli_is_replay_only(self):
+        source = (ROOT / "tools/qualification_gate.py").read_text(encoding="utf-8")
+        self.assertIn('parser.add_argument("--historical-replay-only"', source)
+        self.assertIn("if not args.historical_replay_only:", source)
+        self.assertIn("retired qualification CLI:", source)
+        for path in WORKFLOWS.glob("*.yml"):
+            self.assertNotIn("tools/qualification_gate.py",
+                             path.read_text(encoding="utf-8"),
+                             "old product-certified CLI must not be in active research Actions")
+
     def test_legacy_push_publication_workflows_are_retired(self):
         for relative in (
             "release.yml",
