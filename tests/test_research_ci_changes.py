@@ -58,7 +58,8 @@ class ChangeSelectionTests(unittest.TestCase):
     def test_active_asr_changes_select_research_dependencies(self):
         for path in ('tools/setup_asr_runtime.py', 'tools/active_asr_batch.py',
                      'tools/active_asr_worker.py', 'tools/summarize_active_asr_batch.py',
-                     'tests/test_active_asr_batch.py', 'docs/ACTIVE_ASR_BATCH.md'):
+                     'tests/test_active_asr_batch.py', 'tests/test_active_asr_supervision.py',
+                     'docs/ACTIVE_ASR_BATCH.md'):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
 
@@ -86,7 +87,12 @@ class ChangeSelectionTests(unittest.TestCase):
                      'tests/test_research_weak_training.py', 'tests/test_research_fsmn_weak.py',
                      'docs/research-weak-training.md', 'docs/LOCAL_RESEARCH_QUEUE.md',
                      'docs/active-tts-smoke.md', 'configs/research/active-plan-20261105.json',
-                     'docs/KWS_ACTIVE_EXECUTION_20261105.md'):
+                     'docs/KWS_ACTIVE_EXECUTION_20261105.md',
+                     'training/research_d1_vocab.py', 'training/research_d1_inputs.py',
+                     'training/research_d1_recipe.py', 'training/research_d1_models.py',
+                     'tests/test_research_d1.py', 'tests/fixtures/d1-fulltext/fsmn-official-tokens.txt',
+                     'tests/fixtures/d1-fulltext/research_weak_sampling_v1.py',
+                     'tests/fixtures/d1-fulltext/README.md', 'docs/research-d1-fulltext-v2.md'):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
 

@@ -107,6 +107,10 @@ the separate model-smoke validation status.
 - [`run_zipformer_system.py`](run_zipformer_system.py) — Execute a pinned native Zipformer system on verified shared PCM, preserving per-clip claims and results.
 - [`research_job_lock.py`](research_job_lock.py) — Share one explicit local heavy-model slot across direct and supervised workers.
 - [Native Zipformer system guide](../docs/ZIPFORMER_SYSTEM.md) — Fixed profile, actual D0 execution and limits on interpreting native events.
+- [`setup_tts_runtime.py`](setup_tts_runtime.py) — Install and verify the isolated TTS environment and fixed Base model assets.
+- [`active_tts_smoke.py`](active_tts_smoke.py) — Freeze eight source-bound D1 cells and retain raw generation output before technical checks.
+- [`active_tts_pair.py`](active_tts_pair.py) — Run the separate predeclared reference-mode comparison with source and rights revalidation.
+- [`research_no_network.py`](research_no_network.py) — Disable inference telemetry and restrict a new Linux worker before importing native model libraries.
 
 [`research_python_entry.py`](research_python_entry.py) runs preserved research
 drivers after shared Python startup. It removes only the running interpreter's
@@ -115,7 +119,7 @@ additional loader paths remain errors. The preserved driver guards stay intact.
 
 [`research_queue.py`](research_queue.py) freezes explicitly budgeted local jobs,
 advances on verified prerequisite outputs and preserves claims, logs and terminal
-receipts. [`research_job_lock.py`](research_job_lock.py) shares one configurable
+receipts. The shared `research_job_lock.py` helper uses one configurable
 heavy-model flock with direct or supervised training/evaluation entrypoints.
 The [local queue guide](../docs/LOCAL_RESEARCH_QUEUE.md) explains completion,
 unknown outcomes, actual elapsed-time accounting and the inherited process-group

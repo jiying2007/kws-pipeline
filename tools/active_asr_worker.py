@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import asdict
-import fcntl
 import hashlib
 import importlib.metadata
 import json
@@ -23,6 +22,7 @@ import time
 from active_asr_batch import (BOUNDARY, CONFIGS, MODELS, ROOT, digest, existing_result,
                               model_identity, read_json, utc, verify_inputs, write_once)
 from setup_asr_runtime import MODEL_LOCK, WHISPER_SHA, WHISPER_SOURCE, canonical, save, sha_file
+from research_job_lock import heavy_model_slot
 import research_runtime
 
 
@@ -240,8 +240,10 @@ def main():
         record["status"] = "complete" if not unresolved else "incomplete"
         save(record_path, record)
         return 0 if not unresolved else 1
-    with (runtime / "heavy-model.lock").open("a") as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    with heavy_model_slot(runtime / "heavy-model.lock") as lease:
+        record["heavy_lock"] = {"path": str(lease.path), "inherited": lease.inherited,
+                                "supervised": lease.supervised, "process_id": os.getpid(),
+                                "process_group": os.getpgrp()}
         record["assets"] = verify_model_assets(args.model, runtime)
         env_keys = ("HF_HOME", "TORCH_HOME", "XDG_CACHE_HOME", "NUMBA_CACHE_DIR", "MPLCONFIGDIR")
         for key in env_keys:

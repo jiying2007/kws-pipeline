@@ -30,6 +30,9 @@ jobs:
         run: |
           python3 -B tests/test_research_runtime.py
           python3 -B tests/test_active_asr_batch.py
+          python3 -I -S -B tests/test_active_asr_supervision.py
+          python3 -I -S -B -O tests/test_active_asr_supervision.py
+          python3 -I -S -B -OO tests/test_active_asr_supervision.py
           python3 -B tests/test_research_job_lock.py
           python3 -B tests/test_zipformer_system.py
           python3 -B tests/test_active_tts_runtime.py
@@ -38,6 +41,9 @@ jobs:
           python3 -B tests/test_research_no_network.py
           python3 -B tests/test_research_weak_training.py
           python3 -B tests/test_research_fsmn_weak.py
+          python3 -I -S -B tests/test_research_d1.py
+          python3 -I -S -B -O tests/test_research_d1.py
+          python3 -I -S -B -OO tests/test_research_d1.py
           python3 -B tools/research_runtime.py check-locks
           python3 -B tools/research_runtime.py training-lock --check training/requirements.lock
       - name: Install tracked-worktree integrity guard

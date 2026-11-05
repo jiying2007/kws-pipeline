@@ -6,10 +6,17 @@ patch and the `core`, `tts`, and `asr` dependency roles are declared once in
 The current target is **3.12.16**. Selecting an interpreter and checking package
 metadata do not establish model quality or successful end-to-end inference.
 The combined ASR role completed 192 native recognitions over 64 existing clips
-on this patch, with all 727 input/result files re-read and hash checked. The
-manifest records that scoped evidence separately; TTS model validation on this
-patch is still pending, so the overall model-smoke status remains pending.
-See the [active ASR guide](ACTIVE_ASR_BATCH.md) for conditions and limits.
+on this patch, with all 727 input/result files re-read and hash checked, followed
+by 24 native reference-audio recognitions. Core executed real D0 RNN64/C1/FSMN
+consumption and native Zipformer inference. TTS completed eight source-bound
+smoke generations and four separately predeclared mode-comparison generations
+with native networking disabled. All 12 raw returns were verified; one paired
+output retained its low-RMS technical failure without a retry or gain repair.
+The manifest marks actual model execution as passed and records each role's
+scope separately. These runs do not establish independent content, voice or KWS
+quality. See the [active ASR guide](ACTIVE_ASR_BATCH.md),
+[D0 execution evidence](../research/active-d0-20261105/execution-summary.json) and
+[TTS execution evidence](../research/active-tts-20261105/execution-summary.json).
 
 The device runtime remains pure C. It has no Python runtime dependency.
 Python is a host build, data, training and evaluation tool.

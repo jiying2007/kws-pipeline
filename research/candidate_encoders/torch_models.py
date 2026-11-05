@@ -53,7 +53,10 @@ def build_encoder(spec: EncoderSpec, *, rnn_model=None):
     Model construction/execution is not part of metadata-only CI.
     """
     if type(spec) is not EncoderSpec:
-        raise TypeError("spec must be an EncoderSpec")
+        # The historical v1 path does not import or depend on the v2 head.
+        from .fulltext_contract import FullTextEncoderSpec
+        if type(spec) is not FullTextEncoderSpec:
+            raise TypeError("spec must be an exact EncoderSpec v1 or FullTextEncoderSpec v2")
     if spec.architecture == "rnn64_control" and rnn_model is None:
         raise ValueError("C0 requires an explicit caller-owned reference model")
     if spec.architecture == "causal_ds_tcn_ctc" and rnn_model is not None:

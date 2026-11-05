@@ -20,6 +20,7 @@ import time
 import zipfile
 
 import research_runtime
+from research_job_lock import heavy_model_slot
 from setup_asr_runtime import ROOT, canonical, safe_relative, save, sha_file
 
 MODELS = ("qwen06", "sensevoice", "whisper")
@@ -209,6 +210,33 @@ def existing_result(output, model, clip, identity):
     return "pending", expected
 
 
+def run_worker(command, environment, log, runtime, remaining):
+    """Keep a supervised decoder in its queue's group and inherited model slot."""
+    with heavy_model_slot(Path(runtime) / "heavy-model.lock", environment=environment) as lease:
+        process = subprocess.Popen(command, env=lease.child_environment(environment),
+                                   stdout=log, stderr=subprocess.STDOUT,
+                                   pass_fds=lease.pass_fds, start_new_session=not lease.supervised)
+        try:
+            return process.wait(timeout=remaining)
+        except subprocess.TimeoutExpired:
+            # The queue owns the supervised process group. Do not signal the
+            # batch/queue itself here; its final cleanup removes descendants.
+            import signal
+            if lease.supervised:
+                process.terminate()
+            else:
+                os.killpg(process.pid, signal.SIGTERM)
+            try:
+                process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                if lease.supervised:
+                    process.kill()
+                else:
+                    os.killpg(process.pid, signal.SIGKILL)
+                process.wait()
+            return 124
+
+
 def run(args):
     research_runtime.check_interpreter(research_runtime.load_manifest())
     manifest = verify_inputs(args.inputs)
@@ -261,18 +289,7 @@ def run(args):
                        "--attempt", args.attempt, "--threads", str(args.threads), "--ids", ",".join(ids)]
             with (attempt_dir / (model + ".log")).open("x") as log:
                 started = time.monotonic()
-                process = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
-                try:
-                    code = process.wait(timeout=remaining)
-                except subprocess.TimeoutExpired:
-                    import signal
-                    os.killpg(process.pid, signal.SIGTERM)
-                    try:
-                        process.wait(timeout=10)
-                    except subprocess.TimeoutExpired:
-                        os.killpg(process.pid, signal.SIGKILL)
-                        process.wait()
-                    code = 124
+                code = run_worker(command, env, log, runtime, remaining)
                 summary["models"][model] = {"exit_code": code, "elapsed_seconds": round(time.monotonic() - started, 3)}
             save(attempt_dir / "summary.json", summary)
             print(json.dumps({"model": model, **summary["models"][model]}), flush=True)

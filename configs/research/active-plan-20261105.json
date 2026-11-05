@@ -82,7 +82,9 @@
         "clips_per_speaker": 32,
         "train_speakers": 6,
         "development_speakers": 2,
-        "scope": "engineering learning curve"
+        "scope": "engineering learning curve",
+        "execution_status": "first_8_generated_content_asr_pending_remaining_248_not_generated",
+        "execution_evidence": "research/active-tts-20261105/execution-summary.json"
       },
       {
         "stage": "D2",
@@ -142,6 +144,8 @@
     "external_codex_shared_quota_allowed": false,
     "increase_concurrency_when": "measured peak memory and available compute support the sum of active workers",
     "controller_deployment_status": "local_queue_implemented_remote_watchdog_pending",
-    "past_d0_jobs_reclassified_as_queue_jobs": false
+    "past_d0_jobs_reclassified_as_queue_jobs": false,
+    "local_queue_model_jobs_completed": 2,
+    "first_tts_attempt_actual_seconds": null
   }
 }

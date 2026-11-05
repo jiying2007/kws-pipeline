@@ -6,10 +6,10 @@
     "version": "3.12.16"
   },
   "validation": {
-    "model_smoke": "pending",
+    "model_smoke": "passed",
     "historical_prepare_python": "3.12.14",
     "historical_prepare_run": "https://github.com/jiying2007/kws-pipeline/actions/runs/41850542316",
-    "note": "Historical preparation retains Python 3.12.14 evidence. On Python 3.12.16 the ASR role completed 192 D0 calls and 24 reference calls; core completed actual D0 RNN64/C1/FSMN consumption and native Zipformer inference. TTS model smoke remains pending until a preserved completed run.",
+    "note": "Historical preparation retains Python 3.12.14 evidence. New Python 3.12.16 execution is recorded separately: 192 D0 ASR calls plus 24 reference calls; actual RNN64/C1/FSMN consumption and native Zipformer inference; eight TTS smoke calls and four separately predeclared paired calls. These validate actual execution, not independent content/voice/KWS quality.",
     "asr_model_smoke": {
       "status": "passed",
       "python": "3.12.16",
@@ -31,6 +31,20 @@
       "fsmn_audit_summary_sha256": "8a6923e52961fb9a4a2bab5df0d7798a918ddf7aab1b3eeb3544fe50e810b6bc",
       "zipformer_identity_sha256": "4855e58cc44c189c48a8dc51a20a6add1aee1c0858584bf21435065465811782",
       "scope": "Actual synthetic train-only execution; no independent model-quality or target-hardware claim"
+    },
+    "tts_model_smoke": {
+      "status": "passed",
+      "python": "3.12.16",
+      "evidence": "research/active-tts-20261105/execution-summary.json",
+      "readback_summary_sha256": "42de161437275394a45df2831b699592c36be167f3a4ae2e7dee3e15612b69b7",
+      "smoke_generation_calls": 8,
+      "smoke_technical_pass": 8,
+      "separate_paired_calls": 4,
+      "separate_paired_technical_pass": 3,
+      "separate_paired_failures_retained": 1,
+      "generated_audio_asr_pending": true,
+      "initial_attempt_actual_seconds": null,
+      "scope": "Verified raw waveform return and create-only source/receipt identity with native network disabled; not independent quality evidence"
     }
   },
   "indexes": {

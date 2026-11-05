@@ -75,7 +75,33 @@ and one x-vector call with the same target phrase, seed, model, generation
 options and audio. The seed is reset immediately before generation, after
 reference prompt construction. Mode is part of each independent case identity.
 
-The pair uses a new queue, keeps all raw waveforms, and does not modify the D1
-plan or use generation quality to select references, parameters or retries.
+The pair uses a separate recipe and job, keeps all raw waveforms, and does not
+modify the D1 plan or use generation quality to select references, parameters
+or retries. It may follow the smoke job as an explicit dependency in the same
+newly frozen queue.
 Generated speech still requires separate audio-only ASR observations; four
 synthetic calls cannot establish a general advantage for either mode.
+
+## Preserved execution on 2026-11-05
+
+The [aggregate execution receipt](../research/active-tts-20261105/execution-summary.json)
+binds the separately preserved private raw evidence and independent readback.
+The first attempt was interrupted after a dependency telemetry request was
+rejected. It has no generation-call receipt or returned waveform; its actual
+elapsed time remains unknown. Its original claim is retained and a conservative
+600 seconds is reserved in the cross-attempt budget.
+
+The second attempt enforced the offline environment and native network guard
+before model imports. Eight smoke calls returned eight raw waveforms and passed
+the existing technical gate. The separate four-call pair returned all four raw
+waveforms; three passed the technical gate. One ICL waveform had RMS
+0.00604118875 below the predeclared 0.008 threshold. Its 1.36-second original
+FLOAT audio remains retained, without gain adjustment, replacement or retry.
+Amplitude alone does not determine whether a wake phrase was spoken.
+
+The two completed queue jobs consumed 216.447998461 measured seconds, with a
+peak RSS of 5,873,564 KiB. This known duration plus the old 600-second reservation
+is a conservative allocation account, not a recovered measurement of the old
+attempt. The declared total includes 60 seconds for cleanup within 1,800 seconds.
+Generated-content ASR remains separate. Only eight of the 256 D1 cells were
+generated; the four paired outputs do not advance that roster.
