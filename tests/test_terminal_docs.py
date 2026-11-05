@@ -172,7 +172,54 @@ def check_target_bundle_docs() -> None:
     assert (ROOT / "tools/score_real_human_qualification.py").is_file()
 
 
+def check_current_research_guidance() -> None:
+    customization_path = ROOT / "docs/CUSTOMIZATION.md"
+    customization = customization_path.read_text(encoding="utf-8")
+    require_all(customization, customization_path, (
+        "## Frozen synthetic research comparator",
+        "models/registry/model-749187ec1d66/",
+        "no GitHub Release downloads",
+        "independent real-speech qualification",
+    ))
+    for stale in (
+        "## Current shipping SKU",
+        "Nightly is not another training/qualification path. It must download",
+        "Production should provide explicit pinyin",
+    ):
+        assert stale not in customization, "stale current research guidance: " + stale
+
+    index_path = ROOT / "docs/README.md"
+    index = index_path.read_text(encoding="utf-8")
+    assert "are being migrated under [#704]" not in index
+    require_all(index, index_path, (
+        "last live training Release-read migration",
+        "pins the research archive locally by SHA256",
+    ))
+
+    training_path = ROOT / "docs/PRODUCT_MODEL_TRAINING.md"
+    training = training_path.read_text(encoding="utf-8")
+    require_all(training, training_path, (
+        "## Current research materialization (2026-11-05)",
+        "do **not** call `gh release download`",
+        "retired workflow",
+    ))
+
+    landing_path = ROOT / "docs/KWS_LANDING_STATUS.md"
+    landing = landing_path.read_text(encoding="utf-8")
+    require_all(landing, landing_path, (
+        "Historical engineering checkpoint",
+        "**not** current research gates",
+    ))
+    assert "Shipping/recalibration authority stays" not in landing
+
+    archive_path = ROOT / "docs/KWS_PRODUCTION_CLOSURE_2026-10-29.md"
+    archive_header = archive_path.read_text(encoding="utf-8").split("\n## ", 1)[0]
+    assert "历史快照，非当前研究执行说明" in archive_header
+    assert "RESEARCH_ONLY_EXECUTION.md" in archive_header
+
+
 def main() -> int:
+    check_current_research_guidance()
     check_target_bundle_docs()
     check_navigation_indexes()
     check_research_comparator_status_contract()

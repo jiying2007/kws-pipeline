@@ -39,7 +39,7 @@
 
 ## Research contracts and historical product references
 
-Current research authority is [`docs/RESEARCH_ONLY_EXECUTION.md`](RESEARCH_ONLY_EXECUTION.md) with the pinned `configs/research-baseline.xiaowo.json` comparator. The immutable historical model `model-749187ec1d66` was evaluated on synthetic data; it is not independent real-speech or SSC305 evidence. Historical `configs/shipping.xiaowo.json` and commercial qualification records are no longer research prerequisites and are being migrated under [#704](https://github.com/jiying2007/kws-pipeline/issues/704).
+Current research authority is [`docs/RESEARCH_ONLY_EXECUTION.md`](RESEARCH_ONLY_EXECUTION.md) with the pinned `configs/research-baseline.xiaowo.json` comparator. The immutable historical model `model-749187ec1d66` was evaluated on synthetic data; it is not independent real-speech or SSC305 evidence. Historical `configs/shipping.xiaowo.json` and commercial qualification records are no longer research prerequisites: the publication/namespace migration in [#704](https://github.com/jiying2007/kws-pipeline/issues/704) and the last live training Release-read migration in [#733](https://github.com/jiying2007/kws-pipeline/issues/733) are both closed. [PR #737](https://github.com/jiying2007/kws-pipeline/pull/737) pins the research archive locally by SHA256; these closures do **not** certify independent FAR/FRR or physical SSC305 performance.
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — runtime/offline architecture and hard bounds
 - [`RUNTIME_CONFIG.md`](RUNTIME_CONFIG.md) — parameter contract, L0-L3 layers, ranges, tuning and change checklist
@@ -58,7 +58,7 @@ Current research authority is [`docs/RESEARCH_ONLY_EXECUTION.md`](RESEARCH_ONLY_
 - [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) — traceable/rebuildable/bit-reproducible claims
 - [`TESTING_STRATEGY.md`](TESTING_STRATEGY.md) — layered regression and product evidence
 - [`KWS_LANDING_EXECUTION.md`](KWS_LANDING_EXECUTION.md) — historical staged training diagnosis, algorithm comparison and product-evidence closure
-- [`PRODUCT_MODEL_TRAINING.md`](PRODUCT_MODEL_TRAINING.md) — canonical governed model-training/preflight handoff, provenance and promotion boundaries
+- [`PRODUCT_MODEL_TRAINING.md`](PRODUCT_MODEL_TRAINING.md) — historical training terminology and source/label evidence constraints; use the research execution guide for current instructions
 - [`DATASET_ITERATION.md`](DATASET_ITERATION.md) — dataset-driven iteration for the registered deployable model without changing release authority
 - [`KWS_MULTILINGUAL_MODEL_TOURNAMENT.md`](KWS_MULTILINGUAL_MODEL_TOURNAMENT.md) — source-bound zh/en fixed-development, one-variable multiobjective model selection; no automatic release
 - [`DATA_EFFECTIVENESS_REDESIGN_2026-11-02.md`](DATA_EFFECTIVENESS_REDESIGN_2026-11-02.md) — goal-driven source/voice-clone/ASR/negative-mining redesign, with strict independent acceptance and no current training authority
@@ -86,7 +86,7 @@ Research sources and historical product-reference contracts (not research-admiss
 - [`configs/research/physical-target-profile.schema.json`](../configs/research/physical-target-profile.schema.json) — strict physical-target research input identity (not proof of measurement)
 - [`configs/research/physical-target-resource-budget.schema.json`](../configs/research/physical-target-resource-budget.schema.json) — bounded CPU/RSS/stack/temperature/power research limits
 - [`governance/require_current_main.sh`](../governance/require_current_main.sh) — shared manual-promotion gate requiring exact current protected main and live terminal ruleset
-- [`.github/workflows/far-nightly.yml`](../.github/workflows/far-nightly.yml) — immutable released-model nightly FAR regression with no training/qualification
+- [`.github/workflows/far-nightly.yml`](../.github/workflows/far-nightly.yml) — Git-registered frozen-model research FAR regression with no training/qualification
 - Historical `deployment-release.yml` — removed from active GitHub Actions; inspect the original Git commit for publication history. It is not an experiment or data-admission entrypoint.
 - Historical `real-human-qualification.yml` and `target-dut-qualification.yml` — retired manual GitHub Release publishers; source and previous receipts remain in Git/Actions history. Standalone restricted real-human/target scoring tools retain original numeric/privacy guardrails. New experiments require independent data and physical-runner authorization.
 - Historical `target-cohort-promotion.yml` — retired publication workflow; current research cohort scoring is `tools/score_target_cohort.py` and must use independently verified target measurements.
@@ -95,7 +95,7 @@ Research sources and historical product-reference contracts (not research-admiss
 ## Repository layout
 
 - [`src/`](../src/), [`include/`](../include/), [`cmake/`](../cmake/) and [`CMakeLists.txt`](../CMakeLists.txt): device library and SDK build
-- [`configs/`](../configs/), [`keywords/`](../keywords/), [`models/`](../models/): current machine-readable product inputs and model registry
+- [`configs/`](../configs/), [`keywords/`](../keywords/), [`models/`](../models/): current machine-readable research inputs and frozen model registry
 - [`training/`](../training/), [`eval/`](../eval/) and [`tools/`](../tools/README.md): offline preparation, evaluation and engineering utilities
 - The retired `commercial/` directory is preserved in Git history only; frozen policy bytes live in [`configs/research/history/`](../configs/research/history/), and active research measurements use explicit source/rights and numerical contracts. [`governance/`](../governance/) tracks source-control rules
 - [`tests/`](../tests/), [`fuzz/`](../fuzz/), [`bench/`](../bench/): software verification
@@ -104,8 +104,8 @@ Research sources and historical product-reference contracts (not research-admiss
 
 The [workflow directory](../.github/workflows/) serves different purposes: ordinary
 CI and model-free contract tests; retained-evidence diagnostics with explicit
-admission; frozen-model regression; and separately governed training, release or
-physical qualification. A dispatch entry or historical approval is not permission
+admission; frozen-model regression; and source-governed training or independent
+physical measurement, without a live commercial publication workflow. A dispatch entry or historical approval is not permission
 to run it. Workflow names and test coverage are retained during navigation cleanup.
 The newly retained historical acquisition definitions live under
 [`research/consolidation/`](../research/consolidation/SOURCE_INTEGRATION.md), outside

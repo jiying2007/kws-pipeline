@@ -2,11 +2,11 @@
 
 > **Current authority: technical research only.** The frozen synthetic model and keyword source is `configs/research/two-keyword-synthetic-comparator.json`; it is not real-human FAR/FRR, a physical SSC305 measurement or commercial publication authority. Old product/Release terminology elsewhere on this page is historical context, not a workflow to execute.
 
-The runtime supports three customization levels, but product claims must distinguish **framework capability** from the vocabulary/model that has actually passed release qualification.
+The runtime supports three customization levels. Technical capability must be distinguished from what the frozen synthetic research comparator actually demonstrates; independent real-speech or physical-board results are not implied.
 
-## Current shipping SKU
+## Frozen synthetic research comparator
 
-The current synthetic-qualified product model is `model-749187ec1d66`. It uses the dedicated five-token vocabulary:
+The frozen historical synthetic comparator is `model-749187ec1d66`. It uses the dedicated five-token vocabulary:
 
 ```text
 <blk> 0
@@ -16,7 +16,7 @@ xiao3 3
 wo1 4
 ```
 
-and exactly two shipping wake words:
+and exactly two full research wake phrases:
 
 ```text
 id  text      threshold  explicit-pinyin
@@ -26,11 +26,11 @@ id  text      threshold  explicit-pinyin
 
 The two-character `小窝` is a partial/negative phrase, not one of the two full research wake phrases. `configs/research/two-keyword-synthetic-comparator.json` is the frozen synthetic comparator.
 
-The deployed acoustic model is `KWSP` ABI v2 and the field-updatable keyword pack is `KWKP` ABI v3. Both carry the same vocabulary size/fingerprint. Model ABI v2 also binds the frontend kind (`logmel` or `pcen-lite`). Warm starts, export provenance and release qualification reject vocabulary/frontend mismatches.
+The frozen comparator's acoustic model uses `KWSP` ABI v2 and its keyword pack uses `KWKP` ABI v3. Both carry the same vocabulary size/fingerprint. Model ABI v2 also binds the frontend kind (`logmel` or `pcen-lite`). Warm starts, research exports and source-identity checks reject vocabulary/frontend mismatches.
 
 ## L0: keyword-pack-only update
 
-L0 means the acoustic model weights remain fixed. It is valid only when **every acoustic token required by the requested phrase already exists in the loaded model vocabulary** and the resulting product tuple is revalidated.
+L0 means the acoustic model weights remain fixed. It is valid only when **every acoustic token required by the requested phrase already exists in the loaded model vocabulary** and the resulting research model/keyword source identity is revalidated.
 
 The keyword TSV accepts:
 
@@ -38,9 +38,9 @@ The keyword TSV accepts:
 id  text  threshold  explicit-pinyin  min_trailing_blanks  priority  prefix_policy  grace_frames
 ```
 
-Production should provide explicit pinyin in column 4. Columns 5–8 are optional bounded runtime-policy metadata.
+Research keyword definitions should provide explicit pinyin in column 4. Columns 5–8 are optional bounded runtime-policy metadata.
 
-For the current five-token shipping model, only the exact two rows above have passed formal synthetic qualification. A phrase requiring any other Mandarin token is **not** an L0 update for this release: it requires an intentionally broader/new acoustic model or an L2-style customization followed by fresh qualification.
+For the frozen five-token comparator, only the two rows above have historical synthetic evaluation evidence, not independent real-speech qualification. A phrase requiring any other Mandarin token is **not** a valid L0 extension of this reference: it requires an intentionally broader/new acoustic model and new independent research evaluation.
 
 Compile a pack with:
 
@@ -84,7 +84,7 @@ The accepted model's qualification seed `271838` is already exposed and frozen. 
 
 ## L2: acoustic customization / broader vocabulary
 
-If the product requires wake phrases outside the current model vocabulary, first define the intended vocabulary/model identity, then audit split leakage and train an explicit new candidate. Example:
+If a research candidate requires wake phrases outside the frozen model vocabulary, first define the intended vocabulary/model identity, then audit split leakage and train an explicit new candidate. Example:
 
 ```bash
 python3 training/audit_dataset.py \
@@ -150,7 +150,7 @@ The synthetic 0.3–5 m distances are simulation parameters, not a claim that re
 
 ## Nightly regression rule
 
-Nightly is not another training/qualification path. It must download the exact immutable promoted model release and evaluate it against an independent regression corpus. It may not:
+Nightly is not another training/qualification path. It loads the exact hash-pinned model and keyword pack from `models/registry/model-749187ec1d66/` and the `configs/research-baseline.xiaowo.json` comparator, with no GitHub Release downloads, and evaluates the fixed negative regression corpus. It may not:
 
 - call `train_ctc.py` or `iterate_domain.py`;
 - create or rotate a formal qualification cohort;
@@ -162,10 +162,10 @@ Nightly is not another training/qualification path. It must download the exact i
 
 ## Final AFE customization
 
-The shipping AFE is part of the release-qualification tuple. The renderer's `command` backend binds the actual executable, ordered config bundle, command template, I/O hashes, result sidecar and latency. Any change to the shipping BF/AEC/RES/NS/AGC binary/config creates a new product tuple and requires requalification even when `.kwm` and `.kwk` are unchanged.
+For final-AFE research comparisons, the renderer's `command` backend binds the actual executable, ordered config bundle, command template, I/O hashes, result sidecar and latency. Any change to BF/AEC/RES/NS/AGC binaries or configuration creates a different research evidence identity and requires a new independent measurement, even when `.kwm` and `.kwk` remain unchanged.
 
-The current synthetic-qualified model used proxy AFE evidence. The final real `audio-pipeline` identity will be bound in the deferred real-human/device qualification phase; until then the product contract remains `shipping_approved=false`.
+The frozen synthetic comparator used proxy AFE evidence. Real final-AFE and SSC305 measurements remain separately unmeasured research inputs. The retained historical `shipping_approved=false` flag does not activate a publication workflow.
 
 ## Research source and fresh-measurement boundary
 
-Any change to `.kwm`, `.kwk`, token vocabulary, runtime behavior/config, or shipping AFE binary/config creates a new release-qualification tuple. Model provenance, runtime release identity, keyword-pack hash, AFE identity and final evidence must all refer to the same product deployment. See `docs/RELEASE_QUALIFICATION.md`.
+Any change to `.kwm`, `.kwk`, token vocabulary, runtime behavior/config, or final-AFE binary/config creates a new research comparison identity. Model provenance, runtime source identity, keyword-pack hash, AFE identity and measured evidence must refer to the same exact candidate. `docs/RELEASE_QUALIFICATION.md` is an archival product-era source record, not an active approval procedure.

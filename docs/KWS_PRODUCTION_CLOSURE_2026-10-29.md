@@ -1,5 +1,7 @@
 # 生产模型闭环推进记录：2026-10-29
 
+> **历史快照，非当前研究执行说明。** 本文中的“当前”、`commercial/`、`shipping`、Release 和产品资格流程，仅记录 2026-10-29 当时状态与证据。上述商用执行入口后来已从活动主线退役；当前科研入口见 [RESEARCH_ONLY_EXECUTION.md](RESEARCH_ONLY_EXECUTION.md)，研究对照使用 `configs/research-baseline.xiaowo.json`。保留以下原始历史叙述用于溯源，不授权新的发布、真人数据采集或模型训练准入。
+
 本页记录审查后的实现和交付边界。源码基线为 `d09a6c55241d7f903e3c9e6e766d878454bbd321`；PR 和 Actions 链接提供后续状态。机器放行权威仍是 `configs/shipping.xiaowo.json` 与 `commercial/*.policy.json`，本页不替代这些门禁。
 
 ## 当前结论
