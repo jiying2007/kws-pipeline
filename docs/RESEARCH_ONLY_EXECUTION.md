@@ -117,6 +117,25 @@ model/data experiments. The old tagged commercial bootstrap helper is retired
 from the active tree; its Git source remains historical and may be inspected,
 but does not determine current research admission or model provenance.
 
+## Pinned local research training base (migration in progress)
+
+The historical training-base source may be supplied explicitly as
+`KWS_RESEARCH_BASE_ARCHIVE=/absolute/path/to/verified-archive.tar.gz`
+when running `training/materialize_governed_product_base.sh`. Before any
+generated output is deleted, the script verifies the exact frozen archive
+SHA256 from `configs/training/product-speech-like-base-v1.json`, rejects
+missing or mismatched files, and refuses a source under generated output.
+The local path performs **no GitHub Release lookup or download**. It still
+runs the existing provider, bundle, config and training-entry checks.
+
+This option is not evidence that the archive is currently accessible in
+CI or that its dataset rights have been re-reviewed. Current Actions do
+not set `KWS_RESEARCH_BASE_ARCHIVE`; their old fallback remains a
+**known live Release dependency** tracked by [#733](https://github.com/jiying2007/kws-pipeline/issues/733).
+Do not claim full research-only terminal completion until a real
+rights-reviewed source is available to every live training workflow,
+the fallback is removed, and all exact-head and fresh-main gates pass.
+
 ## Retired GitHub Release-backed base recovery (2026-11-04)
 
 The former `live-base-binding` job in `product-training-data-contract.yml`

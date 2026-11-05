@@ -77,22 +77,50 @@ release_id="$(jq -r '.release_id' "$contract")"
 archive="$(jq -r '.release_archive' "$contract")"
 archive_sha="$(jq -r '.release_archive_sha256' "$contract")"
 
+# Issue #733: opt-in byte-identical research archive input. No network or
+# GitHub Release lookup is performed on this path. This does not establish
+# dataset rights or create new independent corpus evidence.
+research_archive="${KWS_RESEARCH_BASE_ARCHIVE:-}"
+if [ -n "$research_archive" ]; then
+  test -f "$research_archive" || {
+    echo "research base archive is missing: $research_archive" >&2
+    exit 2
+  }
+  research_archive="$(realpath -- "$research_archive")"
+  for generated in "$release_root" "$base_root" "$provider_root" "$provider_cache"; do
+    generated="$(realpath -m -- "$generated")"
+    case "$research_archive" in
+      "$generated"/*) echo "research base archive must be outside generated output: $research_archive" >&2; exit 2 ;;
+    esac
+  done
+  printf '%s  %s\n' "$archive_sha" "$research_archive" | sha256sum -c --status || {
+    echo "research base archive SHA256 differs from frozen source contract" >&2
+    exit 2
+  }
+fi
+
 rm -rf "$release_root" "$base_root" "$provider_root" "$provider_cache"
 mkdir -p "$release_root" "$base_root"
 
-retry_to_file "$release_root/release.json"   gh api "repos/$GITHUB_REPOSITORY/releases/tags/$release_tag"
-jq -e --arg target "$release_target" --argjson release_id "$release_id" '
-  .id == $release_id
-  and .draft == false
-  and .prerelease == false
-  and .immutable == true
-  and .target_commitish == $target
-' "$release_root/release.json" >/dev/null
-jq -e --arg name "$archive" --arg digest "sha256:$archive_sha" '
-  [.assets[] | select(.name == $name and .digest == $digest)] | length == 1
-' "$release_root/release.json" >/dev/null
-
-retry_release_download
+if [ -n "$research_archive" ]; then
+  cp -- "$research_archive" "$release_root/$archive"
+  printf '%s  %s\n' "$archive_sha" "$archive" > "$release_root/SPEECH_LIKE_BASE_SHA256SUMS"
+else
+  # Historical fallback remains live until #733 provides verified research
+  # asset storage to every active training workflow. This is NOT terminal.
+  retry_to_file "$release_root/release.json"   gh api "repos/$GITHUB_REPOSITORY/releases/tags/$release_tag"
+  jq -e --arg target "$release_target" --argjson release_id "$release_id" '
+    .id == $release_id
+    and .draft == false
+    and .prerelease == false
+    and .immutable == true
+    and .target_commitish == $target
+  ' "$release_root/release.json" >/dev/null
+  jq -e --arg name "$archive" --arg digest "sha256:$archive_sha" '
+    [.assets[] | select(.name == $name and .digest == $digest)] | length == 1
+  ' "$release_root/release.json" >/dev/null
+  retry_release_download
+fi
 
 (
   cd "$release_root"
