@@ -5,15 +5,15 @@ this organization does not create wrappers, relocate scripts, or activate a run.
 Some Python modules are shared libraries rather than standalone commands.
 
 - [Build and SDK usage](../README.md#build-and-install)
-- [Documentation and product contracts](../docs/README.md)
+- [Research documentation and frozen historical contracts](../docs/README.md)
 - [Isolated research modules and their tests](../research/README.md)
 - [Contributor checks](../CONTRIBUTING.md#required-local-checks)
 
 The real-time library remains under `src/` and `include/`. Python dependencies
-and corpus/model processing belong to offline tools. Scripts for measurement,
-training, private data or promotion retain their own input and permission gates;
-an entry in this index grants no new execution authority. Product-evidence tools
-make collected measurements auditable and do not substitute for those measurements.
+and corpus/model processing belong to offline tools. Scripts for measurement, training and private data retain their own source, rights
+and input gates; an index entry grants no new execution authority. Historical
+qualification-format tools below are for offline evidence replay and numerical
+boundary testing, not product approval or publication.
 
 ## Runtime command-line programs and C helpers
 
@@ -145,21 +145,21 @@ additional loader paths remain errors. The preserved driver guards stay intact.
 - [`report_offline_effect.py`](report_offline_effect.py): compare saved events by evidence tier under frozen identities; no inference, production qualification or shipping approval.
 - [`summarize_frozen_far_context_path.py`](summarize_frozen_far_context_path.py)
 
-## Product evidence and qualification
+## Research measurements and historical qualification-format replay
 
 - [`collect_runtime_soak.py`](collect_runtime_soak.py)
 - [`collect_target_evidence.py`](collect_target_evidence.py)
 - [`final_afe_identity.py`](final_afe_identity.py)
 - [`qualification_common.py`](qualification_common.py)
-- [`qualification_gate.py`](qualification_gate.py) (requires original `--references`, `--detections`, and `--board-audio` for independent replay)
+- [`qualification_gate.py`](qualification_gate.py) — Historical-format offline replay only; its retained `shipping_approved` assertion is not a research acceptance gate. Exact original `--references`, `--detections` and `--board-audio` remain required to reproduce an old result.
 - [`qualification_manifest.py`](qualification_manifest.py)
 - [`qualification_metrics.py`](qualification_metrics.py)
 - [`run_dataset_iteration.py`](run_dataset_iteration.py)
 - [`run_final_afe_corpus.py`](run_final_afe_corpus.py)
 - [`runtime_soak_contract.py`](runtime_soak_contract.py) — Versioned single-core CPU evidence validation.
-- [`score_real_human_qualification.py`](score_real_human_qualification.py)
-- [`score_target_cohort.py`](score_target_cohort.py)
-- [`score_target_dut_qualification.py`](score_target_dut_qualification.py)
+- [`score_real_human_qualification.py`](score_real_human_qualification.py) — Retained strict old-format numeric scorer for independent source/AFE research; no current commercial publication.
+- [`score_target_cohort.py`](score_target_cohort.py) — Retained physical multi-DUT evidence math, not Shipping promotion.
+- [`score_target_dut_qualification.py`](score_target_dut_qualification.py) — Historical deployment-format replay; no current active Actions publisher.
 - [`seal_real_human_corpus.py`](seal_real_human_corpus.py)
 - [`validate_real_human_corpus.py`](validate_real_human_corpus.py)
 - [`validate_real_human_development_corpus.py`](validate_real_human_development_corpus.py)
@@ -168,12 +168,12 @@ additional loader paths remain errors. The preserved driver guards stay intact.
 
 - [`export_artifacts.py`](export_artifacts.py) — Reject input/output aliases and stage model/provenance writes before per-file replacement.
 
-- [`materialize_model_registry.py`](materialize_model_registry.py)
+- [`materialize_model_registry.py`](materialize_model_registry.py) — Inert fail-closed tombstone retained solely because a frozen historical CI workflow still syntax-compiles this path. No GitHub Release, Shipping or model import behavior; original source remains in Git history.
 - [`model_family_resource_estimate.py`](model_family_resource_estimate.py)
 - [`model_provenance.py`](model_provenance.py)
 - [`verify_model_promotion_source.py`](verify_model_promotion_source.py) — Authenticate the governed training producer and safely verify/extract its exact artifact carrier.
 - [`verify_model_promotion_bundle.py`](verify_model_promotion_bundle.py)
-- [`verify_model_registry.py`](verify_model_registry.py)
+- [`verify_model_registry.py`](verify_model_registry.py) — Current Git-registered immutable research comparator verifier; no Release import.
 - [`verify_research_model_assets.py`](verify_research_model_assets.py)
 
 ## Repository verification and maintenance

@@ -217,6 +217,27 @@ def check_current_research_guidance() -> None:
     assert "历史快照，非当前研究执行说明" in archive_header
     assert "RESEARCH_ONLY_EXECUTION.md" in archive_header
 
+    contributing_path = ROOT / "CONTRIBUTING.md"
+    contributing = contributing_path.read_text(encoding="utf-8")
+    require_all(contributing, contributing_path, (
+        "This repository is KWS technical research only.",
+        "## Reproducible research training",
+        "## Independent physical-board research evidence",
+        "## Archived qualification-format regression (not an active gate)",
+        "Current research CI **does not publish commercial model/SDK GitHub Releases**",
+        "source rights, speaker/session/source metadata",
+    ))
+    for retired_instruction in (
+        "Shipping training should use an immutable OCI base",
+        "## Product-board evidence invariant",
+        "## Release qualification",
+        "Formal release workflow must not publish",
+        "matching `shipping_approved=true` SKU policy;",
+    ):
+        assert retired_instruction not in contributing, (
+            "stale contributor Shipping/Release instruction: " + retired_instruction
+        )
+
 
 def main() -> int:
     check_current_research_guidance()
