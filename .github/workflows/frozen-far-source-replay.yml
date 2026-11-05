@@ -51,6 +51,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
 
       - name: Self-test frozen FAR source replay contract
         run: |
@@ -101,6 +102,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
 
       - name: Verify historical runtime math is unchanged
         env:

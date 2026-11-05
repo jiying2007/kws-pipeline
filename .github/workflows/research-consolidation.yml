@@ -13,6 +13,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Verify integrated source identities and negative cases
         run: |
           python3 -B tools/verify_research_consolidation.py

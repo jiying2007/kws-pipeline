@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import json
 from pathlib import Path
 import sys
 import unittest
@@ -28,6 +29,12 @@ class CandidateNumericCIContracts(unittest.TestCase):
         self.assertEqual(changes.scopes(paths), (False, True))
         self.assertEqual(changes.scopes(["README.md"]), (False, False))
         self.assertEqual(changes.scopes(["research/candidate_encoders-lookalike/x.py"]), (False, False))
+
+    def test_shared_runtime_changes_select_both_numeric_scopes(self):
+        for path in ("configs/runtime/research-runtime.json", "tools/research_runtime.py",
+                     "training/setup_core_runtime.sh", ".github/actions/setup-research-python/action.yml"):
+            with self.subTest(path=path):
+                self.assertEqual(changes.scopes([path]), (True, True))
 
     def test_direct_only_and_shared_scorer_scopes(self):
         for path in ("research/direct_kws/model.py", "research/direct_kws/events.py",
@@ -186,7 +193,9 @@ class CandidateNumericCIContracts(unittest.TestCase):
         self.assertIn(".venv-objective/bin/python -B tests/test_candidate_encoder_numeric.py", step)
         self.assertIn("--report build/candidate-encoder-numeric.json", step)
         self.assertIn("needs.select-scope.outputs.candidate_required == 'true'", step)
-        self.assertIn("torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu", job)
+        self.assertIn("bash training/setup_core_runtime.sh .venv-objective", job)
+        runtime = json.loads((ROOT / "configs/runtime/research-runtime.json").read_text())
+        self.assertEqual(runtime["roles"]["core"]["packages"]["torch"], "2.13.0+cpu")
         for variable in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
             self.assertIn(variable + ': "1"', job)
         self.assertEqual(self.workflow.count("tests/test_candidate_encoder_numeric.py \\"), 1)

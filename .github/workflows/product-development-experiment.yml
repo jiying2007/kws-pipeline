@@ -43,6 +43,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Resolve exact PR-head experiment
         id: diff
         env:
@@ -82,6 +83,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
 
       - name: Verify exact PR-head source
         env:
@@ -128,9 +130,7 @@ jobs:
 
       - name: Install pinned CPU training runtime
         run: |
-          python3 -m venv .venv
-          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
-          .venv/bin/python -m pip install --disable-pip-version-check --no-input             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+          bash training/setup_core_runtime.sh .venv
 
       - name: Verify objective math
         run: .venv/bin/python training/test_sequence_margin.py

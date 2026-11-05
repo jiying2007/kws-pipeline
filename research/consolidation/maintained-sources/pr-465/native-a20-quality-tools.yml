@@ -1,0 +1,29 @@
+name: native-a20-quality-tools
+on:
+  pull_request:
+    paths:
+      - "research/native_a20_quality/**"
+      - ".github/workflows/native-a20-quality-tools.yml"
+  push:
+    branches: [main, "research/**", "codex/**"]
+    paths:
+      - "research/native_a20_quality/**"
+      - ".github/workflows/native-a20-quality-tools.yml"
+permissions:
+  contents: read
+jobs:
+  saved-metadata-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Metadata-only quality contracts (no inference or downloads)
+        run: python3 -B -m unittest discover -s research/native_a20_quality/tests -v
+      - name: Validate existing bounded inventory (no audio execution)
+        run: python3 -B research/native_a20_quality/quality.py admit --manifest research/native_a20_quality/inventory/existing-50.manifest.json
+      - name: Verify toy saved-prediction CLI (no model invocation)
+        run: python3 -B research/native_a20_quality/quality.py score --manifest research/native_a20_quality/examples/toy-manifest.json --predictions research/native_a20_quality/examples/toy-predictions.json --output "$RUNNER_TEMP/native-a20-quality-toy.json"
+      - name: Confirm tracked source unchanged
+        run: git diff --exit-code

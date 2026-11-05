@@ -1,0 +1,141 @@
+{
+  "schema": "kws-active-research-plan-v1",
+  "effective_date": "2026-11-05",
+  "purpose": "technical KWS research",
+  "execution_authority": "user instruction to implement the reviewed plan and refactor as needed",
+  "runtime_manifest": "configs/runtime/research-runtime.json",
+  "wake_phrases": [
+    {
+      "keyword_id": 1,
+      "text": "你好小窝"
+    },
+    {
+      "keyword_id": 2,
+      "text": "小窝小窝"
+    }
+  ],
+  "partial_phrases": [
+    "小窝"
+  ],
+  "positive_variation": [
+    "accent",
+    "connected-speech",
+    "soft-voice",
+    "far-field"
+  ],
+  "evaluation": {
+    "default_cross_model_mode": "system",
+    "causal_claim_mode": "ablation",
+    "common_inputs": [
+      "raw audio bytes",
+      "reference events",
+      "event matching protocol",
+      "speaker split",
+      "evaluation partition"
+    ],
+    "native_frontends_and_decoders_allowed": true,
+    "far_upper_policy": "exact one-sided Poisson, confidence 0.95",
+    "initial_natural_audio_far_budget_per_hour": 1.0,
+    "nearphone_policy": "report challenge FA per clip and tune against positive recall; zero errors is not required",
+    "accent_policy": "report full-phrase recall by accent; predeclare noninferiority margin before development threshold selection",
+    "small_slice_policy": "report numerator, denominator and uncertainty; point-estimate regressions alone are not an automatic veto",
+    "latency": [
+      "raw capture sample coordinate",
+      "post AFE sample coordinate",
+      "application callback when actually measured"
+    ],
+    "challenge_clips_are_natural_far_exposure": false,
+    "synthetic_audio_is_independent_human_evidence": false
+  },
+  "data": {
+    "first_batch": {
+      "id": "qwen-nonclone64-20261104-v1",
+      "clips": 64,
+      "reuse_existing_audio": true,
+      "archive_sha256": "0704e28608f636fa14e8bfa30ebc5ed5b870b9576ec8c80fbe15da9e05033ac5",
+      "original_three_asr_baseline": true,
+      "engines": [
+        "qwen06",
+        "sensevoice",
+        "whisper"
+      ],
+      "generation_prompts_are_observed_labels": false
+    },
+    "later_batches": {
+      "primary_asr_count": 2,
+      "third_route": [
+        "disagreement",
+        "uncertain",
+        "random agreement audit"
+      ]
+    },
+    "unknown_labels_are_negative": false,
+    "weak_labels_train_only": true,
+    "split_registry": "persistent canonical dataset and source-speaker identity",
+    "hmac_key_controls_split": false,
+    "development_data_in_training": false,
+    "growth_stages": [
+      {
+        "stage": "D1",
+        "speakers": 8,
+        "clips_per_speaker": 32,
+        "train_speakers": 6,
+        "development_speakers": 2,
+        "scope": "engineering learning curve"
+      },
+      {
+        "stage": "D2",
+        "speakers": 32,
+        "clips_per_speaker": 64,
+        "advance_when": "source coverage and D1 learning evidence justify expansion"
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "id": "rnn64_control",
+      "role": "fresh same-data control",
+      "initialization": "fresh",
+      "enabled": true,
+      "execution_status": "planned_not_executed"
+    },
+    {
+      "id": "fsmn_ctc",
+      "role": "streaming CTC candidate",
+      "enabled": true,
+      "execution_status": "planned_not_executed"
+    },
+    {
+      "id": "c1_causal",
+      "role": "existing causal convolution",
+      "head_variants": [
+        "ctc",
+        "two-keyword direct"
+      ],
+      "enabled": true,
+      "execution_status": "planned_not_executed"
+    },
+    {
+      "id": "zipformer_kws",
+      "role": "sherpa-onnx native pretrained system evaluation first",
+      "train_initially": false,
+      "enabled": true,
+      "execution_status": "planned_not_executed"
+    }
+  ],
+  "execution": {
+    "advance_on": "completed prerequisite outputs",
+    "watchdog_role": "recovery and stalled task inspection only",
+    "persist_before_publication": true,
+    "reuse_identical_completed_outputs": true,
+    "maximum_model_jobs_concurrently": 1,
+    "maximum_runner_minutes_per_item": 999,
+    "global_budget_is_sum_of_actual_job_minutes": true,
+    "maximum_infrastructure_attempts_per_new_stage": 2,
+    "retry_quality_failures_automatically": false,
+    "paid_model_apis_allowed": false,
+    "external_codex_shared_quota_allowed": false,
+    "increase_concurrency_when": "measured peak memory and available compute support the sum of active workers",
+    "controller_deployment_status": "pending"
+  }
+}

@@ -22,6 +22,7 @@ RUN = ROOT / "tools" / "run_dataset_iteration.py"
 sys.path.insert(0, str(ROOT / "tools"))
 from run_dataset_iteration import dataset_identity  # noqa: E402
 import run_dataset_iteration as iteration  # noqa: E402
+import dataset_iteration_inputs as iteration_inputs  # noqa: E402
 sys.path.insert(0, str(ROOT / "eval"))
 import score_events  # noqa: E402
 
@@ -364,7 +365,7 @@ class FarPopulationPolicyTests(unittest.TestCase):
         self.assertEqual(summary["false_accepts"], 2)
         self.assertEqual(summary["far_per_hour"], 1.0)
         self.assertEqual((hours, rate["observed_false_accepts"], rate["point_estimate_per_hour"]), (1.0, 0, 0.0))
-        self.assertEqual(rate["upper_bound_95_per_hour"], 2.9957)
+        self.assertAlmostEqual(rate["upper_bound_95_per_hour"], -math.log(.05), places=14)
         for kwargs in ({"positive_unmatched": 0}, {"positive_unmatched": 4}, {"positive_hours": 2.0}):
             with self.subTest(kwargs=kwargs):
                 changed = far_summary(**kwargs)
@@ -459,7 +460,9 @@ class FarPopulationPolicyTests(unittest.TestCase):
             for count in (0, 1, 2):
                 for hours in (0.25, 2.0):
                     before, after = self.new_card(exposure_hours=hours), self.new_card(model="m2", exposure_hours=hours)
-                    expected = iteration.far_upper_bound_95(count, hours)
+                    # Schemas 2--4 keep their original approximation for replay.
+                    expected = (2.9957 / hours if count == 0 else
+                                (count + 1.959964 * math.sqrt(count)) / hours)
                     for card in (before, after):
                         card["far_rate"].update(observed_false_accepts=count,
                                                 point_estimate_per_hour=count / hours,
@@ -506,10 +509,10 @@ class FarPopulationPolicyTests(unittest.TestCase):
                 self.assertTrue(result["earlier_work_remains"])
                 continue
             card = result["card"]
-            self.assertEqual(card["schema_version"], 4)
+            self.assertEqual(card["schema_version"], 5)
             self.assertEqual(card["identity"]["dataset_identity_policy"], "effective-domain-keys-verified-afe-v2")
-            self.assertEqual(card["identity"]["far_policy"], self.POLICY)
-            self.assertEqual(card["protocol"], "dataset-iteration-v4" if protocol is None else protocol)
+            self.assertEqual(card["identity"]["far_policy"], iteration.FAR_POLICY)
+            self.assertEqual(card["protocol"], "dataset-iteration-v5" if protocol is None else protocol)
             self.assertEqual(card["metrics"]["false_accepts"], result["summary"]["false_accepts"])
             self.assertEqual(card["metrics"]["far_per_hour"], result["summary"]["far_per_hour"])
             self.assertEqual(card["far_rate"]["point_estimate_per_hour"], 0.0)
@@ -725,7 +728,7 @@ class EffectiveDomainIdentityTests(unittest.TestCase):
         self.assertNotEqual(baseline, DatasetIdentityAliasTests.LEGACY_PATH_ONLY_ID)
         self.assertNotEqual(baseline, DatasetIdentityAliasTests.DOMAIN_ONLY_PATH_ID)
         # A policy tag change must change the envelope even for all-only data.
-        with mock.patch.object(iteration, "DATASET_IDENTITY_POLICY", "test-other-policy"):
+        with mock.patch.object(iteration_inputs, "DATASET_IDENTITY_POLICY", "test-other-policy"):
             self.assertNotEqual(self.identity({}), baseline)
 
 
@@ -1107,7 +1110,7 @@ class VerifiedAfeIdentityTests(unittest.TestCase):
             self.assertEqual(item["stages"], ["run_corpus.py", "score_events.py", "domain_metrics.py"])
             self.assertTrue(item["unchanged"])
             card = item["card"]
-            self.assertEqual(card["schema_version"], 4)
+            self.assertEqual(card["schema_version"], 5)
             self.assertEqual(card["identity"]["dataset_identity_policy"], "effective-domain-keys-verified-afe-v2")
             self.assertEqual(card["identity"]["protocol"], "custom-label")
             self.assertEqual(card["run_id"], iteration.canonical_hash(card["identity"])[:16])
@@ -1146,6 +1149,7 @@ class VerifiedAfeIdentityTests(unittest.TestCase):
 
 
 def main() -> int:
+    from test_dataset_iteration_v5 import ExactFarTests, SystemComparisonTests
     strict = unittest.TextTestRunner(verbosity=2).run(
         unittest.TestSuite([
             unittest.defaultTestLoader.loadTestsFromTestCase(RequiredMetricTests),
@@ -1154,9 +1158,11 @@ def main() -> int:
             unittest.defaultTestLoader.loadTestsFromTestCase(EffectiveDomainIdentityTests),
             unittest.defaultTestLoader.loadTestsFromTestCase(DomainPolicyCompatibilityTests),
             unittest.defaultTestLoader.loadTestsFromTestCase(VerifiedAfeIdentityTests),
+            unittest.defaultTestLoader.loadTestsFromTestCase(ExactFarTests),
+            unittest.defaultTestLoader.loadTestsFromTestCase(SystemComparisonTests),
         ])
     )
-    if strict.testsRun != 36 or strict.skipped or not strict.wasSuccessful():
+    if strict.testsRun != 56 or strict.skipped or not strict.wasSuccessful():
         return 1
 
     with tempfile.TemporaryDirectory() as td:

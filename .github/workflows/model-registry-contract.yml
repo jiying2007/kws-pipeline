@@ -29,6 +29,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Python syntax
         run: python3 -m py_compile tools/materialize_model_registry.py tools/verify_model_registry.py
       - name: Verify all registry entries and pinned model

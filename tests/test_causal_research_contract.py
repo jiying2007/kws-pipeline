@@ -40,7 +40,11 @@ def main():
     verify_metadata_retention()
     mode = ['-' + 'O' * sys.flags.optimize] if sys.flags.optimize else []
     for directory, script, expected in CASES:
-        result = subprocess.run([sys.executable, '-S', '-B', *mode, script],
+        # Shared Python needs its lib directory at startup. These frozen ARM
+        # drivers must see no inherited loader override after startup.
+        entry = ([str(ROOT / 'tools/research_python_entry.py')]
+                 if directory == 'research/fsmn2599-stream-c' else [])
+        result = subprocess.run([sys.executable, '-S', '-B', *mode, *entry, script],
                                 cwd=ROOT / directory, text=True,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                 timeout=60, check=False)

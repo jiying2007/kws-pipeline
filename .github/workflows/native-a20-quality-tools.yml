@@ -19,6 +19,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Metadata-only quality contracts (no inference or downloads)
         run: python3 -B -m unittest discover -s research/native_a20_quality/tests -v
       - name: Validate existing bounded inventory (no audio execution)

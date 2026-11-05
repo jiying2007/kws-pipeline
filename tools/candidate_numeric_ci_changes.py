@@ -32,6 +32,9 @@ CANDIDATE_PREFIXES = ("research/candidate_encoders/", "research/direct_kws/", "r
 CANDIDATE_GLOBS = frozenset(prefix + "**" for prefix in CANDIDATE_PREFIXES)
 # Shared source/control edits require both the old gates and the new contracts.
 CANDIDATE_SHARED = frozenset({WORKFLOW, "training/model.py", "training/sitecustomize.py",
+                              "configs/runtime/research-runtime.json", "tools/research_runtime.py",
+                              "training/setup_core_runtime.sh", ".github/actions/setup-research-python/action.yml",
+                              "tests/test_research_runtime.py",
                               "tools/research_ci_changes.py", "tools/check_workflow_path_filters.py",
                               "eval/score_events.py", "eval/context_policy.py",
                               "training/frontend.py", "training/frontend_spec.py", "training/train_ctc.py",

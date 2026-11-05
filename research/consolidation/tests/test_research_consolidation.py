@@ -94,6 +94,25 @@ class RetentionTests(unittest.TestCase):
         # not silently replace it with the maintained active CI source.
         self.assertFalse((projected / ".github/workflows/ci.yml").exists())
 
+    def test_original_native_quality_workflow_keeps_its_source_identity(self):
+        core = json.loads((ROOT / "research/consolidation/core-2026-10-07.json").read_text())
+        original = ".github/workflows/native-a20-quality-tools.yml"
+        row = next(item for item in core["files"] if item.get("source_path") == original)
+        self.assertEqual(row["path"], "research/consolidation/maintained-sources/pr-465/native-a20-quality-tools.yml")
+        self.assertEqual((row["source_pr"], row["source_commit"]),
+                         (465, "d8453ae8b2b2c620716b32c96d9647834ce96746"))
+        self.assertEqual(row["sha256"], "768bee0c5d499a375e75596a50f84fd103fe2c3fffbc02664706453d03d6ae42")
+        original_bytes = (ROOT / row["path"]).read_bytes()
+        self.assertNotEqual(original_bytes, (ROOT / original).read_bytes())
+        target = self.root / row["path"]
+        target.parent.mkdir(parents=True)
+        target.write_bytes(original_bytes)
+        core["files"] = [row]
+        self.assertEqual(RETENTION.verify(self.root, core), 1)
+        target.write_bytes(original_bytes + b"# changed original\n")
+        with self.assertRaises(ValueError):
+            RETENTION.verify(self.root, core)
+
     def test_original_native_a20_admission_sources_are_retained_separately(self):
         core = json.loads((ROOT / "research/consolidation/core-2026-10-07.json").read_text())
         names = {"README.md", "PROVENANCE.json", "SOURCE_MANIFEST.json", "build.py",

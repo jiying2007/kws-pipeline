@@ -3,7 +3,7 @@
 
 No model inference/training/download is performed; no synthetic result becomes
 real-human/SSC305 or shipping qualification. The input scorecards must be
-produced under the *same* frozen development corpus and v4 protocol.
+produced under the same frozen development corpus and scorecard policy.
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from compare_dataset_iterations import (  # noqa: E402
-    DATASET_IDENTITY_POLICY, FAR_POLICY, compare, far_policy,
+    APPROX_FAR_POLICY, DATASET_IDENTITY_POLICY, FAR_POLICY, compare, far_policy,
     framing, metric, dataset_identity_policy,
 )
 from statistical_bounds import poisson_rate_upper, wilson_upper  # noqa: E402
@@ -148,8 +148,8 @@ def load_entry(entry: dict, *, expected_role: str) -> tuple[dict, dict, dict]:
     card = read_json(name)
     expected_sha = digest(entry["scorecard_sha256"], 64, "SCORECARD_SHA_NOT_PINNED")
     need(sha(name.read_bytes()) == expected_sha, "SCORECARD_BYTES_CHANGED")
-    need(type(card.get("schema_version")) is int and card["schema_version"] == 4,
-         "SCORECARD_V4_REQUIRED")
+    need(type(card.get("schema_version")) is int and card["schema_version"] in (4, 5),
+         "SCORECARD_V4_OR_V5_REQUIRED")
     need(type(card.get("identity")) is dict and
          card["identity"].get("variable") == "model",
          "MODEL_VARIABLE_ONLY")
@@ -174,8 +174,9 @@ def load_entry(entry: dict, *, expected_role: str) -> tuple[dict, dict, dict]:
         number(rate.get(key), key)
     for key in ("frr", "far_per_hour", "p95_post_end_latency_ms"):
         number(counts.get(key), key)
+    expected_far_policy = FAR_POLICY if card["schema_version"] == 5 else APPROX_FAR_POLICY
     need(dataset_identity_policy(card, ident) == DATASET_IDENTITY_POLICY and
-         far_policy(card, ident) == FAR_POLICY,
+         far_policy(card, ident) == expected_far_policy,
          "LEGACY_METRIC_POLICY_REJECTED")
     ident_sha = card["identity"]
     need(type(ident_sha.get("code_sha")) is str and
@@ -326,7 +327,7 @@ def select(plan: dict) -> dict:
              "NONCOMPARABLE_DEVELOPMENT_COHORT")
         need(ident["model_id"] not in model_ids, "REPEATED_CANDIDATE_MODEL")
         model_ids.add(ident["model_id"])
-        # Preserve legacy v4 diagnostics, never use approximate FAR to gate v2.
+        # v4 diagnostics remain historical; the rank always uses exact FAR.
         comparison = compare(original, card, b["max_far_upper_95_per_hour"],
                              b["frr_point_tolerance"], b["max_latency_ms"])
         values = {**scores, **resources}
@@ -348,7 +349,8 @@ def select(plan: dict) -> dict:
             "model_id": ident["model_id"],
             "development_scores": values,
             "paired_verdict": comparison["verdict"],
-            "legacy_v4_comparison": comparison,
+            "scorecard_comparison": comparison,
+            "legacy_v4_comparison": comparison if card["schema_version"] == 4 else None,
             "eligible_for_development_rank": not reasons,
             "blockers": sorted(set(reasons)),
         })
@@ -365,14 +367,15 @@ def select(plan: dict) -> dict:
     return {
         "schema_version": 2, "policy": POLICY, "locale": plan["locale"],
         "selection_statistical_policy": SELECTION_STATISTICAL_POLICY,
-        "input_far_policy": FAR_POLICY,
+        "input_far_policy": far_policy(original, "baseline"),
         "confidence_scope": "marginal-per-model-not-simultaneous",
         "per_keyword_support_status": "NOT_VERIFIED",
         "per_keyword_non_regression_status": "NOT_VERIFIED",
         "pre_registration_verified": False,
         "selection_rule": "strict-observed-aggregate-and-resource-pareto-over-eligible-baseline",
         "limitations": [
-            "Input v4 approximate FAR fields are unchanged legacy diagnostics.",
+            ("Input v4 approximate FAR fields are unchanged legacy diagnostics." if
+             original["schema_version"] == 4 else "Input v5 FAR fields use exact one-sided Poisson bounds."),
             "Exact selection FAR uses only negative-only-recording count and hours.",
             "Hashes and declarations do not authenticate source roles or pre-registration.",
             "Observed Pareto dominance is not statistical significance or per-keyword improvement.",

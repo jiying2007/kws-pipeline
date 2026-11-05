@@ -6,6 +6,11 @@ on:
       - main
       - "fix/product-training-speech-like-v1"
     paths:
+      - "configs/runtime/research-runtime.json"
+      - "tools/research_runtime.py"
+      - "training/setup_core_runtime.sh"
+      - ".github/actions/setup-research-python/action.yml"
+      - "tests/test_research_runtime.py"
       - ".github/workflows/kw1-preset-supplement-20261014-v1.yml"
       - "research/alimeeting-continuous-intake-v1/float-c-parity-observation-v1/compare.py"
       - "research/alimeeting-continuous-intake-v1/float-c-parity-observation-v1/independent-float-parity-audit.json"
@@ -424,6 +429,11 @@ on:
       - ".github/workflows/product-training-data-contract.yml"
   pull_request:
     paths:
+      - "configs/runtime/research-runtime.json"
+      - "tools/research_runtime.py"
+      - "training/setup_core_runtime.sh"
+      - ".github/actions/setup-research-python/action.yml"
+      - "tests/test_research_runtime.py"
       - ".github/workflows/kw1-preset-supplement-20261014-v1.yml"
       - "research/alimeeting-continuous-intake-v1/float-c-parity-observation-v1/compare.py"
       - "research/alimeeting-continuous-intake-v1/float-c-parity-observation-v1/independent-float-parity-audit.json"
@@ -857,6 +867,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 2
+      - uses: ./.github/actions/setup-research-python
       - name: Select complete product and candidate change scopes
         id: scope
         run: python3 -B tools/candidate_numeric_ci_changes.py
@@ -876,6 +887,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Product training entry contract
         run: |
           python3 tests/test_product_training_entry_contract.py
@@ -1023,12 +1035,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Install pinned CPU objective runtime
         run: |
-          python3 -m venv .venv-objective
-          .venv-objective/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2 scipy==1.17.1
-          .venv-objective/bin/python -m pip install --disable-pip-version-check --no-input \
-            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+          bash training/setup_core_runtime.sh .venv-objective
       - name: Decoder-aligned objective math contract
         if: ${{ needs.select-scope.outputs.existing_required == 'true' }}
         run: |
@@ -1143,12 +1153,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Install pinned CPU reproducibility runtime
         run: |
-          python3 -m venv .venv-repro
-          .venv-repro/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2 scipy==1.17.1
-          .venv-repro/bin/python -m pip install --disable-pip-version-check --no-input \
-            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+          bash training/setup_core_runtime.sh .venv-repro
       - name: Train unobserved parity reference
         run: |
           .venv-repro/bin/python training/reproducibility_smoke.py \
@@ -1186,6 +1194,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Download independent runner identities
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:

@@ -15253,58 +15253,58 @@
     {
       "path": ".github/workflows/acoustic-boundary-segmentation.yml",
       "mode": "100644",
-      "bytes": 9010,
-      "sha256": "6a37608043e03937fa46260d61a5dd807dad38c56df6a776d9ad261b242dc089",
-      "git_blob_sha1": "f7e659bff283fc49da39c17d28d9005abfeab330"
+      "bytes": 9064,
+      "sha256": "030c1b11ef517ea9229f2dfea02d18eccbe2d575978e85d29ca62ca5d701ea95",
+      "git_blob_sha1": "862ffd4797bd8427de0d97299cee404c7df8c2ca"
     },
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 68813,
-      "sha256": "9579c675f2e5519964d2de324dcf57ff3aecfaf2f77ea022957568e6200c9dcd",
-      "git_blob_sha1": "ad144f7271c3a0d311614bfc8f29244ff146dc2d"
+      "bytes": 70078,
+      "sha256": "24f6b4cfe4883ff9a34e2deadfe9142d08ee32e6616bef2c4e0bc54f5093e5ce",
+      "git_blob_sha1": "292fb9ef065940529374c9e333baa4104998233e"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
       "mode": "100644",
-      "bytes": 9051,
-      "sha256": "b56e377ce74aadf60058b257d600be446a030fcba631d2f34a911b14e481359a",
-      "git_blob_sha1": "bb963eabdc7d2b2123dc7042e2429939f22b63ab"
+      "bytes": 16472,
+      "sha256": "4cd0b632dce6c281b5df5f9da5502e3ae5ce9f0a2a8da0d267abd4fb410c5fa5",
+      "git_blob_sha1": "bd04f500968774ba2082ce341345feca9f84d2b2"
     },
     {
       "path": ".github/workflows/decoder-boundary-requalification.yml",
       "mode": "100644",
-      "bytes": 12417,
-      "sha256": "0f195ca8237d78a4f79849deb4c457162a9f1d5f50417d1d474eb60d5a3fc8f1",
-      "git_blob_sha1": "99eac834cc8737a237d3b8cf5f3025c72bbd627f"
+      "bytes": 12471,
+      "sha256": "d8457ba8ed238d76346c2dbd799d3a063a0216fb01f414b37c4acca5f232e887",
+      "git_blob_sha1": "b346da390f7fc52bf11b95dac692689cbe4646e5"
     },
     {
       "path": ".github/workflows/decoder-boundary-separability.yml",
       "mode": "100644",
-      "bytes": 9046,
-      "sha256": "df627697d915972501bb528af873296c359a05d6d8eab060d31ce6d57bc5b63f",
-      "git_blob_sha1": "758d106802b1f13155a1fcf761fd968ae8353367"
+      "bytes": 9100,
+      "sha256": "c27fc6ab9d8e4d9fa0df8e7dd97f8c673f340eb64c4d5f018bbb6803a25404d1",
+      "git_blob_sha1": "0f6b34520c2eaf85abf22ebdc1f54c26525d29cd"
     },
     {
       "path": ".github/workflows/experiment-quality-guards.yml",
       "mode": "100644",
-      "bytes": 2931,
-      "sha256": "e27422560fe174cc91af0e1cb76e23d1cca01d0a986e5c092afed4b494378778",
-      "git_blob_sha1": "74985256b9e1eecd77d9def1bb03ef7cf6ccb326"
+      "bytes": 2985,
+      "sha256": "c6bc8084c0919a199c1d45e645718e8174f649f5129607c7c031a2ce010141ff",
+      "git_blob_sha1": "af0d2ff56d7fd8df5698e65f670ae86cfb154557"
     },
     {
       "path": ".github/workflows/far-nightly.yml",
       "mode": "100644",
-      "bytes": 15660,
-      "sha256": "99587ec96f0e4a4bcca034a126fb77513f2b116e300ad09ffbde4bdd21f39370",
-      "git_blob_sha1": "56ccd8463c4baaff381dc2718634817feabc8cf2"
+      "bytes": 15714,
+      "sha256": "af5629886679dee1bf810a99bb2efe1bd6dfdf6a010e35487091316da672dcab",
+      "git_blob_sha1": "93c0569eaaf324757bca292309150511b8b0e1c4"
     },
     {
       "path": ".github/workflows/frozen-far-source-replay.yml",
       "mode": "100644",
-      "bytes": 21076,
-      "sha256": "e009ae47e8778e94bfb2a52ea8fbf432823174fb8f3419642c877d0758d55175",
-      "git_blob_sha1": "e443f402921d36d5a8eaa2e1c92e2ec5d84c726a"
+      "bytes": 21184,
+      "sha256": "a7f6956f30477d84b4aed78e73b7a6791b837e144191b8373bc47c3b18e93f92",
+      "git_blob_sha1": "e8a6f9ac3852b5e43e1ba09a65ef39df005eac19"
     },
     {
       "path": ".github/workflows/github-hosted-resource-probe.yml",
@@ -15323,72 +15323,72 @@
     {
       "path": ".github/workflows/kws-landing-status.yml",
       "mode": "100644",
-      "bytes": 2951,
-      "sha256": "4036e41eeac9dce088ea32afe4f73c581275b0efa415c6b769c4b7d657e0e867",
-      "git_blob_sha1": "b85012d8a6dd7f57ff241ff44864e7c95f2e2b32"
+      "bytes": 3005,
+      "sha256": "d57894c3190841c8fa6e4edb1cf86798c8eff8aa708c4a93f15d6194032c2c3c",
+      "git_blob_sha1": "4e25c58c998fc86591ffba5f82fa50665f97849c"
     },
     {
       "path": ".github/workflows/model-family-resource-contract.yml",
       "mode": "100644",
-      "bytes": 2667,
-      "sha256": "419ec0f21bf2754f4c3c7500d1b3e74c6a4bdff09189c26fb594927433716db8",
-      "git_blob_sha1": "b43d837d6cdd4faadc2f9754b6079100b1ac9441"
+      "bytes": 2721,
+      "sha256": "2ec85a39696b7ce724e0b75de225801ce3cb92b7620866848ceebe79dc634927",
+      "git_blob_sha1": "979e08ad3d5ea1901be27a3d65d2d7f59ad04096"
     },
     {
       "path": ".github/workflows/model-registry-contract.yml",
       "mode": "100644",
-      "bytes": 3733,
-      "sha256": "9739017330b247dd29a0035136d68cf566dc36854926f777ecb04c9bcce57101",
-      "git_blob_sha1": "90c8fae7149002598108cae350baca56b93af0fa"
+      "bytes": 3787,
+      "sha256": "d7480c0a2af6a64ac68b7b9dcd7868d7a0cf0a7faa7e3190b747fa4521c1f4ec",
+      "git_blob_sha1": "6414df255470cd7f02f3611090be706d6b3002cb"
     },
     {
       "path": ".github/workflows/model-training-preflight.yml",
       "mode": "100644",
-      "bytes": 16061,
-      "sha256": "ec6ff044f922bcbe6d7ea3838ebcd496df09ea35b62bc5d1394ea9a387c3183f",
-      "git_blob_sha1": "3d2e6121f4b64104b1e9e9fdfb847bdfa30c17f2"
+      "bytes": 15759,
+      "sha256": "89590d90a95055668c6c7f90a0392850bf1b6153745c75968cd137eb5863d150",
+      "git_blob_sha1": "4a9a426e1198d2f7d65c4d289973b2447ad7fcf0"
     },
     {
       "path": ".github/workflows/model-training.yml",
       "mode": "100644",
-      "bytes": 13936,
-      "sha256": "cb57e3362f12887f51ab11f341fe237a249307f1cf378fbb82d6c68c9489100a",
-      "git_blob_sha1": "9ac3039a8e5855d1a321842790fbf962cdc561ab"
+      "bytes": 13370,
+      "sha256": "c6f08641082d6e0915903c487aee6ef78f71dbbca0f9480572d78dc032f2e036",
+      "git_blob_sha1": "88a5239e956f153001f2099ba46ad23afad28496"
     },
     {
       "path": ".github/workflows/native-a20-quality-tools.yml",
       "mode": "100644",
-      "bytes": 1355,
-      "sha256": "768bee0c5d499a375e75596a50f84fd103fe2c3fffbc02664706453d03d6ae42",
-      "git_blob_sha1": "a5ff424679ba72b6ec025a7c2d4ab39492d58355"
+      "bytes": 1409,
+      "sha256": "baa0c9726f587807ab062d561e493b4fa25d8f6b35019bb4d5f543cae2ef155b",
+      "git_blob_sha1": "882c5451e9d248f87258bfd4164cc58362ed9d77"
     },
     {
       "path": ".github/workflows/product-development-experiment.yml",
       "mode": "100644",
-      "bytes": 35404,
-      "sha256": "ef11d02f986f6db7b00d94ae8c23ea8f4f24e93c3da5c0d09e1809d60b0b38b6",
-      "git_blob_sha1": "0e192eeffcbb46ff1b49e9f47ccee5b3650e19d3"
+      "bytes": 35282,
+      "sha256": "55c6485d8e5d204fdf027df6a32d1128e8a631cc37cd53ea30da033ef76bf117",
+      "git_blob_sha1": "2a1a7853335e493900bcc58ddbc0b68cd6611acb"
     },
     {
       "path": ".github/workflows/product-development-pair-analysis.yml",
       "mode": "100644",
-      "bytes": 4456,
-      "sha256": "227af540dd4f54233e8a7d9235edbf63c4cdb4a8cc6969ed2b3265e0518949ed",
-      "git_blob_sha1": "3f646cf1c3c48a4925162374b96f43c70ad54f49"
+      "bytes": 4510,
+      "sha256": "9e4881dc63725e785a3d785645d1ce06d710e8dbd49fec87772fd8119cd9b131",
+      "git_blob_sha1": "43839f30dd32c1c0531a91e841d461811d9113bf"
     },
     {
       "path": ".github/workflows/product-development-paired-experiment.yml",
       "mode": "100644",
-      "bytes": 16063,
-      "sha256": "a744849d0a3ae45e6858b89caff247dcf70d301c6b76f75ff4229ff2b9e3faa4",
-      "git_blob_sha1": "9f9a2376bd55d7e6aba7de5d791c6a270ff3fb96"
+      "bytes": 15939,
+      "sha256": "a788abadf1daa5238ec64bd5f17969ca7e9712161c6b3f0c4d8b0e06a8a5fc00",
+      "git_blob_sha1": "6f9432b9f776b451730098d3cb84eb6760fdbf68"
     },
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "bytes": 87216,
-      "sha256": "b5c70cbdad9bf6b5bd911ff46f806278911a6b1f1f6c9ae1f09e5884d490ff6b",
-      "git_blob_sha1": "2aa56505d6c70ed09ccf43b0f1af6a10c4015650"
+      "bytes": 87412,
+      "sha256": "2effdb56742ad33a63bc44f6b75542a6065f142b69d32164563814d3dc7efd4a",
+      "git_blob_sha1": "dea91032882790458e8ab621db686e02ffca77c2"
     },
     {
       "path": ".github/workflows/repository-cleanup.yml",
@@ -15400,184 +15400,184 @@
     {
       "path": ".github/workflows/research-arm-runtime.yml",
       "mode": "100644",
-      "bytes": 996,
-      "sha256": "5b3df899bcf50c6d7e534b4be44b277791c099328b996df846a39a4f2be12ae2",
-      "git_blob_sha1": "a76b39e1f50942d63f358a3944cb19e359dc5ad8"
+      "bytes": 1050,
+      "sha256": "8b181d5df0638247f3e40e67f2b0d38651cbb61cf615050c7ed9f7e518004bd7",
+      "git_blob_sha1": "822f83e1ed052507d0150f245cd9214ea5006e99"
     },
     {
       "path": ".github/workflows/research-asr-evidence.yml",
       "mode": "100644",
-      "bytes": 1037,
-      "sha256": "746683227221f4917b73d4783f0ce792bebcbecfd7ae83379d99ec72b720a0f5",
-      "git_blob_sha1": "b96b6ae8e4d5e345dccc2f51c4965ec63124f1da"
+      "bytes": 1091,
+      "sha256": "e7922a911be2367c323024865c3ae38333a9de133fbd5d62020baaebbad498d2",
+      "git_blob_sha1": "b3094b048815538ce88c4e6c5d8063a5720ef0cf"
     },
     {
       "path": ".github/workflows/research-consolidation.yml",
       "mode": "100644",
-      "bytes": 840,
-      "sha256": "0ee5f1b9d037d308654aea822069631bc586d789126d5b4b0594dd26f7975eff",
-      "git_blob_sha1": "78f7fa38913cc1b7f5df2a91ed82b7f499572721"
+      "bytes": 894,
+      "sha256": "fd2d609dda23ba18799e87286d99a3f13d79cf6510c738c63c02476ab7cecb94",
+      "git_blob_sha1": "3d1b871cb5e9802356a7778286f15f161309474b"
     },
     {
       "path": ".github/workflows/research-donor-fbank.yml",
       "mode": "100644",
-      "bytes": 3696,
-      "sha256": "bc493caee3e50a1be03f7d684c435cec7a1a7dfd996e8850869cca4553d890a5",
-      "git_blob_sha1": "ccfa145ad90a9c5fe4f0002d684953729034f630"
+      "bytes": 3618,
+      "sha256": "b5f944199bb64fef67caed2d36d4f5d2b081fb0456392b49095d08fb98bb1490",
+      "git_blob_sha1": "c060426c38963d99758cdf44bba0ae40d7221c1a"
     },
     {
       "path": ".github/workflows/research-donor-fsmn.yml",
       "mode": "100644",
-      "bytes": 1705,
-      "sha256": "462ee1a899be236ba6bbe413d8d9866ee4381f839d0447a88ea3951d6f8ddf73",
-      "git_blob_sha1": "7fc010ad1a6590e2b2475334ce824102104cae77"
+      "bytes": 1636,
+      "sha256": "a434297f12cc0f9bd3d29d86c6761510486a0b8af586871a9abf4e6920cb6d99",
+      "git_blob_sha1": "6bfa8afcb054f9567a3bc705ff47e2a34e77b873"
     },
     {
       "path": ".github/workflows/research-native-a20.yml",
       "mode": "100644",
-      "bytes": 3635,
-      "sha256": "29476f609f896158d20c27ab1be5e87403ff6e1aa659deb7f877ee13addedd32",
-      "git_blob_sha1": "1c504623407b6e0c46e83bd62d7479ce081b1daa"
+      "bytes": 3743,
+      "sha256": "8ea8f3f61271e59996fbf231349bd4c902160cc4500d69a6d4f56701beda4040",
+      "git_blob_sha1": "0088e2dbbf647f74c6055095a80dbe1362aabf3d"
     },
     {
       "path": ".github/workflows/research-sherpa-host.yml",
       "mode": "100644",
-      "bytes": 973,
-      "sha256": "c7abe51344e301039e5854008d6434d885fdc218858e470f521e2ae236024ebd",
-      "git_blob_sha1": "4501ea147d1fed3a4c77df2083b2123a15a38337"
+      "bytes": 1027,
+      "sha256": "c7e76130c9f775ed51c585077e5f1d3f9911c160a70a1c8da08b5da857241093",
+      "git_blob_sha1": "c9feebc22fea14caeaf10309a363259f33c93ca9"
     },
     {
       "path": ".github/workflows/research-sherpa-pcm.yml",
       "mode": "100644",
-      "bytes": 1054,
-      "sha256": "77fe083c0fddeb7c06c00e59ca08ac530bf53d0b3b7c016c2a11989337120760",
-      "git_blob_sha1": "20aaee5cac8cb75ce68fa66b61b065568ef46d75"
+      "bytes": 1108,
+      "sha256": "cf1cf4fe443519bd33540814b48b0d49405982cdc7dde12f2bb015c619db2b50",
+      "git_blob_sha1": "1ff1e1b2b8ded0771e47aa0c89f9facb426226d3"
     },
     {
       "path": ".github/workflows/retained-ctc-keyword-competition-gradient.yml",
       "mode": "100644",
-      "bytes": 9891,
-      "sha256": "1e995aa218c64a8e58c77b51955a054b0810c9b11b322ed4fb643b68c9f72eeb",
-      "git_blob_sha1": "3a77c0b3a2791d36c3806b26901353abe627f030"
+      "bytes": 9999,
+      "sha256": "8898b18f1171b1d4d237d741d5850587833ae4361d070e17586a474626ff7768",
+      "git_blob_sha1": "8a3bbcad05d813a7fb53abe3114709ed1a046400"
     },
     {
       "path": ".github/workflows/retained-ctc-label-prior-gradient.yml",
       "mode": "100644",
-      "bytes": 8965,
-      "sha256": "633c83438c5c1bc3e9725908fe6fb7acdbc0efbeb94bc154aaa77bb8890fc333",
-      "git_blob_sha1": "008b9526e292f85b9da25d78c6f444737b781854"
+      "bytes": 9073,
+      "sha256": "763b22f1cb0966bad6eeb96db21fe3138cb76f55c7f731893ae16a74acf68c5f",
+      "git_blob_sha1": "6d5839cde228f247ccdaa9d8b8a2fc62cb97cf66"
     },
     {
       "path": ".github/workflows/retained-ctc-token-state-blank-gradient.yml",
       "mode": "100644",
-      "bytes": 9092,
-      "sha256": "276ed42f84911d0f22f9e1b976add9c4df8b2ebe5762d9abe75bcc252b9b2391",
-      "git_blob_sha1": "bea9fdc76cf9beeca5249ce50bae2612f3599ea7"
+      "bytes": 9200,
+      "sha256": "d47b531980e0a8cef5fca89b7fff0a5feb6daa292d551d9f1116e3c0bb45bf4d",
+      "git_blob_sha1": "ba97bac52d088e1c30bf3bfa400f06119061ec28"
     },
     {
       "path": ".github/workflows/retained-decoder-search-path-decomposition.yml",
       "mode": "100644",
-      "bytes": 13120,
-      "sha256": "201955494cff930a528f1dd27dc2cd59928a1b214d611853bc3658b32f4ee96a",
-      "git_blob_sha1": "d98310c1486c02b25b304ff849b13dcd91ad5eae"
+      "bytes": 13228,
+      "sha256": "7f25c490fa4ca739c5e1a999986c4bb905f33316222d41bd520288db6de1d6ba",
+      "git_blob_sha1": "e36a3949fe316e222ba01cecdae816203c24c3f5"
     },
     {
       "path": ".github/workflows/retained-frozen-far-context-path-summary.yml",
       "mode": "100644",
-      "bytes": 5319,
-      "sha256": "1f6431df5bdfe11e0df433e0379b9b3fde62c683d8469cb58fd27a99ad089a1a",
-      "git_blob_sha1": "81dbbb8e74df1b97d608ff459c735c3fcf69aa28"
+      "bytes": 5427,
+      "sha256": "17528a186e9ca21d20ab7e69955942be97e9aebf7102b4f71c643792bfc03905",
+      "git_blob_sha1": "c6e6bc2a06d8cea23aabdc9906c6a7f9fcf4f89c"
     },
     {
       "path": ".github/workflows/retained-full-speech-objective-gradient.yml",
       "mode": "100644",
-      "bytes": 10226,
-      "sha256": "1cd750aa3d269baab4311f49a84829e96d8b79401119e72d5b718cc4e90810e3",
-      "git_blob_sha1": "682a192d9b8594afed73703d99a0cac3c7fae383"
+      "bytes": 10334,
+      "sha256": "bdf086f33c02dc80110f9351405fae06ac5ddb7bae500af908248b85aeb655e3",
+      "git_blob_sha1": "1ab1c49b9b4fc484a2512f1f8644b010cac3fa74"
     },
     {
       "path": ".github/workflows/retained-sequence-margin-runtime-gap-decomposition.yml",
       "mode": "100644",
-      "bytes": 9408,
-      "sha256": "495a7b728e997fb7efa3ca3d3387699cd8cc7b11f5e3f78d0c8fe5af0831bb2f",
-      "git_blob_sha1": "fcf52f8f7a3285e89862142d9b29afc98a83bf10"
+      "bytes": 9516,
+      "sha256": "eed2eb0617ba4508a2952e071967f02d8dff2153ed7b7d28d546e651b9e5c330",
+      "git_blob_sha1": "7ad042339aa60c979e2146222f5f6ace46bc94bf"
     },
     {
       "path": ".github/workflows/speech-like-base-index-contract.yml",
       "mode": "100644",
-      "bytes": 6703,
-      "sha256": "a61a399bf51d00516f5ea4972b13d0dde825e8d6bbcecb2e6c43e5d549cf9060",
-      "git_blob_sha1": "dfc9e17936cb8a65defa8acf104cc4836aad73f7"
+      "bytes": 6757,
+      "sha256": "9192ff54afb607b3065ab2aeb3046b35a9cd9ed461f2721e25dd73b701d9a6e3",
+      "git_blob_sha1": "c31801c47a8c22614bde4caddbf6329a0b6caf24"
     },
     {
       "path": ".github/workflows/speech-like-command-provider-contract.yml",
       "mode": "100644",
-      "bytes": 8954,
-      "sha256": "b72bc40e692a8e6d2054752cb3052846b9b7752fdee16ba79f8a45dd6b000413",
-      "git_blob_sha1": "f4499cdebdc406884c6b6e3524b94195d0005043"
+      "bytes": 9008,
+      "sha256": "988d5ef88d5484f88f4dc01a1b74fa4bcd6e5ba181e6a171ee8affce32372cd4",
+      "git_blob_sha1": "6656d982a00a57d875bef6d0b73bccfd0445d98a"
     },
     {
       "path": ".github/workflows/speech-like-corpus-generation-contract.yml",
       "mode": "100644",
-      "bytes": 17590,
-      "sha256": "8a0990d9f9446486fd81316ef62e177dd3afd13fc670c32b3ac021e45917e0a5",
-      "git_blob_sha1": "9327db5ee8f27951eb93c8e8d04628bc5bbc56fa"
+      "bytes": 17644,
+      "sha256": "648c4df25bb30917d96a177d37612c74da8b8a1fdf306cc077217f24273c2366",
+      "git_blob_sha1": "88e585df3dd4a9ffa286621af875b0edbe7c3218"
     },
     {
       "path": ".github/workflows/speech-like-corpus-plan-contract.yml",
       "mode": "100644",
-      "bytes": 11835,
-      "sha256": "53f657113c919d8829792065946ad44d0f9b6a0e8c5bab74e7b1fd58c4d84d93",
-      "git_blob_sha1": "d5a7f4f4e111301f90b74cee96d4bb249ec79444"
+      "bytes": 11889,
+      "sha256": "912e44066dd65ee6145298f39c429083857a28d6e7bd03c27ec33e9e3b41bd26",
+      "git_blob_sha1": "0e4c4d1c376b15d63310f473924e4a51ff6fa17a"
     },
     {
       "path": ".github/workflows/speech-like-external-base-bundle-contract.yml",
       "mode": "100644",
-      "bytes": 7687,
-      "sha256": "d6fdb0d57b9026519c02c3d4997286c9ec50cd0ce34c5224cd6ed42cb0fbe591",
-      "git_blob_sha1": "c14f609a8fc5d898ecc7cb79a64796bb626aa6ae"
+      "bytes": 7741,
+      "sha256": "9f42e413d4e6720112e379b5084294cd34c87eac0a0fad05a6fe4f169086649e",
+      "git_blob_sha1": "3aff09fe17860b7f3c5b8d22291b1ed5062d0ec1"
     },
     {
       "path": ".github/workflows/speech-like-label-contract.yml",
       "mode": "100644",
-      "bytes": 5381,
-      "sha256": "c0b3f4b928ac59d28f912f921e2f853db64d202e6cf0254cdb9021d782dbe146",
-      "git_blob_sha1": "98ed1c19346d87240febe06d15e38384f4f01a08"
+      "bytes": 5435,
+      "sha256": "455e1a0bf859f4031aa8dafcfd2db55ee6b27dcffa4353793d53383f6594bb32",
+      "git_blob_sha1": "4fecc39ee859f3bce070fc8e6897e3cedc300b98"
     },
     {
       "path": ".github/workflows/speech-like-provider-materialization-contract.yml",
       "mode": "100644",
-      "bytes": 34783,
-      "sha256": "37e48dfd8abc8c730c64c33b9220524ccfa3c8aa3edeb7424e71e6bb1f221507",
-      "git_blob_sha1": "aa64b718450998373f4c97d7903c78638099c6af"
+      "bytes": 34837,
+      "sha256": "040ad24d31dfd7a5f5a8c422ed8ffca61f712fbd53357ea39875dcd07018e730",
+      "git_blob_sha1": "41bf3f99396580104b5380d402ca1b8ca2e2e93b"
     },
     {
       "path": ".github/workflows/speech-like-stage-a-bootstrap-contract.yml",
       "mode": "100644",
-      "bytes": 20071,
-      "sha256": "1f671b58df277c3f64e17317c5e53637cce6e49e0e2bdcd72da0708e05d7a4ff",
-      "git_blob_sha1": "a04ed9fd3630aec0c28df956c0fb17a126ee04aa"
+      "bytes": 20125,
+      "sha256": "5d50b854cc134cd7d0cd2cf6f58505f4f32fe6391755808958be5b9bd7193399",
+      "git_blob_sha1": "2f796e473f78f41accd04fdac79fb792341ed69a"
     },
     {
       "path": ".github/workflows/speech-like-synthetic-contract.yml",
       "mode": "100644",
-      "bytes": 6787,
-      "sha256": "5364e25d901de2123be7eb84750c89f5d5b14070420faff564df4e5415270d2e",
-      "git_blob_sha1": "e0ed70d323ff675b44fcef681590631e3b28806c"
+      "bytes": 6841,
+      "sha256": "4183be98169b345f924b983374266bb06204e687898acf96fac341a90b6f079b",
+      "git_blob_sha1": "7b9a3075b17bcc34bef165126214b892ff65455d"
     },
     {
       "path": ".github/workflows/training-audit-closure.yml",
       "mode": "100644",
-      "bytes": 3011,
-      "sha256": "64f33a545a3ebda433cc54ae0f4fad7416256aa8a81024018a9afbab0c846724",
-      "git_blob_sha1": "993319a679c5823592dbd6fb3b5edea104b39aa8"
+      "bytes": 2835,
+      "sha256": "3c58d79babfcfe9c1e87d149e57310740cbcb4f8ff11bd336be15986624e5a4f",
+      "git_blob_sha1": "fcce78e9c4349ccf939bc8197ddacf1ca8ae3c76"
     },
     {
       "path": ".github/workflows/training-integration.yml",
       "mode": "100644",
-      "bytes": 4582,
-      "sha256": "7ada549a0b8c83d5c421c479b74b05b4b82ab129863f82e95bc8dd5a766b67b3",
-      "git_blob_sha1": "6c82340bc9a18f35deb72229bcf3fa62496f9ea5"
+      "bytes": 4706,
+      "sha256": "a635d739a20bb60581dee0daee34684d709736d63577483a8cea43d5d715a2fc",
+      "git_blob_sha1": "9b450a29b43ff1ed4b882c454eda6d4e4dbb6054"
     }
   ],
   "allowed_new_active_workflows": [
@@ -44116,15 +44116,1859 @@
           }
         }
       ]
+    },
+    {
+      "id": "far-capture-context-finite-preflight-20261101",
+      "date": "2026-11-01",
+      "base_commit": "b12f3b7e30c4000c06eb0852f016a3f8c2c5a40d",
+      "base_tree": "3d14e802c310594bb97d9ff99b0c2a9830349c4f",
+      "workflow_source_changed": false,
+      "scope": "Reject non-finite capture-context seconds before output directory creation or runner launch; preserve legal finite boundaries.",
+      "rationale": "Two mock-only preflight tests add 16 invalid and 4 valid cases to the existing 12 metadata tests; original NaN behavior reached launch boundary. No actual runner executes in these new tests.",
+      "files": [
+        {
+          "path": "eval/long_far_stream.py",
+          "before": {
+            "path": "eval/long_far_stream.py",
+            "mode": "100644",
+            "bytes": 20229,
+            "sha256": "d9bce889a3c85480aaf170f06b867b13cf8b5472a1b5d21b861bae804dd716cf",
+            "git_blob_sha1": "09781e383493f244013a61d6c42fc32e78f40c29"
+          },
+          "after": {
+            "path": "eval/long_far_stream.py",
+            "mode": "100644",
+            "bytes": 20294,
+            "sha256": "e13d1ee6bf2a92d8076a8e6cc1366a0f3d5398f7e74534fe23f5622a9e882652",
+            "git_blob_sha1": "9f122c17128c177a6cd889869040c1450df63ddd"
+          }
+        },
+        {
+          "path": "tests/test_long_far.py",
+          "before": {
+            "path": "tests/test_long_far.py",
+            "mode": "100644",
+            "bytes": 41647,
+            "sha256": "02d77d0a7b18527658fea541543f03ffd97c3ce7f93d62ad815dedd296b5ccd8",
+            "git_blob_sha1": "96f23ebcd7938baf7393e19f0d57168041e88dc7"
+          },
+          "after": {
+            "path": "tests/test_long_far.py",
+            "mode": "100644",
+            "bytes": 44813,
+            "sha256": "3bbb983d98b214c85913c31193715fd1d93ea8661522e3fa75163c9b9063b0d7",
+            "git_blob_sha1": "156bf3277f4ed9c0a438c2927bd0be000cfeacac"
+          }
+        }
+      ]
+    },
+    {
+      "id": "research-sample-coordinate-latency-diagnostics-20261103",
+      "date": "2026-11-03",
+      "base_commit": "b0fa8ca15ba52d680bbca86caa1119077bf1459f",
+      "base_tree": "cd2a4c31592974bddf53f8a46bf486439faa9527",
+      "workflow_source_changed": false,
+      "scope": "Add research-only raw/post-AFE sample-coordinate p95 latency diagnostics and explicit callback NOT_MEASURED; preserve legacy acoustic qualified semantics and retired publication workflows.",
+      "rationale": "One normal full suite passed locally with independent raw-log review, including 16 metadata cases and four actual scorer-to-producer synthetic cases. Raw 600/post 300 and 500/501 boundaries are not callback measurements or per-event bounds. Missing timing or zero matched events remain not evaluable. Schema constraints were statically reviewed, not validator-executed. No real corpus, model or product qualification.",
+      "files": [
+        {
+          "path": "tools/score_real_human_qualification.py",
+          "before": {
+            "path": "tools/score_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 17166,
+            "sha256": "f66858fabd1956d72d6f926dbb5cd05ada636b49be8498c5ecea99e3b1e1a348",
+            "git_blob_sha1": "eb9a1e6681abd5c1b996f6a70421a8bdabdd5eca"
+          },
+          "after": {
+            "path": "tools/score_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 19293,
+            "sha256": "e04caaba9e28b2bbaa47a3bdbc31b12093a831d97e12347afdd4cbf697536b50",
+            "git_blob_sha1": "2a3bb4663b686079cc2a9615a5aa5fe51e4aacd8"
+          }
+        },
+        {
+          "path": "commercial/real-human-qualification-summary.schema.json",
+          "before": {
+            "path": "commercial/real-human-qualification-summary.schema.json",
+            "mode": "100644",
+            "bytes": 2654,
+            "sha256": "1b6d9efee7ad9d3b577a67ce6168723731b7baca3b5417fdf822737d2a0c332d",
+            "git_blob_sha1": "0eecca53f1eadd0a6c8af95f82a45b37956e88b0"
+          },
+          "after": {
+            "path": "commercial/real-human-qualification-summary.schema.json",
+            "mode": "100644",
+            "bytes": 7610,
+            "sha256": "a645bc2bd0170973921c77299169ba6e5a49a4a44244f3b29b0f5d3a602cfd22",
+            "git_blob_sha1": "eaedf90a1092faa78530b91a9f48788296291329"
+          }
+        },
+        {
+          "path": "tests/test_real_human_qualification.py",
+          "before": {
+            "path": "tests/test_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 37779,
+            "sha256": "8b33871bfc05fbcad0367434a29cb5d0bb00f73a80563beee1edb4fc71292b1d",
+            "git_blob_sha1": "df4684dc5304f6cbac992c91bd42e85affce66d9"
+          },
+          "after": {
+            "path": "tests/test_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 46147,
+            "sha256": "2490ee77a13768365a6a98963ab8fc8f72207587756123cda49f56e64c2c1ec4",
+            "git_blob_sha1": "66fd7a96a852c9eb936364e298ca26c61ff8f88e"
+          }
+        }
+      ]
+    },
+    {
+      "id": "active-research-execution-resume-20261105",
+      "date": "2026-11-05",
+      "base_commit": "d34e27babd1e328ecbc628fb016cac23f5e3e173",
+      "base_tree": "800cfd2c838c552c8add0ccafaed4dd90617bd45",
+      "workflow_source_changed": true,
+      "scope": "Integrate finite capture preflight, sample-coordinate latency diagnostics, evidence-first publication recovery and explicit system comparison invocation. Declare active research plan without claiming deployed orchestration or model results.",
+      "rationale": "Reuse the reviewed functional fixes from PR687 and PR714 on current main, preserving both original source records; offline real-shell publication tests cover failed PR creation, identity collision, closed PR and incomplete recovery source.",
+      "files": [
+        {
+          "path": ".github/workflows/dataset-driven-iteration.yml",
+          "before": {
+            "path": ".github/workflows/dataset-driven-iteration.yml",
+            "mode": "100644",
+            "bytes": 9051,
+            "sha256": "b56e377ce74aadf60058b257d600be446a030fcba631d2f34a911b14e481359a",
+            "git_blob_sha1": "bb963eabdc7d2b2123dc7042e2429939f22b63ab"
+          },
+          "after": {
+            "path": ".github/workflows/dataset-driven-iteration.yml",
+            "mode": "100644",
+            "bytes": 14046,
+            "sha256": "16c7975c0eacf2ebeebbc3e1c2439f6a4ecf916beb952c18bdc913c6c8995a4b",
+            "git_blob_sha1": "56b0f1776f63a108600541912aec5ae020813ab4"
+          }
+        },
+        {
+          "path": "tests/test_dataset_iteration_publication.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_dataset_iteration_publication.py",
+            "mode": "100644",
+            "bytes": 8778,
+            "sha256": "136c8f14ed5f7974fcc39aac12e6341e6663537a3eb0460b5117a5680af497d1",
+            "git_blob_sha1": "95d1e9ede713d3de3afe48ce3982147c9c5df228"
+          }
+        },
+        {
+          "path": "configs/research/active-plan-20261105.json",
+          "before": null,
+          "after": {
+            "path": "configs/research/active-plan-20261105.json",
+            "mode": "100644",
+            "bytes": 4448,
+            "sha256": "9cfff37283535e26dd98619f3058d94065f035c5e17bc854babe6cdfed8fa234",
+            "git_blob_sha1": "95a63f412aaeabb6a475fae92aaf7c631e4a0b56"
+          }
+        },
+        {
+          "path": "docs/KWS_ACTIVE_EXECUTION_20261105.md",
+          "before": null,
+          "after": {
+            "path": "docs/KWS_ACTIVE_EXECUTION_20261105.md",
+            "mode": "100644",
+            "bytes": 5669,
+            "sha256": "08babf8b999cb483de4507baf12c2c19cced17ac038cff66a34dcf1cef808dc6",
+            "git_blob_sha1": "7b48834e54fb1531c210c91e149e64792c532a81"
+          }
+        },
+        {
+          "path": "eval/long_far_stream.py",
+          "before": {
+            "path": "eval/long_far_stream.py",
+            "mode": "100644",
+            "bytes": 20229,
+            "sha256": "d9bce889a3c85480aaf170f06b867b13cf8b5472a1b5d21b861bae804dd716cf",
+            "git_blob_sha1": "09781e383493f244013a61d6c42fc32e78f40c29"
+          },
+          "after": {
+            "path": "eval/long_far_stream.py",
+            "mode": "100644",
+            "bytes": 20294,
+            "sha256": "e13d1ee6bf2a92d8076a8e6cc1366a0f3d5398f7e74534fe23f5622a9e882652",
+            "git_blob_sha1": "9f122c17128c177a6cd889869040c1450df63ddd"
+          }
+        },
+        {
+          "path": "tests/test_long_far.py",
+          "before": {
+            "path": "tests/test_long_far.py",
+            "mode": "100644",
+            "bytes": 41647,
+            "sha256": "02d77d0a7b18527658fea541543f03ffd97c3ce7f93d62ad815dedd296b5ccd8",
+            "git_blob_sha1": "96f23ebcd7938baf7393e19f0d57168041e88dc7"
+          },
+          "after": {
+            "path": "tests/test_long_far.py",
+            "mode": "100644",
+            "bytes": 44813,
+            "sha256": "3bbb983d98b214c85913c31193715fd1d93ea8661522e3fa75163c9b9063b0d7",
+            "git_blob_sha1": "156bf3277f4ed9c0a438c2927bd0be000cfeacac"
+          }
+        },
+        {
+          "path": "tests/test_real_human_qualification.py",
+          "before": {
+            "path": "tests/test_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 38070,
+            "sha256": "fdae407102c48a2825cf2ed2da57f17d9eb299db0a5b8c1c30260b9aa772ebe6",
+            "git_blob_sha1": "3c26d4c8cea4b7f118839765c6945a9048dc48f8"
+          },
+          "after": {
+            "path": "tests/test_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 46438,
+            "sha256": "8d3ee43595584781d7a7258a8f8da5011c1643b44afc263bbef5f2fb3a22ef7d",
+            "git_blob_sha1": "c1635989082a480a5ee7a723aa97af39341d838d"
+          }
+        },
+        {
+          "path": "tools/score_real_human_qualification.py",
+          "before": {
+            "path": "tools/score_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 17220,
+            "sha256": "1b70e98844ed75472d77ba7433c04f79a0d69fcfa7bc5598020dfbaac6d53a32",
+            "git_blob_sha1": "c7c45e5a7b231663a0d96558a722f75482d9394e"
+          },
+          "after": {
+            "path": "tools/score_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 19347,
+            "sha256": "b1ee9abcfcd19ad25efbc43015b5e947cb0d3437d38b97a472e7e5ed12baebd1",
+            "git_blob_sha1": "3feb7a2f3a177d1ec8485d9cc9d5e7850e2fd922"
+          }
+        }
+      ]
+    },
+    {
+      "id": "research-foundation-python312-evaluation-v5-20261105",
+      "date": "2026-11-05",
+      "base_commit": "d34e27babd1e328ecbc628fb016cac23f5e3e173",
+      "base_tree": "800cfd2c838c552c8add0ccafaed4dd90617bd45",
+      "workflow_source_changed": true,
+      "scope": "Unify active Python setup, exact Poisson v5 scoring, portable system comparison evidence, publication-only recovery, declared baseline artifact restore, and known native runner block contract. Preserve all original history and PR687/714 origin records.",
+      "rationale": "Independent review found and fixed missing iteration Python setup, Actions artifact read permission, baseline replay bundle restoration and declared-vs-actual native feed size. Model quality and target-device results remain separate from software checks.",
+      "files": [
+        {
+          "path": ".github/actions/setup-research-python/action.yml",
+          "before": null,
+          "after": {
+            "path": ".github/actions/setup-research-python/action.yml",
+            "mode": "100644",
+            "bytes": 803,
+            "sha256": "93015b46412119ef2a1fad558d55d5cb71b3bc97e47cf4668485f3532f69d6cc",
+            "git_blob_sha1": "253f404251172c88d44a995622cb6e5c18ae25be"
+          }
+        },
+        {
+          "path": ".github/workflows/acoustic-boundary-segmentation.yml",
+          "before": {
+            "path": ".github/workflows/acoustic-boundary-segmentation.yml",
+            "mode": "100644",
+            "bytes": 9010,
+            "sha256": "6a37608043e03937fa46260d61a5dd807dad38c56df6a776d9ad261b242dc089",
+            "git_blob_sha1": "f7e659bff283fc49da39c17d28d9005abfeab330"
+          },
+          "after": {
+            "path": ".github/workflows/acoustic-boundary-segmentation.yml",
+            "mode": "100644",
+            "bytes": 9064,
+            "sha256": "030c1b11ef517ea9229f2dfea02d18eccbe2d575978e85d29ca62ca5d701ea95",
+            "git_blob_sha1": "862ffd4797bd8427de0d97299cee404c7df8c2ca"
+          }
+        },
+        {
+          "path": ".github/workflows/authorized-voice-clone-contracts.yml",
+          "before": {
+            "path": ".github/workflows/authorized-voice-clone-contracts.yml",
+            "mode": "100644",
+            "bytes": 1271,
+            "sha256": "b44acb0d9a4b448a4578afaca4eabd49162603438dbd5a76b7fae7a0bae017ca",
+            "git_blob_sha1": "f98d751fea32576585a465012113ecae82ce9922"
+          },
+          "after": {
+            "path": ".github/workflows/authorized-voice-clone-contracts.yml",
+            "mode": "100644",
+            "bytes": 1325,
+            "sha256": "1ee1bbab8324c38516446a121a86c72c1f4d7d8940fed812e6ac1dc0cf3e4027",
+            "git_blob_sha1": "6447b780ace7062db71814e341d3f183f080131d"
+          }
+        },
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 68813,
+            "sha256": "9579c675f2e5519964d2de324dcf57ff3aecfaf2f77ea022957568e6200c9dcd",
+            "git_blob_sha1": "ad144f7271c3a0d311614bfc8f29244ff146dc2d"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 69593,
+            "sha256": "b8bbbc0a95db68b89738593234254c484ce74b5f34564b8f88ff7640add68273",
+            "git_blob_sha1": "71bb4b295032e6b8080dc3d16f8fe7a1e352d4f3"
+          }
+        },
+        {
+          "path": ".github/workflows/dataset-driven-iteration.yml",
+          "before": {
+            "path": ".github/workflows/dataset-driven-iteration.yml",
+            "mode": "100644",
+            "bytes": 9051,
+            "sha256": "b56e377ce74aadf60058b257d600be446a030fcba631d2f34a911b14e481359a",
+            "git_blob_sha1": "bb963eabdc7d2b2123dc7042e2429939f22b63ab"
+          },
+          "after": {
+            "path": ".github/workflows/dataset-driven-iteration.yml",
+            "mode": "100644",
+            "bytes": 16472,
+            "sha256": "4cd0b632dce6c281b5df5f9da5502e3ae5ce9f0a2a8da0d267abd4fb410c5fa5",
+            "git_blob_sha1": "bd04f500968774ba2082ce341345feca9f84d2b2"
+          }
+        },
+        {
+          "path": ".github/workflows/decoder-boundary-requalification.yml",
+          "before": {
+            "path": ".github/workflows/decoder-boundary-requalification.yml",
+            "mode": "100644",
+            "bytes": 12417,
+            "sha256": "0f195ca8237d78a4f79849deb4c457162a9f1d5f50417d1d474eb60d5a3fc8f1",
+            "git_blob_sha1": "99eac834cc8737a237d3b8cf5f3025c72bbd627f"
+          },
+          "after": {
+            "path": ".github/workflows/decoder-boundary-requalification.yml",
+            "mode": "100644",
+            "bytes": 12471,
+            "sha256": "d8457ba8ed238d76346c2dbd799d3a063a0216fb01f414b37c4acca5f232e887",
+            "git_blob_sha1": "b346da390f7fc52bf11b95dac692689cbe4646e5"
+          }
+        },
+        {
+          "path": ".github/workflows/decoder-boundary-separability.yml",
+          "before": {
+            "path": ".github/workflows/decoder-boundary-separability.yml",
+            "mode": "100644",
+            "bytes": 9046,
+            "sha256": "df627697d915972501bb528af873296c359a05d6d8eab060d31ce6d57bc5b63f",
+            "git_blob_sha1": "758d106802b1f13155a1fcf761fd968ae8353367"
+          },
+          "after": {
+            "path": ".github/workflows/decoder-boundary-separability.yml",
+            "mode": "100644",
+            "bytes": 9100,
+            "sha256": "c27fc6ab9d8e4d9fa0df8e7dd97f8c673f340eb64c4d5f018bbb6803a25404d1",
+            "git_blob_sha1": "0f6b34520c2eaf85abf22ebdc1f54c26525d29cd"
+          }
+        },
+        {
+          "path": ".github/workflows/experiment-quality-guards.yml",
+          "before": {
+            "path": ".github/workflows/experiment-quality-guards.yml",
+            "mode": "100644",
+            "bytes": 2931,
+            "sha256": "e27422560fe174cc91af0e1cb76e23d1cca01d0a986e5c092afed4b494378778",
+            "git_blob_sha1": "74985256b9e1eecd77d9def1bb03ef7cf6ccb326"
+          },
+          "after": {
+            "path": ".github/workflows/experiment-quality-guards.yml",
+            "mode": "100644",
+            "bytes": 2985,
+            "sha256": "c6bc8084c0919a199c1d45e645718e8174f649f5129607c7c031a2ce010141ff",
+            "git_blob_sha1": "af0d2ff56d7fd8df5698e65f670ae86cfb154557"
+          }
+        },
+        {
+          "path": ".github/workflows/far-nightly.yml",
+          "before": {
+            "path": ".github/workflows/far-nightly.yml",
+            "mode": "100644",
+            "bytes": 15660,
+            "sha256": "99587ec96f0e4a4bcca034a126fb77513f2b116e300ad09ffbde4bdd21f39370",
+            "git_blob_sha1": "56ccd8463c4baaff381dc2718634817feabc8cf2"
+          },
+          "after": {
+            "path": ".github/workflows/far-nightly.yml",
+            "mode": "100644",
+            "bytes": 15714,
+            "sha256": "af5629886679dee1bf810a99bb2efe1bd6dfdf6a010e35487091316da672dcab",
+            "git_blob_sha1": "93c0569eaaf324757bca292309150511b8b0e1c4"
+          }
+        },
+        {
+          "path": ".github/workflows/frozen-far-source-replay.yml",
+          "before": {
+            "path": ".github/workflows/frozen-far-source-replay.yml",
+            "mode": "100644",
+            "bytes": 21076,
+            "sha256": "e009ae47e8778e94bfb2a52ea8fbf432823174fb8f3419642c877d0758d55175",
+            "git_blob_sha1": "e443f402921d36d5a8eaa2e1c92e2ec5d84c726a"
+          },
+          "after": {
+            "path": ".github/workflows/frozen-far-source-replay.yml",
+            "mode": "100644",
+            "bytes": 21184,
+            "sha256": "a7f6956f30477d84b4aed78e73b7a6791b837e144191b8373bc47c3b18e93f92",
+            "git_blob_sha1": "e8a6f9ac3852b5e43e1ba09a65ef39df005eac19"
+          }
+        },
+        {
+          "path": ".github/workflows/kw1-supplement-observation.yml",
+          "before": {
+            "path": ".github/workflows/kw1-supplement-observation.yml",
+            "mode": "100644",
+            "bytes": 964,
+            "sha256": "3882b9b5498c3479086c354eb393142339c1466ce468a25ad5efd19ec1dd0731",
+            "git_blob_sha1": "68472c1bc2837fb7243a2552d25060f7da270adc"
+          },
+          "after": {
+            "path": ".github/workflows/kw1-supplement-observation.yml",
+            "mode": "100644",
+            "bytes": 1018,
+            "sha256": "9833d8a7325ed67fecc5ee8ecca59205eec88a454120fc5b791984b64967e36f",
+            "git_blob_sha1": "12dc33be1e483a374b810a73fcfb1a5ea8f452ec"
+          }
+        },
+        {
+          "path": ".github/workflows/kws-landing-status.yml",
+          "before": {
+            "path": ".github/workflows/kws-landing-status.yml",
+            "mode": "100644",
+            "bytes": 2951,
+            "sha256": "4036e41eeac9dce088ea32afe4f73c581275b0efa415c6b769c4b7d657e0e867",
+            "git_blob_sha1": "b85012d8a6dd7f57ff241ff44864e7c95f2e2b32"
+          },
+          "after": {
+            "path": ".github/workflows/kws-landing-status.yml",
+            "mode": "100644",
+            "bytes": 3005,
+            "sha256": "d57894c3190841c8fa6e4edb1cf86798c8eff8aa708c4a93f15d6194032c2c3c",
+            "git_blob_sha1": "4e25c58c998fc86591ffba5f82fa50665f97849c"
+          }
+        },
+        {
+          "path": ".github/workflows/model-family-resource-contract.yml",
+          "before": {
+            "path": ".github/workflows/model-family-resource-contract.yml",
+            "mode": "100644",
+            "bytes": 2667,
+            "sha256": "419ec0f21bf2754f4c3c7500d1b3e74c6a4bdff09189c26fb594927433716db8",
+            "git_blob_sha1": "b43d837d6cdd4faadc2f9754b6079100b1ac9441"
+          },
+          "after": {
+            "path": ".github/workflows/model-family-resource-contract.yml",
+            "mode": "100644",
+            "bytes": 2721,
+            "sha256": "2ec85a39696b7ce724e0b75de225801ce3cb92b7620866848ceebe79dc634927",
+            "git_blob_sha1": "979e08ad3d5ea1901be27a3d65d2d7f59ad04096"
+          }
+        },
+        {
+          "path": ".github/workflows/model-registry-contract.yml",
+          "before": {
+            "path": ".github/workflows/model-registry-contract.yml",
+            "mode": "100644",
+            "bytes": 3733,
+            "sha256": "9739017330b247dd29a0035136d68cf566dc36854926f777ecb04c9bcce57101",
+            "git_blob_sha1": "90c8fae7149002598108cae350baca56b93af0fa"
+          },
+          "after": {
+            "path": ".github/workflows/model-registry-contract.yml",
+            "mode": "100644",
+            "bytes": 3787,
+            "sha256": "d7480c0a2af6a64ac68b7b9dcd7868d7a0cf0a7faa7e3190b747fa4521c1f4ec",
+            "git_blob_sha1": "6414df255470cd7f02f3611090be706d6b3002cb"
+          }
+        },
+        {
+          "path": ".github/workflows/model-training-preflight.yml",
+          "before": {
+            "path": ".github/workflows/model-training-preflight.yml",
+            "mode": "100644",
+            "bytes": 16061,
+            "sha256": "ec6ff044f922bcbe6d7ea3838ebcd496df09ea35b62bc5d1394ea9a387c3183f",
+            "git_blob_sha1": "3d2e6121f4b64104b1e9e9fdfb847bdfa30c17f2"
+          },
+          "after": {
+            "path": ".github/workflows/model-training-preflight.yml",
+            "mode": "100644",
+            "bytes": 15759,
+            "sha256": "89590d90a95055668c6c7f90a0392850bf1b6153745c75968cd137eb5863d150",
+            "git_blob_sha1": "4a9a426e1198d2f7d65c4d289973b2447ad7fcf0"
+          }
+        },
+        {
+          "path": ".github/workflows/model-training.yml",
+          "before": {
+            "path": ".github/workflows/model-training.yml",
+            "mode": "100644",
+            "bytes": 13936,
+            "sha256": "cb57e3362f12887f51ab11f341fe237a249307f1cf378fbb82d6c68c9489100a",
+            "git_blob_sha1": "9ac3039a8e5855d1a321842790fbf962cdc561ab"
+          },
+          "after": {
+            "path": ".github/workflows/model-training.yml",
+            "mode": "100644",
+            "bytes": 13370,
+            "sha256": "c6f08641082d6e0915903c487aee6ef78f71dbbca0f9480572d78dc032f2e036",
+            "git_blob_sha1": "88a5239e956f153001f2099ba46ad23afad28496"
+          }
+        },
+        {
+          "path": ".github/workflows/native-a20-quality-tools.yml",
+          "before": {
+            "path": ".github/workflows/native-a20-quality-tools.yml",
+            "mode": "100644",
+            "bytes": 1355,
+            "sha256": "768bee0c5d499a375e75596a50f84fd103fe2c3fffbc02664706453d03d6ae42",
+            "git_blob_sha1": "a5ff424679ba72b6ec025a7c2d4ab39492d58355"
+          },
+          "after": {
+            "path": ".github/workflows/native-a20-quality-tools.yml",
+            "mode": "100644",
+            "bytes": 1409,
+            "sha256": "baa0c9726f587807ab062d561e493b4fa25d8f6b35019bb4d5f543cae2ef155b",
+            "git_blob_sha1": "882c5451e9d248f87258bfd4164cc58362ed9d77"
+          }
+        },
+        {
+          "path": ".github/workflows/product-development-experiment.yml",
+          "before": {
+            "path": ".github/workflows/product-development-experiment.yml",
+            "mode": "100644",
+            "bytes": 35404,
+            "sha256": "ef11d02f986f6db7b00d94ae8c23ea8f4f24e93c3da5c0d09e1809d60b0b38b6",
+            "git_blob_sha1": "0e192eeffcbb46ff1b49e9f47ccee5b3650e19d3"
+          },
+          "after": {
+            "path": ".github/workflows/product-development-experiment.yml",
+            "mode": "100644",
+            "bytes": 35282,
+            "sha256": "55c6485d8e5d204fdf027df6a32d1128e8a631cc37cd53ea30da033ef76bf117",
+            "git_blob_sha1": "2a1a7853335e493900bcc58ddbc0b68cd6611acb"
+          }
+        },
+        {
+          "path": ".github/workflows/product-development-pair-analysis.yml",
+          "before": {
+            "path": ".github/workflows/product-development-pair-analysis.yml",
+            "mode": "100644",
+            "bytes": 4456,
+            "sha256": "227af540dd4f54233e8a7d9235edbf63c4cdb4a8cc6969ed2b3265e0518949ed",
+            "git_blob_sha1": "3f646cf1c3c48a4925162374b96f43c70ad54f49"
+          },
+          "after": {
+            "path": ".github/workflows/product-development-pair-analysis.yml",
+            "mode": "100644",
+            "bytes": 4510,
+            "sha256": "9e4881dc63725e785a3d785645d1ce06d710e8dbd49fec87772fd8119cd9b131",
+            "git_blob_sha1": "43839f30dd32c1c0531a91e841d461811d9113bf"
+          }
+        },
+        {
+          "path": ".github/workflows/product-development-paired-experiment.yml",
+          "before": {
+            "path": ".github/workflows/product-development-paired-experiment.yml",
+            "mode": "100644",
+            "bytes": 16063,
+            "sha256": "a744849d0a3ae45e6858b89caff247dcf70d301c6b76f75ff4229ff2b9e3faa4",
+            "git_blob_sha1": "9f9a2376bd55d7e6aba7de5d791c6a270ff3fb96"
+          },
+          "after": {
+            "path": ".github/workflows/product-development-paired-experiment.yml",
+            "mode": "100644",
+            "bytes": 15939,
+            "sha256": "a788abadf1daa5238ec64bd5f17969ca7e9712161c6b3f0c4d8b0e06a8a5fc00",
+            "git_blob_sha1": "6f9432b9f776b451730098d3cb84eb6760fdbf68"
+          }
+        },
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 87216,
+            "sha256": "b5c70cbdad9bf6b5bd911ff46f806278911a6b1f1f6c9ae1f09e5884d490ff6b",
+            "git_blob_sha1": "2aa56505d6c70ed09ccf43b0f1af6a10c4015650"
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 87412,
+            "sha256": "2effdb56742ad33a63bc44f6b75542a6065f142b69d32164563814d3dc7efd4a",
+            "git_blob_sha1": "dea91032882790458e8ab621db686e02ffca77c2"
+          }
+        },
+        {
+          "path": ".github/workflows/research-arm-runtime.yml",
+          "before": {
+            "path": ".github/workflows/research-arm-runtime.yml",
+            "mode": "100644",
+            "bytes": 996,
+            "sha256": "5b3df899bcf50c6d7e534b4be44b277791c099328b996df846a39a4f2be12ae2",
+            "git_blob_sha1": "a76b39e1f50942d63f358a3944cb19e359dc5ad8"
+          },
+          "after": {
+            "path": ".github/workflows/research-arm-runtime.yml",
+            "mode": "100644",
+            "bytes": 1050,
+            "sha256": "8b181d5df0638247f3e40e67f2b0d38651cbb61cf615050c7ed9f7e518004bd7",
+            "git_blob_sha1": "822f83e1ed052507d0150f245cd9214ea5006e99"
+          }
+        },
+        {
+          "path": ".github/workflows/research-asr-evidence.yml",
+          "before": {
+            "path": ".github/workflows/research-asr-evidence.yml",
+            "mode": "100644",
+            "bytes": 1037,
+            "sha256": "746683227221f4917b73d4783f0ce792bebcbecfd7ae83379d99ec72b720a0f5",
+            "git_blob_sha1": "b96b6ae8e4d5e345dccc2f51c4965ec63124f1da"
+          },
+          "after": {
+            "path": ".github/workflows/research-asr-evidence.yml",
+            "mode": "100644",
+            "bytes": 1091,
+            "sha256": "e7922a911be2367c323024865c3ae38333a9de133fbd5d62020baaebbad498d2",
+            "git_blob_sha1": "b3094b048815538ce88c4e6c5d8063a5720ef0cf"
+          }
+        },
+        {
+          "path": ".github/workflows/research-consolidation.yml",
+          "before": {
+            "path": ".github/workflows/research-consolidation.yml",
+            "mode": "100644",
+            "bytes": 840,
+            "sha256": "0ee5f1b9d037d308654aea822069631bc586d789126d5b4b0594dd26f7975eff",
+            "git_blob_sha1": "78f7fa38913cc1b7f5df2a91ed82b7f499572721"
+          },
+          "after": {
+            "path": ".github/workflows/research-consolidation.yml",
+            "mode": "100644",
+            "bytes": 894,
+            "sha256": "fd2d609dda23ba18799e87286d99a3f13d79cf6510c738c63c02476ab7cecb94",
+            "git_blob_sha1": "3d1b871cb5e9802356a7778286f15f161309474b"
+          }
+        },
+        {
+          "path": ".github/workflows/research-donor-fbank.yml",
+          "before": {
+            "path": ".github/workflows/research-donor-fbank.yml",
+            "mode": "100644",
+            "bytes": 3696,
+            "sha256": "bc493caee3e50a1be03f7d684c435cec7a1a7dfd996e8850869cca4553d890a5",
+            "git_blob_sha1": "ccfa145ad90a9c5fe4f0002d684953729034f630"
+          },
+          "after": {
+            "path": ".github/workflows/research-donor-fbank.yml",
+            "mode": "100644",
+            "bytes": 3618,
+            "sha256": "b5f944199bb64fef67caed2d36d4f5d2b081fb0456392b49095d08fb98bb1490",
+            "git_blob_sha1": "c060426c38963d99758cdf44bba0ae40d7221c1a"
+          }
+        },
+        {
+          "path": ".github/workflows/research-donor-fsmn.yml",
+          "before": {
+            "path": ".github/workflows/research-donor-fsmn.yml",
+            "mode": "100644",
+            "bytes": 1705,
+            "sha256": "462ee1a899be236ba6bbe413d8d9866ee4381f839d0447a88ea3951d6f8ddf73",
+            "git_blob_sha1": "7fc010ad1a6590e2b2475334ce824102104cae77"
+          },
+          "after": {
+            "path": ".github/workflows/research-donor-fsmn.yml",
+            "mode": "100644",
+            "bytes": 1636,
+            "sha256": "a434297f12cc0f9bd3d29d86c6761510486a0b8af586871a9abf4e6920cb6d99",
+            "git_blob_sha1": "6bfa8afcb054f9567a3bc705ff47e2a34e77b873"
+          }
+        },
+        {
+          "path": ".github/workflows/research-native-a20.yml",
+          "before": {
+            "path": ".github/workflows/research-native-a20.yml",
+            "mode": "100644",
+            "bytes": 3635,
+            "sha256": "29476f609f896158d20c27ab1be5e87403ff6e1aa659deb7f877ee13addedd32",
+            "git_blob_sha1": "1c504623407b6e0c46e83bd62d7479ce081b1daa"
+          },
+          "after": {
+            "path": ".github/workflows/research-native-a20.yml",
+            "mode": "100644",
+            "bytes": 3743,
+            "sha256": "8ea8f3f61271e59996fbf231349bd4c902160cc4500d69a6d4f56701beda4040",
+            "git_blob_sha1": "0088e2dbbf647f74c6055095a80dbe1362aabf3d"
+          }
+        },
+        {
+          "path": ".github/workflows/research-sherpa-host.yml",
+          "before": {
+            "path": ".github/workflows/research-sherpa-host.yml",
+            "mode": "100644",
+            "bytes": 973,
+            "sha256": "c7abe51344e301039e5854008d6434d885fdc218858e470f521e2ae236024ebd",
+            "git_blob_sha1": "4501ea147d1fed3a4c77df2083b2123a15a38337"
+          },
+          "after": {
+            "path": ".github/workflows/research-sherpa-host.yml",
+            "mode": "100644",
+            "bytes": 1027,
+            "sha256": "c7e76130c9f775ed51c585077e5f1d3f9911c160a70a1c8da08b5da857241093",
+            "git_blob_sha1": "c9feebc22fea14caeaf10309a363259f33c93ca9"
+          }
+        },
+        {
+          "path": ".github/workflows/research-sherpa-pcm.yml",
+          "before": {
+            "path": ".github/workflows/research-sherpa-pcm.yml",
+            "mode": "100644",
+            "bytes": 1054,
+            "sha256": "77fe083c0fddeb7c06c00e59ca08ac530bf53d0b3b7c016c2a11989337120760",
+            "git_blob_sha1": "20aaee5cac8cb75ce68fa66b61b065568ef46d75"
+          },
+          "after": {
+            "path": ".github/workflows/research-sherpa-pcm.yml",
+            "mode": "100644",
+            "bytes": 1108,
+            "sha256": "cf1cf4fe443519bd33540814b48b0d49405982cdc7dde12f2bb015c619db2b50",
+            "git_blob_sha1": "1ff1e1b2b8ded0771e47aa0c89f9facb426226d3"
+          }
+        },
+        {
+          "path": ".github/workflows/research-source-consolidation.yml",
+          "before": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "bytes": 4156,
+            "sha256": "e7590960080b5f79f9acb8189282bc1377a11b8fe69a4d3dfb08960fb521e80e",
+            "git_blob_sha1": "5bdebb8922969da5038e491292cdec5ac9fee48e"
+          },
+          "after": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "bytes": 4366,
+            "sha256": "06dd2670caf1f7061ddf9abccde340e4d8c2eb77fd87a93b5a2191b32cc834c1",
+            "git_blob_sha1": "234f26d4e941bd8fc868d8f5e77e1f02359108ad"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-ctc-keyword-competition-gradient.yml",
+          "before": {
+            "path": ".github/workflows/retained-ctc-keyword-competition-gradient.yml",
+            "mode": "100644",
+            "bytes": 9891,
+            "sha256": "1e995aa218c64a8e58c77b51955a054b0810c9b11b322ed4fb643b68c9f72eeb",
+            "git_blob_sha1": "3a77c0b3a2791d36c3806b26901353abe627f030"
+          },
+          "after": {
+            "path": ".github/workflows/retained-ctc-keyword-competition-gradient.yml",
+            "mode": "100644",
+            "bytes": 9999,
+            "sha256": "8898b18f1171b1d4d237d741d5850587833ae4361d070e17586a474626ff7768",
+            "git_blob_sha1": "8a3bbcad05d813a7fb53abe3114709ed1a046400"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-ctc-label-prior-gradient.yml",
+          "before": {
+            "path": ".github/workflows/retained-ctc-label-prior-gradient.yml",
+            "mode": "100644",
+            "bytes": 8965,
+            "sha256": "633c83438c5c1bc3e9725908fe6fb7acdbc0efbeb94bc154aaa77bb8890fc333",
+            "git_blob_sha1": "008b9526e292f85b9da25d78c6f444737b781854"
+          },
+          "after": {
+            "path": ".github/workflows/retained-ctc-label-prior-gradient.yml",
+            "mode": "100644",
+            "bytes": 9073,
+            "sha256": "763b22f1cb0966bad6eeb96db21fe3138cb76f55c7f731893ae16a74acf68c5f",
+            "git_blob_sha1": "6d5839cde228f247ccdaa9d8b8a2fc62cb97cf66"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-ctc-token-state-blank-gradient.yml",
+          "before": {
+            "path": ".github/workflows/retained-ctc-token-state-blank-gradient.yml",
+            "mode": "100644",
+            "bytes": 9092,
+            "sha256": "276ed42f84911d0f22f9e1b976add9c4df8b2ebe5762d9abe75bcc252b9b2391",
+            "git_blob_sha1": "bea9fdc76cf9beeca5249ce50bae2612f3599ea7"
+          },
+          "after": {
+            "path": ".github/workflows/retained-ctc-token-state-blank-gradient.yml",
+            "mode": "100644",
+            "bytes": 9200,
+            "sha256": "d47b531980e0a8cef5fca89b7fff0a5feb6daa292d551d9f1116e3c0bb45bf4d",
+            "git_blob_sha1": "ba97bac52d088e1c30bf3bfa400f06119061ec28"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-decoder-search-path-decomposition.yml",
+          "before": {
+            "path": ".github/workflows/retained-decoder-search-path-decomposition.yml",
+            "mode": "100644",
+            "bytes": 13120,
+            "sha256": "201955494cff930a528f1dd27dc2cd59928a1b214d611853bc3658b32f4ee96a",
+            "git_blob_sha1": "d98310c1486c02b25b304ff849b13dcd91ad5eae"
+          },
+          "after": {
+            "path": ".github/workflows/retained-decoder-search-path-decomposition.yml",
+            "mode": "100644",
+            "bytes": 13228,
+            "sha256": "7f25c490fa4ca739c5e1a999986c4bb905f33316222d41bd520288db6de1d6ba",
+            "git_blob_sha1": "e36a3949fe316e222ba01cecdae816203c24c3f5"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-frozen-far-context-path-summary.yml",
+          "before": {
+            "path": ".github/workflows/retained-frozen-far-context-path-summary.yml",
+            "mode": "100644",
+            "bytes": 5319,
+            "sha256": "1f6431df5bdfe11e0df433e0379b9b3fde62c683d8469cb58fd27a99ad089a1a",
+            "git_blob_sha1": "81dbbb8e74df1b97d608ff459c735c3fcf69aa28"
+          },
+          "after": {
+            "path": ".github/workflows/retained-frozen-far-context-path-summary.yml",
+            "mode": "100644",
+            "bytes": 5427,
+            "sha256": "17528a186e9ca21d20ab7e69955942be97e9aebf7102b4f71c643792bfc03905",
+            "git_blob_sha1": "c6e6bc2a06d8cea23aabdc9906c6a7f9fcf4f89c"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-full-speech-objective-gradient.yml",
+          "before": {
+            "path": ".github/workflows/retained-full-speech-objective-gradient.yml",
+            "mode": "100644",
+            "bytes": 10226,
+            "sha256": "1cd750aa3d269baab4311f49a84829e96d8b79401119e72d5b718cc4e90810e3",
+            "git_blob_sha1": "682a192d9b8594afed73703d99a0cac3c7fae383"
+          },
+          "after": {
+            "path": ".github/workflows/retained-full-speech-objective-gradient.yml",
+            "mode": "100644",
+            "bytes": 10334,
+            "sha256": "bdf086f33c02dc80110f9351405fae06ac5ddb7bae500af908248b85aeb655e3",
+            "git_blob_sha1": "1ab1c49b9b4fc484a2512f1f8644b010cac3fa74"
+          }
+        },
+        {
+          "path": ".github/workflows/retained-sequence-margin-runtime-gap-decomposition.yml",
+          "before": {
+            "path": ".github/workflows/retained-sequence-margin-runtime-gap-decomposition.yml",
+            "mode": "100644",
+            "bytes": 9408,
+            "sha256": "495a7b728e997fb7efa3ca3d3387699cd8cc7b11f5e3f78d0c8fe5af0831bb2f",
+            "git_blob_sha1": "fcf52f8f7a3285e89862142d9b29afc98a83bf10"
+          },
+          "after": {
+            "path": ".github/workflows/retained-sequence-margin-runtime-gap-decomposition.yml",
+            "mode": "100644",
+            "bytes": 9516,
+            "sha256": "eed2eb0617ba4508a2952e071967f02d8dff2153ed7b7d28d546e651b9e5c330",
+            "git_blob_sha1": "7ad042339aa60c979e2146222f5f6ace46bc94bf"
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-base-index-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-base-index-contract.yml",
+            "mode": "100644",
+            "bytes": 6703,
+            "sha256": "a61a399bf51d00516f5ea4972b13d0dde825e8d6bbcecb2e6c43e5d549cf9060",
+            "git_blob_sha1": "dfc9e17936cb8a65defa8acf104cc4836aad73f7"
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-base-index-contract.yml",
+            "mode": "100644",
+            "bytes": 6757,
+            "sha256": "9192ff54afb607b3065ab2aeb3046b35a9cd9ed461f2721e25dd73b701d9a6e3",
+            "git_blob_sha1": "c31801c47a8c22614bde4caddbf6329a0b6caf24"
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-command-provider-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-command-provider-contract.yml",
+            "mode": "100644",
+            "bytes": 8954,
+            "sha256": "b72bc40e692a8e6d2054752cb3052846b9b7752fdee16ba79f8a45dd6b000413",
+            "git_blob_sha1": "f4499cdebdc406884c6b6e3524b94195d0005043"
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-command-provider-contract.yml",
+            "mode": "100644",
+            "bytes": 9008,
+            "sha256": "988d5ef88d5484f88f4dc01a1b74fa4bcd6e5ba181e6a171ee8affce32372cd4",
+            "git_blob_sha1": "6656d982a00a57d875bef6d0b73bccfd0445d98a"
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-corpus-generation-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-corpus-generation-contract.yml",
+            "mode": "100644",
+            "bytes": 17590,
+            "sha256": "8a0990d9f9446486fd81316ef62e177dd3afd13fc670c32b3ac021e45917e0a5",
+            "git_blob_sha1": "9327db5ee8f27951eb93c8e8d04628bc5bbc56fa"
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-corpus-generation-contract.yml",
+            "mode": "100644",
+            "bytes": 17644,
+            "sha256": "648c4df25bb30917d96a177d37612c74da8b8a1fdf306cc077217f24273c2366",
+            "git_blob_sha1": "88e585df3dd4a9ffa286621af875b0edbe7c3218"
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-corpus-plan-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-corpus-plan-contract.yml",
+            "mode": "100644",
+            "bytes": 11835,
+            "sha256": "53f657113c919d8829792065946ad44d0f9b6a0e8c5bab74e7b1fd58c4d84d93",
+            "git_blob_sha1": "d5a7f4f4e111301f90b74cee96d4bb249ec79444"
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-corpus-plan-contract.yml",
+            "mode": "100644",
+            "bytes": 11889,
+            "sha256": "912e44066dd65ee6145298f39c429083857a28d6e7bd03c27ec33e9e3b41bd26",
+            "git_blob_sha1": "0e4c4d1c376b15d63310f473924e4a51ff6fa17a"
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-external-base-bundle-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-external-base-bundle-contract.yml",
+            "mode": "100644",
+            "bytes": 7687,
+            "sha256": "d6fdb0d57b9026519c02c3d4997286c9ec50cd0ce34c5224cd6ed42cb0fbe591",
+            "git_blob_sha1": "c14f609a8fc5d898ecc7cb79a64796bb626aa6ae"
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-external-base-bundle-contract.yml",
+            "mode": "100644",
+            "bytes": 7741,
+            "sha256": "9f42e413d4e6720112e379b5084294cd34c87eac0a0fad05a6fe4f169086649e",
+            "git_blob_sha1": "3aff09fe17860b7f3c5b8d22291b1ed5062d0ec1"
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-label-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-label-contract.yml",
+            "mode": "100644",
+            "bytes": 5381,
+            "sha256": "c0b3f4b928ac59d28f912f921e2f853db64d202e6cf0254cdb9021d782dbe146",
+            "git_blob_sha1": "98ed1c19346d87240febe06d15e38384f4f01a08"
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-label-contract.yml",
+            "mode": "100644",
+            "bytes": 5435,
+            "sha256": "455e1a0bf859f4031aa8dafcfd2db55ee6b27dcffa4353793d53383f6594bb32",
+            "git_blob_sha1": "4fecc39ee859f3bce070fc8e6897e3cedc300b98"
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-provider-materialization-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-provider-materialization-contract.yml",
+            "mode": "100644",
+            "bytes": 34783,
+            "sha256": "37e48dfd8abc8c730c64c33b9220524ccfa3c8aa3edeb7424e71e6bb1f221507",
+            "git_blob_sha1": "aa64b718450998373f4c97d7903c78638099c6af"
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-provider-materialization-contract.yml",
+            "mode": "100644",
+            "bytes": 34837,
+            "sha256": "040ad24d31dfd7a5f5a8c422ed8ffca61f712fbd53357ea39875dcd07018e730",
+            "git_blob_sha1": "41bf3f99396580104b5380d402ca1b8ca2e2e93b"
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-stage-a-bootstrap-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-stage-a-bootstrap-contract.yml",
+            "mode": "100644",
+            "bytes": 20071,
+            "sha256": "1f671b58df277c3f64e17317c5e53637cce6e49e0e2bdcd72da0708e05d7a4ff",
+            "git_blob_sha1": "a04ed9fd3630aec0c28df956c0fb17a126ee04aa"
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-stage-a-bootstrap-contract.yml",
+            "mode": "100644",
+            "bytes": 20125,
+            "sha256": "5d50b854cc134cd7d0cd2cf6f58505f4f32fe6391755808958be5b9bd7193399",
+            "git_blob_sha1": "2f796e473f78f41accd04fdac79fb792341ed69a"
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-synthetic-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-synthetic-contract.yml",
+            "mode": "100644",
+            "bytes": 6787,
+            "sha256": "5364e25d901de2123be7eb84750c89f5d5b14070420faff564df4e5415270d2e",
+            "git_blob_sha1": "e0ed70d323ff675b44fcef681590631e3b28806c"
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-synthetic-contract.yml",
+            "mode": "100644",
+            "bytes": 6841,
+            "sha256": "4183be98169b345f924b983374266bb06204e687898acf96fac341a90b6f079b",
+            "git_blob_sha1": "7b9a3075b17bcc34bef165126214b892ff65455d"
+          }
+        },
+        {
+          "path": ".github/workflows/training-audit-closure.yml",
+          "before": {
+            "path": ".github/workflows/training-audit-closure.yml",
+            "mode": "100644",
+            "bytes": 3011,
+            "sha256": "64f33a545a3ebda433cc54ae0f4fad7416256aa8a81024018a9afbab0c846724",
+            "git_blob_sha1": "993319a679c5823592dbd6fb3b5edea104b39aa8"
+          },
+          "after": {
+            "path": ".github/workflows/training-audit-closure.yml",
+            "mode": "100644",
+            "bytes": 2835,
+            "sha256": "3c58d79babfcfe9c1e87d149e57310740cbcb4f8ff11bd336be15986624e5a4f",
+            "git_blob_sha1": "fcce78e9c4349ccf939bc8197ddacf1ca8ae3c76"
+          }
+        },
+        {
+          "path": ".github/workflows/training-integration.yml",
+          "before": {
+            "path": ".github/workflows/training-integration.yml",
+            "mode": "100644",
+            "bytes": 4582,
+            "sha256": "7ada549a0b8c83d5c421c479b74b05b4b82ab129863f82e95bc8dd5a766b67b3",
+            "git_blob_sha1": "6c82340bc9a18f35deb72229bcf3fa62496f9ea5"
+          },
+          "after": {
+            "path": ".github/workflows/training-integration.yml",
+            "mode": "100644",
+            "bytes": 4706,
+            "sha256": "a635d739a20bb60581dee0daee34684d709736d63577483a8cea43d5d715a2fc",
+            "git_blob_sha1": "9b450a29b43ff1ed4b882c454eda6d4e4dbb6054"
+          }
+        },
+        {
+          "path": "configs/research/active-plan-20261105.json",
+          "before": null,
+          "after": {
+            "path": "configs/research/active-plan-20261105.json",
+            "mode": "100644",
+            "bytes": 4448,
+            "sha256": "9cfff37283535e26dd98619f3058d94065f035c5e17bc854babe6cdfed8fa234",
+            "git_blob_sha1": "95a63f412aaeabb6a475fae92aaf7c631e4a0b56"
+          }
+        },
+        {
+          "path": "configs/runtime/research-runtime.json",
+          "before": null,
+          "after": {
+            "path": "configs/runtime/research-runtime.json",
+            "mode": "100644",
+            "bytes": 2171,
+            "sha256": "4c5529d9b1db456f67c1fa93536672a31782568bb929bb6416280af50fa28a90",
+            "git_blob_sha1": "e2cd633f8f75d8f4b6661592d11c6000e3fcc57c"
+          }
+        },
+        {
+          "path": "docs/DATASET_ITERATION.md",
+          "before": {
+            "path": "docs/DATASET_ITERATION.md",
+            "mode": "100644",
+            "bytes": 12276,
+            "sha256": "e752ca515399dfea2ae5de51c2ba00263aab3494a2ed06d764e5c15e2d9f0cf6",
+            "git_blob_sha1": "af9e691cf95b72522a29b9191a16945cc6e93fe5"
+          },
+          "after": {
+            "path": "docs/DATASET_ITERATION.md",
+            "mode": "100644",
+            "bytes": 19632,
+            "sha256": "818ed1fdf0ad155549d382a0e309237abf91e151cbe4a7946f9c4a6a69a4d387",
+            "git_blob_sha1": "6de4982b69d9264f0eeb69014fc76999590ae4ad"
+          }
+        },
+        {
+          "path": "docs/KWS_ACTIVE_EXECUTION_20261105.md",
+          "before": null,
+          "after": {
+            "path": "docs/KWS_ACTIVE_EXECUTION_20261105.md",
+            "mode": "100644",
+            "bytes": 5809,
+            "sha256": "18201be3a45d5938f8d1006d028326ce0291e4850fa5422a7169fa0b69465574",
+            "git_blob_sha1": "e927cc5598908c76be6f7cdf78b8f396db4e8ebc"
+          }
+        },
+        {
+          "path": "docs/KWS_MULTILINGUAL_MODEL_TOURNAMENT.md",
+          "before": {
+            "path": "docs/KWS_MULTILINGUAL_MODEL_TOURNAMENT.md",
+            "mode": "100644",
+            "bytes": 11011,
+            "sha256": "8644c7a66959fbbdec9270bf2e021a3071a9da07eb1b43de393aefa0f4ea9e24",
+            "git_blob_sha1": "45930cbebff68aea1d92058361634cc3d0d23b7f"
+          },
+          "after": {
+            "path": "docs/KWS_MULTILINGUAL_MODEL_TOURNAMENT.md",
+            "mode": "100644",
+            "bytes": 11757,
+            "sha256": "8799c0b921a082ac777df48f87f1e86ccbc0d7b8416ca54caa699b811ce295e1",
+            "git_blob_sha1": "22a1e98af0afad9f056976e0202e07a76bd91d4d"
+          }
+        },
+        {
+          "path": "docs/RESEARCH_RUNTIME.md",
+          "before": null,
+          "after": {
+            "path": "docs/RESEARCH_RUNTIME.md",
+            "mode": "100644",
+            "bytes": 5913,
+            "sha256": "7688d86df926523245bfcc15c71d8deb17a52558e8dc5d66e6faf39b914ce1a3",
+            "git_blob_sha1": "250bfa00d38595d5419e4266b02648322974f9f5"
+          }
+        },
+        {
+          "path": "eval/long_far_stream.py",
+          "before": {
+            "path": "eval/long_far_stream.py",
+            "mode": "100644",
+            "bytes": 20229,
+            "sha256": "d9bce889a3c85480aaf170f06b867b13cf8b5472a1b5d21b861bae804dd716cf",
+            "git_blob_sha1": "09781e383493f244013a61d6c42fc32e78f40c29"
+          },
+          "after": {
+            "path": "eval/long_far_stream.py",
+            "mode": "100644",
+            "bytes": 20294,
+            "sha256": "e13d1ee6bf2a92d8076a8e6cc1366a0f3d5398f7e74534fe23f5622a9e882652",
+            "git_blob_sha1": "9f122c17128c177a6cd889869040c1450df63ddd"
+          }
+        },
+        {
+          "path": "tests/test_candidate_encoder_numeric_ci.py",
+          "before": {
+            "path": "tests/test_candidate_encoder_numeric_ci.py",
+            "mode": "100644",
+            "bytes": 19203,
+            "sha256": "85037738a125c55dfb9211daa82b8e2983c5dbf2c4ba3469ee8eb77a5431a228",
+            "git_blob_sha1": "e54cf9afdd161dc7633ea0c92117a80174701336"
+          },
+          "after": {
+            "path": "tests/test_candidate_encoder_numeric_ci.py",
+            "mode": "100644",
+            "bytes": 19764,
+            "sha256": "589d6b1b3fb913cc8374f6e93c2bdffcbd1ed6f980fe8ad13b98316c104622f0",
+            "git_blob_sha1": "2396828b2da8ec59100c9c45d293b90766f80839"
+          }
+        },
+        {
+          "path": "tests/test_dataset_iteration.py",
+          "before": {
+            "path": "tests/test_dataset_iteration.py",
+            "mode": "100644",
+            "bytes": 75510,
+            "sha256": "ae2778732bbaba6eae5f1df5043c0be516f2c895ab9a47afd653161f8fdfe653",
+            "git_blob_sha1": "f0479875df6cb9e91574be92aca920d6af3b3986"
+          },
+          "after": {
+            "path": "tests/test_dataset_iteration.py",
+            "mode": "100644",
+            "bytes": 76010,
+            "sha256": "1a7d0381596dbf76d54bbc4aa93db68883626d6fc49dcdbff8c0b2048021a2f0",
+            "git_blob_sha1": "514355a075e7e089a149da94283525cec28c6634"
+          }
+        },
+        {
+          "path": "tests/test_dataset_iteration_publication.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_dataset_iteration_publication.py",
+            "mode": "100644",
+            "bytes": 11377,
+            "sha256": "98171ab36cb86f9af8dacb6e24b39742bdfcc726e01ffdd0886b8376fdfb2266",
+            "git_blob_sha1": "14cd0f3802def0baaaa4ea00979dd42d25b23a1b"
+          }
+        },
+        {
+          "path": "tests/test_dataset_iteration_v5.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_dataset_iteration_v5.py",
+            "mode": "100644",
+            "bytes": 25218,
+            "sha256": "37c4418f3b535b084d95d0a08509be480a54bfe7c23f62ba8c68e1bf7055da52",
+            "git_blob_sha1": "e1f37f4e6f249b19bf4515b2a00f1a540238cb52"
+          }
+        },
+        {
+          "path": "tests/test_long_far.py",
+          "before": {
+            "path": "tests/test_long_far.py",
+            "mode": "100644",
+            "bytes": 41647,
+            "sha256": "02d77d0a7b18527658fea541543f03ffd97c3ce7f93d62ad815dedd296b5ccd8",
+            "git_blob_sha1": "96f23ebcd7938baf7393e19f0d57168041e88dc7"
+          },
+          "after": {
+            "path": "tests/test_long_far.py",
+            "mode": "100644",
+            "bytes": 44813,
+            "sha256": "3bbb983d98b214c85913c31193715fd1d93ea8661522e3fa75163c9b9063b0d7",
+            "git_blob_sha1": "156bf3277f4ed9c0a438c2927bd0be000cfeacac"
+          }
+        },
+        {
+          "path": "tests/test_multilingual_kws_tournament.py",
+          "before": {
+            "path": "tests/test_multilingual_kws_tournament.py",
+            "mode": "100644",
+            "bytes": 20219,
+            "sha256": "e945feb1cef3b28ed7c2984336f0a98202d4658194e053a9ecb4260571acd885",
+            "git_blob_sha1": "d21a6273f0cea63a0533044472299e2d0a93cc80"
+          },
+          "after": {
+            "path": "tests/test_multilingual_kws_tournament.py",
+            "mode": "100644",
+            "bytes": 21726,
+            "sha256": "57b4e44be505254a056dfb726ab8271027388c38198f5971cf68e9d2520c1055",
+            "git_blob_sha1": "0d5f270e68cbae501efab79bf400cc10e2382d60"
+          }
+        },
+        {
+          "path": "tests/test_real_human_qualification.py",
+          "before": {
+            "path": "tests/test_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 38070,
+            "sha256": "fdae407102c48a2825cf2ed2da57f17d9eb299db0a5b8c1c30260b9aa772ebe6",
+            "git_blob_sha1": "3c26d4c8cea4b7f118839765c6945a9048dc48f8"
+          },
+          "after": {
+            "path": "tests/test_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 46438,
+            "sha256": "8d3ee43595584781d7a7258a8f8da5011c1643b44afc263bbef5f2fb3a22ef7d",
+            "git_blob_sha1": "c1635989082a480a5ee7a723aa97af39341d838d"
+          }
+        },
+        {
+          "path": "tests/test_research_ci_changes.py",
+          "before": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 8738,
+            "sha256": "7dd1e87915fa6be9292dbda82aa61a80c71d20d78f7704bc0ad9b0960223d339",
+            "git_blob_sha1": "c3c608c9f29a8293b67fb3fcab390e1360d53d88"
+          },
+          "after": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 9103,
+            "sha256": "76b7f7db49e7ae24e541820899fecf61f0a8e97e782448ce9ee9abcdc6c01c3b",
+            "git_blob_sha1": "3871652e8f4ef85644901b5ef3db07c04b7b5d2e"
+          }
+        },
+        {
+          "path": "tests/test_research_runtime.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_runtime.py",
+            "mode": "100644",
+            "bytes": 5292,
+            "sha256": "67a84f5458c74dc2149d956824119f44fbeb51a7d138499d40b9d6cca5bcf224",
+            "git_blob_sha1": "7022379a8116f2521e2e29c8f191e113edb7caea"
+          }
+        },
+        {
+          "path": "tests/test_training_supply_chain.py",
+          "before": {
+            "path": "tests/test_training_supply_chain.py",
+            "mode": "100644",
+            "bytes": 23128,
+            "sha256": "6b5804e3f79cef35443b77dcd57da444ee5f0ea0bc2319e6c8eedadafb535be5",
+            "git_blob_sha1": "a52a7dbb67355761fd0de5741bff7ea366d5b13c"
+          },
+          "after": {
+            "path": "tests/test_training_supply_chain.py",
+            "mode": "100644",
+            "bytes": 23257,
+            "sha256": "7ce60359259261f254f9f8ae0d24e9a327fe70c754a4e2dd53046407e6af7e0f",
+            "git_blob_sha1": "afc33ec46dab9fab5f631ed45b4f40a8980dd308"
+          }
+        },
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 15634,
+            "sha256": "4bc70e200f931d4794d4000a3ed43d3626b4a1374c46774dd45aa879c60403a4",
+            "git_blob_sha1": "9d7032bc627216fbbd857bfe56fa802b3f19c279"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 16409,
+            "sha256": "2cad6452823395b4d4ff1c9187fd3a0fad97aaeb18e3689ddd56a636c5251a73",
+            "git_blob_sha1": "87a35379a584e1e29ad3c3006b8c2ea60900d969"
+          }
+        },
+        {
+          "path": "tools/candidate_numeric_ci_changes.py",
+          "before": {
+            "path": "tools/candidate_numeric_ci_changes.py",
+            "mode": "100644",
+            "bytes": 4788,
+            "sha256": "a4a31108f4ec8c10d37a61ead15505f294dbe40605382d5abdac6d84e6b8fa8f",
+            "git_blob_sha1": "685c8dceee73980146847a0a6c7c0a32186bca63"
+          },
+          "after": {
+            "path": "tools/candidate_numeric_ci_changes.py",
+            "mode": "100644",
+            "bytes": 5068,
+            "sha256": "e030e89844bc7b3ec5940474b75e7f16bb3755f7010c7ea32c72e205ea9ce30e",
+            "git_blob_sha1": "00387860bed6c98f1aaf48b4fbae2397a2dc3b26"
+          }
+        },
+        {
+          "path": "tools/compare_dataset_iterations.py",
+          "before": {
+            "path": "tools/compare_dataset_iterations.py",
+            "mode": "100644",
+            "bytes": 12322,
+            "sha256": "113380bbd669525df5243c0ad672f0df7dd1db16d55b2e629495241a2d088726",
+            "git_blob_sha1": "e4cfdf23dda59e43c8758b0efdb29cb983b8a88a"
+          },
+          "after": {
+            "path": "tools/compare_dataset_iterations.py",
+            "mode": "100644",
+            "bytes": 16957,
+            "sha256": "63e5d4fdc293fb395bb1e294f20561924564dcf6e76e90456a1db98debd6ca99",
+            "git_blob_sha1": "7df0abacb0367d2966302149e52fb0dd44e874d0"
+          }
+        },
+        {
+          "path": "tools/dataset_iteration_inputs.py",
+          "before": null,
+          "after": {
+            "path": "tools/dataset_iteration_inputs.py",
+            "mode": "100644",
+            "bytes": 20561,
+            "sha256": "a7d6a681e6974f87f1251be8077b1c53b24afab38d183512bf142572c51d1bca",
+            "git_blob_sha1": "c63ae9f8eab7ef1ae8ed8752b7d5c4bf196dd657"
+          }
+        },
+        {
+          "path": "tools/dataset_iteration_policy.py",
+          "before": null,
+          "after": {
+            "path": "tools/dataset_iteration_policy.py",
+            "mode": "100644",
+            "bytes": 1668,
+            "sha256": "eecbcfa3f2a5c133355cd7667213d853ea739c3de57664c9bd2e63a5de2a3142",
+            "git_blob_sha1": "cae0e721f229e6812bf22e06ba15df2222566fc4"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3603,
+            "sha256": "5a7a43cfafd24651abbb29ffcfc91770b44ce84e26706f9b15043aaebe367786",
+            "git_blob_sha1": "bdc78e7abb297cf1ccf483e1d479806772cf27c8"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3805,
+            "sha256": "0f7afc3435805478d2a9175d6a0e81c394dc4644928447af4b0a060191b30b81",
+            "git_blob_sha1": "aef70fea13c5bd7b4bacb8cf319b1271d4ae9235"
+          }
+        },
+        {
+          "path": "tools/research_runtime.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_runtime.py",
+            "mode": "100644",
+            "bytes": 8654,
+            "sha256": "960c71abf374604afbdc599c31d016a3c9bbbca7cc5d1304184afffe29bb96c4",
+            "git_blob_sha1": "41a051a703a3a1853e68511d6aaeeb97fd276db1"
+          }
+        },
+        {
+          "path": "tools/run_dataset_iteration.py",
+          "before": {
+            "path": "tools/run_dataset_iteration.py",
+            "mode": "100644",
+            "bytes": 15557,
+            "sha256": "edcb8007e31819e376996cd56a956e1718724de7ff1ac064637b173e2ebf4352",
+            "git_blob_sha1": "c2376128f2ae38eb7e27606bc9b9a2d8c60d63db"
+          },
+          "after": {
+            "path": "tools/run_dataset_iteration.py",
+            "mode": "100644",
+            "bytes": 15290,
+            "sha256": "f40614f3c6e2b1511839ca90162a691db930aa05398c553fe7dcdb9b47b8b038",
+            "git_blob_sha1": "e7abbd7269e06bf0c1de16b6ab6bbcc4127fd1cf"
+          }
+        },
+        {
+          "path": "tools/score_real_human_qualification.py",
+          "before": {
+            "path": "tools/score_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 17220,
+            "sha256": "1b70e98844ed75472d77ba7433c04f79a0d69fcfa7bc5598020dfbaac6d53a32",
+            "git_blob_sha1": "c7c45e5a7b231663a0d96558a722f75482d9394e"
+          },
+          "after": {
+            "path": "tools/score_real_human_qualification.py",
+            "mode": "100644",
+            "bytes": 19347,
+            "sha256": "b1ee9abcfcd19ad25efbc43015b5e947cb0d3437d38b97a472e7e5ed12baebd1",
+            "git_blob_sha1": "3feb7a2f3a177d1ec8485d9cc9d5e7850e2fd922"
+          }
+        },
+        {
+          "path": "tools/select_multilingual_kws_models.py",
+          "before": {
+            "path": "tools/select_multilingual_kws_models.py",
+            "mode": "100644",
+            "bytes": 21537,
+            "sha256": "ee64a61c345224b8a0e2ffa8d4b94f73951675018e3200dabb8e7fdd5ba1d770",
+            "git_blob_sha1": "3bfccc9def6491a7182c2c069873638ee0f064b4"
+          },
+          "after": {
+            "path": "tools/select_multilingual_kws_models.py",
+            "mode": "100644",
+            "bytes": 21890,
+            "sha256": "c2079a2b4fdff115ad84c18b89a506673c4a6a73d243472b5c51d864b75a4b54",
+            "git_blob_sha1": "3d525c8a6b736ffed39ba93b26a2b372cc069459"
+          }
+        },
+        {
+          "path": "training/Dockerfile",
+          "before": {
+            "path": "training/Dockerfile",
+            "mode": "100644",
+            "bytes": 1299,
+            "sha256": "4fed1c8171e55020c450c79e6f4ebb851ef657b6943f28cfc8f2b0b2e363e5b4",
+            "git_blob_sha1": "749a392031a7da31e0a3b1b384c76af0638001d9"
+          },
+          "after": {
+            "path": "training/Dockerfile",
+            "mode": "100644",
+            "bytes": 1141,
+            "sha256": "b3abdace52754fa14035d02110f1917adbc967774f476c0b3e4482da0b605830",
+            "git_blob_sha1": "21ffad314d6311bf249c5e89c625fe7fb25e6bce"
+          }
+        },
+        {
+          "path": "training/build_container.py",
+          "before": {
+            "path": "training/build_container.py",
+            "mode": "100644",
+            "bytes": 2435,
+            "sha256": "be87510abc95b40b063d3b9a9deb18261c20c05677fff3fbfd305caf3685fa61",
+            "git_blob_sha1": "976aac0b58d47f4087ac779bd96dba1aab4e0fcd"
+          },
+          "after": {
+            "path": "training/build_container.py",
+            "mode": "100644",
+            "bytes": 2571,
+            "sha256": "975dbf03327d55796966a9693f3cd8165c9a274382f4c32663460f87da3bdc5c",
+            "git_blob_sha1": "3568cd537f78913764bcc5468e038d565464f340"
+          }
+        },
+        {
+          "path": "training/export_model.py",
+          "before": {
+            "path": "training/export_model.py",
+            "mode": "100644",
+            "bytes": 34243,
+            "sha256": "aa03dd058081e949abb887e214e29441c79e7b628309f74571887d4587440185",
+            "git_blob_sha1": "ce13f084026d0b919fa9fd47d4fd5d552b0c7e27"
+          },
+          "after": {
+            "path": "training/export_model.py",
+            "mode": "100644",
+            "bytes": 34270,
+            "sha256": "33c488cdcbc5d6d463189d30cdbc8b11acd0ff118b0ff38b41bd905f6b9ae479",
+            "git_blob_sha1": "d818e8443d3fb106693c6ff6eb055919188a9bbc"
+          }
+        },
+        {
+          "path": "training/requirements.lock",
+          "before": {
+            "path": "training/requirements.lock",
+            "mode": "100644",
+            "bytes": 261,
+            "sha256": "a0454b58d397053f4bbafa364c4e468b370099fe8fa6a5f874e723adc2b67d3a",
+            "git_blob_sha1": "b2c1491ea7f950b4e9471a775f543c917abaa3c9"
+          },
+          "after": {
+            "path": "training/requirements.lock",
+            "mode": "100644",
+            "bytes": 155,
+            "sha256": "de3f322d2eb45907ce9e8b371558cd23e7602050b23bc8f9c0516dceb1823296",
+            "git_blob_sha1": "ad0f436203dddb1bb6679fb104a44e5a25ca44ed"
+          }
+        },
+        {
+          "path": "training/setup_core_runtime.sh",
+          "before": null,
+          "after": {
+            "path": "training/setup_core_runtime.sh",
+            "mode": "100644",
+            "bytes": 945,
+            "sha256": "faf9536858a3d4eaa35ff13ec642874a5d175e9e8281579c0e6a122bbf112589",
+            "git_blob_sha1": "a033f568c5cc8f14ca1deea962320103f5a6d6dd"
+          }
+        },
+        {
+          "path": "training/train_ctc.py",
+          "before": {
+            "path": "training/train_ctc.py",
+            "mode": "100644",
+            "bytes": 68411,
+            "sha256": "7b973bc6a1d60ccd684c19f546cf851225499bbcf082fd9a1d4e05f070191f13",
+            "git_blob_sha1": "518aa88f20911666b5ff3ee8a74742ad558a5ff8"
+          },
+          "after": {
+            "path": "training/train_ctc.py",
+            "mode": "100644",
+            "bytes": 68511,
+            "sha256": "ca7418648d1b4a11a5f00dc5c957306a879365d63633a26530778d604dd21ead",
+            "git_blob_sha1": "491d044998f7a04156d5ceec0c94712a8600d433"
+          }
+        }
+      ]
+    },
+    {
+      "id": "kw1-historical-workflow-projection-python312-20261105",
+      "date": "2026-11-05",
+      "base_commit": "bbce727f140a6d459207acadf1ded0055a09c79d",
+      "base_tree": "4753ff76b571ece439b96c37e16307886ec6c50e",
+      "workflow_source_changed": true,
+      "scope": "Run unchanged KW1 saved-observation verification and tamper tests in an exact historical workflow projection with the active Python interpreter.",
+      "rationale": "The historical observation receipt binds the original 964-byte workflow. Archive and verify those exact bytes instead of rewriting the saved receipt when the active workflow changes.",
+      "files": [
+        {
+          "path": ".github/workflows/kw1-supplement-observation.yml",
+          "before": {
+            "path": ".github/workflows/kw1-supplement-observation.yml",
+            "mode": "100644",
+            "bytes": 1018,
+            "sha256": "9833d8a7325ed67fecc5ee8ecca59205eec88a454120fc5b791984b64967e36f",
+            "git_blob_sha1": "12dc33be1e483a374b810a73fcfb1a5ea8f452ec"
+          },
+          "after": {
+            "path": ".github/workflows/kw1-supplement-observation.yml",
+            "mode": "100644",
+            "bytes": 2940,
+            "sha256": "830b19d64b4584d5ff8ae589b589c5e71abbe5c85f21026964e9da44d6ec4a5e",
+            "git_blob_sha1": "a78c27e814f0add055daafddd4d8edc7e0a87590"
+          }
+        },
+        {
+          "path": "research/consolidation/archive/workflow-revisions/python312-20261105/kw1-supplement-observation.yml.txt",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/workflow-revisions/python312-20261105/kw1-supplement-observation.yml.txt",
+            "mode": "100644",
+            "bytes": 964,
+            "sha256": "3882b9b5498c3479086c354eb393142339c1466ce468a25ad5efd19ec1dd0731",
+            "git_blob_sha1": "68472c1bc2837fb7243a2552d25060f7da270adc"
+          }
+        }
+      ]
+    },
+    {
+      "id": "python312-loader-and-original-workflow-retention-20261105",
+      "date": "2026-11-05",
+      "base_commit": "bbce727f140a6d459207acadf1ded0055a09c79d",
+      "base_tree": "4753ff76b571ece439b96c37e16307886ec6c50e",
+      "workflow_source_changed": true,
+      "scope": "Isolate the verified shared CPython loader directory at ARM research entry points, and retain the original native-A20 quality workflow separately from its active Python setup.",
+      "rationale": "Initial CI exposed historical loader guards and an original workflow hash. Unsafe loader overrides remain refused; original source identities and model evidence remain unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 69593,
+            "sha256": "b8bbbc0a95db68b89738593234254c484ce74b5f34564b8f88ff7640add68273",
+            "git_blob_sha1": "71bb4b295032e6b8080dc3d16f8fe7a1e352d4f3"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 69842,
+            "sha256": "496f39c24b148fddb2086f10fa4feca1ffc30c583ef6e89f06c336ef82897019",
+            "git_blob_sha1": "c8336024da2a17a6133e503da28c472c1f3b2d23"
+          }
+        },
+        {
+          "path": "research/consolidation/core-2026-10-07.json",
+          "before": {
+            "path": "research/consolidation/core-2026-10-07.json",
+            "mode": "100644",
+            "bytes": 44512,
+            "sha256": "200b539da039753f84c1f54790aec7584e81f9438666ab63914220dbf728ae8a",
+            "git_blob_sha1": "f3c2a8d5654b7fdcbd724130dbd2ef142b49805d"
+          },
+          "after": {
+            "path": "research/consolidation/core-2026-10-07.json",
+            "mode": "100644",
+            "bytes": 44614,
+            "sha256": "a1dd9998eb82daadcea155515ab8fa5d2a68e3aa18d9e31152526a1ade2c087d",
+            "git_blob_sha1": "7efcb977bd38ae08b057ac45fe3b87a83ae0d8d7"
+          }
+        },
+        {
+          "path": "research/consolidation/maintained-sources/pr-465/native-a20-quality-tools.yml",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/maintained-sources/pr-465/native-a20-quality-tools.yml",
+            "mode": "100644",
+            "bytes": 1355,
+            "sha256": "768bee0c5d499a375e75596a50f84fd103fe2c3fffbc02664706453d03d6ae42",
+            "git_blob_sha1": "a5ff424679ba72b6ec025a7c2d4ab39492d58355"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_research_consolidation.py",
+          "before": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 13174,
+            "sha256": "f7afaae51104c11fec21ee477eb2d75b3e98e6874007f45a0026fb139b00e37b",
+            "git_blob_sha1": "ccc86beb1e6875b1d300ed5b86abf20ea0c1df60"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 14389,
+            "sha256": "8c957e34a9607c5c46ea9fc61a7d84861dbf82210cea60088f236190b6a0ba2e",
+            "git_blob_sha1": "16e7e61762a9f8f88ed6bb1d1a2c6c00f996d1c6"
+          }
+        },
+        {
+          "path": "tests/run_research_fsmn_stream_arm_build.py",
+          "before": {
+            "path": "tests/run_research_fsmn_stream_arm_build.py",
+            "mode": "100644",
+            "bytes": 4299,
+            "sha256": "925418e3207a3c9ca54d1b461239d7cada004015135345fe0d76b224e36d793a",
+            "git_blob_sha1": "e7822b99a26b690d8a7c5e80f3947cbdb96d2e57"
+          },
+          "after": {
+            "path": "tests/run_research_fsmn_stream_arm_build.py",
+            "mode": "100644",
+            "bytes": 4323,
+            "sha256": "3ccc5f3dde9fa8ad281e2c37b755c572eb93101bdcbb791ee301e892cdbbd9ac",
+            "git_blob_sha1": "a1a2d4f365eacb16d55f9ce6af2bc1546efa81e5"
+          }
+        },
+        {
+          "path": "tests/test_causal_research_contract.py",
+          "before": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 2867,
+            "sha256": "69b5f9d529a2a83593591198bdf0e90f467527b1dab49602f4ac15e6a4316f34",
+            "git_blob_sha1": "217c674c101f5c782975cd525729f9ac7157ef6f"
+          },
+          "after": {
+            "path": "tests/test_causal_research_contract.py",
+            "mode": "100644",
+            "bytes": 3158,
+            "sha256": "a8a1e9575b497715f064ffe53d4e84bdc2bc01aa173d52566a672e6bc1bb715f",
+            "git_blob_sha1": "159aaf8e2f855d0e94c56de1ef0004171813cd27"
+          }
+        },
+        {
+          "path": "tests/test_research_ci_changes.py",
+          "before": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 9103,
+            "sha256": "76b7f7db49e7ae24e541820899fecf61f0a8e97e782448ce9ee9abcdc6c01c3b",
+            "git_blob_sha1": "3871652e8f4ef85644901b5ef3db07c04b7b5d2e"
+          },
+          "after": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 9197,
+            "sha256": "432102bb1a0e59d08c17922be89444b0079f6129556589c08d7f39b66c4ceb4d",
+            "git_blob_sha1": "3c6e240685974eee9f9d59e937f4a92828dddef9"
+          }
+        },
+        {
+          "path": "tests/test_research_fsmn_stream.py",
+          "before": {
+            "path": "tests/test_research_fsmn_stream.py",
+            "mode": "100644",
+            "bytes": 3104,
+            "sha256": "64b096164e69462e00a1c77b05f0564cde9510a8b814ec75388b83ff6b9057d3",
+            "git_blob_sha1": "ec8cfab2a8f933aeebf8276f0a42f772f71ce4cd"
+          },
+          "after": {
+            "path": "tests/test_research_fsmn_stream.py",
+            "mode": "100644",
+            "bytes": 3282,
+            "sha256": "7319f1e6f80a2f88d8617a520e7042e7c4c6b29819e8c20832a7de447bb9c20c",
+            "git_blob_sha1": "e2e96f949afcb3e1b85846c9f2ccd7a88593625e"
+          }
+        },
+        {
+          "path": "tests/test_research_python_entry.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_python_entry.py",
+            "mode": "100644",
+            "bytes": 5873,
+            "sha256": "3356f22e630e6d8d5a6a7a67b1aeee0a0e5b0b19b706e545d7c099a4b040c031",
+            "git_blob_sha1": "85d4bf4481dbb7edabe1eb3b2c61a4e6f618ddbc"
+          }
+        },
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 16409,
+            "sha256": "2cad6452823395b4d4ff1c9187fd3a0fad97aaeb18e3689ddd56a636c5251a73",
+            "git_blob_sha1": "87a35379a584e1e29ad3c3006b8c2ea60900d969"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 16727,
+            "sha256": "8071d41152eb7558d4a4ce6ed8e60e01c26a58350faa968bc6bb085992488b20",
+            "git_blob_sha1": "08249db1ab5e2dd9f06d3924fec629e4f23ed9c9"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3805,
+            "sha256": "0f7afc3435805478d2a9175d6a0e81c394dc4644928447af4b0a060191b30b81",
+            "git_blob_sha1": "aef70fea13c5bd7b4bacb8cf319b1271d4ae9235"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 3882,
+            "sha256": "a1f203812d3ae8c175314afc8f919e5d8b6fe19eacc3469f2904699d262c5450",
+            "git_blob_sha1": "ff53c15ca8bd8e0ef061d131208955b53a1df371"
+          }
+        },
+        {
+          "path": "tools/research_python_entry.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_python_entry.py",
+            "mode": "100644",
+            "bytes": 2373,
+            "sha256": "d98177f1f49d26fa359a9f43e221c1a5a60e9251a17561ca170ecdbdc1e2e338",
+            "git_blob_sha1": "1bcb58d0b3552dc3082a81929077009a52cde32b"
+          }
+        }
+      ]
+    },
+    {
+      "id": "python312-pinned-workflow-yaml-dependency-20261105",
+      "date": "2026-11-05",
+      "base_commit": "2c0cfefa2ced90cfee89a445e1d4108997e2667e",
+      "base_tree": "2e48eb01d73af9d594c867242f43247a31161980",
+      "workflow_source_changed": true,
+      "scope": "Install the one hash-pinned YAML parser required by hosted workflow tests in the selected CPython 3.12 interpreter.",
+      "rationale": "The runner system Python previously supplied PyYAML implicitly. Its absence in the new exact interpreter made the redeemed-verdict fixture fail before checking a workflow.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 69842,
+            "sha256": "496f39c24b148fddb2086f10fa4feca1ffc30c583ef6e89f06c336ef82897019",
+            "git_blob_sha1": "c8336024da2a17a6133e503da28c472c1f3b2d23"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 70078,
+            "sha256": "24f6b4cfe4883ff9a34e2deadfe9142d08ee32e6616bef2c4e0bc54f5093e5ce",
+            "git_blob_sha1": "292fb9ef065940529374c9e333baa4104998233e"
+          }
+        },
+        {
+          "path": "configs/runtime/host-tools.requirements.lock",
+          "before": null,
+          "after": {
+            "path": "configs/runtime/host-tools.requirements.lock",
+            "mode": "100644",
+            "bytes": 228,
+            "sha256": "47bf11bf0468137be92910b121b76d9d0c8441543a43ae6c5110cb6465ba8381",
+            "git_blob_sha1": "510d26da9c7932658d669a3980d19ad16491c3bf"
+          }
+        },
+        {
+          "path": "docs/RESEARCH_RUNTIME.md",
+          "before": {
+            "path": "docs/RESEARCH_RUNTIME.md",
+            "mode": "100644",
+            "bytes": 5913,
+            "sha256": "7688d86df926523245bfcc15c71d8deb17a52558e8dc5d66e6faf39b914ce1a3",
+            "git_blob_sha1": "250bfa00d38595d5419e4266b02648322974f9f5"
+          },
+          "after": {
+            "path": "docs/RESEARCH_RUNTIME.md",
+            "mode": "100644",
+            "bytes": 6238,
+            "sha256": "4bf1746aca14bea6776ad73d7fab7b64f2fb54229b2b9cda819d28250817e273",
+            "git_blob_sha1": "27f52d1000d6b5ed4121dc4ade43e92eafda33f0"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
     {
       "path": ".github/workflows/research-source-consolidation.yml",
       "mode": "100644",
-      "bytes": 4156,
-      "sha256": "e7590960080b5f79f9acb8189282bc1377a11b8fe69a4d3dfb08960fb521e80e",
-      "git_blob_sha1": "5bdebb8922969da5038e491292cdec5ac9fee48e"
+      "bytes": 4366,
+      "sha256": "06dd2670caf1f7061ddf9abccde340e4d8c2eb77fd87a93b5a2191b32cc834c1",
+      "git_blob_sha1": "234f26d4e941bd8fc868d8f5e77e1f02359108ad"
     },
     {
       "path": ".github/workflows/qwen12-native-admission-v1.yml",
@@ -44206,16 +46050,16 @@
     {
       "path": ".github/workflows/kw1-supplement-observation.yml",
       "mode": "100644",
-      "bytes": 964,
-      "sha256": "3882b9b5498c3479086c354eb393142339c1466ce468a25ad5efd19ec1dd0731",
-      "git_blob_sha1": "68472c1bc2837fb7243a2552d25060f7da270adc"
+      "bytes": 2940,
+      "sha256": "830b19d64b4584d5ff8ae589b589c5e71abbe5c85f21026964e9da44d6ec4a5e",
+      "git_blob_sha1": "a78c27e814f0add055daafddd4d8edc7e0a87590"
     },
     {
       "path": ".github/workflows/authorized-voice-clone-contracts.yml",
       "mode": "100644",
-      "bytes": 1271,
-      "sha256": "b44acb0d9a4b448a4578afaca4eabd49162603438dbd5a76b7fae7a0bae017ca",
-      "git_blob_sha1": "f98d751fea32576585a465012113ecae82ce9922"
+      "bytes": 1325,
+      "sha256": "1ee1bbab8324c38516446a121a86c72c1f4d7d8940fed812e6ac1dc0cf3e4027",
+      "git_blob_sha1": "6447b780ace7062db71814e341d3f183f080131d"
     }
   ],
   "current_source_revision": {

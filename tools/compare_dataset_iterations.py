@@ -1,27 +1,14 @@
 #!/usr/bin/env python3
-"""Compare two dataset-iteration scorecards as a paired A/B result.
+"""Compare research scorecards under an explicit ablation or system mode.
 
-The governed gate in this repository asks for zero false rejects *and* zero
-false accepts at the same time. That is not a measurable target, and it is why
-the frozen qualification has failed every time it ran. This comparator is what
-replaces it for the iteration lane: instead of an absolute verdict, it answers
-"did this change make things better, worse, or is there nothing to say yet?"
+Ablation retains the single-declared-variable and identical-code checks. System
+mode permits different models/code/native frontends only after rechecking shared
+input bytes, corpus provenance and the common scoring protocol. Its result does
+not attribute a difference to one particular implementation change.
 
-Three rules make the answer trustworthy:
-
-1. **Same protocol, or refuse.** Numbers produced under different protocols are
-   not the same measurement.
-2. **Exactly one variable may move.** If both the dataset and the model changed,
-   there is no interpretation of the delta -- it is a different experiment. The
-   run declares which variable is under test, and the comparator enforces that
-   only that one differs.
-3. **Compare false accepts on the upper bound, not the point estimate.**
-   Zero false accepts over 30 seconds and zero over 30 hours are wildly
-different evidence, yet both read as ``far_per_hour = 0``. The bound carries the
-   exposure; the point estimate does not.
-
-The verdict is deliberately about *regression*, not about shipping: this lane
-measures, it does not qualify.
+Schema 5 uses exact one-sided Poisson bounds. Schemas 1--4 retain historical
+interpretation and cannot be mixed with the new policy. No verdict qualifies a
+model or establishes statistical significance.
 """
 from __future__ import annotations
 
@@ -31,10 +18,17 @@ import math
 import pathlib
 import sys
 
+from dataset_iteration_policy import (
+    APPROX_FAR_POLICY, CONFIDENCE, DATASET_IDENTITY_POLICY, FAR_POLICY, MAX_FA_EVENTS,
+    far_upper_bound_95, historical_far_upper_bound_95,
+)
+from dataset_iteration_inputs import (
+    adjacent_evidence_root, system_input_paths, validate_output_paths, verify_system_evidence,
+)
+from export_artifacts import write_export_artifacts
+
 IDENTITY_FIELDS = ("protocol", "dataset_id", "model_id", "code_sha", "seed")
 METRIC_FIELDS = ("frr", "far_per_hour", "p95_post_end_latency_ms")
-FAR_POLICY = "negative-only-recordings-iteration-approx95-v1"
-DATASET_IDENTITY_POLICY = "effective-domain-keys-verified-afe-v2"
 DOMAIN_ONLY_DATASET_IDENTITY_POLICY = "effective-domain-keys-v1"
 LEGACY_DATASET_IDENTITY_POLICY = "legacy-top-level-distance-v1"
 LEGACY_FAR_POLICY = "legacy-mixed-recordings-iteration-approx95-v1"
@@ -64,9 +58,11 @@ def load(path: pathlib.Path) -> dict:
 
 
 def number(value: object, label: str) -> float:
+    if isinstance(value, bool):
+        raise ValueError(f"{label} must not be a boolean")
     try:
         result = float(value)  # type: ignore[arg-type]
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         raise ValueError(f"{label} is not a number: {value!r}") from None
     if not math.isfinite(result):
         raise ValueError(f"{label} is not finite: {value!r}")
@@ -76,7 +72,10 @@ def number(value: object, label: str) -> float:
 def metric(row: dict, field: str) -> float:
     if field not in row["metrics"]:
         raise ValueError(f"metrics is missing required '{field}'")
-    return number(row["metrics"][field], f"metrics.{field}")
+    result = number(row["metrics"][field], f"metrics.{field}")
+    if result < 0 or (field == "frr" and result > 1):
+        raise ValueError(f"metrics.{field} is outside its valid range")
+    return result
 
 
 def far_bound(row: dict, label: str) -> float:
@@ -87,7 +86,7 @@ def dataset_identity_policy(row: dict, label: str) -> str:
     """Classify semantics independently of caller-selected protocol labels."""
     schema = row.get("schema_version")
     identity = row["identity"]
-    if type(schema) is not int or schema not in (1, 2, 3, 4):
+    if type(schema) is not int or schema not in (1, 2, 3, 4, 5):
         raise ValueError(f"{label}: unsupported scorecard schema/dataset identity policy combination")
     if schema in (1, 2):
         if "dataset_identity_policy" in identity:
@@ -106,15 +105,18 @@ def far_policy(row: dict, label: str) -> str:
     identity = row["identity"]
     if type(schema) is int and schema == 1 and "far_policy" not in identity:
         return LEGACY_FAR_POLICY
-    if type(schema) is not int or schema not in (2, 3, 4):
+    if type(schema) is not int or schema not in (2, 3, 4, 5):
         raise ValueError(f"{label}: unsupported scorecard schema/FAR policy combination")
-    if identity.get("far_policy") != FAR_POLICY:
+    expected_policy = FAR_POLICY if schema == 5 else APPROX_FAR_POLICY
+    if identity.get("far_policy") != expected_policy:
         raise ValueError(f"{label}: schema {schema} requires the known FAR policy")
     if not isinstance(row["far_rate"], dict) or not isinstance(row["exposure"], dict):
         raise ValueError(f"{label}: schema {schema} FAR rate and exposure must be objects")
     count = row["far_rate"].get("observed_false_accepts")
     if type(count) is not int or count < 0:
         raise ValueError(f"{label}: negative false accepts must be a non-negative integer")
+    if schema == 5 and count > MAX_FA_EVENTS:
+        raise ValueError(f"{label}: negative false accepts exceed {MAX_FA_EVENTS}")
     raw_hours = row["exposure"].get("exposure_hours")
     raw_point = row["far_rate"].get("point_estimate_per_hour")
     raw_bound = row["far_rate"].get("upper_bound_95_per_hour")
@@ -125,27 +127,56 @@ def far_policy(row: dict, label: str) -> str:
     bound = far_bound(row, label)
     if hours <= 0.0 or point < 0.0 or bound < 0.0 or point != count / hours:
         raise ValueError(f"{label}: inconsistent negative FAR tuple")
-    # Keep schema-2/3/4 bounds tied to the producer's declared approximation.
-    # Legacy cards return above and retain their historical interpretation.
-    expected_bound = (2.9957 / hours if count == 0 else
-                      (count + 1.959964 * math.sqrt(count)) / hours)
+    if schema == 5:
+        if (type(row["far_rate"].get("confidence_level")) not in (int, float)
+                or row["far_rate"]["confidence_level"] != CONFIDENCE):
+            raise ValueError(f"{label}: exact FAR requires one-sided 95% confidence")
+        expected_bound = far_upper_bound_95(count, hours)
+    else:
+        # Preserve old bytes/interpretation; never silently relabel old bounds.
+        expected_bound = historical_far_upper_bound_95(count, hours)
     if not math.isfinite(expected_bound) or bound != expected_bound:
         raise ValueError(f"{label}: inconsistent negative FAR bound")
-    return FAR_POLICY
+    return expected_policy
 
 
-def framing(before: dict, after: dict) -> dict:
-    """Check that the two scorecards form a valid paired comparison."""
+def framing(before: dict, after: dict, *, mode: str = "ablation",
+            baseline_evidence_root: pathlib.Path | None = None,
+            candidate_evidence_root: pathlib.Path | None = None) -> dict:
+    """Check mode and evidence before permitting any metric comparison."""
+    if mode not in ("ablation", "system"):
+        raise ValueError("comparison mode must be ablation or system")
+    if mode != "system" and any(root is not None for root in
+                               (baseline_evidence_root, candidate_evidence_root)):
+        raise ValueError("evidence relocation requires system mode")
     if dataset_identity_policy(before, "before") != dataset_identity_policy(after, "after"):
         raise ValueError("dataset identity policy mismatch: re-run both sides under the same policy")
     if far_policy(before, "before") != far_policy(after, "after"):
         raise ValueError("FAR policy mismatch: re-run the baseline under the same measurement policy")
     left, right = before["identity"], after["identity"]
+    for label, card in (("before", before), ("after", after)):
+        declared = card["identity"].get("comparison_mode", "ablation")
+        if declared != mode or (card["schema_version"] == 5 and
+                                "comparison_mode" not in card["identity"]):
+            raise ValueError(f"{label}: comparison mode mismatch; explicitly produce cards for {mode}")
     if left["protocol"] != right["protocol"]:
         raise ValueError(
             f"protocol mismatch: {left['protocol']} vs {right['protocol']} -- "
             "results measured under different protocols are not comparable"
         )
+    if mode == "system":
+        evidence_before = verify_system_evidence(before, "before", evidence_root=baseline_evidence_root)
+        evidence_after = verify_system_evidence(after, "after", evidence_root=candidate_evidence_root)
+        if evidence_before != evidence_after:
+            raise ValueError("system comparison requires identical verified inputs and evaluation protocol")
+        moved = [field for field in ("model_id", "code_sha", "runner_sha256", "native_frontend")
+                 if left.get(field) != right.get(field)]
+        if not moved:
+            raise ValueError("nothing moved: the system identities are identical")
+        return {"variable": "system", "moved": moved, "mode": mode,
+                "verified_evaluation": evidence_after}
+    if right["variable"] not in ("dataset", "model"):
+        raise ValueError("ablation variable must be dataset or model")
     moved = [field for field in ("dataset_id", "model_id") if left[field] != right[field]]
     variable = str(right["variable"])
     if not moved:
@@ -167,14 +198,21 @@ def framing(before: dict, after: dict) -> dict:
     if left["code_sha"] != right["code_sha"]:
         raise ValueError(
             "code_sha differs: a code change confounds the comparison. Re-run the "
-            "baseline on the current code, or declare the code change as the variable."
+            "baseline on the current code, or produce both cards in explicit system mode."
         )
-    return {"variable": variable, "moved": moved[0]}
+    return {"variable": variable, "moved": moved[0], "mode": mode}
 
 
 def compare(before: dict, after: dict, far_budget: float, frr_tolerance: float,
-            latency_budget: float) -> dict:
-    frame = framing(before, after)
+            latency_budget: float, *, mode: str = "ablation",
+            baseline_evidence_root: pathlib.Path | None = None,
+            candidate_evidence_root: pathlib.Path | None = None) -> dict:
+    if any(isinstance(value, bool) or not math.isfinite(value) for value in
+           (far_budget, frr_tolerance, latency_budget)) or (
+            far_budget < 0 or not 0 <= frr_tolerance <= 1 or latency_budget <= 0):
+        raise ValueError("budgets must be finite and non-negative, FRR tolerance <= 1, latency positive")
+    frame = framing(before, after, mode=mode, baseline_evidence_root=baseline_evidence_root,
+                    candidate_evidence_root=candidate_evidence_root)
     deltas = {
         field: metric(after, field) - metric(before, field) for field in METRIC_FIELDS
     }
@@ -209,8 +247,16 @@ def compare(before: dict, after: dict, far_budget: float, frr_tolerance: float,
         and after_bound <= before_bound
     )
     return {
-        "schema_version": 1,
+        "schema_version": 2 if after["schema_version"] == 5 else 1,
         "protocol": after["identity"]["protocol"],
+        "comparison_mode": frame["mode"],
+        "comparison_scope": ("system-quality-without-single-change-attribution" if mode == "system"
+                             else "one-declared-variable-with-fixed-code"),
+        "verified_evaluation": frame.get("verified_evaluation"),
+        "input_evidence_scope": ("rechecked WAV/PCM, references, saved events and corpus provenance; "
+                                 "runner context is declared, not execution-attested" if mode == "system" else None),
+        "far_policy": far_policy(after, "after"),
+        "historical_statistics": after["schema_version"] < 5,
         "variable": frame["variable"],
         "moved": frame["moved"],
         "baseline_run": before.get("run_id"),
@@ -236,6 +282,12 @@ def main() -> int:
     )
     parser.add_argument("--baseline", required=True, type=pathlib.Path)
     parser.add_argument("--candidate", required=True, type=pathlib.Path)
+    parser.add_argument("--mode", choices=("ablation", "system"), default="ablation",
+                        help="system requires schema-5 measured-input evidence; default retains strict ablation")
+    parser.add_argument("--baseline-evidence-root", type=pathlib.Path,
+                        help="restored baseline origin_root tree; scorecard bytes remain unchanged")
+    parser.add_argument("--candidate-evidence-root", type=pathlib.Path,
+                        help="restored candidate origin_root tree; scorecard bytes remain unchanged")
     parser.add_argument("--far-budget", type=float, default=1.0,
                         help="ceiling on the 95%% upper bound of false accepts per hour")
     parser.add_argument("--frr-tolerance", type=float, default=0.0,
@@ -248,12 +300,24 @@ def main() -> int:
     if args.far_budget < 0.0 or args.frr_tolerance < 0.0 or args.latency_budget <= 0.0:
         raise ValueError("budgets must be non-negative and latency budget positive")
 
-    report = compare(load(args.baseline), load(args.candidate),
-                     args.far_budget, args.frr_tolerance, args.latency_budget)
+    before, after = load(args.baseline), load(args.candidate)
+    if args.mode == "system":
+        args.baseline_evidence_root = (args.baseline_evidence_root or
+                                      adjacent_evidence_root(args.baseline, before))
+        args.candidate_evidence_root = (args.candidate_evidence_root or
+                                       adjacent_evidence_root(args.candidate, after))
+    report = compare(before, after, args.far_budget, args.frr_tolerance,
+                     args.latency_budget, mode=args.mode,
+                     baseline_evidence_root=args.baseline_evidence_root,
+                     candidate_evidence_root=args.candidate_evidence_root)
     text = json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)
     if args.output is not None:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(text + "\n", encoding="utf-8")
+        inputs = [args.baseline, args.candidate]
+        if args.mode == "system":
+            inputs.extend(system_input_paths(before, args.baseline_evidence_root))
+            inputs.extend(system_input_paths(after, args.candidate_evidence_root))
+        validate_output_paths({"comparison": args.output}, inputs)
+        write_export_artifacts({args.output: (text + "\n").encode("utf-8")})
     print(text)
     if report["verdict"] == "regressed":
         return 1

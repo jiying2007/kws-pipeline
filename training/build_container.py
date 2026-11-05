@@ -40,6 +40,7 @@ def main() -> int:
     base = validate_base_image(args.base_image)
     dockerfile = ROOT / "training" / "Dockerfile"
     lock = ROOT / "training" / "requirements.lock"
+    runtime_manifest = ROOT / "configs/runtime/research-runtime.json"
     subprocess.check_call(
         [
             "docker",
@@ -65,6 +66,7 @@ def main() -> int:
         "base_image": base,
         "dockerfile_sha256": sha256_file(dockerfile),
         "requirements_lock_sha256": sha256_file(lock),
+        "runtime_manifest_sha256": sha256_file(runtime_manifest),
         "image_id": image_id,
         "tag": args.tag,
     }

@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
       - name: Run saved review and dataset quality guards (normal and optimized)
         run: |
           python3 -S -B -m unittest discover -s research/experiment_quality_guards/tests -p test_quality_gates.py -v

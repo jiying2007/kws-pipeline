@@ -12,7 +12,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import select_multilingual_kws_models as rank  # noqa: E402
-from compare_dataset_iterations import FAR_POLICY, DATASET_IDENTITY_POLICY  # noqa: E402
+from compare_dataset_iterations import APPROX_FAR_POLICY as FAR_POLICY, DATASET_IDENTITY_POLICY  # noqa: E402
 
 
 def scorecard(model: str, *, failures: int, false_accepts: int,
@@ -363,6 +363,34 @@ class DevelopmentTournamentTests(unittest.TestCase):
         }
         with self.assertRaisesRegex(ValueError, "LANGUAGE_COHORT_BINDING_DRIFT"):
             rank.select(p)
+
+    def upgrade_entry(self, entry):
+        card_path = Path(entry["scorecard_path"])
+        card = json.loads(card_path.read_text())
+        card["schema_version"] = 5
+        card["identity"]["far_policy"] = rank.SELECTION_STATISTICAL_POLICY
+        card["identity"]["comparison_mode"] = "ablation"
+        card["far_rate"]["confidence_level"] = .95
+        card["far_rate"]["upper_bound_95_per_hour"] = rank.poisson_rate_upper(
+            card["far_rate"]["observed_false_accepts"], card["exposure"]["exposure_hours"], .95)
+        card_path.write_text(json.dumps(card))
+        entry["scorecard_sha256"] = hashlib.sha256(card_path.read_bytes()).hexdigest()
+
+    def test_schema5_exact_cards_are_accepted_without_legacy_relabelling(self) -> None:
+        plan = copy.deepcopy(self.plan)
+        for entry in [plan["baseline"], *plan["candidates"]]:
+            self.upgrade_entry(entry)
+        result = rank.select(plan)
+        self.assertEqual(result["input_far_policy"], rank.SELECTION_STATISTICAL_POLICY)
+        for candidate in result["candidate_results"]:
+            self.assertIsNone(candidate["legacy_v4_comparison"])
+            self.assertFalse(candidate["scorecard_comparison"]["historical_statistics"])
+
+    def test_same_protocol_label_cannot_mix_v4_and_v5(self) -> None:
+        plan = copy.deepcopy(self.plan)
+        self.upgrade_entry(plan["candidates"][0])
+        with self.assertRaisesRegex(ValueError, "FAR policy mismatch"):
+            rank.select(plan)
 
     def test_source_only_private_create_once_file(self) -> None:
         plan = self.root / "plan.json"

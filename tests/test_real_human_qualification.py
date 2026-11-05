@@ -6,6 +6,7 @@ import json
 import pathlib
 import struct
 import subprocess
+import sys
 import tempfile
 import wave
 
@@ -29,6 +30,8 @@ def write_wav(path: pathlib.Path, marker: int, seconds: float = 1.0) -> None:
 
 
 def run(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
+    if args and args[0] == "python3":
+        args = (sys.executable, "-S", "-B", *args[1:])
     completed = subprocess.run(
         args,
         cwd=ROOT,
@@ -36,6 +39,7 @@ def run(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         check=False,
+        timeout=30,
     )
     if completed.returncode != expect:
         raise AssertionError(
@@ -382,7 +386,57 @@ def test_phase_a_field_plan_preflight() -> None:
             raise AssertionError("private field-plan output accepted inside repository")
 
 
+def test_research_latency_diagnostic() -> None:
+    sys.path.insert(0, str(ROOT / "tools"))
+    from score_real_human_qualification import sample_coordinate_latency_diagnostic
+    valid = {
+        "matched": 2,
+        "timing_coordinates": {"total_recordings": 3, "afe_contract_recordings": 3,
+                              "matched_events": 2, "raw_metrics_available": True},
+        "p50_raw_capture_signed_end_offset_ms": 500.0,
+        "p95_raw_capture_signed_end_offset_ms": 500.0,
+        "p50_post_afe_signed_end_offset_ms": 200.0,
+        "p95_post_afe_signed_end_offset_ms": 200.0,
+    }
+    def require(condition, message):
+        if not condition:
+            raise AssertionError(message)
+    require(sample_coordinate_latency_diagnostic(valid)["status"] == "WITHIN_LIMIT", "500 boundary")
+    above = json.loads(json.dumps(valid))
+    above["p95_raw_capture_signed_end_offset_ms"] = 500.001
+    require(sample_coordinate_latency_diagnostic(above)["status"] == "EXCEEDS_LIMIT", "no boundary rounding")
+    zero_matches = json.loads(json.dumps(valid))
+    zero_matches["matched"] = 0
+    zero_matches["timing_coordinates"]["matched_events"] = 0
+    zero_result = sample_coordinate_latency_diagnostic(zero_matches)
+    require(zero_result["complete_timing_coverage"] is True,
+            "complete recording coverage is independent of matched events")
+    require(zero_result["status"] == "NOT_EVALUABLE" and
+            zero_result["p95_raw_capture_signed_end_offset_ms"] is None,
+            "zero matches cannot produce a timing estimate")
+    cases = []
+    for field, value in (("afe_contract_recordings", 2), ("matched_events", 0),
+                         ("matched_events", True), ("total_recordings", 0),
+                         ("raw_metrics_available", False)):
+        changed = json.loads(json.dumps(valid))
+        changed["timing_coordinates"][field] = value
+        cases.append(changed)
+    cases.extend([{}, {"timing_coordinates": None}])
+    mismatch = json.loads(json.dumps(valid)); mismatch["matched"] = 1; cases.append(mismatch)
+    for value in (None, True, "500", float("nan"), float("inf")):
+        changed = json.loads(json.dumps(valid))
+        changed["p95_raw_capture_signed_end_offset_ms"] = value
+        cases.append(changed)
+    for changed in cases:
+        diagnostic = sample_coordinate_latency_diagnostic(changed)
+        require(diagnostic["status"] == "NOT_EVALUABLE", "incomplete timing must not pass")
+        require(all(diagnostic[key] is None for key in valid if key.startswith("p")),
+                "unavailable coordinate metrics must be null")
+    print("research latency metadata counterexamples: 16 cases")
+
+
 def main() -> int:
+    test_research_latency_diagnostic()
     test_phase_a_field_plan_preflight()
     production_policy = json.loads(
         (ROOT / "configs/research/history/real-human-phase-a.policy.json").read_text(
@@ -594,7 +648,7 @@ def main() -> int:
 
         fake_afe = tmp / "fake_afe.py"
         fake_afe.write_text(
-            "#!/usr/bin/env python3\n"
+            f"#!{sys.executable} -S\n"
             "import json, shutil, sys\n"
             "_, src, dst, result, config = sys.argv\n"
             "shutil.copyfile(src, dst)\n"
@@ -746,6 +800,82 @@ def main() -> int:
             - 1.0 / 3600.0
         ) < 1e-12
         assert result["next_gate"] == "physical-target-board-performance-and-soak"
+
+        # Artificial timing-coordinate cases are not callback measurements.
+        # Exercise the real event scorer and the real Phase-A consumer.
+        snapshot_paths = (references, detections, score_summary, false_accepts,
+                          false_rejects, afe_root / "afe-corpus-summary.json", final)
+        latency_snapshot = {path: path.read_bytes() for path in snapshot_paths}
+        try:
+            rows = [json.loads(line) for line in references.read_text().splitlines() if line.strip()]
+            for row in rows:
+                # This new synthetic case explicitly declares both coordinates;
+                # the legacy zero-delay fake does not emit an aligned contract.
+                row["timing_contract"] = "afe-output-sample-v1"
+                row["sample_rate_hz"] = 16000
+                row["afe_latency_samples"] = 4800
+                for event in row.get("expected", []):
+                    event["raw_start_s"] = event["start_s"]
+                    event["raw_end_s"] = event["end_s"]
+                    event["start_s"] = event["raw_start_s"] + 0.3
+                    event["end_s"] = event["raw_end_s"] + 0.3
+                    if "match_not_before_s" in event:
+                        event["match_not_before_s"] += 0.3
+            references.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+            changed_afe = json.loads(latency_snapshot[afe_root / "afe-corpus-summary.json"])
+            changed_afe["references_sha256"] = sha(references)
+            changed_afe["latency_samples"] = {"min": 4800, "max": 4800}
+            (afe_root / "afe-corpus-summary.json").write_text(json.dumps(changed_afe), encoding="utf-8")
+            for decision, expected_raw, expected_post, expected_status in (
+                (0.900, 600.0, 300.0, "EXCEEDS_LIMIT"),
+                (0.800, 500.0, 200.0, "WITHIN_LIMIT"),
+                (0.801, 501.0, 201.0, "EXCEEDS_LIMIT"),
+            ):
+                detections.write_text("".join(json.dumps({
+                    "recording": "k" + str(keyword), "keyword_id": keyword,
+                    "time_s": decision, "confidence": 0.9}) + "\n"
+                    for keyword in (1, 2)), encoding="utf-8")
+                run("python3", "eval/score_events.py",
+                    "--references", str(references), "--detections", str(detections),
+                    "--pre-tolerance-ms", "0", "--post-tolerance-ms", "500",
+                    "--summary", str(score_summary), "--false-positives", str(false_accepts),
+                    "--false-rejects", str(false_rejects))
+                run("python3", "tools/score_real_human_qualification.py", *gate_args)
+                observed = json.loads(final.read_text())
+                diagnostic = observed["sample_coordinate_latency"]
+                if observed["qualified"] is not True or observed["shipping_approved"] is not False:
+                    raise AssertionError("legacy acoustic scope unexpectedly changed")
+                if observed["callback_latency"] != {"status": "NOT_MEASURED", "latency_ms": None, "reason": "no-application-callback-clock-evidence"}:
+                    raise AssertionError("sample offsets were promoted to callback qualification")
+                if diagnostic["status"] != expected_status or not diagnostic["complete_timing_coverage"]:
+                    raise AssertionError("raw sample-coordinate boundary/coverage differs")
+                if abs(diagnostic["p95_raw_capture_signed_end_offset_ms"] - expected_raw) > 1e-9 or abs(diagnostic["p95_post_afe_signed_end_offset_ms"] - expected_post) > 1e-9:
+                    raise AssertionError("AFE delay was omitted or counted twice")
+            # One negative recording lacks the declared timing contract. The
+            # legacy acoustic result stays readable, but raw coverage is absent.
+            missing_rows = json.loads(json.dumps(rows))
+            negative = next(row for row in missing_rows if not row.get("expected"))
+            for key in ("timing_contract", "sample_rate_hz", "afe_latency_samples"):
+                negative.pop(key, None)
+            references.write_text("".join(json.dumps(row) + "\n" for row in missing_rows), encoding="utf-8")
+            changed_afe["references_sha256"] = sha(references)
+            (afe_root / "afe-corpus-summary.json").write_text(json.dumps(changed_afe), encoding="utf-8")
+            run("python3", "eval/score_events.py",
+                "--references", str(references), "--detections", str(detections),
+                "--pre-tolerance-ms", "0", "--post-tolerance-ms", "500",
+                "--summary", str(score_summary), "--false-positives", str(false_accepts),
+                "--false-rejects", str(false_rejects))
+            run("python3", "tools/score_real_human_qualification.py", *gate_args)
+            observed = json.loads(final.read_text())
+            if (observed["qualified"] is not True
+                    or observed["sample_coordinate_latency"]["status"] != "NOT_EVALUABLE"
+                    or observed["sample_coordinate_latency"]["p95_raw_capture_signed_end_offset_ms"] is not None
+                    or observed["callback_latency"]["status"] != "NOT_MEASURED"):
+                raise AssertionError("mixed timing cannot manufacture raw or callback measurement")
+        finally:
+            for path, body in latency_snapshot.items():
+                path.write_bytes(body)
+        print("raw latency producer counterexamples: 4 synthetic cases; callback NOT_MEASURED")
 
         afe_summary_path = afe_root / "afe-corpus-summary.json"
         valid_afe_summary = afe_summary_path.read_text(encoding="utf-8")

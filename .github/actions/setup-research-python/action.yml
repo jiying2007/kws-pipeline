@@ -1,0 +1,19 @@
+name: Set up the active research Python
+description: Read the single runtime manifest, select its exact Python, and verify it without ML imports.
+runs:
+  using: composite
+  steps:
+    - name: Read the interpreter pin without using runner Python
+      id: runtime
+      shell: bash
+      run: |
+        set -euo pipefail
+        version="$(jq -er '.python.version | select(test("^3\\.12\\.[0-9]+$"))' configs/runtime/research-runtime.json)"
+        printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      with:
+        python-version: ${{ steps.runtime.outputs.version }}
+        check-latest: false
+    - name: Verify the active host interpreter
+      shell: bash
+      run: python -B tools/research_runtime.py check

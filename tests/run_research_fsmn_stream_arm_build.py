@@ -3,18 +3,20 @@
 import argparse
 import importlib.util
 import json
-import os
 from pathlib import Path
 import shutil
+import sys
 import tempfile
 import time
 
 from run_research_three_window_arm import check_arm_dynamic_symbols
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
+from research_python_entry import clear_interpreter_library_path
+
 
 def execute(root):
-    if any(name in os.environ for name in ("LD_PRELOAD", "LD_LIBRARY_PATH", "LD_AUDIT")):
-        raise RuntimeError("loader overrides are forbidden")
+    clear_interpreter_library_path()
     source = root / 'research/fsmn2599-stream-c/build.py'
     spec = importlib.util.spec_from_file_location('fsmn_stream_build', source)
     build = importlib.util.module_from_spec(spec)
