@@ -125,6 +125,7 @@ def aggregate_batches(packages, loader, *, expected_plan_sha256):
                 parent_manifest_sha256=manifest_sha, parent_report_sha256=sha(report_raw),
                 parent_inputs_sha256=sha(inputs_raw), global_source_key=list(key),
                 source_role=source["role"], parent_source_sha256=source["parent_source_sha256"],
+                intended_keyword_id=source.get("intended_keyword_id"),
                 reference_wav_sha256=source["reference_wav_sha256"],
                 reference_pcm_sha256=source["reference_pcm_sha256"],
                 asr_transcripts=raw["asr"], retained_row_sha256=digest(raw),

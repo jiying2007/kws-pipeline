@@ -52,6 +52,16 @@ def project_row(row, vocabulary):
                     target == int(KEYWORDS[index] in text), "D1_KEYWORD_TARGET_DIFFERS_FROM_FULL_TEXT")
         else:
             require(target is None and weight == 0, "D1_UNKNOWN_KEYWORD_IS_NOT_NEGATIVE")
+    category = row["generation_category"]
+    require(category in ("full-positive", "ordinary-negative", "partial-negative", "near-negative"),
+            "D1_GENERATION_CATEGORY")
+    observed_positive = any(target == 1 and mask for target, mask in zip(row["keyword_targets"], row["keyword_mask"]))
+    intended_keyword = row.get("intended_keyword_id")
+    require(intended_keyword is None or type(intended_keyword) is int and intended_keyword in (1, 2),
+            "D1_INTENDED_KEYWORD_ID")
+    conflict = confirmed and (
+        observed_positive != (category == "full-positive") or
+        category == "full-positive" and intended_keyword is not None and row["keyword_targets"][intended_keyword - 1] != 1)
     require(type(row["samples"]) is int and row["samples"] > 0, "D1_AUDIO_SAMPLE_COUNT")
     projection = fulltext_targets(text if confirmed else None, vocabulary)
     frames = {"rnn64": max(0, 1 + (row["samples"] - 400) // 320),
@@ -63,15 +73,23 @@ def project_row(row, vocabulary):
         minimum = len(ids) + sum(a == b for a, b in zip(ids, ids[1:]))
         if any(value < minimum for value in frames.values()):
             projection.update(supported=False, reason="common_unpadded_ctc_geometry_infeasible", target_ids=None)
+    if conflict:
+        projection.update(supported=False, reason="generation_intent_weak_label_conflict", target_ids=None)
     ctc = confirmed and projection["supported"]
-    keyword = confirmed and any(row["keyword_mask"]) and frames["c1"] > 0
+    keyword = confirmed and not conflict and any(row["keyword_mask"]) and frames["c1"] > 0
     return {**row, "consumer": "d1-objective-projection-v2", "vocabulary_sha256": digest(vocabulary),
             "label_ctc_mask": row["ctc_mask"], "label_ctc_weight": row["ctc_weight"],
+            "label_keyword_targets": list(row["keyword_targets"]), "label_keyword_mask": list(row["keyword_mask"]),
+            "label_keyword_weight": list(row["keyword_weight"]),
+            "keyword_targets": [None, None] if conflict else list(row["keyword_targets"]),
+            "keyword_mask": [False, False] if conflict else list(row["keyword_mask"]),
+            "keyword_weight": [0.0, 0.0] if conflict else list(row["keyword_weight"]),
             "ctc_mask": ctc, "ctc_weight": row["ctc_weight"] if ctc else 0.0,
             "target_ids": projection["target_ids"] if ctc else None,
             "ctc_reason": projection["reason"], "oov_characters": projection["oov_characters"],
             "ctc_minimum_frames": minimum, "expected_output_frames": frames,
-            "keyword_eligible": keyword, "same_cohort_ctc_eligible": ctc}
+            "keyword_eligible": keyword, "same_cohort_ctc_eligible": ctc,
+            "quarantined": conflict, "quarantine_reason": "generation_intent_weak_label_conflict" if conflict else None}
 
 
 def project_rows(rows, vocabulary):
@@ -198,3 +216,29 @@ def make_comparison_recipes(rows, vocabulary, sampler):
     require(len({recipe["cohort_sha256"] for recipe in recipes.values()}) == 1,
             "D1_SAME_DATA_COHORT_REQUIRED")
     return recipes
+
+
+def available_recipes(rows, vocabulary, sampler):
+    """A missing near pool blocks its requested arms, not the zero arm."""
+    available, blocked = {}, {}
+    if not cohort_rows(rows):
+        return {}, {"schema": "kws-d1-arm-availability-v2", "available": [],
+            "blocked": {str(percent): {"status": "blocked", "reason": "NO_CONFIRMED_COMMON_CTC_ROWS",
+                         "automatic_retry": False} for percent in (0, 5, 10)},
+            "quarantined_items": sum(row["quarantined"] for row in rows),
+            "unchanged_generation_intents": True, "automatic_pool_filling": False}
+    for percent in (0, 5, 10):
+        try:
+            available[str(percent)] = make_recipe(rows, vocabulary, sampler, near_percent=percent)[0]
+        except ValueError as error:
+            if not str(error).startswith("MISSING_SAMPLING_POOL:"):
+                raise
+            blocked[str(percent)] = {"status": "blocked", "reason": str(error), "automatic_retry": False}
+    positives = [[(draw["source_id"], draw["ctc_weight"], draw["keyword_mask"], draw["keyword_weight"])
+                  for draw in recipe["exposure_plan"]["draws"] if draw["bucket"] == "full-positive"]
+                 for recipe in available.values()]
+    require(not positives or all(value == positives[0] for value in positives),
+            "D1_AVAILABLE_ARMS_POSITIVE_EXPOSURES_CHANGED")
+    return available, {"schema": "kws-d1-arm-availability-v2", "available": sorted(map(int, available)),
+                       "blocked": blocked, "quarantined_items": sum(row["quarantined"] for row in rows),
+                       "unchanged_generation_intents": True, "automatic_pool_filling": False}

@@ -30,6 +30,7 @@ CANDIDATE_EXACT = frozenset({
     "training/research_d1_inputs.py",
     "training/research_d1_recipe.py",
     "training/research_d1_models.py",
+    "training/research_d1_train.py",
     "tests/test_research_d1.py",
     "tests/fixtures/d1-fulltext/fsmn-official-tokens.txt",
     "tests/fixtures/d1-fulltext/research_weak_sampling_v1.py",

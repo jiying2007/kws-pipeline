@@ -43,7 +43,7 @@ class CandidateNumericCIContracts(unittest.TestCase):
                      "configs/runtime/fsmn-fulltext-sources.json", "tools/research_job_lock.py",
                      "tests/test_research_job_lock.py", "training/research_d1_vocab.py",
                      "training/research_d1_inputs.py", "training/research_d1_recipe.py",
-                     "training/research_d1_models.py", "tests/test_research_d1.py",
+                     "training/research_d1_models.py", "training/research_d1_train.py", "tests/test_research_d1.py",
                      "tests/fixtures/d1-fulltext/fsmn-official-tokens.txt",
                      "tests/fixtures/d1-fulltext/research_weak_sampling_v1.py",
                      "docs/research-d1-fulltext-v2.md"):

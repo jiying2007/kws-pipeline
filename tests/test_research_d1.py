@@ -7,11 +7,14 @@ import copy
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
+import time
 import unittest
 from types import SimpleNamespace
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT / "training")]
@@ -19,6 +22,7 @@ import research_d1_inputs as inputs_module
 import research_d1_models as models
 import research_d1_recipe as recipes
 import research_d1_vocab as vocab_module
+import research_d1_train as trainer
 from research.candidate_encoders.contract import EncoderSpec
 from research.candidate_encoders.fulltext_contract import c1_fulltext_spec, rnn64_fulltext_spec
 
@@ -194,6 +198,117 @@ class RecipeContracts(unittest.TestCase):
         self.assertEqual(projected[0]["ctc_reason"], "common_unpadded_ctc_geometry_infeasible")
         self.assertEqual(projected[0]["expected_output_frames"], {"rnn64": 1, "c1": 1, "fsmn": 0})
 
+    def test_intent_weak_label_conflicts_are_preserved_and_quarantined(self):
+        rows = raw_rows()
+        rows[0].update(full_text="好小窝", keyword_targets=[0, 0], intended_keyword_id=1)
+        rows[7].update(full_text="你好小窝", keyword_targets=[1, 0])
+        projected = recipes.project_rows(rows, vocabulary())
+        for index, original_targets in ((0, [0, 0]), (7, [1, 0])):
+            self.assertTrue(projected[index]["quarantined"])
+            self.assertFalse(projected[index]["ctc_mask"] or projected[index]["keyword_eligible"])
+            self.assertEqual(projected[index]["full_text"], rows[index]["full_text"])
+            self.assertEqual(projected[index]["generation_category"], rows[index]["generation_category"])
+            self.assertEqual(projected[index]["label_keyword_targets"], original_targets)
+            self.assertEqual(projected[index]["keyword_targets"], [None, None])
+            self.assertEqual(projected[index]["keyword_mask"], [False, False])
+            self.assertEqual(projected[index]["keyword_weight"], [0, 0])
+            self.assertIsNone(projected[index]["target_ids"])
+        available, report = recipes.available_recipes(projected, vocabulary(), sampler())
+        self.assertEqual(report["quarantined_items"], 2)
+        self.assertEqual(set(available), {"0", "5", "10"})
+        for recipe in available.values():
+            self.assertEqual(recipe["total_exposures"], 600)
+            self.assertNotIn(rows[0]["source_id"], recipe["exposures_by_source"])
+            self.assertNotIn(rows[7]["source_id"], recipe["exposures_by_source"])
+
+    def test_near_conflicts_block_only_near_arms_and_no_target_is_invented(self):
+        rows = raw_rows()
+        for row in rows:
+            if row["generation_category"] == "near-negative":
+                row.update(full_text="你好小窝", keyword_targets=[1, 0])
+        available, report = recipes.available_recipes(recipes.project_rows(rows, vocabulary()), vocabulary(), sampler())
+        self.assertEqual(set(available), {"0"})
+        self.assertEqual(report["available"], [0])
+        self.assertEqual(set(report["blocked"]), {"5", "10"})
+        self.assertEqual(report["blocked"]["5"]["reason"], "MISSING_SAMPLING_POOL:near-negative")
+        self.assertFalse(report["automatic_pool_filling"])
+
+
+class EntryContracts(unittest.TestCase):
+    def test_job_shape_timeout_and_candidate_identity(self):
+        job = {"schema": trainer.JOB_SCHEMA, "candidate": "rnn64-ctc2601", "near_percent": 0,
+               "timeout_seconds": 600, "prepared_from_dependency": "prepare"}
+        self.assertEqual(trainer.validate_job(job), job)
+        for field, value in (("timeout_seconds", True), ("timeout_seconds", 60000),
+                             ("candidate", "fsmn2599"), ("near_percent", 1), ("near_percent", True)):
+            with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                trainer.validate_job({**job, field: value})
+        with self.assertRaises(ValueError):
+            trainer.validate_job({**job, "prepared": "/pretend"})
+
+    def test_new_or_empty_output_never_reuses_partial_run(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "output"
+            trainer.output_directory(path)
+            trainer.output_directory(path)
+            (path / "partial").write_text("already claimed")
+            with self.assertRaisesRegex(ValueError, "D1_OUTPUT_MUST_BE_NEW_OR_EMPTY"):
+                trainer.output_directory(path)
+
+    def test_real_dummy_queue_resolves_completed_preparation_receipt(self):
+        # No Torch, feature construction or model is imported by this real
+        # queue -> supervised command -> completed-dependency path.
+        queue = trainer.io_contract
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            first_recipe = root / "prepare.json"
+            first_recipe.write_text('{"fixture":"stdlib only","model_calls":0}')
+            job = {"schema": trainer.JOB_SCHEMA, "candidate": "rnn64-ctc2601", "near_percent": 0,
+                   "timeout_seconds": 600, "prepared_from_dependency": "prepare"}
+            second_recipe = root / "run.json"
+            second_recipe.write_bytes(vocab_module.canonical(job))
+            prepare_code = "import os;from pathlib import Path;Path(os.environ['KWS_RESEARCH_OUTPUT_DIR'],'MANIFEST.json').write_text('{}')"
+            consume_code = "\n".join((
+                "import os,sys,json;from pathlib import Path",
+                "sys.path[:0]=[sys.argv[1],str(Path(sys.argv[1])/'training'),str(Path(sys.argv[1])/'tools')]",
+                "from research_d1_train import read_json,validate_job,resolve_prepared,queue_binding",
+                "from research_job_lock import heavy_model_slot,PATH_ENV",
+                "with heavy_model_slot(os.environ[PATH_ENV]) as lease:",
+                " recipe=Path(os.environ['KWS_RESEARCH_RECIPE'])",
+                " queue_binding(recipe,lease)",
+                " root,sha,binding=resolve_prepared(validate_job(read_json(recipe)))",
+                " Path(os.environ['KWS_RESEARCH_OUTPUT_DIR'],'answer.json').write_text(json.dumps({'manifest_sha256':sha,'binding':binding,'model_calls':0}))",
+            ))
+            jobs = []
+            for name, recipe, code, deps, outputs in (("prepare", first_recipe, prepare_code, [], ["MANIFEST.json"]),
+                                                     ("run", second_recipe, consume_code, ["prepare"], ["answer.json"])):
+                jobs.append({"job_id": name, "recipe": str(recipe), "recipe_sha256": hashlib.sha256(recipe.read_bytes()).hexdigest(),
+                    "argv": [sys.executable, "-I", "-S", "-B", "-c", code, str(ROOT)], "cwd": str(root),
+                    "depends_on": deps, "timeout_minutes": .1, "outputs": outputs})
+            request = root / "request.json"
+            request.write_bytes(vocab_module.canonical({"schema": queue.SCHEMA, "queue_id": "d1-handoff",
+                                                       "global_budget_minutes": 1, "jobs": jobs}))
+            queue_root = root / "queue"
+            queue.create(queue_root, request, ROOT / "configs/research/active-plan-20261105.json", root / "slot.lock")
+            from research_job_lock import FD_ENV, PATH_ENV, SUPERVISED_ENV
+            environment = {key: value for key, value in os.environ.items() if key not in (FD_ENV, PATH_ENV, SUPERVISED_ENV)}
+            # A numeric test may itself own the real shared model slot. Keep
+            # that open descriptor, but do not describe it as this independent
+            # no-model dummy queue's inherited temporary slot.
+            with patch.dict(os.environ, environment, clear=True):
+                status, code = queue.run(queue_root)
+            self.assertEqual((status["status"], code), ("completed", 0))
+            answer = json.loads((queue_root / "jobs/run/outputs/answer.json").read_text())
+            self.assertEqual(answer["manifest_sha256"], hashlib.sha256(b"{}").hexdigest())
+            self.assertEqual(answer["binding"]["job_id"], "prepare")
+            self.assertEqual(answer["model_calls"], 0)
+            with patch.dict(os.environ, environment, clear=True):
+                self.assertEqual(queue.run(queue_root)[1], 0)
+            # The original completed output binding cannot accept later bytes.
+            (queue_root / "jobs/prepare/outputs/MANIFEST.json").write_text("changed")
+            with self.assertRaisesRegex(ValueError, "D1_DEPENDENCY_MANIFEST_CHANGED"):
+                trainer.resolve_prepared(job, dependencies_path=queue_root / "jobs/run/dependencies.json")
+
 
 class AggregateContracts(unittest.TestCase):
     """Exercise cross-package orchestration with an explicit replay test double.
@@ -343,13 +458,38 @@ class NumericContracts(unittest.TestCase):
         loss.backward()
         self.assertEqual(logits.grad.abs().sum().item(), 0)
 
+    def test_actual_training_consumer_updates_weights_and_records_each_draw(self):
+        torch = self.torch
+        projected = recipes.project_rows(raw_rows(), vocabulary())
+        recipe, rows = recipes.make_recipe(projected, vocabulary(), sampler(), near_percent=5)
+        # A four-draw software fixture exercises the actual loop. The public
+        # run() still requires its sealed 600-draw/150-step budget exactly.
+        recipe = copy.deepcopy(recipe)
+        recipe["exposure_plan"]["draws"] = recipe["exposure_plan"]["draws"][:4]
+        torch.manual_seed(recipes.SEED)
+        model, _ = models.build_fresh("rnn64-ctc2601", vocabulary(), self.reference)
+        original = [parameter.detach().clone() for parameter in model.parameters()]
+        features = [torch.linspace(-.1, .1, 8 * 32).reshape(8, 32) for _ in rows]
+        optimizer = torch.optim.AdamW(model.parameters(), lr=.001)
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            result = trainer.train_batches(model, features, rows, recipe, optimizer, output=output, deadline=time.monotonic()+10)
+            self.assertEqual((result["optimizer_steps"], result["sample_exposures"]), (1, 4))
+            ledger = json.loads((output / "consumption.jsonl").read_text())
+            self.assertEqual([draw["source_id"] for draw in ledger["draws"]],
+                             [draw["source_id"] for draw in recipe["exposure_plan"]["draws"]])
+            self.assertEqual([draw["ctc_weight"] for draw in ledger["draws"]],
+                             [draw["ctc_weight"] for draw in recipe["exposure_plan"]["draws"]])
+            self.assertTrue(all(draw["ctc_mask"] and not draw["keyword_loss_used"] for draw in ledger["draws"]))
+            self.assertTrue(any(not torch.equal(before, after) for before, after in zip(original, model.parameters())))
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--numeric", action="store_true")
     args = parser.parse_args()
     suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case)
-                               for case in (VocabularyContracts, RecipeContracts, AggregateContracts))
+                               for case in (VocabularyContracts, RecipeContracts, AggregateContracts, EntryContracts))
     if args.numeric:
         suite.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(NumericContracts))
     return 0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1
