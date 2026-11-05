@@ -47935,6 +47935,34 @@
           }
         }
       ]
+    },
+    {
+      "id": "d1-native-tool-navigation-completion-20261105",
+      "date": "2026-11-05",
+      "base_commit": "319889c17579147bd5fbd7e6bf6d80e114349cc5",
+      "base_tree": "56c6c215605e648c2d5796f757653dceb56a3bc4",
+      "workflow_source_changed": false,
+      "scope": "Register the added native D1 entry in the complete engineering-tool navigation index.",
+      "rationale": "The mandatory terminal-documentation contract correctly found the missing index entry; add that entry without weakening the check or changing any measured result, frozen source, or prior maintenance record.",
+      "files": [
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 20522,
+            "sha256": "dfb7c166f5c72b42127d8ded80b0633bbaf8f25d7263ae2cb38b272cf8a6b0dc",
+            "git_blob_sha1": "da321938db9b2e1ba3f8d6b4b86ebd2ef2c9b68d"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 20728,
+            "sha256": "e4f53c89d00316b52d01167fcb67c89309502421ec143a4c3cc07e6596cd4e51",
+            "git_blob_sha1": "03fe3178493e7d33142ae5682c63b6e69b0071a1"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
