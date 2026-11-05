@@ -476,9 +476,16 @@ def worker(root, job_id, lease_fd, claim_sha):
         return 0 if result["status"] == "completed" else 1
 
 
-def run(root):
+def run(root, *, max_jobs=None):
+    """Advance ready jobs, optionally pausing after this many new claims.
+
+    The limit is per invocation. Existing completed jobs never consume it,
+    and a successful bounded pause still reports the queue as incomplete.
+    """
+    require(max_jobs is None or type(max_jobs) is int and max_jobs > 0, "MAX_JOBS_POSITIVE_INTEGER_REQUIRED")
     require(SUPERVISED_ENV not in os.environ, "NESTED_QUEUE_NOT_SUPPORTED")
     root, queue, request, queue_sha = load_queue(root)
+    started_jobs = []
     with exclusive(root / "controller.lock"):
         while True:
             status = inspect(root, reconcile=True)
@@ -498,6 +505,11 @@ def run(root):
             if status["remaining_budget_nanoseconds"] == 0:
                 status["status"] = "budget_exhausted"
                 return status, 3
+            if max_jobs is not None and len(started_jobs) >= max_jobs:
+                status.update(stop_reason="max_jobs_reached", max_jobs=max_jobs,
+                    jobs_started_this_invocation=len(started_jobs), started_job_ids=started_jobs)
+                return status, 0 if all(status["jobs"][name]["status"] == "completed"
+                                       for name in started_jobs) else 1
             job = ready[0]
             try:
                 with heavy_model_slot(queue["heavy_lock"]) as lease, exclusive(root / "jobs" / job["job_id"] / "job.lock") as job_fd:
@@ -516,6 +528,7 @@ def run(root):
                         "global_actual_before_nanoseconds": status["actual_known_job_nanoseconds"],
                         "automatic_retry": False}
                     write_json(folder / "claim.json", claim)
+                    started_jobs.append(job["job_id"])
                     write_json(folder / "dependencies.json", dependencies)
                     optimization = ["-" + "O" * sys.flags.optimize] if sys.flags.optimize else []
                     command = [sys.executable, "-I", "-S", "-B", *optimization, str(Path(__file__).resolve()), "worker", "--root", str(root),
@@ -560,6 +573,9 @@ def main(argv=None):
     for name in ("run", "status", "worker"):
         command = sub.add_parser(name)
         command.add_argument("--root", type=Path, required=True)
+        if name == "run":
+            command.add_argument("--max-jobs", type=int, metavar="N",
+                help="pause after at most N newly claimed jobs in this invocation (positive integer)")
         if name == "worker":
             command.add_argument("--job-id", required=True)
             command.add_argument("--lease-fd", type=int, required=True)
@@ -571,7 +587,7 @@ def main(argv=None):
         elif args.command == "status":
             result, code = inspect(args.root), 0
         elif args.command == "run":
-            result, code = run(args.root)
+            result, code = run(args.root, max_jobs=args.max_jobs)
         else:
             return worker(args.root, args.job_id, args.lease_fd, args.claim_sha256)
         print(json.dumps(result, sort_keys=True, ensure_ascii=False))
