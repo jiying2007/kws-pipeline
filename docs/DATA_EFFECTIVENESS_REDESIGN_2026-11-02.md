@@ -1,5 +1,7 @@
 # Goal-driven KWS data redesign (2026-11-02)
 
+> **Historical proposal, not current admission policy.** This dated plan retains its original methodology and numeric requests, but its product/shipping language and retired configuration references do not authorize or block current experiments. Follow [RESEARCH_ONLY_EXECUTION.md](RESEARCH_ONLY_EXECUTION.md); preserve original evidence and source rights.
+
 **Status:** proposed engineering/data policy, not evidence of a new model or
 production readiness. This proposal does not modify frozen source records,
 training admission, qualification, thresholds, or shipping configuration.

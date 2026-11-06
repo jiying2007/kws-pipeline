@@ -1,5 +1,7 @@
 # Architecture
 
+> **Current research scope:** This guide describes technical research only. [RESEARCH_ONLY_EXECUTION.md](RESEARCH_ONLY_EXECUTION.md) defines current execution. Commercial publication, shipping approval and product certification are not research prerequisites. Source rights, actual labels, split isolation and honest measurements remain required; absent device or independent acoustic evidence limits only the corresponding claims.
+
 `kws-pipeline` separates the offline/control plane from the bounded always-on C runtime.
 
 ## Real-time data path
@@ -50,14 +52,14 @@ The acoustic network learns reusable pinyin-token acoustics. Configured wake phr
 
 The default 32-feature / 48-hidden / ~420-token geometry is about 1.2 MMAC/s and about 26 KB of model weights+biases. These are design calculations, not physical target-board measurements.
 
-The promoted `model-749187ec1d66` is a distinct, smaller 32-input / 64-hidden /
-5-output tanh RNN: blank plus the four product tokens for `你/好/小/窝`. The current
-[production transcript mapper](SPEECH_BASE_ADMISSION.md#human-review-v2) supports
+The frozen research comparator `model-749187ec1d66` is a distinct, smaller 32-input / 64-hidden /
+5-output tanh RNN: blank plus the four comparator tokens for `你/好/小/窝`. The current
+[current transcript mapper](SPEECH_BASE_ADMISSION.md#human-review-v2) supports
 those four characters. The isolated native A20 research export instead has six
 classes, `<blank>/你/好/小/窝/屋`; that research label set neither extends the
-production mapper nor admits `屋` as a production CTC target. Reference-only
+current mapper nor admits `屋` as a current CTC target. Reference-only
 research results do not establish native numerical admission or qualify either
-model for shipping.
+model for independent acoustic acceptance.
 
 ## Decoder state and CTC admission
 
@@ -139,11 +141,11 @@ The older generic synthetic prototype uses its own stricter 99.5% token-fit floo
 
 `kws_raw_stream` feeds raw PCM16 blocks through the same runtime without WAV/clip resets. `eval/long_far_stream.py` uses it to exercise long continuous negative streams and record false accepts. The nightly workflow is a hosted/synthetic regression watch, not evidence for a production FAR/hour claim.
 
-## Provenance and qualification
+## Research provenance and independent evidence
 
 Training requires the actual token vocabulary. Checkpoints retain vocabulary fingerprint/token hash, manifest hashes, frontend identity/spec, seed and optimizer settings. Export refuses incompatible vocabulary/frontend metadata and emits deterministic model provenance with quantization diagnostics.
 
-Shipping qualification then re-hashes the concrete checkpoint, training tokens, complete manifest multiset, exported model, pack, release tokens/config, evaluation artifacts and target-board artifacts. Runtime frontend identity must equal model-lineage frontend identity. The SKU policy is applied only after these byte-complete consistency checks.
+Research comparison re-hashes the concrete checkpoint, training tokens, complete manifest multiset, exported model, keyword pack, configuration and evaluation artifacts. Runtime frontend identity must equal model-lineage frontend identity. Device-specific claims separately bind actual target-board artifacts. No shipping SKU policy or commercial qualification is a research prerequisite.
 
 ## Ownership and hard bounds
 

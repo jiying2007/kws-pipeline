@@ -90,6 +90,21 @@ def require_no_new_indirect_release_readers(workflows, scripts, known_debt):
 
 class ResearchPublicationBoundaryTests(unittest.TestCase):
 
+    def test_current_guides_keep_scoped_research_not_commercial_admission(self):
+        for name in ("ARCHITECTURE.md", "SYNTHETIC_TRAINING.md", "KWS_DATA_BULK_EFFECT_BOUNDARY.md", "PHASE_A_CRITICAL_CAPTURE_SUPPLEMENT.md", "KEYWORD_SET_IDENTITY.md"):
+            with self.subTest(path=name):
+                text = (ROOT / "docs" / name).read_text(encoding="utf-8")
+                self.assertIn("Current research scope", text)
+                self.assertIn("RESEARCH_ONLY_EXECUTION.md", text)
+                self.assertIn("Source rights, actual labels, split isolation and honest measurements remain required", text)
+        for name, stale in (("ARCHITECTURE.md", "The SKU policy is applied only after"),
+                            ("PHASE_A_CRITICAL_CAPTURE_SUPPLEMENT.md", "the current commercial"),
+                            ("KWS_DATA_BULK_EFFECT_BOUNDARY.md", "before shipping Phase C"),
+                            ("KEYWORD_SET_IDENTITY.md", "Current shipping remains")):
+            self.assertNotIn(stale, (ROOT / "docs" / name).read_text(encoding="utf-8"))
+        for name in ("DATA_EFFECTIVENESS_REDESIGN_2026-11-02.md", "KWS_PARALLEL_OPTIMIZATION_REVIEW_2026-10-10.md"):
+            self.assertIn("Historical proposal, not current admission policy", (ROOT / "docs" / name).read_text(encoding="utf-8"))
+
     def test_orphan_release_registry_importer_is_fail_closed(self):
         path = ROOT / "tools/materialize_model_registry.py"
         self.assertTrue(path.is_file())

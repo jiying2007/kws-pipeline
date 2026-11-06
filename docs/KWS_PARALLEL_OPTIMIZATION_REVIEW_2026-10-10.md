@@ -1,5 +1,7 @@
 # 双唤醒词并行优化评审与决策路线
 
+> **Historical proposal, not current admission policy.** This dated plan retains its original methodology and numeric requests, but its product/shipping language and retired configuration references do not authorize or block current experiments. Follow [RESEARCH_ONLY_EXECUTION.md](RESEARCH_ONLY_EXECUTION.md); preserve original evidence and source rights.
+
 日期：2026-10-10。目标：`你好小窝`、`小窝小窝` 在最终产品 AFE、真实 3–5 m 和 SSC305 上同时满足误拒、误触发、延迟与资源要求。
 
 **建议先修正数据、事件语义和流式评估的可信度，再用新训 RNN64 对照、因果 DS-TCN 首选挑战者、条件性因果 FSMN 做小而可解释的并行比较。** 不把更多模型、更多 TTS 或更长训练本身视为进展。当前没有可据此宣布的获胜架构。
