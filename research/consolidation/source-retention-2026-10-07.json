@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 81884,
-      "git_blob_sha1": "883cf13dfc1f77d850f35b4799e7817e59e2e254",
-      "sha256": "780310db4fb5e43d930faca9cbab9fae2108f6e77a34a6de4e07f1ce353d069c"
+      "bytes": 82318,
+      "git_blob_sha1": "860a5b1c9b5abdf59e2e772cceb2458ef1ac5a0f",
+      "sha256": "fb97ee49412e805e0d1202e8e8698832822dfa1a29c63fdeda46bff0efa5be0d"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -51348,6 +51348,198 @@
             "bytes": 51956,
             "git_blob_sha1": "ec1e826f8c10e0699952fe1dd8c3836886af73ed",
             "sha256": "3c846dc8eafc3969af96d906108b23b81567f89d8b3b407ac9b028885642ec2a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c1-posterior-allocation-continuation-20261106",
+      "date": "2026-11-06",
+      "base_commit": "ea60d51cf5826dbc23813a3638888ce93fb6a47a",
+      "base_tree": "72b710f08f5113305d7d920356989f5dd091b570",
+      "public_source_commit": "6cfdc3c7cfcd1b174dd8ca26747658dd073d611c",
+      "source_tree": "f43663c2d643db27c4b717eea3423b28bae509bb",
+      "public_source_receipt_sha256": "01537865223fc794fd99d0c69311fcedd4db084852630dc99033895b10cff142",
+      "previous_manifest_sha256": "8e80db705354b84bcf169e9408cc6fc5eeeb57654769dd0ddb1c1ece25bc0036",
+      "workflow_source_changed": true,
+      "scope": "Saved balanced64 posterior adapter, fixed 3:1 source sampling-policy candidate, real mixed outcome aggregates and metadata CI integration.",
+      "rationale": "Preserve all original source inventory and prior maintenance history while binding the exact reviewed current CI and research source bytes. Saved diagnostics use the original numerical kernel; the one actual allocation experiment fails its predeclared nonregression rule. No automatic model promotion or additional ratio search.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 81884,
+            "git_blob_sha1": "883cf13dfc1f77d850f35b4799e7817e59e2e254",
+            "sha256": "780310db4fb5e43d930faca9cbab9fae2108f6e77a34a6de4e07f1ce353d069c"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 82318,
+            "git_blob_sha1": "860a5b1c9b5abdf59e2e772cceb2458ef1ac5a0f",
+            "sha256": "fb97ee49412e805e0d1202e8e8698832822dfa1a29c63fdeda46bff0efa5be0d"
+          }
+        },
+        {
+          "path": "configs/research/c1-saved-posterior-20261106.json",
+          "before": null,
+          "after": {
+            "path": "configs/research/c1-saved-posterior-20261106.json",
+            "mode": "100644",
+            "bytes": 8481,
+            "git_blob_sha1": "ef1c5c473001669d7345557b4b8277accbf378c5",
+            "sha256": "37d0da96f014c57f8d22a7be904097f05a9b20fe7d8bf6ff4b0efb6809b5466e"
+          }
+        },
+        {
+          "path": "docs/KWS_BALANCED64_20261106.md",
+          "before": null,
+          "after": {
+            "path": "docs/KWS_BALANCED64_20261106.md",
+            "mode": "100644",
+            "bytes": 3754,
+            "git_blob_sha1": "d7dcce505a3d0b1b7f424c11778261a9202fd221",
+            "sha256": "08bfbdd3cdb68dd16636bff1be7e06d98c15b9199571cc683f87f6ef5f155b7c"
+          }
+        },
+        {
+          "path": "docs/KWS_C1_ALLOCATION_20261106.md",
+          "before": null,
+          "after": {
+            "path": "docs/KWS_C1_ALLOCATION_20261106.md",
+            "mode": "100644",
+            "bytes": 5278,
+            "git_blob_sha1": "619a8bce046400c18ea1205d6cffcc5b9367555f",
+            "sha256": "e7e0c8bc8b343406490feea754490fe397e812c17ce2f1836b74eb46c634f7ad"
+          }
+        },
+        {
+          "path": "docs/KWS_C1_POSTERIOR_20261106.md",
+          "before": null,
+          "after": {
+            "path": "docs/KWS_C1_POSTERIOR_20261106.md",
+            "mode": "100644",
+            "bytes": 6652,
+            "git_blob_sha1": "30554a634de642a630aabda748b2a4d135429282",
+            "sha256": "083c03c0de6ef99d123565344d48c093ade657bc2edbc4dbcbd410a753f1b56b"
+          }
+        },
+        {
+          "path": "docs/research-c1-posterior-audit.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-c1-posterior-audit.md",
+            "mode": "100644",
+            "bytes": 7502,
+            "git_blob_sha1": "237b18ea9b38490dd550adfd4c6e76fdb451798a",
+            "sha256": "21f6cff150516098a844325a92cf7640effaabf2de6ad757fa763a9ddd716c2c"
+          }
+        },
+        {
+          "path": "docs/research-c1-source-allocation.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-c1-source-allocation.md",
+            "mode": "100644",
+            "bytes": 7294,
+            "git_blob_sha1": "9ec5459e0f48afecec859bbc4e869b62d8330e83",
+            "sha256": "051b42eb3ac5acce142f9dd1ab7a28cb5f62ea803bf31de38d8b0389253b4254"
+          }
+        },
+        {
+          "path": "research/balanced64-20261106/allocation-evaluation.json",
+          "before": null,
+          "after": {
+            "path": "research/balanced64-20261106/allocation-evaluation.json",
+            "mode": "100644",
+            "bytes": 20741,
+            "git_blob_sha1": "026f402aa2a60f14c0786bf4799b3a40c9d09767",
+            "sha256": "bafd8b8a50be958458197adddf755321dad2a14d2f7078ca2547f631603bd92e"
+          }
+        },
+        {
+          "path": "research/balanced64-20261106/execution-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/balanced64-20261106/execution-summary.json",
+            "mode": "100644",
+            "bytes": 27071,
+            "git_blob_sha1": "85d928e7a6517a898c0bddb6cdb4e31cc8e48f61",
+            "sha256": "45e4151ea29f9bcc1a26e8febb2fd3f7cb156607d16157400ae9a42a5f7ec1d0"
+          }
+        },
+        {
+          "path": "research/balanced64-20261106/posterior-findings.json",
+          "before": null,
+          "after": {
+            "path": "research/balanced64-20261106/posterior-findings.json",
+            "mode": "100644",
+            "bytes": 33605,
+            "git_blob_sha1": "659fd67ec92c1ed4417cc3f93485082562aed457",
+            "sha256": "4bc84b19ed230cf1f65ce00861aa58d36030cc4f804202894ef4983d9bef5606"
+          }
+        },
+        {
+          "path": "tests/test_research_c1_posterior_audit.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_c1_posterior_audit.py",
+            "mode": "100644",
+            "bytes": 15211,
+            "git_blob_sha1": "3e936e6570177c7f57d9cb84b39fd40da63f54db",
+            "sha256": "de30fc5886a0a59014ce68903e6ef8ad4bf2e252c7797bcc66f150c451443964"
+          }
+        },
+        {
+          "path": "tests/test_research_c1_source_allocation.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_c1_source_allocation.py",
+            "mode": "100644",
+            "bytes": 15963,
+            "git_blob_sha1": "e3deef416f08da298a600e2ebf8b3d66096a374c",
+            "sha256": "9c8773839aa3864050a245ed692fd286ef605ab16f27ced076b7d61c8300dd5a"
+          }
+        },
+        {
+          "path": "training/research_c1_posterior_audit.py",
+          "before": null,
+          "after": {
+            "path": "training/research_c1_posterior_audit.py",
+            "mode": "100644",
+            "bytes": 41309,
+            "git_blob_sha1": "36d979ce68684e2d535f34fced0aac934ba40125",
+            "sha256": "97c7852dfc2c5981f46822aa6101d0428a3baf5786bea5812680e1278141a9b7"
+          }
+        },
+        {
+          "path": "training/research_c1_source_allocation.py",
+          "before": null,
+          "after": {
+            "path": "training/research_c1_source_allocation.py",
+            "mode": "100644",
+            "bytes": 17958,
+            "git_blob_sha1": "92e0e9410362e7ada99bb71f8bd4e33819f40391",
+            "sha256": "3d6c742fceb74896d254cb2300ed7b3c2f275e758c2f028cd6c7b4e17b31db04"
+          }
+        },
+        {
+          "path": "training/research_c1_source_augmentation.py",
+          "before": {
+            "path": "training/research_c1_source_augmentation.py",
+            "mode": "100644",
+            "bytes": 51956,
+            "git_blob_sha1": "ec1e826f8c10e0699952fe1dd8c3836886af73ed",
+            "sha256": "3c846dc8eafc3969af96d906108b23b81567f89d8b3b407ac9b028885642ec2a"
+          },
+          "after": {
+            "path": "training/research_c1_source_augmentation.py",
+            "mode": "100644",
+            "bytes": 53041,
+            "git_blob_sha1": "be69e59c9f451b1d9250ef240837e2ba9c3bb178",
+            "sha256": "5170a188cb69c2beaae8c3200b196932e574860bcc7ab5aa8d43763e44bf03b1"
           }
         }
       ]
