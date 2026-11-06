@@ -13,6 +13,17 @@ only the first eight cells, one per source. Preparation records raw file hashes
 separately from the producer's canonical plan hash. The first eight preserve
 their identities if the remaining plan is considered in a later task.
 
+When a restored runtime retains its actual import receipt under another name,
+`prepare --runtime-preflight PATH` accepts the existing
+`kws-runtime-import-preflight-v1` TTS receipt. Before creating the prepared
+directory it checks the successful import-only result, zero constructed models
+and model calls, CPU/library versions against the retained setup, original
+command/time fields and offline environment. Dependency warnings and both
+captured streams remain byte-for-byte intact. The recipe binds the original
+receipt path/hash as well as the copied bytes, and `run` rechecks that binding.
+This option does not rerun an import or establish model readiness. Omitting it
+keeps the legacy `runtime/preflight.json` interface and receipt format.
+
 `run` requires the persistent research queue and its verified inherited heavy
 model lock. It uses one process, CPU float32/SDPA, four Torch computation threads
 and one interop thread. The recipe fixes a 600-second queue deadline, no retries,

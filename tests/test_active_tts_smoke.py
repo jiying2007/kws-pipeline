@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Offline invocation-boundary tests; no model imports or generation."""
+import copy
 import json
 from pathlib import Path
 import sys
@@ -19,6 +20,21 @@ def plan_fixture():
                        'source_family_id': 'f' + str(i % 8),
                        'role': 'train-candidate' if i % 8 < 6 else 'development-only'}
                       for i in range(256)]}
+
+
+def import_receipt_fixture():
+    versions = {'torch': '2.11.0+cpu', 'numpy': '1.26.4', 'scipy': '1.17.1', 'soundfile': '0.13.1'}
+    setup = {'status': 'complete', 'active_python': '3.12.16', 'installed_packages': versions}
+    result = {'python': '3.12.16', **versions, 'qwen_class': 'Qwen3TTSModel', 'cuda_compiled': None,
+              'model_objects_constructed': 0, 'model_calls': 0}
+    receipt = {'schema': 'kws-runtime-import-preflight-v1', 'role': 'tts',
+               'argv': ['/fixture/tts/bin/python', '-B', '-I', '-c', 'fictional import-only command'],
+               'returncode': 0, 'stdout': 'Dependency warning retained\n' + json.dumps(result) + '\n',
+               'stderr': 'Original dependency diagnostic\n', 'elapsed_seconds': 0.25,
+               'recorded_at': '2026-11-06T00:00:00+00:00',
+               'model_objects_constructed': 0, 'model_calls': 0,
+               'network_environment': {'HF_HUB_OFFLINE': '1', 'TRANSFORMERS_OFFLINE': '1'}}
+    return setup, receipt
 
 
 class FakeClone:
@@ -106,6 +122,96 @@ class TTSSmokeContract(unittest.TestCase):
         for path in ('../source', '/tmp/source', 'a\\source'):
             with self.assertRaisesRegex(ValueError, 'UNSAFE_RELATIVE_PATH'):
                 smoke.relative(path)
+
+    def test_legacy_preflight_interface_preserves_opaque_bytes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            original = b'{"legacy-format": true}\n'
+            (root / 'preflight.json').write_bytes(original)
+            raw, explicit_source = smoke.preflight_input(SimpleNamespace(runtime=root))
+            self.assertEqual(raw, original)
+            self.assertIsNone(explicit_source)
+            self.assertEqual((root / 'preflight.json').read_bytes(), original)
+
+    def test_explicit_receipt_is_copied_verbatim_and_source_is_bound(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            runtime, data = root / 'runtime', root / 'data'
+            runtime.mkdir()
+            setup, receipt = import_receipt_fixture()
+            (runtime / 'setup.json').write_text(json.dumps(setup))
+            original = (json.dumps(receipt, indent=3) + '\n\n').encode()
+            receipt_path = root / 'retained-import.json'
+            receipt_path.write_bytes(original)
+            sources = root / 'sources.json'
+            sources.write_text('{}\n')
+            for name in smoke.SOURCE_FILES:
+                path = data / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('# fixture producer\n')
+            fake = SimpleNamespace(LOCK_SCHEMA='fixture-lock', asset_lock=lambda *args: None,
+                p=SimpleNamespace(read_json=lambda path: {}, validate_sources=lambda *args: [],
+                    plan=lambda *args, **kwargs: plan_fixture(), D1_LAYOUT='d1-interleaved-32-v1'))
+            args = SimpleNamespace(output=root / 'prepared', runtime=runtime, data_root=data,
+                audio_root=root, sources=sources, batch_id='fictional-first-eight', runtime_preflight=receipt_path)
+            with patch.object(smoke, 'load_bulk', return_value=fake), \
+                    patch.object(smoke.subprocess, 'check_output', return_value='a' * 40 + '\n'):
+                result = smoke.prepare(args)
+            recipe = smoke.read(result['recipe'])
+            self.assertEqual((args.output / 'runtime-preflight.json').read_bytes(), original)
+            self.assertEqual(recipe['runtime_preflight_source'], {'path': str(receipt_path), **smoke.record(receipt_path)})
+            self.assertEqual(recipe['runtime_preflight'], smoke.record(receipt_path))
+            self.assertFalse((runtime / 'preflight.json').exists())
+            self.assertEqual(receipt_path.read_bytes(), original)
+            receipt_path.write_bytes(original + b' ')
+            with self.assertRaisesRegex(ValueError, 'TTS_IMPORT_PREFLIGHT_SOURCE_CHANGED'):
+                smoke.verify_recipe(recipe)
+            self.assertEqual((args.output / 'runtime-preflight.json').read_bytes(), original)
+
+    def test_explicit_failed_or_incompatible_receipts_are_rejected(self):
+        setup, good = import_receipt_fixture()
+        cases = []
+        for key, value in [('role', 'asr'), ('returncode', 1), ('model_calls', 1),
+                           ('model_objects_constructed', False), ('elapsed_seconds', -1),
+                           ('network_environment', {})]:
+            bad = copy.deepcopy(good)
+            bad[key] = value
+            cases.append(bad)
+        for key, value in [('model_calls', 1), ('numpy', 'different-version'), ('cuda_compiled', '12.0')]:
+            bad = copy.deepcopy(good)
+            payload = json.loads(good['stdout'].splitlines()[-1])
+            payload[key] = value
+            bad['stdout'] = json.dumps(payload) + '\n'
+            cases.append(bad)
+        bad = copy.deepcopy(good)
+        bad['stdout'] += good['stdout'].splitlines()[-1] + '\n'
+        cases.append(bad)
+        for bad in cases:
+            with self.subTest(receipt=bad), self.assertRaises(ValueError):
+                smoke.validate_import_preflight(json.dumps(bad).encode(), setup)
+
+    def test_bad_explicit_receipt_fails_before_preparation_claim(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            runtime = root / 'runtime'
+            runtime.mkdir()
+            setup, receipt = import_receipt_fixture()
+            (runtime / 'setup.json').write_text(json.dumps(setup))
+            source = root / 'invalid.json'
+            receipt['returncode'] = 1
+            source.write_text(json.dumps(receipt))
+            args = SimpleNamespace(output=root / 'prepared', runtime=runtime, runtime_preflight=source)
+            with patch.object(smoke, 'load_bulk') as loader:
+                with self.assertRaisesRegex(ValueError, 'NOT_SUCCESSFUL_IMPORT_ONLY'):
+                    smoke.prepare(args)
+                loader.assert_not_called()
+            self.assertFalse(args.output.exists())
+            alias = root / 'receipt-alias.json'
+            alias.symlink_to(source)
+            args.runtime_preflight = alias
+            with self.assertRaisesRegex(ValueError, 'EXPECTED_REGULAR_FILE'):
+                smoke.prepare(args)
+            self.assertFalse(args.output.exists())
 
 
 if __name__ == '__main__':

@@ -12,6 +12,10 @@
 
 研究入口：[可复用模块、保留的实验结论与资格边界](research/README.md)
 
+保存输出后续：[264条件CTC诊断结果](docs/KWS_SAVED_CTC264_20261106.md)与[聚合执行索引](research/saved-ctc264-20261106/execution-index.json)。计算与独立审计已完成，没有新增模型前向或优化器更新；posthoc条件对齐不构成声学真值或解码器正确性证据。
+
+2026-11-06 后续落地：[当前集成状态](docs/KWS_CONTINUATION_ACCEPTANCE_20261106.md)、[已完成的 context52/tail7 结果](docs/KWS_CONTEXT52_TAIL7_20261106.md)与[执行索引](research/context52-tail7-20261106/execution-index.json)。固定训练与开发读回继续按弱标签、已曝光开发集的原范围解释。
+
 数据方案落地：[32 人参考身份、D2 增量执行、原生 ASR 弱包与实际训练消费](docs/KWS_D2_IMPLEMENTATION_20261105.md)。首批 24 条新原音、55 次识别与固定 25 步消费探针均有独立证据；尚未完成的 2,048 项候选目标另行计数。
 
 最新 D1 检查点：[256 项账本、固定初始化对比与原生关键词观察](docs/KWS_D1_ACCOUNTED256_20261105.md)。255 项真实返回与 1 项已消耗未知分别报告。
