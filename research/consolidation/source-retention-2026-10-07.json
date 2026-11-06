@@ -49996,6 +49996,53 @@
           }
         }
       ]
+    },
+    {
+      "id": "context-acoustic-research-wording-20261106",
+      "date": "2026-11-06",
+      "base_commit": "315360dbf98eb52160d9b6f1042b180c66882599",
+      "base_tree": "dfdc735890a055ec0786b8f937fbd95651e00744",
+      "public_source_commit": "303842db57a248ef79f05d994358568d4addba18",
+      "previous_manifest_sha256": "0916297d955b49cd846ad7e8662dd0074e0fbadcfd0a33a2313f9d2bb1e1cad5",
+      "workflow_source_changed": false,
+      "scope": "Research-only wording in context ingestion and acoustic ASR guides",
+      "rationale": "Preserve the published two-document correction and every previous source event; model execution, data labels, frozen schemas and historical records remain unchanged",
+      "files": [
+        {
+          "path": "docs/research-acoustic-asr124.md",
+          "before": {
+            "path": "docs/research-acoustic-asr124.md",
+            "mode": "100644",
+            "bytes": 9239,
+            "git_blob_sha1": "9f3ff645dc8cc489721a86cacd4ecffa6d7d826f",
+            "sha256": "56ad602c5d382aea16f1e152b9fe16270f112ee0253f2d5162f3935b114984be"
+          },
+          "after": {
+            "path": "docs/research-acoustic-asr124.md",
+            "mode": "100644",
+            "bytes": 9249,
+            "git_blob_sha1": "ffc230b4cc62e9c5ed00e01e9f046dfdbafd8271",
+            "sha256": "ac4de4e85e0d0b7865bb9b076963238b680a63440aa97da4ca0f526dcae458ca"
+          }
+        },
+        {
+          "path": "docs/research-context-v3-ingestion.md",
+          "before": {
+            "path": "docs/research-context-v3-ingestion.md",
+            "mode": "100644",
+            "bytes": 11961,
+            "git_blob_sha1": "e42e4edff1191a7d889ec6f79604102847972ae9",
+            "sha256": "cee41de98ae8f6c67770f4b10f96f343faa437aae6435f6aad1b92053a69f01a"
+          },
+          "after": {
+            "path": "docs/research-context-v3-ingestion.md",
+            "mode": "100644",
+            "bytes": 11936,
+            "git_blob_sha1": "0f38bcc245197f295c8f0868cf3562b9a2bd4a4d",
+            "sha256": "2e7eb44332622e4c0f1f2e260f39b93e04ad232983b4811d35e8dc1cc5f142ef"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
