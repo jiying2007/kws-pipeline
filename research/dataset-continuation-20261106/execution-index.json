@@ -700,6 +700,805 @@
       "supplemental_cli_execution_provenance": "unavailable",
       "supplemental_cli_invocations_by_this_adoption": 0,
       "supplemental_independent_ledger_draws_checked": 8000
+    },
+    {
+      "id": "acoustic-positive-ingestion25",
+      "status": "completed_verified_and_saved",
+      "readback_status": "verified",
+      "scope": "Fixed positive-only acoustic data-consumption check from the original zero-step C1 initialization.",
+      "recorded_execution_commit": "bb9684f83b07375671e9ba4b5a75413c5ab8d67c",
+      "pinned_source_files_verified_against_commit": 30,
+      "upstream_observation_entry": "acoustic124-three-asr",
+      "all_projected_rows": 124,
+      "eligible_train_rows": 41,
+      "eligible_development_rows": 11,
+      "eligible_train_parent_recordings": 9,
+      "eligible_train_source_families": 5,
+      "eligible_development_parent_recordings": 2,
+      "eligible_development_source_families": 2,
+      "development_coverage_by_target_id": {
+        "K1": 0,
+        "K2": 11
+      },
+      "projection_reasons": {
+        "acoustic_asr_full-transcript-disagreement": 32,
+        "untranscribed_additive_background": 40,
+        "verified_parent_fulltext": 52
+      },
+      "zero_ctc_rows": 72,
+      "original_noise_rows_retained_zero_weight": 40,
+      "original_source_rows_modified": 0,
+      "ctc_confidence_weight": 0.5,
+      "ordinary_negative_rows": 0,
+      "positive_only": true,
+      "optimizer_steps": 25,
+      "batch_size": 4,
+      "sample_exposures": 100,
+      "exposure_repetitions": {
+        "3": 18,
+        "2": 23
+      },
+      "training_model_forwards": 100,
+      "train_diagnostic_model_forwards": 82,
+      "development_model_forwards": 11,
+      "total_model_forwards": 193,
+      "development_optimizer_draws": 0,
+      "model_constructions": 1,
+      "asr_or_tts_calls": 0,
+      "automatic_retry": false,
+      "before_train": {
+        "evaluable_clips": 41,
+        "empty_outputs": 0,
+        "exact_token_matches": 0,
+        "exact_token_match_denominator": 41,
+        "edit_numerator": 1234,
+        "target_token_denominator": 440,
+        "blank_argmax_fraction": 0.0,
+        "blank_probability_mean": 0.00043665999817729065,
+        "mean_ctc_loss_confidence_weighted": 71.22111799658799
+      },
+      "after_train": {
+        "evaluable_clips": 41,
+        "empty_outputs": 41,
+        "exact_token_matches": 0,
+        "exact_token_match_denominator": 41,
+        "edit_numerator": 440,
+        "target_token_denominator": 440,
+        "blank_argmax_fraction": 1.0,
+        "blank_probability_mean": 0.03197319426639475,
+        "mean_ctc_loss_confidence_weighted": 34.841672804297474
+      },
+      "development": {
+        "evaluable_clips": 11,
+        "empty_outputs": 11,
+        "exact_token_matches": 0,
+        "exact_token_match_denominator": 11,
+        "edit_numerator": 111,
+        "target_token_denominator": 111,
+        "blank_argmax_fraction": 1.0,
+        "blank_probability_mean": 0.023771277411202205,
+        "mean_ctc_loss_confidence_weighted": 46.28047735040838
+      },
+      "nonzero_finite_gradient_steps": 25,
+      "changed_parameter_tensors": 16,
+      "initial_checkpoint_sha256": "da7671fe71fef9ecd6822c747e3fe153b9ee563a6784c18eded90d3354486ecf",
+      "final_checkpoint_sha256": "780c9e16e713c2ee08730225d429f5406c26de78c499077a3802e64a48b7513b",
+      "final_float_state_sha256": "d366287a6dd4b4b81fc1ee5e127eb23de11859b93451678c66e6faed703adaf4",
+      "queue_elapsed_nanoseconds": 24699486578,
+      "queue_runner_minutes": 0.4116581096333333,
+      "model_worker_wall_seconds": 23.67452487400078,
+      "peak_rss_kib": 369468,
+      "finished_at_utc": "2026-11-06T04:41:23.223146+00:00",
+      "deadline_overrun_nanoseconds": 0,
+      "quality_acceptance_claim": false,
+      "known_silence_correction_objective_used": false,
+      "known_silence_corrected_weights_used": false,
+      "tiny_fit_passed": null,
+      "generalization_passed": null,
+      "readback_feature_rows_replayed": 52,
+      "readback_optimizer_steps_replayed": 25,
+      "readback_new_model_constructions": 0,
+      "readback_new_model_forwards": 0,
+      "readback_new_optimizer_steps": 0,
+      "independent_review_saved_tensor_audit_rerun": false,
+      "receipts": {
+        "recipe": {
+          "bytes": 3635,
+          "sha256": "0ae893d4694d7242f71eb39844aef6b96b73002bc6ca44d674b70527807ff028"
+        },
+        "summary": {
+          "bytes": 9881,
+          "sha256": "2add6473a552d46dd9204f1f7e77e6b2ef73eb1b8167029bf63647bc77b24310"
+        },
+        "queue_result": {
+          "bytes": 2376,
+          "sha256": "70f19468971b17235732383f2a4a0f44cd0f1471f3a1c4a5b7c8edcd1eb64ecb"
+        },
+        "readback": {
+          "bytes": 414,
+          "sha256": "c5eddd91eb0c50b2a888a12f99875da025a28634803767c3902059fd4beb05aa"
+        },
+        "readback_execution": {
+          "bytes": 718,
+          "sha256": "860e362ab326301237ccf11c42892966036deac078ab88a3f257ff91b9a731b7"
+        },
+        "prepared_manifest": {
+          "bytes": 21787,
+          "sha256": "6f5a36604a71ac686694832da0bbb4a470477e2eb6223b01ca472d3ed43c2e79"
+        },
+        "output_manifest": {
+          "bytes": 14852,
+          "sha256": "df073fc951b85da593a02f56402f5d0b9f2acb05b212d6057729efb5e642f0a5"
+        },
+        "independent_metadata_terminal_review": {
+          "bytes": 8319,
+          "sha256": "d8d9967a38cdbbcfae3ae32e4b89b7eefee0f3a6e3cedcc6fbf45d653783345d"
+        },
+        "metadata_tests_review": {
+          "bytes": 1675,
+          "sha256": "67bddc66570a89fca9045d334af3353f7090aa89fb2c3143889b6ada84549dea"
+        },
+        "independent_persistence_audit": {
+          "bytes": 33237,
+          "sha256": "269c8cf45c4fad3ce102f732f645cc3623116b08261ac298ece37ea53ccd1670"
+        },
+        "tensor_restore_index": {
+          "bytes": 32480,
+          "sha256": "75c2f7629579bec0c1f6324879283d86cc418133cfc8be5f38db39b9f048c603"
+        },
+        "terminal_recovery_index": {
+          "bytes": 2596821,
+          "sha256": "19d728305c261af1a0ea94988aa35828dc6ca790aa716f7dff3c298239f6a2d9"
+        }
+      },
+      "metadata_tests": {
+        "python": "3.12.16",
+        "modes": [
+          "normal",
+          "-O",
+          "-OO"
+        ],
+        "reported_cases_per_mode": 23,
+        "executed_passes_per_mode": 21,
+        "expected_skips_per_mode": 2,
+        "saved_tensor_mode_enabled": false,
+        "new_model_calls": 0
+      },
+      "durable_save": {
+        "provider": "ChatGPT Library",
+        "object_id": "libfile_a7404c0ecb008191a15ef024fdd62c3f",
+        "version": 0,
+        "capsule": {
+          "bytes": 17897844,
+          "sha256": "c5b498a64a4b0e354b95de4b188d320888d16701456b125315fa31bc6b67f4df"
+        },
+        "member_manifest_sha256": "64523c43cc33385672bf75f83a5af969f42ae1eb510e98802d4bf13bae492a37",
+        "verified_manifest_members": 549,
+        "acknowledgement": {
+          "bytes": 1015,
+          "sha256": "d75f7ddc6c6e299a6777b6819b9c44c187121dcc2c754b0bf9325ee0671567c5"
+        },
+        "provider_response": {
+          "bytes": 1197,
+          "sha256": "40d90977d618c0360b02cae20064942c0be56aa50b609125c716ee71c3b6b3b4"
+        },
+        "remote_bytes_independently_retrieved": false
+      },
+      "limits": [
+        "All 41 eligible training and 11 development greedy outputs are empty after the fixed 25-step check; successful data consumption does not establish learning.",
+        "The 11 development rows derive from two parent recordings and two families, all K2; K1 development coverage is zero.",
+        "The 124-row consumer view retains 40 noise rows and 32 non-noise disagreement rows at zero CTC weight; the original labels and splits remain unchanged.",
+        "This independent positive-only check uses the original zero-step initialization, without the known-silence correction weights or auxiliary objective.",
+        "The original saved-tensor readback is an existing recorded execution. The independent metadata review did not repeat that numerical audit or any model computation.",
+        "The two saved-tensor test cases were expected skips in each default metadata test run; they are not counted as executed tests.",
+        "Execution and save receipts do not establish the identity of the original controlling actor."
+      ],
+      "eligible_train_coverage_by_target_id": {
+        "K1": 16,
+        "K2": 25
+      },
+      "numeric_evidence_save": {
+        "scope": "All 93 saved diagnostic numeric outputs are retained in seven separate data capsules; the terminal retains 14 nonnumeric output members and the complete recovery index.",
+        "parts": [
+          {
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_f6fb421b982081919c068989cb01cfea",
+            "version": 0,
+            "capsule": {
+              "bytes": 28746143,
+              "sha256": "d7012b6d1bb040b940f58244aff23f4f91e7213c43c245a6ac17a197410fccec"
+            },
+            "member_manifest_sha256": "d1f63417339786a1082a061c6cbdfc94550ef3282f91b7d4cc192f0112ada72c",
+            "verified_manifest_members": 17,
+            "acknowledgement": {
+              "bytes": 1039,
+              "sha256": "3ebb9a74cb8201deae399d70a846272f3ad8c1872b37564c15920b15c2345906"
+            },
+            "provider_response": {
+              "bytes": 1205,
+              "sha256": "5923b5d1d8cd72fae4a037897766a875259eb6c968ff7093fb75f012cd2e8558"
+            },
+            "remote_bytes_independently_retrieved": false,
+            "part": "part-001",
+            "numeric_tensors": 16,
+            "numeric_raw_bytes": 32976912
+          },
+          {
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_1a7d903a510481919e80b86839f0146c",
+            "version": 0,
+            "capsule": {
+              "bytes": 27432008,
+              "sha256": "6996118b51bcb2de40f82cf2724829399638af39800ac5df960ca8026c7b3e4f"
+            },
+            "member_manifest_sha256": "175ecb0ffb52db50de92bc641155040860177f0a8e49d2db668074a8a4c34386",
+            "verified_manifest_members": 16,
+            "acknowledgement": {
+              "bytes": 1039,
+              "sha256": "b3b80d03c1768de9c3afbe80a568a8aa04cc68c10fc7ba3e699cb88a16c3216b"
+            },
+            "provider_response": {
+              "bytes": 1205,
+              "sha256": "f62782f5eda3c016cc9d4de7e0c396bd7703da7801b234f05116c74d88e046af"
+            },
+            "remote_bytes_independently_retrieved": false,
+            "part": "part-002",
+            "numeric_tensors": 15,
+            "numeric_raw_bytes": 31447723
+          },
+          {
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_e85842f1e1d48191aa81ae2eb44c0788",
+            "version": 0,
+            "capsule": {
+              "bytes": 28373088,
+              "sha256": "11bb488434248099e6f6def64ec984cf8d777f24e3c5baba2ed1871367ea9698"
+            },
+            "member_manifest_sha256": "1ccf27d8c40d59575a4a77563912dd9a0591113623d34652f4ba1cccc501a9d6",
+            "verified_manifest_members": 15,
+            "acknowledgement": {
+              "bytes": 1039,
+              "sha256": "ab14f7a35bd3daabaa278f897df8e658f82acb74232a7bb3fa9dfdc4b82fc0f9"
+            },
+            "provider_response": {
+              "bytes": 1205,
+              "sha256": "bf33592e8434d9c5ba7cc034c0bb5b9920ea2c6319112aabec57fd11a72eb015"
+            },
+            "remote_bytes_independently_retrieved": false,
+            "part": "part-003",
+            "numeric_tensors": 14,
+            "numeric_raw_bytes": 32003910
+          },
+          {
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_338e7d17f5148191a36d32d49e23f298",
+            "version": 0,
+            "capsule": {
+              "bytes": 29529902,
+              "sha256": "b932cb61f0279b0702ea836b2aacc86a422fe8003d4ec2833a91d44f2eec74ee"
+            },
+            "member_manifest_sha256": "43bff93efb9b3bdb599d8f17cfbcc1989a0bca20ecdd1085cdd57a0663a26157",
+            "verified_manifest_members": 17,
+            "acknowledgement": {
+              "bytes": 1039,
+              "sha256": "0e03532d8c81e41505937aa10622f17ef8c23243215467dc36551b9ce4d6bfc4"
+            },
+            "provider_response": {
+              "bytes": 1205,
+              "sha256": "0284d2d1e10016b905a1cd55bd37241369c8de1458b5e05e6d8b935bb33f1197"
+            },
+            "remote_bytes_independently_retrieved": false,
+            "part": "part-004",
+            "numeric_tensors": 16,
+            "numeric_raw_bytes": 32260688
+          },
+          {
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_b1cf2751bd448191a9491e968a83bb0a",
+            "version": 0,
+            "capsule": {
+              "bytes": 29224945,
+              "sha256": "02656fdf30de074c29b145957b35ee690f26bb30793585c59caac72386a75d4a"
+            },
+            "member_manifest_sha256": "5f19401b416e699bf5c2b1ec49e4e455f5511af37efabfd1aeae260ab9322efc",
+            "verified_manifest_members": 16,
+            "acknowledgement": {
+              "bytes": 1039,
+              "sha256": "000fbe4743934d747a4cd86e8fd54a7482eb13150e585a7038a4d7329b955fb8"
+            },
+            "provider_response": {
+              "bytes": 1205,
+              "sha256": "548681b2b5eb2d37303a8c9b5c7ed3aa1df8d68af2884eab7940badcfe7939b9"
+            },
+            "remote_bytes_independently_retrieved": false,
+            "part": "part-005",
+            "numeric_tensors": 15,
+            "numeric_raw_bytes": 31932267
+          },
+          {
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_0339ecac1ff08191a4d4c8683c2f403e",
+            "version": 0,
+            "capsule": {
+              "bytes": 28588817,
+              "sha256": "534a3d01b9ef06a118f98544bc81510ba67808cf32c3e04a1fe681906dc6ae10"
+            },
+            "member_manifest_sha256": "a6d52831e5492dd5bbd5d5386421fdbfe817125d032da52526b41c2dc3474628",
+            "verified_manifest_members": 14,
+            "acknowledgement": {
+              "bytes": 1039,
+              "sha256": "b4ee235690603b3274de8dafd333b8ee92bf5e6713d453803033a3a1d3773194"
+            },
+            "provider_response": {
+              "bytes": 1205,
+              "sha256": "bda7b67ab9c8d8fd41f76e9391e52e5b48061acf9521378168630284b58fe2fd"
+            },
+            "remote_bytes_independently_retrieved": false,
+            "part": "part-006",
+            "numeric_tensors": 13,
+            "numeric_raw_bytes": 32791713
+          },
+          {
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_c10043507c4c8191877bbc5990c3c02a",
+            "version": 0,
+            "capsule": {
+              "bytes": 8435718,
+              "sha256": "7da5242598a4216002371604e0bea0d36ba03803b927ce9ab3a02fb969b0749f"
+            },
+            "member_manifest_sha256": "06a5ded32c22e9472d45667f0172b805cadc61ec8edb5af0705cb1738a86f802",
+            "verified_manifest_members": 5,
+            "acknowledgement": {
+              "bytes": 1038,
+              "sha256": "bb167065697aa26a68d206828c996f257b9e067527b5f02528f6ce06fed27ccb"
+            },
+            "provider_response": {
+              "bytes": 1203,
+              "sha256": "3b540ea2fe5b4773ca3bfd926570ec40b2def75560c7aba59ac98137c6a793f9"
+            },
+            "remote_bytes_independently_retrieved": false,
+            "part": "part-007",
+            "numeric_tensors": 4,
+            "numeric_raw_bytes": 9845076
+          }
+        ],
+        "numeric_tensors_by_scope": {
+          "after": 41,
+          "before": 41,
+          "development": 11
+        },
+        "numeric_tensors": 93,
+        "numeric_raw_bytes": 203258289,
+        "complete_numeric_restore_routes": 93,
+        "terminal_contains_all_numeric_tensors": false,
+        "nonnumeric_output_members_in_terminal": 14,
+        "complete_output_member_count": 107,
+        "all_output_members_covered_without_duplication": true,
+        "sum_eight_saved_capsule_bytes": 198228465,
+        "remote_bytes_independently_retrieved": false
+      }
+    },
+    {
+      "id": "natural-alimeeting-eval-tail2",
+      "status": "completed_verified_and_saved",
+      "readback_status": "completed_native_observations_only",
+      "scope": "Restore the historical AliMeeting Eval input identity and observe two predeclared annotation-gap windows from one development session.",
+      "recorded_execution_commit": "d4f89b0164a9663a2ed13afe99f58793755ee6fe",
+      "pinned_source_files_verified_against_commit": 27,
+      "restored_historical_sessions": 8,
+      "restored_mono_files_with_file_and_pcm_hashes_verified": 8,
+      "restored_textgrid_files_with_hashes_verified": 8,
+      "restored_parent_samples": 242211440,
+      "restored_parent_seconds": 15138.215,
+      "restored_parent_hours": 4.205059722222222,
+      "new_independent_recordings": 0,
+      "windows": 2,
+      "parent_recordings_in_window_observation": 1,
+      "split": "development",
+      "sample_rate_hz": 16000,
+      "window_input_samples": 926352,
+      "window_input_seconds": 57.897,
+      "unique_parent_samples": 846352,
+      "unique_parent_seconds": 52.897,
+      "overlap_samples": 80000,
+      "overlap_seconds": 5.0,
+      "native_asr_calls": 6,
+      "calls_by_model": {
+        "qwen06": 2,
+        "sensevoice": 2,
+        "whisper": 2
+      },
+      "complete_claim_return_result_triplets": 6,
+      "nonempty_text_observations": 6,
+      "quality_flagged_observations": 1,
+      "incomplete_whisper_observations": 1,
+      "primary_disagreement_windows": 2,
+      "three_engine_fulltext_agreement_windows": 0,
+      "literal_target_text_flags": 0,
+      "target_presence": "unknown",
+      "accepted_negative_seconds": 0,
+      "new_independent_validation_seconds": 0,
+      "training_admitted": false,
+      "word_timestamps_available": false,
+      "human_gold": false,
+      "automatic_retry": false,
+      "new_tts_calls": 0,
+      "new_optimizer_steps": 0,
+      "queue_elapsed_nanoseconds": 169720687727,
+      "queue_runner_minutes": 2.8286781287833334,
+      "finished_at_utc": "2026-11-06T04:30:54.052368+00:00",
+      "deadline_overrun_nanoseconds": 0,
+      "native_worker_processes": 3,
+      "observed_native_worker_intervals_overlap": false,
+      "peak_single_worker_rss_kib": 5302944,
+      "peak_rss_scope": "Peak of three per-worker ru_maxrss observations; not total system memory and not a sum of worker peaks.",
+      "maximum_threads_per_worker": 4,
+      "interop_threads_per_worker": 1,
+      "whisper_language_condition": "Chinese (zh), explicitly supplied, not detected",
+      "readback_new_model_calls": 0,
+      "independent_authentication_new_model_calls": 0,
+      "receipts": {
+        "stage": {
+          "bytes": 5686,
+          "sha256": "9ff17c024f66888a8da6dda7867289c2b37679d65a2c3e20d8abbb811b72b436"
+        },
+        "request": {
+          "bytes": 11030,
+          "sha256": "5dc71e5898a21d28526232a8a71f57d170e7430d556e23f27f8181bb197b98ad"
+        },
+        "queue_result": {
+          "bytes": 1973,
+          "sha256": "c0a507ca13c91bd9b77de833d61555baea2f1c5321ed54b00e7c5eedbe314870"
+        },
+        "readback": {
+          "bytes": 4078,
+          "sha256": "61c0e56d9841a80085614e19a8d33af558b68ca05ab9f0bf1665fface604cf75"
+        },
+        "native_final_audit": {
+          "bytes": 1744,
+          "sha256": "6720439f8a84d81c69d5f76c597ca884959d681e269f5b78348e8837cc4b109a"
+        },
+        "independent_terminal_audit": {
+          "bytes": 39743,
+          "sha256": "581a114389720a50035c7becb69017ccca589846c282347bfa2442cc3f9c63db"
+        },
+        "metadata_tests_receipt": {
+          "bytes": 4181,
+          "sha256": "6a3636cc51623534fd2ec296e1867e6b6d1c717b3b2f81d63317e968db7712ab"
+        },
+        "independent_parent_evidence_save_audit": {
+          "bytes": 49083,
+          "sha256": "9e22c3c7db1f5ceda8e84f81e4fcf2bba30b8cfa89bf067abe73ef7e29961026"
+        }
+      },
+      "metadata_tests": {
+        "python": "3.12.16",
+        "modes": [
+          "normal",
+          "-O",
+          "-OO"
+        ],
+        "executed_passes_per_mode": 18,
+        "new_model_calls": 0
+      },
+      "durable_save": {
+        "provider": "ChatGPT Library",
+        "object_id": "libfile_e6ee76f19d808191aab6ecf8fe8cbd6f",
+        "version": 0,
+        "capsule": {
+          "bytes": 4233773,
+          "sha256": "f1cbb5955bbb469518b79acd1d5b4c0050e475d45b9aeee5a9b14192808a7688"
+        },
+        "member_manifest_sha256": "5684f8f46a9d49c78edd51d10453be1758d5bf501c2cd5150b32acc54dd7835f",
+        "acknowledgement": {
+          "bytes": 999,
+          "sha256": "f98eb89ddd255759008fa17855eb36cda604dfaadebf26f6112d8cface3c8766"
+        },
+        "provider_response": {
+          "bytes": 1190,
+          "sha256": "fe89689840c0b033bcf953381bedba76c99153a963082a7d9f7689ffc8533a05"
+        },
+        "remote_bytes_independently_retrieved": false
+      },
+      "durable_save_payload_files": 111,
+      "parent_data_save": {
+        "status": "thirteen_provider_confirmed_objects_with_exact_local_reconstruction",
+        "provider": "ChatGPT Library",
+        "scope": "Eight complete historical mono recordings and eight TextGrids, with download/recovery source and receipts. The original 3,673,718,355-byte compressed tar and the separate tail-window ASR package are excluded.",
+        "archive": {
+          "bytes": 485334457,
+          "sha256": "da040a981d688fc5ddc8576123aea883771626bdbb0c69ba3d2da53a17597a17"
+        },
+        "archive_manifest": {
+          "bytes": 17699,
+          "sha256": "ef706fa9a1527147372db8537c05eb917f265ff99f0bddece271319143e842c6"
+        },
+        "parts_manifest": {
+          "bytes": 3643,
+          "sha256": "160b79886a5f1b44399ac171fa3c816349c9069d53b2e1d4fa3a6ae48ce5fefb"
+        },
+        "restore_program": {
+          "bytes": 1798,
+          "sha256": "e7bd14e2e558020d28ffe1be8332bd7dd691ba2d821c006669171d1b839c5a9a"
+        },
+        "byte_part_count": 12,
+        "restore_metadata_object_count": 1,
+        "verified_provider_objects": 13,
+        "zip_members_including_manifest": 53,
+        "payload_members": 52,
+        "current_original_source_files_verified": 49,
+        "total_saved_item_bytes": 485350734,
+        "local_byte_reconstruction_verified": true,
+        "reconstructed_archive_bytes": 485334457,
+        "reconstructed_archive_sha256": "da040a981d688fc5ddc8576123aea883771626bdbb0c69ba3d2da53a17597a17",
+        "all_provider_objects_distinct": true,
+        "objects_in_restore_order": [
+          {
+            "index": 1,
+            "kind": "archive_byte_part",
+            "object_id": "libfile_f4ccb78fe1a08191a146adeab98bcea4",
+            "provider_version_at_save": 0,
+            "saved_file": {
+              "bytes": 41943040,
+              "sha256": "723e49b07dfd02f279cd1786def4cc238fe621d666622eab5aa9c4acd05ee066"
+            },
+            "claim_receipt": {
+              "bytes": 494,
+              "sha256": "d3e3c108f004b59c4dbbd2bc8d44a9fb5b3c71b92b30e678159006e48a84b049"
+            },
+            "provider_response": {
+              "bytes": 862,
+              "sha256": "ccaf64c605f587b402421755727b8d4681b83a61a8ece79384c71a85b478d01a"
+            }
+          },
+          {
+            "index": 2,
+            "kind": "archive_byte_part",
+            "object_id": "libfile_dab6d7c610048191934f861d604dfcd7",
+            "provider_version_at_save": 0,
+            "saved_file": {
+              "bytes": 41943040,
+              "sha256": "e369eea0f8890a1272570c1471669f79813375830444b0ce9615f55d77cbc420"
+            },
+            "claim_receipt": {
+              "bytes": 486,
+              "sha256": "e285857099e2c528541b33068699ec9af33d7a485f226ce6615754d487f24c4c"
+            },
+            "provider_response": {
+              "bytes": 862,
+              "sha256": "528b234d321793c16023318a54000e2fd0070fabb9df075e1c7137dffaf0e5c6"
+            }
+          },
+          {
+            "index": 3,
+            "kind": "archive_byte_part",
+            "object_id": "libfile_c6c1f7aecb4881919e2223ae23116e73",
+            "provider_version_at_save": 0,
+            "saved_file": {
+              "bytes": 41943040,
+              "sha256": "f800bb61f109b5729d030c7e02231badb9eca6acd6b5d16b596c690cadc26ba6"
+            },
+            "claim_receipt": {
+              "bytes": 486,
+              "sha256": "c627aa5011b1103f9e63bb9354f38843e8ee64a0125d602c38231e37b6ac8c5a"
+            },
+            "provider_response": {
+              "bytes": 862,
+              "sha256": "51677fe4599c77ac72fe9817ad98a680aa830224c454e96c5c07eec2d8c9ef59"
+            }
+          },
+          {
+            "index": 4,
+            "kind": "archive_byte_part",
+            "object_id": "libfile_07b7f1025d548191b4255cf1e0daafc9",
+            "provider_version_at_save": 0,
+            "saved_file": {
+              "bytes": 41943040,
+              "sha256": "9bccbe344dda64b2f9f2238d2c6788754d340d9408aec28dd84de004e4dff43b"
+            },
+            "claim_receipt": {
+              "bytes": 486,
+              "sha256": "0c8e9676b38879ff3277617fe1c7ebe4a7e6ef5d5248683bb870ade160a17e4a"
+            },
+            "provider_response": {
+              "bytes": 862,
+              "sha256": "c2a6484d0d1698fa74c80c6335072d351db17ee45a010d3354d85ce993b59e94"
+            }
+          },
+          {
+            "index": 5,
+            "kind": "archive_byte_part",
+            "object_id": "libfile_6fc93d79de30819183f6732080f89579",
+            "provider_version_at_save": 0,
+            "saved_file": {
+              "bytes": 41943040,
+              "sha256": "d00f768cd44f8b65c277525c62a185690b9a0598b97401e8f2a26fa8af989722"
+            },
+            "claim_receipt": {
+              "bytes": 486,
+              "sha256": "a9052ab3d9b9280a64ef98fffc66b2d8e4eb2bcc9b55066a0582ab21098108cd"
+            },
+            "provider_response": {
+              "bytes": 862,
+              "sha256": "f9796d009d563633e0025e68cf8c0049c316235294e0607c730404f17fb3a743"
+            }
+          },
+          {
+            "index": 6,
+            "kind": "archive_byte_part",
+            "object_id": "libfile_e2641a6548fc8191bc038fde9d80d60c",
+            "provider_version_at_save": 0,
+            "saved_file": {
+              "bytes": 41943040,
+              "sha256": "5cee971bbbe7067ac3905d66dd2d4be4123a06df9b5dc04f88f754805191668b"
+            },
+            "claim_receipt": {
+              "bytes": 486,
+              "sha256": "e7dbbd5dc5bacd107f5775ba727b2ebddc4ff5191d2480e5bffab75befc40b16"
+            },
+            "provider_response": {
+              "bytes": 862,
+              "sha256": "7cbf01632142c1d1b7f0971c534047f026a238f5132acf84dbe306bbdec2f6b8"
+            }
+          },
+          {
+            "index": 7,
+            "kind": "archive_byte_part",
+            "object_id": "libfile_271f9f5a344c8191b46ab3e988232484",
+            "provider_version_at_save": 0,
+            "saved_file": {
+              "bytes": 41943040,
+              "sha256": "b8c9346df6fee12fc6d0e5588d66ecd8f02a101aa4108c0cc87426dd4e60bc38"
+            },
+            "claim_receipt": {
+              "bytes": 486,
+              "sha256": "89e52c2686ca4b2c90739871a06b6046ef5cb48527f79dfdac777d2b50f0d2a5"
+            },
+            "provider_response": {
+              "bytes": 862,
+              "sha256": "f555cfd7a2f23fcb7aa3eaaf89057f311973574266b4c4f411d30857e51adefe"
+            }
+          },
+          {
+            "index": 8,
+            "kind": "archive_byte_part",
+            "object_id": "libfile_85ea58888d788191a2882fd487fec363",
+            "provider_version_at_save": 0,
+            "saved_file": {
+              "bytes": 41943040,
+              "sha256": "6c8fdd80e61d06aded4d2c9c62763ba1126675d1b9b2404eac38012ef3a92000"
+            },
+            "claim_receipt": {
+              "bytes": 486,
+              "sha256": "e8efa5ffa31572a2c34a7fec78dd1f2755677ebc565f8ca79a6f083c16f4ef68"
+            },
+            "provider_response": {
+              "bytes": 862,
+              "sha256": "983c0e30dae12b93bab1539ac03d8f27e6c4f1cf1180ba6d3a153fe912947482"
+            }
+          },
+          {
+            "index": 9,
+            "kind": "archive_byte_part",
+            "object_id": "libfile_7ab25be0681c8191ae8c3a78d138fa76",
+            "provider_version_at_save": 0,
+            "saved_file": {
+              "bytes": 41943040,
+              "sha256": "d79ba1b505cc0889eb081a8b3cd1cde7ec54a33fd24718ea2745b3b262985086"
+            },
+            "claim_receipt": {
+              "bytes": 486,
+              "sha256": "d2e9c052d674c1d8ab8bb53ee26a626792489e1228731dfe96408b4a3d4dacce"
+            },
+            "provider_response": {
+              "bytes": 862,
+              "sha256": "9156d89173c11a09158b09e88c08c251dc7ace3320b4db4859da05f4071b478f"
+            }
+          },
+          {
+            "index": 10,
+            "kind": "archive_byte_part",
+            "object_id": "libfile_8b231f618b04819185551d5c9c5dff4c",
+            "provider_version_at_save": 0,
+            "saved_file": {
+              "bytes": 41943040,
+              "sha256": "28d97e3f19eb8925873e061081f0d6166263372d5a136caa15069aac5e04fa7c"
+            },
+            "claim_receipt": {
+              "bytes": 487,
+              "sha256": "70d59975bc669c33aaec12be8e3c4c8dc031f835fda66cb897bc8b3993b80527"
+            },
+            "provider_response": {
+              "bytes": 862,
+              "sha256": "a9eb2f4677aee213d8acea5012f08d542091daa55134d3981f0d5adc545023b2"
+            }
+          },
+          {
+            "index": 11,
+            "kind": "archive_byte_part",
+            "object_id": "libfile_c022d651ffc0819195fd8dd5bd7f871d",
+            "provider_version_at_save": 0,
+            "saved_file": {
+              "bytes": 41943040,
+              "sha256": "71009c782a5adf71d2c1cb4293d436e4b29c15b3d34f66f33104682ef39486a0"
+            },
+            "claim_receipt": {
+              "bytes": 487,
+              "sha256": "b5c4b2c8f96932fb69f02d0ba02fd66036b6200268da5865c17b9fc57e3e659a"
+            },
+            "provider_response": {
+              "bytes": 862,
+              "sha256": "4783bc871661c64ce9b1517616ef14361bee7c10add7b0db7c13e0fc6a8ce871"
+            }
+          },
+          {
+            "index": 12,
+            "kind": "archive_byte_part",
+            "object_id": "libfile_ba211c2829a081919d66d3b362f50679",
+            "provider_version_at_save": 0,
+            "saved_file": {
+              "bytes": 23961017,
+              "sha256": "2cdfa90b83bf6dafdd4b70e3b863bc14630240efea3ec01a0ce75369e8822331"
+            },
+            "claim_receipt": {
+              "bytes": 487,
+              "sha256": "1f0444bb91b811ab531ca63a3d09030cc771a0c991ec1be0693001e802f04c61"
+            },
+            "provider_response": {
+              "bytes": 875,
+              "sha256": "fa38454ba6113d3f8f87cd82550c88242a591b1b083b2cb4a1e93733bcacf322"
+            }
+          },
+          {
+            "index": 13,
+            "kind": "restore_metadata_zip",
+            "object_id": "libfile_6ed7999d7b548191a2051d8d0cb4ddf6",
+            "provider_version_at_save": 0,
+            "saved_file": {
+              "bytes": 16277,
+              "sha256": "83f4478424f3624262b361a12d8c58de49c592f9e5fd69488d984bc1fa494556"
+            },
+            "claim_receipt": {
+              "bytes": 485,
+              "sha256": "cc713159f073d51b162baac980d2be807c5c6d9a5d9368850bb5584185f9a6ee"
+            },
+            "provider_response": {
+              "bytes": 874,
+              "sha256": "1fd2640ed98e117cf32c8112c1dd96a42161ea1f213baccffd438f10f311acc7"
+            }
+          }
+        ],
+        "remote_bytes_independently_retrieved": false,
+        "live_version_number_independently_returned": false,
+        "original_whole_archive_upload": {
+          "status": "failed",
+          "error_code": "transfer_failed",
+          "not_counted_as_saved": true,
+          "claim": {
+            "bytes": 970,
+            "sha256": "76bc43cc21aaca79b11a57d9f7b47bb0b1576f0e06c48707f692e0c53e414549"
+          },
+          "result": {
+            "bytes": 469,
+            "sha256": "8cb046320ad0fc980476c1580429956e6ab1d16f9428c8388e831dac03dcd62d"
+          },
+          "provider_response": {
+            "bytes": 253,
+            "sha256": "60e336749929dc26c9f99d1816b5845f31cb08313a6aa467845d3d766c797af7"
+          },
+          "retried_by_independent_auditor": false
+        }
+      },
+      "limits": [
+        "The 57.897 seconds of processed windows contain a five-second overlap; their union is 52.897 seconds of the same historical parent recording.",
+        "All six calls returned observations, but one Whisper observation is decoder-incomplete; no retry was requested.",
+        "Differing transcripts and no literal target-string flags do not establish silence, absence of target speech, human truth, or verified negative exposure.",
+        "Confirmed natural-negative exposure, training admission, and new independent validation exposure remain zero.",
+        "The 111-member tail-window terminal includes the two window inputs and six-call evidence; the eight complete parent recordings and TextGrids require their separate parent-data save chain.",
+        "The original compressed source archive hash is inherited from the verified recovery receipt; this independent terminal audit did not re-download or re-hash that whole archive.",
+        "Whisper received an explicit Chinese-language condition, so its observation is not language-independent discovery.",
+        "Execution and save receipts do not establish the identity of the original controlling actor."
+      ]
     }
   ],
   "awaiting_terminal_entries": [],
@@ -728,5 +1527,29 @@
     "new_optimizer_steps": 0,
     "remote_bytes_independently_retrieved": false,
     "supplemental_cli_execution_provenance": "unavailable; existing receipt adopted after independent saved-ledger arithmetic verification"
+  },
+  "followup_audit_bundle": {
+    "scope": "Independent terminal authentication, metadata test execution, complete natural parent restore references, acoustic numeric-capsule persistence, and earlier publication/CI repair evidence for the two followup stages.",
+    "provider": "ChatGPT Library",
+    "object_id": "libfile_711877ff77b48191b66be3f8d5e8d857",
+    "version": 0,
+    "payload_files": 42,
+    "capsule": {
+      "bytes": 84174,
+      "sha256": "84bbcde427e4e2e501c13d8e1058cd0e69b3a2c201239d1263594a7ee28c95d3"
+    },
+    "member_manifest_sha256": "7957c977de554b9a342e3aac9cb939ba1d46ddf04fab5396b23cd01a8d2f4bb2",
+    "acknowledgement": {
+      "bytes": 1011,
+      "sha256": "1e3c871b768a43b0f2cdabd37493543004d87ead2c8167e328ab87541c98c343"
+    },
+    "provider_response": {
+      "bytes": 1517,
+      "sha256": "0dc7f0ede9ad9cdb34405abe6f213b2e957a5c7066055aa615bde9bdb4a7ddd1"
+    },
+    "existing_terminal_capsules_modified": false,
+    "new_model_calls": 0,
+    "new_optimizer_steps": 0,
+    "remote_bytes_independently_retrieved": false
   }
 }

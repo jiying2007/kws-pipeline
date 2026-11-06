@@ -214,6 +214,15 @@ jobs:
           python3 -I -S -B tests/test_research_acoustic_asr.py
           python3 -I -S -B -O tests/test_research_acoustic_asr.py
           python3 -I -S -B -OO tests/test_research_acoustic_asr.py
+          python3 -I -S -B tests/test_research_acoustic_consume.py
+          python3 -I -S -B -O tests/test_research_acoustic_consume.py
+          python3 -I -S -B -OO tests/test_research_acoustic_consume.py
+      - name: Natural audio window input contracts without models
+        timeout-minutes: 2
+        run: |
+          python3 -I -S -B tests/test_prepare_natural_asr_windows.py
+          python3 -I -S -B -O tests/test_prepare_natural_asr_windows.py
+          python3 -I -S -B -OO tests/test_prepare_natural_asr_windows.py
       - name: Verify tracked worktree after local research queue contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Local research queue contracts"'
       - name: K1 punctuation6 ASR18 offline source contracts

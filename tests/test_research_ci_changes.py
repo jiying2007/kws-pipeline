@@ -61,13 +61,16 @@ class ChangeSelectionTests(unittest.TestCase):
                      'tests/test_active_asr_batch.py', 'tests/test_active_asr_supervision.py',
                      'tools/active_asr_selective.py', 'tests/test_active_asr_selective.py',
                      'configs/research/selective-asr-v2.json', 'docs/ACTIVE_ASR_SELECTIVE_V2.md',
+                     'tools/prepare_natural_asr_windows.py', 'tests/test_prepare_natural_asr_windows.py',
+                     'configs/research/natural-alimeeting-eval-tail2-v1.json', 'docs/research-natural-asr-windows.md',
                      'docs/ACTIVE_ASR_BATCH.md'):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
 
     def test_acoustic_observation_paths_select_existing_research_checks(self):
         for path in ('tools/research_acoustic_asr.py', 'tests/test_research_acoustic_asr.py',
-                     'docs/research-acoustic-asr124.md'):
+                     'docs/research-acoustic-asr124.md', 'training/research_acoustic_consume.py',
+                     'tests/test_research_acoustic_consume.py', 'docs/research-acoustic-consumption.md'):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
 

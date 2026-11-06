@@ -1,0 +1,42 @@
+{
+  "schema": "kws-natural-asr-window-declaration-v1",
+  "status": "declared_not_materialized",
+  "selection_reason": "Predeclared two-window development observation across the longest known Eval TextGrid end-tail boundary. Selected from original annotation extent metadata, not KWS events. TextGrid bodies have been recovered and match the intake hashes; parent mono audio remains to be restored and verified. This declaration does not attest to audio availability or target absence.",
+  "parents": [
+    {
+      "parent_id": "alimeeting-eval-R8001_M8004-ch0",
+      "audio_path": "mono/R8001_M8004_MS801.wav",
+      "wav_sha256": "7312be8c5c34e2cfc5b53812010449023a8c5648565e1908080d481216710c9e",
+      "pcm_sha256": "9557fb6c4289d5884209a1036ed4f1d4bf91ac4d42702a261d023bb22969981e",
+      "sample_rate_hz": 16000,
+      "sample_count": 25181600,
+      "dataset_id": "openslr119-alimeeting",
+      "source_partition": "Eval",
+      "session_id": "R8001_M8004",
+      "source_family_id": "alimeeting-session-R8001_M8004",
+      "split": "development",
+      "provenance": {
+        "source_archive_sha256": "dc47343b2474b5ebcf458927e878155f6ddeb59c85e685b3645c32a1f9578d92",
+        "source_member": "Eval_Ali/Eval_Ali_far/audio_dir/R8001_M8004_MS801.wav",
+        "source_wav_sha256": "f5a719e6b9d9d69b3f00d0447922c09e71320724afeefd3070d25a64b7f1dcf1",
+        "channel_index": 0,
+        "source_audit_sha256": "95b2f7b6abd409fe0a17e597f49a01aa0bbd97f86f4ec807762c609fd5a0aca3",
+        "annotation_sha256": "e5fe941174fe4140bb5923b7caf2cbdd68d8d2a86086e4f00c68afc90d09dbad"
+      }
+    }
+  ],
+  "windows": [
+    {
+      "window_id": "alimeeting-eval-R8001_M8004-tail-boundary-a",
+      "parent_id": "alimeeting-eval-R8001_M8004-ch0",
+      "start_sample": 24335248,
+      "end_sample": 24815248
+    },
+    {
+      "window_id": "alimeeting-eval-R8001_M8004-tail-boundary-b",
+      "parent_id": "alimeeting-eval-R8001_M8004-ch0",
+      "start_sample": 24735248,
+      "end_sample": 25181600
+    }
+  ]
+}
