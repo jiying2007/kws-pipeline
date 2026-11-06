@@ -196,6 +196,15 @@ jobs:
           python3 -I -S -B tests/test_research_d1_fit_diagnostic.py
           python3 -I -S -B -O tests/test_research_d1_fit_diagnostic.py
           python3 -I -S -B -OO tests/test_research_d1_fit_diagnostic.py
+          python3 -I -S -B tests/test_research_c1_onset_diagnostic.py
+          python3 -I -S -B -O tests/test_research_c1_onset_diagnostic.py
+          python3 -I -S -B -OO tests/test_research_c1_onset_diagnostic.py
+          python3 -I -S -B tests/test_research_c1_known_silence.py
+          python3 -I -S -B -O tests/test_research_c1_known_silence.py
+          python3 -I -S -B -OO tests/test_research_c1_known_silence.py
+          python3 -I -S -B tests/test_research_c1_silence_ledger_audit.py
+          python3 -I -S -B -O tests/test_research_c1_silence_ledger_audit.py
+          python3 -I -S -B -OO tests/test_research_c1_silence_ledger_audit.py
           python3 -I -S -B tests/test_research_fit_budget_compare.py
           python3 -I -S -B -O tests/test_research_fit_budget_compare.py
           python3 -I -S -B -OO tests/test_research_fit_budget_compare.py
