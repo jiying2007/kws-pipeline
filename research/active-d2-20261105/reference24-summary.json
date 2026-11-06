@@ -1,0 +1,67 @@
+{
+  "automatic_model_retries": 0,
+  "budget_overrun_nanoseconds": 0,
+  "content_checks_canonical_sha256": "db644910f65b027c2036e5098a3a689b872fa9f4f057df6226772434a51a7274",
+  "content_status_counts": {
+    "content_checked": 3,
+    "dataset_provided": 21,
+    "exported_observations": 72
+  },
+  "created_at": "2026-11-05T13:48:36.851091+00:00",
+  "dataset_provided_source_sha256": "73b61eaf0b141b0b34a29e983847b04f7eda221125664f4a8c144e21f9052289",
+  "declared_runner_budget_minutes": 10,
+  "duplicate_calls": 0,
+  "historical_eight_manifests_unchanged": true,
+  "human_gold": false,
+  "input_manifest_sha256": "0bb04c987fb3cdf910629833912cbe497a788dcf0bf4d4e200d5d39d0cab1a97",
+  "max_model_process_rss_kib": 6128504,
+  "metadata_invocation_correction": "Importer -I sibling-import failure retained; metadata-only rerun with -S -B succeeded; no source edits or model rerun.",
+  "native_audit_file_count": 337,
+  "new_model_calls_during_export_and_readback": 0,
+  "new_tts_calls": 0,
+  "normalized_audio_seconds": 63.0360625,
+  "number_of_matching_models_histogram": {
+    "0": 2,
+    "1": 6,
+    "2": 13,
+    "3": 3
+  },
+  "original_dataset_provided_manifest_unchanged": true,
+  "original_recognition_calls": 72,
+  "prompt_modes": {
+    "icl": 3,
+    "x-vector-only": 21
+  },
+  "publisher_full_text_match_by_model": {
+    "qwen06": 20,
+    "sensevoice": 16,
+    "whisper": 5
+  },
+  "qualification_allowed": false,
+  "reference_count": 24,
+  "research_roles": {
+    "development-only": 6,
+    "train-candidate": 18
+  },
+  "runner_elapsed_nanoseconds": 578528642475,
+  "runner_minutes": 9.64214404125,
+  "schema": "kws-d2-reference24-public-summary-v1",
+  "scope": "Reference transcript consistency with publisher text; no clone quality or KWS benefit claim.",
+  "source_manifest_canonical_sha256": "5976654fa6405ca598d6548c44f9d89f1cd3f42fde4fef61a8210737b540e70f",
+  "source_manifest_sha256": "dba0a89b4f2fbd1dc8491ed469f6b8092b37d26787998a4b79eb1740c0fbd90b",
+  "source_readback_file_count": 79,
+  "target_context_audit": {
+    "input_manifest_contains_only_audio_identities_and_derivation": true,
+    "intended_text_and_peer_results_passed_to_native_recognizers": false,
+    "method": "Exact persisted input/configuration checks and static native-callsite audit; not OS file-access tracing",
+    "passed": true,
+    "qwen_context": "",
+    "qwen_force_language": null,
+    "sensevoice_language": "auto",
+    "whisper_language": "zh",
+    "whisper_prefix": null,
+    "whisper_prompt": null
+  },
+  "training_admitted": false,
+  "private_delivery_sha256": "0c54bfed979a48a4deb4429391684952052f24b4f0f83eea527fd0f5289184f6"
+}

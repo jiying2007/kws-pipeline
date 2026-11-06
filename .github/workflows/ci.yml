@@ -129,7 +129,7 @@ jobs:
       - name: Verify tracked worktree after ARM dependency budget contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "ARM dependency budget contracts"'
       - name: Local research queue and shared slot contracts with dummy commands
-        timeout-minutes: 2
+        timeout-minutes: 3
         run: |
           python3 -I -S -B tests/test_research_job_lock.py
           python3 -I -S -B -O tests/test_research_job_lock.py
@@ -137,6 +137,41 @@ jobs:
           python3 -I -S -B tests/test_research_queue.py
           python3 -I -S -B -O tests/test_research_queue.py
           python3 -I -S -B -OO tests/test_research_queue.py
+          python3 -I -S -B tests/test_research_queue_supervisor.py
+          python3 -I -S -B -O tests/test_research_queue_supervisor.py
+          python3 -I -S -B -OO tests/test_research_queue_supervisor.py
+      - name: Verify tracked worktree after queue supervisor contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Queue supervisor contracts"'
+      - name: D2 and context dataset orchestration contracts without models
+        timeout-minutes: 3
+        run: |
+          python3 -I -S -B tests/test_research_d2_generate.py
+          python3 -I -S -B -O tests/test_research_d2_generate.py
+          python3 -I -S -B -OO tests/test_research_d2_generate.py
+          python3 -I -S -B tests/test_research_d2_campaign.py
+          python3 -I -S -B -O tests/test_research_d2_campaign.py
+          python3 -I -S -B -OO tests/test_research_d2_campaign.py
+          python3 -I -S -B tests/test_research_d2_consume.py
+          python3 -I -S -B -O tests/test_research_d2_consume.py
+          python3 -I -S -B -OO tests/test_research_d2_consume.py
+          python3 -I -S -B tests/test_research_context_generate.py
+          python3 -I -S -B -O tests/test_research_context_generate.py
+          python3 -I -S -B -OO tests/test_research_context_generate.py
+          python3 -I -S -B tests/test_research_context_v2_generate.py
+          python3 -I -S -B -O tests/test_research_context_v2_generate.py
+          python3 -I -S -B -OO tests/test_research_context_v2_generate.py
+          python3 -I -S -B tests/test_research_context_partial.py
+          python3 -I -S -B -O tests/test_research_context_partial.py
+          python3 -I -S -B -OO tests/test_research_context_partial.py
+          python3 -I -S -B tests/test_research_context_inputs.py
+          python3 -I -S -B -O tests/test_research_context_inputs.py
+          python3 -I -S -B -OO tests/test_research_context_inputs.py
+          python3 -I -S -B tests/test_research_context_v2_inputs.py
+          python3 -I -S -B -O tests/test_research_context_v2_inputs.py
+          python3 -I -S -B -OO tests/test_research_context_v2_inputs.py
+          python3 -I -S -B tests/test_research_d1_fit_diagnostic.py
+          python3 -I -S -B -O tests/test_research_d1_fit_diagnostic.py
+          python3 -I -S -B -OO tests/test_research_d1_fit_diagnostic.py
       - name: Verify tracked worktree after local research queue contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Local research queue contracts"'
       - name: K1 punctuation6 ASR18 offline source contracts

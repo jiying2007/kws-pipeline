@@ -12,6 +12,8 @@
 
 研究入口：[可复用模块、保留的实验结论与资格边界](research/README.md)
 
+数据方案落地：[32 人参考身份、D2 增量执行、原生 ASR 弱包与实际训练消费](docs/KWS_D2_IMPLEMENTATION_20261105.md)。首批 24 条新原音、55 次识别与固定 25 步消费探针均有独立证据；尚未完成的 2,048 项候选目标另行计数。
+
 最新 D1 检查点：[256 项账本、固定初始化对比与原生关键词观察](docs/KWS_D1_ACCOUNTED256_20261105.md)。255 项真实返回与 1 项已消耗未知分别报告。
 
 当前状态：[模型与工程摘要](docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status)，核对日期 2026-10-29。[历史工程审查与旧闭环记录](docs/KWS_PRODUCTION_CLOSURE_2026-10-29.md) 列出已合入修复、新增回归、待完成的本地验收，以及新训练数据、候选部署、真人 AFE 和目标板资格的下一关。历史 SKU、FSMN B/OR 与 posterior-only C 的证据范围保留；尚无经过独立真人声学与 SSC305 真机测量的新研究模型。

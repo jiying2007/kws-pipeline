@@ -1,0 +1,123 @@
+{
+  "schema": "kws-d2-first24-public-observation-v1",
+  "scope": "Two completed first chunks only; subsequent work is separate and not implied complete.",
+  "human_gold": false,
+  "quality_improvement_claimed": false,
+  "automatic_retries": 0,
+  "d1_regenerated_calls": 0,
+  "planned_d2_new_cells": 1792,
+  "accounted_d2_new_cells": 24,
+  "observed_d2_native_returns": 24,
+  "observed_machine_weak_candidates": 21,
+  "observed_uncertain": 3,
+  "observed_asr_calls": 55,
+  "actual_runner_ns": 1122284038744,
+  "chunks": [
+    {
+      "stage": "existing-eight-001",
+      "job_id": "generate-001",
+      "claims": 8,
+      "native_returns": 8,
+      "generation_outcomes": {
+        "completed": 7,
+        "failed-native": 1
+      },
+      "weak_statistics": {
+        "completed_asr_results": 18,
+        "development": 2,
+        "disagreement": 0,
+        "machine_candidates": 6,
+        "not_requested_asr_results": 6,
+        "source_families": 8,
+        "source_items": 8,
+        "train": 6,
+        "uncertain": 2
+      },
+      "asr_calls": 18,
+      "asr_models": {
+        "qwen06": {
+          "claims": 8,
+          "not_requested": 0,
+          "requested": 8,
+          "verified": 8,
+          "worker_new_calls": 8
+        },
+        "sensevoice": {
+          "claims": 8,
+          "not_requested": 0,
+          "requested": 8,
+          "verified": 8,
+          "worker_new_calls": 8
+        },
+        "whisper": {
+          "claims": 2,
+          "not_requested": 6,
+          "requested": 2,
+          "verified": 2,
+          "worker_new_calls": 2
+        }
+      },
+      "generation_runner_ns": 209288011024,
+      "asr_runner_ns": 248819913939,
+      "evidence_sha256": {
+        "generation_result": "a7788e9fb02d67991552cda1b53b627496b260fa602253aaa9eff76d5685b164",
+        "asr_result": "d0ec02a341aadd19f0e947846f84e02fb784a9b582c38aa9df69a890cb270f5b",
+        "weak_manifest": "89d9422e869925ba0499e6767359686b7e18c92c87d7f4e199908555b8f594a7",
+        "campaign_chunk": "64addfa1f3ce0f41dc9c3847656ea35ebdf55537bfaaae7698028feb33808ca7"
+      }
+    },
+    {
+      "stage": "new-twenty-four-001",
+      "job_id": "generate-001",
+      "claims": 16,
+      "native_returns": 16,
+      "generation_outcomes": {
+        "completed": 15,
+        "failed-native": 1
+      },
+      "weak_statistics": {
+        "completed_asr_results": 37,
+        "development": 4,
+        "disagreement": 5,
+        "machine_candidates": 15,
+        "not_requested_asr_results": 11,
+        "source_families": 16,
+        "source_items": 16,
+        "train": 12,
+        "uncertain": 1
+      },
+      "asr_calls": 37,
+      "asr_models": {
+        "qwen06": {
+          "claims": 16,
+          "not_requested": 0,
+          "requested": 16,
+          "verified": 16,
+          "worker_new_calls": 16
+        },
+        "sensevoice": {
+          "claims": 16,
+          "not_requested": 0,
+          "requested": 16,
+          "verified": 16,
+          "worker_new_calls": 16
+        },
+        "whisper": {
+          "claims": 5,
+          "not_requested": 11,
+          "requested": 5,
+          "verified": 5,
+          "worker_new_calls": 5
+        }
+      },
+      "generation_runner_ns": 403695477767,
+      "asr_runner_ns": 260480636014,
+      "evidence_sha256": {
+        "generation_result": "8657ec55ffab24b407e0a8514713139bdf97912b3d9016828e66fba234d51b5a",
+        "asr_result": "2c1d3e70da3415fe177e11cc477694c82b6062c5a519c98e73c6a836a589bfdc",
+        "weak_manifest": "a134b87182f02850b316f26f34a11a548af08d3a0738fb6b8ab0a87601a748c1",
+        "campaign_chunk": "e1c34c89576993d32c8e63aa754fa367c99e7f9f59a67aeb06f3c137930a5d40"
+      }
+    }
+  ]
+}
