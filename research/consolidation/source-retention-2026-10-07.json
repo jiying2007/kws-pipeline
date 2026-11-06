@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 80658,
-      "git_blob_sha1": "a553cd8f34d184c29802dde249da33888e5018a5",
-      "sha256": "baa7cdc3cc4d6e4fb8c5ef72fbbbf6ab8bd6256cf1d5bf1d3db717df8f1005c1"
+      "bytes": 81113,
+      "git_blob_sha1": "dbf5ec1720ad667e7d11225c822a783f05fe4221",
+      "sha256": "3a82afae873c736964af21669944c3eb607befc25b1f2ebc5fac2da8e3fceb43"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -50613,6 +50613,165 @@
             "bytes": 22922,
             "git_blob_sha1": "ba28461fae15d3e1fe277fbca9ea6d8e51944989",
             "sha256": "0687589d72c6c8aeaa9e2c1f286dd352ffbe9625885f4faeb87afe5d7dc29be5"
+          }
+        }
+      ]
+    },
+    {
+      "id": "context-development-natural-tail7-source-20261106",
+      "date": "2026-11-06",
+      "base_commit": "d833bb8920125802c7cea7013526e5ea84843a3f",
+      "base_tree": "ddc4ee9a9cebfa7e559ba72e6bfe5ba06f9c6890",
+      "public_source_commit": "8342b030159f0ec3e16ca37679c52cea23c285fb",
+      "previous_manifest_sha256": "5766d7a733014cd7135e6e22a392e6d16574428f6e2de8b6dd61648f3e481be8",
+      "workflow_source_changed": true,
+      "scope": "Add a fixed paired C1 development diagnostic, its metadata contract CI checks, and seven bounded natural annotation-tail declarations.",
+      "rationale": "Bind six source files to their actual published Git commit and fetched tree. Preserve all 191 historical maintenance events and the existing numerical sources. The new diagnostic authenticates the original frozen input validators, retains every float32 logit, and uses the established single-lock queue; these declarations do not grant model acceptance or natural-negative admission.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 80658,
+            "git_blob_sha1": "a553cd8f34d184c29802dde249da33888e5018a5",
+            "sha256": "baa7cdc3cc4d6e4fb8c5ef72fbbbf6ab8bd6256cf1d5bf1d3db717df8f1005c1"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 80884,
+            "git_blob_sha1": "059d169322dc9acbb8d3efda2f6399585b8b60a8",
+            "sha256": "10ad5a1a7d4472215dd6d52cd1f861405d55ff93ac36e59a536846e74fc573ed"
+          }
+        },
+        {
+          "path": "configs/research/natural-alimeeting-eval-tail7-shard-a-v1.json",
+          "before": null,
+          "after": {
+            "path": "configs/research/natural-alimeeting-eval-tail7-shard-a-v1.json",
+            "mode": "100644",
+            "bytes": 5848,
+            "git_blob_sha1": "5e774c52f757488a6ff2db2827f9525416feaa58",
+            "sha256": "76d66756e3bca0399082a38b7c00f62329fa0bcb456e02bc53be9736f934b0a5"
+          }
+        },
+        {
+          "path": "configs/research/natural-alimeeting-eval-tail7-shard-b-v1.json",
+          "before": null,
+          "after": {
+            "path": "configs/research/natural-alimeeting-eval-tail7-shard-b-v1.json",
+            "mode": "100644",
+            "bytes": 4566,
+            "git_blob_sha1": "941c0c8722b2497c56ba82133e28db05d16f684f",
+            "sha256": "5e35c6ae5918b0c1473a93b940b342fb38232b959504afdf41a9954b223aa83b"
+          }
+        },
+        {
+          "path": "docs/research-c1-context-development.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-c1-context-development.md",
+            "mode": "100644",
+            "bytes": 5319,
+            "git_blob_sha1": "e7a2be2db4e29e32040cb0ffa5fa1a3f4887c7c4",
+            "sha256": "9eb50aa60e2a9e61e148750e4ba16a026338762a8480325cccf65a6997d7d990"
+          }
+        },
+        {
+          "path": "tests/test_research_c1_context_development.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_c1_context_development.py",
+            "mode": "100644",
+            "bytes": 14204,
+            "git_blob_sha1": "71f11a6a5893b03fc262cd6219f337e24f82e055",
+            "sha256": "039a370b13e1239e0c497b243ebcb3b4e877adc0ff1b02537df9be3c480b660b"
+          }
+        },
+        {
+          "path": "training/research_c1_context_development.py",
+          "before": null,
+          "after": {
+            "path": "training/research_c1_context_development.py",
+            "mode": "100644",
+            "bytes": 32245,
+            "git_blob_sha1": "b9984a948644f07384864594cec05a7de39a602c",
+            "sha256": "73c6e9449c4b9fb7520d8e6ea3b7fbc81bac8d92d96b133e8798b97a5aa02345"
+          }
+        }
+      ]
+    },
+    {
+      "id": "context52-fixed-roster-training-source-20261106",
+      "date": "2026-11-06",
+      "base_commit": "8f690dd94cfe61b3ddbc974100853aaeb5f52ea7",
+      "base_tree": "143f8150efafe1257abb5f5ce04f836b9deb95ae",
+      "public_source_commit": "9638393b777ad361e2567aee92db5a4f857f776b",
+      "previous_manifest_sha256": "f6ff2f7925c31f2d1b3e77080c54baed73179d1f50479954a9217290b912f8e0",
+      "workflow_source_changed": true,
+      "scope": "Publish the fixed full-context52 known-silence stage, immutable prior plan, usage contract and metadata tests in all three Python modes.",
+      "rationale": "Bind five actual files to the published source commit while preserving all 192 prior maintenance events. Reuse the existing numerical training loop, initialization and 2000-step budget with the complete 52-row training roster; reserve all 18 development rows for fixed final observations. Retain durable call and optimizer ledgers, full final float32 observations and truthful failed-stage boundaries. This source publication is not evidence that the new training run has completed.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 80884,
+            "git_blob_sha1": "059d169322dc9acbb8d3efda2f6399585b8b60a8",
+            "sha256": "10ad5a1a7d4472215dd6d52cd1f861405d55ff93ac36e59a536846e74fc573ed"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 81113,
+            "git_blob_sha1": "dbf5ec1720ad667e7d11225c822a783f05fe4221",
+            "sha256": "3a82afae873c736964af21669944c3eb607befc25b1f2ebc5fac2da8e3fceb43"
+          }
+        },
+        {
+          "path": "configs/research/context52-known-silence-20261106.json",
+          "before": null,
+          "after": {
+            "path": "configs/research/context52-known-silence-20261106.json",
+            "mode": "100644",
+            "bytes": 3226,
+            "git_blob_sha1": "4d0f7f607c8fa3bd23f16ccd9c7f71ae37b17948",
+            "sha256": "87ef781b8c95bccb6158633a4c0d8d506b8e5351be38cdf38415bd18c163bda4"
+          }
+        },
+        {
+          "path": "docs/research-context52-known-silence.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-context52-known-silence.md",
+            "mode": "100644",
+            "bytes": 14198,
+            "git_blob_sha1": "04c2c0c636f6d621370fe1f1b52190e9ffe8ed12",
+            "sha256": "855f9d4ab176d67f261112f77b1c5799293cc59312f37bea2f6b662a279c5c6c"
+          }
+        },
+        {
+          "path": "tests/test_research_context52_known_silence.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_context52_known_silence.py",
+            "mode": "100644",
+            "bytes": 17055,
+            "git_blob_sha1": "3c0b50e636017b0a9511348ef6a36d295e5efe24",
+            "sha256": "d6824a9ed7693f16dd5b8cf82837f3a8d33468ffb51f324ff81ae38f1d280806"
+          }
+        },
+        {
+          "path": "training/research_context52_known_silence.py",
+          "before": null,
+          "after": {
+            "path": "training/research_context52_known_silence.py",
+            "mode": "100644",
+            "bytes": 40565,
+            "git_blob_sha1": "dd5c884843de8fedb80199ebe1bcba895e890882",
+            "sha256": "805e7dc6222df48ec65c918f7a2c30434fe9b2b817f58f2e1c598cae862e701f"
           }
         }
       ]
