@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 79947,
-      "git_blob_sha1": "ebdfb12b94f4f230c6982c1aff5049db3ed4ea43",
-      "sha256": "f0bb08b683c74419bbe0d0e24807a5dcd8d317edfd9ec3553389031a728c4737"
+      "bytes": 80658,
+      "git_blob_sha1": "a553cd8f34d184c29802dde249da33888e5018a5",
+      "sha256": "baa7cdc3cc4d6e4fb8c5ef72fbbbf6ab8bd6256cf1d5bf1d3db717df8f1005c1"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -50521,6 +50521,98 @@
             "bytes": 46694,
             "git_blob_sha1": "2e5319d504cc9bd2c66c058ff502332150947f67",
             "sha256": "4611a2e45681c983d1973522ebd13499dc8a2010780887c9a69f66f79f9de117"
+          }
+        }
+      ]
+    },
+    {
+      "id": "continuation-save-graph-arm-apt-evidence-20261106",
+      "date": "2026-11-06",
+      "base_commit": "27c123b93d4c386d0bda5dddbc441de8385dab77",
+      "base_tree": "938628c3d1a1fb704fc9ef104a048157d1c62613",
+      "public_source_commit": "b0576887c42141d914e8c14cf24af0b7f7fc4bcc",
+      "previous_manifest_sha256": "d059d110100ac5c980ba005bc5eacb4f55a0a35d493572db74edf3fa43edd4c7",
+      "workflow_source_changed": true,
+      "scope": "Publish complete terminal preservation graphs and sanitized aggregate evidence; retain ARM APT failure logs and exit receipts.",
+      "rationale": "Bind the five actual source changes to the independently API-verified public commit while preserving all 190 prior events and the original frozen execution identities. Retain the published independent-audit provenance and K2-only development coverage, reference the final natural recovery index and complete seven-capsule acoustic tensor graph, and keep the ARM dependency failure code, budget and attempt count unchanged. No model execution or new quality acceptance is introduced by this publication.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 79947,
+            "git_blob_sha1": "ebdfb12b94f4f230c6982c1aff5049db3ed4ea43",
+            "sha256": "f0bb08b683c74419bbe0d0e24807a5dcd8d317edfd9ec3553389031a728c4737"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 80658,
+            "git_blob_sha1": "a553cd8f34d184c29802dde249da33888e5018a5",
+            "sha256": "baa7cdc3cc4d6e4fb8c5ef72fbbbf6ab8bd6256cf1d5bf1d3db717df8f1005c1"
+          }
+        },
+        {
+          "path": "docs/KWS_DATASET_CONTINUATION_20261106.md",
+          "before": {
+            "path": "docs/KWS_DATASET_CONTINUATION_20261106.md",
+            "mode": "100644",
+            "bytes": 13904,
+            "git_blob_sha1": "e5abd1db7765a8b03545a9c13d15289485a48693",
+            "sha256": "fa87a7bff7af3c257d056f656bf07341b38f02dc0b40d995f11b38a9b88944a6"
+          },
+          "after": {
+            "path": "docs/KWS_DATASET_CONTINUATION_20261106.md",
+            "mode": "100644",
+            "bytes": 17050,
+            "git_blob_sha1": "6a450dfeaa9c6c57e572d2fceaab4c27bd6a1890",
+            "sha256": "dd08c2cddb27d6934d05e5be3375f99384c15332b58d3969bc679c73ab19b401"
+          }
+        },
+        {
+          "path": "research/dataset-continuation-20261106/execution-index.json",
+          "before": {
+            "path": "research/dataset-continuation-20261106/execution-index.json",
+            "mode": "100644",
+            "bytes": 63560,
+            "git_blob_sha1": "e053a58cf766a7697b7ea6bc60041db9c69b2f83",
+            "sha256": "f1565f50c04ac52bb4448a41b295b239de80b6eac9a1a4210414aea60fec52ab"
+          },
+          "after": {
+            "path": "research/dataset-continuation-20261106/execution-index.json",
+            "mode": "100644",
+            "bytes": 83750,
+            "git_blob_sha1": "fc8c4048ef7ef799b25053a3de6f25569f197918",
+            "sha256": "17b34107770ad71f99075c2138d97ff731875feb8f31c836ab02121185f87735"
+          }
+        },
+        {
+          "path": "research/dataset-continuation-20261106/terminal-evidence.json",
+          "before": null,
+          "after": {
+            "path": "research/dataset-continuation-20261106/terminal-evidence.json",
+            "mode": "100644",
+            "bytes": 66797,
+            "git_blob_sha1": "06f6c10a353217e8519d631078d1099e471dcb40",
+            "sha256": "4b5166c667d926a5c71f63d2701e86efe2b2b8e06c87e906b419bc7dd164413f"
+          }
+        },
+        {
+          "path": "tests/test_arm_dependency_budget.py",
+          "before": {
+            "path": "tests/test_arm_dependency_budget.py",
+            "mode": "100644",
+            "bytes": 18333,
+            "git_blob_sha1": "5a1c54ee46ab0724d5c0cdcec3f541376a29783c",
+            "sha256": "a7e03dd2f46f4721038e77cac92d3de988f6299f9d82b9da1e9daffee2c6d380"
+          },
+          "after": {
+            "path": "tests/test_arm_dependency_budget.py",
+            "mode": "100644",
+            "bytes": 22922,
+            "git_blob_sha1": "ba28461fae15d3e1fe277fbca9ea6d8e51944989",
+            "sha256": "0687589d72c6c8aeaa9e2c1f286dd352ffbe9625885f4faeb87afe5d7dc29be5"
           }
         }
       ]
