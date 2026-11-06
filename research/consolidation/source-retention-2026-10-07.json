@@ -51240,6 +51240,36 @@
           }
         }
       ]
+    },
+    {
+      "id": "known-command-worker-death-fixture-20261106",
+      "date": "2026-11-06",
+      "base_commit": "ddf1e5bd8834ba7c7e129c093a2bccc7e271c581",
+      "base_tree": "8550b882024b985725f510979bc0fed5a8da9878",
+      "public_source_commit": "6b44fe417b79c34ba37febd42a70f8941af5f877",
+      "previous_manifest_sha256": "faf0105b7931c0479f249480d9ce7bd76cec14d3842f3ec2c2da85a6b1cdcd61",
+      "workflow_source_changed": false,
+      "scope": "Synchronize the existing known-command worker-death fixture before its fault injection; preserve runtime code and original timeout/unknown/no-retry behavior.",
+      "rationale": "The child can start before its parent durably records the command identity. A deterministic 0.30s diagnostic pause reproduces the original lock-release failure. Waiting for and checking that identity makes the intended known-command case deterministic; explicit child-death and immutable unknown-resume assertions retain cleanup and no-retry coverage.",
+      "files": [
+        {
+          "path": "tests/test_research_queue.py",
+          "before": {
+            "path": "tests/test_research_queue.py",
+            "mode": "100644",
+            "bytes": 24089,
+            "git_blob_sha1": "c7f16c314ec18b179ba9efcc94e99e667d9ef3a2",
+            "sha256": "1acae6fe56e86a50fe9cd0caf2600e95e77807e594f876c5d975fbd86f5519c5"
+          },
+          "after": {
+            "path": "tests/test_research_queue.py",
+            "mode": "100644",
+            "bytes": 25368,
+            "git_blob_sha1": "09e993cb078e33994589279509bc520dd504d1d8",
+            "sha256": "e4c14a86a835cce11d8253763285bcdad67c2cbdcb0d2b8a3c586c1cad6ccb6f"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
