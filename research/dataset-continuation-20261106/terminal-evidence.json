@@ -1,0 +1,1612 @@
+{
+  "schema": "kws-dataset-continuation-terminal-evidence-v1",
+  "study_date": "2026-11-06",
+  "publication_scope": {
+    "aggregate_counts_hashes_and_resource_observations_only": true,
+    "raw_audio_published_here": false,
+    "full_transcripts_published_here": false,
+    "signed_provider_urls_published_here": false,
+    "human_gold": false,
+    "provider_object_ids_grant_no_new_access": true
+  },
+  "acoustic124": {
+    "original_summary": {
+      "by_conclusion": {
+        "full-transcript-disagreement": 49,
+        "unanimous-parent-fulltext-match": 75
+      },
+      "by_kind": {
+        "digital-level": 28,
+        "measured-rir-convolution": 28,
+        "onset-offset": 28,
+        "recorded-noise-mix": 40
+      },
+      "by_split": {
+        "development": 24,
+        "train": 100
+      },
+      "frozen_variant_rows_changed": 0,
+      "human_gold": false,
+      "native_asr_calls": 372,
+      "new_loss_weights_created": false,
+      "new_optimizer_steps": 0,
+      "new_tts_calls": 0,
+      "noise_ctc_masked_rows_unchanged": 40,
+      "observed_rows": 124,
+      "quarantine_suggestions": 49,
+      "real_farfield_or_soft_speech_claim": false,
+      "schema": "kws-acoustic-asr-observation-view-v1"
+    },
+    "original_summary_receipt": {
+      "bytes": 561,
+      "sha256": "8d6a9cb3553efd02fe197c81cc28927e38b07409f0ea93f3f370583a39e43c7d"
+    },
+    "aggregate_manifest_receipt": {
+      "bytes": 213,
+      "sha256": "2eb187a38735ce3d73e55840d63a2ef4cb7fbb7cd097063fc5f78e43bfc4ded1"
+    },
+    "queue_totals": {
+      "completed_queue_jobs": 16,
+      "native_asr_calls": 372,
+      "actual_runner_nanoseconds": 3017985638412,
+      "actual_runner_minutes": 50.2997606402,
+      "actual_duration_complete": true,
+      "unresolved_jobs": 0,
+      "failed_queue_jobs": 0,
+      "budget_overrun_nanoseconds": 0,
+      "started_at_utc": "2026-11-06T03:22:01.241429+00:00",
+      "finished_at_utc": "2026-11-06T04:18:49.849501+00:00"
+    },
+    "queue_job_receipts": [
+      {
+        "job_id": "observe-001",
+        "status": "completed",
+        "started_at": "2026-11-06T03:22:01.241429+00:00",
+        "finished_at": "2026-11-06T03:25:16.272355+00:00",
+        "actual_elapsed_ns": 195030960073,
+        "receipt": {
+          "bytes": 1717,
+          "sha256": "cf17f7cc626853f94ef997c3091fe5a602921ce01d594a7967bf680df2bc386e"
+        }
+      },
+      {
+        "job_id": "observe-002",
+        "status": "completed",
+        "started_at": "2026-11-06T03:25:39.607040+00:00",
+        "finished_at": "2026-11-06T03:28:52.017563+00:00",
+        "actual_elapsed_ns": 192410544796,
+        "receipt": {
+          "bytes": 1717,
+          "sha256": "b7fe5de462f5d5909508f1ec67b5d8e810c5990f015fba6fc61e45e5a65ca701"
+        }
+      },
+      {
+        "job_id": "observe-003",
+        "status": "completed",
+        "started_at": "2026-11-06T03:29:17.436988+00:00",
+        "finished_at": "2026-11-06T03:32:36.760058+00:00",
+        "actual_elapsed_ns": 199323088285,
+        "receipt": {
+          "bytes": 1717,
+          "sha256": "dfcbe04bd89147bce48bbde8741bcc67dfde77e5b0ba9f47ecba3336de540b6d"
+        }
+      },
+      {
+        "job_id": "observe-004",
+        "status": "completed",
+        "started_at": "2026-11-06T03:33:03.553013+00:00",
+        "finished_at": "2026-11-06T03:36:11.084465+00:00",
+        "actual_elapsed_ns": 187531471054,
+        "receipt": {
+          "bytes": 1716,
+          "sha256": "19cd752d26802d1944051d4ada4c82d9b70e6679f4c5f9841d34ffaa81b40d7e"
+        }
+      },
+      {
+        "job_id": "observe-005",
+        "status": "completed",
+        "started_at": "2026-11-06T03:36:36.767950+00:00",
+        "finished_at": "2026-11-06T03:39:58.257207+00:00",
+        "actual_elapsed_ns": 201489276342,
+        "receipt": {
+          "bytes": 1711,
+          "sha256": "9cc971541d826d6b8a20c17efd4d7a3f9b6883072b435d2bcb7c1a5c4073c790"
+        }
+      },
+      {
+        "job_id": "observe-006",
+        "status": "completed",
+        "started_at": "2026-11-06T03:40:24.040620+00:00",
+        "finished_at": "2026-11-06T03:43:36.857480+00:00",
+        "actual_elapsed_ns": 192816882103,
+        "receipt": {
+          "bytes": 1717,
+          "sha256": "bb2903521083f43929ac72c89e14696f5b17b56ea4b1fc738f88334c3d06b0bb"
+        }
+      },
+      {
+        "job_id": "observe-007",
+        "status": "completed",
+        "started_at": "2026-11-06T03:44:07.940937+00:00",
+        "finished_at": "2026-11-06T03:47:16.791871+00:00",
+        "actual_elapsed_ns": 188850954683,
+        "receipt": {
+          "bytes": 1717,
+          "sha256": "acc8c7c6f4ab81ceefee9b287ded88a72c1aeccfa3e67e14a076042b7b016f62"
+        }
+      },
+      {
+        "job_id": "observe-008",
+        "status": "completed",
+        "started_at": "2026-11-06T03:47:44.673492+00:00",
+        "finished_at": "2026-11-06T03:50:55.075724+00:00",
+        "actual_elapsed_ns": 190402253702,
+        "receipt": {
+          "bytes": 1717,
+          "sha256": "367a1b1b7cd1291af992546acf8546db2b2e500609877d95d99539d92221e57a"
+        }
+      },
+      {
+        "job_id": "observe-009",
+        "status": "completed",
+        "started_at": "2026-11-06T03:51:25.194158+00:00",
+        "finished_at": "2026-11-06T03:54:34.438096+00:00",
+        "actual_elapsed_ns": 189243990720,
+        "receipt": {
+          "bytes": 1710,
+          "sha256": "9bf29c1d92b1b3e4abd91784ed00e7fac676952cef3fa40f967da31979d9cb2c"
+        }
+      },
+      {
+        "job_id": "observe-010",
+        "status": "completed",
+        "started_at": "2026-11-06T03:54:59.979319+00:00",
+        "finished_at": "2026-11-06T03:58:02.856781+00:00",
+        "actual_elapsed_ns": 182877481389,
+        "receipt": {
+          "bytes": 1712,
+          "sha256": "c4de7b0ec2b0d0c216748c5aff6305463b9ed4b3495f14a2bd0c7a2b466e8d3e"
+        }
+      },
+      {
+        "job_id": "observe-011",
+        "status": "completed",
+        "started_at": "2026-11-06T03:58:27.465080+00:00",
+        "finished_at": "2026-11-06T04:01:29.557074+00:00",
+        "actual_elapsed_ns": 182092014341,
+        "receipt": {
+          "bytes": 1718,
+          "sha256": "015b99a7331401c20834f6b3b555bf43e1e1faddade0e558d19359e92bc3e449"
+        }
+      },
+      {
+        "job_id": "observe-012",
+        "status": "completed",
+        "started_at": "2026-11-06T04:01:54.136349+00:00",
+        "finished_at": "2026-11-06T04:05:01.783895+00:00",
+        "actual_elapsed_ns": 187647576279,
+        "receipt": {
+          "bytes": 1713,
+          "sha256": "c0e9365ad38adf396072641c620a5c66e61f228012898be02a5c3783706e4f59"
+        }
+      },
+      {
+        "job_id": "observe-013",
+        "status": "completed",
+        "started_at": "2026-11-06T04:05:27.783639+00:00",
+        "finished_at": "2026-11-06T04:08:34.346821+00:00",
+        "actual_elapsed_ns": 186563209890,
+        "receipt": {
+          "bytes": 1712,
+          "sha256": "714becc42ee7b230150a7cc501f3cc65fdb92ded799f4538a7c6962f73d83863"
+        }
+      },
+      {
+        "job_id": "observe-014",
+        "status": "completed",
+        "started_at": "2026-11-06T04:08:59.203651+00:00",
+        "finished_at": "2026-11-06T04:12:12.163864+00:00",
+        "actual_elapsed_ns": 192960231531,
+        "receipt": {
+          "bytes": 1713,
+          "sha256": "ac0f00380ecd95f2dd443c55cb53497ce50d3ce03ba061c1b6fd0c8346063292"
+        }
+      },
+      {
+        "job_id": "observe-015",
+        "status": "completed",
+        "started_at": "2026-11-06T04:12:37.305939+00:00",
+        "finished_at": "2026-11-06T04:15:44.948479+00:00",
+        "actual_elapsed_ns": 187642559853,
+        "receipt": {
+          "bytes": 1713,
+          "sha256": "7565d90e198046181fc3216df2f93b09be4d3d924b008bf16b28f58bd42941f8"
+        }
+      },
+      {
+        "job_id": "observe-016",
+        "status": "completed",
+        "started_at": "2026-11-06T04:16:08.746377+00:00",
+        "finished_at": "2026-11-06T04:18:49.849501+00:00",
+        "actual_elapsed_ns": 161103143371,
+        "receipt": {
+          "bytes": 1717,
+          "sha256": "264302e883f6fe82784b6a288d0da4e7a09c2af0ec09d364e8075f4e2f750186"
+        }
+      }
+    ],
+    "durable_save": {
+      "provider": "ChatGPT Library",
+      "object_id": "libfile_f77e42d7787881918b9053e4f1a3436f",
+      "version": 0,
+      "capsule": {
+        "bytes": 5205487,
+        "sha256": "7ba19bd22684d28f236959174d33b93bc98c73e5ba966db281f7ff067ffa3451"
+      },
+      "acknowledgement": {
+        "bytes": 1056,
+        "sha256": "b99c961f3925572d43001a699bb77635b39a577150982f890ad3871a81b06ec3"
+      },
+      "provider_response": {
+        "bytes": 1561,
+        "sha256": "839928a9b3d18a01ebca4b0631692371fdc069c943d96bd48f7ae126dd898f2f"
+      },
+      "remote_bytes_independently_retrieved": false
+    },
+    "independent_final_audit_receipt": {
+      "bytes": 47996,
+      "sha256": "5f250bdbc25e9d40eb86ec79029b027e5f41fc1acee4776d59c04b8ddea56c6d"
+    },
+    "independent_audit_status": "independently_verified"
+  },
+  "c1_known_silence": {
+    "original_summary": {
+      "actual_optimizer_steps": 2000,
+      "asr_or_tts_calls": 0,
+      "automatic_retry": false,
+      "auxiliary_confidence": 1.0,
+      "auxiliary_definition": "empty-target CTC over only fully added-zero windows, divided by that window count",
+      "auxiliary_scale": 1.0,
+      "auxiliary_uses_speech_weak_weight": false,
+      "batch_size": 4,
+      "before_forward_calls": 0,
+      "candidate": "c1-ctc2601",
+      "changed_parameter_names": [
+        "in_proj.weight",
+        "in_proj.bias",
+        "blocks.0.depthwise.weight",
+        "blocks.0.depthwise.bias",
+        "blocks.0.pointwise.weight",
+        "blocks.0.pointwise.bias",
+        "blocks.1.depthwise.weight",
+        "blocks.1.depthwise.bias",
+        "blocks.1.pointwise.weight",
+        "blocks.1.pointwise.bias",
+        "blocks.2.depthwise.weight",
+        "blocks.2.depthwise.bias",
+        "blocks.2.pointwise.weight",
+        "blocks.2.pointwise.bias",
+        "out_proj.weight",
+        "out_proj.bias"
+      ],
+      "conditions": {
+        "0": {
+          "all_original_feature_suffixes_bitwise_equal": true,
+          "blank_argmax_fraction": 0.8875,
+          "blank_probability_mean": 0.8870230138301849,
+          "confidence_weight_sum": 4.0,
+          "constant_single_token_prediction": false,
+          "deletions": 0,
+          "distinct_predictions": 5,
+          "edit_numerator": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "empty_outputs": 0,
+          "evaluable_clips": 8,
+          "exact_token_match_denominator": 8,
+          "exact_token_match_rate": 1.0,
+          "exact_token_matches": 8,
+          "insertions": 0,
+          "known_zero_frames": 0,
+          "known_zero_nonblank_frames": 0,
+          "maximum_aligned_original_feature_delta": 0.0,
+          "mean_ctc_loss_confidence_weighted": 0.00019209711899748072,
+          "mean_ctc_loss_target_length_normalized": 0.00038419423799496144,
+          "mean_target_ctc_nll": 0.0017627908673603088,
+          "not_evaluable_reasons": {},
+          "observed_clips": 8,
+          "single_token_outputs": 0,
+          "substitutions": 0,
+          "target_token_denominator": 32,
+          "token_edit_rate": 0.0
+        },
+        "200": {
+          "all_original_feature_suffixes_bitwise_equal": true,
+          "blank_argmax_fraction": 0.9,
+          "blank_probability_mean": 0.8995633796685272,
+          "confidence_weight_sum": 4.0,
+          "constant_single_token_prediction": false,
+          "deletions": 0,
+          "distinct_predictions": 5,
+          "edit_numerator": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "empty_outputs": 0,
+          "evaluable_clips": 8,
+          "exact_token_match_denominator": 8,
+          "exact_token_match_rate": 1.0,
+          "exact_token_matches": 8,
+          "insertions": 0,
+          "known_zero_frames": 72,
+          "known_zero_nonblank_frames": 0,
+          "maximum_aligned_original_feature_delta": 0.0,
+          "mean_ctc_loss_confidence_weighted": 0.00017854015550256008,
+          "mean_ctc_loss_target_length_normalized": 0.00035708031100512017,
+          "mean_target_ctc_nll": 0.0017232837562914938,
+          "not_evaluable_reasons": {},
+          "observed_clips": 8,
+          "single_token_outputs": 0,
+          "substitutions": 0,
+          "target_token_denominator": 32,
+          "token_edit_rate": 0.0
+        },
+        "500": {
+          "all_original_feature_suffixes_bitwise_equal": true,
+          "blank_argmax_fraction": 0.9142857142857143,
+          "blank_probability_mean": 0.9139069744518825,
+          "confidence_weight_sum": 4.0,
+          "constant_single_token_prediction": false,
+          "deletions": 0,
+          "distinct_predictions": 5,
+          "edit_numerator": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "empty_outputs": 0,
+          "evaluable_clips": 8,
+          "exact_token_match_denominator": 8,
+          "exact_token_match_rate": 1.0,
+          "exact_token_matches": 8,
+          "insertions": 0,
+          "known_zero_frames": 192,
+          "known_zero_nonblank_frames": 0,
+          "maximum_aligned_original_feature_delta": 0.0,
+          "mean_ctc_loss_confidence_weighted": 0.00021881955854041735,
+          "mean_ctc_loss_target_length_normalized": 0.0004376391170808347,
+          "mean_target_ctc_nll": 0.0021267071133479476,
+          "not_evaluable_reasons": {},
+          "observed_clips": 8,
+          "single_token_outputs": 0,
+          "substitutions": 0,
+          "target_token_denominator": 32,
+          "token_edit_rate": 0.0
+        }
+      },
+      "development_forward_calls": 0,
+      "exposure_plan_sha256": "b581173b91176a8001af4e06206bc64590db21e7f598922d0ecf180a2e91dc36",
+      "exposures_by_offset": {
+        "0": 2672,
+        "200": 2664,
+        "500": 2664
+      },
+      "final_checkpoint_sha256": "05c6c79258f93a7375db7b3ebe6c502fd696220694f16e004e73776e3c490bed",
+      "final_float_state_sha256": "11d66b5a8f58afad3a6691cd2bb90843fea9a58414eea68a5d08b52236022df6",
+      "final_forward_limit": 24,
+      "final_forwards_completed": 24,
+      "final_forwards_started": 24,
+      "finished_at": "2026-11-06T04:22:10.182336+00:00",
+      "fixed_ctc_normalizer": 1.0,
+      "generalization_passed": null,
+      "gradient_clip_max_norm": 5.0,
+      "gradients": {
+        "all_selected_parameter_gradients_present_and_finite": true,
+        "gradient_norm_max": 125.39871978759766,
+        "gradient_norm_min": 0.0054204510524868965,
+        "nonzero_gradient_steps": 2000,
+        "recorded_optimizer_steps": 2000,
+        "zero_gradient_steps": 0
+      },
+      "human_gold": false,
+      "initial_checkpoint_sha256": "da7671fe71fef9ecd6822c747e3fe153b9ee563a6784c18eded90d3354486ecf",
+      "initial_float_state_sha256": "3717783d0771bc28e66006d523f414dcdbb3997d372b7d115f9961b62e71b855",
+      "known_silence_boundary_passed": true,
+      "known_silence_source": "added PCM16 zeros only; no VAD or amplitude decision on original audio",
+      "labels_changed": false,
+      "launch_requires_entire_acoustic124_campaign_terminal": true,
+      "maximum_token_edits_per_condition": 7,
+      "minimum_exact_per_condition": 5,
+      "minimum_mechanism_gate_passed": true,
+      "model_constructions": 1,
+      "offsets_ms": [
+        0,
+        200,
+        500
+      ],
+      "optimizer": {
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "optimizer_steps": 2000,
+      "original_unpadded_accuracy_restored_in_each_condition": true,
+      "parameter_delta_l2": 28.903377084285847,
+      "parameter_names": [
+        "in_proj.weight",
+        "in_proj.bias",
+        "blocks.0.depthwise.weight",
+        "blocks.0.depthwise.bias",
+        "blocks.0.pointwise.weight",
+        "blocks.0.pointwise.bias",
+        "blocks.1.depthwise.weight",
+        "blocks.1.depthwise.bias",
+        "blocks.1.pointwise.weight",
+        "blocks.1.pointwise.bias",
+        "blocks.2.depthwise.weight",
+        "blocks.2.depthwise.bias",
+        "blocks.2.pointwise.weight",
+        "blocks.2.pointwise.bias",
+        "out_proj.weight",
+        "out_proj.bias"
+      ],
+      "peak_rss_kib": 371952,
+      "quality_winner": null,
+      "queue_minutes": 10,
+      "recipe_sha256": "f46370e3bee34766f3ef71e43ee122fa6ef7a6eb359707aa9f93c2e3e1e04173",
+      "reference_conditions": {
+        "0": {
+          "all_original_feature_suffixes_bitwise_equal": true,
+          "blank_argmax_fraction": 0.9109375,
+          "blank_probability_mean": 0.911507123708725,
+          "confidence_weight_sum": 4.0,
+          "constant_single_token_prediction": false,
+          "deletions": 2,
+          "distinct_predictions": 7,
+          "edit_numerator": 7,
+          "emissions_entirely_in_added_silence": 0,
+          "empty_outputs": 0,
+          "evaluable_clips": 8,
+          "exact_token_match_denominator": 8,
+          "exact_token_match_rate": 0.625,
+          "exact_token_matches": 5,
+          "insertions": 3,
+          "maximum_aligned_original_feature_delta": 0.0,
+          "mean_ctc_loss_confidence_weighted": 0.16694612460560165,
+          "mean_ctc_loss_target_length_normalized": 0.3338922492112033,
+          "mean_target_ctc_nll": 1.4980299484159332,
+          "not_evaluable_reasons": {},
+          "observed_clips": 8,
+          "single_token_outputs": 0,
+          "substitutions": 2,
+          "target_token_denominator": 32,
+          "token_edit_rate": 0.21875
+        },
+        "200": {
+          "all_original_feature_suffixes_bitwise_equal": true,
+          "blank_argmax_fraction": 0.9208333333333333,
+          "blank_probability_mean": 0.9249235823750496,
+          "confidence_weight_sum": 4.0,
+          "constant_single_token_prediction": false,
+          "deletions": 1,
+          "distinct_predictions": 6,
+          "edit_numerator": 18,
+          "emissions_entirely_in_added_silence": 24,
+          "empty_outputs": 0,
+          "evaluable_clips": 8,
+          "exact_token_match_denominator": 8,
+          "exact_token_match_rate": 0.25,
+          "exact_token_matches": 2,
+          "insertions": 7,
+          "maximum_aligned_original_feature_delta": 0.0,
+          "mean_ctc_loss_confidence_weighted": 1.1227439809590578,
+          "mean_ctc_loss_target_length_normalized": 2.2454879619181156,
+          "mean_target_ctc_nll": 9.242459364235401,
+          "not_evaluable_reasons": {},
+          "observed_clips": 8,
+          "single_token_outputs": 0,
+          "substitutions": 10,
+          "target_token_denominator": 32,
+          "token_edit_rate": 0.5625
+        },
+        "500": {
+          "all_original_feature_suffixes_bitwise_equal": true,
+          "blank_argmax_fraction": 0.9321428571428572,
+          "blank_probability_mean": 0.9356488906201862,
+          "confidence_weight_sum": 4.0,
+          "constant_single_token_prediction": false,
+          "deletions": 1,
+          "distinct_predictions": 6,
+          "edit_numerator": 18,
+          "emissions_entirely_in_added_silence": 24,
+          "empty_outputs": 0,
+          "evaluable_clips": 8,
+          "exact_token_match_denominator": 8,
+          "exact_token_match_rate": 0.25,
+          "exact_token_matches": 2,
+          "insertions": 7,
+          "maximum_aligned_original_feature_delta": 0.0,
+          "mean_ctc_loss_confidence_weighted": 1.123268024995923,
+          "mean_ctc_loss_target_length_normalized": 2.246536049991846,
+          "mean_target_ctc_nll": 9.247699804604053,
+          "not_evaluable_reasons": {},
+          "observed_clips": 8,
+          "single_token_outputs": 0,
+          "substitutions": 10,
+          "target_token_denominator": 32,
+          "token_edit_rate": 0.5625
+        }
+      },
+      "required_known_zero_nonblank_frames": 0,
+      "schema": "kws-c1-known-silence-correction-v1",
+      "scope": "fixed known-training-row input/objective correction, not independent generalization",
+      "seed": 20261105,
+      "single_variable_ablation": false,
+      "started_at": "2026-11-06T04:20:11.603569+00:00",
+      "status": "completed",
+      "strict_tiny_fit_exact_conditions": 24,
+      "strict_tiny_fit_passed": true,
+      "system_cpu_seconds": 1.9067489999999998,
+      "training_forward_limit": 8000,
+      "training_forwards_completed": 8000,
+      "training_forwards_started": 8000,
+      "user_cpu_seconds": 115.38977,
+      "wall_seconds": 118.57880917799957,
+      "worker_seconds": 540
+    },
+    "original_summary_receipt": {
+      "bytes": 8467,
+      "sha256": "643648d136233949f46a716421c79a93b39b7b4e955d3eca856a7bc3bcddb917"
+    },
+    "output_manifest_receipt": {
+      "bytes": 8095,
+      "sha256": "020d0e112f63e37e0c90d4377ef3ee21c4b8e878602d661baea8e99f2b9f6f93"
+    },
+    "original_numerical_audit": {
+      "manifest_sha256": "020d0e112f63e37e0c90d4377ef3ee21c4b8e878602d661baea8e99f2b9f6f93",
+      "minimum_mechanism_gate_passed": true,
+      "new_model_constructions": 0,
+      "new_model_forwards": 0,
+      "new_optimizer_steps": 0,
+      "saved_final_conditions": 24,
+      "saved_optimizer_steps": 2000,
+      "saved_training_forwards": 8000,
+      "schema": "kws-c1-known-silence-correction-v1",
+      "status": "verified",
+      "strict_tiny_fit_passed": true
+    },
+    "original_numerical_audit_receipt": {
+      "bytes": 383,
+      "sha256": "13a90d5cdfa19315caed01197e9e96325e6cfd26bfbc72aaa796cf9422f324be"
+    },
+    "supplemental_ledger_audit": {
+      "draw_contributions_checked": 8000,
+      "frozen_execution_source": {
+        "path": "training/research_c1_known_silence.py",
+        "recorded_commit": "d250a12373f68f937fc7c4864b42a682b08240fa",
+        "sha256": "85d7e9a1d1cbc33b103c523455971fd866ede049478f464f44530255ea932d4a"
+      },
+      "manifest_sha256": "020d0e112f63e37e0c90d4377ef3ee21c4b8e878602d661baea8e99f2b9f6f93",
+      "new_model_constructions": 0,
+      "new_model_forwards": 0,
+      "new_optimizer_steps": 0,
+      "optimizer_steps_checked": 2000,
+      "original_audit": {
+        "bytes": 383,
+        "sha256": "13a90d5cdfa19315caed01197e9e96325e6cfd26bfbc72aaa796cf9422f324be"
+      },
+      "per_draw_total_equals_primary_plus_auxiliary": true,
+      "schema": "kws-c1-silence-ledger-supplement-v1",
+      "scope": "Supplemental sealed-ledger arithmetic; original tensor/optimizer audit remains separate.",
+      "status": "verified",
+      "supplement_source_files": {
+        "tools/research_c1_silence_ledger_audit.py": {
+          "bytes": 8305,
+          "sha256": "613ba68ef019f6394c52f2ebf0907d9be9da8ead0806624a36e60d3c9ebd1907"
+        },
+        "tools/research_job_lock.py": {
+          "bytes": 3709,
+          "sha256": "c9d4ddf7bfbd79aeb9e202285610f1f26af303056ed9c2926e0e4e519a30dcfd"
+        },
+        "tools/research_queue.py": {
+          "bytes": 29699,
+          "sha256": "8bc627bf09e7c4b0006ffebe48e7438b0d19da139eed96541b830405b69d3ae5"
+        }
+      }
+    },
+    "supplemental_ledger_audit_receipt": {
+      "bytes": 1165,
+      "sha256": "253a5e3117301d43afb439bd9e1e3ab7d7baa77218e44865cf2ce6e798a84829"
+    },
+    "independent_read_only_crosscheck": {
+      "status": "verified",
+      "method": "Independent standard-library read-only comparison of sealed file hashes, queue outputs and every saved row/batch contribution.",
+      "output_manifest_sha256": "020d0e112f63e37e0c90d4377ef3ee21c4b8e878602d661baea8e99f2b9f6f93",
+      "manifest_files_verified": 59,
+      "optimizer_steps_checked": 2000,
+      "draw_contributions_checked": 8000,
+      "per_draw_total_equals_primary_plus_auxiliary": true,
+      "new_model_constructions": 0,
+      "new_model_forwards": 0,
+      "new_optimizer_steps": 0,
+      "sealed_output_files_written": 0,
+      "original_audit_sha256": "13a90d5cdfa19315caed01197e9e96325e6cfd26bfbc72aaa796cf9422f324be",
+      "supplemental_audit_sha256": "253a5e3117301d43afb439bd9e1e3ab7d7baa77218e44865cf2ce6e798a84829",
+      "verification_record_scope": "Local independent review in this continuation; not a provider signature or new model experiment."
+    },
+    "durable_save": {
+      "provider": "ChatGPT Library",
+      "object_id": "libfile_b88bb78bdc688191a7b8c5202d6783bb",
+      "version": 0,
+      "capsule": {
+        "bytes": 24126802,
+        "sha256": "4c850b0b81bf331f37814228441c48d1c23d2ee47d6201184dd26118e714b9ba"
+      },
+      "acknowledgement": {
+        "bytes": 991,
+        "sha256": "e5d5777465004a376284915381b06a3a3ce89515626ebd650d57a6b6fa7a6e57"
+      },
+      "provider_response": {
+        "bytes": 1189,
+        "sha256": "a54506cd4198c4ca1c7338c2127dfe3ff147101714f26fcb718984504727a2ef"
+      },
+      "remote_bytes_independently_retrieved": false,
+      "scope": "Frozen execution, launch closure and original tensor/optimizer audit; the later ledger supplement is published separately in terminal-evidence.json.",
+      "supplemental_ledger_audit_in_terminal_capsule": false
+    },
+    "supplemental_audit_provenance": {
+      "status": "adopted_existing_receipt_with_independent_saved_ledger_verification",
+      "original_cli_execution_provenance": "unavailable",
+      "original_command_stdout_returncode_reconstructed": false,
+      "supplemental_cli_invocations_by_this_adoption": 0,
+      "independent_saved_ledger_draws_checked": 8000,
+      "existing_receipt_sha256": "253a5e3117301d43afb439bd9e1e3ab7d7baa77218e44865cf2ce6e798a84829",
+      "adoption_receipt": {
+        "bytes": 3063,
+        "sha256": "5a3f7fd75f761c486521e7fb5178ef703727944d9231a73328d11cc75369ad68"
+      },
+      "independent_terminal_authentication_receipt": {
+        "bytes": 14483,
+        "sha256": "6f9485423e74f1ac18242c0da66c18949f58754fa8e38e312e3c4b912e9fbd1b"
+      },
+      "existing_terminal_capsule_modified": false
+    },
+    "sanitized_supplemental_receipt_adoption": {
+      "all_draw_primary_auxiliary_total_equations_passed": true,
+      "author_attribution": "not inferred",
+      "batch_absolute_tolerance": 1e-06,
+      "draw_absolute_tolerance": 1e-07,
+      "draw_contributions_independently_checked": 8000,
+      "existing_supplement": {
+        "bytes": 1165,
+        "sha256": "253a5e3117301d43afb439bd9e1e3ab7d7baa77218e44865cf2ce6e798a84829"
+      },
+      "frozen_execution_source": {
+        "path": "training/research_c1_known_silence.py",
+        "recorded_commit": "d250a12373f68f937fc7c4864b42a682b08240fa",
+        "sha256": "85d7e9a1d1cbc33b103c523455971fd866ede049478f464f44530255ea932d4a"
+      },
+      "maximum_absolute_float_roundoff": {
+        "auxiliary": 0.0,
+        "batch_auxiliary": 0.0,
+        "batch_components": 9.059906005859375e-06,
+        "batch_primary": 0.0,
+        "batch_total": 7.62939453125e-06,
+        "draw_total": 1.5497207641601562e-06,
+        "primary": 0.0
+      },
+      "new_model_constructions": 0,
+      "new_model_forwards": 0,
+      "new_optimizer_steps": 0,
+      "offset_exposures": {
+        "0": 2672,
+        "200": 2664,
+        "500": 2664
+      },
+      "optimizer_steps_checked": 2000,
+      "original_audit": {
+        "bytes": 383,
+        "sha256": "13a90d5cdfa19315caed01197e9e96325e6cfd26bfbc72aaa796cf9422f324be"
+      },
+      "original_execution_record_status": "No supplemental intent or command/stdout/returncode record located in the inspected runtime/result paths; these are not reconstructed or fabricated. Existing receipt is retained and its bound data and arithmetic independently verified.",
+      "original_supplement_execution_command": null,
+      "original_supplement_execution_returncode": null,
+      "original_supplement_execution_stdout": null,
+      "original_tensor_audit_invocations_by_this_adoption": 0,
+      "original_terminal_capsule": {
+        "bytes": 24126802,
+        "sha256": "4c850b0b81bf331f37814228441c48d1c23d2ee47d6201184dd26118e714b9ba"
+      },
+      "original_terminal_modified": false,
+      "output_manifest": {
+        "bytes": 8095,
+        "sha256": "020d0e112f63e37e0c90d4377ef3ee21c4b8e878602d661baea8e99f2b9f6f93"
+      },
+      "provider_uploads_by_this_adoption": 0,
+      "relative_tolerance": 1e-06,
+      "review": {
+        "bytes": 3940,
+        "sha256": "859b3338f94c7841d18d461710e695ed6a12b96b6302f8cd0539e9f28813e496"
+      },
+      "schema": "c1-silence-existing-supplement-adoption-v1",
+      "source_files": {
+        "tools/research_c1_silence_ledger_audit.py": {
+          "bytes": 8305,
+          "sha256": "613ba68ef019f6394c52f2ebf0907d9be9da8ead0806624a36e60d3c9ebd1907"
+        },
+        "tools/research_job_lock.py": {
+          "bytes": 3709,
+          "sha256": "c9d4ddf7bfbd79aeb9e202285610f1f26af303056ed9c2926e0e4e519a30dcfd"
+        },
+        "tools/research_queue.py": {
+          "bytes": 29699,
+          "sha256": "8bc627bf09e7c4b0006ffebe48e7438b0d19da139eed96541b830405b69d3ae5"
+        }
+      },
+      "status": "verified_existing_receipt_adopted",
+      "supplement_tool_invocations_by_this_adoption": 0,
+      "verified_at": "2026-11-06T04:31:31.350111+00:00"
+    },
+    "supplemental_receipt_adoption_sanitization": "Local absolute path fields removed; recorded provenance limits and verification counts preserved."
+  },
+  "natural_tail2": {
+    "sanitized_readback": {
+      "accepted_negative_seconds": 0,
+      "automatic_retry": false,
+      "coverage": {
+        "by_parent": [
+          {
+            "dataset_id": "openslr119-alimeeting",
+            "overlap_samples": 80000,
+            "parent_id": "alimeeting-eval-R8001_M8004-ch0",
+            "session_id": "R8001_M8004",
+            "source_family_id": "alimeeting-session-R8001_M8004",
+            "split": "development",
+            "union_sample_ranges": [
+              [
+                24335248,
+                25181600
+              ]
+            ],
+            "unique_parent_samples": 846352,
+            "window_input_samples": 926352
+          }
+        ],
+        "overlap_samples": 80000,
+        "overlap_seconds": 5.0,
+        "sample_rate_hz": 16000,
+        "semantics": "union within each parent PCM; not independent or verified negative exposure",
+        "unique_parent_samples": 846352,
+        "unique_parent_seconds": 52.897,
+        "window_input_samples": 926352,
+        "window_input_seconds": 57.897
+      },
+      "created_at": "2026-11-06T04:33:31.818298+00:00",
+      "finished_at_utc": "2026-11-06T04:30:54.052368+00:00",
+      "human_gold": false,
+      "interpretation": "Both primary recognizers returned nonempty, differing ordinary-speech text in annotation-gap windows. Missing annotation and absence of literal target strings do not establish silence, exact transcription, or verified negative exposure.",
+      "literal_target_text_flags": 0,
+      "native_audit": {
+        "bytes": 1744,
+        "sha256": "6720439f8a84d81c69d5f76c597ca884959d681e269f5b78348e8837cc4b109a"
+      },
+      "native_calls": 6,
+      "new_independent_validation_seconds": 0,
+      "new_model_calls_in_readback": 0,
+      "nonempty_text_observations": 6,
+      "primary_disagreement_windows": 2,
+      "quality_flagged_observations": 1,
+      "queue_result": {
+        "bytes": 1973,
+        "sha256": "c0a507ca13c91bd9b77de833d61555baea2f1c5321ed54b00e7c5eedbe314870"
+      },
+      "queue_runner_minutes": 2.8286781287833334,
+      "queue_runner_nanoseconds": 169720687727,
+      "rows": [
+        {
+          "clip_id": "clip-000",
+          "literal_target_flags": 0,
+          "native_results": {
+            "qwen06": {
+              "bytes": 4924,
+              "sha256": "468e43ab0eb015c76f3a9840f6d65485cfb4cccb6c6eea44d5e098b3d56d7617"
+            },
+            "sensevoice": {
+              "bytes": 4216,
+              "sha256": "e5972b03584276862a7d5adf108c26670b10fc06ee8b2d0c2d8388f6a0eef445"
+            },
+            "whisper": {
+              "bytes": 3514,
+              "sha256": "0f55c6d5a0417bd1dcd99ce4c20f1604dec858e0c3ca105b466aec167282fb48"
+            }
+          },
+          "nonempty_text_observations": 3,
+          "primary_fulltext_agreement": false,
+          "quality_flags_by_model": {
+            "qwen06": [],
+            "sensevoice": [],
+            "whisper": [
+              "incomplete"
+            ]
+          },
+          "three_engine_fulltext_agreement": false
+        },
+        {
+          "clip_id": "clip-001",
+          "literal_target_flags": 0,
+          "native_results": {
+            "qwen06": {
+              "bytes": 4870,
+              "sha256": "5991e0d07ce25c0a085221a77384e5b8b2b834fd14f9e1cc960092aab2161519"
+            },
+            "sensevoice": {
+              "bytes": 4183,
+              "sha256": "b7561f308d17bfaaad16853c815098dc34961a5f0112be3505384e9e19aa9f5b"
+            },
+            "whisper": {
+              "bytes": 3017,
+              "sha256": "40bc52a1ee5a8b1fb3a33b550943a9a0c11f267e8f12d485385d10906007d4af"
+            }
+          },
+          "nonempty_text_observations": 3,
+          "primary_fulltext_agreement": false,
+          "quality_flags_by_model": {
+            "qwen06": [],
+            "sensevoice": [],
+            "whisper": []
+          },
+          "three_engine_fulltext_agreement": false
+        }
+      ],
+      "schema": "kws-natural-tail2-observation-summary-v1",
+      "source_commit": "d4f89b0164a9663a2ed13afe99f58793755ee6fe",
+      "stage": {
+        "bytes": 5686,
+        "sha256": "9ff17c024f66888a8da6dda7867289c2b37679d65a2c3e20d8abbb811b72b436"
+      },
+      "status": "completed_native_observations_only",
+      "target_presence": "unknown",
+      "three_engine_fulltext_agreement_windows": 0,
+      "training_admitted": false,
+      "windows": 2,
+      "word_timestamps_available": false
+    },
+    "original_readback_receipt": {
+      "bytes": 4078,
+      "sha256": "61c0e56d9841a80085614e19a8d33af558b68ca05ab9f0bf1665fface604cf75"
+    },
+    "sanitization": "Only local absolute path members were removed from file identities; counts, flags and content hashes are preserved. No transcript text or audio is included.",
+    "durable_save": {
+      "provider": "ChatGPT Library",
+      "object_id": "libfile_e6ee76f19d808191aab6ecf8fe8cbd6f",
+      "version": 0,
+      "capsule": {
+        "bytes": 4233773,
+        "sha256": "f1cbb5955bbb469518b79acd1d5b4c0050e475d45b9aeee5a9b14192808a7688"
+      },
+      "acknowledgement": {
+        "bytes": 999,
+        "sha256": "f98eb89ddd255759008fa17855eb36cda604dfaadebf26f6112d8cface3c8766"
+      },
+      "provider_response": {
+        "bytes": 1190,
+        "sha256": "fe89689840c0b033bcf953381bedba76c99153a963082a7d9f7689ffc8533a05"
+      },
+      "remote_bytes_independently_retrieved": false,
+      "scope": "Two natural PCM windows, native ASR observations, queue closure and zero-model readback; the full eight-session recovery uses a separate saved object.",
+      "member_manifest_sha256": "5684f8f46a9d49c78edd51d10453be1758d5bf501c2cd5150b32acc54dd7835f"
+    },
+    "independent_terminal_authentication": {
+      "restored_historical_sessions": 8,
+      "restored_mono_files_with_file_and_pcm_hashes_verified": 8,
+      "restored_textgrid_files_with_hashes_verified": 8,
+      "split": "development",
+      "sample_rate_hz": 16000,
+      "complete_claim_return_result_triplets": 6,
+      "native_worker_processes": 3,
+      "observed_native_worker_intervals_overlap": false,
+      "peak_single_worker_rss_kib": 5302944,
+      "peak_rss_scope": "Peak of three per-worker ru_maxrss observations; not total system memory and not a sum of worker peaks.",
+      "maximum_threads_per_worker": 4,
+      "interop_threads_per_worker": 1,
+      "whisper_language_condition": "Chinese (zh), explicitly supplied, not detected",
+      "independent_authentication_new_model_calls": 0,
+      "metadata_tests": {
+        "python": "3.12.16",
+        "modes": [
+          "normal",
+          "-O",
+          "-OO"
+        ],
+        "executed_passes_per_mode": 18,
+        "new_model_calls": 0
+      },
+      "durable_save_payload_files": 111,
+      "receipts": {
+        "independent_terminal_audit": {
+          "bytes": 39743,
+          "sha256": "581a114389720a50035c7becb69017ccca589846c282347bfa2442cc3f9c63db"
+        },
+        "metadata_tests_receipt": {
+          "bytes": 4181,
+          "sha256": "6a3636cc51623534fd2ec296e1867e6b6d1c717b3b2f81d63317e968db7712ab"
+        },
+        "independent_parent_evidence_save_audit": {
+          "bytes": 49083,
+          "sha256": "9e22c3c7db1f5ceda8e84f81e4fcf2bba30b8cfa89bf067abe73ef7e29961026"
+        }
+      },
+      "limits": [
+        "The 57.897 seconds of processed windows contain a five-second overlap; their union is 52.897 seconds of the same historical parent recording.",
+        "All six calls returned observations, but one Whisper observation is decoder-incomplete; no retry was requested.",
+        "Differing transcripts and no literal target-string flags do not establish silence, absence of target speech, human truth, or verified negative exposure.",
+        "Confirmed natural-negative exposure, training admission, and new independent validation exposure remain zero.",
+        "The 111-member tail-window terminal includes the two window inputs and six-call evidence; the eight complete parent recordings and TextGrids require their separate parent-data save chain.",
+        "The original compressed source archive hash is inherited from the verified recovery receipt; this independent terminal audit did not re-download or re-hash that whole archive.",
+        "Whisper received an explicit Chinese-language condition, so its observation is not language-independent discovery.",
+        "Execution and save receipts do not establish the identity of the original controlling actor."
+      ]
+    }
+  },
+  "acoustic_consumption": {
+    "summary_projection": {
+      "schema": "kws-acoustic-c1-consumption-result-v1",
+      "status": "completed",
+      "scope": "fixed positive-only acoustic ingestion smoke, not a quality experiment",
+      "candidate": "c1-ctc2601",
+      "positive_only": true,
+      "ordinary_negative_rows": 0,
+      "all_observed_rows": 124,
+      "projection_reasons": {
+        "acoustic_asr_full-transcript-disagreement": 32,
+        "untranscribed_additive_background": 40,
+        "verified_parent_fulltext": 52
+      },
+      "train_rows": 41,
+      "development_rows": 11,
+      "optimizer_steps": 25,
+      "sample_exposures": 100,
+      "training_model_forwards": 100,
+      "train_diagnostic_model_forwards": 82,
+      "development_forward_calls": 11,
+      "development_optimizer_draws": 0,
+      "development_readback_passes": 1,
+      "development_selection_or_tuning": false,
+      "model_constructions": 1,
+      "asr_or_tts_calls": 0,
+      "before": {
+        "eligible_rows": 41,
+        "metrics": {
+          "blank_argmax_fraction": 0.0,
+          "blank_probability_mean": 0.00043665999817729065,
+          "confidence_weight_sum": 20.5,
+          "constant_single_token_prediction": false,
+          "deletions": 74,
+          "distinct_predictions": 29,
+          "edit_numerator": 1234,
+          "empty_outputs": 0,
+          "evaluable_clips": 41,
+          "exact_token_match_denominator": 41,
+          "exact_token_match_rate": 0.0,
+          "exact_token_matches": 0,
+          "insertions": 794,
+          "mean_ctc_loss_confidence_weighted": 71.22111799658799,
+          "mean_ctc_loss_target_length_normalized": 142.44223599317598,
+          "mean_target_ctc_nll": 1489.6792258285896,
+          "not_evaluable_reasons": {},
+          "observed_clips": 41,
+          "single_token_outputs": 5,
+          "substitutions": 366,
+          "target_token_denominator": 440,
+          "token_edit_rate": 2.8045454545454547
+        },
+        "status": "observed"
+      },
+      "after": {
+        "eligible_rows": 41,
+        "metrics": {
+          "blank_argmax_fraction": 1.0,
+          "blank_probability_mean": 0.03197319426639475,
+          "confidence_weight_sum": 20.5,
+          "constant_single_token_prediction": false,
+          "deletions": 440,
+          "distinct_predictions": 1,
+          "edit_numerator": 440,
+          "empty_outputs": 41,
+          "evaluable_clips": 41,
+          "exact_token_match_denominator": 41,
+          "exact_token_match_rate": 0.0,
+          "exact_token_matches": 0,
+          "insertions": 0,
+          "mean_ctc_loss_confidence_weighted": 34.841672804297474,
+          "mean_ctc_loss_target_length_normalized": 69.68334560859495,
+          "mean_target_ctc_nll": 725.5049361252203,
+          "not_evaluable_reasons": {},
+          "observed_clips": 41,
+          "single_token_outputs": 0,
+          "substitutions": 0,
+          "target_token_denominator": 440,
+          "token_edit_rate": 1.0
+        },
+        "status": "observed"
+      },
+      "development": {
+        "eligible_rows": 11,
+        "metrics": {
+          "blank_argmax_fraction": 1.0,
+          "blank_probability_mean": 0.023771277411202205,
+          "confidence_weight_sum": 5.5,
+          "constant_single_token_prediction": false,
+          "deletions": 111,
+          "distinct_predictions": 1,
+          "edit_numerator": 111,
+          "empty_outputs": 11,
+          "evaluable_clips": 11,
+          "exact_token_match_denominator": 11,
+          "exact_token_match_rate": 0.0,
+          "exact_token_matches": 0,
+          "insertions": 0,
+          "mean_ctc_loss_confidence_weighted": 46.28047735040838,
+          "mean_ctc_loss_target_length_normalized": 92.56095470081677,
+          "mean_target_ctc_nll": 952.0607188831676,
+          "not_evaluable_reasons": {},
+          "observed_clips": 11,
+          "single_token_outputs": 0,
+          "substitutions": 0,
+          "target_token_denominator": 111,
+          "token_edit_rate": 1.0
+        },
+        "status": "observed"
+      },
+      "gradients": {
+        "all_selected_parameter_gradients_present_and_finite": true,
+        "gradient_norm_max": 70.68527221679688,
+        "gradient_norm_min": 14.928936004638672,
+        "nonzero_gradient_steps": 25,
+        "recorded_optimizer_steps": 25,
+        "zero_gradient_steps": 0
+      },
+      "parameter_delta_l2": 9.078285030485645,
+      "consumption_verified": true,
+      "consumption_sha256": "fdbb357de75944e68e82e2e70b61f7b38bda8e05025cc5f9eab0249795d01cc8",
+      "initial_checkpoint_sha256": "da7671fe71fef9ecd6822c747e3fe153b9ee563a6784c18eded90d3354486ecf",
+      "final_checkpoint_sha256": "780c9e16e713c2ee08730225d429f5406c26de78c499077a3802e64a48b7513b",
+      "initial_float_state_sha256": "3717783d0771bc28e66006d523f414dcdbb3997d372b7d115f9961b62e71b855",
+      "final_float_state_sha256": "d366287a6dd4b4b81fc1ee5e127eb23de11859b93451678c66e6faed703adaf4",
+      "job_recipe_sha256": "0ae893d4694d7242f71eb39844aef6b96b73002bc6ca44d674b70527807ff028",
+      "prepared_manifest_sha256": "6f5a36604a71ac686694832da0bbb4a470477e2eb6223b01ca472d3ed43c2e79",
+      "train_binding_sha256": "73589be9ea45f0186222c135a7b51b1405531dc3e6667f8b43e091f5d993c85b",
+      "development_binding_sha256": "93704a2b4ff763efc0dbef929441e26dadda6960c8a4e086d7ad501fd154c473",
+      "vocabulary_sha256": "104575dab3a9f7ed622d8fa29aa8a897e0590cca8aed9214b26ef4cd1c8b4e4b",
+      "started_at": "2026-11-06T04:40:58.737660+00:00",
+      "finished_at": "2026-11-06T04:41:22.412158+00:00",
+      "wall_seconds": 23.67452487400078,
+      "peak_rss_kib": 369468,
+      "quality_acceptance_claim": false,
+      "tiny_fit_passed": null,
+      "generalization_passed": null,
+      "human_gold": false,
+      "automatic_retry": false,
+      "source_rows_modified": 0,
+      "changed_trainable_parameter_tensors": 16,
+      "trainable_parameter_tensors": 16
+    },
+    "original_summary_receipt": {
+      "bytes": 9881,
+      "sha256": "2add6473a552d46dd9204f1f7e77e6b2ef73eb1b8167029bf63647bc77b24310"
+    },
+    "projection_scope": "Aggregate execution and numeric metrics only; row transcripts, family identifiers and waveform/tensor contents are omitted.",
+    "output_manifest_receipt": {
+      "bytes": 14852,
+      "sha256": "df073fc951b85da593a02f56402f5d0b9f2acb05b212d6057729efb5e642f0a5"
+    },
+    "original_numerical_audit": {
+      "consumption_verified": true,
+      "development_optimizer_draws": 0,
+      "development_rows": 11,
+      "feature_rows_replayed": 52,
+      "manifest_sha256": "df073fc951b85da593a02f56402f5d0b9f2acb05b212d6057729efb5e642f0a5",
+      "model_constructions": 0,
+      "new_model_forwards": 0,
+      "new_optimizer_steps": 0,
+      "optimizer_steps_replayed": 25,
+      "quality_acceptance_claim": false,
+      "schema": "kws-acoustic-consumption-readback-v1",
+      "status": "verified",
+      "train_rows": 41
+    },
+    "original_numerical_audit_receipt": {
+      "bytes": 414,
+      "sha256": "c5eddd91eb0c50b2a888a12f99875da025a28634803767c3902059fd4beb05aa"
+    },
+    "independent_read_only_crosscheck": {
+      "status": "verified",
+      "method": "Independent standard-library read-only validation of all output hashes, queue receipts, frozen Git/source copies and every actual weighted CTC draw.",
+      "output_manifest_sha256": "df073fc951b85da593a02f56402f5d0b9f2acb05b212d6057729efb5e642f0a5",
+      "output_manifest_files_verified": 107,
+      "source_files_verified_against_git_and_prepared": 30,
+      "all_observed_rows_verified": 124,
+      "train_rows": 41,
+      "development_rows": 11,
+      "noise_zero_weight_rows": 40,
+      "other_disagreement_zero_weight_rows": 32,
+      "optimizer_steps_checked": 25,
+      "weighted_ctc_draws_checked": 100,
+      "per_draw_weighted_ctc_equals_raw_times_half_divided_by_four": true,
+      "nonzero_finite_gradient_steps": 25,
+      "original_readback_sha256": "c5eddd91eb0c50b2a888a12f99875da025a28634803767c3902059fd4beb05aa",
+      "new_model_constructions": 0,
+      "new_model_forwards": 0,
+      "new_optimizer_steps": 0,
+      "sealed_output_files_written": 0,
+      "verification_record_scope": "Local independent review; no model experiment or provider signature."
+    },
+    "durable_save": {
+      "status": "saved",
+      "provider": "ChatGPT Library",
+      "object_id": "libfile_a7404c0ecb008191a15ef024fdd62c3f",
+      "terminal_object_id": "libfile_a7404c0ecb008191a15ef024fdd62c3f",
+      "version": 0,
+      "artifact_graph_complete": true,
+      "capsule": {
+        "bytes": 17897844,
+        "sha256": "c5b498a64a4b0e354b95de4b188d320888d16701456b125315fa31bc6b67f4df"
+      },
+      "terminal_members": 549,
+      "member_manifest_sha256": "64523c43cc33385672bf75f83a5af969f42ae1eb510e98802d4bf13bae492a37",
+      "acknowledgement": {
+        "bytes": 1015,
+        "sha256": "d75f7ddc6c6e299a6777b6819b9c44c187121dcc2c754b0bf9325ee0671567c5"
+      },
+      "provider_response": {
+        "bytes": 1197,
+        "sha256": "40d90977d618c0360b02cae20064942c0be56aa50b609125c716ee71c3b6b3b4"
+      },
+      "remote_bytes_independently_retrieved": false,
+      "numeric_members": 93,
+      "numeric_raw_bytes": 203258289,
+      "maximum_numeric_raw_bytes_per_chunk": 33554432,
+      "terminal_contains_all_numeric_members": false,
+      "terminal_contains_complete_numeric_hash_inventory": true,
+      "acknowledged_chunk_objects": [
+        {
+          "part": "part-001",
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_f6fb421b982081919c068989cb01cfea",
+          "version": 0,
+          "capsule": {
+            "bytes": 28746143,
+            "sha256": "d7012b6d1bb040b940f58244aff23f4f91e7213c43c245a6ac17a197410fccec"
+          },
+          "member_manifest_sha256": "d1f63417339786a1082a061c6cbdfc94550ef3282f91b7d4cc192f0112ada72c",
+          "acknowledgement": {
+            "bytes": 1039,
+            "sha256": "3ebb9a74cb8201deae399d70a846272f3ad8c1872b37564c15920b15c2345906"
+          },
+          "provider_response": {
+            "bytes": 1205,
+            "sha256": "5923b5d1d8cd72fae4a037897766a875259eb6c968ff7093fb75f012cd2e8558"
+          },
+          "numeric_members": 16,
+          "numeric_raw_bytes": 32976912,
+          "original_member_bytes_including_marker": 32982793
+        },
+        {
+          "part": "part-002",
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_1a7d903a510481919e80b86839f0146c",
+          "version": 0,
+          "capsule": {
+            "bytes": 27432008,
+            "sha256": "6996118b51bcb2de40f82cf2724829399638af39800ac5df960ca8026c7b3e4f"
+          },
+          "member_manifest_sha256": "175ecb0ffb52db50de92bc641155040860177f0a8e49d2db668074a8a4c34386",
+          "acknowledgement": {
+            "bytes": 1039,
+            "sha256": "b3b80d03c1768de9c3afbe80a568a8aa04cc68c10fc7ba3e699cb88a16c3216b"
+          },
+          "provider_response": {
+            "bytes": 1205,
+            "sha256": "f62782f5eda3c016cc9d4de7e0c396bd7703da7801b234f05116c74d88e046af"
+          },
+          "numeric_members": 15,
+          "numeric_raw_bytes": 31447723,
+          "original_member_bytes_including_marker": 31453336
+        },
+        {
+          "part": "part-003",
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_e85842f1e1d48191aa81ae2eb44c0788",
+          "version": 0,
+          "capsule": {
+            "bytes": 28373088,
+            "sha256": "11bb488434248099e6f6def64ec984cf8d777f24e3c5baba2ed1871367ea9698"
+          },
+          "member_manifest_sha256": "1ccf27d8c40d59575a4a77563912dd9a0591113623d34652f4ba1cccc501a9d6",
+          "acknowledgement": {
+            "bytes": 1039,
+            "sha256": "ab14f7a35bd3daabaa278f897df8e658f82acb74232a7bb3fa9dfdc4b82fc0f9"
+          },
+          "provider_response": {
+            "bytes": 1205,
+            "sha256": "bf33592e8434d9c5ba7cc034c0bb5b9920ea2c6319112aabec57fd11a72eb015"
+          },
+          "numeric_members": 14,
+          "numeric_raw_bytes": 32003910,
+          "original_member_bytes_including_marker": 32009259
+        },
+        {
+          "part": "part-004",
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_338e7d17f5148191a36d32d49e23f298",
+          "version": 0,
+          "capsule": {
+            "bytes": 29529902,
+            "sha256": "b932cb61f0279b0702ea836b2aacc86a422fe8003d4ec2833a91d44f2eec74ee"
+          },
+          "member_manifest_sha256": "43bff93efb9b3bdb599d8f17cfbcc1989a0bca20ecdd1085cdd57a0663a26157",
+          "acknowledgement": {
+            "bytes": 1039,
+            "sha256": "0e03532d8c81e41505937aa10622f17ef8c23243215467dc36551b9ce4d6bfc4"
+          },
+          "provider_response": {
+            "bytes": 1205,
+            "sha256": "0284d2d1e10016b905a1cd55bd37241369c8de1458b5e05e6d8b935bb33f1197"
+          },
+          "numeric_members": 16,
+          "numeric_raw_bytes": 32260688,
+          "original_member_bytes_including_marker": 32266585
+        },
+        {
+          "part": "part-005",
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_b1cf2751bd448191a9491e968a83bb0a",
+          "version": 0,
+          "capsule": {
+            "bytes": 29224945,
+            "sha256": "02656fdf30de074c29b145957b35ee690f26bb30793585c59caac72386a75d4a"
+          },
+          "member_manifest_sha256": "5f19401b416e699bf5c2b1ec49e4e455f5511af37efabfd1aeae260ab9322efc",
+          "acknowledgement": {
+            "bytes": 1039,
+            "sha256": "000fbe4743934d747a4cd86e8fd54a7482eb13150e585a7038a4d7329b955fb8"
+          },
+          "provider_response": {
+            "bytes": 1205,
+            "sha256": "548681b2b5eb2d37303a8c9b5c7ed3aa1df8d68af2884eab7940badcfe7939b9"
+          },
+          "numeric_members": 15,
+          "numeric_raw_bytes": 31932267,
+          "original_member_bytes_including_marker": 31937895
+        },
+        {
+          "part": "part-006",
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_0339ecac1ff08191a4d4c8683c2f403e",
+          "version": 0,
+          "capsule": {
+            "bytes": 28588817,
+            "sha256": "534a3d01b9ef06a118f98544bc81510ba67808cf32c3e04a1fe681906dc6ae10"
+          },
+          "member_manifest_sha256": "a6d52831e5492dd5bbd5d5386421fdbfe817125d032da52526b41c2dc3474628",
+          "acknowledgement": {
+            "bytes": 1039,
+            "sha256": "b4ee235690603b3274de8dafd333b8ee92bf5e6713d453803033a3a1d3773194"
+          },
+          "provider_response": {
+            "bytes": 1205,
+            "sha256": "bda7b67ab9c8d8fd41f76e9391e52e5b48061acf9521378168630284b58fe2fd"
+          },
+          "numeric_members": 13,
+          "numeric_raw_bytes": 32791713,
+          "original_member_bytes_including_marker": 32796838
+        },
+        {
+          "part": "part-007",
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_c10043507c4c8191877bbc5990c3c02a",
+          "version": 0,
+          "capsule": {
+            "bytes": 8435718,
+            "sha256": "7da5242598a4216002371604e0bea0d36ba03803b927ce9ab3a02fb969b0749f"
+          },
+          "member_manifest_sha256": "06a5ded32c22e9472d45667f0172b805cadc61ec8edb5af0705cb1738a86f802",
+          "acknowledgement": {
+            "bytes": 1038,
+            "sha256": "bb167065697aa26a68d206828c996f257b9e067527b5f02528f6ce06fed27ccb"
+          },
+          "provider_response": {
+            "bytes": 1203,
+            "sha256": "3b540ea2fe5b4773ca3bfd926570ec40b2def75560c7aba59ac98137c6a793f9"
+          },
+          "numeric_members": 4,
+          "numeric_raw_bytes": 9845076,
+          "original_member_bytes_including_marker": 9847763
+        }
+      ],
+      "dependency_counts": {
+        "historical-predecessor": 17,
+        "execution-predecessor": 2,
+        "numeric-data": 7
+      },
+      "recovery_index": {
+        "artifact_name": "terminal-recovery-index.json",
+        "bytes": 2596821,
+        "sha256": "19d728305c261af1a0ea94988aa35828dc6ca790aa716f7dff3c298239f6a2d9",
+        "contained_in_terminal_object_id": "libfile_a7404c0ecb008191a15ef024fdd62c3f",
+        "archive_member": "files/000286"
+      },
+      "terminal_seal_receipt": {
+        "bytes": 1181,
+        "sha256": "cfd1a34798e93569bc3732e0d0f4e4be021ef03a9ab865ce3ffb50cffc066be3"
+      },
+      "scope": "The terminal metadata and seven separately acknowledged numeric capsules form the saved acoustic-consumption graph. The terminal retains all 475 original prelaunch members and immutable nonnumeric queue evidence, plus the complete original-path/hash inventory.",
+      "restore_order": [
+        "Retrieve and restore the terminal metadata capsule using its recorded SHA256.",
+        "Read the embedded recovery index and retrieve all seven numeric-data objects by their actual Library IDs.",
+        "Verify every capsule SHA256 and restore its original paths using the pinned create-only checkpoint reader.",
+        "Verify the original complete outputs MANIFEST after all 93 numeric members are present."
+      ],
+      "restored_launch_intents_are_not_reusable": true,
+      "verified_manifest_members": 549
+    },
+    "independent_terminal_authentication": {
+      "eligible_train_rows": 41,
+      "eligible_development_rows": 11,
+      "eligible_train_parent_recordings": 9,
+      "eligible_train_source_families": 5,
+      "eligible_development_parent_recordings": 2,
+      "eligible_development_source_families": 2,
+      "eligible_train_coverage_by_target_id": {
+        "K1": 16,
+        "K2": 25
+      },
+      "development_coverage_by_target_id": {
+        "K1": 0,
+        "K2": 11
+      },
+      "exposure_repetitions": {
+        "3": 18,
+        "2": 23
+      },
+      "total_model_forwards": 193,
+      "known_silence_correction_objective_used": false,
+      "known_silence_corrected_weights_used": false,
+      "independent_review_saved_tensor_audit_rerun": false,
+      "metadata_tests": {
+        "python": "3.12.16",
+        "modes": [
+          "normal",
+          "-O",
+          "-OO"
+        ],
+        "reported_cases_per_mode": 23,
+        "executed_passes_per_mode": 21,
+        "expected_skips_per_mode": 2,
+        "saved_tensor_mode_enabled": false,
+        "new_model_calls": 0
+      },
+      "receipts": {
+        "independent_metadata_terminal_review": {
+          "bytes": 8319,
+          "sha256": "d8d9967a38cdbbcfae3ae32e4b89b7eefee0f3a6e3cedcc6fbf45d653783345d"
+        },
+        "metadata_tests_review": {
+          "bytes": 1675,
+          "sha256": "67bddc66570a89fca9045d334af3353f7090aa89fb2c3143889b6ada84549dea"
+        },
+        "independent_persistence_audit": {
+          "bytes": 33237,
+          "sha256": "269c8cf45c4fad3ce102f732f645cc3623116b08261ac298ece37ea53ccd1670"
+        },
+        "tensor_restore_index": {
+          "bytes": 32480,
+          "sha256": "75c2f7629579bec0c1f6324879283d86cc418133cfc8be5f38db39b9f048c603"
+        },
+        "terminal_recovery_index": {
+          "bytes": 2596821,
+          "sha256": "19d728305c261af1a0ea94988aa35828dc6ca790aa716f7dff3c298239f6a2d9"
+        }
+      },
+      "limits": [
+        "All 41 eligible training and 11 development greedy outputs are empty after the fixed 25-step check; successful data consumption does not establish learning.",
+        "The 11 development rows derive from two parent recordings and two families, all K2; K1 development coverage is zero.",
+        "The 124-row consumer view retains 40 noise rows and 32 non-noise disagreement rows at zero CTC weight; the original labels and splits remain unchanged.",
+        "This independent positive-only check uses the original zero-step initialization, without the known-silence correction weights or auxiliary objective.",
+        "The original saved-tensor readback is an existing recorded execution. The independent metadata review did not repeat that numerical audit or any model computation.",
+        "The two saved-tensor test cases were expected skips in each default metadata test run; they are not counted as executed tests.",
+        "Execution and save receipts do not establish the identity of the original controlling actor."
+      ]
+    },
+    "numeric_evidence_coverage": {
+      "scope": "All 93 saved diagnostic numeric outputs are retained in seven separate data capsules; the terminal retains 14 nonnumeric output members and the complete recovery index.",
+      "numeric_tensors_by_scope": {
+        "after": 41,
+        "before": 41,
+        "development": 11
+      },
+      "numeric_tensors": 93,
+      "numeric_raw_bytes": 203258289,
+      "complete_numeric_restore_routes": 93,
+      "terminal_contains_all_numeric_tensors": false,
+      "nonnumeric_output_members_in_terminal": 14,
+      "complete_output_member_count": 107,
+      "all_output_members_covered_without_duplication": true,
+      "sum_eight_saved_capsule_bytes": 198228465,
+      "remote_bytes_independently_retrieved": false
+    }
+  },
+  "natural_historical_recovery": {
+    "recovery_projection": {
+      "sessions": 8,
+      "historical_original_samples": 242211440,
+      "sample_rate_hz": 16000,
+      "historical_audio_seconds": 15138.215,
+      "historical_audio_hours": 4.205059722222222,
+      "mono_wav_files": 8,
+      "textgrid_files": 8,
+      "accepted_negative_seconds": 0,
+      "new_independent_negative_seconds": 0,
+      "new_independent_validation_hours": 0,
+      "evaluation_admitted": false,
+      "human_gold": false,
+      "download_and_recovery_model_calls": 0,
+      "download_wall_seconds": 437.9653099779989,
+      "download_wall_minutes": 7.299421832966648,
+      "recovery_outer_wall_seconds": 76.61403990500003
+    },
+    "durable_save": {
+      "status": "saved",
+      "provider": "ChatGPT Library",
+      "recovery_index": {
+        "object_id": "libfile_c30199968d148191a966621ef1220d64",
+        "version": 0,
+        "bytes": 19797,
+        "sha256": "7e2e6dd958ad03499f64f7b75307fc7ff514bfc60ec96f4cb9e240438050195c"
+      },
+      "index_save_receipt": {
+        "bytes": 945,
+        "sha256": "b4e58ec83542da17160c0c6824aecc628c222e4f5fd48ce9b39c606bc0b777f8"
+      },
+      "parts_save_receipt": {
+        "bytes": 9266,
+        "sha256": "77c4edceb5eb566938636beb865c1a7834ff1be6354b2681c28884e3b4369b0e"
+      },
+      "saved_parts": 12,
+      "saved_manifest_archives": 1,
+      "all_part_and_manifest_saves_succeeded": true,
+      "whole_capsule": {
+        "bytes": 485334457,
+        "sha256": "da040a981d688fc5ddc8576123aea883771626bdbb0c69ba3d2da53a17597a17",
+        "member_manifest_sha256": "ef706fa9a1527147372db8537c05eb917f265ff99f0bddece271319143e842c6",
+        "zip_member_count": 53,
+        "whole_file_library_object_id": null,
+        "lossless_byte_parts": 12,
+        "maximum_part_bytes": 41943040,
+        "parts_are_independent_zip_files": false,
+        "every_part_hash_and_recombined_hash_rechecked_after_save": true
+      },
+      "original_whole_upload": {
+        "status": "transfer_failed",
+        "finalize_tool_calls": 0,
+        "whole_capsule_retried": false,
+        "final_library_file_id_returned": false
+      },
+      "scope": "The saved private recovery index identifies twelve lossless byte parts and a separate Manifest ZIP for the historical eight-session mono-audio/TextGrid recovery capsule. Public records expose only this index ID and hashes, not the audio-part IDs or audio.",
+      "restore_order": [
+        "Retrieve the saved recovery index by its actual object ID and verify its content SHA256.",
+        "Use its private part identities and byte order to retrieve twelve parts plus the Manifest ZIP.",
+        "Verify every part and concatenate the byte parts into the 485334457-byte original ZIP.",
+        "Verify the recombined ZIP SHA256 and its retained member manifest before restoring historical files."
+      ],
+      "new_model_calls_in_preservation": 0,
+      "new_independent_negative_seconds": 0,
+      "new_independent_validation_hours": 0
+    },
+    "publication_scope": "Aggregate historical recovery coverage, index identity and reconstruction hashes only; no audio, full transcripts or individual audio-part IDs.",
+    "independent_parent_preservation_authentication": {
+      "status": "thirteen_provider_confirmed_objects_with_exact_local_reconstruction",
+      "provider": "ChatGPT Library",
+      "scope": "Eight complete historical mono recordings and eight TextGrids, with download/recovery source and receipts. The original 3,673,718,355-byte compressed tar and the separate tail-window ASR package are excluded.",
+      "archive": {
+        "bytes": 485334457,
+        "sha256": "da040a981d688fc5ddc8576123aea883771626bdbb0c69ba3d2da53a17597a17"
+      },
+      "archive_manifest": {
+        "bytes": 17699,
+        "sha256": "ef706fa9a1527147372db8537c05eb917f265ff99f0bddece271319143e842c6"
+      },
+      "parts_manifest": {
+        "bytes": 3643,
+        "sha256": "160b79886a5f1b44399ac171fa3c816349c9069d53b2e1d4fa3a6ae48ce5fefb"
+      },
+      "restore_program": {
+        "bytes": 1798,
+        "sha256": "e7bd14e2e558020d28ffe1be8332bd7dd691ba2d821c006669171d1b839c5a9a"
+      },
+      "byte_part_count": 12,
+      "restore_metadata_object_count": 1,
+      "verified_provider_objects": 13,
+      "zip_members_including_manifest": 53,
+      "payload_members": 52,
+      "current_original_source_files_verified": 49,
+      "total_saved_item_bytes": 485350734,
+      "local_byte_reconstruction_verified": true,
+      "reconstructed_archive_bytes": 485334457,
+      "reconstructed_archive_sha256": "da040a981d688fc5ddc8576123aea883771626bdbb0c69ba3d2da53a17597a17",
+      "all_provider_objects_distinct": true,
+      "remote_bytes_independently_retrieved": false,
+      "live_version_number_independently_returned": false,
+      "original_whole_archive_upload": {
+        "status": "failed",
+        "error_code": "transfer_failed",
+        "not_counted_as_saved": true,
+        "claim": {
+          "bytes": 970,
+          "sha256": "76bc43cc21aaca79b11a57d9f7b47bb0b1576f0e06c48707f692e0c53e414549"
+        },
+        "result": {
+          "bytes": 469,
+          "sha256": "8cb046320ad0fc980476c1580429956e6ab1d16f9428c8388e831dac03dcd62d"
+        },
+        "provider_response": {
+          "bytes": 253,
+          "sha256": "60e336749929dc26c9f99d1816b5845f31cb08313a6aa467845d3d766c797af7"
+        },
+        "retried_by_independent_auditor": false
+      },
+      "recovery_index": {
+        "object_id": "libfile_c30199968d148191a966621ef1220d64",
+        "version": 0,
+        "bytes": 19797,
+        "sha256": "7e2e6dd958ad03499f64f7b75307fc7ff514bfc60ec96f4cb9e240438050195c"
+      },
+      "public_object_reference_scope": "Only the final saved recovery index is exposed here; the thirteen individual part/metadata object identities remain inside that private index.",
+      "current_recovery_graph_status": "saved"
+    }
+  },
+  "additional_audit_bundle": {
+    "scope": "Independent acoustic and C1 terminal authentication, supplemental source tests and saved-ledger receipt adoption, plus storage closure observations.",
+    "provider": "ChatGPT Library",
+    "object_id": "libfile_5a7c51a33e4081918e3c85134663e5ea",
+    "version": 0,
+    "payload_files": 15,
+    "source_reports": 14,
+    "capsule": {
+      "bytes": 38410,
+      "sha256": "797850f276be1efe2fc9523862c9c19ee0bb7a1d4cdb2369c74b2cff3eddecc6"
+    },
+    "member_manifest_sha256": "c079b9abd174458786bb16993396480ae499bc6e1ef0b77fc84dd62ead2f6669",
+    "acknowledgement": {
+      "bytes": 1002,
+      "sha256": "7243b24abef26813f520626b97eb91df58d711bc4cd91754082f65b47ad22865"
+    },
+    "provider_response": {
+      "bytes": 1508,
+      "sha256": "66615aeb77827cf5267a99f11511b3bac735512c0485230956189b45e1435f2d"
+    },
+    "existing_terminal_capsules_modified": false,
+    "new_model_calls": 0,
+    "new_optimizer_steps": 0,
+    "remote_bytes_independently_retrieved": false,
+    "supplemental_cli_execution_provenance": "unavailable; existing receipt adopted after independent saved-ledger arithmetic verification"
+  },
+  "followup_audit_bundle": {
+    "scope": "Independent terminal authentication, metadata test execution, complete natural parent restore references, acoustic numeric-capsule persistence, and earlier publication/CI repair evidence for the two followup stages.",
+    "provider": "ChatGPT Library",
+    "object_id": "libfile_711877ff77b48191b66be3f8d5e8d857",
+    "version": 0,
+    "payload_files": 42,
+    "capsule": {
+      "bytes": 84174,
+      "sha256": "84bbcde427e4e2e501c13d8e1058cd0e69b3a2c201239d1263594a7ee28c95d3"
+    },
+    "member_manifest_sha256": "7957c977de554b9a342e3aac9cb939ba1d46ddf04fab5396b23cd01a8d2f4bb2",
+    "acknowledgement": {
+      "bytes": 1011,
+      "sha256": "1e3c871b768a43b0f2cdabd37493543004d87ead2c8167e328ab87541c98c343"
+    },
+    "provider_response": {
+      "bytes": 1517,
+      "sha256": "0dc7f0ede9ad9cdb34405abe6f213b2e957a5c7066055aa615bde9bdb4a7ddd1"
+    },
+    "existing_terminal_capsules_modified": false,
+    "new_model_calls": 0,
+    "new_optimizer_steps": 0,
+    "remote_bytes_independently_retrieved": false
+  }
+}

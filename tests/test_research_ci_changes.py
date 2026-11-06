@@ -61,13 +61,16 @@ class ChangeSelectionTests(unittest.TestCase):
                      'tests/test_active_asr_batch.py', 'tests/test_active_asr_supervision.py',
                      'tools/active_asr_selective.py', 'tests/test_active_asr_selective.py',
                      'configs/research/selective-asr-v2.json', 'docs/ACTIVE_ASR_SELECTIVE_V2.md',
+                     'tools/prepare_natural_asr_windows.py', 'tests/test_prepare_natural_asr_windows.py',
+                     'configs/research/natural-alimeeting-eval-tail2-v1.json', 'docs/research-natural-asr-windows.md',
                      'docs/ACTIVE_ASR_BATCH.md'):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
 
     def test_acoustic_observation_paths_select_existing_research_checks(self):
         for path in ('tools/research_acoustic_asr.py', 'tests/test_research_acoustic_asr.py',
-                     'docs/research-acoustic-asr124.md'):
+                     'docs/research-acoustic-asr124.md', 'training/research_acoustic_consume.py',
+                     'tests/test_research_acoustic_consume.py', 'docs/research-acoustic-consumption.md'):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
 
@@ -113,6 +116,12 @@ class ChangeSelectionTests(unittest.TestCase):
                      'tests/test_research_context_v3_handoff_consume.py',
                      'docs/research-context-v3-ingestion.md',
                      'training/research_d1_fit_diagnostic.py', 'tests/test_research_d1_fit_diagnostic.py',
+                     'training/research_c1_onset_diagnostic.py', 'tests/test_research_c1_onset_diagnostic.py',
+                     'docs/research-c1-onset-diagnostic.md',
+                     'training/research_c1_known_silence.py', 'tests/test_research_c1_known_silence.py',
+                     'tools/research_c1_silence_ledger_audit.py', 'tests/test_research_c1_silence_ledger_audit.py',
+                     'docs/research-c1-known-silence-correction.md',
+                     'docs/KWS_DATASET_CONTINUATION_20261106.md',
                      'tools/research_fit_budget_compare.py', 'tests/test_research_fit_budget_compare.py',
                      'docs/research-fit-exposure-comparison.md',
                      'training/research_acoustic_augment.py', 'tests/test_research_acoustic_augment.py',

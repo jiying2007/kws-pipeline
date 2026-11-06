@@ -102,6 +102,7 @@ the separate model-smoke validation status.
 - [`setup_asr_runtime.py`](setup_asr_runtime.py) — Install the shared ASR role from retained package, source and model hashes.
 - [`active_asr_batch.py`](active_asr_batch.py) — Bind existing audio and resume a bounded private ASR batch without repeating completed calls.
 - [`active_asr_selective.py`](active_asr_selective.py) — Run two audio-only primary recognizers and the predeclared selective Whisper audit with explicit unrequested observations.
+- [`prepare_natural_asr_windows.py`](prepare_natural_asr_windows.py) — Prepare and recheck declared natural-recording sample windows with full parent identities and overlap-aware coverage; see the [natural window input guide](../docs/research-natural-asr-windows.md).
 - [`active_tts_expand.py`](active_tts_expand.py) — Continue the frozen D1 roster in bounded jobs while retaining raw failures and preventing repeated generation calls.
 - [`active_tts_continuation.py`](active_tts_continuation.py) — Continue only never-claimed cells after a preserved timeout, pause for verified recognition, and keep returned audio separate from consumed unknown calls.
 - [`research_tts_partial.py`](research_tts_partial.py) — Verify the original timed-out generation job in its exact isolated source environment without a model call.
@@ -134,7 +135,12 @@ the separate model-smoke validation status.
 - [Context v3 ingestion smoke](../docs/research-context-v3-ingestion.md) — Consume a predeclared six-family training subset with the original C1 setup, retain every exclusion, and run one separate final development readback under a single durable queue attempt.
 - [`research_context_partial.py`](research_context_partial.py) — Authenticate only the complete native returns of a preserved timed-out context job without generating another utterance.
 - [`research_fit_budget_compare.py`](research_fit_budget_compare.py) — Verify paired tiny-fit input, optimizer and consumed-step controls when only the declared exposure budget changes; constructs no model.
+- [C1 onset diagnostic](../docs/research-c1-onset-diagnostic.md) — Compare saved and newly observed digital-silence conditions at a fixed checkpoint while checking that original feature suffixes remain bitwise equal.
+- [C1 known-silence correction](../docs/research-c1-known-silence-correction.md) — Declare one fixed candidate combining cyclic onset exposure and a blank objective on fully known zero frames.
+- [C1 per-draw loss audit](research_c1_silence_ledger_audit.py) — Supplement the frozen experiment's original audit with every primary, auxiliary and total loss contribution, including errors that cancel within a batch; no tensor load or model call.
+- [Dataset continuation execution index](../research/dataset-continuation-20261106/execution-index.json) — Aggregate completed execution counts, source identities, receipt hashes, resource observations and retained evidence references; see the [Chinese results and remaining work](../docs/KWS_DATASET_CONTINUATION_20261106.md).
 - [`research_acoustic_asr.py`](research_acoustic_asr.py) — Independently observe all 124 frozen acoustic variants with the three existing ASR engines, preserve inherited labels, and save each native/validation closure before advancing.
+- [Acoustic observation consumption](../docs/research-acoustic-consumption.md) — Preserve all 124 frozen variants in a separate weak-label view and consume eligible training rows in one fixed positive-only 25-step smoke with saved-tensor readback.
 - [Native Zipformer system guide](../docs/ZIPFORMER_SYSTEM.md) — Fixed profile, actual D0 execution and limits on interpreting native events.
 - [`setup_tts_runtime.py`](setup_tts_runtime.py) — Install and verify the isolated TTS environment and fixed Base model assets.
 - [`active_tts_smoke.py`](active_tts_smoke.py) — Freeze eight source-bound D1 cells and retain raw generation output before technical checks.

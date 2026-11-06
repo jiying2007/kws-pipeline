@@ -196,6 +196,15 @@ jobs:
           python3 -I -S -B tests/test_research_d1_fit_diagnostic.py
           python3 -I -S -B -O tests/test_research_d1_fit_diagnostic.py
           python3 -I -S -B -OO tests/test_research_d1_fit_diagnostic.py
+          python3 -I -S -B tests/test_research_c1_onset_diagnostic.py
+          python3 -I -S -B -O tests/test_research_c1_onset_diagnostic.py
+          python3 -I -S -B -OO tests/test_research_c1_onset_diagnostic.py
+          python3 -I -S -B tests/test_research_c1_known_silence.py
+          python3 -I -S -B -O tests/test_research_c1_known_silence.py
+          python3 -I -S -B -OO tests/test_research_c1_known_silence.py
+          python3 -I -S -B tests/test_research_c1_silence_ledger_audit.py
+          python3 -I -S -B -O tests/test_research_c1_silence_ledger_audit.py
+          python3 -I -S -B -OO tests/test_research_c1_silence_ledger_audit.py
           python3 -I -S -B tests/test_research_fit_budget_compare.py
           python3 -I -S -B -O tests/test_research_fit_budget_compare.py
           python3 -I -S -B -OO tests/test_research_fit_budget_compare.py
@@ -205,6 +214,15 @@ jobs:
           python3 -I -S -B tests/test_research_acoustic_asr.py
           python3 -I -S -B -O tests/test_research_acoustic_asr.py
           python3 -I -S -B -OO tests/test_research_acoustic_asr.py
+          python3 -I -S -B tests/test_research_acoustic_consume.py
+          python3 -I -S -B -O tests/test_research_acoustic_consume.py
+          python3 -I -S -B -OO tests/test_research_acoustic_consume.py
+      - name: Natural audio window input contracts without models
+        timeout-minutes: 2
+        run: |
+          python3 -I -S -B tests/test_prepare_natural_asr_windows.py
+          python3 -I -S -B -O tests/test_prepare_natural_asr_windows.py
+          python3 -I -S -B -OO tests/test_prepare_natural_asr_windows.py
       - name: Verify tracked worktree after local research queue contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Local research queue contracts"'
       - name: K1 punctuation6 ASR18 offline source contracts
@@ -1216,7 +1234,20 @@ jobs:
       - name: Install cross compiler and ARM user-mode emulator
         timeout-minutes: 8
         # Root supervisor can clean up root APT children; install is never retried.
-        run: sudo python3 -I -S -B tools/install_arm_dependencies.py
+        shell: bash
+        run: |
+          set -euo pipefail
+          install_evidence="$RUNNER_TEMP/arm-dependency-install"
+          mkdir -p "$install_evidence"
+          set +e
+          sudo python3 -I -S -B tools/install_arm_dependencies.py 2>&1 | tee "$install_evidence/apt.log"
+          install_status=("${PIPESTATUS[@]}")
+          printf 'helper_exit_code=%s\ntee_exit_code=%s\n' "${install_status[0]}" "${install_status[1]}" > "$install_evidence/exit-codes.txt"
+          receipt_status=$?
+          set -e
+          if (( install_status[0] != 0 )); then exit "${install_status[0]}"; fi
+          if (( install_status[1] != 0 )); then exit "${install_status[1]}"; fi
+          exit "$receipt_status"
       - name: Locate ARM sysroot for the emulator
         run: |
           set -euo pipefail
@@ -1254,12 +1285,14 @@ jobs:
           python3 -S -B tools/research_python_entry.py research/fsmn2599-stream-c/check_arm_dependencies.py
           --execute --sysroot "$KWS_ARM_SYSROOT" --emulator "$KWS_SYNTHETIC_QEMU"
           --output "$RUNNER_TEMP/arm-dependency-snapshot"
-      - name: Retain ARM dependency snapshot including failed attempts
+      - name: Retain ARM installation logs and dependency snapshot
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: arm-dependency-snapshot-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/arm-dependency-snapshot/
+          path: |
+            ${{ runner.temp }}/arm-dependency-install/
+            ${{ runner.temp }}/arm-dependency-snapshot/
           if-no-files-found: error
           retention-days: 30
       - name: Public synthetic ARM QEMU four-mode correctness only

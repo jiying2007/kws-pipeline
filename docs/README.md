@@ -14,6 +14,9 @@
 
 ## Research data preparation
 
+- [Natural recording windows](research-natural-asr-windows.md): prepare fixed sample intervals with complete parent identities and overlap-aware coverage for the existing ASR queue.
+- [Acoustic observation consumption](research-acoustic-consumption.md): a separate all-124-row weak-label view and fixed positive-only C1 ingestion smoke, preserving original labels and development isolation.
+
 - [Private candidate host smoke](private-candidate-host-smoke.md): explicit opt-in local transport equivalence, private output handling and fixed budgets; artificial CI admission checks are not real candidate execution or acoustic qualification.
 
 - [Causal research incremental assets](../research/causal-kws-increment-2026-10-18/README.md): reusable joint/merge/timing cores, artificial contracts and anonymous bounded evidence; research-only policy tiers.
