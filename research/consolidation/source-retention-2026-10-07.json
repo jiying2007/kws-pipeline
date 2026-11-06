@@ -50234,6 +50234,87 @@
           }
         }
       ]
+    },
+    {
+      "id": "c1-acoustic-terminal-results-20261106",
+      "date": "2026-11-06",
+      "base_commit": "83cc7442b4eba4f9f3f544a2ecde00737653f129",
+      "base_tree": "da843d06a2c7042a19c7fcdfbff0aef438630a95",
+      "public_source_commit": "2ca08db0705ab89d1fdeac7e76bdd9945db386d0",
+      "previous_manifest_sha256": "9074acc363a0de1fc78eb19b833be31fbfdb62e1bcfc5efdbcf76bb7ae3ac8af",
+      "workflow_source_changed": false,
+      "scope": "Append verified acoustic124 and C1 known-silence terminal observations, independent audit references, and precise verification accounting; repair the tools navigation links",
+      "rationale": "Record the actual completed and durably saved outcomes after the earlier source-only publication. Keep all 188 prior events, original execution modules and recipes, weak labels, split assignments, noise masks and historical D1/D2 state unchanged. Distinguish adopted supplemental receipt arithmetic verification from unavailable original CLI provenance, and retain optional tensor fixtures as definitions without unsupported execution claims.",
+      "files": [
+        {
+          "path": "docs/KWS_DATASET_CONTINUATION_20261106.md",
+          "before": {
+            "path": "docs/KWS_DATASET_CONTINUATION_20261106.md",
+            "mode": "100644",
+            "bytes": 7145,
+            "git_blob_sha1": "867b86687951d6c14c150a17546d52583f8a8415",
+            "sha256": "3e9d1ffbdcb19e75117d1381fa64f40a335396bbb5710ed0387e9e69c335ee51"
+          },
+          "after": {
+            "path": "docs/KWS_DATASET_CONTINUATION_20261106.md",
+            "mode": "100644",
+            "bytes": 10445,
+            "git_blob_sha1": "faa11aa16904afcab7168c9680e9deffade9ad35",
+            "sha256": "5d085f4cc48aae91f20cfcfce23b64f7dc1c414fce0b9868cc02e1ff7ca33719"
+          }
+        },
+        {
+          "path": "docs/research-c1-known-silence-correction.md",
+          "before": {
+            "path": "docs/research-c1-known-silence-correction.md",
+            "mode": "100644",
+            "bytes": 9064,
+            "git_blob_sha1": "b89a82cfc51dac5202cb450cd6001f7238bfc4dc",
+            "sha256": "40bbe17f03828431c37265e0f4da9fdbc3cbc2cf969566e25a294d3bf8a9dccb"
+          },
+          "after": {
+            "path": "docs/research-c1-known-silence-correction.md",
+            "mode": "100644",
+            "bytes": 9027,
+            "git_blob_sha1": "56d403209e32806205e10df8a95548752d203ae1",
+            "sha256": "1100be2cf0a37a9fe781e8fc1f346aa483c35f1b2a08c0a9e800b8e412ee3601"
+          }
+        },
+        {
+          "path": "research/dataset-continuation-20261106/execution-index.json",
+          "before": {
+            "path": "research/dataset-continuation-20261106/execution-index.json",
+            "mode": "100644",
+            "bytes": 11783,
+            "git_blob_sha1": "c83d4aee98d4e98ee7b8a9da5bc72408a5a954aa",
+            "sha256": "b236c0b67788824535d677d2945e5806b8f1eb93f5ccb8e08339b33118000412"
+          },
+          "after": {
+            "path": "research/dataset-continuation-20261106/execution-index.json",
+            "mode": "100644",
+            "bytes": 28903,
+            "git_blob_sha1": "031efba4c8ba61a9f5ed45057b94e02ca00f75f5",
+            "sha256": "ef0fe872881f3482a506821dd26002dea2aeed000a9cc7e86614c79e7ee053d8"
+          }
+        },
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 27108,
+            "git_blob_sha1": "6d6ce801fa19a0a8f0d5fbbde94e48b1a3eacb14",
+            "sha256": "12c3627abb2a2efb56b37df319c56ed159589d3c713ad5c5c960faccab504827"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 26961,
+            "git_blob_sha1": "e05d0ff04daab106a53fe37d533169985344458b",
+            "sha256": "bdd21468ad1dd57bbe1e2b05dda12ade7b721d269d48d2664eac4e382c33d31a"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
