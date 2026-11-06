@@ -187,16 +187,6 @@ jobs:
           python3 -I -S -B tests/test_research_fit_budget_compare.py
           python3 -I -S -B -O tests/test_research_fit_budget_compare.py
           python3 -I -S -B -OO tests/test_research_fit_budget_compare.py
-      - name: Observed acoustic variant numerical and label contracts
-        timeout-minutes: 3
-        run: |
-          set -euo pipefail
-          python3 -m venv "$RUNNER_TEMP/acoustic-contracts"
-          "$RUNNER_TEMP/acoustic-contracts/bin/python" -m pip install --disable-pip-version-check --no-deps --only-binary=:all: --require-hashes -r research/tts-pilot-screening-v1/numeric-requirements.txt
-          "$RUNNER_TEMP/acoustic-contracts/bin/python" -c 'import numpy,scipy; actual=(numpy.__version__,scipy.__version__); expected=("2.3.2","1.17.1"); print(actual); raise SystemExit(0 if actual == expected else 1)'
-          "$RUNNER_TEMP/acoustic-contracts/bin/python" -B tests/test_research_acoustic_augment.py
-          "$RUNNER_TEMP/acoustic-contracts/bin/python" -B -O tests/test_research_acoustic_augment.py
-          "$RUNNER_TEMP/acoustic-contracts/bin/python" -B -OO tests/test_research_acoustic_augment.py
       - name: Verify tracked worktree after local research queue contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Local research queue contracts"'
       - name: K1 punctuation6 ASR18 offline source contracts
@@ -1023,6 +1013,20 @@ jobs:
       - name: Install the pinned YAML parser for workflow checks
         run: |
           python3 -m pip install --disable-pip-version-check --no-deps --only-binary=:all: --require-hashes -r configs/runtime/host-tools.requirements.lock
+      # Numeric wheels use the existing dependency-enabled lanes. The shared
+      # compiler-independent retention job keeps its local-only boundary.
+      - name: Observed acoustic variant numerical and label contracts
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/acoustic-contracts"
+          "$RUNNER_TEMP/acoustic-contracts/bin/python" -m pip install --disable-pip-version-check --no-deps --only-binary=:all: --require-hashes -r research/tts-pilot-screening-v1/numeric-requirements.txt
+          "$RUNNER_TEMP/acoustic-contracts/bin/python" -c 'import numpy,scipy; actual=(numpy.__version__,scipy.__version__); expected=("2.3.2","1.17.1"); print(actual); raise SystemExit(0 if actual == expected else 1)'
+          "$RUNNER_TEMP/acoustic-contracts/bin/python" -B tests/test_research_acoustic_augment.py
+          "$RUNNER_TEMP/acoustic-contracts/bin/python" -B -O tests/test_research_acoustic_augment.py
+          "$RUNNER_TEMP/acoustic-contracts/bin/python" -B -OO tests/test_research_acoustic_augment.py
+      - name: Verify tracked worktree after observed acoustic contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Observed acoustic contracts"'
       - name: Deferred verdict contract
         run: python3 tests/test_deferred_verdicts.py
       - name: Verify tracked worktree after Deferred verdict contract
