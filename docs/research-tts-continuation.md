@@ -30,6 +30,19 @@ historical nanoseconds and known new-stage nanoseconds separately; neither is
 presented as a complete lifetime total. An unknown claim does not become a
 zero-duration job. No automatic retries are introduced.
 
+For a new plan whose first-eight job completed successfully, preparation accepts
+`--completed-base-history` instead of `--prior-budget`. It authenticates the
+same explicitly pinned base result and its original durable claim, then records
+the result's `actual_elapsed_ns` as the duration of that first-eight job only.
+It does not invent an old failed attempt, substitute model-worker or outer-driver
+timing, or claim a complete project/runtime lifetime total. This separate
+`active-tts-completed-base-history-v1` is re-derived from the original receipts
+whenever the stage is loaded. The existing unknown-history format and checks
+remain unchanged; its unknown duration stays null and its reservation remains
+separate. Both modes are validated before any new ledger or preparation files
+are published, and neither adds time to the new stage's fixed 1,200-second
+allowance.
+
 A separately named infrastructure recovery is allowed only for one proved
 pre-model failure: the first job has a known failed terminal, every old output
 directory is empty, no selected cell has a claim or terminal, and later jobs
@@ -191,6 +204,29 @@ python3.12 -I -S -B tools/active_tts_expand.py prepare --help
 python3.12 -I -S -B tools/active_tts_expand.py status --stage /private/stage/stage.json
 python3.12 -I -S -B tools/active_tts_expand.py export-asr --stage /private/stage/stage.json
 ```
+
+For the completed-base mode, the exact preparation command takes the following
+form. All hashes refer to actual retained originals; this command prepares
+metadata and the shared plan ledger without initializing a queue or loading a
+model:
+
+```bash
+python3.12 -I -S -B tools/active_tts_expand.py prepare \
+  --base-recipe /private/first8/prepared/recipe.json \
+  --base-recipe-sha256 <actual-recipe-sha256> \
+  --base-job /private/first8/queue/jobs/first-eight \
+  --base-result-sha256 <actual-result-sha256> \
+  --completed-base-history \
+  --target-count 64 --stage-id next64 \
+  --output /private/next64/prepared \
+  --heavy-lock /private/runtime/heavy-model.lock
+```
+
+The first64 prefix is not a new stopping rule. Later fixed prefixes up to256
+remain available through the same entry point, subject to its existing per-stage
+56-call limit, actual terminal history, and the next research decision. Existing
+completed and consumed-unknown cells never become new calls merely because a
+different stage name or prefix is supplied.
 
 `tests/test_active_tts_expand.py` verifies the cell and budget boundaries with
 small standard-library protocol fixtures, including real forked claim races.

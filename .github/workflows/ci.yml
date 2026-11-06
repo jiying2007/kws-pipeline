@@ -30,6 +30,8 @@ jobs:
         run: |
           python3 -B tests/test_research_runtime.py
           python3 -B tests/test_active_asr_batch.py
+          python3 -I -S -B -O tests/test_active_asr_batch.py
+          python3 -I -S -B -OO tests/test_active_asr_batch.py
           python3 -I -S -B tests/test_active_asr_supervision.py
           python3 -I -S -B -O tests/test_active_asr_supervision.py
           python3 -I -S -B -OO tests/test_active_asr_supervision.py
@@ -208,6 +210,9 @@ jobs:
           python3 -I -S -B tests/test_research_context52_known_silence.py
           python3 -I -S -B -O tests/test_research_context52_known_silence.py
           python3 -I -S -B -OO tests/test_research_context52_known_silence.py
+          python3 -I -S -B tests/test_research_c1_source_augmentation.py
+          python3 -I -S -B -O tests/test_research_c1_source_augmentation.py
+          python3 -I -S -B -OO tests/test_research_c1_source_augmentation.py
           python3 -I -S -B tests/test_research_saved_ctc_diagnostic.py
           python3 -I -S -B -O tests/test_research_saved_ctc_diagnostic.py
           python3 -I -S -B -OO tests/test_research_saved_ctc_diagnostic.py
