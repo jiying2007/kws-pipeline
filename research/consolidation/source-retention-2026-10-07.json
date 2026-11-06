@@ -51000,6 +51000,70 @@
           }
         }
       ]
+    },
+    {
+      "id": "newsource8-retained-tts-import-preflight-20261106",
+      "date": "2026-11-06",
+      "base_commit": "8091bc737c1f1988a7ef4486743b97c7c3904121",
+      "base_tree": "daa6115aaefbba55ec9df7d2f706111de826105e",
+      "public_source_commit": "f7f7b61652fa845d2e9cceb7b49d97b2cf981dff",
+      "previous_manifest_sha256": "95448cf788fde802a00cb533fe1a25f9b8e77a8feb5ab9fc719b3014e88c6efe",
+      "workflow_source_changed": false,
+      "scope": "Explicitly bind the retained CPU TTS import-only preflight while preserving the historical default, native generation code and parameters.",
+      "rationale": "The recovered TTS role has an actual import-preflight receipt, not the legacy preflight.json; accept that explicit validated evidence without fabricating historical runtime receipts.",
+      "files": [
+        {
+          "path": "docs/active-tts-smoke.md",
+          "before": {
+            "path": "docs/active-tts-smoke.md",
+            "mode": "100644",
+            "bytes": 6640,
+            "git_blob_sha1": "9a47ec35b00497e9af964beae488b154fab0244f",
+            "sha256": "d5e185be004a1cf090e8bcff26ccb7562dcb8b23366de2760eb69870c4704c33"
+          },
+          "after": {
+            "path": "docs/active-tts-smoke.md",
+            "mode": "100644",
+            "bytes": 7386,
+            "git_blob_sha1": "d8ffac51b0b9973ff051dc1c2ec997efaf0b6f3f",
+            "sha256": "44d440d3d4314c71869dab60a371abd692d165bc49a26bf60904da83251cb741"
+          }
+        },
+        {
+          "path": "tests/test_active_tts_smoke.py",
+          "before": {
+            "path": "tests/test_active_tts_smoke.py",
+            "mode": "100644",
+            "bytes": 5451,
+            "git_blob_sha1": "b1cd6b7661834b07b303fa517a31a0f8fca98743",
+            "sha256": "c3bba59c83b94cf8ce77995d49a9f5720bad6ec9e53c786088d8a07ff5a43833"
+          },
+          "after": {
+            "path": "tests/test_active_tts_smoke.py",
+            "mode": "100644",
+            "bytes": 11587,
+            "git_blob_sha1": "3e5871cb7533dcc9a5ce1670d74fcadd51a3fe06",
+            "sha256": "5483320f68dce5b8fd5e694698bba9fe760681ccdb39260d9da546e3f7ad4d63"
+          }
+        },
+        {
+          "path": "tools/active_tts_smoke.py",
+          "before": {
+            "path": "tools/active_tts_smoke.py",
+            "mode": "100644",
+            "bytes": 20003,
+            "git_blob_sha1": "c97c8984d1cc194ebab844d3148bd9a73e1dcbd1",
+            "sha256": "7387c094f1badcc87d65b225c36f8173221eb7f1c7a3510a76bbce5a0a92c547"
+          },
+          "after": {
+            "path": "tools/active_tts_smoke.py",
+            "mode": "100644",
+            "bytes": 24127,
+            "git_blob_sha1": "a502cac5e0d42223edffcc7b92ce2bfd2ca080f2",
+            "sha256": "8546f7d2c8c612484f326395a13dc64e1d4debb92ac752d2c059a61266583811"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
