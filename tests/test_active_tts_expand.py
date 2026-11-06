@@ -320,6 +320,101 @@ class ContinuationTests(unittest.TestCase):
         self.assertNotEqual(expand.digest(value), expand.queue_digest(value))
         self.assertEqual(expand.digest(value), hashlib.sha256(expand.common.canonical(value)).hexdigest())
 
+    def completed_history_fixture(self):
+        """Use the real controller's zero-model claim/result, not mirrored JSON."""
+        recipe = self.root / 'base-recipe.json'
+        expand.once(recipe, {'fixture': 'completed-base-history-only'})
+        queue_root = self.root / 'base-queue'
+        command = "from pathlib import Path;import sys;Path(sys.argv[1]).joinpath('probe.json').write_text('{}\\n')"
+        request = {'schema': controller.SCHEMA, 'queue_id': 'completed-history-fixture',
+            'global_budget_minutes': 10, 'jobs': [{'job_id': 'first-eight', 'recipe': str(recipe),
+                'recipe_sha256': expand.common.sha_file(recipe),
+                'argv': [sys.executable, '-I', '-S', '-B', '-c', command, '{output_dir}'],
+                'cwd': str(self.root), 'depends_on': [], 'timeout_minutes': 10, 'outputs': ['probe.json']}]}
+        request_path = self.root / 'base-request.json'; expand.once(request_path, request)
+        argv = [sys.executable, '-I', '-S', '-B', str(ROOT / 'tools/research_queue.py')]
+        for args in (['init', '--request', str(request_path), '--root', str(queue_root),
+                      '--heavy-lock', str(self.root / 'base-heavy.lock')], ['run', '--root', str(queue_root)]):
+            result = subprocess.run(argv + args, capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        job = queue_root / 'jobs/first-eight'
+        return job, expand.common.sha_file(job / 'result.json'), expand.common.sha_file(recipe)
+
+    def test_completed_base_history_uses_actual_queue_duration_only(self):
+        job, result_sha, recipe_sha = self.completed_history_fixture()
+        before = {p: p.read_bytes() for p in job.rglob('*') if p.is_file()}
+        history = expand.freeze_completed_base_history(job, result_sha, recipe_sha)
+        actual = expand.common.read(job / 'result.json')['actual_elapsed_ns']
+        self.assertGreater(actual, 0)
+        self.assertEqual(history['schema'], 'active-tts-completed-base-history-v1')
+        self.assertEqual(history['scope'], 'verified-first-eight-job-only')
+        self.assertEqual(history['historical_known_job_nanoseconds'], actual)
+        self.assertEqual(history['historical_actual_total_nanoseconds'], actual)
+        self.assertTrue(history['historical_actual_total_complete'])
+        self.assertFalse(history['project_or_runtime_lifetime_total_claimed'])
+        self.assertEqual(history['unknown_conservative_reservation_seconds'], 0)
+        self.assertNotIn('old_attempt', history)
+        self.assertEqual(before, {p: p.read_bytes() for p in before})
+
+    def test_completed_history_refuses_unknown_missing_duration_or_changed_binding(self):
+        job, result_sha, recipe_sha = self.completed_history_fixture()
+        path = job / 'result.json'; original = path.read_bytes()
+        with self.assertRaisesRegex(ValueError, 'COMPLETED_BASE_TERMINAL_CHANGED'):
+            expand.freeze_completed_base_history(job, '0' * 64, recipe_sha)
+        for changes in ({'status': 'unknown', 'actual_elapsed_ns': None},
+                        {'actual_duration_known': False}, {'actual_elapsed_ns': True},
+                        {'recipe_sha256': '0' * 64}, {'claim_sha256': '0' * 64}):
+            with self.subTest(changes=changes):
+                row = json.loads(original); row.update(changes)
+                path.write_bytes(expand.common.canonical(row) + b'\n')
+                with self.assertRaises(ValueError):
+                    expand.freeze_completed_base_history(job, expand.common.sha_file(path), recipe_sha)
+        path.write_bytes(original)
+        claim_path = job / 'claim.json'; claim = expand.common.read(claim_path)
+        claim['allowed_runner_nanoseconds'] += 1
+        claim_path.write_bytes(expand.common.canonical(claim) + b'\n')
+        with self.assertRaises(ValueError):
+            expand.freeze_completed_base_history(job, result_sha, recipe_sha)
+
+    def test_old_unknown_history_is_separate_and_never_rewritten_as_zero(self):
+        old = self.root / 'old/jobs/smoke8/result.json'
+        expand.once(old, {'status': 'unknown', 'actual_elapsed_ns': None})
+        known = self.root / 'known/jobs/success/result.json'
+        expand.once(known, {'status': 'completed', 'actual_elapsed_ns': 123, 'recipe_sha256': 'a' * 64})
+        budget = {'schema': 'active-tts-cross-attempt-budget-v1', 'actual_total_complete': False,
+            'old_attempt': {'status': 'unknown', 'actual_elapsed_seconds': None,
+                'queue': str(self.root / 'old'), 'terminal_receipt_sha256': expand.common.sha_file(old),
+                'conservative_reservation_seconds': 600},
+            'new_attempt': {'queue': str(self.root / 'known'),
+                'jobs': [{'id': 'success', 'recipe_sha256': 'a' * 64}]},
+            'total_conservative_allocation_seconds': 1200}
+        path = self.root / 'old-budget.json'; expand.once(path, budget)
+        history = expand.freeze_history(path)
+        self.assertEqual(history['schema'], 'active-tts-extension-history-v1')
+        self.assertIsNone(history['historical_actual_total_nanoseconds'])
+        self.assertFalse(history['historical_actual_total_complete'])
+        self.assertEqual(history['unknown_conservative_reservation_seconds'], 600)
+        self.assertEqual(history['historical_known_job_nanoseconds'], 123)
+        budget['actual_total_complete'] = True
+        path.write_bytes(expand.common.canonical(budget) + b'\n')
+        with self.assertRaisesRegex(ValueError, 'HISTORICAL_UNKNOWN_MUST_REMAIN_UNKNOWN'):
+            expand.freeze_history(path)
+
+    def test_invalid_history_is_rejected_before_any_shared_ledger_write(self):
+        bad = self.root / 'bad-history.json'; expand.once(bad, {'schema': 'not-a-history'})
+        args = SimpleNamespace(stage_id='fresh-history', target_count=64, base_recipe=self.root / 'recipe.json',
+            base_recipe_sha256='a' * 64, base_job=self.root / 'base', base_result_sha256='b' * 64,
+            completed_base_history=False, prior_budget=bad, prior_stage=None,
+            prior_stage_sha256=None, prior_result_sha256=None, heavy_lock=self.root / 'unused.lock',
+            output=self.root / 'new-stage')
+        with patch.object(expand, 'verify_parent', return_value=({'runtime': str(self.root / 'runtime')},
+                self.root / 'prepared', self.plan, None, BINDING)), \
+                patch.object(expand, 'verify_base_job', return_value={}):
+            with self.assertRaisesRegex(ValueError, 'HISTORICAL_UNKNOWN_MUST_REMAIN_UNKNOWN'):
+                expand.prepare(args)
+        self.assertFalse((self.root / 'runtime').exists())
+        self.assertFalse(args.output.exists())
+
     def test_recovery_budget_is_fixed_and_never_allows_arbitrary_minutes(self):
         stage, _ = self.queue_fixture()
         stage.update(stage_budget_minutes=20, infrastructure_attempt=2, queue_budget_minutes=19.99,

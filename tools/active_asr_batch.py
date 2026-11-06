@@ -7,6 +7,7 @@ evidence, never human labels or proof of acoustic completeness.
 from __future__ import annotations
 
 import argparse
+import ast
 from datetime import datetime, timezone
 import fcntl
 import hashlib
@@ -237,10 +238,149 @@ def run_worker(command, environment, log, runtime, remaining):
             return 124
 
 
+def verify_completed_pilot(path, expected_sha256, runtime, threads):
+    """Authenticate a saved completed pilot without loading a model or editing it.
+
+    This opt-in authorizes a fresh input matrix, not reuse of a previous call
+    allowance. Every old native cell and its actual queue/audit/save lineage is
+    checked. Only the input manifest may differ in the model identity.
+    """
+    import research_d2_checkpoints as checkpoints
+    from research_queue import require
+    path = Path(path)
+    require(sha_file(path) == expected_sha256, "COMPLETED_PILOT_DECLARATION_CHANGED")
+    proof = checkpoints.read(path)
+    require(set(proof) == {"schema", "inputs", "output", "source_root", "queue_result",
+                          "audit_receipt", "checkpoint", "checkpoint_descriptor", "checkpoint_ack"} and
+            proof["schema"] == "active-asr-completed-pilot-v1", "COMPLETED_PILOT_SCHEMA")
+    for field in ("inputs", "queue_result", "audit_receipt", "checkpoint_descriptor", "checkpoint_ack"):
+        require(checkpoints.pin(proof[field]["path"]) == proof[field], "COMPLETED_PILOT_PIN:" + field)
+    folder = Path(proof["checkpoint"])
+    require(Path(proof["checkpoint_descriptor"]["path"]) == folder / "capsule.json" and
+            Path(proof["checkpoint_ack"]["path"]) == folder / "ack.json", "COMPLETED_PILOT_SAVE_BINDING")
+    ack = checkpoints.verify_ack(folder)
+    descriptor = checkpoints.verify_capsule(folder, current_sources=True)
+    with zipfile.ZipFile(descriptor["capsule"]["path"]) as archive:
+        members = {row["path"]: row for row in json.loads(archive.read("MANIFEST.json"))["files"].values()}
+
+    def retained(file):
+        actual = checkpoints.pin(file)
+        require(members.get(actual["path"]) == actual, "COMPLETED_PILOT_NOT_SAVED:" + actual["path"])
+        return actual
+
+    inputs_path, output, old_source = Path(proof["inputs"]["path"]), Path(proof["output"]), Path(proof["source_root"])
+    for field in ("inputs", "queue_result", "audit_receipt"):
+        retained(proof[field]["path"])
+    inputs = verify_inputs(inputs_path)
+    require(2 <= len(inputs["clips"]) <= 64, "COMPLETED_PILOT_BOUNDED_INPUTS")
+    job = read_json(output / "job.json")
+    job_pin = retained(output / "job.json")
+    expected = {(model, clip["id"]) for model in MODELS for clip in inputs["clips"]}
+    require(job["identity"] == {"input_manifest_sha256": sha_file(inputs_path), "models": list(MODELS),
+            "max_calls": len(expected), "heavy_model_concurrency": 1, "threads": threads} and
+            job["boundary"] == BOUNDARY, "COMPLETED_PILOT_JOB_SCOPE")
+    terminal = read_json(proof["queue_result"]["path"])
+    queue_output = Path(proof["queue_result"]["path"]).parent / "outputs"
+    relative_job = (output / "job.json").relative_to(queue_output).as_posix()
+    require(terminal.get("schema") == "kws-local-research-job-result-v1" and
+            terminal.get("status") == "completed" and terminal.get("exit_code") == 0 and
+            terminal.get("actual_duration_known") is True and terminal.get("automatic_retry") is False and
+            terminal["outputs"].get(relative_job) == {k: job_pin[k] for k in ("bytes", "sha256")},
+            "COMPLETED_PILOT_QUEUE_RECEIPT")
+    audit_receipt = read_json(proof["audit_receipt"]["path"])
+    require(audit_receipt.get("returncode") == 0 and audit_receipt.get("timed_out") is False and
+            audit_receipt.get("launch_error") is None, "COMPLETED_PILOT_AUDIT_RECEIPT")
+    for field in ("command", "stdout", "stderr"):
+        require(retained(audit_receipt[field]["path"]) == audit_receipt[field], "COMPLETED_PILOT_AUDIT_BYTES")
+    command = read_json(audit_receipt["command"]["path"])["argv"]
+    require(str(old_source / "tools/summarize_active_asr_batch.py") in command and
+            all(command[command.index(flag) + 1] == value for flag, value in
+                (("--runtime", str(runtime)), ("--inputs", str(inputs_path)), ("--output", str(output)))),
+            "COMPLETED_PILOT_AUDIT_COMMAND")
+    audit = read_json(output / "audit/final-summary.json")
+    retained(output / "audit/final-summary.json")
+    inventory = retained(output / "audit/file-hashes.json")
+    require(audit.get("schema") == "active-asr-batch-final-audit-v1" and audit.get("status") == "complete" and
+            not audit["errors"] and audit["input_manifest_sha256"] == sha_file(inputs_path) and
+            audit["expected_matrix_cells"] == audit["verified_matrix_cells"] == audit["original_recognition_calls"] == len(expected) and
+            audit["duplicate_model_clip_pairs"] == 0 and audit["finished_before_deadline"] is True and
+            audit["persisted_deadline_unix"] == job["deadline_unix"] and
+            audit["inventory_sha256"] == inventory["sha256"], "COMPLETED_PILOT_AUDIT_SCOPE")
+    hashes = read_json(output / "audit/file-hashes.json")
+    require(hashes["roots"] == {"inputs": str(inputs_path.parent), "results": str(output)} and
+            hashes["file_count"] == len(hashes["files"]) and hashes["files_sha256"] == digest(hashes["files"]),
+            "COMPLETED_PILOT_INVENTORY_SCOPE")
+    for name, row in hashes["files"].items():
+        relative = safe_relative(name)
+        file = inputs_path.parent.joinpath(*relative.parts[1:]) if relative.parts[0] == "inputs" else output / relative
+        actual = retained(file)
+        require({k: actual[k] for k in ("bytes", "sha256")} == row, "COMPLETED_PILOT_INVENTORY_BYTES")
+    sources = ["tools/active_asr_worker.py", "tools/setup_asr_runtime.py", "tools/research_runtime.py",
+               "tools/research_job_lock.py", "tools/summarize_active_asr_batch.py", "configs/runtime/research-runtime.json",
+               "research/qwen6_asr/model-locks.json", "research/source-screen32-whisper-v1/source-lock.json"]
+    sources += ["research/qwen6_asr/core/" + name for name in (
+        "asr_stage/__init__.py", "asr_stage/architecture.py", "asr_stage/decoding.py", "asr_stage/runtime_support.py",
+        "vendor/__init__.py", "vendor/qwen_loading_gate_v2.py", "vendor/checkpoint_guard/__init__.py",
+        "vendor/checkpoint_guard/checkpoint_contract.py", "vendor/checkpoint_guard/exact_apply.py")]
+    source_hashes = {}
+    for name in sources:
+        prior = retained(old_source / name)
+        require(sha_file(ROOT / name) == prior["sha256"], "COMPLETED_PILOT_NUMERICAL_SOURCE_CHANGED:" + name)
+        source_hashes[name] = prior["sha256"]
+    retained(old_source / "tools/active_asr_batch.py")
+    old_tree, new_tree = ast.parse((old_source / "tools/active_asr_batch.py").read_bytes()), ast.parse(Path(__file__).read_bytes())
+    for name in ("verify_inputs", "prepare", "model_identity", "existing_result", "run_worker"):
+        a = next(node for node in old_tree.body if isinstance(node, ast.FunctionDef) and node.name == name)
+        b = next(node for node in new_tree.body if isinstance(node, ast.FunctionDef) and node.name == name)
+        require(ast.dump(a, include_attributes=False) == ast.dump(b, include_attributes=False),
+                "COMPLETED_PILOT_BATCH_NUMERICS_CHANGED:" + name)
+    worker_sha = source_hashes["tools/active_asr_worker.py"]
+    require(audit["decoder_source_sha256"] == worker_sha and
+            audit["auditor_source_sha256"] == source_hashes["tools/summarize_active_asr_batch.py"], "COMPLETED_PILOT_AUDITOR_SOURCE")
+    for kind in ("claims", "native", "results"):
+        paths = list((output / kind).glob("*/*.json"))
+        require({(p.parent.name, p.stem) for p in paths} == expected, "COMPLETED_PILOT_MATRIX")
+        for file in paths:
+            retained(file)
+    identities = {}
+    for model in MODELS:
+        identity = model_identity(model, runtime, inputs_path, threads)
+        identities[model] = {k: v for k, v in identity.items() if k != "input_manifest_sha256"}
+        for clip in inputs["clips"]:
+            require(existing_result(output, model, clip, identity)[0] == "complete" and
+                    read_json(output / "results" / model / (clip["id"] + ".json"))["decoder_source_sha256"] == worker_sha,
+                    "COMPLETED_PILOT_MODEL_OR_RESULT_CHANGED")
+    return {"proof_sha256": expected_sha256, "input_manifest_sha256": sha_file(inputs_path),
+            "job_sha256": job_pin["sha256"], "verified_calls": len(expected),
+            "checkpoint_sha256": descriptor["capsule"]["sha256"], "object_id": ack["object_id"],
+            "version": ack["version"], "compatible_source_sha256": digest(source_hashes),
+            "original_pcm_sha256": sorted({clip["original_pcm"]["sha256"] for clip in inputs["clips"]}),
+            "derived_pcm_sha256": sorted({clip["derived_pcm"]["sha256"] for clip in inputs["clips"]}),
+            "model_identities_without_input": identities}
+
+
 def run(args):
     research_runtime.check_interpreter(research_runtime.load_manifest())
     manifest = verify_inputs(args.inputs)
     runtime, output = args.runtime.resolve(), args.output.resolve()
+    pilot_path, pilot_sha = getattr(args, "completed_pilot", None), getattr(args, "completed_pilot_sha256", None)
+    if (pilot_path is None) != (pilot_sha is None):
+        raise ValueError("completed pilot path and SHA256 must be supplied together")
+    pilot = None
+    if pilot_path is not None:
+        if args.phase != "full" or args.models != list(MODELS) or args.threads != 4 or args.budget_minutes != 9:
+            raise ValueError("verified pilot extension requires full three-model order, four threads, and nine minutes")
+        pilot = verify_completed_pilot(pilot_path, pilot_sha, runtime, args.threads)
+        if pilot["input_manifest_sha256"] == sha_file(args.inputs):
+            raise ValueError("completed pilot audio must not be recognized again")
+        if any({clip[kind]["sha256"] for clip in manifest["clips"]} & set(pilot[kind + "_sha256"])
+               for kind in ("original_pcm", "derived_pcm")):
+            raise ValueError("completed pilot PCM must not be recognized again under new IDs or a reordered manifest")
+        with heavy_model_slot(runtime / "heavy-model.lock") as lease:
+            if not lease.inherited or not lease.supervised:
+                raise ValueError("verified pilot extension requires the supervised inherited heavy-model slot")
+        if output.exists() and any(output.iterdir()):
+            raise ValueError("verified pilot extension requires unused output; no automatic restart")
     output.mkdir(parents=True, exist_ok=True)
     if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", args.attempt) is None:
         raise ValueError("simple bounded attempt ID required")
@@ -249,6 +389,8 @@ def run(args):
         job_path = output / "job.json"
         identity = {"input_manifest_sha256": sha_file(args.inputs), "models": list(MODELS),
                     "max_calls": 3 * len(manifest["clips"]), "heavy_model_concurrency": 1, "threads": args.threads}
+        if pilot is not None:
+            identity["completed_pilot"] = pilot
         if job_path.exists():
             job = read_json(job_path)
             if job["identity"] != identity:
@@ -262,7 +404,7 @@ def run(args):
             raise TimeoutError("persisted job wall-clock budget exhausted")
         clips = manifest["clips"]
         ids = [clips[0]["id"], clips[-1]["id"]] if args.phase == "smoke" and len(clips) > 1 else [x["id"] for x in clips]
-        if args.phase == "full":
+        if args.phase == "full" and pilot is None:
             smoke_ids = {clips[0]["id"], clips[-1]["id"]}
             for model in MODELS:
                 current = model_identity(model, runtime, args.inputs, args.threads)
@@ -318,9 +460,21 @@ def main(argv=None):
     execute.add_argument("--models", nargs="+", choices=MODELS, default=list(MODELS))
     execute.add_argument("--threads", type=int, choices=range(1, 5), default=4)
     execute.add_argument("--budget-minutes", type=int, default=90)
+    execute.add_argument("--completed-pilot", type=Path,
+                         help="Explicit saved completed-pilot proof for one fresh full batch; requires its SHA256.")
+    execute.add_argument("--completed-pilot-sha256")
+    verify = sub.add_parser("verify-pilot", help="Read-only completed-pilot authentication; no model imports or queue.")
+    verify.add_argument("--completed-pilot", type=Path, required=True)
+    verify.add_argument("--completed-pilot-sha256", required=True)
+    verify.add_argument("--runtime", type=Path, required=True)
+    verify.add_argument("--threads", type=int, choices=range(1, 5), default=4)
     args = parser.parse_args(argv)
     if args.command == "run" and (not 1 <= args.budget_minutes <= 999 or len(set(args.models)) != len(args.models)):
         parser.error("budget must be 1..999 minutes and model IDs distinct")
+    if args.command == "verify-pilot":
+        value = verify_completed_pilot(args.completed_pilot, args.completed_pilot_sha256, args.runtime.resolve(), args.threads)
+        print(json.dumps({"status": "verified-completed-pilot", "binding": value, "new_model_calls": 0}, sort_keys=True))
+        return 0
     return prepare(args) if args.command == "prepare" else run(args)
 
 

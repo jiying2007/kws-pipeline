@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 81535,
-      "git_blob_sha1": "1f6218904b44d292fafa4c04a57cfacfa82bdb72",
-      "sha256": "7fcb32ccfc2adef85c46230ee816ff4ebc611426215348d482f0bc1574c22f42"
+      "bytes": 81884,
+      "git_blob_sha1": "883cf13dfc1f77d850f35b4799e7817e59e2e254",
+      "sha256": "780310db4fb5e43d930faca9cbab9fae2108f6e77a34a6de4e07f1ce353d069c"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -51061,6 +51061,212 @@
             "bytes": 24127,
             "git_blob_sha1": "a502cac5e0d42223edffcc7b92ce2bfd2ca080f2",
             "sha256": "8546f7d2c8c612484f326395a13dc64e1d4debb92ac752d2c059a61266583811"
+          }
+        }
+      ]
+    },
+    {
+      "id": "balanced64-source-augmentation-20261106",
+      "date": "2026-11-06",
+      "base_commit": "6f33a837896c38830e4de3a8a3be2e0c65669557",
+      "base_tree": "3b43d7c38a0e9591ce0d956e8f75b56104d455bd",
+      "public_source_commit": "e4e9786ecf9437eb05ffbeaed365190fe0a0f41c",
+      "previous_manifest_sha256": "538f32ef6cd8c393cc279d5a564dc89eade03edafedf90b44b0d0d8d92cbabbf",
+      "workflow_source_changed": true,
+      "scope": "Truthful completed-first8 TTS continuation, explicitly authenticated saved-pilot full ASR for new audio, fixed C1 source augmentation with matched saved comparison.",
+      "rationale": "The current successful eight-cell base could not enter the old unknown-history expansion branch. Repeated per-batch smoke would load each recognizer twice. The shared three-model cohort projection and fixed52 training roster cannot correctly consume this balanced first64 C1 experiment. Preserve original numerical primitives, full weak labels, strict source roles, same initialization, fixed budgets and no retry.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 81535,
+            "git_blob_sha1": "1f6218904b44d292fafa4c04a57cfacfa82bdb72",
+            "sha256": "7fcb32ccfc2adef85c46230ee816ff4ebc611426215348d482f0bc1574c22f42"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 81884,
+            "git_blob_sha1": "883cf13dfc1f77d850f35b4799e7817e59e2e254",
+            "sha256": "780310db4fb5e43d930faca9cbab9fae2108f6e77a34a6de4e07f1ce353d069c"
+          }
+        },
+        {
+          "path": "docs/research-c1-source-augmentation.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-c1-source-augmentation.md",
+            "mode": "100644",
+            "bytes": 12039,
+            "git_blob_sha1": "2bda55d14fe140b33d810d214578ccb71929689f",
+            "sha256": "614f69dcf106a60d7be7f8ec36a5ab931171d31976bb83480d54c7c78938c5d7"
+          }
+        },
+        {
+          "path": "docs/research-reference8-asr.md",
+          "before": {
+            "path": "docs/research-reference8-asr.md",
+            "mode": "100644",
+            "bytes": 3741,
+            "git_blob_sha1": "1b2ebc61816d6f7bde490ef1cbd5e56e529c640f",
+            "sha256": "6c8520badcb08a7f7e268c31209690edc34b1bdce9b19ce216f890db28f778de"
+          },
+          "after": {
+            "path": "docs/research-reference8-asr.md",
+            "mode": "100644",
+            "bytes": 7548,
+            "git_blob_sha1": "61d95b9939ef1f1e5568692b4e15ace45bea13e4",
+            "sha256": "a1c15b58de50cbbd1622c41989410c46c4db25f5781f9c7eaa6f059599ecdadd"
+          }
+        },
+        {
+          "path": "docs/research-tts-continuation.md",
+          "before": {
+            "path": "docs/research-tts-continuation.md",
+            "mode": "100644",
+            "bytes": 11301,
+            "git_blob_sha1": "9b6e06b6d35f2c3ceeaa75638d8a7bbf28aab427",
+            "sha256": "f88b9a78b9c215d0679dde3d398dfbc255a7f40d61ce029d9cb4535bc8178b63"
+          },
+          "after": {
+            "path": "docs/research-tts-continuation.md",
+            "mode": "100644",
+            "bytes": 13206,
+            "git_blob_sha1": "ecd870926f12a130e61a1e04d1ef907b4611981c",
+            "sha256": "489f533a3a6434b1a62d2811a5813d19a9912fba980e759b22a6aef09c918142"
+          }
+        },
+        {
+          "path": "tests/research_c1_source_augmentation_numeric.py",
+          "before": null,
+          "after": {
+            "path": "tests/research_c1_source_augmentation_numeric.py",
+            "mode": "100644",
+            "bytes": 2885,
+            "git_blob_sha1": "b61bdabcdcc42f1c5534773e052b35d98dca4d60",
+            "sha256": "11bc0d9e71ba9c2af9b720613a8e6040b5ef5c466eca4435a57fecdb3d5467ae"
+          }
+        },
+        {
+          "path": "tests/test_active_asr_batch.py",
+          "before": {
+            "path": "tests/test_active_asr_batch.py",
+            "mode": "100644",
+            "bytes": 8957,
+            "git_blob_sha1": "24fb4985b3ae51d0f3f72502ec9eea9b5815fc5a",
+            "sha256": "4cb63b0849e7e8e2916c28130d4369d72ed24e687b2b7ceb81f482bf46e9f130"
+          },
+          "after": {
+            "path": "tests/test_active_asr_batch.py",
+            "mode": "100644",
+            "bytes": 24812,
+            "git_blob_sha1": "da325173c628cfcd293d796b12b57efa6cec583f",
+            "sha256": "ae0f0fdc8871fffd69b628d2a03f7c70b1c7998d3eb0770c0b196ae581913965"
+          }
+        },
+        {
+          "path": "tests/test_active_tts_expand.py",
+          "before": {
+            "path": "tests/test_active_tts_expand.py",
+            "mode": "100644",
+            "bytes": 38367,
+            "git_blob_sha1": "4c4548a4fb2236ab33f689287307365e9bffb86f",
+            "sha256": "1cb0b8c48f89b8b89df9fa15955f2f6e8b1768ee5bbb860cf6ef3dd14e6ec486"
+          },
+          "after": {
+            "path": "tests/test_active_tts_expand.py",
+            "mode": "100644",
+            "bytes": 45096,
+            "git_blob_sha1": "59b105491ec94c1e24cc05ab4ae964c2610bbef4",
+            "sha256": "e22760e348250de3fe327d0e2a97e041ada65846fd7feec895c3d6e2b66e9fb4"
+          }
+        },
+        {
+          "path": "tests/test_research_c1_source_augmentation.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_c1_source_augmentation.py",
+            "mode": "100644",
+            "bytes": 10683,
+            "git_blob_sha1": "29c27dbc8a1a276e5e405f9432df3af3e5dd506b",
+            "sha256": "54520d13b452ef4097fe578716bb115a5d9abc1e39bb9e6e03dcebca1d5473ab"
+          }
+        },
+        {
+          "path": "tools/active_asr_batch.py",
+          "before": {
+            "path": "tools/active_asr_batch.py",
+            "mode": "100644",
+            "bytes": 18465,
+            "git_blob_sha1": "0d36eac2209fbcf071b177575b57f015a4d04996",
+            "sha256": "7e0bffe7b156be3d5fc864e9a9122586366dee656e5b3e8369afdfa4e9eb20de"
+          },
+          "after": {
+            "path": "tools/active_asr_batch.py",
+            "mode": "100644",
+            "bytes": 29696,
+            "git_blob_sha1": "df5b99758c6027cafe7b3f972cbdcc3735e4c48d",
+            "sha256": "3d996681849e5bd4a8c387ea27feeefa66023279d711c07e1386cbe931322677"
+          }
+        },
+        {
+          "path": "tools/active_tts_expand.py",
+          "before": {
+            "path": "tools/active_tts_expand.py",
+            "mode": "100644",
+            "bytes": 67149,
+            "git_blob_sha1": "6af0927a326ee71ab4a44ca7c781b33e3df808f2",
+            "sha256": "c5aeb8b1d9a28e0b4ed27fabd2e552108b232dcf5fa2942e714fa62b0bb5cf8b"
+          },
+          "after": {
+            "path": "tools/active_tts_expand.py",
+            "mode": "100644",
+            "bytes": 70923,
+            "git_blob_sha1": "1feb59c805a11f54cf552b6f3b745fb1493207c7",
+            "sha256": "6717af8fea35bf1e4c2ced0267dce1a9409cbed4424ad6ddcbaf7f78ec59f1c0"
+          }
+        },
+        {
+          "path": "training/research_c1_source_augmentation.py",
+          "before": null,
+          "after": {
+            "path": "training/research_c1_source_augmentation.py",
+            "mode": "100644",
+            "bytes": 49677,
+            "git_blob_sha1": "15e3ec0833c938d45c0a3e0dfa0926842dd40984",
+            "sha256": "576b8cdfaf890690900ff68c63df6ac8bead4fd78f4dd1042be3ca6be2cd84bd"
+          }
+        }
+      ]
+    },
+    {
+      "id": "known-command-worker-death-fixture-20261106",
+      "date": "2026-11-06",
+      "base_commit": "ddf1e5bd8834ba7c7e129c093a2bccc7e271c581",
+      "base_tree": "8550b882024b985725f510979bc0fed5a8da9878",
+      "public_source_commit": "6b44fe417b79c34ba37febd42a70f8941af5f877",
+      "previous_manifest_sha256": "faf0105b7931c0479f249480d9ce7bd76cec14d3842f3ec2c2da85a6b1cdcd61",
+      "workflow_source_changed": false,
+      "scope": "Synchronize the existing known-command worker-death fixture before its fault injection; preserve runtime code and original timeout/unknown/no-retry behavior.",
+      "rationale": "The child can start before its parent durably records the command identity. A deterministic 0.30s diagnostic pause reproduces the original lock-release failure. Waiting for and checking that identity makes the intended known-command case deterministic; explicit child-death and immutable unknown-resume assertions retain cleanup and no-retry coverage.",
+      "files": [
+        {
+          "path": "tests/test_research_queue.py",
+          "before": {
+            "path": "tests/test_research_queue.py",
+            "mode": "100644",
+            "bytes": 24089,
+            "git_blob_sha1": "c7f16c314ec18b179ba9efcc94e99e667d9ef3a2",
+            "sha256": "1acae6fe56e86a50fe9cd0caf2600e95e77807e594f876c5d975fbd86f5519c5"
+          },
+          "after": {
+            "path": "tests/test_research_queue.py",
+            "mode": "100644",
+            "bytes": 25368,
+            "git_blob_sha1": "09e993cb078e33994589279509bc520dd504d1d8",
+            "sha256": "e4c14a86a835cce11d8253763285bcdad67c2cbdcb0d2b8a3c586c1cad6ccb6f"
           }
         }
       ]

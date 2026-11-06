@@ -529,6 +529,41 @@ def freeze_history(path):
             'budget': budget}
 
 
+def freeze_completed_base_history(job_root, result_sha, recipe_sha):
+    """Record one verified successful base job, without inventing older attempts.
+
+    The caller has already run verify_base_job against the complete first-eight
+    media. This history describes that job only, never all project/runtime work.
+    """
+    root = absolute(job_root)
+    result_path, claim_path = root / 'result.json', root / 'claim.json'
+    require(common.sha_file(result_path) == result_sha, 'COMPLETED_BASE_TERMINAL_CHANGED')
+    result, claim = common.read(result_path), common.read(claim_path)
+    require(result['schema'] == 'kws-local-research-job-result-v1' and
+            result['status'] == 'completed' and result['exit_code'] == 0 and
+            result['recipe_sha256'] == recipe_sha and
+            result['claim_sha256'] == common.sha_file(claim_path) and
+            result['actual_duration_known'] is True and result['automatic_retry'] is False and
+            type(result['actual_elapsed_ns']) is int and result['actual_elapsed_ns'] >= 0,
+            'COMPLETED_BASE_ACTUAL_DURATION_REQUIRED')
+    require(claim['schema'] == 'kws-local-research-job-claim-v1' and
+            claim['job_id'] == root.name and claim['attempt'] == 1 and claim['automatic_retry'] is False and
+            all(claim[key] == result[key] for key in
+                ('job_id', 'queue_sha256', 'job_definition_sha256', 'recipe_sha256', 'allowed_runner_nanoseconds')) and
+            claim['allowed_runner_nanoseconds'] == JOB_SECONDS * 10**9 and
+            claim['deadline_monotonic_ns'] == claim['started_monotonic_ns'] + claim['allowed_runner_nanoseconds'],
+            'COMPLETED_BASE_CLAIM_BINDING')
+    known = result['actual_elapsed_ns']
+    return {'schema': 'active-tts-completed-base-history-v1',
+            'scope': 'verified-first-eight-job-only', 'base_job': str(root),
+            'base_result_sha256': result_sha, 'base_recipe_sha256': recipe_sha,
+            'files': {str(path): common.record(path) for path in (result_path, claim_path)},
+            'historical_known_job_nanoseconds': known, 'historical_actual_total_nanoseconds': known,
+            'historical_actual_total_complete': True, 'unknown_conservative_reservation_seconds': 0,
+            'historical_conservative_allocation_seconds': JOB_SECONDS,
+            'project_or_runtime_lifetime_total_claimed': False}
+
+
 def freeze_recovery(path, stage_sha, result_sha):
     """Admit one separately named recovery only after a proven pre-model failure."""
     path = absolute(path)
@@ -619,6 +654,9 @@ def prepare(args):
     require(type(args.stage_id) is str and ID.fullmatch(args.stage_id), 'SAFE_STAGE_ID_REQUIRED')
     require(type(args.target_count) is int and 8 <= args.target_count <= 256, 'BOUNDED_TARGET_AND_CHUNK')
     recipe, prepared, plan, bulk, binding = verify_parent(args.base_recipe, args.base_recipe_sha256)
+    completed_base = getattr(args, 'completed_base_history', False)
+    require(type(completed_base) is bool and completed_base != (args.prior_budget is not None),
+            'EXACTLY_ONE_HISTORICAL_EVIDENCE_MODE')
     prior_args = (args.prior_stage, args.prior_stage_sha256, args.prior_result_sha256)
     require(all(value is None for value in prior_args) or all(value is not None for value in prior_args),
             'RECOVERY_STAGE_AND_RESULT_PINS_REQUIRED')
@@ -631,6 +669,9 @@ def prepare(args):
         with heavy_model_slot(args.heavy_lock):
             pass  # The stopped attempt has actually released the shared slot.
     reused = verify_base_job(args.base_job, args.base_result_sha256, args.base_recipe_sha256, plan, binding)
+    # Validate history before publishing any shared ledger/preparation files.
+    history = (freeze_completed_base_history(args.base_job, args.base_result_sha256, args.base_recipe_sha256)
+               if completed_base else freeze_history(args.prior_budget))
     ledger = absolute(Path(recipe['runtime']) / 'plan-ledgers' / binding['plan_canonical_sha256'])
     refs = {ref['reference_id']: ref for ref in plan['references']}
     with ledger_lock(ledger):
@@ -666,7 +707,7 @@ def prepare(args):
         output = absolute(args.output)
         require(not output.exists(), 'NEW_PREPARATION_DIRECTORY_REQUIRED')
         output.mkdir(parents=True, mode=0o700)
-        once(output / 'history.json', freeze_history(args.prior_budget))
+        once(output / 'history.json', history)
         source = {}
         for name in OWN_SOURCES:
             body = (common.ROOT / name).read_bytes()
@@ -732,6 +773,11 @@ def load_stage(path):
     history_path = Path(stage['prepared']) / 'history.json'
     require(common.record(history_path) == stage['history'], 'HISTORY_SNAPSHOT_CHANGED')
     history = common.read(history_path)
+    require(history['schema'] in ('active-tts-extension-history-v1', 'active-tts-completed-base-history-v1'),
+            'HISTORY_SCHEMA_CHANGED')
+    if history['schema'] == 'active-tts-completed-base-history-v1':
+        require(history == freeze_completed_base_history(stage['base_job'], stage['base_result_sha256'],
+                                                         stage['base_recipe_sha256']), 'COMPLETED_BASE_HISTORY_CHANGED')
     for name, expected in history['files'].items():
         require(common.record(absolute(name)) == expected, 'HISTORICAL_RECEIPT_CHANGED')
     target = [row['cell_id'] for row in plan['cells'][:stage['target_count']]]
@@ -955,7 +1001,9 @@ def inspect_stage(path):
         'combined_extension_actual_total_is_complete': complete_duration,
         'budget_scope': 'new jobs in this frozen extension stage; historical generation receipts remain separate',
         'historical_known_job_nanoseconds': history['historical_known_job_nanoseconds'],
-        'historical_actual_total_nanoseconds': None,
+        'historical_actual_total_nanoseconds': history['historical_actual_total_nanoseconds'],
+        'historical_actual_total_complete': history['historical_actual_total_complete'],
+        'historical_scope': history.get('scope', 'retained-cross-attempt-budget'),
         'historical_unknown_conservative_reservation_seconds': history['unknown_conservative_reservation_seconds'],
         'records': records, 'training_admitted': False}
 
@@ -1039,8 +1087,12 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='command', required=True)
     prep = sub.add_parser('prepare')
-    for name in ('base-recipe', 'base-job', 'output', 'heavy-lock', 'prior-budget'):
+    for name in ('base-recipe', 'base-job', 'output', 'heavy-lock'):
         prep.add_argument('--' + name, type=Path, required=True)
+    history = prep.add_mutually_exclusive_group(required=True)
+    history.add_argument('--prior-budget', type=Path)
+    history.add_argument('--completed-base-history', action='store_true',
+                         help='Retain only the authenticated completed first-eight job; no invented unknown history.')
     for name in ('base-recipe-sha256', 'base-result-sha256', 'stage-id'):
         prep.add_argument('--' + name, required=True)
     prep.add_argument('--target-count', type=int, default=64)
