@@ -1,6 +1,8 @@
 # Domain-aware synthetic self-training
 
-These workflows close the **software, data and model-control loop before complete real product data is available**. They deliberately separate synthetic evidence from shipping acoustic evidence.
+> **Current research scope:** This guide describes technical research only. [RESEARCH_ONLY_EXECUTION.md](RESEARCH_ONLY_EXECUTION.md) defines current execution. Commercial publication, shipping approval and product certification are not research prerequisites. Source rights, actual labels, split isolation and honest measurements remain required; absent device or independent acoustic evidence limits only the corresponding claims.
+
+These workflows exercise the **research software, data and model-control loop**. Synthetic regression is reported separately from independent real-speech and device evidence; neither commercial approval nor unavailable device evidence is a prerequisite for a correctly scoped synthetic study.
 
 A successful synthetic loop can prove deterministic split isolation, model fitting/export, keyword-pack compilation, C-runtime evaluation, threshold calibration, failure replay, candidate selection and held-out synthetic qualification. It cannot prove Mandarin human-speech quality, real-room 3–5 m performance or physical Cortex-A32 performance.
 
@@ -130,7 +132,7 @@ The final qualification pool is never a mining source. Once a held-out sample is
 
 ## Promotion to real evidence
 
-Keep the same orchestration when product data arrives, but replace synthetic-only claims with real split identities:
+Keep the same orchestration when independently verified research data arrives, but replace synthetic-only claims with real split identities:
 
 1. real train data;
 2. real calibration data for threshold/replay;

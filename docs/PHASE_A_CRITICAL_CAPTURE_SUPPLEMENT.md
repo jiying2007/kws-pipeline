@@ -1,5 +1,7 @@
 # Supplemental real-human Phase-A capture requests (private field worksheet)
 
+> **Current research scope:** This guide describes technical research only. [RESEARCH_ONLY_EXECUTION.md](RESEARCH_ONLY_EXECUTION.md) defines current execution. Commercial publication, shipping approval and product certification are not research prerequisites. Source rights, actual labels, split isolation and honest measurements remain required; absent device or independent acoustic evidence limits only the corresponding claims.
+
 The existing upstream `kws-data` field pilot prepares 37 fixed tasks per
 declared session. Those are valuable for wake words, near-phonetic confusions,
 front/rear orientation and a general background prompt, but **do not directly
@@ -68,8 +70,8 @@ must contain a truly spoken complete wake phrase, verified with human
 annotations and independent source/session evidence. Playback of a generated
 voice does not automatically count as a real-human positive.
 
-For independent continuous negative exposure, the current commercial
-policy requests >=24 hours total with critical strata household 8 h,
+For independent continuous negative exposure, this fixed research worksheet
+requests >=24 hours total with critical strata household 8 h,
 speech-confusion 4 h, playback 4 h and robot-motion 4 h.
 To avoid double counting requested blocks, this worksheet assigns the
 remaining 4-hour global difference to household scenes, then adds 10%
@@ -90,7 +92,8 @@ These are **requested recording durations**, not proof of captured or
 usable post-AFE audio. Hidden complete wake phrases must be annotated and
 excluded from negative exposure as required by the qualification scorer.
 Real post-AFE valid duration may be lower than requested; the 10% margin is
-not a quality guarantee and does not change the 24-hour product gate.
+not a quality guarantee. The 24-hour request belongs to this worksheet only;
+it is not a product gate or prerequisite for unrelated research.
 
 At 80 sealed sessions the worksheet has **1,600 capture requests**:
 1,280 wake-scene requests and 320 negative-scene requests. Each request

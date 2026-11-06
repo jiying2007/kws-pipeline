@@ -1,5 +1,7 @@
 # Offline keyword-set identity v2
 
+> **Current research scope:** This guide describes technical research only. [RESEARCH_ONLY_EXECUTION.md](RESEARCH_ONLY_EXECUTION.md) defines current execution. Commercial publication, shipping approval and product certification are not research prerequisites. Source rights, actual labels, split isolation and honest measurements remain required; absent device or independent acoustic evidence limits only the corresponding claims.
+
 `tools/keyword_set_identity.py` provides one current keyword semantic identity and
 strict source contract verifier. It is an offline, standard-library-only tool;
 it does not train, run inference, download models/audio, or change product policy.
@@ -136,9 +138,9 @@ Deferred: wiring identity into corpus generators, trainer/checkpoint/provenance,
 replay, model promotion, and deployment would change their contracts and requires
 separate design and tests. Historical trainers/replay/workflows are not imported.
 No shipping/training config, model, keyword TSV, parameter contract, deployment,
-or approval flag changes are made by this port. Current shipping remains the
-immutable `model-749187ec1d66` two-keyword tuple (`你好小窝`, `小窝小窝`, threshold
-0.55 each), with `shipping_approved=false`.
+or approval flag changes are made by this port. The immutable `model-749187ec1d66` two-keyword tuple (`你好小窝`, `小窝小窝`,
+threshold 0.55 each) remains a frozen synthetic research comparator, not current
+shipping authority. Its original `shipping_approved=false` record is not changed.
 
 ## Verification and CI source retention
 
