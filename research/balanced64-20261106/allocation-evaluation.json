@@ -1,0 +1,592 @@
+{
+  "allocation_checkpoint_sha256": "b178bf7f0cabf3061cf99987e4bfd9bea4fd92e12aa3a167957a9e2becdf24cc",
+  "checks": {
+    "at_least_one_strict_development_improvement": true,
+    "new_development_fulltext_edits_at_most_31": false,
+    "no_new_known_negative_greedy_keyword_sequence": true,
+    "old_development_fulltext_edits_at_most_109": true,
+    "preserve_each_control_known_positive_keyword_hit": false
+  },
+  "comparison_sha256": "e5837d6513ca2d3b5add52b56954b4826945abbfe37b9f736de75889370e372e",
+  "control_checkpoint_sha256": "13cdff7365f5c34e0e8f09d73f32d73d90b462a447245506d7acac20695d8f92",
+  "evaluation_plan_sha256": "5ebcd165af2e8ddd6d6ce1d6f8bbb6537b5832c0064cf3af81244e77610fe8f7",
+  "evaluation_scope": {
+    "audio_bodies_read": 0,
+    "checkpoint_byte_hash_checks": 2,
+    "new_model_forwards": 0,
+    "new_optimizer_steps": 0,
+    "numeric_tensor_values_read": 0,
+    "paired_conditions": 402,
+    "paired_model_observations": 804,
+    "rows": 134,
+    "tensor_deserializations": 0,
+    "unknown_fulltext_rows": 4,
+    "unknown_paired_conditions": 12
+  },
+  "limits": {
+    "automatic_model_promotion": false,
+    "development_previously_exposed": true,
+    "greedy_sequence_metrics_are_online_trigger_FAR": false,
+    "human_gold": false,
+    "independent_test": false,
+    "offsets_are_independent_samples": false,
+    "ratio_sweep": false,
+    "threshold_tuning": false
+  },
+  "marginal_ratio_effect_isolated": false,
+  "passes_preregistered_descriptive_rule": false,
+  "primary_offset_ms": 0,
+  "primary_panels": {
+    "new-development": {
+      "allocation_fulltext_edits": 35,
+      "control_fulltext_edits": 31,
+      "fulltext_evaluable_rows": 16,
+      "fulltext_unknown_rows": 0,
+      "keywords": {
+        "K1": {
+          "allocation_negative_sequences": 0,
+          "allocation_positive_hits": 0,
+          "control_negative_sequences": 0,
+          "control_positive_hits": 1,
+          "gained_positive_hits": 0,
+          "known_negative_rows": 12,
+          "known_positive_rows": 4,
+          "lost_control_positive_hits": 1,
+          "new_negative_sequences": 0,
+          "resolved_negative_sequences": 0,
+          "retained_control_positive_hits": 0,
+          "unknown_label_rows": 0
+        },
+        "K2": {
+          "allocation_negative_sequences": 0,
+          "allocation_positive_hits": 4,
+          "control_negative_sequences": 0,
+          "control_positive_hits": 3,
+          "gained_positive_hits": 1,
+          "known_negative_rows": 12,
+          "known_positive_rows": 4,
+          "lost_control_positive_hits": 0,
+          "new_negative_sequences": 0,
+          "resolved_negative_sequences": 0,
+          "retained_control_positive_hits": 3,
+          "unknown_label_rows": 0
+        }
+      },
+      "reference_tokens": 68,
+      "rows": 16
+    },
+    "old-development": {
+      "allocation_fulltext_edits": 103,
+      "control_fulltext_edits": 109,
+      "fulltext_evaluable_rows": 18,
+      "fulltext_unknown_rows": 0,
+      "keywords": {
+        "K1": {
+          "allocation_negative_sequences": 0,
+          "allocation_positive_hits": 1,
+          "control_negative_sequences": 0,
+          "control_positive_hits": 3,
+          "gained_positive_hits": 0,
+          "known_negative_rows": 12,
+          "known_positive_rows": 6,
+          "lost_control_positive_hits": 2,
+          "new_negative_sequences": 0,
+          "resolved_negative_sequences": 0,
+          "retained_control_positive_hits": 1,
+          "unknown_label_rows": 0
+        },
+        "K2": {
+          "allocation_negative_sequences": 0,
+          "allocation_positive_hits": 6,
+          "control_negative_sequences": 0,
+          "control_positive_hits": 6,
+          "gained_positive_hits": 0,
+          "known_negative_rows": 12,
+          "known_positive_rows": 6,
+          "lost_control_positive_hits": 0,
+          "new_negative_sequences": 0,
+          "resolved_negative_sequences": 0,
+          "retained_control_positive_hits": 6,
+          "unknown_label_rows": 0
+        }
+      },
+      "reference_tokens": 219,
+      "rows": 18
+    }
+  },
+  "sampling_policy": "old3-new1-fair-cycle-v1",
+  "schema": "kws-c1-allocation-descriptive-evaluation-public-v1",
+  "secondary_panels": {
+    "new-development": {
+      "0": {
+        "allocation_fulltext_edits": 35,
+        "control_fulltext_edits": 31,
+        "fulltext_evaluable_rows": 16,
+        "fulltext_unknown_rows": 0,
+        "keywords": {
+          "K1": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 0,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 1,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 12,
+            "known_positive_rows": 4,
+            "lost_control_positive_hits": 1,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 0,
+            "unknown_label_rows": 0
+          },
+          "K2": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 4,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 3,
+            "gained_positive_hits": 1,
+            "known_negative_rows": 12,
+            "known_positive_rows": 4,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 3,
+            "unknown_label_rows": 0
+          }
+        },
+        "reference_tokens": 68,
+        "rows": 16
+      },
+      "200": {
+        "allocation_fulltext_edits": 34,
+        "control_fulltext_edits": 30,
+        "fulltext_evaluable_rows": 16,
+        "fulltext_unknown_rows": 0,
+        "keywords": {
+          "K1": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 0,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 1,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 12,
+            "known_positive_rows": 4,
+            "lost_control_positive_hits": 1,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 0,
+            "unknown_label_rows": 0
+          },
+          "K2": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 4,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 3,
+            "gained_positive_hits": 1,
+            "known_negative_rows": 12,
+            "known_positive_rows": 4,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 3,
+            "unknown_label_rows": 0
+          }
+        },
+        "reference_tokens": 68,
+        "rows": 16
+      },
+      "500": {
+        "allocation_fulltext_edits": 34,
+        "control_fulltext_edits": 30,
+        "fulltext_evaluable_rows": 16,
+        "fulltext_unknown_rows": 0,
+        "keywords": {
+          "K1": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 0,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 1,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 12,
+            "known_positive_rows": 4,
+            "lost_control_positive_hits": 1,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 0,
+            "unknown_label_rows": 0
+          },
+          "K2": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 4,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 3,
+            "gained_positive_hits": 1,
+            "known_negative_rows": 12,
+            "known_positive_rows": 4,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 3,
+            "unknown_label_rows": 0
+          }
+        },
+        "reference_tokens": 68,
+        "rows": 16
+      }
+    },
+    "new-train": {
+      "0": {
+        "allocation_fulltext_edits": 29,
+        "control_fulltext_edits": 7,
+        "fulltext_evaluable_rows": 44,
+        "fulltext_unknown_rows": 4,
+        "keywords": {
+          "K1": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 10,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 10,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 34,
+            "known_positive_rows": 10,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 10,
+            "unknown_label_rows": 4
+          },
+          "K2": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 11,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 11,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 33,
+            "known_positive_rows": 11,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 11,
+            "unknown_label_rows": 4
+          }
+        },
+        "reference_tokens": 192,
+        "rows": 48
+      },
+      "200": {
+        "allocation_fulltext_edits": 29,
+        "control_fulltext_edits": 7,
+        "fulltext_evaluable_rows": 44,
+        "fulltext_unknown_rows": 4,
+        "keywords": {
+          "K1": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 10,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 10,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 34,
+            "known_positive_rows": 10,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 10,
+            "unknown_label_rows": 4
+          },
+          "K2": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 11,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 11,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 33,
+            "known_positive_rows": 11,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 11,
+            "unknown_label_rows": 4
+          }
+        },
+        "reference_tokens": 192,
+        "rows": 48
+      },
+      "500": {
+        "allocation_fulltext_edits": 29,
+        "control_fulltext_edits": 7,
+        "fulltext_evaluable_rows": 44,
+        "fulltext_unknown_rows": 4,
+        "keywords": {
+          "K1": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 10,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 10,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 34,
+            "known_positive_rows": 10,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 10,
+            "unknown_label_rows": 4
+          },
+          "K2": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 11,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 11,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 33,
+            "known_positive_rows": 11,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 11,
+            "unknown_label_rows": 4
+          }
+        },
+        "reference_tokens": 192,
+        "rows": 48
+      }
+    },
+    "old-development": {
+      "0": {
+        "allocation_fulltext_edits": 103,
+        "control_fulltext_edits": 109,
+        "fulltext_evaluable_rows": 18,
+        "fulltext_unknown_rows": 0,
+        "keywords": {
+          "K1": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 1,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 3,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 12,
+            "known_positive_rows": 6,
+            "lost_control_positive_hits": 2,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 1,
+            "unknown_label_rows": 0
+          },
+          "K2": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 6,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 6,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 12,
+            "known_positive_rows": 6,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 6,
+            "unknown_label_rows": 0
+          }
+        },
+        "reference_tokens": 219,
+        "rows": 18
+      },
+      "200": {
+        "allocation_fulltext_edits": 102,
+        "control_fulltext_edits": 110,
+        "fulltext_evaluable_rows": 18,
+        "fulltext_unknown_rows": 0,
+        "keywords": {
+          "K1": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 1,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 3,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 12,
+            "known_positive_rows": 6,
+            "lost_control_positive_hits": 2,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 1,
+            "unknown_label_rows": 0
+          },
+          "K2": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 6,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 6,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 12,
+            "known_positive_rows": 6,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 6,
+            "unknown_label_rows": 0
+          }
+        },
+        "reference_tokens": 219,
+        "rows": 18
+      },
+      "500": {
+        "allocation_fulltext_edits": 102,
+        "control_fulltext_edits": 110,
+        "fulltext_evaluable_rows": 18,
+        "fulltext_unknown_rows": 0,
+        "keywords": {
+          "K1": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 1,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 3,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 12,
+            "known_positive_rows": 6,
+            "lost_control_positive_hits": 2,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 1,
+            "unknown_label_rows": 0
+          },
+          "K2": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 6,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 6,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 12,
+            "known_positive_rows": 6,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 6,
+            "unknown_label_rows": 0
+          }
+        },
+        "reference_tokens": 219,
+        "rows": 18
+      }
+    },
+    "old-train": {
+      "0": {
+        "allocation_fulltext_edits": 91,
+        "control_fulltext_edits": 101,
+        "fulltext_evaluable_rows": 52,
+        "fulltext_unknown_rows": 0,
+        "keywords": {
+          "K1": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 13,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 13,
+            "gained_positive_hits": 1,
+            "known_negative_rows": 35,
+            "known_positive_rows": 17,
+            "lost_control_positive_hits": 1,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 12,
+            "unknown_label_rows": 0
+          },
+          "K2": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 17,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 17,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 35,
+            "known_positive_rows": 17,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 17,
+            "unknown_label_rows": 0
+          }
+        },
+        "reference_tokens": 624,
+        "rows": 52
+      },
+      "200": {
+        "allocation_fulltext_edits": 91,
+        "control_fulltext_edits": 102,
+        "fulltext_evaluable_rows": 52,
+        "fulltext_unknown_rows": 0,
+        "keywords": {
+          "K1": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 13,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 13,
+            "gained_positive_hits": 1,
+            "known_negative_rows": 35,
+            "known_positive_rows": 17,
+            "lost_control_positive_hits": 1,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 12,
+            "unknown_label_rows": 0
+          },
+          "K2": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 17,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 17,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 35,
+            "known_positive_rows": 17,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 17,
+            "unknown_label_rows": 0
+          }
+        },
+        "reference_tokens": 624,
+        "rows": 52
+      },
+      "500": {
+        "allocation_fulltext_edits": 91,
+        "control_fulltext_edits": 102,
+        "fulltext_evaluable_rows": 52,
+        "fulltext_unknown_rows": 0,
+        "keywords": {
+          "K1": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 13,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 13,
+            "gained_positive_hits": 1,
+            "known_negative_rows": 35,
+            "known_positive_rows": 17,
+            "lost_control_positive_hits": 1,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 12,
+            "unknown_label_rows": 0
+          },
+          "K2": {
+            "allocation_negative_sequences": 0,
+            "allocation_positive_hits": 17,
+            "control_negative_sequences": 0,
+            "control_positive_hits": 17,
+            "gained_positive_hits": 0,
+            "known_negative_rows": 35,
+            "known_positive_rows": 17,
+            "lost_control_positive_hits": 0,
+            "new_negative_sequences": 0,
+            "resolved_negative_sequences": 0,
+            "retained_control_positive_hits": 17,
+            "unknown_label_rows": 0
+          }
+        },
+        "reference_tokens": 624,
+        "rows": 52
+      }
+    }
+  },
+  "status": "completed-saved-only",
+  "strict_improvement_counts": {
+    "gained_positive_hits": 1,
+    "new_development_edit_reduction": -4,
+    "old_development_edit_reduction": 6
+  },
+  "verdict": "mixed-improvements-and-regressions"
+}

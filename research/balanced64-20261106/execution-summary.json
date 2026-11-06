@@ -1,0 +1,874 @@
+{
+  "actual_training_exposure": {
+    "actual_draws_from_uncertain_rows": 0,
+    "augmentation": {
+      "new": {
+        "actual_draws": 3652,
+        "ctc_weighted_draw_sum": 2905.0,
+        "draws_by_offset_ms": {
+          "0": 1232,
+          "200": 1232,
+          "500": 1188
+        },
+        "fraction_of_8000_draws": 0.4565,
+        "per_row_draw_count_histogram": {
+          "83": 44
+        },
+        "rows_by_original_ctc_weight": {
+          "0.5": 18,
+          "1.0": 26
+        },
+        "train_rows": 44
+      },
+      "old": {
+        "actual_draws": 4348,
+        "ctc_weighted_draw_sum": 2425.5,
+        "draws_by_offset_ms": {
+          "0": 1456,
+          "200": 1456,
+          "500": 1436
+        },
+        "fraction_of_8000_draws": 0.5435,
+        "per_row_draw_count_histogram": {
+          "83": 20,
+          "84": 32
+        },
+        "rows_by_original_ctc_weight": {
+          "0.5": 46,
+          "1.0": 6
+        },
+        "train_rows": 52
+      }
+    },
+    "baseline_full52": {
+      "new": {
+        "actual_draws": 0,
+        "ctc_weighted_draw_sum": 0.0,
+        "draws_by_offset_ms": {},
+        "fraction_of_8000_draws": 0.0,
+        "per_row_draw_count_histogram": {},
+        "rows_by_original_ctc_weight": {},
+        "train_rows": 0
+      },
+      "old": {
+        "actual_draws": 8000,
+        "ctc_weighted_draw_sum": 4462.0,
+        "draws_by_offset_ms": {
+          "0": 2696,
+          "200": 2652,
+          "500": 2652
+        },
+        "fraction_of_8000_draws": 1.0,
+        "per_row_draw_count_histogram": {
+          "153": 8,
+          "154": 44
+        },
+        "rows_by_original_ctc_weight": {
+          "0.5": 46,
+          "1.0": 6
+        },
+        "train_rows": 52
+      }
+    },
+    "interpretation": "Draw counts and weak-weight exposure are descriptive ledger facts, not a numerical replay of gradients or proof of a causal source effect.",
+    "recorded_shared_settings": {
+      "batch_size": 4,
+      "gradient_clip_max_norm": 5.0,
+      "optimizer": {
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "optimizer_steps": 2000,
+      "seed": 20261105,
+      "training_forward_limit": 8000
+    },
+    "retained_new_uncertain_train_rows": 4
+  },
+  "additional_unknown_rows_at_zero_loss": 4,
+  "authorship": "Root assistant aggregate projection of observed prior-stage records; original execution sources and receipts are unchanged.",
+  "completed_original_plan_cells": 64,
+  "conditions": {
+    "augmentation_conditions": {
+      "new-development": {
+        "0": {
+          "edit_numerator": 31,
+          "empty_outputs": 0,
+          "evaluable_clips": 16,
+          "exact_token_match_denominator": 16,
+          "exact_token_matches": 4,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 12,
+              "known_positive_rows": 4,
+              "matched_positive_rows": 1,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 12,
+              "known_positive_rows": 4,
+              "matched_positive_rows": 3,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 16,
+          "target_token_denominator": 68,
+          "token_edit_rate": 0.45588235294117646
+        },
+        "200": {
+          "edit_numerator": 30,
+          "empty_outputs": 0,
+          "evaluable_clips": 16,
+          "exact_token_match_denominator": 16,
+          "exact_token_matches": 4,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 12,
+              "known_positive_rows": 4,
+              "matched_positive_rows": 1,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 12,
+              "known_positive_rows": 4,
+              "matched_positive_rows": 3,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 16,
+          "target_token_denominator": 68,
+          "token_edit_rate": 0.4411764705882353
+        },
+        "500": {
+          "edit_numerator": 30,
+          "empty_outputs": 0,
+          "evaluable_clips": 16,
+          "exact_token_match_denominator": 16,
+          "exact_token_matches": 4,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 12,
+              "known_positive_rows": 4,
+              "matched_positive_rows": 1,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 12,
+              "known_positive_rows": 4,
+              "matched_positive_rows": 3,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 16,
+          "target_token_denominator": 68,
+          "token_edit_rate": 0.4411764705882353
+        }
+      },
+      "new-train": {
+        "0": {
+          "edit_numerator": 7,
+          "empty_outputs": 0,
+          "evaluable_clips": 44,
+          "exact_token_match_denominator": 44,
+          "exact_token_matches": 37,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 34,
+              "known_positive_rows": 10,
+              "matched_positive_rows": 10,
+              "unknown_rows": 4
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 33,
+              "known_positive_rows": 11,
+              "matched_positive_rows": 11,
+              "unknown_rows": 4
+            }
+          ],
+          "observed_clips": 48,
+          "target_token_denominator": 192,
+          "token_edit_rate": 0.036458333333333336
+        },
+        "200": {
+          "edit_numerator": 7,
+          "empty_outputs": 0,
+          "evaluable_clips": 44,
+          "exact_token_match_denominator": 44,
+          "exact_token_matches": 37,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 34,
+              "known_positive_rows": 10,
+              "matched_positive_rows": 10,
+              "unknown_rows": 4
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 33,
+              "known_positive_rows": 11,
+              "matched_positive_rows": 11,
+              "unknown_rows": 4
+            }
+          ],
+          "observed_clips": 48,
+          "target_token_denominator": 192,
+          "token_edit_rate": 0.036458333333333336
+        },
+        "500": {
+          "edit_numerator": 7,
+          "empty_outputs": 0,
+          "evaluable_clips": 44,
+          "exact_token_match_denominator": 44,
+          "exact_token_matches": 37,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 34,
+              "known_positive_rows": 10,
+              "matched_positive_rows": 10,
+              "unknown_rows": 4
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 33,
+              "known_positive_rows": 11,
+              "matched_positive_rows": 11,
+              "unknown_rows": 4
+            }
+          ],
+          "observed_clips": 48,
+          "target_token_denominator": 192,
+          "token_edit_rate": 0.036458333333333336
+        }
+      },
+      "old-development": {
+        "0": {
+          "edit_numerator": 109,
+          "empty_outputs": 0,
+          "evaluable_clips": 18,
+          "exact_token_match_denominator": 18,
+          "exact_token_matches": 0,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 12,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 3,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 12,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 6,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 18,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.4977168949771689
+        },
+        "200": {
+          "edit_numerator": 110,
+          "empty_outputs": 0,
+          "evaluable_clips": 18,
+          "exact_token_match_denominator": 18,
+          "exact_token_matches": 0,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 12,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 3,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 12,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 6,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 18,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.502283105022831
+        },
+        "500": {
+          "edit_numerator": 110,
+          "empty_outputs": 0,
+          "evaluable_clips": 18,
+          "exact_token_match_denominator": 18,
+          "exact_token_matches": 0,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 12,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 3,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 12,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 6,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 18,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.502283105022831
+        }
+      },
+      "old-train": {
+        "0": {
+          "edit_numerator": 101,
+          "empty_outputs": 0,
+          "evaluable_clips": 52,
+          "exact_token_match_denominator": 52,
+          "exact_token_matches": 6,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 35,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 13,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 35,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 17,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 52,
+          "target_token_denominator": 624,
+          "token_edit_rate": 0.16185897435897437
+        },
+        "200": {
+          "edit_numerator": 102,
+          "empty_outputs": 0,
+          "evaluable_clips": 52,
+          "exact_token_match_denominator": 52,
+          "exact_token_matches": 6,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 35,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 13,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 35,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 17,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 52,
+          "target_token_denominator": 624,
+          "token_edit_rate": 0.16346153846153846
+        },
+        "500": {
+          "edit_numerator": 102,
+          "empty_outputs": 0,
+          "evaluable_clips": 52,
+          "exact_token_match_denominator": 52,
+          "exact_token_matches": 6,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 35,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 13,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 35,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 17,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 52,
+          "target_token_denominator": 624,
+          "token_edit_rate": 0.16346153846153846
+        }
+      }
+    },
+    "baseline_conditions": {
+      "new-development": {
+        "0": {
+          "edit_numerator": 45,
+          "empty_outputs": 1,
+          "evaluable_clips": 16,
+          "exact_token_match_denominator": 16,
+          "exact_token_matches": 3,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 12,
+              "known_positive_rows": 4,
+              "matched_positive_rows": 0,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 12,
+              "known_positive_rows": 4,
+              "matched_positive_rows": 3,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 16,
+          "target_token_denominator": 68,
+          "token_edit_rate": 0.6617647058823529
+        },
+        "200": {
+          "edit_numerator": 45,
+          "empty_outputs": 1,
+          "evaluable_clips": 16,
+          "exact_token_match_denominator": 16,
+          "exact_token_matches": 3,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 12,
+              "known_positive_rows": 4,
+              "matched_positive_rows": 0,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 12,
+              "known_positive_rows": 4,
+              "matched_positive_rows": 3,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 16,
+          "target_token_denominator": 68,
+          "token_edit_rate": 0.6617647058823529
+        },
+        "500": {
+          "edit_numerator": 45,
+          "empty_outputs": 1,
+          "evaluable_clips": 16,
+          "exact_token_match_denominator": 16,
+          "exact_token_matches": 3,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 12,
+              "known_positive_rows": 4,
+              "matched_positive_rows": 0,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 12,
+              "known_positive_rows": 4,
+              "matched_positive_rows": 3,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 16,
+          "target_token_denominator": 68,
+          "token_edit_rate": 0.6617647058823529
+        }
+      },
+      "new-train": {
+        "0": {
+          "edit_numerator": 95,
+          "empty_outputs": 1,
+          "evaluable_clips": 44,
+          "exact_token_match_denominator": 44,
+          "exact_token_matches": 16,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 34,
+              "known_positive_rows": 10,
+              "matched_positive_rows": 4,
+              "unknown_rows": 4
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 33,
+              "known_positive_rows": 11,
+              "matched_positive_rows": 9,
+              "unknown_rows": 4
+            }
+          ],
+          "observed_clips": 48,
+          "target_token_denominator": 192,
+          "token_edit_rate": 0.4947916666666667
+        },
+        "200": {
+          "edit_numerator": 95,
+          "empty_outputs": 1,
+          "evaluable_clips": 44,
+          "exact_token_match_denominator": 44,
+          "exact_token_matches": 16,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 34,
+              "known_positive_rows": 10,
+              "matched_positive_rows": 4,
+              "unknown_rows": 4
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 33,
+              "known_positive_rows": 11,
+              "matched_positive_rows": 9,
+              "unknown_rows": 4
+            }
+          ],
+          "observed_clips": 48,
+          "target_token_denominator": 192,
+          "token_edit_rate": 0.4947916666666667
+        },
+        "500": {
+          "edit_numerator": 95,
+          "empty_outputs": 1,
+          "evaluable_clips": 44,
+          "exact_token_match_denominator": 44,
+          "exact_token_matches": 16,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 34,
+              "known_positive_rows": 10,
+              "matched_positive_rows": 4,
+              "unknown_rows": 4
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 33,
+              "known_positive_rows": 11,
+              "matched_positive_rows": 9,
+              "unknown_rows": 4
+            }
+          ],
+          "observed_clips": 48,
+          "target_token_denominator": 192,
+          "token_edit_rate": 0.4947916666666667
+        }
+      },
+      "old-development": {
+        "0": {
+          "edit_numerator": 96,
+          "empty_outputs": 0,
+          "evaluable_clips": 18,
+          "exact_token_match_denominator": 18,
+          "exact_token_matches": 0,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 12,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 1,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 12,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 6,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 18,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.4383561643835616
+        },
+        "200": {
+          "edit_numerator": 96,
+          "empty_outputs": 0,
+          "evaluable_clips": 18,
+          "exact_token_match_denominator": 18,
+          "exact_token_matches": 0,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 12,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 1,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 12,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 6,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 18,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.4383561643835616
+        },
+        "500": {
+          "edit_numerator": 96,
+          "empty_outputs": 0,
+          "evaluable_clips": 18,
+          "exact_token_match_denominator": 18,
+          "exact_token_matches": 0,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 12,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 1,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 12,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 6,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 18,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.4383561643835616
+        }
+      },
+      "old-train": {
+        "0": {
+          "edit_numerator": 93,
+          "empty_outputs": 0,
+          "evaluable_clips": 52,
+          "exact_token_match_denominator": 52,
+          "exact_token_matches": 8,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 35,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 11,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 35,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 17,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 52,
+          "target_token_denominator": 624,
+          "token_edit_rate": 0.14903846153846154
+        },
+        "200": {
+          "edit_numerator": 95,
+          "empty_outputs": 0,
+          "evaluable_clips": 52,
+          "exact_token_match_denominator": 52,
+          "exact_token_matches": 7,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 35,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 11,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 35,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 17,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 52,
+          "target_token_denominator": 624,
+          "token_edit_rate": 0.15224358974358973
+        },
+        "500": {
+          "edit_numerator": 95,
+          "empty_outputs": 0,
+          "evaluable_clips": 52,
+          "exact_token_match_denominator": 52,
+          "exact_token_matches": 7,
+          "keywords": [
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 1,
+              "known_negative_rows": 35,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 11,
+              "unknown_rows": 0
+            },
+            {
+              "false_positive_rows": 0,
+              "keyword_id": 2,
+              "known_negative_rows": 35,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 17,
+              "unknown_rows": 0
+            }
+          ],
+          "observed_clips": 52,
+          "target_token_denominator": 624,
+          "token_edit_rate": 0.15224358974358973
+        }
+      }
+    }
+  },
+  "created_at_utc": "2026-11-06T15:17:46.002221+00:00",
+  "development_rows": 34,
+  "eligible_train_rows": 96,
+  "evidence": {
+    "comparison": {
+      "bytes": 4881743,
+      "sha256": "ec9b488266bcab8480b08dd88835fdd998954c028b6903f0b89008099ac93844"
+    },
+    "manifest": {
+      "bytes": 85568,
+      "sha256": "06dc3b01a63500a9a88f149cdc73ba50493849f620668f909354b856456c8ea3"
+    },
+    "model_summary": {
+      "bytes": 19295,
+      "sha256": "e231b529f3d2b33f67ca4a2898b3cfef4c076fccceeacf58902a650bc4feeb4d"
+    },
+    "queue_result": {
+      "bytes": 2520,
+      "sha256": "c37f68fc2a41f72277a58bb9dc82cc00cf55ddfa1e69d5a57fb8fa0a3b367a61"
+    },
+    "saved_graph": {
+      "bytes": 46159,
+      "sha256": "c568cbbffa3a5f2f7d158cd7b61813e336bbb55c9e52e8b7f4fb87c2fa5a6464"
+    },
+    "scope_decision": {
+      "bytes": 12096,
+      "sha256": "21b665f89b98aec1a01e9e16e16a098cc7c06744b7352d3dd92823c6a8b94178"
+    }
+  },
+  "final_observations": 402,
+  "generalization_passed": null,
+  "human_gold": false,
+  "independent_test": false,
+  "initial_float_state_sha256": "3717783d0771bc28e66006d523f414dcdbb3997d372b7d115f9961b62e71b855",
+  "interpretation": "K1 gains three complete-sequence development row hits without losing the prior hit, while K2 stays unchanged. New-development fulltext improves and old-development fulltext worsens; combined development edit count changes only from141/287 to140/287.",
+  "job_id": "c1-newsource64-augmentation2000",
+  "model_checkpoint_sha256": "13cdff7365f5c34e0e8f09d73f32d73d90b462a447245506d7acac20695d8f92",
+  "natural_far_established": false,
+  "natural_negative_seconds_accepted": 0,
+  "new_asr_calls": 168,
+  "new_generation_calls": 56,
+  "new_weak_rows": {
+    "machine_candidate": 60,
+    "uncertain": 4,
+    "weight0": 4,
+    "weight0_5": 25,
+    "weight1": 35
+  },
+  "numeric_bytes_retained": 646437978,
+  "numeric_files_retained": 402,
+  "offsets_are_repeated_conditions": true,
+  "optimizer_steps": 2000,
+  "original_plan_cells": 256,
+  "paired_K1_row_transitions": {
+    "new-development": {
+      "hit_to_hit": 0,
+      "hit_to_miss": 0,
+      "known_k1_positive_rows": 4,
+      "miss_to_hit": 1,
+      "miss_to_miss": 3
+    },
+    "old-development": {
+      "hit_to_hit": 1,
+      "hit_to_miss": 0,
+      "known_k1_positive_rows": 6,
+      "miss_to_hit": 2,
+      "miss_to_miss": 3
+    }
+  },
+  "physical_ssc305_validation": false,
+  "previously_exposed_development": true,
+  "quality_winner": null,
+  "remote_bytes_independently_redownloaded": false,
+  "reused_asr_observations": 24,
+  "reused_generation_outputs": 8,
+  "schema": "kws-balanced64-aggregate-completion-v1",
+  "single_variable_data_size_ablation": false,
+  "source_main_ci": "https://github.com/jiying2007/kws-pipeline/actions/runs/42236542433",
+  "source_main_sha": "ea60d51cf5826dbc23813a3638888ce93fb6a47a",
+  "source_prs": [
+    "https://github.com/jiying2007/kws-pipeline/pull/762",
+    "https://github.com/jiying2007/kws-pipeline/pull/763"
+  ],
+  "status": "completed-and-saved",
+  "this_projection_model_calls": 0,
+  "this_projection_tensor_deserializations": 0,
+  "training_forwards": 8000,
+  "unknown_training_draws": 0,
+  "unstarted_cells": 192
+}

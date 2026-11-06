@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 from contextlib import contextmanager
+from dataclasses import dataclass
 import hashlib
 import json
 import math
@@ -45,6 +46,26 @@ CORRECTED_BUDGET_SHA = "b1e6aaddb2eb3b662f004ded0d574220c99a110ab89e4ec4f568f4a3
 MODES = ("baseline-evaluation", "augmentation2000")
 OFFSETS = (0, 200, 500)
 STEPS, DRAWS, BATCH = 2000, 8000, 4
+
+
+@dataclass(frozen=True)
+class ExecutionPolicy:
+    """Explicit metadata/entry-point dependencies; numerical operations are shared.
+
+    A new experiment supplies its own frozen recipe validator and source list.
+    The default policy below preserves this stage's original contract. This is
+    an in-process dependency, never a callable loaded from a recipe.
+    """
+    schema: str
+    source: str
+    code: tuple[str, ...]
+    contract: object
+    validate_contract: object
+    validate_recipe: object
+
+
+def execution_policy():
+    return ExecutionPolicy(SCHEMA, SOURCE, CODE, contract, validate_contract, validate_recipe)
 
 
 def pin(path):
@@ -449,9 +470,10 @@ def deadline(seconds):
         signal.signal(signal.SIGALRM, previous)
 
 
-def run(recipe_path, output, lock):
+def run(recipe_path, output, lock, *, policy=None):
+    policy = execution_policy() if policy is None else policy
     job = training.read_json(recipe_path)
-    validate_contract(job)
+    policy.validate_contract(job)
     require(str(io.safe_path(lock)) == job["heavy_lock"], "AUGMENTATION_CANONICAL_LOCK")
     with training.heavy_model_slot(lock) as lease:
         training.queue_binding(recipe_path, lease)
@@ -460,7 +482,7 @@ def run(recipe_path, output, lock):
             os.environ.get("KWS_RESEARCH_OUTPUT_DIR") == str(Path(output).absolute()), "AUGMENTATION_QUEUE_SCOPE")
         output = training.output_directory(output)
         started = time.monotonic()
-        status = {**contract(job["mode"]), "status": "running", "started_at": training.utc(),
+        status = {**policy.contract(job["mode"]), "status": "running", "started_at": training.utc(),
             "job_id": job["job_id"], "recipe_sha256": training.sha_file(recipe_path), "model_constructions": 0, "actual_optimizer_steps": 0,
             "training_forwards_started": 0, "training_forwards_completed": 0,
             "final_forwards_started": 0, "final_forwards_completed": 0, "final_forward_limit": job["final_forward_limit"]}
@@ -468,14 +490,14 @@ def run(recipe_path, output, lock):
         model = optimizer = None
         try:
             with deadline(job["worker_seconds"]) as end:
-                vocabulary = validate_recipe(job)
+                vocabulary = policy.validate_recipe(job)
                 runtime = training.research_runtime.load_manifest()
                 training.research_runtime.check_interpreter(runtime)
                 training.research_runtime.check_packages(runtime, "core")
                 torch, reference = training.torch_runtime()
                 from training_state import atomic_save_checkpoint, load_checkpoint_snapshot, state_identity
                 training.copy_once(recipe_path, output / "request.json")
-                for name in CODE:
+                for name in policy.code:
                     training.copy_once(ROOT / name, output / "execution-source" / name)
                 for key, name in (("initial_checkpoint", "initial.pt"), ("vocabulary_file", "vocabulary.json"), ("tokens_file", "tokens.txt")):
                     training.copy_once(checked(job[key]), output / name)
@@ -504,7 +526,7 @@ def run(recipe_path, output, lock):
                     identity = state_identity(model.state_dict())
                     names = [name for name, _ in model.named_parameters()]
                     require(names == job["canonical_parameter_names"] == list(model.state_dict()), "AUGMENTATION_PARAMETER_ORDER")
-                    payload = {"schema": SCHEMA, "candidate": onset.CANDIDATE, "state_dict": model.state_dict(),
+                    payload = {"schema": policy.schema, "candidate": onset.CANDIDATE, "state_dict": model.state_dict(),
                         "optimizer_state": optimizer.state_dict(), "float_state_identity": identity,
                         "job_recipe_sha256": status["recipe_sha256"], "optimizer_steps": STEPS, "training_model_forwards": DRAWS,
                         "initial_checkpoint_sha256": silence.INITIAL_SHA, "vocabulary_sha256": job["vocabulary_sha256"],
@@ -549,7 +571,7 @@ def run(recipe_path, output, lock):
                 possible_incomplete_call="retain original started claims; no retry")
             if model is not None and optimizer is not None and not (output / "final.pt").exists():
                 try:
-                    atomic_save_checkpoint({"schema": SCHEMA, "status": "partial-failure-not-final", "state_dict": model.state_dict(),
+                    atomic_save_checkpoint({"schema": policy.schema, "status": "partial-failure-not-final", "state_dict": model.state_dict(),
                         "optimizer_state": optimizer.state_dict(), "counts_are_lower_bounds": True,
                         "recorded_optimizer_steps": status["actual_optimizer_steps"]}, output / "partial.pt")
                 except BaseException as saved_error:
@@ -560,7 +582,8 @@ def run(recipe_path, output, lock):
             raise
 
 
-def audit(output, expected):
+def audit(output, expected, *, policy=None):
+    policy = execution_policy() if policy is None else policy
     output = io.safe_path(output)
     onset.verify_manifest(output, expected)
     job, summary = training.read_json(output / "request.json"), training.read_json(output / "summary.json")
@@ -573,10 +596,10 @@ def audit(output, expected):
         receipt["outputs"]["MANIFEST.json"] == io.file_record(output / "MANIFEST.json"), "AUGMENTATION_COMPLETED_QUEUE")
     with training.heavy_model_slot(job["heavy_lock"]):
         with deadline(240):
-            vocabulary = validate_recipe(job)
-            validate_contract(summary)
+            vocabulary = policy.validate_recipe(job)
+            policy.validate_contract(summary)
             validate_terminal_counts(summary, job)
-            require({n: training.sha_file(output / "execution-source" / n) for n in CODE} == job["source_hashes"], "AUGMENTATION_SAVED_SOURCE")
+            require({n: training.sha_file(output / "execution-source" / n) for n in policy.code} == job["source_hashes"], "AUGMENTATION_SAVED_SOURCE")
             runtime = training.research_runtime.load_manifest()
             training.research_runtime.check_interpreter(runtime)
             training.research_runtime.check_packages(runtime, "core")
@@ -589,7 +612,7 @@ def audit(output, expected):
                 final_sha == summary["final_checkpoint_sha256"] and summary["final_observation_state_unchanged"] is True and
                 initial["float_state_identity"]["sha256"] == summary["initial_float_state_sha256"], "AUGMENTATION_SAVED_STATE")
             if job["mode"] == "augmentation2000":
-                require(final["schema"] == SCHEMA and final["candidate"] == onset.CANDIDATE and
+                require(final["schema"] == policy.schema and final["candidate"] == onset.CANDIDATE and
                     final["optimizer_steps"] == STEPS and final["training_model_forwards"] == DRAWS and
                     final["job_recipe_sha256"] == summary["recipe_sha256"] and final["initial_checkpoint_sha256"] == silence.INITIAL_SHA and
                     final["vocabulary_sha256"] == job["vocabulary_sha256"] and final["train_binding_sha256"] == job["train_binding_sha256"] and
@@ -613,32 +636,34 @@ def audit(output, expected):
             else:
                 require(context.lines(output / "forward-calls.jsonl") == calls, "AUGMENTATION_BASELINE_CALLS")
             require(conditions(observed, job) == summary["conditions"], "AUGMENTATION_SAVED_SUMMARY")
-            return {"schema": SCHEMA, "status": "verified", "mode": job["mode"], "manifest_sha256": expected,
+            return {"schema": policy.schema, "status": "verified", "mode": job["mode"], "manifest_sha256": expected,
                 "saved_training_forwards": job["training_forward_limit"], "saved_optimizer_steps": job["optimizer_steps"],
                 "saved_final_conditions": job["final_forward_limit"], "new_model_constructions": 0,
                 "new_model_forwards": 0, "new_optimizer_steps": 0, "complete_optimization_numerically_replayed": False}
 
 
-def queue_definition(recipe, python):
+def queue_definition(recipe, python, *, policy=None):
+    policy = execution_policy() if policy is None else policy
     job = training.read_json(recipe)
-    validate_contract(job)
+    policy.validate_contract(job)
     outputs = ["summary.json", "observations.jsonl", "forward-calls.jsonl", "final.pt", "MANIFEST.json"]
     if job["mode"] == "augmentation2000":
         outputs += ["consumption.jsonl", "optimizer-calls.jsonl"]
     return {"schema": io.SCHEMA, "queue_id": job["job_id"], "global_budget_minutes": job["queue_minutes"], "jobs": [{
         "job_id": job["job_id"], "recipe": str(Path(recipe).absolute()), "recipe_sha256": training.sha_file(recipe),
-        "argv": [python, "-I", "-B", str(ROOT / SOURCE), "run", "--recipe", "{recipe}",
+        "argv": [python, "-I", "-B", str(ROOT / policy.source), "run", "--recipe", "{recipe}",
                  "--output", "{output_dir}", "--heavy-lock", job["heavy_lock"]],
         "cwd": str(ROOT), "depends_on": [], "timeout_minutes": job["queue_minutes"], "outputs": outputs}]}
 
 
-def completed_evidence(value):
+def completed_evidence(value, *, policy=None):
+    policy = execution_policy() if policy is None else policy
     require(set(value) == {"output", "manifest_sha256", "audit"}, "AUGMENTATION_COMPARISON_INPUT")
     output = io.safe_path(value["output"])
     onset.verify_manifest(output, value["manifest_sha256"])
     job, summary = training.read_json(output / "request.json"), training.read_json(output / "summary.json")
-    validate_contract(job)
-    validate_contract(summary)
+    policy.validate_contract(job)
+    policy.validate_contract(summary)
     validate_terminal_counts(summary, job)
     result = training.read_json(output.parent / "result.json")
     audit_record = training.read_json(checked(value["audit"]))
@@ -647,7 +672,7 @@ def completed_evidence(value):
         result["recipe_sha256"] == summary["recipe_sha256"] == training.sha_file(output / "request.json") and
         result["queue_sha256"] == training.sha_file(output.parents[2] / "queue.json") and
         result["outputs"]["MANIFEST.json"] == io.file_record(output / "MANIFEST.json") and
-        audit_record["schema"] == SCHEMA and audit_record["status"] == "verified" and
+        audit_record["schema"] == policy.schema and audit_record["status"] == "verified" and
         audit_record["manifest_sha256"] == value["manifest_sha256"] and audit_record["mode"] == job["mode"] and
         audit_record["saved_final_conditions"] == job["final_forward_limit"] and
         audit_record["saved_training_forwards"] == job["training_forward_limit"] and
