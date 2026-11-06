@@ -11,6 +11,16 @@ imports the existing frontend, `fulltext_ctc`, `research_c1_known_silence.train`
 durable forward/optimizer accounting, AdamW readback and numerical observation
 functions. It does not change those sources or the original frozen artifacts.
 
+The C1-local feature-bank adapter also accepts evaluation rows with no usable
+full-text target. When `ctc_mask` is false and `ctc_minimum_frames` is null, it
+passes a temporary lower bound of zero to the unchanged acoustic frontend.
+The original row, observed transcript, masks, weights and label identity remain
+unchanged. Feature evidence is built from that original row; the temporary
+geometry argument never becomes supervision or a saved row. Known integer
+target bounds retain the original check. Both execution and saved-tensor audit
+use this same adapter, and every target-free row retains all three numerical
+observations with an explicit not-evaluable status.
+
 ## Fixed question and inputs
 
 The preceding saved CTC analysis found low support for the K1 character “好” in
@@ -133,6 +143,16 @@ retries. The separately invoked saved-tensor audit uses the same shared lock and
 a240-second internal deadline, but constructs no model and performs no forward
 or optimizer update. Its time belongs to the explicit metadata/audit reservation.
 
+The original schema-v1/370-minute declaration remains supported. The separately
+frozen schema-v2/375-minute budget adds one fresh baseline invocation only after
+the first attempt failed in frontend preparation, before model construction.
+Its exact budget SHA is pinned by the corrected source. The failed queue is
+retained and cannot be resumed; independent zero-model-call proof, actual saved
+failure evidence, corrected public source and a newly saved preparation are
+required by the new execution authorization. The baseline still has at most one
+model-producing invocation and 192 forwards, and augmentation remains one
+2000-step invocation. Unknown or consumed model calls gain no replay permission.
+
 Training retains started/completed forward and optimizer ledgers, complete
 per-draw weak targets/weights/losses, gradient-norm observations, final state and
 AdamW moments. It does not retain all8000 intermediate training logit/gradient
@@ -191,4 +211,8 @@ After a real completed result, run `audit --output ... --manifest-sha256 ...
 The source tests use invented metadata for opposite-intent/actual-label cases,
 uncertain masks, complete OOV retention, C1/FSMN geometry differences, source-role
 leaks, fixed budgets and per-row exposures. The separate numeric fixture uses
-only tiny invented logits; it constructs no model or optimizer.
+small invented PCM through the real Torch frontend and tiny invented logits.
+It reproduces the former null-minimum failure, verifies bit-identical known-row
+features and evidence, and saves all three target-free observations without
+changing original labels or identities. Guards reject model construction,
+module calls and optimizer construction; no model inference or training runs.

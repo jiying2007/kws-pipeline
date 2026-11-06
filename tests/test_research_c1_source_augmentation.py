@@ -63,6 +63,30 @@ class MetadataTests(unittest.TestCase):
         self.assertEqual(actual["keyword_targets"], [None, None])
         self.assertEqual(actual["keyword_mask"], [False, False])
 
+    def test_target_free_geometry_is_a_temporary_nonlabel_copy(self):
+        vocabulary, row = fixture()
+        row.update(label_status="uncertain", full_text=None, ctc_mask=False, ctc_weight=0.0,
+            keyword_targets=[None, None], keyword_mask=[False, False], keyword_weight=[0.0, 0.0])
+        actual = stage.project_row(row, vocabulary)
+        original = copy.deepcopy(actual)
+        geometry = stage.feature_geometry_row(actual)
+        self.assertEqual(geometry, {**original, "ctc_minimum_frames": 0})
+        self.assertEqual(actual, original)
+        self.assertIsNone(actual["ctc_minimum_frames"])
+        self.assertNotEqual(stage.fit.row_identity(geometry), stage.fit.row_identity(actual))
+        for changed in ({"target_ids": [1]}, {"ctc_weight": .5}):
+            with self.subTest(changed=changed), self.assertRaisesRegex(ValueError, "MISSING_TRAIN_CTC_GEOMETRY"):
+                stage.feature_geometry_row({**actual, **changed})
+
+    def test_target_free_geometry_never_relaxes_known_target_bound(self):
+        vocabulary, row = fixture()
+        known = stage.project_row(row, vocabulary)
+        self.assertIs(stage.feature_geometry_row(known), known)
+        with self.assertRaisesRegex(ValueError, "MISSING_TRAIN_CTC_GEOMETRY"):
+            stage.feature_geometry_row({**known, "ctc_minimum_frames": None})
+        infeasible = {**known, "ctc_mask": False, "ctc_minimum_frames": 10000}
+        self.assertIs(stage.feature_geometry_row(infeasible), infeasible)
+
     def test_wrong_keyword_label_is_rejected(self):
         vocabulary, row = fixture()
         row["keyword_targets"] = [0, 0]

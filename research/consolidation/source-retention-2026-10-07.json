@@ -51270,6 +51270,87 @@
           }
         }
       ]
+    },
+    {
+      "id": "c1-target-free-feature-geometry-20261106",
+      "date": "2026-11-06",
+      "base_commit": "9127648a45e4ac485a0e3298b3b8f041e6952c56",
+      "base_tree": "5dafe4454d16fd07ea1c679160fe522dae3555bd",
+      "public_source_commit": "e99c285668cc1a1e1d93e69f103114e9c0278297",
+      "previous_manifest_sha256": "225213d6517e53f38e8706914f8075a95cae231320ca41aa1908cc0d50cdfa25",
+      "workflow_source_changed": false,
+      "scope": "C1-only target-free feature argument adapter, unchanged original evidence labels/identity, explicit separately pinned corrected budget support, focused metadata and real small PCM frontend fixtures, documentation. Existing33 numerical dependency files remain byte-identical.",
+      "rationale": "The first saved baseline failed before model construction when a target-free None CTC lower bound reached numeric frontend geometry. Correct only that argument path; retain uncertain masks and all final numerical observations. Original failed runtime and actual zero-call proof remain immutable dependencies, no consumed or unknown model call is replayed.",
+      "files": [
+        {
+          "path": "docs/research-c1-source-augmentation.md",
+          "before": {
+            "path": "docs/research-c1-source-augmentation.md",
+            "mode": "100644",
+            "bytes": 12039,
+            "git_blob_sha1": "2bda55d14fe140b33d810d214578ccb71929689f",
+            "sha256": "614f69dcf106a60d7be7f8ec36a5ab931171d31976bb83480d54c7c78938c5d7"
+          },
+          "after": {
+            "path": "docs/research-c1-source-augmentation.md",
+            "mode": "100644",
+            "bytes": 13737,
+            "git_blob_sha1": "b020b2307e85d70ce0f3093b6a7b888b2310d735",
+            "sha256": "c36fbd52dca4b59bb5bd31e263b1331be1e35922e729a4e5e40352ce8454bae7"
+          }
+        },
+        {
+          "path": "tests/research_c1_source_augmentation_numeric.py",
+          "before": {
+            "path": "tests/research_c1_source_augmentation_numeric.py",
+            "mode": "100644",
+            "bytes": 2885,
+            "git_blob_sha1": "b61bdabcdcc42f1c5534773e052b35d98dca4d60",
+            "sha256": "11bc0d9e71ba9c2af9b720613a8e6040b5ef5c466eca4435a57fecdb3d5467ae"
+          },
+          "after": {
+            "path": "tests/research_c1_source_augmentation_numeric.py",
+            "mode": "100644",
+            "bytes": 8533,
+            "git_blob_sha1": "8e28cebd4aea96f8c53ffa3b5bc634ff87435ed6",
+            "sha256": "27555d3ec59f84394afec11800db7f611c8324456c97b2c18874dc97e6cddc1c"
+          }
+        },
+        {
+          "path": "tests/test_research_c1_source_augmentation.py",
+          "before": {
+            "path": "tests/test_research_c1_source_augmentation.py",
+            "mode": "100644",
+            "bytes": 10683,
+            "git_blob_sha1": "29c27dbc8a1a276e5e405f9432df3af3e5dd506b",
+            "sha256": "54520d13b452ef4097fe578716bb115a5d9abc1e39bb9e6e03dcebca1d5473ab"
+          },
+          "after": {
+            "path": "tests/test_research_c1_source_augmentation.py",
+            "mode": "100644",
+            "bytes": 12177,
+            "git_blob_sha1": "ea6c0faa813d55180dbd89346579f6322ddac69b",
+            "sha256": "5095bc5516046e9f20dd08a3be00dd5359830ca7e09dc4064cfee46ba17313fc"
+          }
+        },
+        {
+          "path": "training/research_c1_source_augmentation.py",
+          "before": {
+            "path": "training/research_c1_source_augmentation.py",
+            "mode": "100644",
+            "bytes": 49677,
+            "git_blob_sha1": "15e3ec0833c938d45c0a3e0dfa0926842dd40984",
+            "sha256": "576b8cdfaf890690900ff68c63df6ac8bead4fd78f4dd1042be3ca6be2cd84bd"
+          },
+          "after": {
+            "path": "training/research_c1_source_augmentation.py",
+            "mode": "100644",
+            "bytes": 51956,
+            "git_blob_sha1": "ec1e826f8c10e0699952fe1dd8c3836886af73ed",
+            "sha256": "3c846dc8eafc3969af96d906108b23b81567f89d8b3b407ac9b028885642ec2a"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

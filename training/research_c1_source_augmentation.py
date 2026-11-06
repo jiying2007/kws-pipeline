@@ -41,6 +41,7 @@ BASELINE_SHA = "92d1d0b3d98e39bb9d5739d5bce80dc4a93bd7eb2e6a97f6fd55308012b19857
 BASELINE_RECIPE_SHA = "d5d10948fd2381fc1fa1c465953e01dcd72ba0e1356469cb3c2a98491f81affb"
 BASELINE_MANIFEST_SHA = "3dc3f3f8159fff515cc2a20ff68ed33ca99b388d984a50da1a81bf96cf2c5fdb"
 NEW_PLAN_SHA = "8ff19752b173cd8097ad8a612bd3329d44ae679419e8c54d30a69e73ad88ebd9"
+CORRECTED_BUDGET_SHA = "b1e6aaddb2eb3b662f004ded0d574220c99a110ab89e4ec4f568f4a323136be6"
 MODES = ("baseline-evaluation", "augmentation2000")
 OFFSETS = (0, 200, 500)
 STEPS, DRAWS, BATCH = 2000, 8000, 4
@@ -170,7 +171,14 @@ def assemble(request, *, require_terminal=True):
         "packages", "view_loader", "terminal_accounting", "global_budget"} and request["schema"] == REQUEST, "AUGMENTATION_REQUEST")
     budget = training.read_json(checked(request["global_budget"]))
     jobs = {j["id"]: j for j in budget["jobs"]}
-    require(budget["schema"] == "kws-balanced64-global-budget-v1" and budget["global_runner_minutes_ceiling"] == 370 and
+    original_budget = budget["schema"] == "kws-balanced64-global-budget-v1" and budget["global_runner_minutes_ceiling"] == 370
+    corrected_budget = (request["global_budget"]["sha256"] == CORRECTED_BUDGET_SHA and
+        budget["schema"] == "kws-balanced64-global-budget-v2" and budget["global_runner_minutes_ceiling"] == 375 and
+        jobs["c1-baseline-new64"]["maximum_invocations"] == 2 and
+        jobs["c1-baseline-new64"]["maximum_model_producing_invocations"] == 1 and
+        jobs["c1-baseline-new64"]["first_failed_queue_never_resumed"] is True and
+        jobs["c1-augmentation-fixed2000"]["maximum_invocations"] == 1)
+    require((original_budget or corrected_budget) and
         budget["heavy_model_concurrency"] == 1 and budget["threads"] == 4 and budget["interop_threads"] == 1 and
         jobs["c1-baseline-new64"]["queue_wall_seconds"] == 300 and
         jobs["c1-baseline-new64"]["maximum_new_inference_forwards"] == 192 and
@@ -385,6 +393,40 @@ def relocated_rows(job):
         for r in job["evaluation_rows"]]
 
 
+def feature_geometry_row(row):
+    """Supply no target-length bound when an evaluation row has no target.
+
+    This temporary frontend argument is never a supervision or evidence row.
+    The declared row retains its original None minimum, masks and identity.
+    """
+    if row["ctc_minimum_frames"] is None:
+        require(row["ctc_mask"] is False and row["target_ids"] is None and row["ctc_weight"] == 0,
+            "AUGMENTATION_MISSING_TRAIN_CTC_GEOMETRY")
+        return {**row, "ctc_minimum_frames": 0}
+    return row
+
+
+def feature_bank(prepared, rows, torch):
+    """Keep the prior acoustic/evidence calculation, with target-free input support."""
+    bank, evidence, pcms = {}, [], []
+    for index, row in enumerate(rows):
+        pcm = evaluation.read_pcm(prepared, row)
+        pcms.append(pcm)
+        geometry_row = feature_geometry_row(row)
+        for ms in OFFSETS:
+            feature = diagnostic.features(pcm, geometry_row, ms, torch)
+            shape = onset.geometry(row["samples"], ms)
+            if ms == 0:
+                baseline = feature
+            require(feature.dtype == torch.float32 and feature[shape["shift_frames"]:].equal(baseline),
+                "CONTEXT52_ORIGINAL_FEATURE_SUFFIX_CHANGED")
+            bank[index, ms] = feature
+            evidence.append({"source_id": row["source_id"], "split": row["split"], "offset_ms": ms,
+                "label_binding_sha256": fit.row_identity(row), "pcm_sha256": row["pcm_sha256"],
+                "feature_sha256": training.tensor_sha(feature), "baseline_feature_sha256": training.tensor_sha(baseline), **shape})
+    return bank, evidence, pcms
+
+
 def validate_terminal_counts(status, job):
     require(status["model_constructions"] == 1 and status["actual_optimizer_steps"] == job["optimizer_steps"] and
         status["training_forwards_started"] == status["training_forwards_completed"] == job["training_forward_limit"] and
@@ -444,7 +486,7 @@ def run(recipe_path, output, lock):
                     ("development-rows.json", job["development"]), ("evaluation-rows.json", rows)):
                     io.write_json(output / name, value)
                 initial = prior.initial_state(output / "initial.pt", job)
-                bank, evidence, pcms = prior.feature_bank(output, rows, torch)
+                bank, evidence, pcms = feature_bank(output, rows, torch)
                 io.write_json(output / "feature-bindings.json", evidence)
                 torch.manual_seed(job["seed"])
                 model, description = training.build_fresh(onset.CANDIDATE, vocabulary, reference)
@@ -563,7 +605,7 @@ def audit(output, expected):
                 training.read_json(output / "all-new-rows.json") == job["all_new_rows"] and
                 training.read_json(output / "train-rows.json") == job["train"] and
                 training.read_json(output / "development-rows.json") == job["development"], "AUGMENTATION_SAVED_ROWS")
-            bank, evidence, pcms = prior.feature_bank(output, rows, torch)
+            bank, evidence, pcms = feature_bank(output, rows, torch)
             require(evidence == training.read_json(output / "feature-bindings.json"), "AUGMENTATION_SAVED_FEATURES")
             observed, calls = observe(job, output, bank, pcms, vocabulary, final_sha, torch)
             if job["mode"] == "augmentation2000":
