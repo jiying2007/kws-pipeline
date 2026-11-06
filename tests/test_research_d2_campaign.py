@@ -23,6 +23,7 @@ import research_d2_campaign as campaign
 queue = campaign.queue
 ACTIVE_PLAN = ROOT / "configs/research/active-plan-20261105.json"
 LOAD_DATA = campaign.load_data
+REAL_GATE = campaign.checkpoints.Gate
 
 
 class CampaignTests(unittest.TestCase):
@@ -46,7 +47,8 @@ class CampaignTests(unittest.TestCase):
         (self.runtime / "venv/bin").mkdir(parents=True)
         (self.runtime / "venv/bin/python").symlink_to(sys.executable)
         source_names = set(campaign.generation.OWN_FILES) | {"tools/research_d2_campaign.py",
-                       "tools/research_queue_supervisor.py", "tools/active_asr_selective.py"}
+                       "tools/research_queue_supervisor.py", "tools/active_asr_selective.py",
+                       "tools/research_d2_checkpoints.py", "tools/research_d2_recovery.py"}
         for name in source_names:
             target = self.source / name
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -67,6 +69,8 @@ class CampaignTests(unittest.TestCase):
                                     build_source_map=self.source_map, create_view=self.create_view,
                                     verify_view=self.verify_view)
         patches = (
+            mock.patch.object(campaign.checkpoints, "Gate", side_effect=lambda: REAL_GATE(
+                wait_seconds=.01, max_wait_seconds=0, on_wait=self.save_fixture_checkpoint)),
             mock.patch.object(campaign, "ROOT", self.source),
             mock.patch.object(campaign, "driver_identity", return_value={"fixture": True, "python": "3.12.16"}),
             mock.patch.object(campaign, "load_data", return_value=self.data),
@@ -86,6 +90,15 @@ class CampaignTests(unittest.TestCase):
                               asr_runtime=self.runtime, policy=self.policy, fsmn_tokens=None,
                               max_chunks=2, total_minutes=1, asr_job_minutes=.05,
                               asr_budget_seconds=1, threads=4)
+
+    def save_fixture_checkpoint(self, folder, descriptor):
+        # Explicitly synthetic storage; no network and no real persistence claim.
+        receipt = folder / "fixture-save-input.json"
+        queue.write_json(receipt, {"schema": campaign.checkpoints.SAVE, "status": "saved",
+            "provider": "explicit-test-fixture", "object_id": "fixture-" + descriptor["capsule"]["sha256"],
+            "artifact": descriptor["capsule"], "member_manifest_sha256": descriptor["member_manifest_sha256"],
+            "provider_response": {"fixture_saved_id": "fixture-" + descriptor["capsule"]["sha256"]}})
+        campaign.checkpoints.acknowledge(folder, receipt)
 
     def load_stage(self, path):
         self.assertEqual(Path(path), self.stage_path)
@@ -388,7 +401,7 @@ class CampaignTests(unittest.TestCase):
         self.make_generation_queue()
         self.declare()
         observed = []
-        def synthetic_advance(path, *, max_chunks_this_call, progress):
+        def synthetic_advance(path, *, max_chunks_this_call, progress, checkpoint_gate):
             observed.append(max_chunks_this_call)
             if len(observed) == 1:
                 target = campaign.paths(self.output, self.job_ids[0])["complete"]
@@ -399,6 +412,45 @@ class CampaignTests(unittest.TestCase):
         with mock.patch.object(campaign, "advance", side_effect=synthetic_advance):
             campaign.run(self.path, max_chunks_this_call=2, wait_seconds=.02)
         self.assertEqual(observed, [2, 1])
+
+    def test_unacknowledged_intent_blocks_model_and_new_invocation_cannot_reuse_it(self):
+        self.make_generation_queue()
+        self.declare()
+        with self.assertRaisesRegex(ValueError, "SAVE_NOT_ACKNOWLEDGED"):
+            campaign.run(self.path, checkpoint_gate=REAL_GATE(max_wait_seconds=0))
+        self.assertEqual(self.event_rows(), [])
+        with self.assertRaisesRegex(ValueError, "AMBIGUOUS_INTENT_AFTER_RESTART"):
+            campaign.run(self.path)
+        self.assertEqual(self.event_rows(), [])
+        self.assertEqual(queue.inspect(self.generation_queue)["jobs"][self.job_ids[0]]["status"], "pending")
+
+    def test_generation_saved_then_driver_stops_before_asr_intent_can_resume_without_tts(self):
+        self.make_generation_queue()
+        self.declare(max_chunks=1)
+        def save_and_stop(folder, descriptor):
+            self.save_fixture_checkpoint(folder, descriptor)
+            if descriptor["context"]["phase"] == "generation-complete":
+                raise RuntimeError("fixture interruption after durable generation")
+        gate = REAL_GATE(max_wait_seconds=0, on_wait=save_and_stop)
+        with self.assertRaisesRegex(RuntimeError, "fixture interruption"):
+            campaign.run(self.path, checkpoint_gate=gate)
+        self.assertEqual(self.event_rows(), ["gen:generate-001"])
+        result, code = campaign.run(self.path)
+        self.assertEqual((result["status"], code), ("completed", 0))
+        self.assertEqual(self.event_rows(), ["gen:generate-001", "asr:generate-001"])
+
+    def test_unacknowledged_closure_blocks_next_generation_and_remains_recoverable(self):
+        self.make_generation_queue()
+        self.declare()
+        def save_except_closure(folder, descriptor):
+            if descriptor["context"]["phase"] != "chunk-complete":
+                self.save_fixture_checkpoint(folder, descriptor)
+        with self.assertRaisesRegex(ValueError, "SAVE_NOT_ACKNOWLEDGED"):
+            campaign.run(self.path, checkpoint_gate=REAL_GATE(max_wait_seconds=0, on_wait=save_except_closure))
+        self.assertEqual(self.event_rows(), ["gen:generate-001", "asr:generate-001"])
+        result, code = campaign.run(self.path)
+        self.assertEqual((result["status"], code), ("completed", 0))
+        self.assertEqual(self.event_rows(), ["gen:generate-001", "asr:generate-001", "gen:generate-002", "asr:generate-002"])
 
     def test_driver_lock_rejects_a_concurrent_host(self):
         self.make_generation_queue()

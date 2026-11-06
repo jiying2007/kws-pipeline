@@ -123,9 +123,14 @@ the separate model-smoke validation status.
 - [`research_queue_supervisor.py`](research_queue_supervisor.py) — Supervise an immutable local queue with heartbeat evidence and preserve failed or unknown model claims.
 - [`research_d2_generate.py`](research_d2_generate.py) — Generate only declared D2 additions and authenticate native returns before ASR export.
 - [`research_d2_campaign.py`](research_d2_campaign.py) — Complete each bounded generation, selective-ASR and weak-view chunk before advancing the same frozen campaign.
+- [`research_d2_checkpoints.py`](research_d2_checkpoints.py) — Save and verify per-phase evidence capsules; require external-save receipts and preserve ambiguous launch intents across restore.
+- [`research_d2_recovery.py`](research_d2_recovery.py) — Reconcile authenticated archived D2 receipts after runtime loss and exclude unrecorded outcomes from resubmission.
 - [`research_context_generate.py`](research_context_generate.py) — Run independently declared context supplements without repeating D1 or D2 cells.
 - [`research_context_v2_generate.py`](research_context_v2_generate.py) — Generate an explicit fixed-vocabulary context revision in separate bounded chunks while retaining its original parent.
+- [`research_context_v3_generate.py`](research_context_v3_generate.py) — Generate new full-text requests for 24 added identities; require externally saved launch and terminal evidence for each bounded chunk.
+- [`research_context_v3_campaign.py`](research_context_v3_campaign.py) — Close all nine context-v3 chunks through generation, selective ASR, complete weak-text replay and fixed full2601 projection, with durable acknowledgements between model phases.
 - [`research_context_partial.py`](research_context_partial.py) — Authenticate only the complete native returns of a preserved timed-out context job without generating another utterance.
+- [`research_fit_budget_compare.py`](research_fit_budget_compare.py) — Verify paired tiny-fit input, optimizer and consumed-step controls when only the declared exposure budget changes; constructs no model.
 - [Native Zipformer system guide](../docs/ZIPFORMER_SYSTEM.md) — Fixed profile, actual D0 execution and limits on interpreting native events.
 - [`setup_tts_runtime.py`](setup_tts_runtime.py) — Install and verify the isolated TTS environment and fixed Base model assets.
 - [`active_tts_smoke.py`](active_tts_smoke.py) — Freeze eight source-bound D1 cells and retain raw generation output before technical checks.

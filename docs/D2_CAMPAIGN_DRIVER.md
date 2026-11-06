@@ -1,5 +1,12 @@
 # Complete an existing D2 stage
 
+New declarations now use the mandatory per-phase persistence protocol in
+[D2 durable recovery](D2_DURABLE_RECOVERY.md). They stop at each external-save
+barrier until a real provider receipt acknowledges the exact capsule. A new
+driver invocation cannot reuse an ambiguous old launch intent. The v1 sources
+that executed the 2026-11-05 campaigns remain frozen; incomplete archived
+history is reconciled read-only and cannot be restarted as pending work.
+
 `tools/research_d2_campaign.py` connects the existing generation queue to the
 existing audio preparation, selective ASR and D2 weak-view producer. It does not
 declare a new TTS plan, retry a cell, import D1 work or change historical queues.

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 75230,
-      "sha256": "11f02a82d263e8bded34052a747afe8c541304a3d6301a8239ff55c87dd84e17",
-      "git_blob_sha1": "4e89b44d7f3fcd6460379dd2798e3fad95cfc4fc"
+      "bytes": 77516,
+      "sha256": "24b69527b841cfbdb4315e0b3760c4625782cc822c065a3b56c7a1ee4b720ec8",
+      "git_blob_sha1": "e52041026a7aaa8f3f58c4a70d305822d3593de8"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -49376,6 +49376,399 @@
             "bytes": 16848,
             "sha256": "39caa92e09eb8677bca70164be875f573b34d46f4af3d27d4e7817b8d2fe679a",
             "git_blob_sha1": "9be3502e217007124b5cea59bbccf881746d62af"
+          }
+        }
+      ]
+    },
+    {
+      "id": "dataset-continuation-20261106",
+      "date": "2026-11-06",
+      "base_commit": "d8d62a355a20a2da64d1dd3ad1de363c3c29f321",
+      "base_tree": "0d9bbfbafaf6f4b0f49cada29c34aee3321b3f22",
+      "public_source_commit": "9d7e14773242b503064245bc7e98430562d1ae85",
+      "previous_manifest_sha256": "5bfa9915a144599f540a24ce2903d86e6b655b3256a25f2ea0b2195876c32121",
+      "workflow_source_changed": true,
+      "scope": "Durable context72 generation ASR and fulltext projection, unknown D2 recovery guard, exact exposure comparison and acoustic derivations",
+      "rationale": "Continue with source-bound resumable evidence, preserve unknown historical model outcomes and compare observed training and acoustic effects without rewriting source IDs or claiming synthetic data as human truth",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 75230,
+            "git_blob_sha1": "4e89b44d7f3fcd6460379dd2798e3fad95cfc4fc",
+            "sha256": "11f02a82d263e8bded34052a747afe8c541304a3d6301a8239ff55c87dd84e17"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 77207,
+            "git_blob_sha1": "5a8fee13fffcb6770cbbcf5c36295a6cc6f10f31",
+            "sha256": "8278ade2b2ff024a7a7a1895d06375119a393868b9dd1c20fc0903f25b424fd0"
+          }
+        },
+        {
+          "path": "docs/CONTEXT_V3_CAMPAIGN.md",
+          "before": null,
+          "after": {
+            "path": "docs/CONTEXT_V3_CAMPAIGN.md",
+            "mode": "100644",
+            "bytes": 5222,
+            "git_blob_sha1": "de0ac6bfbaf7ef232a6344a3b7bfe3478c418620",
+            "sha256": "baddfd669ea52baae52272ddf0c732cfa7461b106df7b36e75fa2da662154831"
+          }
+        },
+        {
+          "path": "docs/CONTEXT_V3_GENERATION.md",
+          "before": null,
+          "after": {
+            "path": "docs/CONTEXT_V3_GENERATION.md",
+            "mode": "100644",
+            "bytes": 4663,
+            "git_blob_sha1": "f378e80af973c2780f79d19712e0e767fa880a6a",
+            "sha256": "13d5038dc6dda68eb42b53dfcad719a68ea6b99c3381c6730d2a36d3f6980ddc"
+          }
+        },
+        {
+          "path": "docs/D2_CAMPAIGN_DRIVER.md",
+          "before": {
+            "path": "docs/D2_CAMPAIGN_DRIVER.md",
+            "mode": "100644",
+            "bytes": 6978,
+            "git_blob_sha1": "b0c2e32788fdc6451443441757e3840bb486668b",
+            "sha256": "4a2dcf167baf1ee49aca6ac0e624b60f327d286f974efd7a8ff33ccb4fdd8c9b"
+          },
+          "after": {
+            "path": "docs/D2_CAMPAIGN_DRIVER.md",
+            "mode": "100644",
+            "bytes": 7432,
+            "git_blob_sha1": "7f300b14cd9d7a973a20fc03b215adc3074d8a8d",
+            "sha256": "1dff5b620ec2cddadea2d00fbd944ed5445260cb0dc364aaec57cd3edc5cd5ae"
+          }
+        },
+        {
+          "path": "docs/D2_DURABLE_RECOVERY.md",
+          "before": null,
+          "after": {
+            "path": "docs/D2_DURABLE_RECOVERY.md",
+            "mode": "100644",
+            "bytes": 9086,
+            "git_blob_sha1": "8d73d220b1d1a32b5cb2d8d514b682a4ed9c1d7f",
+            "sha256": "b257fac13ab56db1c1ad4674553d1c0cada591bb750e12c0602379e6c2d13f02"
+          }
+        },
+        {
+          "path": "docs/research-context-v3-inputs.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-context-v3-inputs.md",
+            "mode": "100644",
+            "bytes": 4505,
+            "git_blob_sha1": "fd4ae187ade16534618f0e158ecd689f971c6e3b",
+            "sha256": "2b7a0f79d1ac7044c0b2139802908d5e014c7c954cf12d371636caf7735aa239"
+          }
+        },
+        {
+          "path": "docs/research-fit-exposure-comparison.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-fit-exposure-comparison.md",
+            "mode": "100644",
+            "bytes": 7306,
+            "git_blob_sha1": "68293802267c1a9d0576d10f19a7a211bc2edf85",
+            "sha256": "51ded4c909fd1feb3240ccc05a77605260edd370bacc78a7b60f2a0392dca24f"
+          }
+        },
+        {
+          "path": "research/acoustic-variants-20261106/README.md",
+          "before": null,
+          "after": {
+            "path": "research/acoustic-variants-20261106/README.md",
+            "mode": "100644",
+            "bytes": 2025,
+            "git_blob_sha1": "61aabae41bcfa61223620ab27f60a31265fd84f5",
+            "sha256": "34eb7c168cb3b511a08238060466e3dae08d1b6278d579a75e8a2f13b4d4993c"
+          }
+        },
+        {
+          "path": "research/active-d2-20261106/fit-exposure2000-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/active-d2-20261106/fit-exposure2000-summary.json",
+            "mode": "100644",
+            "bytes": 4498,
+            "git_blob_sha1": "bb974cb20096f2b7dae0c6d77b80e09f0ef88174",
+            "sha256": "43eb821bd032634d3080c4fa786f0eee3ada6629e4b6e8cb6f32e9e8544c8d10"
+          }
+        },
+        {
+          "path": "research/active-d2-recovery-20261106/recovery-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/active-d2-recovery-20261106/recovery-summary.json",
+            "mode": "100644",
+            "bytes": 1530,
+            "git_blob_sha1": "ff4d8c00624754b374cfd78b65037e7319eaa74c",
+            "sha256": "0a85fe0fec8f7d8c1def5fcb231f7a090701b7a68eda5e24bb6d5184211910a0"
+          }
+        },
+        {
+          "path": "tests/test_research_acoustic_augment.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_acoustic_augment.py",
+            "mode": "100644",
+            "bytes": 3820,
+            "git_blob_sha1": "f90ffeaa6c4345b113d564a664be51d8aa527c83",
+            "sha256": "065eba3c6f8a3a3495dad015c535c919d4851e5221d3b93dc541805242205175"
+          }
+        },
+        {
+          "path": "tests/test_research_ci_changes.py",
+          "before": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 14462,
+            "git_blob_sha1": "521f688a002306fa00a4e536660fffd55d8a3e17",
+            "sha256": "584d5a56c704b262e6a257843eb8706c33a2550062b8de33aafcbdaa1a94c33a"
+          },
+          "after": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 14738,
+            "git_blob_sha1": "fdda84559adb042fa923554e358efadb3ad01b48",
+            "sha256": "46a493ba14085cd83a2c89d4b8b3f55efa7184b60ea7749931f048136eabf5b1"
+          }
+        },
+        {
+          "path": "tests/test_research_context_v3_campaign.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_context_v3_campaign.py",
+            "mode": "100644",
+            "bytes": 16418,
+            "git_blob_sha1": "ff78c9a31ab2a83fe29615b8c006e19f3726c3f7",
+            "sha256": "a013fdc1ee40c671213137f9b3b78bbbd337151869bfe6df7ead1559dc6c97a8"
+          }
+        },
+        {
+          "path": "tests/test_research_context_v3_generate.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_context_v3_generate.py",
+            "mode": "100644",
+            "bytes": 34722,
+            "git_blob_sha1": "fd1973ddc92d9a61d24eef5fc02bf8fe54dab8d7",
+            "sha256": "fe8bb39ad32839bb8162c0dece5d09d6645ebb65e218f7e36ffd85dd6d56d9a7"
+          }
+        },
+        {
+          "path": "tests/test_research_context_v3_inputs.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_context_v3_inputs.py",
+            "mode": "100644",
+            "bytes": 16926,
+            "git_blob_sha1": "73438fd8bf0c745a62a491778fba6906b81bd8a4",
+            "sha256": "420022f0afceecb657ba3b30bc0c4f34a625d8bdca42d3dc1f66c21ef2cd2ae5"
+          }
+        },
+        {
+          "path": "tests/test_research_d2_campaign.py",
+          "before": {
+            "path": "tests/test_research_d2_campaign.py",
+            "mode": "100644",
+            "bytes": 22788,
+            "git_blob_sha1": "942383756c53c917bb6ba0b9b50803829ec750ee",
+            "sha256": "7788997e279448e8157fd5d9ea8ee586b70f17ecd544fa5fbd664bb9064f0cf9"
+          },
+          "after": {
+            "path": "tests/test_research_d2_campaign.py",
+            "mode": "100644",
+            "bytes": 26169,
+            "git_blob_sha1": "f01735577bc7935b9026f9acf13153e707cfecf6",
+            "sha256": "b317986b74a6423edc0e29e277e957638aad663c5b4cb8dd64198e025ca6f0c4"
+          }
+        },
+        {
+          "path": "tests/test_research_d2_recovery.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_d2_recovery.py",
+            "mode": "100644",
+            "bytes": 11823,
+            "git_blob_sha1": "0ce9c568a8e1d756430879a2b3bac77e261278d8",
+            "sha256": "9c376294e6b1a2594f237a837ba0c7c6451c5343375296b077538aeb8923f7cb"
+          }
+        },
+        {
+          "path": "tests/test_research_fit_budget_compare.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_fit_budget_compare.py",
+            "mode": "100644",
+            "bytes": 6788,
+            "git_blob_sha1": "175627fd3d0c4411ba1180e03e31051ce7af5a6a",
+            "sha256": "102a8293bd7580e4e18a3b1ddc3dcbfdbe3b4ab97f1962831e49229222066448"
+          }
+        },
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 23907,
+            "git_blob_sha1": "065e4b24fd18268c005c0ab03034d11de2630f67",
+            "sha256": "027507170a1988d8dd8c3f72e4e206a4f6b10e7f72f232ca02f037aae0e54eff"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 24947,
+            "git_blob_sha1": "388a651684e0d310785caffd803d7c620fb228c0",
+            "sha256": "7259a8fdd37a3c24481ae5a0c279278d9c4db33d593178e6c09456ae847db93b"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 7929,
+            "git_blob_sha1": "ee06d3e0b8cff6dcd0ed7fa526331af5ebd20849",
+            "sha256": "3c1c5b431de7d2b1c01da29855adb2dd2b733dd87044eed4060095e48cd2980c"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 8686,
+            "git_blob_sha1": "4eb0baa248040245ca2a3369df4f8708c105c263",
+            "sha256": "b951c02685f8f25d13efdf542c69a7aa85c0bb19ac9be7f9880457a905fded1f"
+          }
+        },
+        {
+          "path": "tools/research_context_v3_campaign.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_context_v3_campaign.py",
+            "mode": "100644",
+            "bytes": 44507,
+            "git_blob_sha1": "1f7a67bb99483bc64a0216e427644dd5ff72b8df",
+            "sha256": "f24fd09677b6ea58891b506c7cf951d10ef10a20cac70692e302d0ac886ec19a"
+          }
+        },
+        {
+          "path": "tools/research_context_v3_generate.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_context_v3_generate.py",
+            "mode": "100644",
+            "bytes": 33170,
+            "git_blob_sha1": "12ea3200a4ac757820cd1727cf95359f2cb82566",
+            "sha256": "92e4f792a8073d632d3b4d5d564793e1771600b8dba3852877111e944d65be5b"
+          }
+        },
+        {
+          "path": "tools/research_d2_campaign.py",
+          "before": {
+            "path": "tools/research_d2_campaign.py",
+            "mode": "100644",
+            "bytes": 30939,
+            "git_blob_sha1": "60c7cf3d1a2ad19fc6ba5ea587b4e8c3895d52a0",
+            "sha256": "be46b7bbfbddee40d6fd24e4f7ab229dc4ef570fbd3933d94d1f338342ccf97c"
+          },
+          "after": {
+            "path": "tools/research_d2_campaign.py",
+            "mode": "100644",
+            "bytes": 35000,
+            "git_blob_sha1": "d6a7d1404a7ce55f60c26e513a8030b36b96d0e0",
+            "sha256": "15e6cf083b9bb58a2c20e1a1a4f902d8a8bb3315d41b3b2009ff445f25b30d0a"
+          }
+        },
+        {
+          "path": "tools/research_d2_checkpoints.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_d2_checkpoints.py",
+            "mode": "100644",
+            "bytes": 18867,
+            "git_blob_sha1": "ae6616ffd3ba1b2f2c009d05cde5d7725b1a3e4b",
+            "sha256": "65f1e4a2aa143a4bf6eff4fa656ed1143087d9b353e7dfed0a783fd899660d45"
+          }
+        },
+        {
+          "path": "tools/research_d2_recovery.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_d2_recovery.py",
+            "mode": "100644",
+            "bytes": 15430,
+            "git_blob_sha1": "605cc449d62da6df61c0853eccabbc007cc6daf4",
+            "sha256": "edd0715cc159ad744acd06edab33d7189ab08684b396a0852f14430b0f96e126"
+          }
+        },
+        {
+          "path": "tools/research_fit_budget_compare.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_fit_budget_compare.py",
+            "mode": "100644",
+            "bytes": 11907,
+            "git_blob_sha1": "75bd9a38d873055db774b6f0c982cac4445b40fc",
+            "sha256": "de7467d08aafa3033ac3688085f429e9b67ff5c1b4051d4aaf4e2fc6f453ef8a"
+          }
+        },
+        {
+          "path": "training/research_acoustic_augment.py",
+          "before": null,
+          "after": {
+            "path": "training/research_acoustic_augment.py",
+            "mode": "100644",
+            "bytes": 16689,
+            "git_blob_sha1": "2ab545f22c66692ee7d2e195ca14f21f8d536f3e",
+            "sha256": "3ffc188807d3cd38489c026238895d43ebeaf4f46ea8cf1ac095a441f80ee690"
+          }
+        },
+        {
+          "path": "training/research_context_v3_inputs.py",
+          "before": null,
+          "after": {
+            "path": "training/research_context_v3_inputs.py",
+            "mode": "100644",
+            "bytes": 17910,
+            "git_blob_sha1": "2ad219c329858cbcfe2f2c017495d892f796789f",
+            "sha256": "a2e2cd217c727e1ab603c2c46f90129ed4c8a6e5bab89bdaf1c8d591a31d6178"
+          }
+        }
+      ]
+    },
+    {
+      "id": "dataset-continuation-ci-placement-20261106",
+      "date": "2026-11-06",
+      "base_commit": "9762e7c3034b9493f738ab80377e3467c21beeba",
+      "base_tree": "2b8f7508a96c34218befd3fe55bd4df28288364e",
+      "public_source_commit": "12f59543e68d57685eaa5f6d2a8ccb57be6dad14",
+      "previous_manifest_sha256": "30be94581cd89d3bd8204aa9e506c70bc56c8070e42a93cf2d47d1c213f96126",
+      "workflow_source_changed": true,
+      "scope": "Move unchanged acoustic numeric contracts into the existing dependency-enabled hosted-build job",
+      "rationale": "Resolve the actual compiler-independent CI structural failure while preserving its local-only guard, full acoustic tests, workflow inventory and all previous public source events",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 77207,
+            "git_blob_sha1": "5a8fee13fffcb6770cbbcf5c36295a6cc6f10f31",
+            "sha256": "8278ade2b2ff024a7a7a1895d06375119a393868b9dd1c20fc0903f25b424fd0"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 77516,
+            "git_blob_sha1": "e52041026a7aaa8f3f58c4a70d305822d3593de8",
+            "sha256": "24b69527b841cfbdb4315e0b3760c4625782cc822c065a3b56c7a1ee4b720ec8"
           }
         }
       ]

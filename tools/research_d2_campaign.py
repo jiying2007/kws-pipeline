@@ -27,9 +27,12 @@ import active_asr_selective as selective
 import research_d2_generate as generation
 import research_queue as queue
 import research_queue_supervisor as supervisor
+import research_d2_checkpoints as checkpoints
+import research_d2_recovery as recovery
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMA = "kws-d2-campaign-v1"
+LEGACY_SCHEMA = "kws-d2-campaign-v1"
+SCHEMA = "kws-d2-campaign-v2"
 COMPLETION = "kws-d2-campaign-chunk-complete-v1"
 ASR_JOB = "asr-selective"
 
@@ -106,7 +109,9 @@ def declare(args):
     """Freeze the complete allowed prefix once, optionally adopting its files."""
     stage_path, root = queue.safe_path(args.stage), queue.safe_path(args.output)
     driver = driver_identity()
-    stage, _prepared, _plan, _bulk = generation.load_stage(stage_path)
+    stage, _prepared, plan, _bulk = generation.load_stage(stage_path)
+    history_loss = [pin(path) for path in getattr(args, "history_loss", [])]
+    recovery.guard_plan(plan, history_loss)
     qroot, qmeta, request, queue_sha = queue.load_queue(stage["queue_root"])
     queue.require(type(args.max_chunks) is int and 1 <= args.max_chunks <= len(stage["chunks"]),
                   "D2_CAMPAIGN_CHUNK_LIMIT")
@@ -126,7 +131,8 @@ def declare(args):
     data_root = queue.safe_path(args.data_root)
     data = load_data(data_root)
     own_names = set(generation.OWN_FILES) | set(selective.source_identity()) | {
-        "tools/research_d2_campaign.py", "tools/research_queue_supervisor.py"}
+        "tools/research_d2_campaign.py", "tools/research_queue_supervisor.py",
+        "tools/research_d2_checkpoints.py", "tools/research_d2_recovery.py"}
     own = {name: queue.file_record(ROOT / name) for name in sorted(own_names)}
     producer = {name: queue.file_record(data_root / name) for name in data.PRODUCER_FILES}
     value = {"schema": SCHEMA, "created_at": queue.utc(), "root": str(root), "stage": pin(stage_path),
@@ -139,7 +145,9 @@ def declare(args):
              "max_chunks": args.max_chunks, "total_budget_minutes": args.total_minutes,
              "asr_job_minutes": args.asr_job_minutes, "asr_budget_seconds": args.asr_budget_seconds,
              "threads": args.threads, "model_concurrency": 1, "automatic_retries": 0,
-             "d1_reissued_cells": 0, "human_gold": False}
+             "d1_reissued_cells": 0, "human_gold": False,
+             "durable_checkpoints": {"schema": checkpoints.SCHEMA, "required": True,
+                                     "intent_owner": "one-live-driver-invocation", "history_loss": history_loss}}
     with queue.exclusive(driver_lock(stage_path)):
         registration = registration_path(stage_path)
         queue.require(not registration.exists(), "D2_STAGE_DRIVER_ALREADY_REGISTERED")
@@ -157,13 +165,13 @@ def declare(args):
 def load(path):
     path = queue.safe_path(path)
     value = read(path)
-    queue.require(value["schema"] == SCHEMA and value["model_concurrency"] == 1 and
+    queue.require(value["schema"] in (LEGACY_SCHEMA, SCHEMA) and value["model_concurrency"] == 1 and
                   value["automatic_retries"] == value["d1_reissued_cells"] == 0 and
                   value["human_gold"] is False and path == Path(value["root"]) / "campaign.json",
                   "D2_CAMPAIGN_POLICY_CHANGED")
     check_pin(value["stage"])
     registration = read(registration_path(value["stage"]["path"]))
-    queue.require(registration == {"schema": SCHEMA, "stage": value["stage"], "campaign": pin(path)},
+    queue.require(registration == {"schema": value["schema"], "stage": value["stage"], "campaign": pin(path)},
                   "D2_CAMPAIGN_REGISTRATION_CHANGED")
     queue.require(driver_identity() == value["driver_runtime"], "D2_CAMPAIGN_DRIVER_RUNTIME_CHANGED")
     for key, root in (("pipeline_files", ROOT), ("data_files", Path(value["data_root"]))):
@@ -173,7 +181,13 @@ def load(path):
     check_pin(value["policy"])
     if value["fsmn_tokens"] is not None:
         check_pin(value["fsmn_tokens"])
-    stage, _prepared, _plan, _bulk = generation.load_stage(value["stage"]["path"])
+    stage, _prepared, plan, _bulk = generation.load_stage(value["stage"]["path"])
+    if value["schema"] == SCHEMA:
+        policy = value["durable_checkpoints"]
+        queue.require(policy == {"schema": checkpoints.SCHEMA, "required": True,
+                                 "intent_owner": "one-live-driver-invocation", "history_loss": policy["history_loss"]},
+                      "D2_DURABLE_CHECKPOINT_POLICY_CHANGED")
+        recovery.guard_plan(plan, policy["history_loss"])
     qroot, qmeta, request, queue_sha = queue.load_queue(stage["queue_root"])
     queue.require(value["generation_queue"] == {"path": str(qroot), "queue_sha256": queue_sha} and
                   value["job_ids"] == [j["job_id"] for j in request["jobs"][:value["max_chunks"]]] and
@@ -372,9 +386,40 @@ def compact_budget(report):
     return {key: value for key, value in report.items() if key not in ("generation", "asr")}
 
 
-def advance(campaign_path, *, max_chunks_this_call=None, progress=None):
+def checkpoint_sources(campaign, stage, job_id, phase):
+    """Capture static dependencies and the exact phase, never future job output."""
+    prepared = Path(stage["prepared"])
+    names = [Path(campaign["root"]) / "campaign.json", Path(campaign["policy"]["path"])]
+    if campaign["fsmn_tokens"] is not None:
+        names.append(Path(campaign["fsmn_tokens"]["path"]))
+    names += [Path(row["path"]) for row in campaign["durable_checkpoints"]["history_loss"]]
+    for child in sorted(prepared.iterdir()):
+        if child.name not in ("queue", "generation", "campaign-driver.lock") and not child.name.endswith(".lock"):
+            names += checkpoints.regular_tree(child)
+    for key, root in (("pipeline_files", ROOT), ("data_files", Path(campaign["data_root"]))):
+        names += [root / queue.relative(name) for name in campaign[key]]
+    qroot = Path(campaign["generation_queue"]["path"])
+    names += [qroot / name for name in ("queue.json", "request.json", "active-plan.json")]
+    names.append(qroot / "recipes" / (job_id + ".json"))
+    if phase != "before-generation":
+        names += checkpoints.regular_tree(qroot / "jobs" / job_id)
+        generation_root = Path(stage.get("generation_root", prepared / "generation"))
+        for cell in stage["chunks"][campaign["job_ids"].index(job_id)]:
+            directory = generation_root / "cells" / cell
+            if directory.exists():
+                names += checkpoints.regular_tree(directory)
+        for child in generation_root.glob("*"):
+            if child.is_file() and not child.name.endswith(".lock"):
+                names.append(child)
+        names += checkpoints.regular_tree(paths(campaign["root"], job_id)["chunk"])
+    return names
+
+
+def advance(campaign_path, *, max_chunks_this_call=None, progress=None, checkpoint_gate=None):
     """Advance an explicit prefix; completed earlier chunks do not use the cap."""
     campaign, stage, request = load(campaign_path)
+    queue.require(campaign["schema"] == SCHEMA and checkpoint_gate is not None,
+                  "D2_DURABLE_HANDOFF_REQUIRED_FOR_EXECUTION")
     queue.require(max_chunks_this_call is None or type(max_chunks_this_call) is int and max_chunks_this_call > 0,
                   "D2_POSITIVE_CHUNKS_PER_INVOCATION_REQUIRED")
     data = load_data(campaign["data_root"])
@@ -402,6 +447,8 @@ def advance(campaign_path, *, max_chunks_this_call=None, progress=None):
             # Reserve a full downstream ASR job before consuming new TTS data.
             if allowance <= 0 or not reserve(report, allowance + queue.minutes_ns(campaign["asr_job_minutes"], 999)):
                 return {"status": "budget_exhausted", "job_id": job_id, "budget": compact_budget(report)}, 3
+            checkpoint_gate.barrier(campaign, stage, job_id, "before-generation",
+                                    checkpoint_sources(campaign, stage, job_id, "before-generation"), progress=progress)
             generated, code = queue.run(campaign["generation_queue"]["path"], max_jobs=1)
             if code:
                 return {"status": generated["status"], "job_id": job_id,
@@ -411,6 +458,8 @@ def advance(campaign_path, *, max_chunks_this_call=None, progress=None):
         if progress:
             progress(job_id, "export_and_source_map")
         exported = ensure_export(campaign, job_id)
+        checkpoint_gate.barrier(campaign, stage, job_id, "generation-complete",
+                                checkpoint_sources(campaign, stage, job_id, "generation-complete"), progress=progress)
         view = None
         if exported["included"]:
             inputs = ensure_inputs(campaign, job_id, exported)
@@ -427,6 +476,8 @@ def advance(campaign_path, *, max_chunks_this_call=None, progress=None):
                     return {"status": "waiting_for_worker", "job_id": job_id, "budget": compact_budget(current)}, 75
                 if not reserve(current, queue.minutes_ns(campaign["asr_job_minutes"], 999)):
                     return {"status": "budget_exhausted", "job_id": job_id, "budget": compact_budget(current)}, 3
+                checkpoint_gate.barrier(campaign, stage, job_id, "before-asr",
+                                        checkpoint_sources(campaign, stage, job_id, "before-asr"), progress=progress)
                 asr, code = queue.run(where["asr_queue"], max_jobs=1)
                 if code:
                     return {"status": asr["status"], "job_id": job_id, "budget": compact_budget(budget(campaign))}, code
@@ -436,6 +487,8 @@ def advance(campaign_path, *, max_chunks_this_call=None, progress=None):
         elif any(where[name].exists() for name in ("inputs", "source_map", "asr_request", "asr_queue", "view")):
             raise ValueError("D2_EMPTY_EXPORT_HAS_UNEXPECTED_ASR_ARTIFACTS")
         seal_chunk(campaign, job_id, exported, view)
+        checkpoint_gate.barrier(campaign, stage, job_id, "chunk-complete",
+                                checkpoint_sources(campaign, stage, job_id, "chunk-complete"), progress=progress)
         completed.append(job_id)
         done_this_call += not already_sealed
     final_budget = budget(campaign)
@@ -444,8 +497,11 @@ def advance(campaign_path, *, max_chunks_this_call=None, progress=None):
             "new_completed_chunks": done_this_call, "budget": compact_budget(final_budget)}, 3 if exceeded else 0
 
 
-def run(campaign_path, *, max_chunks_this_call=None, wait_seconds=1.0):
+def run(campaign_path, *, max_chunks_this_call=None, wait_seconds=1.0, checkpoint_gate=None):
     campaign, _stage, _request = load(campaign_path)
+    queue.require(campaign["schema"] == SCHEMA, "D2_DURABLE_HANDOFF_REQUIRED_FOR_EXECUTION")
+    if checkpoint_gate is None:
+        checkpoint_gate = checkpoints.Gate()
     queue.require(type(wait_seconds) in (int, float) and .02 <= wait_seconds <= 30,
                   "D2_BOUNDED_WAIT_INTERVAL_REQUIRED")
     root = Path(campaign["root"])
@@ -480,7 +536,8 @@ def run(campaign_path, *, max_chunks_this_call=None, wait_seconds=1.0):
                                   "completed": sorted(sealed_now), "budget": compact_budget(budget(campaign))}
                         publish(None, result["status"])
                         return result, 0
-                result, code = advance(campaign_path, max_chunks_this_call=limit, progress=publish)
+                result, code = advance(campaign_path, max_chunks_this_call=limit, progress=publish,
+                                       checkpoint_gate=checkpoint_gate)
                 publish(result.get("job_id"), result["status"])
                 if code != 75:
                     return result, code
@@ -534,6 +591,8 @@ def main(argv=None):
     prep.add_argument("--asr-job-minutes", type=float, default=10)
     prep.add_argument("--asr-budget-seconds", type=int, default=570)
     prep.add_argument("--threads", type=int, default=4)
+    prep.add_argument("--history-loss", type=Path, action="append", default=[],
+                      help="Pin each known immutable runtime-loss exclusion before new model work.")
     for name in ("run", "status"):
         command = commands.add_parser(name)
         command.add_argument("--campaign", type=Path, required=True)
