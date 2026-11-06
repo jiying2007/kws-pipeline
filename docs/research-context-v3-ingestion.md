@@ -3,8 +3,8 @@
 `training/research_context_v3_consume.py` performs one bounded C1 consumption
 check over the new context-v3 observations. Its purpose is to establish that the
 verified complete transcripts, source families, loss weights and original
-2601-symbol targets enter an actual optimizer loop. It does not establish that
-C1 fits these examples, generalizes to new speakers, or passes a release gate.
+2601-symbol targets enter an actual optimizer loop. Model fit and generalization
+to new speakers are separate research measurements.
 Machine agreement remains a weak label and is never represented as human gold.
 
 ## Selection before observation

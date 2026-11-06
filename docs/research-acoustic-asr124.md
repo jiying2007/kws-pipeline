@@ -50,8 +50,8 @@ different text, complete-transcript disagreement, quality/termination uncertaint
 and all-empty native transcripts. A keyword match alone is insufficient for a
 full-transcript match. Disagreement and uncertainty produce a quarantine
 suggestion in this new view, with no automatic change to the original dataset.
-Machine agreement remains weak evidence and never becomes human transcription
-or training/production approval.
+Machine agreement is recorded as weak evidence, with the original transcription
+observations and uncertainties retained.
 
 ## Preparation and prerequisites
 
