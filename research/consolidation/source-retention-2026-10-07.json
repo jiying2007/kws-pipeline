@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 79417,
-      "git_blob_sha1": "fd115176dc884a0c64ea878e7a75d3cca5ee772b",
-      "sha256": "3841ee3983443a2956adad72f1e1736aaf9de6f0225b9db186cad053863d5c04"
+      "bytes": 79947,
+      "git_blob_sha1": "ebdfb12b94f4f230c6982c1aff5049db3ed4ea43",
+      "sha256": "f0bb08b683c74419bbe0d0e24807a5dcd8d317edfd9ec3553389031a728c4737"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -50312,6 +50312,215 @@
             "bytes": 26961,
             "git_blob_sha1": "e05d0ff04daab106a53fe37d533169985344458b",
             "sha256": "bdd21468ad1dd57bbe1e2b05dda12ade7b721d269d48d2664eac4e382c33d31a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "natural-acoustic-consumption-terminal-20261106",
+      "date": "2026-11-06",
+      "base_commit": "cb6a2ca26761f59ce2643cd017abe28f67a4f397",
+      "base_tree": "23835179e203537c27b5deaaea6d8d72fb894206",
+      "public_source_commit": "5c3e7a6aead2fa7dfd4d4b381d376327ebc3ef04",
+      "previous_manifest_sha256": "ed8e3f7d869c9c7804abb04b541a5b6e8c403561a5373f4183998805fb671f5d",
+      "workflow_source_changed": true,
+      "scope": "Natural-window preparation, positive-only acoustic consumption, terminal research evidence, and default metadata CI integration.",
+      "rationale": "Preserve exact frozen execution identities d4f89b0164a9663a2ed13afe99f58793755ee6fe and bb9684f83b07375671e9ba4b5a75413c5ab8d67c separately from this public integration; append verified actual save references for two completed followups without changing the five previous index entries or prior retention events.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 79417,
+            "git_blob_sha1": "fd115176dc884a0c64ea878e7a75d3cca5ee772b",
+            "sha256": "3841ee3983443a2956adad72f1e1736aaf9de6f0225b9db186cad053863d5c04"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 79947,
+            "git_blob_sha1": "ebdfb12b94f4f230c6982c1aff5049db3ed4ea43",
+            "sha256": "f0bb08b683c74419bbe0d0e24807a5dcd8d317edfd9ec3553389031a728c4737"
+          }
+        },
+        {
+          "path": "configs/research/natural-alimeeting-eval-tail2-v1.json",
+          "before": null,
+          "after": {
+            "path": "configs/research/natural-alimeeting-eval-tail2-v1.json",
+            "mode": "100644",
+            "bytes": 2007,
+            "git_blob_sha1": "40a3090c152f65c2f8688004ef8b4e06887bf2b9",
+            "sha256": "56331de614464626b6bf2a53df0138ed456e6e97b239d126b18ea9e02b2deb83"
+          }
+        },
+        {
+          "path": "docs/KWS_DATASET_CONTINUATION_20261106.md",
+          "before": {
+            "path": "docs/KWS_DATASET_CONTINUATION_20261106.md",
+            "mode": "100644",
+            "bytes": 10445,
+            "git_blob_sha1": "faa11aa16904afcab7168c9680e9deffade9ad35",
+            "sha256": "5d085f4cc48aae91f20cfcfce23b64f7dc1c414fce0b9868cc02e1ff7ca33719"
+          },
+          "after": {
+            "path": "docs/KWS_DATASET_CONTINUATION_20261106.md",
+            "mode": "100644",
+            "bytes": 13904,
+            "git_blob_sha1": "e5abd1db7765a8b03545a9c13d15289485a48693",
+            "sha256": "fa87a7bff7af3c257d056f656bf07341b38f02dc0b40d995f11b38a9b88944a6"
+          }
+        },
+        {
+          "path": "docs/README.md",
+          "before": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 14174,
+            "git_blob_sha1": "0da452d2f3a5bf75a8bed575bc139499e0b3661d",
+            "sha256": "672e6de4109c330ce6e31dc6620e99d10c468052c7768e2aa37dfc934ec70277"
+          },
+          "after": {
+            "path": "docs/README.md",
+            "mode": "100644",
+            "bytes": 14566,
+            "git_blob_sha1": "cb570a1304de71a345132754ee6bbabeeb798e2c",
+            "sha256": "0a3fe7a21a5e49d18036f21123ccc317c4cbfaeb0b3e71238c675800feba2734"
+          }
+        },
+        {
+          "path": "docs/research-acoustic-consumption.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-acoustic-consumption.md",
+            "mode": "100644",
+            "bytes": 6345,
+            "git_blob_sha1": "f636080e8898bfc44b2e5d9588ff240540fa2b9d",
+            "sha256": "bbe41db2d84c35608df6e15e6f3dbdad153f76d0885e2c3f53be04be5def81d6"
+          }
+        },
+        {
+          "path": "docs/research-natural-asr-windows.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-natural-asr-windows.md",
+            "mode": "100644",
+            "bytes": 8796,
+            "git_blob_sha1": "24d2658bc4ef239d437ffc3c67b68668d1c06f25",
+            "sha256": "9ec1f8ec73b8b1c38f0526281cfdba4acb115141cbbd60455b4a66ed1c4ba0b2"
+          }
+        },
+        {
+          "path": "research/dataset-continuation-20261106/execution-index.json",
+          "before": {
+            "path": "research/dataset-continuation-20261106/execution-index.json",
+            "mode": "100644",
+            "bytes": 28903,
+            "git_blob_sha1": "031efba4c8ba61a9f5ed45057b94e02ca00f75f5",
+            "sha256": "ef0fe872881f3482a506821dd26002dea2aeed000a9cc7e86614c79e7ee053d8"
+          },
+          "after": {
+            "path": "research/dataset-continuation-20261106/execution-index.json",
+            "mode": "100644",
+            "bytes": 63560,
+            "git_blob_sha1": "e053a58cf766a7697b7ea6bc60041db9c69b2f83",
+            "sha256": "f1565f50c04ac52bb4448a41b295b239de80b6eac9a1a4210414aea60fec52ab"
+          }
+        },
+        {
+          "path": "tests/test_prepare_natural_asr_windows.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_prepare_natural_asr_windows.py",
+            "mode": "100644",
+            "bytes": 15946,
+            "git_blob_sha1": "7bbf3944c23f15f79d20c65a588c15c634fb1af8",
+            "sha256": "ccec06e3a860f978b1d2832ce43820d03f19936be6d10c92415e593fc1b32b18"
+          }
+        },
+        {
+          "path": "tests/test_research_acoustic_consume.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_acoustic_consume.py",
+            "mode": "100644",
+            "bytes": 33173,
+            "git_blob_sha1": "0a12eb41a80831ba37cb9080d6f8aab4206adb92",
+            "sha256": "1f5d465a451ce8f3c5862ea4ceeb88bcc90ad721462195e7350e3f721594dab8"
+          }
+        },
+        {
+          "path": "tests/test_research_ci_changes.py",
+          "before": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 16226,
+            "git_blob_sha1": "059fb9653c1969bf07b35cc32cfaef2daddebba2",
+            "sha256": "a63f3e1a02fff8e3d9bc4aa15bb5c5bd483f782cb8535a0cf65fa5bfc61f3eba"
+          },
+          "after": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 16597,
+            "git_blob_sha1": "079e65243c0cc0577493a98925d9a3e2e79dc4db",
+            "sha256": "c53e5042a764faf19b2bcbcef7300ed9931c823b6bb5b6590d22b1f12c0a4f71"
+          }
+        },
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 26961,
+            "git_blob_sha1": "e05d0ff04daab106a53fe37d533169985344458b",
+            "sha256": "bdd21468ad1dd57bbe1e2b05dda12ade7b721d269d48d2664eac4e382c33d31a"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 27481,
+            "git_blob_sha1": "ebe560d987dda0ff767ba419c5f212caa39b0ea6",
+            "sha256": "bb5d1648477c3b18b8f622c3526b89adecaee61685ec0ad17136fa6e8ebbee89"
+          }
+        },
+        {
+          "path": "tools/prepare_natural_asr_windows.py",
+          "before": null,
+          "after": {
+            "path": "tools/prepare_natural_asr_windows.py",
+            "mode": "100644",
+            "bytes": 19588,
+            "git_blob_sha1": "65d13876bdb56fb978b4dd063ea55d75285b0e4b",
+            "sha256": "77b5c557c1a1daf6d0518054d4ec38b9de1daa24af098da7ae521b6d1a42bc9d"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 9738,
+            "git_blob_sha1": "e93a542f4720b3b6438b11fad5ae281789c5aa01",
+            "sha256": "af7ad1661f1b582ec039f7cf726893f6d7f69eb32aae892ad0c9731986367465"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 10062,
+            "git_blob_sha1": "713996549f336e50ca14df22a05fe2363376b6f4",
+            "sha256": "268b2b31327c805cd68bf479994d645335baac34b29f873c6c8d3ddb7abfb383"
+          }
+        },
+        {
+          "path": "training/research_acoustic_consume.py",
+          "before": null,
+          "after": {
+            "path": "training/research_acoustic_consume.py",
+            "mode": "100644",
+            "bytes": 46694,
+            "git_blob_sha1": "2e5319d504cc9bd2c66c058ff502332150947f67",
+            "sha256": "4611a2e45681c983d1973522ebd13499dc8a2010780887c9a69f66f79f9de117"
           }
         }
       ]
