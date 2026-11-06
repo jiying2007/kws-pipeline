@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 78763,
-      "sha256": "4a70545d567cc0e0c9ac22211066bc631b9a5abf58439ad207fe784c774459f2",
-      "git_blob_sha1": "45b41db7b7fc7819e41d2e6c23207cef116cf8ca"
+      "bytes": 79417,
+      "git_blob_sha1": "fd115176dc884a0c64ea878e7a75d3cca5ee772b",
+      "sha256": "3841ee3983443a2956adad72f1e1736aaf9de6f0225b9db186cad053863d5c04"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -50040,6 +50040,197 @@
             "bytes": 11936,
             "git_blob_sha1": "0f38bcc245197f295c8f0868cf3562b9a2bd4a4d",
             "sha256": "2e7eb44332622e4c0f1f2e260f39b93e04ad232983b4811d35e8dc1cc5f142ef"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c1-onset-silence-ledger-audit-publication-20261106",
+      "date": "2026-11-06",
+      "base_commit": "85b3d22c38e58b743f42bd45a885577055bae597",
+      "base_tree": "6ff1468d40d6fa7d0b688aad30d5ec1000787870",
+      "public_source_commit": "08aa6ba09da43ec74e438ff7b1239b8cf5d7a02d",
+      "previous_manifest_sha256": "8aaec9ceaebc0dd807d11d78bf9cbc1a3023dab41793e2d7a1d6bd4792c3e4c1",
+      "workflow_source_changed": true,
+      "scope": "Publish frozen C1 onset diagnostic, known-silence correction, separate per-draw ledger supplement, completed context/onset observations and offline CI routing",
+      "rationale": "Preserve the real published source commit and all prior source events. The frozen executed/predeclared modules and recipes remain unchanged; the supplementary auditor binds their original terminal evidence without model calls. Acoustic124 and correction outcomes are still pending in this source publication; no future result, new model execution, retry or quality acceptance is declared.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 78763,
+            "git_blob_sha1": "45b41db7b7fc7819e41d2e6c23207cef116cf8ca",
+            "sha256": "4a70545d567cc0e0c9ac22211066bc631b9a5abf58439ad207fe784c774459f2"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 79417,
+            "git_blob_sha1": "fd115176dc884a0c64ea878e7a75d3cca5ee772b",
+            "sha256": "3841ee3983443a2956adad72f1e1736aaf9de6f0225b9db186cad053863d5c04"
+          }
+        },
+        {
+          "path": "docs/KWS_DATASET_CONTINUATION_20261106.md",
+          "before": null,
+          "after": {
+            "path": "docs/KWS_DATASET_CONTINUATION_20261106.md",
+            "mode": "100644",
+            "bytes": 7145,
+            "git_blob_sha1": "867b86687951d6c14c150a17546d52583f8a8415",
+            "sha256": "3e9d1ffbdcb19e75117d1381fa64f40a335396bbb5710ed0387e9e69c335ee51"
+          }
+        },
+        {
+          "path": "docs/research-c1-known-silence-correction.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-c1-known-silence-correction.md",
+            "mode": "100644",
+            "bytes": 9064,
+            "git_blob_sha1": "b89a82cfc51dac5202cb450cd6001f7238bfc4dc",
+            "sha256": "40bbe17f03828431c37265e0f4da9fdbc3cbc2cf969566e25a294d3bf8a9dccb"
+          }
+        },
+        {
+          "path": "docs/research-c1-onset-diagnostic.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-c1-onset-diagnostic.md",
+            "mode": "100644",
+            "bytes": 5158,
+            "git_blob_sha1": "db431739cdcfd2fc8fdaebc08403e25f5d12b3e8",
+            "sha256": "fec40efcfd6a68c07f2799b28d3567722bb67014d053deabe775ac0dda005b16"
+          }
+        },
+        {
+          "path": "research/dataset-continuation-20261106/execution-index.json",
+          "before": null,
+          "after": {
+            "path": "research/dataset-continuation-20261106/execution-index.json",
+            "mode": "100644",
+            "bytes": 11783,
+            "git_blob_sha1": "c83d4aee98d4e98ee7b8a9da5bc72408a5a954aa",
+            "sha256": "b236c0b67788824535d677d2945e5806b8f1eb93f5ccb8e08339b33118000412"
+          }
+        },
+        {
+          "path": "tests/test_research_c1_known_silence.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_c1_known_silence.py",
+            "mode": "100644",
+            "bytes": 6948,
+            "git_blob_sha1": "795635fd0f39ed887e4810d2979ea943d99511d9",
+            "sha256": "ad63213018a84cfa05da5d91e481a67cada0c782bf339ca0ed42bc3c9feefc9c"
+          }
+        },
+        {
+          "path": "tests/test_research_c1_onset_diagnostic.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_c1_onset_diagnostic.py",
+            "mode": "100644",
+            "bytes": 4980,
+            "git_blob_sha1": "ff1835bf65497a00a665ef71a64ab2516b1b43bb",
+            "sha256": "bba868027601a4d651bf7d50ab82ff401397ae7621eff13cc477560a47a43578"
+          }
+        },
+        {
+          "path": "tests/test_research_c1_silence_ledger_audit.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_c1_silence_ledger_audit.py",
+            "mode": "100644",
+            "bytes": 10518,
+            "git_blob_sha1": "6879ed7df87c41f42417310a42be222870a228d6",
+            "sha256": "6244f0c573f3375cc3dfecc3e5d91a4727e20ee7093ef025da67793515316a66"
+          }
+        },
+        {
+          "path": "tests/test_research_ci_changes.py",
+          "before": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 15698,
+            "git_blob_sha1": "91ab68b26ebc0bbf9f3abc7cf6357bb6ccfdec46",
+            "sha256": "8de9237a5c3ff94ca9ad3d40c122f46d1d326b267880461e17a1d7231bb38edd"
+          },
+          "after": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 16226,
+            "git_blob_sha1": "059fb9653c1969bf07b35cc32cfaef2daddebba2",
+            "sha256": "a63f3e1a02fff8e3d9bc4aa15bb5c5bd483f782cb8535a0cf65fa5bfc61f3eba"
+          }
+        },
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 25965,
+            "git_blob_sha1": "277cb6b312e57c96cfb15effdb655f50f9028dd2",
+            "sha256": "dbf91b3829a217c44e62cce29fc5f5ea5a7e5cd8c298455a87651c5d0fd2c667"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 27108,
+            "git_blob_sha1": "6d6ce801fa19a0a8f0d5fbbde94e48b1a3eacb14",
+            "sha256": "12c3627abb2a2efb56b37df319c56ed159589d3c713ad5c5c960faccab504827"
+          }
+        },
+        {
+          "path": "tools/research_c1_silence_ledger_audit.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_c1_silence_ledger_audit.py",
+            "mode": "100644",
+            "bytes": 8305,
+            "git_blob_sha1": "5eb8f7930d1f7b0c0d5629630efee1820b611970",
+            "sha256": "613ba68ef019f6394c52f2ebf0907d9be9da8ead0806624a36e60d3c9ebd1907"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 9312,
+            "git_blob_sha1": "042ae5dd44a3a2506a7e29c83d825927ebffd05c",
+            "sha256": "b0f2e53b48e63584fd78c86761c5e738e144523a57c96fdf4f6206f199ad0871"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 9738,
+            "git_blob_sha1": "e93a542f4720b3b6438b11fad5ae281789c5aa01",
+            "sha256": "af7ad1661f1b582ec039f7cf726893f6d7f69eb32aae892ad0c9731986367465"
+          }
+        },
+        {
+          "path": "training/research_c1_known_silence.py",
+          "before": null,
+          "after": {
+            "path": "training/research_c1_known_silence.py",
+            "mode": "100644",
+            "bytes": 31450,
+            "git_blob_sha1": "dc0527ef4869ccff1399d454ff3823a6f6c80e9b",
+            "sha256": "85d7e9a1d1cbc33b103c523455971fd866ede049478f464f44530255ea932d4a"
+          }
+        },
+        {
+          "path": "training/research_c1_onset_diagnostic.py",
+          "before": null,
+          "after": {
+            "path": "training/research_c1_onset_diagnostic.py",
+            "mode": "100644",
+            "bytes": 26099,
+            "git_blob_sha1": "2adb43e3ca2c225958aec462c6420bed3ce6affa",
+            "sha256": "e168e45d8134ea1dc689efd594cf5167e4108aa8d6e0732c485d7d61d10d5e23"
           }
         }
       ]
