@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 77207,
-      "sha256": "8278ade2b2ff024a7a7a1895d06375119a393868b9dd1c20fc0903f25b424fd0",
-      "git_blob_sha1": "5a8fee13fffcb6770cbbcf5c36295a6cc6f10f31"
+      "bytes": 77516,
+      "sha256": "24b69527b841cfbdb4315e0b3760c4625782cc822c065a3b56c7a1ee4b720ec8",
+      "git_blob_sha1": "e52041026a7aaa8f3f58c4a70d305822d3593de8"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -49739,6 +49739,36 @@
             "bytes": 17910,
             "git_blob_sha1": "2ad219c329858cbcfe2f2c017495d892f796789f",
             "sha256": "a2e2cd217c727e1ab603c2c46f90129ed4c8a6e5bab89bdaf1c8d591a31d6178"
+          }
+        }
+      ]
+    },
+    {
+      "id": "dataset-continuation-ci-placement-20261106",
+      "date": "2026-11-06",
+      "base_commit": "9762e7c3034b9493f738ab80377e3467c21beeba",
+      "base_tree": "2b8f7508a96c34218befd3fe55bd4df28288364e",
+      "public_source_commit": "12f59543e68d57685eaa5f6d2a8ccb57be6dad14",
+      "previous_manifest_sha256": "30be94581cd89d3bd8204aa9e506c70bc56c8070e42a93cf2d47d1c213f96126",
+      "workflow_source_changed": true,
+      "scope": "Move unchanged acoustic numeric contracts into the existing dependency-enabled hosted-build job",
+      "rationale": "Resolve the actual compiler-independent CI structural failure while preserving its local-only guard, full acoustic tests, workflow inventory and all previous public source events",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 77207,
+            "git_blob_sha1": "5a8fee13fffcb6770cbbcf5c36295a6cc6f10f31",
+            "sha256": "8278ade2b2ff024a7a7a1895d06375119a393868b9dd1c20fc0903f25b424fd0"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 77516,
+            "git_blob_sha1": "e52041026a7aaa8f3f58c4a70d305822d3593de8",
+            "sha256": "24b69527b841cfbdb4315e0b3760c4625782cc822c065a3b56c7a1ee4b720ec8"
           }
         }
       ]
