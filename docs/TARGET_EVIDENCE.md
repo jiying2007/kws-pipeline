@@ -1,186 +1,48 @@
 # Physical-target research evidence collection
 
-**Technical research only.** Actual DUT research must retain source-bound, machine-collected measurements alongside aggregate statistics. The inherited v0.3 evidence contract separates runtime-soak acquisition, raw input identity, independent attestation and actual target evidence assembly so a JSON summary cannot replace measured artifacts.
+**Technical research only.** Real SSC305/DUT studies require source-bound, independently retained observations, **not product Shipping or certification authority**. Historical Phase-B/product receipts, filenames and signing schemes remain in the immutable Git history; they are not current model/algorithm/data admission gates. Hosted fixtures and QEMU cannot substitute for physical measurements. Missing hardware, rights or actual captured evidence remains `NOT_RUN` or `BLOCKED`.
 
-This guide preserves strict technical tools and historical field names for reproducibility, **not product Shipping or certification authority**. Hosted fixtures test software contracts, not physical SSC305 performance; missing source rights, board or measurements must remain NOT_RUN/BLOCKED. See [research-only execution](RESEARCH_ONLY_EXECUTION.md).
+## Baseline runtime identity
 
-## Runtime timing
+Build the C runner from the exact audited commit, bind executable and configuration SHA256, and record actual board, OS, governor, affinity, audio I/O path and sample rate. The preserved research comparator assets are:
 
-Cross-build and retain `kws_board_bench`, then run the exact source-bound research `.kwm/.kwk` and an appropriately licensed post-AFE WAV. Preserve the emitted JSON plus the exact benchmark executable, model, keyword pack and board-audio bytes.
+- `models/registry/model-749187ec1d66/xiaowo-model.kwm`
+- `models/registry/model-749187ec1d66/xiaowo-keywords.kwk`
 
-`kws_board_bench` measures per-hop processing time/RTF/headroom. It does not replace sustained product-process CPU/RSS/thermal/soak evidence.
+Verify both through `tools/verify_model_registry.py` before a diagnostic. These bytes represent the **historical synthetic comparator**, not independently demonstrated real-speech performance or an SSC305 result. Fresh research models require their own source/manifest/consumed-data hashes and cannot inherit this identity.
 
-## Runtime soak
+## Runtime timing and audio exposure
 
-Run the actual independently authorized DUT research process under `tools/collect_runtime_soak.py` (the `product-*` command below is a **historical placeholder**, not a provided production executable):
+Use `kws_board_bench` with an appropriately licensed and source-hashed *actual post-AFE WAV* to measure per-hop latency, real-time factor, headroom and the exact workload. Preserve measured frames, wall time, runner/model/pack/AFE versions and input WAV/decoded PCM identity. Cross-compilation and synthetic benchmark scores remain software diagnostics, not target acoustic claims.
 
-```bash
-python3 tools/collect_runtime_soak.py \
-  --hours 24 \
-  --sample-seconds 60 \
-  --output qualification/runtime-soak.json \
-  --command ./product-kws-soak --config qualification/product-config.json
-```
+`tools/collect_runtime_soak.py` independently observes a **real, long-running research KWS process** using `--hours`, `--sample-seconds`, `--output` and `--command`. Pass an actual installed process path only after reviewing the executable and its source SHA; this repository does **not** supply a fake `product-kws-soak` process. The observer fails on early exit and retains requested/actual duration, child PID, process CPU and RSS, threads, temperature and actual samples. Duration is not proof that audio was processed.
 
-Runtime-soak schema v3 records requested/actual duration, early-exit state, child PID/command, max child-process RSS, aggregate process CPU time, observed thread counts, thermal samples/max temperature and the retained raw time series. If the process exits before the requested duration, the collector fails.
+## CPU units and unavailable audio exposure
 
-### CPU units and unavailable audio exposure
+CPU measurements retain `measurement_contract_id=process-cpu-one-core-v1` with `cpu_percent_semantics="process_cpu_seconds / wall_seconds * 100"`. `process_cpu_seconds` is measured from the child process's `/proc/<pid>/stat` user and system CPU deltas, aggregated over that process's threads. A launcher that forks away the workload is not an acceptable observation target. Descendants are outside the sampler's scope.
 
-All CPU gates use the fixed `measurement_contract_id=process-cpu-one-core-v1` and `cpu_percent_semantics="process_cpu_seconds / wall_seconds * 100"`:
+`wall_seconds` equals measured elapsed observation time, excluding cleanup. **100% means one fully occupied core; 150% means 1.5 cores.** Do not divide by the number of available cores, affinity width or thread count. On a dual-core device, 20 CPU-seconds in 100 wall-seconds means 20%, not 10%. Capture the actual thread-count sample series and maximum observed RSS; samples do not rule out between-sample peaks.
 
-- `process_cpu_seconds` is the final minus initial `/proc/<pid>/stat` user + system CPU time, summed over that process's threads. Descendant processes are outside this sampler's scope; run the actual product process directly, not a launcher that forks the workload away.
-- `wall_seconds` equals `elapsed_seconds` and the final sample's `elapsed_s`. Termination and cleanup waits are excluded from the denominator.
-- `average_cpu_percent` in the raw soak becomes `cpu_percent` in evidence and scores. 100% means one occupied core, 150% means 1.5 cores. Values are not clipped to 100 and are never divided by online cores, affinity, configured threads or measured threads.
-- `cpu_capacity_count` is descriptive topology only. Two-core hardware using 20 CPU-seconds in 100 wall-seconds measures 20%, so a 10% budget FAILS.
-- Every sample retains an actual `/proc/<pid>/status` `thread_count`; `max_thread_count` is the maximum observed at sample times, not a guarantee about threads between samples.
-- This sampler has no retained audio sample counter. `audio_seconds` and `cpu_seconds_per_audio_second` must both be null; wall time is not audio exposure. A future CPU/audio-second measurement must bind real processed-sample counters and their sample rate. `kws_board_bench` separately reports processing-time RTF against its known input WAV duration/repeats; that audio duration cannot be reused for the soak.
+This soak collector does **not** count actual audio samples. Therefore `audio_seconds` and `cpu_seconds_per_audio_second` remain null; wall time must not be substituted for audio duration. `kws_board_bench` can report per-audio-second RTF only for its own known WAV/repeat execution. Legacy units in older archived receipts cannot simply be relabelled as fresh research evidence.
 
-Collection and independent qualification both recompute the same schema-v3 contract. Missing/reset CPU counters, missing/invalid thread counts, inconsistent endpoint durations or changed units fail closed. Runtime-soak v2 and target-evidence v2 used online-capacity units and are rejected, even on a single-core host. Do not relabel historical evidence or simply change its version/semantics string; recollect and attest the current contract. Historical archived artifacts retain their original bytes and authority boundaries.
+## Independent source, board, stack and power evidence
 
-Also retain audio-pipeline XRUN/backpressure counters and `kws_engine_get_stats()` discontinuity snapshots when the SKU requires them.
+For any physical study, retain an exact manifest of actual raw traces, hashes and byte lengths, including the source checkout/build, runner binary, model/keyword pack, captured WAV/PCM, process CPU/RSS/thermal series, board/clock/route and any real external instrument output. Recompute hashes independently at readback. Missing files, changed source identity, inconsistent durations, non-finite metrics and unmeasured dimensions fail or remain `NOT_RUN`; summaries cannot substitute for the raw observations.
 
-## Stack and power evidence
+Generic Linux does not expose a portable and trustworthy stack high-water mark for arbitrary threads; report `stack_high_water_bytes` only with separately documented instrumentation and retain its raw measurements. Power measurements require actual instrument/CSV/calibration identity, not a guessed milliwatt average. Keep process and algorithm resource measurements separate from acoustic FAR/FRR. If downstream audio-pipeline exposes XRUN/backpressure counters, preserve the actual snapshots and `kws_engine_get_stats()` discontinuity telemetry alongside the tested AFE identity.
 
-Generic Linux does not provide a portable, trustworthy stack high-water metric for an arbitrary product thread. `stack_high_water_bytes` therefore remains an approved product-harness measurement and must have retained raw evidence.
+## Qualification binding (historical reference only)
 
-Power normally comes from an external instrument. Preserve its original CSV/trace, instrument ID and calibration ID. A summarized average-power number is not accepted without the raw instrument file.
+Historical Phase-B formats attached a raw-manifest hash, original model/keyword
+pack bytes, an independent attestation-verification receipt and a final-AFE
+identity to the same measured target. Those historical artifacts may still be
+inspected for provenance. The former product-qualification entrypoints are
+retired and must **not** be used to authorize current model training, research
+evaluation or real-board performance claims. Preserve original measurements,
+source identity, rights and any previously failed/incomplete status unchanged.
 
-## Canonical raw-evidence manifest
+## Independent scientific interpretation
 
-Before assembling target evidence, freeze the exact raw files selected for qualification. `--evidence-raw` is a JSONL manifest containing exactly one row per retained raw artifact:
+Reserved independent human speech, far-field 3–5 m, challenging near-homophones and continuous negative streams are measured under their own identities and may not be fed back to training while still called held-out. A successful hosted test, model-hash verification, source-only DUT-contract fixture or synthetic replay is **not** a claim that the SSC305 board, real microphones, true audio exposure, physical thermal/power budget or wake-up error rate was measured.
 
-```json
-{"name":"runtime-soak.json","sha256":"<64 lowercase hex>","bytes":12345}
-{"name":"stack-watermark.txt","sha256":"<64 lowercase hex>","bytes":456}
-{"name":"power.csv","sha256":"<64 lowercase hex>","bytes":789}
-```
-
-The set must exactly equal:
-
-- the runtime-soak JSON;
-- every repeated `--raw-evidence` file;
-- the `--power-raw` file.
-
-Release and Phase-B qualification also require the exact schema-v2 `board-summary.json` as a raw artifact, binding timing/workload results through this attested manifest. Phase-B bundles retain byte-identical copies at `board-summary.json` and `raw/board-summary.json`. Duplicate names, missing rows, extra rows, size mismatches or hash mismatches are rejected. This manifest should be emitted by the controlled qualification harness after measurements are frozen.
-
-## External attestation verification
-
-`--attestation-verification` is the output of the product qualification trust layer, not a self-attestation generated by `collect_target_evidence.py`. Schema v1 must report `verified=true` and bind the exact selected artifacts **and the full final-AFE identity inherited from Phase A**:
-
-```json
-{
-  "schema_version": 1,
-  "verified": true,
-  "subject_kind": "kws-target-evidence",
-  "issuer": "<trusted verifier>",
-  "trust_policy": "<approved policy id>",
-  "verified_at_utc": "2026-08-30T00:00:00Z",
-  "subject_sha256": "<evidence-raw.jsonl sha256>",
-  "collector_sha256": "<collect_target_evidence.py sha256>",
-  "board_runner_sha256": "<kws_board_bench sha256>",
-  "model_sha256": "<base.kwm sha256>",
-  "keyword_pack_sha256": "<xiaowo.kwk sha256>",
-  "audio_frontend_identity_sha256": "<Phase-A final_afe_identity_sha256>"
-}
-```
-
-The repository independently parses this verifier result during Phase-B scoring and checks every binding again. The full AFE identity is content-addressed from executable/config bundle/command template/SKU/microphone/enclosure/audio route/toolchain, so reusing the same executable with a different product configuration cannot pass as the Phase-A tuple.
-
-Production trust in `issuer`/`trust_policy` belongs to the controlled qualification/signing infrastructure.
-
-## Assemble product-board evidence
-
-Run the exact retained collector with explicit SKU, source, builder and DUT identity. Builder and DUT IDs must be distinct.
-
-```bash
-python3 tools/collect_target_evidence.py \
-  --output qualification/evidence.json \
-  --target product-sku-a \
-  --board-revision A \
-  --soc cortex-a32 \
-  --toolchain arm-linux-gnueabihf-gcc-... \
-  --compiler-flags '-O3 -mcpu=cortex-a32 ...' \
-  --audio-frontend audio-pipeline-vX \
-  --audio-frontend-sha256 <final-afe-executable-sha256> \
-  --audio-frontend-identity-sha256 <phase-a-final-afe-identity-sha256> \
-  --runtime-soak qualification/runtime-soak.json \
-  --stack-high-water-bytes <measured> \
-  --average-power-mw <measured> \
-  --raw-evidence qualification/stack-watermark.txt \
-  --raw-evidence qualification/board-summary.json \
-  --power-raw qualification/power.csv \
-  --evidence-raw qualification/evidence-raw.jsonl \
-  --attestation-verification qualification/attestation-verification.json \
-  --board-runner qualification/kws_board_bench.target \
-  --model release/base.kwm \
-  --keyword-pack release/xiaowo.kwk \
-  --board-audio qualification/board-audio.wav \
-  --sku product-sku-a \
-  --source-sha "$(git rev-parse HEAD)" \
-  --builder-id qualification-builder-01 \
-  --dut-id product-dut-01 \
-  --collector-id qualification-station-01 \
-  --instrument-id <meter-id> \
-  --calibration-id <calibration-id>
-```
-
-The collector emits target evidence schema v3 with `evidence_class=product-board`. It derives soak hours, CPU, RSS and max temperature from the retained runtime-soak bytes, embeds those exact soak bytes for independent recomputation, and binds:
-
-- SKU and exact source SHA;
-- builder/DUT/collector identity;
-- collector hash;
-- canonical raw-evidence manifest hash;
-- external attestation-verification hash;
-- board runner/model/keyword-pack/board-audio hashes;
-- final-AFE executable SHA and full Phase-A final-AFE identity SHA;
-- runtime-soak, power and additional raw artifacts;
-- target/board/SoC/toolchain/kernel/governor/AFE identity;
-- stack, power, instrument and calibration identity.
-
-## Qualification binding
-
-`qualification_manifest.py` must receive the same evidence trust tuple and every raw artifact:
-
-```bash
---evidence qualification/evidence.json \
---evidence-collector tools/collect_target_evidence.py \
---evidence-raw qualification/evidence-raw.jsonl \
---attestation-verification qualification/attestation-verification.json \
---raw-evidence qualification/runtime-soak.json \
---raw-evidence qualification/stack-watermark.txt \
---raw-evidence qualification/board-summary.json \
---raw-evidence qualification/power.csv \
---sku product-sku-a
-```
-
-The manifest independently re-hashes those files and verifies that the external attestation, canonical raw manifest, collector output and selected release artifacts all describe the same SKU/source tuple.
-
-The standalone `qualification_gate.py` also replays runtime-soak measurements
-instead of trusting a persisted manifest's CPU/RSS/thermal/duration summaries.
-The qualification manifest retains the exact UTF-8 text in
-`evidence.runtime_soak_raw` and `evidence.raw_evidence_manifest_raw`. The gate
-checks the original raw-index hash and byte length, rejects duplicate names or
-missing/extra raw tuples, and binds the soak bytes to that index and its existing
-attestation subject cross-link before recomputing all soak-derived metrics.
-Changing a summary alone, or changing soak bytes and their tuple while keeping
-the original index, is malformed evidence (exit 2), not a new measurement.
-
-This remains manifest schema v3 and does not add a CLI argument. Older v3
-manifests missing either retained text field fail closed: regenerate them with
-`qualification_manifest.py` from the original evidence and raw files. Do not
-fill the fields from reconstructed summaries, change historical hashes, or
-silently reuse an old gate result. Complete manifests containing raw soak
-metadata belong in controlled evidence storage, not automatic public metadata
-publication.
-
-The Phase-B `target-dut-qualification` scorer adds a stricter product binding on top: it requires the externally attested `audio_frontend_identity_sha256` to equal the immutable Phase-A `final_afe_identity_sha256` before any physical DUT can qualify.
-That scorer already replays the retained runtime soak; the standalone-gate
-consistency repair is not evidence of a shipping-approval bypass. It adds no
-manifest signature or attestor-identity verification and does not establish
-the authenticity of stack/power summaries.
-
-## Trust boundary
-
-SHA256 binding prevents accidental substitution and summary-only tampering; it does not by itself establish who performed a physical measurement. Production authenticity still depends on controlled DUT inventory, qualification stations, verifier/signing identity and release/OTA trust roots.
-
-No hosted fixture, synthetic audio run or cross-compile result should be labeled `product-board` evidence for a shipping claim.
+The retired product certificate/Shipping approval generators and `release/base.kwm` examples are not present-day commands. Historical policy/attestation schemas may be audited offline with explicitly guarded replay tools; do not restore old `qualification_manifest.py` or `qualification_gate.py` as research permission. Do not fabricate hardware, source rights, measurement records or model-quality claims.
