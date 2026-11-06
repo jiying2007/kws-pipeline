@@ -1,0 +1,90 @@
+{
+  "schema": "kws-natural-asr-window-declaration-v1",
+  "status": "declared_not_materialized",
+  "selection_reason": "Predeclared development observation of the last 30 seconds of each of the seven remaining AliMeeting Eval channel-0 sessions, excluding the previously observed R8001_M8004 tail2. Selected solely from the original intake session roster and annotation-end coverage gaps, never from KWS detections or ASR text. Sessions are sorted lexically and split into shards of four then three; this is shard B. Parent mono recordings and original annotation identities are already restored. This declaration does not establish target absence or negative-duration admission.",
+  "parents": [
+    {
+      "parent_id": "alimeeting-eval-R8009_M8018-ch0",
+      "audio_path": "mono/R8009_M8018_MS809.wav",
+      "wav_sha256": "257d92806998e591328dc8a87278908249bb8ffa0a1acabdc27f160a2565aa4e",
+      "pcm_sha256": "f6f7f9b2fdaba90887d7949065163ad30dd66b7d933acd76299e16e26e87b47e",
+      "sample_rate_hz": 16000,
+      "sample_count": 26474512,
+      "dataset_id": "openslr119-alimeeting",
+      "source_partition": "Eval",
+      "session_id": "R8009_M8018",
+      "source_family_id": "alimeeting-session-R8009_M8018",
+      "split": "development",
+      "provenance": {
+        "source_archive_sha256": "dc47343b2474b5ebcf458927e878155f6ddeb59c85e685b3645c32a1f9578d92",
+        "source_member": "Eval_Ali/Eval_Ali_far/audio_dir/R8009_M8018_MS809.wav",
+        "source_wav_sha256": "6534df2cdc7e208c043ef823befaf4cb9b80164fad577915ff7b9eef9ba22e70",
+        "channel_index": 0,
+        "source_audit_sha256": "95b2f7b6abd409fe0a17e597f49a01aa0bbd97f86f4ec807762c609fd5a0aca3",
+        "annotation_sha256": "be91df9d87f0f988ade6d1b2fdba82f4533a4e994fb22f8935f27b4bd7d0300e"
+      }
+    },
+    {
+      "parent_id": "alimeeting-eval-R8009_M8019-ch0",
+      "audio_path": "mono/R8009_M8019_MS810.wav",
+      "wav_sha256": "8fc9bc2f43c1e26db99bd0cf707271b0d82b9fc6d7020c44ddfcdb59fcc8d4bc",
+      "pcm_sha256": "96945e3a198855c728e3f12b282dff14db547d6e91bd4edeb822f096aee28442",
+      "sample_rate_hz": 16000,
+      "sample_count": 31582816,
+      "dataset_id": "openslr119-alimeeting",
+      "source_partition": "Eval",
+      "session_id": "R8009_M8019",
+      "source_family_id": "alimeeting-session-R8009_M8019",
+      "split": "development",
+      "provenance": {
+        "source_archive_sha256": "dc47343b2474b5ebcf458927e878155f6ddeb59c85e685b3645c32a1f9578d92",
+        "source_member": "Eval_Ali/Eval_Ali_far/audio_dir/R8009_M8019_MS810.wav",
+        "source_wav_sha256": "67e7c91769b289bfcc6f0d4da5992934218f4f9b70e6178a92f0cae0309b8b11",
+        "channel_index": 0,
+        "source_audit_sha256": "95b2f7b6abd409fe0a17e597f49a01aa0bbd97f86f4ec807762c609fd5a0aca3",
+        "annotation_sha256": "dd85bfb2b920ac064b61e1fb8a09ab378a9e10422b48d23cd3030e2f02271b7c"
+      }
+    },
+    {
+      "parent_id": "alimeeting-eval-R8009_M8020-ch0",
+      "audio_path": "mono/R8009_M8020_MS810.wav",
+      "wav_sha256": "4fd9fa229c7fa2fe69fd9c7f8b6413097949cb5a66adec48357f27448d6087d8",
+      "pcm_sha256": "619d19a55238c767d51ac19c6c9ccdcf52bd9bdf774f6a1788a58d272347109d",
+      "sample_rate_hz": 16000,
+      "sample_count": 30567097,
+      "dataset_id": "openslr119-alimeeting",
+      "source_partition": "Eval",
+      "session_id": "R8009_M8020",
+      "source_family_id": "alimeeting-session-R8009_M8020",
+      "split": "development",
+      "provenance": {
+        "source_archive_sha256": "dc47343b2474b5ebcf458927e878155f6ddeb59c85e685b3645c32a1f9578d92",
+        "source_member": "Eval_Ali/Eval_Ali_far/audio_dir/R8009_M8020_MS810.wav",
+        "source_wav_sha256": "51190a947a182294b103e37ab4a29ee6adeb3fb1ee94572769da82a96f7ce952",
+        "channel_index": 0,
+        "source_audit_sha256": "95b2f7b6abd409fe0a17e597f49a01aa0bbd97f86f4ec807762c609fd5a0aca3",
+        "annotation_sha256": "6d82a5c11a1d237b8f462aeca2844dd969b5b473e13b7fa2bb45722a2f12e032"
+      }
+    }
+  ],
+  "windows": [
+    {
+      "window_id": "alimeeting-eval-R8009_M8018-last30s-v1",
+      "parent_id": "alimeeting-eval-R8009_M8018-ch0",
+      "start_sample": 25994512,
+      "end_sample": 26474512
+    },
+    {
+      "window_id": "alimeeting-eval-R8009_M8019-last30s-v1",
+      "parent_id": "alimeeting-eval-R8009_M8019-ch0",
+      "start_sample": 31102816,
+      "end_sample": 31582816
+    },
+    {
+      "window_id": "alimeeting-eval-R8009_M8020-last30s-v1",
+      "parent_id": "alimeeting-eval-R8009_M8020-ch0",
+      "start_sample": 30087097,
+      "end_sample": 30567097
+    }
+  ]
+}
