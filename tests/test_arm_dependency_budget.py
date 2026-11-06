@@ -8,6 +8,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import textwrap
 import time
 import unittest
 from unittest.mock import patch
@@ -74,6 +75,86 @@ class WorkflowContractTests(unittest.TestCase):
         for mode in ('', '-O ', '-OO '):
             self.assertIn('python3 -I -S -B ' + mode + 'tests/test_arm_dependency_budget.py', workflow)
         self.assertTrue(HELPER.is_file())
+
+    def test_failed_install_and_snapshot_evidence_are_always_retained(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text()
+        retain = workflow.split('      - name: Retain ARM installation logs and dependency snapshot\n', 1)[1].split(
+            '      - name:', 1)[0]
+        self.assertIn('if: always()', retain)
+        self.assertIn('${{ runner.temp }}/arm-dependency-install/', retain)
+        self.assertIn('${{ runner.temp }}/arm-dependency-snapshot/', retain)
+        self.assertIn('if-no-files-found: error', retain)
+
+
+class InstallEvidenceTests(unittest.TestCase):
+    """Execute the actual workflow shell with fake sudo; never call APT."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix='arm-install-evidence-')
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.bin = self.root / 'bin'; self.bin.mkdir()
+        sudo = self.bin / 'sudo'
+        sudo.write_text('#!' + sys.executable + '\n' + textwrap.dedent('''\
+            import json, os, sys
+            from pathlib import Path
+            expected = ['python3', '-I', '-S', '-B', 'tools/install_arm_dependencies.py']
+            if sys.argv[1:] != expected:
+                raise SystemExit(99)
+            Path(os.environ['KWS_TEST_APT_CALL']).write_text(json.dumps(sys.argv[1:]))
+            print('fake APT stdout', flush=True)
+            print('fake APT stderr', file=sys.stderr, flush=True)
+            raise SystemExit(int(os.environ['KWS_TEST_APT_EXIT']))
+            '''))
+        sudo.chmod(0o755)
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text()
+        step = workflow.split('      - name: Install cross compiler and ARM user-mode emulator\n', 1)[1].split(
+            '      - name: Locate ARM sysroot', 1)[0]
+        self.script = textwrap.dedent(step.split('        run: |\n', 1)[1])
+
+    def run_wrapper(self, helper_code, *, tee_failure=False, receipt_failure=False):
+        if tee_failure:
+            tee = self.bin / 'tee'
+            tee.write_text('#!' + sys.executable + '\nimport sys\nsys.stdout.write(sys.stdin.read())\nraise SystemExit(73)\n')
+            tee.chmod(0o755)
+        runner = self.root / ('run-' + str(helper_code)); runner.mkdir()
+        if receipt_failure:
+            (runner / 'arm-dependency-install/exit-codes.txt').mkdir(parents=True)
+        env = dict(os.environ, PATH=str(self.bin) + os.pathsep + os.environ['PATH'],
+                   RUNNER_TEMP=str(runner), KWS_TEST_APT_EXIT=str(helper_code),
+                   KWS_TEST_APT_CALL=str(runner / 'fake-call.json'))
+        result = subprocess.run(['bash', '-e', '-o', 'pipefail', '-c', self.script],
+                                cwd=ROOT, env=env, capture_output=True, text=True, timeout=5)
+        self.assertEqual(json.loads((runner / 'fake-call.json').read_text()),
+                         ['python3', '-I', '-S', '-B', 'tools/install_arm_dependencies.py'])
+        self.assertFalse((runner / 'arm-dependency-snapshot').exists())
+        return result, runner / 'arm-dependency-install'
+
+    def test_success_and_original_timeout_code_keep_stdout_stderr_and_receipt(self):
+        for code in (0, 124):
+            with self.subTest(code=code):
+                result, folder = self.run_wrapper(code)
+                self.assertEqual(result.returncode, code, result.stderr)
+                self.assertEqual((folder / 'apt.log').read_text(), 'fake APT stdout\nfake APT stderr\n')
+                self.assertEqual((folder / 'exit-codes.txt').read_text(),
+                                 f'helper_exit_code={code}\ntee_exit_code=0\n')
+                # The real snapshot owns a separate create-only destination.
+                (folder.parent / 'arm-dependency-snapshot').mkdir()
+
+    def test_tee_failure_cannot_turn_successful_helper_green(self):
+        result, folder = self.run_wrapper(0, tee_failure=True)
+        self.assertEqual(result.returncode, 73)
+        self.assertEqual((folder / 'exit-codes.txt').read_text(), 'helper_exit_code=0\ntee_exit_code=73\n')
+
+    def test_exit_receipt_write_failure_cannot_turn_successful_helper_green(self):
+        result, folder = self.run_wrapper(0, receipt_failure=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue((folder / 'apt.log').is_file())
+
+    def test_original_helper_failure_survives_both_evidence_write_failures(self):
+        result, _ = self.run_wrapper(124, tee_failure=True, receipt_failure=True)
+        self.assertEqual(result.returncode, 124)
+        self.assertTrue(result.stderr)
 
 
 class FakeAPTTests(unittest.TestCase):

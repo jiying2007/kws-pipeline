@@ -304,6 +304,113 @@
       "scope": "Three independent recognizer observations per frozen derived audio sample; full-text agreement is machine evidence.",
       "recorded_execution_commit": "b9f21b6b5096eaee11239184f50b8011a04f8aa3",
       "pinned_source_files_verified_against_commit": 30,
+      "campaign_totals": {
+        "completed_queue_jobs": 16,
+        "native_asr_calls": 372,
+        "actual_runner_nanoseconds": 3017985638412,
+        "actual_runner_minutes": 50.2997606402,
+        "actual_duration_complete": true,
+        "unresolved_jobs": 0,
+        "failed_queue_jobs": 0,
+        "budget_overrun_nanoseconds": 0,
+        "started_at_utc": "2026-11-06T03:22:01.241429+00:00",
+        "finished_at_utc": "2026-11-06T04:18:49.849501+00:00"
+      },
+      "dataset": {
+        "observed_rows": 124,
+        "parent_rows": 14,
+        "source_families": 7,
+        "observed_by_split": {
+          "development": 24,
+          "train": 100
+        },
+        "observed_by_kind": {
+          "digital-level": 28,
+          "measured-rir-convolution": 28,
+          "onset-offset": 28,
+          "recorded-noise-mix": 40
+        },
+        "by_conclusion": {
+          "full-transcript-disagreement": 49,
+          "unanimous-parent-fulltext-match": 75
+        },
+        "quarantine_suggestions": 49,
+        "noise_fulltext_ctc_zero_weight_rows": 40,
+        "frozen_variant_rows_changed": 0,
+        "new_loss_weights_created": false,
+        "human_gold": false,
+        "new_independent_speakers": 0
+      },
+      "new_tts_calls": 0,
+      "new_optimizer_steps": 0,
+      "receipts": {
+        "aggregate_summary": {
+          "bytes": 561,
+          "sha256": "8d6a9cb3553efd02fe197c81cc28927e38b07409f0ea93f3f370583a39e43c7d"
+        },
+        "aggregate_rows": {
+          "bytes": 652115,
+          "sha256": "20e9335e69fe141f77ac98c21400ba1891335293f178b8698ea65342c4179376"
+        },
+        "aggregate_manifest": {
+          "bytes": 213,
+          "sha256": "2eb187a38735ce3d73e55840d63a2ef4cb7fbb7cd097063fc5f78e43bfc4ded1"
+        },
+        "stage": {
+          "bytes": 25843,
+          "sha256": "9007e43053369f5c4952d2caefd4ac0da9ab9a5ce9d9e51dac84993014bc8925"
+        },
+        "queue_request": {
+          "bytes": 11948,
+          "sha256": "767922db4cdec1e7bef702894d7e97e0a9afa4668b03c258d98507591aabadb9"
+        },
+        "original_variant_rows": {
+          "bytes": 266110,
+          "sha256": "c9c8cba8aca58e47cde43cb54e87714ce734b546aa0e873131535acd98b6cbb2"
+        },
+        "source_stage": {
+          "bytes": 25843,
+          "sha256": "9007e43053369f5c4952d2caefd4ac0da9ab9a5ce9d9e51dac84993014bc8925"
+        },
+        "independent_final_audit": {
+          "bytes": 47996,
+          "sha256": "5f250bdbc25e9d40eb86ec79029b027e5f41fc1acee4776d59c04b8ddea56c6d"
+        }
+      },
+      "durable_save": {
+        "provider": "ChatGPT Library",
+        "object_id": "libfile_f77e42d7787881918b9053e4f1a3436f",
+        "version": 0,
+        "capsule": {
+          "bytes": 5205487,
+          "sha256": "7ba19bd22684d28f236959174d33b93bc98c73e5ba966db281f7ff067ffa3451"
+        },
+        "acknowledgement": {
+          "bytes": 1056,
+          "sha256": "b99c961f3925572d43001a699bb77635b39a577150982f890ad3871a81b06ec3"
+        },
+        "provider_response": {
+          "bytes": 1561,
+          "sha256": "839928a9b3d18a01ebca4b0631692371fdc069c943d96bd48f7ae126dd898f2f"
+        },
+        "remote_bytes_independently_retrieved": false
+      },
+      "aggregate_evidence": {
+        "path": "research/dataset-continuation-20261106/terminal-evidence.json",
+        "bytes": 66797,
+        "sha256": "4b5166c667d926a5c71f63d2701e86efe2b2b8e06c87e906b419bc7dd164413f"
+      },
+      "limits": [
+        "The 75 unanimous parent matches are observation outcomes, not automatic training admission.",
+        "All 40 untranscribed noise mixtures retain their frozen zero full-text CTC weights, including any unanimous observations.",
+        "The 49 full-transcript disagreements remain separately observable and do not rewrite original labels.",
+        "Derived audio adds neither independent speakers nor a real far-field or soft-speech measurement.",
+        "Recognizer disagreement is preserved separately from original audio and label quality; no row is automatically relabeled.",
+        "All 40 noise variants retain their original zero-weight CTC masks, including the 23 with unanimous parent-fulltext matches.",
+        "The 124 variants derive from 14 parent samples and seven source families; they add no independent speakers.",
+        "Counts describe normalized full-text agreement with weak parent labels, not human transcription accuracy or real-room performance.",
+        "Queue runner and model subprocess elapsed durations overlap in scope and are not added together."
+      ],
       "observed_rows": 124,
       "unique_variant_ids": 124,
       "unique_pcm_hashes": 124,
@@ -324,8 +431,6 @@
       "unresolved_jobs": 0,
       "automatic_retries": 0,
       "reused_model_calls": 0,
-      "new_tts_calls": 0,
-      "new_optimizer_steps": 0,
       "by_split": {
         "development": {
           "by_conclusion": {
@@ -480,89 +585,28 @@
         "sensevoice": 319.3283511350037,
         "whisper": 407.66051906600114
       },
-      "whisper_language_condition": "Chinese (zh) explicitly supplied; no language-independent detection claim.",
-      "receipts": {
-        "aggregate_summary": {
-          "bytes": 561,
-          "sha256": "8d6a9cb3553efd02fe197c81cc28927e38b07409f0ea93f3f370583a39e43c7d"
-        },
-        "aggregate_rows": {
-          "bytes": 652115,
-          "sha256": "20e9335e69fe141f77ac98c21400ba1891335293f178b8698ea65342c4179376"
-        },
-        "aggregate_manifest": {
-          "bytes": 213,
-          "sha256": "2eb187a38735ce3d73e55840d63a2ef4cb7fbb7cd097063fc5f78e43bfc4ded1"
-        },
-        "original_variant_rows": {
-          "bytes": 266110,
-          "sha256": "c9c8cba8aca58e47cde43cb54e87714ce734b546aa0e873131535acd98b6cbb2"
-        },
-        "source_stage": {
-          "bytes": 25843,
-          "sha256": "9007e43053369f5c4952d2caefd4ac0da9ab9a5ce9d9e51dac84993014bc8925"
-        },
-        "independent_final_audit": {
-          "bytes": 47996,
-          "sha256": "5f250bdbc25e9d40eb86ec79029b027e5f41fc1acee4776d59c04b8ddea56c6d"
-        }
-      },
-      "durable_save": {
-        "provider": "ChatGPT Library",
-        "object_id": "libfile_f77e42d7787881918b9053e4f1a3436f",
-        "version": 0,
-        "capsule": {
-          "bytes": 5205487,
-          "sha256": "7ba19bd22684d28f236959174d33b93bc98c73e5ba966db281f7ff067ffa3451"
-        },
-        "acknowledgement": {
-          "bytes": 1056,
-          "sha256": "b99c961f3925572d43001a699bb77635b39a577150982f890ad3871a81b06ec3"
-        },
-        "provider_response": {
-          "bytes": 1561,
-          "sha256": "839928a9b3d18a01ebca4b0631692371fdc069c943d96bd48f7ae126dd898f2f"
-        },
-        "remote_bytes_independently_retrieved": false
-      },
-      "limits": [
-        "Recognizer disagreement is preserved separately from original audio and label quality; no row is automatically relabeled.",
-        "All 40 noise variants retain their original zero-weight CTC masks, including the 23 with unanimous parent-fulltext matches.",
-        "The 124 variants derive from 14 parent samples and seven source families; they add no independent speakers.",
-        "Counts describe normalized full-text agreement with weak parent labels, not human transcription accuracy or real-room performance.",
-        "Queue runner and model subprocess elapsed durations overlap in scope and are not added together."
-      ]
+      "whisper_language_condition": "Chinese (zh) explicitly supplied; no language-independent detection claim."
     },
     {
       "id": "c1-silence-counterexample-candidate",
       "status": "completed",
       "readback_status": "verified",
-      "supplemental_ledger_audit_status": "adopted_existing_receipt_with_independent_saved_ledger_verification",
       "scope": "One fixed input/objective correction from the original zero-step initialization on eight known training rows and three exposed digital-silence conditions.",
       "recorded_execution_commit": "d250a12373f68f937fc7c4864b42a682b08240fa",
       "pinned_source_files_verified_against_commit": 24,
       "optimizer_steps": 2000,
-      "batch_size": 4,
-      "training_sample_exposures": 8000,
       "training_model_forwards": 8000,
       "final_model_forwards": 24,
+      "known_training_source_rows": 8,
+      "model_constructions": 1,
       "before_model_forwards": 0,
       "development_model_forwards": 0,
-      "model_constructions": 1,
       "asr_or_tts_calls": 0,
-      "automatic_retry": false,
-      "known_training_rows": 8,
-      "exposures_by_added_silence_ms": {
+      "exposures_by_offset_ms": {
         "0": 2672,
         "200": 2664,
         "500": 2664
       },
-      "per_row_exposures_by_added_silence_ms": {
-        "0": 334,
-        "200": 333,
-        "500": 333
-      },
-      "single_variable_ablation": false,
       "conditions_by_added_silence_ms": {
         "0": {
           "evaluable_clips": 8,
@@ -571,9 +615,9 @@
           "edit_numerator": 0,
           "target_token_denominator": 32,
           "empty_outputs": 0,
-          "emissions_entirely_in_added_silence": 0,
           "known_zero_frames": 0,
           "known_zero_nonblank_frames": 0,
+          "emissions_entirely_in_added_silence": 0,
           "all_original_feature_suffixes_bitwise_equal": true,
           "maximum_aligned_original_feature_delta": 0.0,
           "mean_ctc_loss_target_length_normalized": 0.00038419423799496144,
@@ -586,9 +630,9 @@
           "edit_numerator": 0,
           "target_token_denominator": 32,
           "empty_outputs": 0,
-          "emissions_entirely_in_added_silence": 0,
           "known_zero_frames": 72,
           "known_zero_nonblank_frames": 0,
+          "emissions_entirely_in_added_silence": 0,
           "all_original_feature_suffixes_bitwise_equal": true,
           "maximum_aligned_original_feature_delta": 0.0,
           "mean_ctc_loss_target_length_normalized": 0.00035708031100512017,
@@ -601,40 +645,85 @@
           "edit_numerator": 0,
           "target_token_denominator": 32,
           "empty_outputs": 0,
-          "emissions_entirely_in_added_silence": 0,
           "known_zero_frames": 192,
           "known_zero_nonblank_frames": 0,
+          "emissions_entirely_in_added_silence": 0,
           "all_original_feature_suffixes_bitwise_equal": true,
           "maximum_aligned_original_feature_delta": 0.0,
           "mean_ctc_loss_target_length_normalized": 0.0004376391170808347,
           "mean_target_ctc_nll": 0.0021267071133479476
         }
       },
-      "comparison_reference_entry": "c1-onset16",
-      "known_zero_frames_checked": 264,
-      "known_zero_nonblank_frames": 0,
-      "minimum_prefix_blank_probability": 0.9999833106994629,
-      "known_silence_boundary_passed": true,
-      "minimum_mechanism_gate_passed": true,
-      "strict_tiny_fit_passed": true,
-      "generalization_passed": null,
-      "quality_winner": null,
-      "labels_changed": false,
-      "nonzero_finite_gradient_steps": 2000,
-      "changed_parameter_tensors": 16,
-      "initial_checkpoint_sha256": "da7671fe71fef9ecd6822c747e3fe153b9ee563a6784c18eded90d3354486ecf",
-      "final_checkpoint_sha256": "05c6c79258f93a7375db7b3ebe6c502fd696220694f16e004e73776e3c490bed",
-      "final_float_state_sha256": "11d66b5a8f58afad3a6691cd2bb90843fea9a58414eea68a5d08b52236022df6",
       "queue_elapsed_nanoseconds": 119451465918,
       "queue_runner_minutes": 1.9908577653,
       "model_worker_wall_seconds": 118.57880917799957,
       "peak_rss_kib": 371952,
-      "queue_finished_at_utc": "2026-11-06T04:22:10.855539+00:00",
-      "deadline_overrun_nanoseconds": 0,
-      "readback_new_model_constructions": 0,
-      "readback_new_model_forwards": 0,
-      "readback_new_optimizer_steps": 0,
-      "supplemental_ledger_draws_checked": 8000,
+      "started_at_utc": "2026-11-06T04:20:11.404102+00:00",
+      "finished_at_utc": "2026-11-06T04:22:10.855539+00:00",
+      "final_checkpoint_sha256": "05c6c79258f93a7375db7b3ebe6c502fd696220694f16e004e73776e3c490bed",
+      "minimum_mechanism_gate_passed": true,
+      "known_silence_boundary_passed": true,
+      "strict_tiny_fit_passed": true,
+      "generalization_passed": null,
+      "quality_winner": null,
+      "single_variable_ablation": false,
+      "human_gold": false,
+      "labels_changed": false,
+      "automatic_retry": false,
+      "readback": {
+        "original_numerical_audit_status": "verified",
+        "supplemental_ledger_audit_status": "adopted_existing_receipt_with_independent_saved_ledger_verification",
+        "new_model_constructions": 0,
+        "new_model_forwards": 0,
+        "new_optimizer_steps": 0,
+        "optimizer_steps_checked": 2000,
+        "draw_contributions_checked": 8000,
+        "saved_final_conditions": 24,
+        "per_draw_total_equals_primary_plus_auxiliary": true,
+        "frozen_execution_source": {
+          "path": "training/research_c1_known_silence.py",
+          "recorded_commit": "d250a12373f68f937fc7c4864b42a682b08240fa",
+          "sha256": "85d7e9a1d1cbc33b103c523455971fd866ede049478f464f44530255ea932d4a"
+        },
+        "supplement_source_files": {
+          "tools/research_c1_silence_ledger_audit.py": {
+            "bytes": 8305,
+            "sha256": "613ba68ef019f6394c52f2ebf0907d9be9da8ead0806624a36e60d3c9ebd1907"
+          },
+          "tools/research_job_lock.py": {
+            "bytes": 3709,
+            "sha256": "c9d4ddf7bfbd79aeb9e202285610f1f26af303056ed9c2926e0e4e519a30dcfd"
+          },
+          "tools/research_queue.py": {
+            "bytes": 29699,
+            "sha256": "8bc627bf09e7c4b0006ffebe48e7438b0d19da139eed96541b830405b69d3ae5"
+          }
+        },
+        "independent_read_only_crosscheck": {
+          "status": "verified",
+          "method": "Independent standard-library read-only comparison of sealed file hashes, queue outputs and every saved row/batch contribution.",
+          "output_manifest_sha256": "020d0e112f63e37e0c90d4377ef3ee21c4b8e878602d661baea8e99f2b9f6f93",
+          "manifest_files_verified": 59,
+          "optimizer_steps_checked": 2000,
+          "draw_contributions_checked": 8000,
+          "per_draw_total_equals_primary_plus_auxiliary": true,
+          "new_model_constructions": 0,
+          "new_model_forwards": 0,
+          "new_optimizer_steps": 0,
+          "sealed_output_files_written": 0,
+          "original_audit_sha256": "13a90d5cdfa19315caed01197e9e96325e6cfd26bfbc72aaa796cf9422f324be",
+          "supplemental_audit_sha256": "253a5e3117301d43afb439bd9e1e3ab7d7baa77218e44865cf2ce6e798a84829",
+          "verification_record_scope": "Local independent review in this continuation; not a provider signature or new model experiment."
+        },
+        "supplemental_receipt_reported_status": "verified",
+        "supplemental_cli_execution_provenance": "unavailable",
+        "supplemental_cli_invocations_by_this_adoption": 0,
+        "supplemental_independent_ledger_draws_checked": 8000,
+        "supplemental_adoption_receipt": {
+          "bytes": 3063,
+          "sha256": "5a3f7fd75f761c486521e7fb5178ef703727944d9231a73328d11cc75369ad68"
+        }
+      },
       "receipts": {
         "summary": {
           "bytes": 8467,
@@ -644,14 +733,6 @@
           "bytes": 2114,
           "sha256": "d9bb0dab2b67e280619a2769bb76c1926c48065cc43117c35783626d9dcc1bf2"
         },
-        "readback": {
-          "bytes": 383,
-          "sha256": "13a90d5cdfa19315caed01197e9e96325e6cfd26bfbc72aaa796cf9422f324be"
-        },
-        "supplemental_ledger_audit": {
-          "bytes": 1165,
-          "sha256": "253a5e3117301d43afb439bd9e1e3ab7d7baa77218e44865cf2ce6e798a84829"
-        },
         "output_manifest": {
           "bytes": 8095,
           "sha256": "020d0e112f63e37e0c90d4377ef3ee21c4b8e878602d661baea8e99f2b9f6f93"
@@ -659,6 +740,30 @@
         "source_recipe": {
           "bytes": 1156141,
           "sha256": "f46370e3bee34766f3ef71e43ee122fa6ef7a6eb359707aa9f93c2e3e1e04173"
+        },
+        "original_numerical_audit": {
+          "bytes": 383,
+          "sha256": "13a90d5cdfa19315caed01197e9e96325e6cfd26bfbc72aaa796cf9422f324be"
+        },
+        "original_audit_execution": {
+          "bytes": 1671,
+          "sha256": "f8b12ea5ba4a35bafdde8816e22bc8ae026e821485bb300bf14fbfb4e62bd563"
+        },
+        "supplemental_ledger_audit": {
+          "bytes": 1165,
+          "sha256": "253a5e3117301d43afb439bd9e1e3ab7d7baa77218e44865cf2ce6e798a84829"
+        },
+        "launch_prerequisite": {
+          "bytes": 84474,
+          "sha256": "61c61e524340b9b366727055966e903a524f9b165e12661db5cd71c5e1167ebf"
+        },
+        "launch_result": {
+          "bytes": 3245,
+          "sha256": "2e3619b98c61360fc12a5567669d61a248c040c2c87f917f5329e3a0275de499"
+        },
+        "readback": {
+          "bytes": 383,
+          "sha256": "13a90d5cdfa19315caed01197e9e96325e6cfd26bfbc72aaa796cf9422f324be"
         },
         "independent_terminal_authentication": {
           "bytes": 14483,
@@ -685,9 +790,20 @@
           "bytes": 1189,
           "sha256": "a54506cd4198c4ca1c7338c2127dfe3ff147101714f26fcb718984504727a2ef"
         },
-        "remote_bytes_independently_retrieved": false
+        "remote_bytes_independently_retrieved": false,
+        "scope": "Frozen execution, launch closure and original tensor/optimizer audit; the later ledger supplement is published separately in terminal-evidence.json.",
+        "supplemental_ledger_audit_in_terminal_capsule": false
+      },
+      "aggregate_evidence": {
+        "path": "research/dataset-continuation-20261106/terminal-evidence.json",
+        "bytes": 66797,
+        "sha256": "4b5166c667d926a5c71f63d2701e86efe2b2b8e06c87e906b419bc7dd164413f"
       },
       "limits": [
+        "All 24 exact matches are three offset conditions on the same eight known training rows, not 24 independent samples.",
+        "The predeclared known-silence mechanism and strict tiny-fit gates passed; independent generalization remains unmeasured.",
+        "The frozen executed recipe/source was not changed by the later per-draw arithmetic supplement.",
+        "The terminal capsule retains the original numerical audit; the later ledger supplement is included separately in the public aggregate evidence.",
         "All 24 final full-text token sequences match their retained weak targets on the same eight training rows and the three exposed offsets.",
         "Cyclic onset exposure and the known-zero blank objective changed together; this is not a single-variable ablation.",
         "Known digital-zero windows do not establish behavior on natural silence, unseen speakers, real soft speech, far-field audio or continuous negative streams.",
@@ -695,6 +811,34 @@
         "Original numerical/optimizer readback and the supplemental per-draw arithmetic audit remain separate receipts.",
         "The original supplemental CLI command/stdout/returncode record is unavailable. Its retained receipt was adopted only after independent verification of the saved per-draw arithmetic; no original CLI execution history was reconstructed."
       ],
+      "supplemental_ledger_audit_status": "adopted_existing_receipt_with_independent_saved_ledger_verification",
+      "batch_size": 4,
+      "training_sample_exposures": 8000,
+      "known_training_rows": 8,
+      "exposures_by_added_silence_ms": {
+        "0": 2672,
+        "200": 2664,
+        "500": 2664
+      },
+      "per_row_exposures_by_added_silence_ms": {
+        "0": 334,
+        "200": 333,
+        "500": 333
+      },
+      "comparison_reference_entry": "c1-onset16",
+      "known_zero_frames_checked": 264,
+      "known_zero_nonblank_frames": 0,
+      "minimum_prefix_blank_probability": 0.9999833106994629,
+      "nonzero_finite_gradient_steps": 2000,
+      "changed_parameter_tensors": 16,
+      "initial_checkpoint_sha256": "da7671fe71fef9ecd6822c747e3fe153b9ee563a6784c18eded90d3354486ecf",
+      "final_float_state_sha256": "11d66b5a8f58afad3a6691cd2bb90843fea9a58414eea68a5d08b52236022df6",
+      "queue_finished_at_utc": "2026-11-06T04:22:10.855539+00:00",
+      "deadline_overrun_nanoseconds": 0,
+      "readback_new_model_constructions": 0,
+      "readback_new_model_forwards": 0,
+      "readback_new_optimizer_steps": 0,
+      "supplemental_ledger_draws_checked": 8000,
       "independent_terminal_audit_status": "verified_existing_terminal",
       "independent_terminal_numerical_audit_rerun": false,
       "supplemental_cli_execution_provenance": "unavailable",
@@ -705,107 +849,166 @@
       "id": "acoustic-positive-ingestion25",
       "status": "completed_verified_and_saved",
       "readback_status": "verified",
+      "archive_status": "saved",
       "scope": "Fixed positive-only acoustic data-consumption check from the original zero-step C1 initialization.",
       "recorded_execution_commit": "bb9684f83b07375671e9ba4b5a75413c5ab8d67c",
       "pinned_source_files_verified_against_commit": 30,
-      "upstream_observation_entry": "acoustic124-three-asr",
-      "all_projected_rows": 124,
+      "all_observed_rows": 124,
       "eligible_train_rows": 41,
-      "eligible_development_rows": 11,
-      "eligible_train_parent_recordings": 9,
-      "eligible_train_source_families": 5,
-      "eligible_development_parent_recordings": 2,
-      "eligible_development_source_families": 2,
-      "development_coverage_by_target_id": {
-        "K1": 0,
-        "K2": 11
-      },
+      "development_rows": 11,
+      "ctc_weak_label_weight": 0.5,
+      "noise_zero_weight_rows": 40,
+      "other_disagreement_zero_weight_rows": 32,
       "projection_reasons": {
         "acoustic_asr_full-transcript-disagreement": 32,
         "untranscribed_additive_background": 40,
         "verified_parent_fulltext": 52
       },
-      "zero_ctc_rows": 72,
-      "original_noise_rows_retained_zero_weight": 40,
-      "original_source_rows_modified": 0,
-      "ctc_confidence_weight": 0.5,
-      "ordinary_negative_rows": 0,
       "positive_only": true,
+      "ordinary_negative_rows": 0,
       "optimizer_steps": 25,
-      "batch_size": 4,
-      "sample_exposures": 100,
-      "exposure_repetitions": {
-        "3": 18,
-        "2": 23
-      },
+      "training_sample_exposures": 100,
       "training_model_forwards": 100,
       "train_diagnostic_model_forwards": 82,
       "development_model_forwards": 11,
-      "total_model_forwards": 193,
       "development_optimizer_draws": 0,
-      "model_constructions": 1,
-      "asr_or_tts_calls": 0,
-      "automatic_retry": false,
+      "development_readback_passes": 1,
+      "development_selection_or_tuning": false,
       "before_train": {
-        "evaluable_clips": 41,
-        "empty_outputs": 0,
-        "exact_token_matches": 0,
-        "exact_token_match_denominator": 41,
-        "edit_numerator": 1234,
-        "target_token_denominator": 440,
         "blank_argmax_fraction": 0.0,
         "blank_probability_mean": 0.00043665999817729065,
-        "mean_ctc_loss_confidence_weighted": 71.22111799658799
+        "confidence_weight_sum": 20.5,
+        "constant_single_token_prediction": false,
+        "deletions": 74,
+        "distinct_predictions": 29,
+        "edit_numerator": 1234,
+        "empty_outputs": 0,
+        "evaluable_clips": 41,
+        "exact_token_match_denominator": 41,
+        "exact_token_match_rate": 0.0,
+        "exact_token_matches": 0,
+        "insertions": 794,
+        "mean_ctc_loss_confidence_weighted": 71.22111799658799,
+        "mean_ctc_loss_target_length_normalized": 142.44223599317598,
+        "mean_target_ctc_nll": 1489.6792258285896,
+        "not_evaluable_reasons": {},
+        "observed_clips": 41,
+        "single_token_outputs": 5,
+        "substitutions": 366,
+        "target_token_denominator": 440,
+        "token_edit_rate": 2.8045454545454547
       },
       "after_train": {
-        "evaluable_clips": 41,
-        "empty_outputs": 41,
-        "exact_token_matches": 0,
-        "exact_token_match_denominator": 41,
-        "edit_numerator": 440,
-        "target_token_denominator": 440,
         "blank_argmax_fraction": 1.0,
         "blank_probability_mean": 0.03197319426639475,
-        "mean_ctc_loss_confidence_weighted": 34.841672804297474
+        "confidence_weight_sum": 20.5,
+        "constant_single_token_prediction": false,
+        "deletions": 440,
+        "distinct_predictions": 1,
+        "edit_numerator": 440,
+        "empty_outputs": 41,
+        "evaluable_clips": 41,
+        "exact_token_match_denominator": 41,
+        "exact_token_match_rate": 0.0,
+        "exact_token_matches": 0,
+        "insertions": 0,
+        "mean_ctc_loss_confidence_weighted": 34.841672804297474,
+        "mean_ctc_loss_target_length_normalized": 69.68334560859495,
+        "mean_target_ctc_nll": 725.5049361252203,
+        "not_evaluable_reasons": {},
+        "observed_clips": 41,
+        "single_token_outputs": 0,
+        "substitutions": 0,
+        "target_token_denominator": 440,
+        "token_edit_rate": 1.0
       },
       "development": {
-        "evaluable_clips": 11,
-        "empty_outputs": 11,
-        "exact_token_matches": 0,
-        "exact_token_match_denominator": 11,
-        "edit_numerator": 111,
-        "target_token_denominator": 111,
         "blank_argmax_fraction": 1.0,
         "blank_probability_mean": 0.023771277411202205,
-        "mean_ctc_loss_confidence_weighted": 46.28047735040838
+        "confidence_weight_sum": 5.5,
+        "constant_single_token_prediction": false,
+        "deletions": 111,
+        "distinct_predictions": 1,
+        "edit_numerator": 111,
+        "empty_outputs": 11,
+        "evaluable_clips": 11,
+        "exact_token_match_denominator": 11,
+        "exact_token_match_rate": 0.0,
+        "exact_token_matches": 0,
+        "insertions": 0,
+        "mean_ctc_loss_confidence_weighted": 46.28047735040838,
+        "mean_ctc_loss_target_length_normalized": 92.56095470081677,
+        "mean_target_ctc_nll": 952.0607188831676,
+        "not_evaluable_reasons": {},
+        "observed_clips": 11,
+        "single_token_outputs": 0,
+        "substitutions": 0,
+        "target_token_denominator": 111,
+        "token_edit_rate": 1.0
       },
-      "nonzero_finite_gradient_steps": 25,
-      "changed_parameter_tensors": 16,
-      "initial_checkpoint_sha256": "da7671fe71fef9ecd6822c747e3fe153b9ee563a6784c18eded90d3354486ecf",
-      "final_checkpoint_sha256": "780c9e16e713c2ee08730225d429f5406c26de78c499077a3802e64a48b7513b",
-      "final_float_state_sha256": "d366287a6dd4b4b81fc1ee5e127eb23de11859b93451678c66e6faed703adaf4",
+      "gradients": {
+        "all_selected_parameter_gradients_present_and_finite": true,
+        "gradient_norm_max": 70.68527221679688,
+        "gradient_norm_min": 14.928936004638672,
+        "nonzero_gradient_steps": 25,
+        "recorded_optimizer_steps": 25,
+        "zero_gradient_steps": 0
+      },
+      "changed_trainable_parameter_tensors": 16,
+      "trainable_parameter_tensors": 16,
+      "parameter_delta_l2": 9.078285030485645,
       "queue_elapsed_nanoseconds": 24699486578,
       "queue_runner_minutes": 0.4116581096333333,
       "model_worker_wall_seconds": 23.67452487400078,
       "peak_rss_kib": 369468,
+      "started_at_utc": "2026-11-06T04:40:58.523687+00:00",
       "finished_at_utc": "2026-11-06T04:41:23.223146+00:00",
-      "deadline_overrun_nanoseconds": 0,
+      "asr_or_tts_calls": 0,
+      "source_rows_modified": 0,
+      "final_checkpoint_sha256": "780c9e16e713c2ee08730225d429f5406c26de78c499077a3802e64a48b7513b",
       "quality_acceptance_claim": false,
-      "known_silence_correction_objective_used": false,
-      "known_silence_corrected_weights_used": false,
       "tiny_fit_passed": null,
       "generalization_passed": null,
-      "readback_feature_rows_replayed": 52,
-      "readback_optimizer_steps_replayed": 25,
-      "readback_new_model_constructions": 0,
-      "readback_new_model_forwards": 0,
-      "readback_new_optimizer_steps": 0,
-      "independent_review_saved_tensor_audit_rerun": false,
+      "human_gold": false,
+      "automatic_retry": false,
+      "zero_model_readback": {
+        "consumption_verified": true,
+        "development_optimizer_draws": 0,
+        "development_rows": 11,
+        "feature_rows_replayed": 52,
+        "manifest_sha256": "df073fc951b85da593a02f56402f5d0b9f2acb05b212d6057729efb5e642f0a5",
+        "model_constructions": 0,
+        "new_model_forwards": 0,
+        "new_optimizer_steps": 0,
+        "optimizer_steps_replayed": 25,
+        "quality_acceptance_claim": false,
+        "schema": "kws-acoustic-consumption-readback-v1",
+        "status": "verified",
+        "train_rows": 41
+      },
+      "independent_read_only_crosscheck": {
+        "status": "verified",
+        "method": "Independent standard-library read-only validation of all output hashes, queue receipts, frozen Git/source copies and every actual weighted CTC draw.",
+        "output_manifest_sha256": "df073fc951b85da593a02f56402f5d0b9f2acb05b212d6057729efb5e642f0a5",
+        "output_manifest_files_verified": 107,
+        "source_files_verified_against_git_and_prepared": 30,
+        "all_observed_rows_verified": 124,
+        "train_rows": 41,
+        "development_rows": 11,
+        "noise_zero_weight_rows": 40,
+        "other_disagreement_zero_weight_rows": 32,
+        "optimizer_steps_checked": 25,
+        "weighted_ctc_draws_checked": 100,
+        "per_draw_weighted_ctc_equals_raw_times_half_divided_by_four": true,
+        "nonzero_finite_gradient_steps": 25,
+        "original_readback_sha256": "c5eddd91eb0c50b2a888a12f99875da025a28634803767c3902059fd4beb05aa",
+        "new_model_constructions": 0,
+        "new_model_forwards": 0,
+        "new_optimizer_steps": 0,
+        "sealed_output_files_written": 0,
+        "verification_record_scope": "Local independent review; no model experiment or provider signature."
+      },
       "receipts": {
-        "recipe": {
-          "bytes": 3635,
-          "sha256": "0ae893d4694d7242f71eb39844aef6b96b73002bc6ca44d674b70527807ff028"
-        },
         "summary": {
           "bytes": 9881,
           "sha256": "2add6473a552d46dd9204f1f7e77e6b2ef73eb1b8167029bf63647bc77b24310"
@@ -822,13 +1025,33 @@
           "bytes": 718,
           "sha256": "860e362ab326301237ccf11c42892966036deac078ab88a3f257ff91b9a731b7"
         },
+        "output_manifest": {
+          "bytes": 14852,
+          "sha256": "df073fc951b85da593a02f56402f5d0b9f2acb05b212d6057729efb5e642f0a5"
+        },
         "prepared_manifest": {
           "bytes": 21787,
           "sha256": "6f5a36604a71ac686694832da0bbb4a470477e2eb6223b01ca472d3ed43c2e79"
         },
-        "output_manifest": {
-          "bytes": 14852,
-          "sha256": "df073fc951b85da593a02f56402f5d0b9f2acb05b212d6057729efb5e642f0a5"
+        "source_recipe": {
+          "bytes": 3635,
+          "sha256": "0ae893d4694d7242f71eb39844aef6b96b73002bc6ca44d674b70527807ff028"
+        },
+        "fixed_exposure_recipe": {
+          "bytes": 8144,
+          "sha256": "5ba636d7b44a3fd8bbbe98a9e795d5c7ae8c1eeefe9deae2242da4127e03d489"
+        },
+        "source_identity": {
+          "bytes": 3730,
+          "sha256": "8ea3a5cba21dc8ce1e3facb22a8438b4891f9c4b03d6036bf77c6719f6a84a68"
+        },
+        "stage": {
+          "bytes": 4368,
+          "sha256": "cf54efbf9e50d13ad73c45745982c4b0fc62771cc26134d86236096572e187cf"
+        },
+        "recipe": {
+          "bytes": 3635,
+          "sha256": "0ae893d4694d7242f71eb39844aef6b96b73002bc6ca44d674b70527807ff028"
         },
         "independent_metadata_terminal_review": {
           "bytes": 8319,
@@ -851,6 +1074,269 @@
           "sha256": "19d728305c261af1a0ea94988aa35828dc6ca790aa716f7dff3c298239f6a2d9"
         }
       },
+      "durable_save": {
+        "status": "saved",
+        "provider": "ChatGPT Library",
+        "object_id": "libfile_a7404c0ecb008191a15ef024fdd62c3f",
+        "terminal_object_id": "libfile_a7404c0ecb008191a15ef024fdd62c3f",
+        "version": 0,
+        "artifact_graph_complete": true,
+        "capsule": {
+          "bytes": 17897844,
+          "sha256": "c5b498a64a4b0e354b95de4b188d320888d16701456b125315fa31bc6b67f4df"
+        },
+        "terminal_members": 549,
+        "member_manifest_sha256": "64523c43cc33385672bf75f83a5af969f42ae1eb510e98802d4bf13bae492a37",
+        "acknowledgement": {
+          "bytes": 1015,
+          "sha256": "d75f7ddc6c6e299a6777b6819b9c44c187121dcc2c754b0bf9325ee0671567c5"
+        },
+        "provider_response": {
+          "bytes": 1197,
+          "sha256": "40d90977d618c0360b02cae20064942c0be56aa50b609125c716ee71c3b6b3b4"
+        },
+        "remote_bytes_independently_retrieved": false,
+        "numeric_members": 93,
+        "numeric_raw_bytes": 203258289,
+        "maximum_numeric_raw_bytes_per_chunk": 33554432,
+        "terminal_contains_all_numeric_members": false,
+        "terminal_contains_complete_numeric_hash_inventory": true,
+        "acknowledged_chunk_objects": [
+          {
+            "part": "part-001",
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_f6fb421b982081919c068989cb01cfea",
+            "version": 0,
+            "capsule": {
+              "bytes": 28746143,
+              "sha256": "d7012b6d1bb040b940f58244aff23f4f91e7213c43c245a6ac17a197410fccec"
+            },
+            "member_manifest_sha256": "d1f63417339786a1082a061c6cbdfc94550ef3282f91b7d4cc192f0112ada72c",
+            "acknowledgement": {
+              "bytes": 1039,
+              "sha256": "3ebb9a74cb8201deae399d70a846272f3ad8c1872b37564c15920b15c2345906"
+            },
+            "provider_response": {
+              "bytes": 1205,
+              "sha256": "5923b5d1d8cd72fae4a037897766a875259eb6c968ff7093fb75f012cd2e8558"
+            },
+            "numeric_members": 16,
+            "numeric_raw_bytes": 32976912,
+            "original_member_bytes_including_marker": 32982793
+          },
+          {
+            "part": "part-002",
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_1a7d903a510481919e80b86839f0146c",
+            "version": 0,
+            "capsule": {
+              "bytes": 27432008,
+              "sha256": "6996118b51bcb2de40f82cf2724829399638af39800ac5df960ca8026c7b3e4f"
+            },
+            "member_manifest_sha256": "175ecb0ffb52db50de92bc641155040860177f0a8e49d2db668074a8a4c34386",
+            "acknowledgement": {
+              "bytes": 1039,
+              "sha256": "b3b80d03c1768de9c3afbe80a568a8aa04cc68c10fc7ba3e699cb88a16c3216b"
+            },
+            "provider_response": {
+              "bytes": 1205,
+              "sha256": "f62782f5eda3c016cc9d4de7e0c396bd7703da7801b234f05116c74d88e046af"
+            },
+            "numeric_members": 15,
+            "numeric_raw_bytes": 31447723,
+            "original_member_bytes_including_marker": 31453336
+          },
+          {
+            "part": "part-003",
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_e85842f1e1d48191aa81ae2eb44c0788",
+            "version": 0,
+            "capsule": {
+              "bytes": 28373088,
+              "sha256": "11bb488434248099e6f6def64ec984cf8d777f24e3c5baba2ed1871367ea9698"
+            },
+            "member_manifest_sha256": "1ccf27d8c40d59575a4a77563912dd9a0591113623d34652f4ba1cccc501a9d6",
+            "acknowledgement": {
+              "bytes": 1039,
+              "sha256": "ab14f7a35bd3daabaa278f897df8e658f82acb74232a7bb3fa9dfdc4b82fc0f9"
+            },
+            "provider_response": {
+              "bytes": 1205,
+              "sha256": "bf33592e8434d9c5ba7cc034c0bb5b9920ea2c6319112aabec57fd11a72eb015"
+            },
+            "numeric_members": 14,
+            "numeric_raw_bytes": 32003910,
+            "original_member_bytes_including_marker": 32009259
+          },
+          {
+            "part": "part-004",
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_338e7d17f5148191a36d32d49e23f298",
+            "version": 0,
+            "capsule": {
+              "bytes": 29529902,
+              "sha256": "b932cb61f0279b0702ea836b2aacc86a422fe8003d4ec2833a91d44f2eec74ee"
+            },
+            "member_manifest_sha256": "43bff93efb9b3bdb599d8f17cfbcc1989a0bca20ecdd1085cdd57a0663a26157",
+            "acknowledgement": {
+              "bytes": 1039,
+              "sha256": "0e03532d8c81e41505937aa10622f17ef8c23243215467dc36551b9ce4d6bfc4"
+            },
+            "provider_response": {
+              "bytes": 1205,
+              "sha256": "0284d2d1e10016b905a1cd55bd37241369c8de1458b5e05e6d8b935bb33f1197"
+            },
+            "numeric_members": 16,
+            "numeric_raw_bytes": 32260688,
+            "original_member_bytes_including_marker": 32266585
+          },
+          {
+            "part": "part-005",
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_b1cf2751bd448191a9491e968a83bb0a",
+            "version": 0,
+            "capsule": {
+              "bytes": 29224945,
+              "sha256": "02656fdf30de074c29b145957b35ee690f26bb30793585c59caac72386a75d4a"
+            },
+            "member_manifest_sha256": "5f19401b416e699bf5c2b1ec49e4e455f5511af37efabfd1aeae260ab9322efc",
+            "acknowledgement": {
+              "bytes": 1039,
+              "sha256": "000fbe4743934d747a4cd86e8fd54a7482eb13150e585a7038a4d7329b955fb8"
+            },
+            "provider_response": {
+              "bytes": 1205,
+              "sha256": "548681b2b5eb2d37303a8c9b5c7ed3aa1df8d68af2884eab7940badcfe7939b9"
+            },
+            "numeric_members": 15,
+            "numeric_raw_bytes": 31932267,
+            "original_member_bytes_including_marker": 31937895
+          },
+          {
+            "part": "part-006",
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_0339ecac1ff08191a4d4c8683c2f403e",
+            "version": 0,
+            "capsule": {
+              "bytes": 28588817,
+              "sha256": "534a3d01b9ef06a118f98544bc81510ba67808cf32c3e04a1fe681906dc6ae10"
+            },
+            "member_manifest_sha256": "a6d52831e5492dd5bbd5d5386421fdbfe817125d032da52526b41c2dc3474628",
+            "acknowledgement": {
+              "bytes": 1039,
+              "sha256": "b4ee235690603b3274de8dafd333b8ee92bf5e6713d453803033a3a1d3773194"
+            },
+            "provider_response": {
+              "bytes": 1205,
+              "sha256": "bda7b67ab9c8d8fd41f76e9391e52e5b48061acf9521378168630284b58fe2fd"
+            },
+            "numeric_members": 13,
+            "numeric_raw_bytes": 32791713,
+            "original_member_bytes_including_marker": 32796838
+          },
+          {
+            "part": "part-007",
+            "provider": "ChatGPT Library",
+            "object_id": "libfile_c10043507c4c8191877bbc5990c3c02a",
+            "version": 0,
+            "capsule": {
+              "bytes": 8435718,
+              "sha256": "7da5242598a4216002371604e0bea0d36ba03803b927ce9ab3a02fb969b0749f"
+            },
+            "member_manifest_sha256": "06a5ded32c22e9472d45667f0172b805cadc61ec8edb5af0705cb1738a86f802",
+            "acknowledgement": {
+              "bytes": 1038,
+              "sha256": "bb167065697aa26a68d206828c996f257b9e067527b5f02528f6ce06fed27ccb"
+            },
+            "provider_response": {
+              "bytes": 1203,
+              "sha256": "3b540ea2fe5b4773ca3bfd926570ec40b2def75560c7aba59ac98137c6a793f9"
+            },
+            "numeric_members": 4,
+            "numeric_raw_bytes": 9845076,
+            "original_member_bytes_including_marker": 9847763
+          }
+        ],
+        "dependency_counts": {
+          "historical-predecessor": 17,
+          "execution-predecessor": 2,
+          "numeric-data": 7
+        },
+        "recovery_index": {
+          "artifact_name": "terminal-recovery-index.json",
+          "bytes": 2596821,
+          "sha256": "19d728305c261af1a0ea94988aa35828dc6ca790aa716f7dff3c298239f6a2d9",
+          "contained_in_terminal_object_id": "libfile_a7404c0ecb008191a15ef024fdd62c3f",
+          "archive_member": "files/000286"
+        },
+        "terminal_seal_receipt": {
+          "bytes": 1181,
+          "sha256": "cfd1a34798e93569bc3732e0d0f4e4be021ef03a9ab865ce3ffb50cffc066be3"
+        },
+        "scope": "The terminal metadata and seven separately acknowledged numeric capsules form the saved acoustic-consumption graph. The terminal retains all 475 original prelaunch members and immutable nonnumeric queue evidence, plus the complete original-path/hash inventory.",
+        "restore_order": [
+          "Retrieve and restore the terminal metadata capsule using its recorded SHA256.",
+          "Read the embedded recovery index and retrieve all seven numeric-data objects by their actual Library IDs.",
+          "Verify every capsule SHA256 and restore its original paths using the pinned create-only checkpoint reader.",
+          "Verify the original complete outputs MANIFEST after all 93 numeric members are present."
+        ],
+        "restored_launch_intents_are_not_reusable": true,
+        "verified_manifest_members": 549
+      },
+      "aggregate_evidence": {
+        "path": "research/dataset-continuation-20261106/terminal-evidence.json",
+        "bytes": 66797,
+        "sha256": "4b5166c667d926a5c71f63d2701e86efe2b2b8e06c87e906b419bc7dd164413f"
+      },
+      "limits": [
+        "The 100 draws consume positive-only weak full-transcript labels; no ordinary-negative row is included.",
+        "Loss decreased while all 41 training and 11 development greedy outputs became empty; no tiny-fit or generalization success is claimed.",
+        "Development is observed once after training and never used for optimizer draws, sample selection or tuning.",
+        "Full preservation uses the terminal metadata capsule and seven separately acknowledged numeric capsules; restoring only the terminal does not restore the 93 tensors.",
+        "All 41 eligible training and 11 development greedy outputs are empty after the fixed 25-step check; successful data consumption does not establish learning.",
+        "The 11 development rows derive from two parent recordings and two families, all K2; K1 development coverage is zero.",
+        "The 124-row consumer view retains 40 noise rows and 32 non-noise disagreement rows at zero CTC weight; the original labels and splits remain unchanged.",
+        "This independent positive-only check uses the original zero-step initialization, without the known-silence correction weights or auxiliary objective.",
+        "The original saved-tensor readback is an existing recorded execution. The independent metadata review did not repeat that numerical audit or any model computation.",
+        "The two saved-tensor test cases were expected skips in each default metadata test run; they are not counted as executed tests.",
+        "Execution and save receipts do not establish the identity of the original controlling actor."
+      ],
+      "upstream_observation_entry": "acoustic124-three-asr",
+      "all_projected_rows": 124,
+      "eligible_development_rows": 11,
+      "eligible_train_parent_recordings": 9,
+      "eligible_train_source_families": 5,
+      "eligible_development_parent_recordings": 2,
+      "eligible_development_source_families": 2,
+      "development_coverage_by_target_id": {
+        "K1": 0,
+        "K2": 11
+      },
+      "zero_ctc_rows": 72,
+      "original_noise_rows_retained_zero_weight": 40,
+      "original_source_rows_modified": 0,
+      "ctc_confidence_weight": 0.5,
+      "batch_size": 4,
+      "sample_exposures": 100,
+      "exposure_repetitions": {
+        "3": 18,
+        "2": 23
+      },
+      "total_model_forwards": 193,
+      "model_constructions": 1,
+      "nonzero_finite_gradient_steps": 25,
+      "changed_parameter_tensors": 16,
+      "initial_checkpoint_sha256": "da7671fe71fef9ecd6822c747e3fe153b9ee563a6784c18eded90d3354486ecf",
+      "final_float_state_sha256": "d366287a6dd4b4b81fc1ee5e127eb23de11859b93451678c66e6faed703adaf4",
+      "deadline_overrun_nanoseconds": 0,
+      "known_silence_correction_objective_used": false,
+      "known_silence_corrected_weights_used": false,
+      "readback_feature_rows_replayed": 52,
+      "readback_optimizer_steps_replayed": 25,
+      "readback_new_model_constructions": 0,
+      "readback_new_model_forwards": 0,
+      "readback_new_optimizer_steps": 0,
+      "independent_review_saved_tensor_audit_rerun": false,
       "metadata_tests": {
         "python": "3.12.16",
         "modes": [
@@ -864,35 +1350,6 @@
         "saved_tensor_mode_enabled": false,
         "new_model_calls": 0
       },
-      "durable_save": {
-        "provider": "ChatGPT Library",
-        "object_id": "libfile_a7404c0ecb008191a15ef024fdd62c3f",
-        "version": 0,
-        "capsule": {
-          "bytes": 17897844,
-          "sha256": "c5b498a64a4b0e354b95de4b188d320888d16701456b125315fa31bc6b67f4df"
-        },
-        "member_manifest_sha256": "64523c43cc33385672bf75f83a5af969f42ae1eb510e98802d4bf13bae492a37",
-        "verified_manifest_members": 549,
-        "acknowledgement": {
-          "bytes": 1015,
-          "sha256": "d75f7ddc6c6e299a6777b6819b9c44c187121dcc2c754b0bf9325ee0671567c5"
-        },
-        "provider_response": {
-          "bytes": 1197,
-          "sha256": "40d90977d618c0360b02cae20064942c0be56aa50b609125c716ee71c3b6b3b4"
-        },
-        "remote_bytes_independently_retrieved": false
-      },
-      "limits": [
-        "All 41 eligible training and 11 development greedy outputs are empty after the fixed 25-step check; successful data consumption does not establish learning.",
-        "The 11 development rows derive from two parent recordings and two families, all K2; K1 development coverage is zero.",
-        "The 124-row consumer view retains 40 noise rows and 32 non-noise disagreement rows at zero CTC weight; the original labels and splits remain unchanged.",
-        "This independent positive-only check uses the original zero-step initialization, without the known-silence correction weights or auxiliary objective.",
-        "The original saved-tensor readback is an existing recorded execution. The independent metadata review did not repeat that numerical audit or any model computation.",
-        "The two saved-tensor test cases were expected skips in each default metadata test run; they are not counted as executed tests.",
-        "Execution and save receipts do not establish the identity of the original controlling actor."
-      ],
       "eligible_train_coverage_by_target_id": {
         "K1": 16,
         "K2": 25
@@ -1085,6 +1542,233 @@
       "scope": "Restore the historical AliMeeting Eval input identity and observe two predeclared annotation-gap windows from one development session.",
       "recorded_execution_commit": "d4f89b0164a9663a2ed13afe99f58793755ee6fe",
       "pinned_source_files_verified_against_commit": 27,
+      "historical_recovery": {
+        "status": "historical-identity-restored-not-negative-admitted",
+        "sessions": 8,
+        "total_frames": 242211440,
+        "historical_identity_verified": true,
+        "model_calls": 0,
+        "evaluation_admitted": false,
+        "accepted_negative_seconds": 0,
+        "new_independent_validation_hours": 0,
+        "durable_save_status": "saved",
+        "durable_save": {
+          "status": "saved",
+          "provider": "ChatGPT Library",
+          "recovery_index": {
+            "object_id": "libfile_c30199968d148191a966621ef1220d64",
+            "version": 0,
+            "bytes": 19797,
+            "sha256": "7e2e6dd958ad03499f64f7b75307fc7ff514bfc60ec96f4cb9e240438050195c"
+          },
+          "index_save_receipt": {
+            "bytes": 945,
+            "sha256": "b4e58ec83542da17160c0c6824aecc628c222e4f5fd48ce9b39c606bc0b777f8"
+          },
+          "parts_save_receipt": {
+            "bytes": 9266,
+            "sha256": "77c4edceb5eb566938636beb865c1a7834ff1be6354b2681c28884e3b4369b0e"
+          },
+          "saved_parts": 12,
+          "saved_manifest_archives": 1,
+          "all_part_and_manifest_saves_succeeded": true,
+          "whole_capsule": {
+            "bytes": 485334457,
+            "sha256": "da040a981d688fc5ddc8576123aea883771626bdbb0c69ba3d2da53a17597a17",
+            "member_manifest_sha256": "ef706fa9a1527147372db8537c05eb917f265ff99f0bddece271319143e842c6",
+            "zip_member_count": 53,
+            "whole_file_library_object_id": null,
+            "lossless_byte_parts": 12,
+            "maximum_part_bytes": 41943040,
+            "parts_are_independent_zip_files": false,
+            "every_part_hash_and_recombined_hash_rechecked_after_save": true
+          },
+          "original_whole_upload": {
+            "status": "transfer_failed",
+            "finalize_tool_calls": 0,
+            "whole_capsule_retried": false,
+            "final_library_file_id_returned": false
+          },
+          "scope": "The saved private recovery index identifies twelve lossless byte parts and a separate Manifest ZIP for the historical eight-session mono-audio/TextGrid recovery capsule. Public records expose only this index ID and hashes, not the audio-part IDs or audio.",
+          "restore_order": [
+            "Retrieve the saved recovery index by its actual object ID and verify its content SHA256.",
+            "Use its private part identities and byte order to retrieve twelve parts plus the Manifest ZIP.",
+            "Verify every part and concatenate the byte parts into the 485334457-byte original ZIP.",
+            "Verify the recombined ZIP SHA256 and its retained member manifest before restoring historical files."
+          ],
+          "new_model_calls_in_preservation": 0,
+          "new_independent_negative_seconds": 0,
+          "new_independent_validation_hours": 0
+        },
+        "historical_audio_hours": 4.205059722222222,
+        "historical_audio_seconds": 15138.215
+      },
+      "prepared_windows": {
+        "status": "materialized_unlabelled_inputs",
+        "windows": 2,
+        "parents": 1,
+        "window_input_samples": 926352,
+        "window_input_seconds": 57.897,
+        "unique_parent_samples": 846352,
+        "unique_parent_seconds": 52.897,
+        "overlap_samples": 80000,
+        "overlap_seconds": 5.0,
+        "boundary": {
+          "duration_is_negative_exposure": false,
+          "evidence_class": "unlabelled-natural-audio-windows",
+          "human_gold": false,
+          "natural_far_available": false,
+          "new_model_calls": 0,
+          "source_independence": "not_established",
+          "target_presence": "unknown",
+          "training_admitted": false
+        }
+      },
+      "native_calls_by_model": {
+        "qwen06": 2,
+        "sensevoice": 2,
+        "whisper": 2
+      },
+      "observations": {
+        "windows": 2,
+        "native_calls": 6,
+        "nonempty_text_observations": 6,
+        "primary_disagreement_windows": 2,
+        "three_engine_fulltext_agreement_windows": 0,
+        "quality_flagged_observations": 1,
+        "literal_target_text_flags": 0,
+        "word_timestamps_available": false,
+        "target_presence": "unknown",
+        "training_admitted": false,
+        "accepted_negative_seconds": 0,
+        "new_independent_validation_seconds": 0,
+        "human_gold": false
+      },
+      "whisper_incomplete_observations": 1,
+      "interpretation": "Both primary recognizers returned nonempty, differing ordinary-speech text in annotation-gap windows. Missing annotation and absence of literal target strings do not establish silence, exact transcription, or verified negative exposure.",
+      "queue_elapsed_nanoseconds": 169720687727,
+      "queue_runner_minutes": 2.8286781287833334,
+      "started_at_utc": "2026-11-06T04:28:04.331733+00:00",
+      "finished_at_utc": "2026-11-06T04:30:54.052368+00:00",
+      "actual_duration_complete": true,
+      "unresolved_jobs": 0,
+      "budget_overrun_nanoseconds": 0,
+      "new_model_calls_in_readback": 0,
+      "automatic_retry": false,
+      "receipts": {
+        "historical_recovery": {
+          "bytes": 3436,
+          "sha256": "7335634d1fc5c5070b7a9323c356d08c2c0546560969ff499844e7f49594cd84"
+        },
+        "prepared_summary": {
+          "bytes": 1175,
+          "sha256": "9e03fdd1d737ccd9bcae5b7b23b5b37f0be6ea7613439cb9d962ffc1ff7effbb"
+        },
+        "prepared_inputs": {
+          "bytes": 1842,
+          "sha256": "d34b1cb948093e55a0b2424ad5744e646e104ce7ab0585c1600e4806ad76c92c"
+        },
+        "source_map": {
+          "bytes": 1234,
+          "sha256": "e13f0262907673fa99be624d8e474315c03161f7f81fa95eb215b67d02a5015b"
+        },
+        "asr_request": {
+          "bytes": 11030,
+          "sha256": "5dc71e5898a21d28526232a8a71f57d170e7430d556e23f27f8181bb197b98ad"
+        },
+        "queue_request": {
+          "bytes": 898,
+          "sha256": "eee869439e821b5043508a07cb80a3bc0b73c4db24bb4bc163395afd906a6f2e"
+        },
+        "stage": {
+          "bytes": 5686,
+          "sha256": "9ff17c024f66888a8da6dda7867289c2b37679d65a2c3e20d8abbb811b72b436"
+        },
+        "queue_claim": {
+          "bytes": 708,
+          "sha256": "2a612682968bb3ff91bd1677c9b826ef0400afb4fe47e7eda1d0e577fa465bda"
+        },
+        "queue_result": {
+          "bytes": 1973,
+          "sha256": "c0a507ca13c91bd9b77de833d61555baea2f1c5321ed54b00e7c5eedbe314870"
+        },
+        "native_audit": {
+          "bytes": 1744,
+          "sha256": "6720439f8a84d81c69d5f76c597ca884959d681e269f5b78348e8837cc4b109a"
+        },
+        "native_file_inventory": {
+          "bytes": 5883,
+          "sha256": "56f288acf4809682cb3d635cfbb1b81453dd9788e769aaf82c7ccdb25dcffbc6"
+        },
+        "observation_readback": {
+          "bytes": 4078,
+          "sha256": "61c0e56d9841a80085614e19a8d33af558b68ca05ab9f0bf1665fface604cf75"
+        },
+        "request": {
+          "bytes": 11030,
+          "sha256": "5dc71e5898a21d28526232a8a71f57d170e7430d556e23f27f8181bb197b98ad"
+        },
+        "readback": {
+          "bytes": 4078,
+          "sha256": "61c0e56d9841a80085614e19a8d33af558b68ca05ab9f0bf1665fface604cf75"
+        },
+        "native_final_audit": {
+          "bytes": 1744,
+          "sha256": "6720439f8a84d81c69d5f76c597ca884959d681e269f5b78348e8837cc4b109a"
+        },
+        "independent_terminal_audit": {
+          "bytes": 39743,
+          "sha256": "581a114389720a50035c7becb69017ccca589846c282347bfa2442cc3f9c63db"
+        },
+        "metadata_tests_receipt": {
+          "bytes": 4181,
+          "sha256": "6a3636cc51623534fd2ec296e1867e6b6d1c717b3b2f81d63317e968db7712ab"
+        },
+        "independent_parent_evidence_save_audit": {
+          "bytes": 49083,
+          "sha256": "9e22c3c7db1f5ceda8e84f81e4fcf2bba30b8cfa89bf067abe73ef7e29961026"
+        }
+      },
+      "durable_save": {
+        "provider": "ChatGPT Library",
+        "object_id": "libfile_e6ee76f19d808191aab6ecf8fe8cbd6f",
+        "version": 0,
+        "capsule": {
+          "bytes": 4233773,
+          "sha256": "f1cbb5955bbb469518b79acd1d5b4c0050e475d45b9aeee5a9b14192808a7688"
+        },
+        "acknowledgement": {
+          "bytes": 999,
+          "sha256": "f98eb89ddd255759008fa17855eb36cda604dfaadebf26f6112d8cface3c8766"
+        },
+        "provider_response": {
+          "bytes": 1190,
+          "sha256": "fe89689840c0b033bcf953381bedba76c99153a963082a7d9f7689ffc8533a05"
+        },
+        "remote_bytes_independently_retrieved": false,
+        "scope": "Two natural PCM windows, native ASR observations, queue closure and zero-model readback; the full eight-session recovery uses a separate saved object.",
+        "member_manifest_sha256": "5684f8f46a9d49c78edd51d10453be1758d5bf501c2cd5150b32acc54dd7835f"
+      },
+      "aggregate_evidence": {
+        "path": "research/dataset-continuation-20261106/terminal-evidence.json",
+        "bytes": 66797,
+        "sha256": "4b5166c667d926a5c71f63d2701e86efe2b2b8e06c87e906b419bc7dd164413f"
+      },
+      "limits": [
+        "The two primary recognizers returned nonempty, differing ordinary-speech text in annotation-gap windows; missing annotation does not establish silence.",
+        "There is no three-engine full-transcript agreement and one Whisper observation is incomplete.",
+        "No word timestamps are available and target presence remains unknown; absence of literal target strings is not verified target absence.",
+        "The 52.897-second parent union removes five seconds of overlap but is not accepted negative exposure or new independent validation time.",
+        "The historical eight-session recovery is separately preserved through its saved private index and twelve byte parts plus metadata; it adds no accepted negative exposure or independent validation time.",
+        "The 57.897 seconds of processed windows contain a five-second overlap; their union is 52.897 seconds of the same historical parent recording.",
+        "All six calls returned observations, but one Whisper observation is decoder-incomplete; no retry was requested.",
+        "Differing transcripts and no literal target-string flags do not establish silence, absence of target speech, human truth, or verified negative exposure.",
+        "Confirmed natural-negative exposure, training admission, and new independent validation exposure remain zero.",
+        "The 111-member tail-window terminal includes the two window inputs and six-call evidence; the eight complete parent recordings and TextGrids require their separate parent-data save chain.",
+        "The original compressed source archive hash is inherited from the verified recovery receipt; this independent terminal audit did not re-download or re-hash that whole archive.",
+        "Whisper received an explicit Chinese-language condition, so its observation is not language-independent discovery.",
+        "Execution and save receipts do not establish the identity of the original controlling actor."
+      ],
       "restored_historical_sessions": 8,
       "restored_mono_files_with_file_and_pcm_hashes_verified": 8,
       "restored_textgrid_files_with_hashes_verified": 8,
@@ -1121,12 +1805,8 @@
       "training_admitted": false,
       "word_timestamps_available": false,
       "human_gold": false,
-      "automatic_retry": false,
       "new_tts_calls": 0,
       "new_optimizer_steps": 0,
-      "queue_elapsed_nanoseconds": 169720687727,
-      "queue_runner_minutes": 2.8286781287833334,
-      "finished_at_utc": "2026-11-06T04:30:54.052368+00:00",
       "deadline_overrun_nanoseconds": 0,
       "native_worker_processes": 3,
       "observed_native_worker_intervals_overlap": false,
@@ -1137,40 +1817,6 @@
       "whisper_language_condition": "Chinese (zh), explicitly supplied, not detected",
       "readback_new_model_calls": 0,
       "independent_authentication_new_model_calls": 0,
-      "receipts": {
-        "stage": {
-          "bytes": 5686,
-          "sha256": "9ff17c024f66888a8da6dda7867289c2b37679d65a2c3e20d8abbb811b72b436"
-        },
-        "request": {
-          "bytes": 11030,
-          "sha256": "5dc71e5898a21d28526232a8a71f57d170e7430d556e23f27f8181bb197b98ad"
-        },
-        "queue_result": {
-          "bytes": 1973,
-          "sha256": "c0a507ca13c91bd9b77de833d61555baea2f1c5321ed54b00e7c5eedbe314870"
-        },
-        "readback": {
-          "bytes": 4078,
-          "sha256": "61c0e56d9841a80085614e19a8d33af558b68ca05ab9f0bf1665fface604cf75"
-        },
-        "native_final_audit": {
-          "bytes": 1744,
-          "sha256": "6720439f8a84d81c69d5f76c597ca884959d681e269f5b78348e8837cc4b109a"
-        },
-        "independent_terminal_audit": {
-          "bytes": 39743,
-          "sha256": "581a114389720a50035c7becb69017ccca589846c282347bfa2442cc3f9c63db"
-        },
-        "metadata_tests_receipt": {
-          "bytes": 4181,
-          "sha256": "6a3636cc51623534fd2ec296e1867e6b6d1c717b3b2f81d63317e968db7712ab"
-        },
-        "independent_parent_evidence_save_audit": {
-          "bytes": 49083,
-          "sha256": "9e22c3c7db1f5ceda8e84f81e4fcf2bba30b8cfa89bf067abe73ef7e29961026"
-        }
-      },
       "metadata_tests": {
         "python": "3.12.16",
         "modes": [
@@ -1180,25 +1826,6 @@
         ],
         "executed_passes_per_mode": 18,
         "new_model_calls": 0
-      },
-      "durable_save": {
-        "provider": "ChatGPT Library",
-        "object_id": "libfile_e6ee76f19d808191aab6ecf8fe8cbd6f",
-        "version": 0,
-        "capsule": {
-          "bytes": 4233773,
-          "sha256": "f1cbb5955bbb469518b79acd1d5b4c0050e475d45b9aeee5a9b14192808a7688"
-        },
-        "member_manifest_sha256": "5684f8f46a9d49c78edd51d10453be1758d5bf501c2cd5150b32acc54dd7835f",
-        "acknowledgement": {
-          "bytes": 999,
-          "sha256": "f98eb89ddd255759008fa17855eb36cda604dfaadebf26f6112d8cface3c8766"
-        },
-        "provider_response": {
-          "bytes": 1190,
-          "sha256": "fe89689840c0b033bcf953381bedba76c99153a963082a7d9f7689ffc8533a05"
-        },
-        "remote_bytes_independently_retrieved": false
       },
       "durable_save_payload_files": 111,
       "parent_data_save": {
@@ -1232,242 +1859,6 @@
         "reconstructed_archive_bytes": 485334457,
         "reconstructed_archive_sha256": "da040a981d688fc5ddc8576123aea883771626bdbb0c69ba3d2da53a17597a17",
         "all_provider_objects_distinct": true,
-        "objects_in_restore_order": [
-          {
-            "index": 1,
-            "kind": "archive_byte_part",
-            "object_id": "libfile_f4ccb78fe1a08191a146adeab98bcea4",
-            "provider_version_at_save": 0,
-            "saved_file": {
-              "bytes": 41943040,
-              "sha256": "723e49b07dfd02f279cd1786def4cc238fe621d666622eab5aa9c4acd05ee066"
-            },
-            "claim_receipt": {
-              "bytes": 494,
-              "sha256": "d3e3c108f004b59c4dbbd2bc8d44a9fb5b3c71b92b30e678159006e48a84b049"
-            },
-            "provider_response": {
-              "bytes": 862,
-              "sha256": "ccaf64c605f587b402421755727b8d4681b83a61a8ece79384c71a85b478d01a"
-            }
-          },
-          {
-            "index": 2,
-            "kind": "archive_byte_part",
-            "object_id": "libfile_dab6d7c610048191934f861d604dfcd7",
-            "provider_version_at_save": 0,
-            "saved_file": {
-              "bytes": 41943040,
-              "sha256": "e369eea0f8890a1272570c1471669f79813375830444b0ce9615f55d77cbc420"
-            },
-            "claim_receipt": {
-              "bytes": 486,
-              "sha256": "e285857099e2c528541b33068699ec9af33d7a485f226ce6615754d487f24c4c"
-            },
-            "provider_response": {
-              "bytes": 862,
-              "sha256": "528b234d321793c16023318a54000e2fd0070fabb9df075e1c7137dffaf0e5c6"
-            }
-          },
-          {
-            "index": 3,
-            "kind": "archive_byte_part",
-            "object_id": "libfile_c6c1f7aecb4881919e2223ae23116e73",
-            "provider_version_at_save": 0,
-            "saved_file": {
-              "bytes": 41943040,
-              "sha256": "f800bb61f109b5729d030c7e02231badb9eca6acd6b5d16b596c690cadc26ba6"
-            },
-            "claim_receipt": {
-              "bytes": 486,
-              "sha256": "c627aa5011b1103f9e63bb9354f38843e8ee64a0125d602c38231e37b6ac8c5a"
-            },
-            "provider_response": {
-              "bytes": 862,
-              "sha256": "51677fe4599c77ac72fe9817ad98a680aa830224c454e96c5c07eec2d8c9ef59"
-            }
-          },
-          {
-            "index": 4,
-            "kind": "archive_byte_part",
-            "object_id": "libfile_07b7f1025d548191b4255cf1e0daafc9",
-            "provider_version_at_save": 0,
-            "saved_file": {
-              "bytes": 41943040,
-              "sha256": "9bccbe344dda64b2f9f2238d2c6788754d340d9408aec28dd84de004e4dff43b"
-            },
-            "claim_receipt": {
-              "bytes": 486,
-              "sha256": "0c8e9676b38879ff3277617fe1c7ebe4a7e6ef5d5248683bb870ade160a17e4a"
-            },
-            "provider_response": {
-              "bytes": 862,
-              "sha256": "c2a6484d0d1698fa74c80c6335072d351db17ee45a010d3354d85ce993b59e94"
-            }
-          },
-          {
-            "index": 5,
-            "kind": "archive_byte_part",
-            "object_id": "libfile_6fc93d79de30819183f6732080f89579",
-            "provider_version_at_save": 0,
-            "saved_file": {
-              "bytes": 41943040,
-              "sha256": "d00f768cd44f8b65c277525c62a185690b9a0598b97401e8f2a26fa8af989722"
-            },
-            "claim_receipt": {
-              "bytes": 486,
-              "sha256": "a9052ab3d9b9280a64ef98fffc66b2d8e4eb2bcc9b55066a0582ab21098108cd"
-            },
-            "provider_response": {
-              "bytes": 862,
-              "sha256": "f9796d009d563633e0025e68cf8c0049c316235294e0607c730404f17fb3a743"
-            }
-          },
-          {
-            "index": 6,
-            "kind": "archive_byte_part",
-            "object_id": "libfile_e2641a6548fc8191bc038fde9d80d60c",
-            "provider_version_at_save": 0,
-            "saved_file": {
-              "bytes": 41943040,
-              "sha256": "5cee971bbbe7067ac3905d66dd2d4be4123a06df9b5dc04f88f754805191668b"
-            },
-            "claim_receipt": {
-              "bytes": 486,
-              "sha256": "e7dbbd5dc5bacd107f5775ba727b2ebddc4ff5191d2480e5bffab75befc40b16"
-            },
-            "provider_response": {
-              "bytes": 862,
-              "sha256": "7cbf01632142c1d1b7f0971c534047f026a238f5132acf84dbe306bbdec2f6b8"
-            }
-          },
-          {
-            "index": 7,
-            "kind": "archive_byte_part",
-            "object_id": "libfile_271f9f5a344c8191b46ab3e988232484",
-            "provider_version_at_save": 0,
-            "saved_file": {
-              "bytes": 41943040,
-              "sha256": "b8c9346df6fee12fc6d0e5588d66ecd8f02a101aa4108c0cc87426dd4e60bc38"
-            },
-            "claim_receipt": {
-              "bytes": 486,
-              "sha256": "89e52c2686ca4b2c90739871a06b6046ef5cb48527f79dfdac777d2b50f0d2a5"
-            },
-            "provider_response": {
-              "bytes": 862,
-              "sha256": "f555cfd7a2f23fcb7aa3eaaf89057f311973574266b4c4f411d30857e51adefe"
-            }
-          },
-          {
-            "index": 8,
-            "kind": "archive_byte_part",
-            "object_id": "libfile_85ea58888d788191a2882fd487fec363",
-            "provider_version_at_save": 0,
-            "saved_file": {
-              "bytes": 41943040,
-              "sha256": "6c8fdd80e61d06aded4d2c9c62763ba1126675d1b9b2404eac38012ef3a92000"
-            },
-            "claim_receipt": {
-              "bytes": 486,
-              "sha256": "e8efa5ffa31572a2c34a7fec78dd1f2755677ebc565f8ca79a6f083c16f4ef68"
-            },
-            "provider_response": {
-              "bytes": 862,
-              "sha256": "983c0e30dae12b93bab1539ac03d8f27e6c4f1cf1180ba6d3a153fe912947482"
-            }
-          },
-          {
-            "index": 9,
-            "kind": "archive_byte_part",
-            "object_id": "libfile_7ab25be0681c8191ae8c3a78d138fa76",
-            "provider_version_at_save": 0,
-            "saved_file": {
-              "bytes": 41943040,
-              "sha256": "d79ba1b505cc0889eb081a8b3cd1cde7ec54a33fd24718ea2745b3b262985086"
-            },
-            "claim_receipt": {
-              "bytes": 486,
-              "sha256": "d2e9c052d674c1d8ab8bb53ee26a626792489e1228731dfe96408b4a3d4dacce"
-            },
-            "provider_response": {
-              "bytes": 862,
-              "sha256": "9156d89173c11a09158b09e88c08c251dc7ace3320b4db4859da05f4071b478f"
-            }
-          },
-          {
-            "index": 10,
-            "kind": "archive_byte_part",
-            "object_id": "libfile_8b231f618b04819185551d5c9c5dff4c",
-            "provider_version_at_save": 0,
-            "saved_file": {
-              "bytes": 41943040,
-              "sha256": "28d97e3f19eb8925873e061081f0d6166263372d5a136caa15069aac5e04fa7c"
-            },
-            "claim_receipt": {
-              "bytes": 487,
-              "sha256": "70d59975bc669c33aaec12be8e3c4c8dc031f835fda66cb897bc8b3993b80527"
-            },
-            "provider_response": {
-              "bytes": 862,
-              "sha256": "a9eb2f4677aee213d8acea5012f08d542091daa55134d3981f0d5adc545023b2"
-            }
-          },
-          {
-            "index": 11,
-            "kind": "archive_byte_part",
-            "object_id": "libfile_c022d651ffc0819195fd8dd5bd7f871d",
-            "provider_version_at_save": 0,
-            "saved_file": {
-              "bytes": 41943040,
-              "sha256": "71009c782a5adf71d2c1cb4293d436e4b29c15b3d34f66f33104682ef39486a0"
-            },
-            "claim_receipt": {
-              "bytes": 487,
-              "sha256": "b5c4b2c8f96932fb69f02d0ba02fd66036b6200268da5865c17b9fc57e3e659a"
-            },
-            "provider_response": {
-              "bytes": 862,
-              "sha256": "4783bc871661c64ce9b1517616ef14361bee7c10add7b0db7c13e0fc6a8ce871"
-            }
-          },
-          {
-            "index": 12,
-            "kind": "archive_byte_part",
-            "object_id": "libfile_ba211c2829a081919d66d3b362f50679",
-            "provider_version_at_save": 0,
-            "saved_file": {
-              "bytes": 23961017,
-              "sha256": "2cdfa90b83bf6dafdd4b70e3b863bc14630240efea3ec01a0ce75369e8822331"
-            },
-            "claim_receipt": {
-              "bytes": 487,
-              "sha256": "1f0444bb91b811ab531ca63a3d09030cc771a0c991ec1be0693001e802f04c61"
-            },
-            "provider_response": {
-              "bytes": 875,
-              "sha256": "fa38454ba6113d3f8f87cd82550c88242a591b1b083b2cb4a1e93733bcacf322"
-            }
-          },
-          {
-            "index": 13,
-            "kind": "restore_metadata_zip",
-            "object_id": "libfile_6ed7999d7b548191a2051d8d0cb4ddf6",
-            "provider_version_at_save": 0,
-            "saved_file": {
-              "bytes": 16277,
-              "sha256": "83f4478424f3624262b361a12d8c58de49c592f9e5fd69488d984bc1fa494556"
-            },
-            "claim_receipt": {
-              "bytes": 485,
-              "sha256": "cc713159f073d51b162baac980d2be807c5c6d9a5d9368850bb5584185f9a6ee"
-            },
-            "provider_response": {
-              "bytes": 874,
-              "sha256": "1fd2640ed98e117cf32c8112c1dd96a42161ea1f213baccffd438f10f311acc7"
-            }
-          }
-        ],
         "remote_bytes_independently_retrieved": false,
         "live_version_number_independently_returned": false,
         "original_whole_archive_upload": {
@@ -1487,21 +1878,25 @@
             "sha256": "60e336749929dc26c9f99d1816b5845f31cb08313a6aa467845d3d766c797af7"
           },
           "retried_by_independent_auditor": false
-        }
-      },
-      "limits": [
-        "The 57.897 seconds of processed windows contain a five-second overlap; their union is 52.897 seconds of the same historical parent recording.",
-        "All six calls returned observations, but one Whisper observation is decoder-incomplete; no retry was requested.",
-        "Differing transcripts and no literal target-string flags do not establish silence, absence of target speech, human truth, or verified negative exposure.",
-        "Confirmed natural-negative exposure, training admission, and new independent validation exposure remain zero.",
-        "The 111-member tail-window terminal includes the two window inputs and six-call evidence; the eight complete parent recordings and TextGrids require their separate parent-data save chain.",
-        "The original compressed source archive hash is inherited from the verified recovery receipt; this independent terminal audit did not re-download or re-hash that whole archive.",
-        "Whisper received an explicit Chinese-language condition, so its observation is not language-independent discovery.",
-        "Execution and save receipts do not establish the identity of the original controlling actor."
-      ]
+        },
+        "recovery_index": {
+          "object_id": "libfile_c30199968d148191a966621ef1220d64",
+          "version": 0,
+          "bytes": 19797,
+          "sha256": "7e2e6dd958ad03499f64f7b75307fc7ff514bfc60ec96f4cb9e240438050195c"
+        },
+        "public_object_reference_scope": "Only the final saved recovery index is exposed here; the thirteen individual part/metadata object identities remain inside that private index.",
+        "current_recovery_graph_status": "saved"
+      }
     }
   ],
   "awaiting_terminal_entries": [],
+  "in_progress_entries": [],
+  "aggregate_terminal_evidence": {
+    "path": "research/dataset-continuation-20261106/terminal-evidence.json",
+    "bytes": 66797,
+    "sha256": "4b5166c667d926a5c71f63d2701e86efe2b2b8e06c87e906b419bc7dd164413f"
+  },
   "additional_audit_bundle": {
     "scope": "Independent acoustic and C1 terminal authentication, supplemental source tests and saved-ledger receipt adoption, plus storage closure observations.",
     "provider": "ChatGPT Library",
