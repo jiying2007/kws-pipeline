@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 80884,
-      "git_blob_sha1": "059d169322dc9acbb8d3efda2f6399585b8b60a8",
-      "sha256": "10ad5a1a7d4472215dd6d52cd1f861405d55ff93ac36e59a536846e74fc573ed"
+      "bytes": 81113,
+      "git_blob_sha1": "dbf5ec1720ad667e7d11225c822a783f05fe4221",
+      "sha256": "3a82afae873c736964af21669944c3eb607befc25b1f2ebc5fac2da8e3fceb43"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -50698,6 +50698,80 @@
             "bytes": 32245,
             "git_blob_sha1": "b9984a948644f07384864594cec05a7de39a602c",
             "sha256": "73c6e9449c4b9fb7520d8e6ea3b7fbc81bac8d92d96b133e8798b97a5aa02345"
+          }
+        }
+      ]
+    },
+    {
+      "id": "context52-fixed-roster-training-source-20261106",
+      "date": "2026-11-06",
+      "base_commit": "8f690dd94cfe61b3ddbc974100853aaeb5f52ea7",
+      "base_tree": "143f8150efafe1257abb5f5ce04f836b9deb95ae",
+      "public_source_commit": "9638393b777ad361e2567aee92db5a4f857f776b",
+      "previous_manifest_sha256": "f6ff2f7925c31f2d1b3e77080c54baed73179d1f50479954a9217290b912f8e0",
+      "workflow_source_changed": true,
+      "scope": "Publish the fixed full-context52 known-silence stage, immutable prior plan, usage contract and metadata tests in all three Python modes.",
+      "rationale": "Bind five actual files to the published source commit while preserving all 192 prior maintenance events. Reuse the existing numerical training loop, initialization and 2000-step budget with the complete 52-row training roster; reserve all 18 development rows for fixed final observations. Retain durable call and optimizer ledgers, full final float32 observations and truthful failed-stage boundaries. This source publication is not evidence that the new training run has completed.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 80884,
+            "git_blob_sha1": "059d169322dc9acbb8d3efda2f6399585b8b60a8",
+            "sha256": "10ad5a1a7d4472215dd6d52cd1f861405d55ff93ac36e59a536846e74fc573ed"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 81113,
+            "git_blob_sha1": "dbf5ec1720ad667e7d11225c822a783f05fe4221",
+            "sha256": "3a82afae873c736964af21669944c3eb607befc25b1f2ebc5fac2da8e3fceb43"
+          }
+        },
+        {
+          "path": "configs/research/context52-known-silence-20261106.json",
+          "before": null,
+          "after": {
+            "path": "configs/research/context52-known-silence-20261106.json",
+            "mode": "100644",
+            "bytes": 3226,
+            "git_blob_sha1": "4d0f7f607c8fa3bd23f16ccd9c7f71ae37b17948",
+            "sha256": "87ef781b8c95bccb6158633a4c0d8d506b8e5351be38cdf38415bd18c163bda4"
+          }
+        },
+        {
+          "path": "docs/research-context52-known-silence.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-context52-known-silence.md",
+            "mode": "100644",
+            "bytes": 14198,
+            "git_blob_sha1": "04c2c0c636f6d621370fe1f1b52190e9ffe8ed12",
+            "sha256": "855f9d4ab176d67f261112f77b1c5799293cc59312f37bea2f6b662a279c5c6c"
+          }
+        },
+        {
+          "path": "tests/test_research_context52_known_silence.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_context52_known_silence.py",
+            "mode": "100644",
+            "bytes": 17055,
+            "git_blob_sha1": "3c0b50e636017b0a9511348ef6a36d295e5efe24",
+            "sha256": "d6824a9ed7693f16dd5b8cf82837f3a8d33468ffb51f324ff81ae38f1d280806"
+          }
+        },
+        {
+          "path": "training/research_context52_known_silence.py",
+          "before": null,
+          "after": {
+            "path": "training/research_context52_known_silence.py",
+            "mode": "100644",
+            "bytes": 40565,
+            "git_blob_sha1": "dd5c884843de8fedb80199ebe1bcba895e890882",
+            "sha256": "805e7dc6222df48ec65c918f7a2c30434fe9b2b817f58f2e1c598cae862e701f"
           }
         }
       ]
