@@ -323,13 +323,36 @@ class QueueTests(unittest.TestCase):
         folder = root / "jobs/crash"
         self.until(lambda: (folder / "outputs/started").exists())
         worker = json.loads((folder / "worker-started.json").read_bytes())
+        # The command can run before its parent finishes writing its identity.
+        # Kill only after the durable receipt makes this a known-command case.
+        self.until(lambda: (folder / "command-started.json").exists())
+        command = json.loads((folder / "command-started.json").read_bytes())
+        self.assertEqual(command["claim_sha256"], worker["claim_sha256"])
+        self.assertEqual(command["boot_id"], queue.boot_id())
+        self.assertIsNotNone(command["process_start_ticks"])
+        self.assertEqual(command["process_group"], command["pid"])
+        self.assertEqual(os.getpgid(command["pid"]), command["pid"])
+
+        def command_is_live():
+            try:
+                fields = Path(f"/proc/{command['pid']}/stat").read_text().rsplit(")", 1)[1].split()
+            except FileNotFoundError:
+                return False
+            return fields[19] == command["process_start_ticks"] and fields[0] != "Z"
+
+        self.assertTrue(command_is_live())
         os.kill(worker["pid"], signal.SIGKILL)
         self.assertIn(process.wait(timeout=3), (1, 75))
         self.until(lambda: not queue.active(folder / "job.lock"))
+        self.until(lambda: not command_is_live())
         status, code = queue.run(root)
         self.assertEqual((status["status"], code), ("unknown", 1))
         self.assertFalse(status["actual_total_is_complete"])
         self.assertIsNone(status["jobs"]["crash"]["actual_elapsed_ns"])
+        self.assertFalse((root / "jobs/later/claim.json").exists())
+        receipt = (folder / "result.json").read_bytes()
+        self.assertEqual(queue.run(root)[1], 1)
+        self.assertEqual((folder / "result.json").read_bytes(), receipt)
         self.assertFalse((root / "jobs/later/claim.json").exists())
         with heavy_model_slot(self.lock, environment=self.environment):
             pass
