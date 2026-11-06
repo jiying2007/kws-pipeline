@@ -1,5 +1,7 @@
 # kws-data bulk KWS development effect boundary (cross-repository)
 
+> **Current research scope:** This guide describes technical research only. [RESEARCH_ONLY_EXECUTION.md](RESEARCH_ONLY_EXECUTION.md) defines current execution. Commercial publication, shipping approval and product certification are not research prerequisites. Source rights, actual labels, split isolation and honest measurements remain required; absent device or independent acoustic evidence limits only the corresponding claims.
+
 This is the **single consumption boundary** for the already-merged
 `jiying2007/kws-data` #47/#48/#49 native Qwen3-TTS and 3-ASR bulk source
 pipeline. We intentionally do **not** duplicate its TTS runner, model-cache,
@@ -103,12 +105,12 @@ training must have independently controlled and verified source/rights plus
 actual-label evidence, a complete frozen three-ASR native policy/root where
 appropriate, family-isolated training splits and matched ancestry accepted by
 `tools/asr_source_resolver.py` /
-`training/training_admission.py`. The existing code-owned production train
-roots remain empty; do not insert `kws-data` machine-screen strings as
+`training/training_admission.py`. At this report's recorded checkpoint, the code-owned train roots were empty; do not insert `kws-data` machine-screen strings as
 authenticated training roots without completing those checks.
 
 After a truly admitted train-only base exists, compare a fixed model and
-decoder under one data variable on independent development recordings, then
-run independent real Mandarin/final-AFE Phase A and physical SSC305 Phase B
-before shipping Phase C. None of the above can be replaced with generated
-clips or fake CI inference.
+decoder under one data variable on independent development recordings.
+Independent Mandarin/final-AFE audio and physical SSC305 measurements support
+their respective research claims; they are not a commercial Phase C prerequisite
+for other experiments. Generated clips and fake CI inference cannot substitute
+for actual independent evidence.
