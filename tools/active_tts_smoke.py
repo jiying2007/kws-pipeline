@@ -15,6 +15,7 @@ import hashlib
 import importlib
 import importlib.metadata
 import json
+import math
 import os
 from pathlib import Path
 import resource
@@ -93,6 +94,57 @@ def read(path):
     return json.loads(Path(path).read_text(encoding='utf-8'))
 
 
+def validate_import_preflight(raw, setup):
+    """Validate a retained import-only receipt and setup binding, without rerunning it."""
+    receipt = json.loads(raw)
+    require(type(receipt) is dict and receipt.get('schema') == 'kws-runtime-import-preflight-v1'
+            and receipt.get('role') == 'tts', 'TTS_IMPORT_PREFLIGHT_SCHEMA')
+    require(all(type(receipt.get(key)) is int and receipt[key] == 0
+                for key in ('returncode', 'model_objects_constructed', 'model_calls')),
+            'TTS_IMPORT_PREFLIGHT_NOT_SUCCESSFUL_IMPORT_ONLY')
+    require(type(receipt.get('stdout')) is str and type(receipt.get('stderr')) is str,
+            'TTS_IMPORT_PREFLIGHT_STREAMS')
+    argv = receipt.get('argv')
+    require(type(argv) is list and len(argv) == 5 and all(type(value) is str and value for value in argv)
+            and Path(argv[0]).is_absolute() and argv[1:4] == ['-B', '-I', '-c'],
+            'TTS_IMPORT_PREFLIGHT_ARGV')
+    elapsed = receipt.get('elapsed_seconds')
+    require(type(elapsed) in (int, float) and math.isfinite(elapsed) and elapsed >= 0
+            and type(receipt.get('recorded_at')) is str
+            and datetime.fromisoformat(receipt['recorded_at']).utcoffset() is not None,
+            'TTS_IMPORT_PREFLIGHT_TIME')
+    require(receipt.get('network_environment') == {'HF_HUB_OFFLINE': '1', 'TRANSFORMERS_OFFLINE': '1'},
+            'TTS_IMPORT_PREFLIGHT_OFFLINE_ENVIRONMENT')
+    # The real import writes a dependency warning before its one JSON result.
+    results = [json.loads(line) for line in receipt['stdout'].splitlines() if line.lstrip().startswith('{')]
+    require(len(results) == 1 and type(results[0]) is dict, 'TTS_IMPORT_PREFLIGHT_ONE_RESULT')
+    result = results[0]
+    require(set(result) == {'python', 'torch', 'numpy', 'scipy', 'soundfile', 'qwen_class',
+                            'cuda_compiled', 'model_objects_constructed', 'model_calls'},
+            'TTS_IMPORT_PREFLIGHT_RESULT_FIELDS')
+    require(all(type(result.get(key)) is int and result[key] == 0
+                for key in ('model_objects_constructed', 'model_calls'))
+            and result.get('qwen_class') == 'Qwen3TTSModel' and result.get('cuda_compiled', 'missing') is None,
+            'TTS_IMPORT_PREFLIGHT_RESULT')
+    require(setup.get('status') == 'complete' and type(setup.get('active_python')) is str
+            and result['python'] == setup['active_python'] and type(setup.get('installed_packages')) is dict
+            and all(type(result[name]) is str and result[name] == setup['installed_packages'].get(name)
+                    for name in ('torch', 'numpy', 'scipy', 'soundfile')),
+            'TTS_IMPORT_PREFLIGHT_SETUP_VERSIONS')
+
+
+def preflight_input(args):
+    explicit = getattr(args, 'runtime_preflight', None)
+    path = Path(explicit if explicit is not None else args.runtime / 'preflight.json').absolute()
+    identity = {'path': str(path), **record(path)}
+    raw = path.read_bytes()
+    require(len(raw) == identity['bytes'] and hashlib.sha256(raw).hexdigest() == identity['sha256'],
+            'TTS_IMPORT_PREFLIGHT_INPUT_CHANGED')
+    if explicit is not None:
+        validate_import_preflight(raw, read(args.runtime / 'setup.json'))
+    return raw, identity if explicit is not None else None
+
+
 def load_bulk(snapshot):
     # Each invocation is a fresh process: resolve the frozen data producer only.
     sys.path[:0] = [str(Path(snapshot) / BULK), str(snapshot)]
@@ -124,6 +176,7 @@ def verify_source_plan(bulk, prepared, plan):
 def prepare(args):
     output = args.output.resolve()
     require(not output.exists(), 'PREPARED_PACKAGE_ALREADY_EXISTS')
+    preflight_raw, preflight_source = preflight_input(args)
     output.mkdir(parents=True)
     snapshot = output / 'producer-source'
     source_records = {}
@@ -153,7 +206,7 @@ def prepare(args):
     once(output / 'plan.json', plan)
     once(output / 'model-assets.json', model_lock)
     once_bytes(output / 'runtime-setup.json', (args.runtime / 'setup.json').read_bytes())
-    once_bytes(output / 'runtime-preflight.json', (args.runtime / 'preflight.json').read_bytes())
+    once_bytes(output / 'runtime-preflight.json', preflight_raw)
     own_names = ('tools/active_tts_smoke.py', 'tools/research_job_lock.py',
                  'tools/research_no_network.py',
                  'tools/research_runtime.py', 'configs/runtime/research-runtime.json',
@@ -173,6 +226,7 @@ def prepare(args):
         'plan': record(output / 'plan.json'), 'model_assets': record(output / 'model-assets.json'),
         'runtime_setup': record(output / 'runtime-setup.json'),
         'runtime_preflight': record(output / 'runtime-preflight.json'),
+        **({'runtime_preflight_source': preflight_source} if preflight_source is not None else {}),
         'selected_cells': cells, 'generation': GENERATION, 'max_calls': 8, 'threads': 4,
         'timeout_seconds': 600, 'max_retries': 0, 'device': 'cpu', 'dtype': 'float32',
         'attention': 'sdpa', 'queue_supervision_required': True,
@@ -198,6 +252,13 @@ def verify_recipe(recipe):
                         ('model_assets', 'model-assets.json'), ('runtime_setup', 'runtime-setup.json'),
                         ('runtime_preflight', 'runtime-preflight.json')):
         require(record(root / name) == recipe[field], 'PREPARED_INPUT_CHANGED:' + name)
+    if 'runtime_preflight_source' in recipe:
+        origin = recipe['runtime_preflight_source']
+        require(type(origin) is dict and set(origin) == {'path', 'bytes', 'sha256'}
+                and record(origin['path']) == {key: origin[key] for key in ('bytes', 'sha256')}
+                and recipe['runtime_preflight'] == {key: origin[key] for key in ('bytes', 'sha256')},
+                'TTS_IMPORT_PREFLIGHT_SOURCE_CHANGED')
+        validate_import_preflight((root / 'runtime-preflight.json').read_bytes(), read(root / 'runtime-setup.json'))
     for name, expected in recipe['producer_source'].items():
         require(record(root / 'producer-source' / relative(name)) == expected, 'PRODUCER_SOURCE_CHANGED')
     require(set(recipe['producer_source']) == set(SOURCE_FILES), 'PRODUCER_SOURCE_ROSTER')
@@ -365,6 +426,8 @@ def main(argv=None):
     prep = sub.add_parser('prepare')
     for field in ('sources', 'audio-root', 'data-root', 'runtime', 'output'):
         prep.add_argument('--' + field, type=Path, required=True)
+    prep.add_argument('--runtime-preflight', type=Path,
+                      help='Retained successful TTS import-only receipt; defaults to legacy runtime/preflight.json')
     prep.add_argument('--batch-id', required=True)
     execute = sub.add_parser('run')
     for field in ('recipe', 'output', 'heavy-lock'):
