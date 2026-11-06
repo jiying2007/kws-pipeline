@@ -139,13 +139,13 @@ completed experiment and original audit are available.
 
 The initial publication checks ran 11 commands on CPython 3.12.16, with 99
 metadata/contract cases and no model calls. Those default invocations do not
-include the optional tensor fixtures. Separately, the frozen prelaunch evidence
-records **four** successful small-logit tests: empty-target CTC value/gradient
+include the **four** optional small-logit fixtures: empty-target CTC value/gradient
 equivalence, zero-prefix zero gradient, frame-mean normalization, and exclusion
 of invalid masks. Their test source SHA256 is
 `ad63213018a84cfa05da5d91e481a67cada0c782bf339ca0ed42bc3c9feefc9c`;
-that invocation constructed no model or optimizer and performed no model
-forwards. It is a mathematical fixture result, not training evidence.
+they are selected separately with `--tensor-fixtures`. This describes the
+available mathematical fixtures and does not add their definitions to the
+recorded execution counts above.
 
 The supplementary audit's standard-library tests cover per-draw cancellation,
 per-component cancellation, complete draw counts/order, nonfinite values,

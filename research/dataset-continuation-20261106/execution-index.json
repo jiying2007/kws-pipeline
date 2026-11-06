@@ -296,10 +296,437 @@
         "Aligned original features stayed bitwise equal; the numerical observations and full saved tensors remain retained.",
         "Known training rows provide diagnostic evidence; no independent accuracy or model selection is claimed."
       ]
+    },
+    {
+      "id": "acoustic124-three-asr",
+      "status": "completed",
+      "readback_status": "independently_verified",
+      "scope": "Three independent recognizer observations per frozen derived audio sample; full-text agreement is machine evidence.",
+      "recorded_execution_commit": "b9f21b6b5096eaee11239184f50b8011a04f8aa3",
+      "pinned_source_files_verified_against_commit": 30,
+      "observed_rows": 124,
+      "unique_variant_ids": 124,
+      "unique_pcm_hashes": 124,
+      "original_parent_samples": 14,
+      "source_families": 7,
+      "speakers": 7,
+      "new_independent_speakers": 0,
+      "completed_chunks": 16,
+      "durable_chunk_acknowledgements": 16,
+      "native_asr_calls": 372,
+      "native_complete_claim_return_result_triples": 372,
+      "calls_by_model": {
+        "qwen06": 124,
+        "sensevoice": 124,
+        "whisper": 124
+      },
+      "failed_jobs": 0,
+      "unresolved_jobs": 0,
+      "automatic_retries": 0,
+      "reused_model_calls": 0,
+      "new_tts_calls": 0,
+      "new_optimizer_steps": 0,
+      "by_split": {
+        "development": {
+          "by_conclusion": {
+            "full-transcript-disagreement": 13,
+            "unanimous-parent-fulltext-match": 11
+          },
+          "quarantine_suggestions": 13,
+          "rows": 24
+        },
+        "train": {
+          "by_conclusion": {
+            "full-transcript-disagreement": 36,
+            "unanimous-parent-fulltext-match": 64
+          },
+          "quarantine_suggestions": 36,
+          "rows": 100
+        }
+      },
+      "by_conclusion": {
+        "full-transcript-disagreement": 49,
+        "unanimous-parent-fulltext-match": 75
+      },
+      "by_model": {
+        "qwen06": {
+          "observations": 124,
+          "decoder_terminated": 124,
+          "usable_complete_text": 124,
+          "normalized_parent_fulltext_matches": 122,
+          "usable_parent_fulltext_matches": 122,
+          "quality_flags": {}
+        },
+        "sensevoice": {
+          "observations": 124,
+          "decoder_terminated": 124,
+          "usable_complete_text": 124,
+          "normalized_parent_fulltext_matches": 113,
+          "usable_parent_fulltext_matches": 113,
+          "quality_flags": {}
+        },
+        "whisper": {
+          "observations": 124,
+          "decoder_terminated": 124,
+          "usable_complete_text": 124,
+          "normalized_parent_fulltext_matches": 79,
+          "usable_parent_fulltext_matches": 79,
+          "quality_flags": {}
+        }
+      },
+      "by_kind": {
+        "digital-level": {
+          "rows": 28,
+          "by_split": {
+            "development": 8,
+            "train": 20
+          },
+          "by_conclusion": {
+            "unanimous-parent-fulltext-match": 17,
+            "full-transcript-disagreement": 11
+          },
+          "normalized_parent_fulltext_matches_by_model": {
+            "qwen06": 28,
+            "sensevoice": 28,
+            "whisper": 17
+          },
+          "usable_parent_fulltext_matches_by_model": {
+            "qwen06": 28,
+            "sensevoice": 28,
+            "whisper": 17
+          }
+        },
+        "measured-rir-convolution": {
+          "rows": 28,
+          "by_split": {
+            "development": 8,
+            "train": 20
+          },
+          "by_conclusion": {
+            "unanimous-parent-fulltext-match": 15,
+            "full-transcript-disagreement": 13
+          },
+          "normalized_parent_fulltext_matches_by_model": {
+            "qwen06": 28,
+            "sensevoice": 23,
+            "whisper": 17
+          },
+          "usable_parent_fulltext_matches_by_model": {
+            "qwen06": 28,
+            "sensevoice": 23,
+            "whisper": 17
+          }
+        },
+        "onset-offset": {
+          "rows": 28,
+          "by_split": {
+            "development": 8,
+            "train": 20
+          },
+          "by_conclusion": {
+            "unanimous-parent-fulltext-match": 20,
+            "full-transcript-disagreement": 8
+          },
+          "normalized_parent_fulltext_matches_by_model": {
+            "qwen06": 28,
+            "sensevoice": 26,
+            "whisper": 22
+          },
+          "usable_parent_fulltext_matches_by_model": {
+            "qwen06": 28,
+            "sensevoice": 26,
+            "whisper": 22
+          }
+        },
+        "recorded-noise-mix": {
+          "rows": 40,
+          "by_split": {
+            "train": 40
+          },
+          "by_conclusion": {
+            "full-transcript-disagreement": 17,
+            "unanimous-parent-fulltext-match": 23
+          },
+          "normalized_parent_fulltext_matches_by_model": {
+            "qwen06": 38,
+            "sensevoice": 36,
+            "whisper": 23
+          },
+          "usable_parent_fulltext_matches_by_model": {
+            "qwen06": 38,
+            "sensevoice": 36,
+            "whisper": 23
+          }
+        }
+      },
+      "fulltext_match_comparison": "Each recognizer normalized_full_text is compared with the retained normalized_parent_full_text, separately from its usable_complete_text flag.",
+      "quarantine_suggestions": 49,
+      "quarantine_is_automatic_label_mutation": false,
+      "original_labels_splits_and_audio_unchanged": true,
+      "original_label_records_verified": 124,
+      "noise_ctc_masked_rows_unchanged": 40,
+      "noise_zero_weight_rows_unchanged": 40,
+      "noise_target_ids_remain_null": true,
+      "queue_elapsed_nanoseconds": 3017985638412,
+      "queue_runner_minutes": 50.2997606402,
+      "queue_finished_at_utc": "2026-11-06T04:18:49.849501+00:00",
+      "deadline_overrun_nanoseconds": 0,
+      "native_worker_processes": 48,
+      "observed_native_worker_interval_overlaps": 0,
+      "peak_single_worker_rss_kib": 6144400,
+      "peak_rss_scope": "maximum observed ru_maxrss of one native engine process; not total-machine peak or sum of peaks",
+      "model_subprocess_wall_seconds_by_model": {
+        "qwen06": 2081.658185225002,
+        "sensevoice": 319.3283511350037,
+        "whisper": 407.66051906600114
+      },
+      "whisper_language_condition": "Chinese (zh) explicitly supplied; no language-independent detection claim.",
+      "receipts": {
+        "aggregate_summary": {
+          "bytes": 561,
+          "sha256": "8d6a9cb3553efd02fe197c81cc28927e38b07409f0ea93f3f370583a39e43c7d"
+        },
+        "aggregate_rows": {
+          "bytes": 652115,
+          "sha256": "20e9335e69fe141f77ac98c21400ba1891335293f178b8698ea65342c4179376"
+        },
+        "aggregate_manifest": {
+          "bytes": 213,
+          "sha256": "2eb187a38735ce3d73e55840d63a2ef4cb7fbb7cd097063fc5f78e43bfc4ded1"
+        },
+        "original_variant_rows": {
+          "bytes": 266110,
+          "sha256": "c9c8cba8aca58e47cde43cb54e87714ce734b546aa0e873131535acd98b6cbb2"
+        },
+        "source_stage": {
+          "bytes": 25843,
+          "sha256": "9007e43053369f5c4952d2caefd4ac0da9ab9a5ce9d9e51dac84993014bc8925"
+        },
+        "independent_final_audit": {
+          "bytes": 47996,
+          "sha256": "5f250bdbc25e9d40eb86ec79029b027e5f41fc1acee4776d59c04b8ddea56c6d"
+        }
+      },
+      "durable_save": {
+        "provider": "ChatGPT Library",
+        "object_id": "libfile_f77e42d7787881918b9053e4f1a3436f",
+        "version": 0,
+        "capsule": {
+          "bytes": 5205487,
+          "sha256": "7ba19bd22684d28f236959174d33b93bc98c73e5ba966db281f7ff067ffa3451"
+        },
+        "acknowledgement": {
+          "bytes": 1056,
+          "sha256": "b99c961f3925572d43001a699bb77635b39a577150982f890ad3871a81b06ec3"
+        },
+        "provider_response": {
+          "bytes": 1561,
+          "sha256": "839928a9b3d18a01ebca4b0631692371fdc069c943d96bd48f7ae126dd898f2f"
+        },
+        "remote_bytes_independently_retrieved": false
+      },
+      "limits": [
+        "Recognizer disagreement is preserved separately from original audio and label quality; no row is automatically relabeled.",
+        "All 40 noise variants retain their original zero-weight CTC masks, including the 23 with unanimous parent-fulltext matches.",
+        "The 124 variants derive from 14 parent samples and seven source families; they add no independent speakers.",
+        "Counts describe normalized full-text agreement with weak parent labels, not human transcription accuracy or real-room performance.",
+        "Queue runner and model subprocess elapsed durations overlap in scope and are not added together."
+      ]
+    },
+    {
+      "id": "c1-silence-counterexample-candidate",
+      "status": "completed",
+      "readback_status": "verified",
+      "supplemental_ledger_audit_status": "adopted_existing_receipt_with_independent_saved_ledger_verification",
+      "scope": "One fixed input/objective correction from the original zero-step initialization on eight known training rows and three exposed digital-silence conditions.",
+      "recorded_execution_commit": "d250a12373f68f937fc7c4864b42a682b08240fa",
+      "pinned_source_files_verified_against_commit": 24,
+      "optimizer_steps": 2000,
+      "batch_size": 4,
+      "training_sample_exposures": 8000,
+      "training_model_forwards": 8000,
+      "final_model_forwards": 24,
+      "before_model_forwards": 0,
+      "development_model_forwards": 0,
+      "model_constructions": 1,
+      "asr_or_tts_calls": 0,
+      "automatic_retry": false,
+      "known_training_rows": 8,
+      "exposures_by_added_silence_ms": {
+        "0": 2672,
+        "200": 2664,
+        "500": 2664
+      },
+      "per_row_exposures_by_added_silence_ms": {
+        "0": 334,
+        "200": 333,
+        "500": 333
+      },
+      "single_variable_ablation": false,
+      "conditions_by_added_silence_ms": {
+        "0": {
+          "evaluable_clips": 8,
+          "exact_token_matches": 8,
+          "exact_token_match_denominator": 8,
+          "edit_numerator": 0,
+          "target_token_denominator": 32,
+          "empty_outputs": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "known_zero_frames": 0,
+          "known_zero_nonblank_frames": 0,
+          "all_original_feature_suffixes_bitwise_equal": true,
+          "maximum_aligned_original_feature_delta": 0.0,
+          "mean_ctc_loss_target_length_normalized": 0.00038419423799496144,
+          "mean_target_ctc_nll": 0.0017627908673603088
+        },
+        "200": {
+          "evaluable_clips": 8,
+          "exact_token_matches": 8,
+          "exact_token_match_denominator": 8,
+          "edit_numerator": 0,
+          "target_token_denominator": 32,
+          "empty_outputs": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "known_zero_frames": 72,
+          "known_zero_nonblank_frames": 0,
+          "all_original_feature_suffixes_bitwise_equal": true,
+          "maximum_aligned_original_feature_delta": 0.0,
+          "mean_ctc_loss_target_length_normalized": 0.00035708031100512017,
+          "mean_target_ctc_nll": 0.0017232837562914938
+        },
+        "500": {
+          "evaluable_clips": 8,
+          "exact_token_matches": 8,
+          "exact_token_match_denominator": 8,
+          "edit_numerator": 0,
+          "target_token_denominator": 32,
+          "empty_outputs": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "known_zero_frames": 192,
+          "known_zero_nonblank_frames": 0,
+          "all_original_feature_suffixes_bitwise_equal": true,
+          "maximum_aligned_original_feature_delta": 0.0,
+          "mean_ctc_loss_target_length_normalized": 0.0004376391170808347,
+          "mean_target_ctc_nll": 0.0021267071133479476
+        }
+      },
+      "comparison_reference_entry": "c1-onset16",
+      "known_zero_frames_checked": 264,
+      "known_zero_nonblank_frames": 0,
+      "minimum_prefix_blank_probability": 0.9999833106994629,
+      "known_silence_boundary_passed": true,
+      "minimum_mechanism_gate_passed": true,
+      "strict_tiny_fit_passed": true,
+      "generalization_passed": null,
+      "quality_winner": null,
+      "labels_changed": false,
+      "nonzero_finite_gradient_steps": 2000,
+      "changed_parameter_tensors": 16,
+      "initial_checkpoint_sha256": "da7671fe71fef9ecd6822c747e3fe153b9ee563a6784c18eded90d3354486ecf",
+      "final_checkpoint_sha256": "05c6c79258f93a7375db7b3ebe6c502fd696220694f16e004e73776e3c490bed",
+      "final_float_state_sha256": "11d66b5a8f58afad3a6691cd2bb90843fea9a58414eea68a5d08b52236022df6",
+      "queue_elapsed_nanoseconds": 119451465918,
+      "queue_runner_minutes": 1.9908577653,
+      "model_worker_wall_seconds": 118.57880917799957,
+      "peak_rss_kib": 371952,
+      "queue_finished_at_utc": "2026-11-06T04:22:10.855539+00:00",
+      "deadline_overrun_nanoseconds": 0,
+      "readback_new_model_constructions": 0,
+      "readback_new_model_forwards": 0,
+      "readback_new_optimizer_steps": 0,
+      "supplemental_ledger_draws_checked": 8000,
+      "receipts": {
+        "summary": {
+          "bytes": 8467,
+          "sha256": "643648d136233949f46a716421c79a93b39b7b4e955d3eca856a7bc3bcddb917"
+        },
+        "queue_result": {
+          "bytes": 2114,
+          "sha256": "d9bb0dab2b67e280619a2769bb76c1926c48065cc43117c35783626d9dcc1bf2"
+        },
+        "readback": {
+          "bytes": 383,
+          "sha256": "13a90d5cdfa19315caed01197e9e96325e6cfd26bfbc72aaa796cf9422f324be"
+        },
+        "supplemental_ledger_audit": {
+          "bytes": 1165,
+          "sha256": "253a5e3117301d43afb439bd9e1e3ab7d7baa77218e44865cf2ce6e798a84829"
+        },
+        "output_manifest": {
+          "bytes": 8095,
+          "sha256": "020d0e112f63e37e0c90d4377ef3ee21c4b8e878602d661baea8e99f2b9f6f93"
+        },
+        "source_recipe": {
+          "bytes": 1156141,
+          "sha256": "f46370e3bee34766f3ef71e43ee122fa6ef7a6eb359707aa9f93c2e3e1e04173"
+        },
+        "independent_terminal_authentication": {
+          "bytes": 14483,
+          "sha256": "6f9485423e74f1ac18242c0da66c18949f58754fa8e38e312e3c4b912e9fbd1b"
+        },
+        "supplemental_ledger_adoption": {
+          "bytes": 3063,
+          "sha256": "5a3f7fd75f761c486521e7fb5178ef703727944d9231a73328d11cc75369ad68"
+        }
+      },
+      "durable_save": {
+        "provider": "ChatGPT Library",
+        "object_id": "libfile_b88bb78bdc688191a7b8c5202d6783bb",
+        "version": 0,
+        "capsule": {
+          "bytes": 24126802,
+          "sha256": "4c850b0b81bf331f37814228441c48d1c23d2ee47d6201184dd26118e714b9ba"
+        },
+        "acknowledgement": {
+          "bytes": 991,
+          "sha256": "e5d5777465004a376284915381b06a3a3ce89515626ebd650d57a6b6fa7a6e57"
+        },
+        "provider_response": {
+          "bytes": 1189,
+          "sha256": "a54506cd4198c4ca1c7338c2127dfe3ff147101714f26fcb718984504727a2ef"
+        },
+        "remote_bytes_independently_retrieved": false
+      },
+      "limits": [
+        "All 24 final full-text token sequences match their retained weak targets on the same eight training rows and the three exposed offsets.",
+        "Cyclic onset exposure and the known-zero blank objective changed together; this is not a single-variable ablation.",
+        "Known digital-zero windows do not establish behavior on natural silence, unseen speakers, real soft speech, far-field audio or continuous negative streams.",
+        "The separate context25 ingestion result remains blank and has not been replaced by this tiny-fit result.",
+        "Original numerical/optimizer readback and the supplemental per-draw arithmetic audit remain separate receipts.",
+        "The original supplemental CLI command/stdout/returncode record is unavailable. Its retained receipt was adopted only after independent verification of the saved per-draw arithmetic; no original CLI execution history was reconstructed."
+      ],
+      "independent_terminal_audit_status": "verified_existing_terminal",
+      "independent_terminal_numerical_audit_rerun": false,
+      "supplemental_cli_execution_provenance": "unavailable",
+      "supplemental_cli_invocations_by_this_adoption": 0,
+      "supplemental_independent_ledger_draws_checked": 8000
     }
   ],
-  "awaiting_terminal_entries": [
-    "acoustic124-three-asr",
-    "c1-silence-counterexample-candidate"
-  ]
+  "awaiting_terminal_entries": [],
+  "additional_audit_bundle": {
+    "scope": "Independent acoustic and C1 terminal authentication, supplemental source tests and saved-ledger receipt adoption, plus storage closure observations.",
+    "provider": "ChatGPT Library",
+    "object_id": "libfile_5a7c51a33e4081918e3c85134663e5ea",
+    "version": 0,
+    "payload_files": 15,
+    "source_reports": 14,
+    "capsule": {
+      "bytes": 38410,
+      "sha256": "797850f276be1efe2fc9523862c9c19ee0bb7a1d4cdb2369c74b2cff3eddecc6"
+    },
+    "member_manifest_sha256": "c079b9abd174458786bb16993396480ae499bc6e1ef0b77fc84dd62ead2f6669",
+    "acknowledgement": {
+      "bytes": 1002,
+      "sha256": "7243b24abef26813f520626b97eb91df58d711bc4cd91754082f65b47ad22865"
+    },
+    "provider_response": {
+      "bytes": 1508,
+      "sha256": "66615aeb77827cf5267a99f11511b3bac735512c0485230956189b45e1435f2d"
+    },
+    "existing_terminal_capsules_modified": false,
+    "new_model_calls": 0,
+    "new_optimizer_steps": 0,
+    "remote_bytes_independently_retrieved": false,
+    "supplemental_cli_execution_provenance": "unavailable; existing receipt adopted after independent saved-ledger arithmetic verification"
+  }
 }
