@@ -3,6 +3,8 @@
 ## Start here
 
 - [Build and use the engine](../README.md#build-and-install)
+- [2026-11-06 continuation integration state](KWS_CONTINUATION_ACCEPTANCE_20261106.md), [completed context52/tail7 results](KWS_CONTEXT52_TAIL7_20261106.md) and [execution index](../research/context52-tail7-20261106/execution-index.json)
+- [Completed 264-condition saved CTC diagnostic](KWS_SAVED_CTC264_20261106.md) and [aggregate execution index](../research/saved-ctc264-20261106/execution-index.json): both keywords, all four positions and repeated mentions; no new model calls or threshold selection.
 - [Current model and engineering summary](KWS_LANDING_STATUS.md#current-model-and-engineering-status) and [historical research roadmap](KWS_RESEARCH_PRODUCT_ROADMAP.md)
 - [Reusable research modules and outcomes](../research/README.md)
 - [2026-10-10 parallel optimization review](KWS_PARALLEL_OPTIMIZATION_REVIEW_2026-10-10.md): evidence-based candidate shortlist, fair comparison and final-AFE/target closure; proposed plan only, no new run authority
@@ -15,6 +17,8 @@
 ## Research data preparation
 
 - [Natural recording windows](research-natural-asr-windows.md): prepare fixed sample intervals with complete parent identities and overlap-aware coverage for the existing ASR queue.
+- [Paired C1 context-development diagnostic](research-c1-context-development.md): fixed two-checkpoint, 18-row comparison with 108 retained forward observations.
+- [Full context52 known-silence stage](research-context52-known-silence.md): fixed 52-row training roster, 2,000 updates and 210 final train/development observations; preserve the original development exposure boundary.
 - [Acoustic observation consumption](research-acoustic-consumption.md): a separate all-124-row weak-label view and fixed positive-only C1 ingestion smoke, preserving original labels and development isolation.
 
 - [Private candidate host smoke](private-candidate-host-smoke.md): explicit opt-in local transport equivalence, private output handling and fixed budgets; artificial CI admission checks are not real candidate execution or acoustic qualification.
@@ -113,3 +117,5 @@ to run it. Workflow names and test coverage are retained during navigation clean
 The newly retained historical acquisition definitions live under
 [`research/consolidation/`](../research/consolidation/SOURCE_INTEGRATION.md), outside
 the active workflow directory.
+
+- [Eight-source reference ASR contract](research-reference8-asr.md): bounded local smoke/full composition, exact input acknowledgments and no-retry claim accounting.

@@ -137,6 +137,9 @@ the separate model-smoke validation status.
 - [`research_fit_budget_compare.py`](research_fit_budget_compare.py) — Verify paired tiny-fit input, optimizer and consumed-step controls when only the declared exposure budget changes; constructs no model.
 - [C1 onset diagnostic](../docs/research-c1-onset-diagnostic.md) — Compare saved and newly observed digital-silence conditions at a fixed checkpoint while checking that original feature suffixes remain bitwise equal.
 - [C1 known-silence correction](../docs/research-c1-known-silence-correction.md) — Declare one fixed candidate combining cyclic onset exposure and a blank objective on fully known zero frames.
+- [Paired C1 context-development diagnostic](../docs/research-c1-context-development.md) — Authenticate two fixed checkpoints and retain all 108 forward observations on the exposed development roster.
+- [Full context52 known-silence stage](../docs/research-context52-known-silence.md) — Consume the fixed 52-row training roster for 2,000 updates and retain all 210 final observations with their original source and label bindings.
+- [Context52/tail7 continuation](../docs/KWS_CONTINUATION_ACCEPTANCE_20261106.md) — Current integration state, [completed results](../docs/KWS_CONTEXT52_TAIL7_20261106.md) and [execution index](../research/context52-tail7-20261106/execution-index.json).
 - [C1 per-draw loss audit](research_c1_silence_ledger_audit.py) — Supplement the frozen experiment's original audit with every primary, auxiliary and total loss contribution, including errors that cancel within a batch; no tensor load or model call.
 - [Dataset continuation execution index](../research/dataset-continuation-20261106/execution-index.json) — Aggregate completed execution counts, source identities, receipt hashes, resource observations and retained evidence references; see the [Chinese results and remaining work](../docs/KWS_DATASET_CONTINUATION_20261106.md).
 - [`research_acoustic_asr.py`](research_acoustic_asr.py) — Independently observe all 124 frozen acoustic variants with the three existing ASR engines, preserve inherited labels, and save each native/validation closure before advancing.
@@ -270,3 +273,5 @@ not create a GitHub schedule or retrospectively claim earlier model executions.
 - [audit_historical_base_metadata.py](audit_historical_base_metadata.py): read-only historical train/calibration lineage audit; never promotes diagnostic-only data.
 
 - [link_retention_events.py](link_retention_events.py): bounded research-only episode/event sidecar linkage; association is not acoustic truth or production qualification.
+
+- [research_reference8_asr.py](research_reference8_asr.py): one supervised 24-call reference batch with six smoke calls, 18 remaining calls, a shared absolute deadline and original-request save binding; see [the contract](../docs/research-reference8-asr.md).

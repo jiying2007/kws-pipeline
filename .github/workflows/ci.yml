@@ -208,6 +208,12 @@ jobs:
           python3 -I -S -B tests/test_research_context52_known_silence.py
           python3 -I -S -B -O tests/test_research_context52_known_silence.py
           python3 -I -S -B -OO tests/test_research_context52_known_silence.py
+          python3 -I -S -B tests/test_research_saved_ctc_diagnostic.py
+          python3 -I -S -B -O tests/test_research_saved_ctc_diagnostic.py
+          python3 -I -S -B -OO tests/test_research_saved_ctc_diagnostic.py
+          python3 -I -S -B tests/test_research_reference8_asr.py
+          python3 -I -S -B -O tests/test_research_reference8_asr.py
+          python3 -I -S -B -OO tests/test_research_reference8_asr.py
           python3 -I -S -B tests/test_research_c1_silence_ledger_audit.py
           python3 -I -S -B -O tests/test_research_c1_silence_ledger_audit.py
           python3 -I -S -B -OO tests/test_research_c1_silence_ledger_audit.py

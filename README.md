@@ -13,6 +13,10 @@
 
 Research: [reusable modules, retained results and independent evidence boundaries](research/README.md)
 
+Saved-output follow-up: [264-condition CTC results](docs/KWS_SAVED_CTC264_20261106.md) and [aggregate execution index](research/saved-ctc264-20261106/execution-index.json). The completed calculation and audit add no model forward or optimizer update; posthoc conditional alignment is not acoustic or decoder correctness evidence.
+
+2026-11-06 continuation: [current integration state](docs/KWS_CONTINUATION_ACCEPTANCE_20261106.md), [completed context52/tail7 results](docs/KWS_CONTEXT52_TAIL7_20261106.md) and [execution index](research/context52-tail7-20261106/execution-index.json). The fixed training and development observations retain their weak-label and exposed-development scope.
+
 Dataset implementation: [32 reference identities, append-only D2 execution, native ASR weak views and actual training consumption](docs/KWS_D2_IMPLEMENTATION_20261105.md). The first 24 new native returns, 55 recognition calls and fixed 25-step consumer probe are reported separately from the uncompleted 2,048-candidate target.
 
 Latest D1 checkpoint: [256 accounted cells, fixed-initialization comparison and native keyword observations](docs/KWS_D1_ACCOUNTED256_20261105.md). The 255 returned audio cells and one consumed unknown are reported separately.

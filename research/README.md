@@ -13,6 +13,10 @@ policy controls the current technical-research workflow.
 
 ## Research navigation and retained checkpoints / 研究导航与历史检查点
 
+**2026-11-06 continuation / 后续落地：** [current integration state / 当前集成状态](../docs/KWS_CONTINUATION_ACCEPTANCE_20261106.md), [completed context52/tail7 results](../docs/KWS_CONTEXT52_TAIL7_20261106.md) and [execution index](context52-tail7-20261106/execution-index.json). The [paired C1 development guide](../docs/research-c1-context-development.md) and [full context52 training guide](../docs/research-context52-known-silence.md) retain the fixed contracts; these weak-label, exposed-development results establish no independent test, natural FAR or device result.
+
+**Saved CTC264 result / 保存输出诊断：** [completed report](../docs/KWS_SAVED_CTC264_20261106.md) and [aggregate execution index](saved-ctc264-20261106/execution-index.json) retain 876 deletion contrasts across all four positions of both keywords, actual provider acknowledgements and posthoc hit/miss aggregates. Conditional alignment and pairwise target preference do not establish acoustic truth or decoder correctness.
+
 Current summary / 当前统一摘要：[model and engineering status](../docs/KWS_LANDING_STATUS.md#current-model-and-engineering-status).
 2026-10-19 saved-input evidence: [independent direct-DFT diagnostic](fsmn-saved-window-direct-dft-result-v1/README.md) is CONVERGED_HIGH_PRECISION_DIAGNOSTIC_ONLY. Both precisions use the same mpmath implementation; the full 60-digit array was not retained. Complex-DFT observations imply no downstream logfbank, model qualification or historical-cause conclusion.
 2026-10-19 public synthetic evidence: [single-frame boundary-impulse stage diagnostic](fsmn-public-boundary-impulse-result-v1/README.md) is NEW_ENVIRONMENT_DIAGNOSTIC_ONLY. The new Torch historical endpoint does not match; C matches. Saved-value low-energy/log analysis applies only to this new environment, with no historical attribution or model promotion.
