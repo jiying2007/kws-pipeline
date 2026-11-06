@@ -129,8 +129,12 @@ the separate model-smoke validation status.
 - [`research_context_v2_generate.py`](research_context_v2_generate.py) — Generate an explicit fixed-vocabulary context revision in separate bounded chunks while retaining its original parent.
 - [`research_context_v3_generate.py`](research_context_v3_generate.py) — Generate new full-text requests for 24 added identities; require externally saved launch and terminal evidence for each bounded chunk.
 - [`research_context_v3_campaign.py`](research_context_v3_campaign.py) — Close all nine context-v3 chunks through generation, selective ASR, complete weak-text replay and fixed full2601 projection, with durable acknowledgements between model phases.
+- [`research_context_v3_metadata_handoff.py`](research_context_v3_metadata_handoff.py) — Continue only the unclaimed work after an authenticated metadata stop, preserving the original four closed packages and all consumed generation results.
+- [Context v3 mixed reader projection](../docs/research-context-v3-handoff-inputs.md) — Replay each package with its exact declared original or additive reader in a fresh process, retain both native container hashes, and check fulltext targets and global split aliases.
+- [Context v3 ingestion smoke](../docs/research-context-v3-ingestion.md) — Consume a predeclared six-family training subset with the original C1 setup, retain every exclusion, and run one separate final development readback under a single durable queue attempt.
 - [`research_context_partial.py`](research_context_partial.py) — Authenticate only the complete native returns of a preserved timed-out context job without generating another utterance.
 - [`research_fit_budget_compare.py`](research_fit_budget_compare.py) — Verify paired tiny-fit input, optimizer and consumed-step controls when only the declared exposure budget changes; constructs no model.
+- [`research_acoustic_asr.py`](research_acoustic_asr.py) — Independently observe all 124 frozen acoustic variants with the three existing ASR engines, preserve inherited labels, and save each native/validation closure before advancing.
 - [Native Zipformer system guide](../docs/ZIPFORMER_SYSTEM.md) — Fixed profile, actual D0 execution and limits on interpreting native events.
 - [`setup_tts_runtime.py`](setup_tts_runtime.py) — Install and verify the isolated TTS environment and fixed Base model assets.
 - [`active_tts_smoke.py`](active_tts_smoke.py) — Freeze eight source-bound D1 cells and retain raw generation output before technical checks.

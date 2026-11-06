@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 77516,
-      "sha256": "24b69527b841cfbdb4315e0b3760c4625782cc822c065a3b56c7a1ee4b720ec8",
-      "git_blob_sha1": "e52041026a7aaa8f3f58c4a70d305822d3593de8"
+      "bytes": 78763,
+      "sha256": "4a70545d567cc0e0c9ac22211066bc631b9a5abf58439ad207fe784c774459f2",
+      "git_blob_sha1": "45b41db7b7fc7819e41d2e6c23207cef116cf8ca"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -49769,6 +49769,277 @@
             "bytes": 77516,
             "git_blob_sha1": "e52041026a7aaa8f3f58c4a70d305822d3593de8",
             "sha256": "24b69527b841cfbdb4315e0b3760c4625782cc822c065a3b56c7a1ee4b720ec8"
+          }
+        }
+      ]
+    },
+    {
+      "id": "context-metadata-ingestion-acoustic124-20261106",
+      "date": "2026-11-06",
+      "base_commit": "a7232000d839e9860516dd5d22af1d0caf250f7b",
+      "base_tree": "15ae1151ef2b560db9855e73339f5f9313bfbf36",
+      "public_source_commit": "a57fffdd346cb0d820c9b13af18552a6ff42e01b",
+      "previous_manifest_sha256": "4fc110c284b5d63fa4028c19e795d3668ee104d9968e647fe70f641d7819fffb",
+      "workflow_source_changed": true,
+      "scope": "Mixed-reader context continuation, fixed-cohort ingestion and acoustic124 observation",
+      "rationale": "Retain the exact publicly reachable source tree and all earlier source history before protected squash merge; execution identities and failed outcomes remain explicit.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 77516,
+            "git_blob_sha1": "e52041026a7aaa8f3f58c4a70d305822d3593de8",
+            "sha256": "24b69527b841cfbdb4315e0b3760c4625782cc822c065a3b56c7a1ee4b720ec8"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 78763,
+            "git_blob_sha1": "45b41db7b7fc7819e41d2e6c23207cef116cf8ca",
+            "sha256": "4a70545d567cc0e0c9ac22211066bc631b9a5abf58439ad207fe784c774459f2"
+          }
+        },
+        {
+          "path": "docs/research-acoustic-asr124.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-acoustic-asr124.md",
+            "mode": "100644",
+            "bytes": 9239,
+            "git_blob_sha1": "9f3ff645dc8cc489721a86cacd4ecffa6d7d826f",
+            "sha256": "56ad602c5d382aea16f1e152b9fe16270f112ee0253f2d5162f3935b114984be"
+          }
+        },
+        {
+          "path": "docs/research-context-v3-handoff-inputs.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-context-v3-handoff-inputs.md",
+            "mode": "100644",
+            "bytes": 5050,
+            "git_blob_sha1": "40d643d2af17f09312f72cfeb4b33a91d8c5b955",
+            "sha256": "1ae1a260b7bf3d04a572472177fdf8284a2e32dfd3140e52e7e225d7c144f147"
+          }
+        },
+        {
+          "path": "docs/research-context-v3-ingestion.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-context-v3-ingestion.md",
+            "mode": "100644",
+            "bytes": 11961,
+            "git_blob_sha1": "e42e4edff1191a7d889ec6f79604102847972ae9",
+            "sha256": "cee41de98ae8f6c67770f4b10f96f343faa437aae6435f6aad1b92053a69f01a"
+          }
+        },
+        {
+          "path": "docs/research-context-v3-metadata-handoff.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-context-v3-metadata-handoff.md",
+            "mode": "100644",
+            "bytes": 6117,
+            "git_blob_sha1": "0287d96735c5e5cdec795e7ffbd2dc9fa6ff69db",
+            "sha256": "86c6e54c0143d44a7858b5f894451ae8a6a32507a65607809ea493b385fd801f"
+          }
+        },
+        {
+          "path": "tests/test_research_acoustic_asr.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_acoustic_asr.py",
+            "mode": "100644",
+            "bytes": 38050,
+            "git_blob_sha1": "6a24bdd831dde4301a9a4487ddb129ca21e75ad9",
+            "sha256": "90c3a623864fd1521cafb0ece15749374c75d9c896e8f533f4d2fe677f37c716"
+          }
+        },
+        {
+          "path": "tests/test_research_ci_changes.py",
+          "before": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 14738,
+            "git_blob_sha1": "fdda84559adb042fa923554e358efadb3ad01b48",
+            "sha256": "46a493ba14085cd83a2c89d4b8b3f55efa7184b60ea7749931f048136eabf5b1"
+          },
+          "after": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 15698,
+            "git_blob_sha1": "91ab68b26ebc0bbf9f3abc7cf6357bb6ccfdec46",
+            "sha256": "8de9237a5c3ff94ca9ad3d40c122f46d1d326b267880461e17a1d7231bb38edd"
+          }
+        },
+        {
+          "path": "tests/test_research_context_v3_consume.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_context_v3_consume.py",
+            "mode": "100644",
+            "bytes": 26511,
+            "git_blob_sha1": "205216bf71813f26a5ff45efc8c32c4623187030",
+            "sha256": "7a35776b523393937e71c45c7431bee00bdfd80915423f3a6313d65e930e05b6"
+          }
+        },
+        {
+          "path": "tests/test_research_context_v3_handoff_consume.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_context_v3_handoff_consume.py",
+            "mode": "100644",
+            "bytes": 19052,
+            "git_blob_sha1": "6e0bd90a9505eee4f96bebc722464d12d25a2c66",
+            "sha256": "3ff8b1271365dec6da3b108756254071965da3b8b387ff0c483b312c065955dd"
+          }
+        },
+        {
+          "path": "tests/test_research_context_v3_handoff_inputs.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_context_v3_handoff_inputs.py",
+            "mode": "100644",
+            "bytes": 19537,
+            "git_blob_sha1": "0b99ddad1c0f07c37b4f233924f41b14efa7e019",
+            "sha256": "87581082e68ddb5fb2f9ab716a179fea06c3b11bd6548584e6b5104d3c00bfc3"
+          }
+        },
+        {
+          "path": "tests/test_research_context_v3_metadata_handoff.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_context_v3_metadata_handoff.py",
+            "mode": "100644",
+            "bytes": 23057,
+            "git_blob_sha1": "595f946f746e0ce1e49e9a22a4867af33b472107",
+            "sha256": "c5ad0d690eb2ab30b16aafcdada86152440d648f8c4de1d4e8c0d52fd0d12467"
+          }
+        },
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 24947,
+            "git_blob_sha1": "388a651684e0d310785caffd803d7c620fb228c0",
+            "sha256": "7259a8fdd37a3c24481ae5a0c279278d9c4db33d593178e6c09456ae847db93b"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 25965,
+            "git_blob_sha1": "277cb6b312e57c96cfb15effdb655f50f9028dd2",
+            "sha256": "dbf91b3829a217c44e62cce29fc5f5ea5a7e5cd8c298455a87651c5d0fd2c667"
+          }
+        },
+        {
+          "path": "tools/research_acoustic_asr.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_acoustic_asr.py",
+            "mode": "100644",
+            "bytes": 60880,
+            "git_blob_sha1": "759ca0558e7f79f70e81a1c784d21b421b806b62",
+            "sha256": "32d7965947cc0266d5fd58e6e4a64be3bc798ffb25e0672d584aecd9c33598e5"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 8686,
+            "git_blob_sha1": "4eb0baa248040245ca2a3369df4f8708c105c263",
+            "sha256": "b951c02685f8f25d13efdf542c69a7aa85c0bb19ac9be7f9880457a905fded1f"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 9312,
+            "git_blob_sha1": "042ae5dd44a3a2506a7e29c83d825927ebffd05c",
+            "sha256": "b0f2e53b48e63584fd78c86761c5e738e144523a57c96fdf4f6206f199ad0871"
+          }
+        },
+        {
+          "path": "tools/research_context_v3_metadata_handoff.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_context_v3_metadata_handoff.py",
+            "mode": "100644",
+            "bytes": 51494,
+            "git_blob_sha1": "867ff02449dcb464f38b64a1f69953a7d2f23cd1",
+            "sha256": "4c809b5a3463ecf1b40420005a82df445e1098271d24c40c2d82bbcc982f1740"
+          }
+        },
+        {
+          "path": "training/research_context_v3_consume.py",
+          "before": null,
+          "after": {
+            "path": "training/research_context_v3_consume.py",
+            "mode": "100644",
+            "bytes": 71377,
+            "git_blob_sha1": "da01af57f43781015c5b52355ee2a269ed47c08e",
+            "sha256": "97ad0283f0b5da34ff9ebe695b2fed3a9a7457bec28a7e61ad0ae919fffc86cc"
+          }
+        },
+        {
+          "path": "training/research_context_v3_handoff_inputs.py",
+          "before": null,
+          "after": {
+            "path": "training/research_context_v3_handoff_inputs.py",
+            "mode": "100644",
+            "bytes": 37152,
+            "git_blob_sha1": "f34d3d88ca37471a6cf45ed04a198cdc1f3bff5e",
+            "sha256": "5c295c5da545d0b82b2bb430b6c70ad8ba083c169f8103175f6e5e0f0bb905d8"
+          }
+        }
+      ]
+    },
+    {
+      "id": "context-acoustic-research-wording-20261106",
+      "date": "2026-11-06",
+      "base_commit": "315360dbf98eb52160d9b6f1042b180c66882599",
+      "base_tree": "dfdc735890a055ec0786b8f937fbd95651e00744",
+      "public_source_commit": "303842db57a248ef79f05d994358568d4addba18",
+      "previous_manifest_sha256": "0916297d955b49cd846ad7e8662dd0074e0fbadcfd0a33a2313f9d2bb1e1cad5",
+      "workflow_source_changed": false,
+      "scope": "Research-only wording in context ingestion and acoustic ASR guides",
+      "rationale": "Preserve the published two-document correction and every previous source event; model execution, data labels, frozen schemas and historical records remain unchanged",
+      "files": [
+        {
+          "path": "docs/research-acoustic-asr124.md",
+          "before": {
+            "path": "docs/research-acoustic-asr124.md",
+            "mode": "100644",
+            "bytes": 9239,
+            "git_blob_sha1": "9f3ff645dc8cc489721a86cacd4ecffa6d7d826f",
+            "sha256": "56ad602c5d382aea16f1e152b9fe16270f112ee0253f2d5162f3935b114984be"
+          },
+          "after": {
+            "path": "docs/research-acoustic-asr124.md",
+            "mode": "100644",
+            "bytes": 9249,
+            "git_blob_sha1": "ffc230b4cc62e9c5ed00e01e9f046dfdbafd8271",
+            "sha256": "ac4de4e85e0d0b7865bb9b076963238b680a63440aa97da4ca0f526dcae458ca"
+          }
+        },
+        {
+          "path": "docs/research-context-v3-ingestion.md",
+          "before": {
+            "path": "docs/research-context-v3-ingestion.md",
+            "mode": "100644",
+            "bytes": 11961,
+            "git_blob_sha1": "e42e4edff1191a7d889ec6f79604102847972ae9",
+            "sha256": "cee41de98ae8f6c67770f4b10f96f343faa437aae6435f6aad1b92053a69f01a"
+          },
+          "after": {
+            "path": "docs/research-context-v3-ingestion.md",
+            "mode": "100644",
+            "bytes": 11936,
+            "git_blob_sha1": "0f38bcc245197f295c8f0868cf3562b9a2bd4a4d",
+            "sha256": "2e7eb44332622e4c0f1f2e260f39b93e04ad232983b4811d35e8dc1cc5f142ef"
           }
         }
       ]

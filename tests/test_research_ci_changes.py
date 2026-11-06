@@ -65,6 +65,12 @@ class ChangeSelectionTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertTrue(changes.relevant([path]))
 
+    def test_acoustic_observation_paths_select_existing_research_checks(self):
+        for path in ('tools/research_acoustic_asr.py', 'tests/test_research_acoustic_asr.py',
+                     'docs/research-acoustic-asr124.md'):
+            with self.subTest(path=path):
+                self.assertTrue(changes.relevant([path]))
+
     def test_conditioned_queue_selects_all_incremental_paths(self):
         for path in ('docs/language-conditioned-weak-import.md', 'tests/test_language_conditioned_queue.py', 'tools/import_language_conditioned_result.py', 'tools/language_conditioned_vote.py', 'tools/speech_data_queue.py', 'tools/speech_history_evidence.py', 'training/weak_speech_dataset.py'):
             with self.subTest(path=path):
@@ -99,6 +105,13 @@ class ChangeSelectionTests(unittest.TestCase):
                      'docs/research-context-partial-observation.md',
                      'training/research_context_v2_inputs.py', 'tests/test_research_context_v2_inputs.py',
                      'docs/CONTEXT_V2_FULLTEXT_INPUTS.md',
+                     'tools/research_context_v3_metadata_handoff.py', 'tests/test_research_context_v3_metadata_handoff.py',
+                     'docs/research-context-v3-metadata-handoff.md',
+                     'training/research_context_v3_handoff_inputs.py', 'tests/test_research_context_v3_handoff_inputs.py',
+                     'docs/research-context-v3-handoff-inputs.md',
+                     'training/research_context_v3_consume.py', 'tests/test_research_context_v3_consume.py',
+                     'tests/test_research_context_v3_handoff_consume.py',
+                     'docs/research-context-v3-ingestion.md',
                      'training/research_d1_fit_diagnostic.py', 'tests/test_research_d1_fit_diagnostic.py',
                      'tools/research_fit_budget_compare.py', 'tests/test_research_fit_budget_compare.py',
                      'docs/research-fit-exposure-comparison.md',
