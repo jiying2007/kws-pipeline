@@ -1,0 +1,40 @@
+{
+  "archived_completed_cells": 48,
+  "campaigns": [
+    {
+      "archived_completed_cells": 16,
+      "declared_cells": 256,
+      "known_archived_runner_nanoseconds": 844220295949,
+      "plan_canonical_sha256": "7f1faf3d18a1be9aae525702f27f8f85d11cc25e64f8cba3c0220649ee7586d1",
+      "post_checkpoint_outcome_unknown_cells": 240
+    },
+    {
+      "archived_completed_cells": 32,
+      "declared_cells": 1536,
+      "known_archived_runner_nanoseconds": 1217581602808,
+      "plan_canonical_sha256": "337aa4fae3cc1a6dcba0d784869270b8aab1d7aa5628cf20190c49925610951e",
+      "post_checkpoint_outcome_unknown_cells": 1504
+    }
+  ],
+  "date": "2026-11-06",
+  "declared_cells": 1792,
+  "human_gold": false,
+  "known_archived_d2_asr_calls": 113,
+  "known_archived_machine_candidates": 43,
+  "known_archived_runner_nanoseconds": 2061801898757,
+  "known_archived_uncertain": 5,
+  "new_model_calls": 0,
+  "old_request_resubmission_allowed": false,
+  "original_receipts_modified": false,
+  "pending_cells_inferred": null,
+  "post_checkpoint_calls": null,
+  "post_checkpoint_outcome_unknown_cells": 1744,
+  "post_checkpoint_runner_nanoseconds": null,
+  "private_loss_receipt_sha256": "31ca61c6aa0a017797ffd224b0ca9c13cb0b89d09376a800d1d954bf77a2b9d4",
+  "schema": "kws-d2-runtime-loss-public-summary-v1",
+  "source_checkpoint_zip_sha256": [
+    "a546a42b9b6651230b1fa0b8b9ea50beafa339c0536abb9a4403429d226ac7fa",
+    "eda0f7f0b472f3303534361b510970e65bec90c1a9fb8f77d3b9cc5e2f49f929"
+  ],
+  "verified_checkpoint_manifest_files": 4559
+}
