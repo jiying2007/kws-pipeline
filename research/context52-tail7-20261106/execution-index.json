@@ -1,0 +1,1495 @@
+{
+  "schema": "kws-context52-tail7-continuation-index-v1",
+  "date": "2026-11-06",
+  "status": "completed-audited-and-provider-acknowledged",
+  "base_commit": "d833bb8920125802c7cea7013526e5ea84843a3f",
+  "source_publication_commit": "9638393b777ad361e2567aee92db5a4f857f776b",
+  "source_retention_commit": "39fdeacadf380f0815e30587af9bb06186332b79",
+  "preserved_previous_work": "context72, acoustic124, tiny-fit, known-silence correction, AliMeeting parent restoration and earlier tail2 are historical completed experiments; not reexecuted by this continuation",
+  "natural_tail7": {
+    "status": "completed-and-audited",
+    "execution_source_commit": "6b66689b239d10e75e365aa6f8a9e024fde629db",
+    "source_tree": "750f73877d5e062b8989f59de2d0f9332b9b3b78",
+    "aggregate": {
+      "shards": 2,
+      "windows": 7,
+      "parent_sessions": 7,
+      "original_native_calls": 21,
+      "verified_model_clip_cells": 21,
+      "duplicate_model_clip_pairs": 0,
+      "unresolved_calls": 0,
+      "automatic_retries": 0,
+      "timeouts": 0,
+      "actual_job_nanoseconds": 439653900708,
+      "actual_job_seconds": 439.653900708,
+      "actual_runner_minutes": 7.3275650118,
+      "first_job_start_to_last_job_finish_seconds": 439.70085,
+      "global_budget_minutes": 20,
+      "window_input_seconds": 210.0,
+      "unique_parent_seconds": 210.0,
+      "within_campaign_overlap_seconds": 0,
+      "overlap_with_prior_tail2_source_ids": 0,
+      "primary_fulltext_agreement_windows": 0,
+      "three_engine_fulltext_agreement_windows": 0,
+      "quality_flagged_observations": 0,
+      "quality_flags": {},
+      "nonempty_text_observations": 21,
+      "exact_target_literal_hits": [],
+      "partial_or_nearphone_literal_hits": [],
+      "max_single_worker_rss_kib": 6140992,
+      "native_worker_intervals_overlap": false,
+      "accepted_negative_seconds": 0,
+      "training_admitted": false,
+      "new_independent_validation_seconds": 0
+    },
+    "text_screen": {
+      "normalization": "existing active_asr_selective.normalize (NFKC, casefold, punctuation and CJK whitespace)",
+      "exact_target_literals": [
+        "你好小窝",
+        "小窝小窝"
+      ],
+      "partial_and_nearphone_literals": [
+        "小窝",
+        "小屋",
+        "小我",
+        "小沃",
+        "小卧"
+      ],
+      "screen_is_not_complete_phonetic_search": true,
+      "literal_absence_is_not_acoustic_target_absence": true,
+      "model_output_is_not_human_gold": true,
+      "word_timestamps_available": false
+    },
+    "boundary": {
+      "new_model_calls_in_this_review": 0,
+      "training_admitted": false,
+      "human_gold": false,
+      "accepted_negative_seconds": 0,
+      "natural_far_estimate_available": false,
+      "source_independence_not_established": true,
+      "target_presence": "unknown",
+      "no_labels_or_previous_receipts_changed": true,
+      "no_external_publication_by_this_review": true
+    },
+    "queue_request": {
+      "bytes": 1679,
+      "sha256": "0667d35318186d42796ce8d271567d2c997f2b73abc1a12991e8a7799e40085d"
+    },
+    "independent_audit": {
+      "bytes": 147107,
+      "sha256": "d6d320469168f1a8d552b2b5ee610477af0dd1e7c806a51b69183cbea581b04c"
+    },
+    "preparation_save": {
+      "capsule": {
+        "bytes": 15457976,
+        "path": "/workspace/scratch/d18b42cd7071/runtime-natural-tail7/checkpoints/preparation-001/checkpoint-ceb0b8984dd03a8825148667.zip",
+        "sha256": "5a49c9bdda424b6a54a962238aa6821f03543de19ecddc6551bcb679c4cae0ee"
+      },
+      "descriptor": {
+        "bytes": 1127,
+        "path": "/workspace/scratch/d18b42cd7071/runtime-natural-tail7/checkpoints/preparation-001/capsule.json",
+        "sha256": "343e323ef47c8e5435c38eead277498d5cfafd57317291608d12dae06c3d4a45"
+      },
+      "member_manifest_sha256": "2861220164cbe46841f9042d23d47b61f6c24d87b317e02a72bd0e92db3bedad",
+      "object_id": "libfile_824013db32188191b33932ebe8cef1c8",
+      "provider": "ChatGPT Library",
+      "provider_response_supplied_by_operator": true,
+      "provider_save": {
+        "bytes": 1174,
+        "path": "/workspace/scratch/d18b42cd7071/runtime-natural-tail7/checkpoints/preparation-001/provider-save.json",
+        "sha256": "d9bd8db9125edf6eb882e0e93a7586362fb8bc495ce01fea74e08601bf0758ef"
+      },
+      "remote_bytes_independently_retrieved": false,
+      "schema": "kws-d2-durable-checkpoint-v1",
+      "version": null
+    },
+    "terminal_save": {
+      "capsule": {
+        "bytes": 16121122,
+        "path": "/workspace/scratch/d18b42cd7071/runtime-natural-tail7/checkpoints/terminal-001/checkpoint-caa380b8387410fcb44ae28c.zip",
+        "sha256": "70ae544491be22568f234178790cc2ba401ec5afa01ea6b94d88ceba16cc1511"
+      },
+      "descriptor": {
+        "bytes": 1542,
+        "path": "/workspace/scratch/d18b42cd7071/runtime-natural-tail7/checkpoints/terminal-001/capsule.json",
+        "sha256": "a2c45e35139f55d31d2e833cddac03ee231bfa4c80068937a54a6c565b1e32a6"
+      },
+      "member_manifest_sha256": "58f05eb347d453fbe457b9ddf32711c9cbd9bb08237a16b259eee12a1f90c266",
+      "object_id": "libfile_9a47282eecb08191b34bfd38d827fa83",
+      "provider": "ChatGPT Library",
+      "provider_response_supplied_by_operator": true,
+      "provider_save": {
+        "bytes": 1171,
+        "path": "/workspace/scratch/d18b42cd7071/runtime-natural-tail7/checkpoints/terminal-001/provider-save.json",
+        "sha256": "a8100ef76ce4f522defe56cb3fbca6517a431278f78283f3c2bc71a9dbf2419c"
+      },
+      "remote_bytes_independently_retrieved": false,
+      "schema": "kws-d2-durable-checkpoint-v1",
+      "version": null
+    },
+    "implementation_publication_commit": "8342b030159f0ec3e16ca37679c52cea23c285fb"
+  },
+  "c1_paired_development": {
+    "status": "completed-and-saved-tensor-audited",
+    "execution_source_commit": "67943f69cbb8c8e6757041a4132817055201af38",
+    "recipe": {
+      "bytes": 266128,
+      "sha256": "9ca55e4eaad785b1868819d348b3a52c7c051d3ca6b06639fad70839eefaee16"
+    },
+    "manifest": {
+      "bytes": 25865,
+      "sha256": "8c5b14b8186206d56d7b0224b8f78b93e4291ab199bd897c1c9a168c5b746e2f"
+    },
+    "readback": {
+      "independent_test": false,
+      "manifest_sha256": "8c5b14b8186206d56d7b0224b8f78b93e4291ab199bd897c1c9a168c5b746e2f",
+      "new_model_constructions": 0,
+      "new_model_forwards": 0,
+      "new_optimizer_steps": 0,
+      "saved_conditions_verified": 108,
+      "schema": "kws-c1-context-development-diagnostic-v1",
+      "status": "verified"
+    },
+    "independent_preflight_review": {
+      "bytes": 11730,
+      "sha256": "6c40e61eb053b36a50b14be7fd9d18f4f83e3ecc4571ca9aea08da71a23d117f"
+    },
+    "development_rows": 18,
+    "development_source_families": 6,
+    "model_constructions": 2,
+    "started_forward_calls": 108,
+    "completed_forward_calls": 108,
+    "optimizer_steps": 0,
+    "worker_wall_seconds": 59.21290271199905,
+    "actual_job_nanoseconds": 60237886501,
+    "peak_rss_kib": 347724,
+    "conditions": {
+      "known-silence-corrected": {
+        "0": {
+          "observed_clips": 18,
+          "evaluable_clips": 18,
+          "exact_token_matches": 0,
+          "exact_token_match_denominator": 18,
+          "exact_token_match_rate": 0.0,
+          "edit_numerator": 187,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.8538812785388128,
+          "substitutions": 94,
+          "deletions": 88,
+          "insertions": 5,
+          "empty_outputs": 2,
+          "blank_argmax_fraction": 0.9213448488587291,
+          "blank_probability_mean": 0.9213129297073501,
+          "mean_target_ctc_nll": 495.30480088127985,
+          "mean_ctc_loss_target_length_normalized": 42.11833593580458,
+          "mean_ctc_loss_confidence_weighted": 24.54295031229655,
+          "confidence_weight_sum": 10.5,
+          "known_zero_frames": 0,
+          "known_zero_nonblank_frames": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "keywords": [
+            {
+              "keyword_id": 1,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 0,
+              "known_negative_rows": 12,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            },
+            {
+              "keyword_id": 2,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 3,
+              "known_negative_rows": 12,
+              "false_positive_rows": 3,
+              "unknown_rows": 0
+            }
+          ]
+        },
+        "200": {
+          "observed_clips": 18,
+          "evaluable_clips": 18,
+          "exact_token_matches": 0,
+          "exact_token_match_denominator": 18,
+          "exact_token_match_rate": 0.0,
+          "edit_numerator": 187,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.8538812785388128,
+          "substitutions": 95,
+          "deletions": 87,
+          "insertions": 5,
+          "empty_outputs": 2,
+          "blank_argmax_fraction": 0.9254821741671537,
+          "blank_probability_mean": 0.9253854025950006,
+          "mean_target_ctc_nll": 485.96185514662,
+          "mean_ctc_loss_target_length_normalized": 41.27799987792969,
+          "mean_ctc_loss_confidence_weighted": 24.098671913146973,
+          "confidence_weight_sum": 10.5,
+          "known_zero_frames": 162,
+          "known_zero_nonblank_frames": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "keywords": [
+            {
+              "keyword_id": 1,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 0,
+              "known_negative_rows": 12,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            },
+            {
+              "keyword_id": 2,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 3,
+              "known_negative_rows": 12,
+              "false_positive_rows": 3,
+              "unknown_rows": 0
+            }
+          ]
+        },
+        "500": {
+          "observed_clips": 18,
+          "evaluable_clips": 18,
+          "exact_token_matches": 0,
+          "exact_token_match_denominator": 18,
+          "exact_token_match_rate": 0.0,
+          "edit_numerator": 187,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.8538812785388128,
+          "substitutions": 95,
+          "deletions": 87,
+          "insertions": 5,
+          "empty_outputs": 2,
+          "blank_argmax_fraction": 0.930931744312026,
+          "blank_probability_mean": 0.9308413077279005,
+          "mean_target_ctc_nll": 485.98448774549695,
+          "mean_ctc_loss_target_length_normalized": 41.279682371351456,
+          "mean_ctc_loss_confidence_weighted": 24.104410277472603,
+          "confidence_weight_sum": 10.5,
+          "known_zero_frames": 432,
+          "known_zero_nonblank_frames": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "keywords": [
+            {
+              "keyword_id": 1,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 0,
+              "known_negative_rows": 12,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            },
+            {
+              "keyword_id": 2,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 3,
+              "known_negative_rows": 12,
+              "false_positive_rows": 3,
+              "unknown_rows": 0
+            }
+          ]
+        }
+      },
+      "original-tiny-fit": {
+        "0": {
+          "observed_clips": 18,
+          "evaluable_clips": 18,
+          "exact_token_matches": 0,
+          "exact_token_match_denominator": 18,
+          "exact_token_match_rate": 0.0,
+          "edit_numerator": 192,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.8767123287671232,
+          "substitutions": 93,
+          "deletions": 98,
+          "insertions": 1,
+          "empty_outputs": 0,
+          "blank_argmax_fraction": 0.932140653917335,
+          "blank_probability_mean": 0.9303583052149531,
+          "mean_target_ctc_nll": 743.5452802446154,
+          "mean_ctc_loss_target_length_normalized": 61.11621199713813,
+          "mean_ctc_loss_confidence_weighted": 35.86705292595757,
+          "confidence_weight_sum": 10.5,
+          "known_zero_frames": 0,
+          "known_zero_nonblank_frames": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "keywords": [
+            {
+              "keyword_id": 1,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 1,
+              "known_negative_rows": 12,
+              "false_positive_rows": 3,
+              "unknown_rows": 0
+            },
+            {
+              "keyword_id": 2,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 0,
+              "known_negative_rows": 12,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            }
+          ]
+        },
+        "200": {
+          "observed_clips": 18,
+          "evaluable_clips": 18,
+          "exact_token_matches": 0,
+          "exact_token_match_denominator": 18,
+          "exact_token_match_rate": 0.0,
+          "edit_numerator": 182,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.8310502283105022,
+          "substitutions": 97,
+          "deletions": 84,
+          "insertions": 1,
+          "empty_outputs": 0,
+          "blank_argmax_fraction": 0.9360023378141438,
+          "blank_probability_mean": 0.9361632546265177,
+          "mean_target_ctc_nll": 686.686396492852,
+          "mean_ctc_loss_target_length_normalized": 56.29762479994032,
+          "mean_ctc_loss_confidence_weighted": 32.95105775197347,
+          "confidence_weight_sum": 10.5,
+          "known_zero_frames": 162,
+          "known_zero_nonblank_frames": 54,
+          "emissions_entirely_in_added_silence": 54,
+          "keywords": [
+            {
+              "keyword_id": 1,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 3,
+              "known_negative_rows": 12,
+              "false_positive_rows": 11,
+              "unknown_rows": 0
+            },
+            {
+              "keyword_id": 2,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 1,
+              "known_negative_rows": 12,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            }
+          ]
+        },
+        "500": {
+          "observed_clips": 18,
+          "evaluable_clips": 18,
+          "exact_token_matches": 0,
+          "exact_token_match_denominator": 18,
+          "exact_token_match_rate": 0.0,
+          "edit_numerator": 182,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.8310502283105022,
+          "substitutions": 97,
+          "deletions": 84,
+          "insertions": 1,
+          "empty_outputs": 0,
+          "blank_argmax_fraction": 0.94068255687974,
+          "blank_probability_mean": 0.9408341697856122,
+          "mean_target_ctc_nll": 685.99221695794,
+          "mean_ctc_loss_target_length_normalized": 56.244690577189125,
+          "mean_ctc_loss_confidence_weighted": 32.920128928290474,
+          "confidence_weight_sum": 10.5,
+          "known_zero_frames": 432,
+          "known_zero_nonblank_frames": 54,
+          "emissions_entirely_in_added_silence": 54,
+          "keywords": [
+            {
+              "keyword_id": 1,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 3,
+              "known_negative_rows": 12,
+              "false_positive_rows": 11,
+              "unknown_rows": 0
+            },
+            {
+              "keyword_id": 2,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 1,
+              "known_negative_rows": 12,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            }
+          ]
+        }
+      }
+    },
+    "preparation_save": {
+      "capsule": {
+        "bytes": 14273291,
+        "path": "/workspace/scratch/d18b42cd7071/runtime-c1-context-development/checkpoints/preparation-001/checkpoint-34fac72882fdcec26488787a.zip",
+        "sha256": "548a95f8168074124fbb8c75f639e530c491d3cb1faa7d36a7d47c42c2e951bb"
+      },
+      "descriptor": {
+        "bytes": 4494,
+        "path": "/workspace/scratch/d18b42cd7071/runtime-c1-context-development/checkpoints/preparation-001/capsule.json",
+        "sha256": "21a24b9cce78711e2c4e1b5d3a713667e91e6a03f69010328920cb3732ec6539"
+      },
+      "member_manifest_sha256": "49ce5605a7c001ac14f08c744a93308fdcdfa0208e299ffcd41bb8f82e777a92",
+      "object_id": "libfile_89936ff6b164819199ceb0b94e73a796",
+      "provider": "ChatGPT Library",
+      "provider_response_supplied_by_operator": true,
+      "provider_save": {
+        "bytes": 1183,
+        "path": "/workspace/scratch/d18b42cd7071/runtime-c1-context-development/checkpoints/preparation-001/provider-save.json",
+        "sha256": "99117150f739ad21bb44c6878e79b1767c365984240292d14393ac010402b090"
+      },
+      "remote_bytes_independently_retrieved": false,
+      "schema": "kws-d2-durable-checkpoint-v1",
+      "version": null
+    },
+    "terminal_persistence_status": "all-8-terminal-capsules-saved-and-acknowledged",
+    "terminal_save_graph": {
+      "bytes": 40193,
+      "sha256": "bd4503a39f7985cb06b38f015cc95100dd3b81220f3aecdb6d9c9ace71c1908f"
+    },
+    "numeric_file_count": 108,
+    "numeric_file_bytes": 218360604,
+    "independent_numeric_membership_review": {
+      "bytes": 2845,
+      "sha256": "ca639ab796491f25b48724245ee5ff01d356ac64bc9ff68c0dc97425ecef945e"
+    },
+    "terminal_capsules": [
+      {
+        "part": "numeric-001",
+        "artifact": {
+          "bytes": 28275801,
+          "sha256": "42788a703daf8fd42064c6e133ea8d3b1c9b65aa86ad80e287cf0598d2e92db9"
+        },
+        "library_file_id": "libfile_72a8481ed2848191b0e13ae0804750c3",
+        "member_manifest_sha256": "cc86dbf0c9917d1cb65cba9ca72328325d0dfd6d563cd0d4741930e780288046",
+        "payload_files": 21,
+        "provider_ack": {
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_72a8481ed2848191b0e13ae0804750c3",
+          "version": 0,
+          "remote_bytes_independently_retrieved": false
+        }
+      },
+      {
+        "part": "numeric-002",
+        "artifact": {
+          "bytes": 27174687,
+          "sha256": "47223e2dca143608eb0f92b3cc8b333e7d0cd8a79cfcfdbfee779677798a8adb"
+        },
+        "library_file_id": "libfile_bba151efb5fc81919bcf8a87bd6a9466",
+        "member_manifest_sha256": "457778024b3f66b11f7a2f0c65fdc82f0b8e26725356fe5384d2559f088c065a",
+        "payload_files": 20,
+        "provider_ack": {
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_bba151efb5fc81919bcf8a87bd6a9466",
+          "version": 0,
+          "remote_bytes_independently_retrieved": false
+        }
+      },
+      {
+        "part": "numeric-003",
+        "artifact": {
+          "bytes": 26611906,
+          "sha256": "d458c5bae4a51f01dc987118e03ffbdf0afe7a72783fb9157f242e7087d61ab0"
+        },
+        "library_file_id": "libfile_4c4a2ab04af08191b66c30c9d3585060",
+        "member_manifest_sha256": "d0acfc8dcbe4f7e73260218322f15fe172e23ffd5803ef1f0a0f8a389d114b3b",
+        "payload_files": 19,
+        "provider_ack": {
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_4c4a2ab04af08191b66c30c9d3585060",
+          "version": 0,
+          "remote_bytes_independently_retrieved": false
+        }
+      },
+      {
+        "part": "numeric-004",
+        "artifact": {
+          "bytes": 27354617,
+          "sha256": "62dd29352c04cd98303302482d9bc8f8065b7772113e146edb2c703989337bc2"
+        },
+        "library_file_id": "libfile_967745e54bb88191b5a6cb300107e471",
+        "member_manifest_sha256": "c1ba980aea845e27bd449ac42be60e26a781198b35faa2099ea6fb8dd524a044",
+        "payload_files": 20,
+        "provider_ack": {
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_967745e54bb88191b5a6cb300107e471",
+          "version": 0,
+          "remote_bytes_independently_retrieved": false
+        }
+      },
+      {
+        "part": "numeric-005",
+        "artifact": {
+          "bytes": 28087242,
+          "sha256": "40337f41d76fe14cfa4db0c7c4968e23adc8e81f189e27572ed979eadc1cbd35"
+        },
+        "library_file_id": "libfile_9b06e6425f488191b2f042b4ef53fe26",
+        "member_manifest_sha256": "9b9eec7830f7745d995dbd5468b586f2cb844553eeb8b293cb3af55f56a2f757",
+        "payload_files": 21,
+        "provider_ack": {
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_9b06e6425f488191b2f042b4ef53fe26",
+          "version": 0,
+          "remote_bytes_independently_retrieved": false
+        }
+      },
+      {
+        "part": "numeric-006",
+        "artifact": {
+          "bytes": 26871649,
+          "sha256": "72006616ed5f6eeb735a5249005950299d01914635408e943707a8ff925bd933"
+        },
+        "library_file_id": "libfile_9c93a531cfa08191b2c00fbbf2beb311",
+        "member_manifest_sha256": "844dc9c6718c06357c1257deb7958286b2b4fad4df89e04861e3577d4a8741ac",
+        "payload_files": 20,
+        "provider_ack": {
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_9c93a531cfa08191b2c00fbbf2beb311",
+          "version": 0,
+          "remote_bytes_independently_retrieved": false
+        }
+      },
+      {
+        "part": "numeric-007",
+        "artifact": {
+          "bytes": 19176702,
+          "sha256": "eb37594bc41557279af9f45bb8bedd2bae8f93be25a49f15323317ccd51622d7"
+        },
+        "library_file_id": "libfile_196b0242c22c8191bcf48f0aaaa29753",
+        "member_manifest_sha256": "bab918d74aa1412c1eb853b463d5a0a9cc3c9ccce0902ae7e14ee2c5fb8aef8a",
+        "payload_files": 15,
+        "provider_ack": {
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_196b0242c22c8191bcf48f0aaaa29753",
+          "version": 0,
+          "remote_bytes_independently_retrieved": false
+        }
+      },
+      {
+        "part": "terminal-metadata-001",
+        "artifact": {
+          "bytes": 20531447,
+          "sha256": "942fb7a7fb243d1e6a76b3695c9225ae905f53a19ebcd7db5a6d9fe24f5182d4"
+        },
+        "library_file_id": "libfile_01f8c2f6e7a48191b4b1babc814b2a47",
+        "member_manifest_sha256": "0b3ba14e5e2914128c918b9d1e1134cba9e78eacdcfed41303b02a94210f146e",
+        "payload_files": 489,
+        "provider_ack": {
+          "provider": "ChatGPT Library",
+          "object_id": "libfile_01f8c2f6e7a48191b4b1babc814b2a47",
+          "version": 0,
+          "remote_bytes_independently_retrieved": false
+        }
+      }
+    ],
+    "implementation_publication_commit": "8342b030159f0ec3e16ca37679c52cea23c285fb",
+    "metric_definition": "Per-row binary presence of at least one complete contiguous keyword token sequence in greedy CTC; not correctness of all repeated mentions, word timestamps, or a wake-event decoder.",
+    "checkpoints": {
+      "original-tiny-fit": {
+        "sha256": "602f2e410d1ffba6a2ec1e41bf6fa6025412bf5d4a86fed6ffa8dc6f9cd99dc5"
+      },
+      "known-silence-corrected": {
+        "sha256": "05c6c79258f93a7375db7b3ebe6c502fd696220694f16e004e73776e3c490bed"
+      }
+    },
+    "evidence": {
+      "summary": {
+        "bytes": 7753,
+        "sha256": "bdf77f76719fead1b24d85530f90bb50d2a85c6a75c8ba23ba5d053baeab59df"
+      },
+      "original_queue_result": {
+        "bytes": 2166,
+        "sha256": "009a7c091aea2368a8ee56e4e19cf7a023cb32dfdec66b6e34d06caad7fe1519"
+      },
+      "canonical_saved_tensor_audit": {
+        "bytes": 291,
+        "sha256": "af82a29fe459b448972ce2781c79e710d38c9116551d9aee8651215893667544"
+      }
+    }
+  },
+  "context52_training": {
+    "status": "completed-and-saved-tensor-audited",
+    "terminal_persistence_status": "actual-provider-acknowledged",
+    "execution_source_commit": "bcf5573dc59fe9a1401a6c10eb36f32319835477",
+    "implementation_publication_commit": "9638393b777ad361e2567aee92db5a4f857f776b",
+    "source_retention_commit": "39fdeacadf380f0815e30587af9bb06186332b79",
+    "fixed_decision": {
+      "declared_at": "2026-11-06T07:08:19.738112+00:00",
+      "declared_before_root_reads_current_paired_diagnostic_metrics": true,
+      "file": {
+        "bytes": 2068,
+        "sha256": "08b37c8f71112265c6b20a4aa8827aa516c966deb3de736bfb41220ec555cdbe"
+      },
+      "settings_not_selected_from_paired_development_metrics": true
+    },
+    "contract": {
+      "candidate": "c1-ctc2601",
+      "optimizer_steps": 2000,
+      "batch_size": 4,
+      "training_forward_limit": 8000,
+      "before_forward_calls": 0,
+      "final_forward_limit": 210,
+      "final_train_forward_calls": 156,
+      "final_development_forward_calls": 54,
+      "offsets_ms": [
+        0,
+        200,
+        500
+      ],
+      "optimizer": {
+        "lr": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.01
+      },
+      "gradient_clip_max_norm": 5.0,
+      "fixed_ctc_normalizer": 1.0,
+      "seed": 20261105,
+      "auxiliary_scale": 1.0,
+      "known_zero_frames": {
+        "0": 0,
+        "200": 9,
+        "500": 24
+      },
+      "worker_seconds": 540,
+      "queue_minutes": 10,
+      "maximum_model_jobs_concurrently": 1,
+      "reset_each_forward": true
+    },
+    "cohorts": {
+      "training_rows": 52,
+      "training_families": 18,
+      "training_strata": {
+        "keyword-1": 17,
+        "keyword-2": 17,
+        "ordinary-negative": 18
+      },
+      "development_rows": 18,
+      "development_families": 6,
+      "development_strata": {
+        "keyword-1": 6,
+        "keyword-2": 6,
+        "ordinary-negative": 6
+      },
+      "failed_native_rows_excluded_with_original_zero_weight": 2,
+      "complete_nonempty_transcripts_for_speech_negatives": true,
+      "original_weak_labels_weights_and_known_masks_unchanged": true,
+      "train_development_identity_overlap": 0,
+      "context_vs_original_tiny8_identity_overlap": 0,
+      "verified_identity_dimensions": [
+        "source_family",
+        "speaker",
+        "original_pcm"
+      ],
+      "previous_context_consumer_training_rows": 17,
+      "isolation_verifier": {
+        "preflight_review": {
+          "bytes": 14479,
+          "sha256": "66e89a5882a860b44fd9bc5431be51bc2ee9abf21c35351a1f3f15048b3692c0"
+        },
+        "terminal_original_bindings_verified": true
+      }
+    },
+    "actual_execution": {
+      "model_constructions": 1,
+      "actual_optimizer_steps": 2000,
+      "training_forwards_started": 8000,
+      "training_forwards_completed": 8000,
+      "final_forwards_started": 210,
+      "final_forwards_completed": 210,
+      "final_observation_state_unchanged": true,
+      "total_model_forwards": 8210,
+      "all52_train_rows_consumed": true,
+      "row_exposure_histogram": {
+        "153": 8,
+        "154": 44
+      },
+      "exposures_by_offset": {
+        "0": 2696,
+        "200": 2652,
+        "500": 2652
+      },
+      "unmatched_forward_claims": 0,
+      "unmatched_optimizer_claims": 0,
+      "automatic_retries": 0
+    },
+    "timing": {
+      "worker_started_at_utc": "2026-11-06T07:39:18.187839+00:00",
+      "worker_finished_at_utc": "2026-11-06T07:43:59.724350+00:00",
+      "worker_wall_seconds": 281.53677997999694,
+      "worker_user_cpu_seconds": 214.70272200000002,
+      "worker_system_cpu_seconds": 5.865584,
+      "queue_started_at_utc": "2026-11-06T07:39:17.918790+00:00",
+      "queue_finished_at_utc": "2026-11-06T07:44:00.813791+00:00",
+      "actual_job_nanoseconds": 282895035975,
+      "actual_job_seconds": 282.895035975,
+      "actual_runner_minutes": 4.71491726625,
+      "deadline_overrun_nanoseconds": 0,
+      "peak_rss_kib": 417844,
+      "canonical_audit_driver_seconds": 38.807201157,
+      "worker_time_includes_metadata_validation_training_final_readback_and_io": true
+    },
+    "training_accounting": {
+      "gradients": {
+        "recorded_optimizer_steps": 2000,
+        "nonzero_gradient_steps": 2000,
+        "zero_gradient_steps": 0,
+        "all_selected_parameter_gradients_present_and_finite": true,
+        "gradient_norm_min": 0.7793811559677124,
+        "gradient_norm_max": 105.57160949707031,
+        "draw_contributions_checked": 8000,
+        "per_draw_total_equals_primary_plus_auxiliary": true,
+        "complete_optimization_numerically_replayed": false
+      },
+      "adamw_parameter_count": 16,
+      "adamw_steps_per_parameter": 2000,
+      "changed_parameter_count": 16,
+      "parameter_delta_l2": 37.73800386831838
+    },
+    "conditions": {
+      "development": {
+        "0": {
+          "observed_clips": 18,
+          "evaluable_clips": 18,
+          "exact_token_matches": 0,
+          "exact_token_match_denominator": 18,
+          "exact_token_match_rate": 0.0,
+          "edit_numerator": 96,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.4383561643835616,
+          "substitutions": 23,
+          "deletions": 73,
+          "insertions": 0,
+          "empty_outputs": 0,
+          "blank_argmax_fraction": 0.9216533004318322,
+          "blank_probability_mean": 0.9183606064885873,
+          "mean_target_ctc_nll": 33.780474384625755,
+          "mean_ctc_loss_target_length_normalized": 3.088085183666812,
+          "mean_ctc_loss_confidence_weighted": 1.767433682249652,
+          "confidence_weight_sum": 10.5,
+          "known_zero_frames": 0,
+          "known_zero_nonblank_frames": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "keywords": [
+            {
+              "keyword_id": 1,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 1,
+              "known_negative_rows": 12,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            },
+            {
+              "keyword_id": 2,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 6,
+              "known_negative_rows": 12,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            }
+          ]
+        },
+        "200": {
+          "observed_clips": 18,
+          "evaluable_clips": 18,
+          "exact_token_matches": 0,
+          "exact_token_match_denominator": 18,
+          "exact_token_match_rate": 0.0,
+          "edit_numerator": 96,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.4383561643835616,
+          "substitutions": 23,
+          "deletions": 73,
+          "insertions": 0,
+          "empty_outputs": 0,
+          "blank_argmax_fraction": 0.9254821741671537,
+          "blank_probability_mean": 0.9224309493825145,
+          "mean_target_ctc_nll": 32.896335949500404,
+          "mean_ctc_loss_target_length_normalized": 2.990262479417854,
+          "mean_ctc_loss_confidence_weighted": 1.7181357625457976,
+          "confidence_weight_sum": 10.5,
+          "known_zero_frames": 162,
+          "known_zero_nonblank_frames": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "keywords": [
+            {
+              "keyword_id": 1,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 1,
+              "known_negative_rows": 12,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            },
+            {
+              "keyword_id": 2,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 6,
+              "known_negative_rows": 12,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            }
+          ]
+        },
+        "500": {
+          "observed_clips": 18,
+          "evaluable_clips": 18,
+          "exact_token_matches": 0,
+          "exact_token_match_denominator": 18,
+          "exact_token_match_rate": 0.0,
+          "edit_numerator": 96,
+          "target_token_denominator": 219,
+          "token_edit_rate": 0.4383561643835616,
+          "substitutions": 23,
+          "deletions": 73,
+          "insertions": 0,
+          "empty_outputs": 0,
+          "blank_argmax_fraction": 0.930931744312026,
+          "blank_probability_mean": 0.9279022320120203,
+          "mean_target_ctc_nll": 32.89142675201098,
+          "mean_ctc_loss_target_length_normalized": 2.9896127589874797,
+          "mean_ctc_loss_confidence_weighted": 1.7179344313012228,
+          "confidence_weight_sum": 10.5,
+          "known_zero_frames": 432,
+          "known_zero_nonblank_frames": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "keywords": [
+            {
+              "keyword_id": 1,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 1,
+              "known_negative_rows": 12,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            },
+            {
+              "keyword_id": 2,
+              "known_positive_rows": 6,
+              "matched_positive_rows": 6,
+              "known_negative_rows": 12,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            }
+          ]
+        }
+      },
+      "train": {
+        "0": {
+          "observed_clips": 52,
+          "evaluable_clips": 52,
+          "exact_token_matches": 8,
+          "exact_token_match_denominator": 52,
+          "exact_token_match_rate": 0.15384615384615385,
+          "edit_numerator": 93,
+          "target_token_denominator": 624,
+          "token_edit_rate": 0.14903846153846154,
+          "substitutions": 2,
+          "deletions": 91,
+          "insertions": 0,
+          "empty_outputs": 0,
+          "blank_argmax_fraction": 0.9062753036437247,
+          "blank_probability_mean": 0.906073267914747,
+          "mean_target_ctc_nll": 4.610888385428832,
+          "mean_ctc_loss_target_length_normalized": 0.39656745800032067,
+          "mean_ctc_loss_confidence_weighted": 0.21550698872082508,
+          "confidence_weight_sum": 29.0,
+          "known_zero_frames": 0,
+          "known_zero_nonblank_frames": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "keywords": [
+            {
+              "keyword_id": 1,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 11,
+              "known_negative_rows": 35,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            },
+            {
+              "keyword_id": 2,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 17,
+              "known_negative_rows": 35,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            }
+          ]
+        },
+        "200": {
+          "observed_clips": 52,
+          "evaluable_clips": 52,
+          "exact_token_matches": 7,
+          "exact_token_match_denominator": 52,
+          "exact_token_match_rate": 0.1346153846153846,
+          "edit_numerator": 95,
+          "target_token_denominator": 624,
+          "token_edit_rate": 0.15224358974358973,
+          "substitutions": 2,
+          "deletions": 93,
+          "insertions": 0,
+          "empty_outputs": 0,
+          "blank_argmax_fraction": 0.9111538461538462,
+          "blank_probability_mean": 0.9107958300812886,
+          "mean_target_ctc_nll": 4.638649497252818,
+          "mean_ctc_loss_target_length_normalized": 0.40545853463789594,
+          "mean_ctc_loss_confidence_weighted": 0.21951119419044027,
+          "confidence_weight_sum": 29.0,
+          "known_zero_frames": 468,
+          "known_zero_nonblank_frames": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "keywords": [
+            {
+              "keyword_id": 1,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 11,
+              "known_negative_rows": 35,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            },
+            {
+              "keyword_id": 2,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 17,
+              "known_negative_rows": 35,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            }
+          ]
+        },
+        "500": {
+          "observed_clips": 52,
+          "evaluable_clips": 52,
+          "exact_token_matches": 7,
+          "exact_token_match_denominator": 52,
+          "exact_token_match_rate": 0.1346153846153846,
+          "edit_numerator": 95,
+          "target_token_denominator": 624,
+          "token_edit_rate": 0.15224358974358973,
+          "substitutions": 2,
+          "deletions": 93,
+          "insertions": 0,
+          "empty_outputs": 0,
+          "blank_argmax_fraction": 0.9173524150268336,
+          "blank_probability_mean": 0.9168317063976485,
+          "mean_target_ctc_nll": 4.616098320541473,
+          "mean_ctc_loss_target_length_normalized": 0.4026618171483278,
+          "mean_ctc_loss_confidence_weighted": 0.21785139156362185,
+          "confidence_weight_sum": 29.0,
+          "known_zero_frames": 1248,
+          "known_zero_nonblank_frames": 0,
+          "emissions_entirely_in_added_silence": 0,
+          "keywords": [
+            {
+              "keyword_id": 1,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 11,
+              "known_negative_rows": 35,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            },
+            {
+              "keyword_id": 2,
+              "known_positive_rows": 17,
+              "matched_positive_rows": 17,
+              "known_negative_rows": 35,
+              "false_positive_rows": 0,
+              "unknown_rows": 0
+            }
+          ]
+        }
+      }
+    },
+    "row_prediction_consistency_across_offsets": {
+      "development": {
+        "changed_greedy_token_sequence_across_offsets": 1,
+        "identical_greedy_token_sequence_across_all_three_offsets": 17,
+        "known_zero_blank_does_not_imply_whole_sequence_invariance": true,
+        "rows": 18
+      },
+      "train": {
+        "changed_greedy_token_sequence_across_offsets": 2,
+        "identical_greedy_token_sequence_across_all_three_offsets": 50,
+        "known_zero_blank_does_not_imply_whole_sequence_invariance": true,
+        "rows": 52
+      }
+    },
+    "additional_prefix_aggregates": {
+      "development": {
+        "0": {
+          "known_zero_frames": 0,
+          "mean_blank_nll_on_known_zero_frames": null,
+          "mean_blank_probability_on_known_zero_frames": null
+        },
+        "200": {
+          "known_zero_frames": 162,
+          "mean_blank_nll_on_known_zero_frames": 0.01021131593734026,
+          "mean_blank_probability_on_known_zero_frames": 0.9900064468383789
+        },
+        "500": {
+          "known_zero_frames": 432,
+          "mean_blank_nll_on_known_zero_frames": 0.005616386886686087,
+          "mean_blank_probability_on_known_zero_frames": 0.9944679737091064
+        }
+      },
+      "train": {
+        "0": {
+          "known_zero_frames": 0,
+          "mean_blank_nll_on_known_zero_frames": null,
+          "mean_blank_probability_on_known_zero_frames": null
+        },
+        "200": {
+          "known_zero_frames": 468,
+          "mean_blank_nll_on_known_zero_frames": 0.01021131593734026,
+          "mean_blank_probability_on_known_zero_frames": 0.9900064468383789
+        },
+        "500": {
+          "known_zero_frames": 1248,
+          "mean_blank_nll_on_known_zero_frames": 0.005616386886686087,
+          "mean_blank_probability_on_known_zero_frames": 0.9944679737091064
+        }
+      }
+    },
+    "added_zero_frames_total": 2310,
+    "added_zero_nonblank_frames_total": 0,
+    "comparison_with_previous_corrected_model": {
+      "same_development_rows_and_order": true,
+      "per_offset_reference_tokens": 219,
+      "previous_corrected_edit_numerator": 187,
+      "current_edit_numerator": 96,
+      "fewer_token_edits_per_offset": 91,
+      "previous_token_edit_rate": 0.8538812785388128,
+      "current_token_edit_rate": 0.4383561643835616,
+      "exact_matches_previous_and_current": 0,
+      "exact_match_denominator": 18,
+      "single_variable_data_size_ablation": false,
+      "checkpoint_or_threshold_selected_on_development": false
+    },
+    "evidence": {
+      "recipe": {
+        "bytes": 2165931,
+        "sha256": "d5d10948fd2381fc1fa1c465953e01dcd72ba0e1356469cb3c2a98491f81affb"
+      },
+      "output_manifest": {
+        "bytes": 47836,
+        "sha256": "3dc3f3f8159fff515cc2a20ff68ed33ca99b388d984a50da1a81bf96cf2c5fdb"
+      },
+      "saved_summary": {
+        "bytes": 14435,
+        "sha256": "8da204191975f2da516b28a73a64b8eb032f95ae8c3a4a1a7992cb326a72d335"
+      },
+      "original_queue_result": {
+        "bytes": 2397,
+        "sha256": "1687e239b6159659a2586b88c5e2fb2d07e8a1b5839cfce68e6567aeb20f37bb"
+      },
+      "queue": {
+        "bytes": 631,
+        "sha256": "6d2df489098a525963dc0e4128c6fe6f05ada7c72ba462b77223729370f6ca56"
+      },
+      "queue_request": {
+        "bytes": 934,
+        "sha256": "25a98c3422a5d40a48f328e9264e82ac7529e0595234b29777b494d63f2ec88f"
+      },
+      "consumption_ledger": {
+        "bytes": 6533461,
+        "sha256": "05bd421c6703d048581955027b64b08f71c76ab6a33c20dae38364665d1b0502"
+      },
+      "forward_ledger": {
+        "bytes": 6816766,
+        "sha256": "126de500d3a2b94660801b56654771c8b8d17467ced3de6777256bc8088f393f"
+      },
+      "optimizer_ledger": {
+        "bytes": 309236,
+        "sha256": "db7c73edab8acb7b7a42c547bec3cd53895a11625a5c30a138f4065c0a69ed54"
+      },
+      "aggregate_source_observations": {
+        "bytes": 1482787,
+        "sha256": "5016daf3e4cb517fdaeb3b63c795f6c51f82eac4e9d0f71c70838e91ed8891a3"
+      },
+      "canonical_saved_tensor_audit": {
+        "bytes": 446,
+        "sha256": "111b55ff476b2cc6473810011badeaa7d105c0a6fe11f32b4dd60ace6af131b8"
+      },
+      "canonical_audit_driver_receipt": {
+        "bytes": 835,
+        "sha256": "fcf9faf25b9e2149b75aaa70c89f6eedb438ff2640a7b5063e4c5360220a94ce"
+      },
+      "independent_terminal_review": {
+        "bytes": 15490,
+        "sha256": "0fdd7e15ffff56b8195fb2b065f35eb410caacc2b805108d65e790458097ac77"
+      },
+      "independent_preflight_review": {
+        "bytes": 14479,
+        "sha256": "66e89a5882a860b44fd9bc5431be51bc2ee9abf21c35351a1f3f15048b3692c0"
+      }
+    },
+    "checkpoints": {
+      "initial_zero_step_sha256": "da7671fe71fef9ecd6822c747e3fe153b9ee563a6784c18eded90d3354486ecf",
+      "initial_float_state_sha256": "3717783d0771bc28e66006d523f414dcdbb3997d372b7d115f9961b62e71b855",
+      "final": {
+        "bytes": 2238883,
+        "sha256": "92d1d0b3d98e39bb9d5739d5bce80dc4a93bd7eb2e6a97f6fd55308012b19857"
+      },
+      "final_float_state_sha256": "849d859d380237e5713351bc8c3ee499d33435eb86905f4cf9a385b04e02b619",
+      "vocabulary_sha256": "104575dab3a9f7ed622d8fa29aa8a897e0590cca8aed9214b26ef4cd1c8b4e4b",
+      "exposure_plan_sha256": "b07b36fa1fc2c2c05714ea7f4da8520738886bc939c5e0e6fc9fa7eea6f06dd1",
+      "train_binding_sha256": "e0cc498cf44149dcba4e6b85723a75fed0b998e28ed99316e9d9cc31638fb7be",
+      "development_binding_sha256": "2a978e674ccd26ea1d3dc064056faddaf12a469d54c8d2e2376d22fe111ba34b"
+    },
+    "audit": {
+      "canonical_status": "verified",
+      "canonical_new_model_constructions": 0,
+      "canonical_new_model_forwards": 0,
+      "canonical_new_optimizer_steps": 0,
+      "saved_final_conditions_verified": 210,
+      "saved_optimizer_steps_verified": 2000,
+      "saved_training_forwards_verified": 8000,
+      "independent_status": "PASS",
+      "independent_new_model_calls": 0,
+      "independent_new_optimizer_steps": 0,
+      "independent_torch_imported": false,
+      "independent_shared_heavy_lock_acquired": false,
+      "independent_reconstructed_aggregates": [
+        "full-text token edits and exact matches",
+        "CTC normalization/weak-weight accounting and condition means",
+        "complete contiguous K1/K2 token presence",
+        "blank occupancy aggregates",
+        "fully-added-zero scope, emission windows and counts"
+      ],
+      "canonical_audit_recomputed_features_and_saved_tensor_metrics": true,
+      "independent_review_recomputed_tensor_values": false,
+      "complete_training_optimization_replayed": false
+    },
+    "numeric_retention": {
+      "full_float32_final_features_and_logits_retained": true,
+      "final_numeric_files": 210,
+      "serialized_numeric_file_bytes": 440837722,
+      "logits_raw_payload_bytes": 435053664,
+      "features_raw_payload_bytes": 5352448,
+      "training_intermediate_logits_retained": false,
+      "intermediate_gradient_tensors_retained": false,
+      "quantization_used_for_retention": false,
+      "complete_training_optimization_numerically_replayed": false
+    },
+    "persistence": {
+      "status": "actual-provider-acknowledged",
+      "terminal_capsule_count": 15,
+      "numeric_capsule_count": 14,
+      "metadata_capsule_count": 1,
+      "standalone_checkpoint_acknowledged": true,
+      "public_whitelist_record": {
+        "bytes": 6113,
+        "sha256": "16702190dc1fb03b3faf2a3524c19b0cb5fa37d8cbf3bd3a2cbdfb8d297145e1"
+      },
+      "public_whitelist": {
+        "capsules": [
+          {
+            "library_file_id": "libfile_404392f4b00c8191afbd77225cbe0d4e",
+            "member_manifest_sha256": "06357dbbd299d2172ec9dc451e12c3cd3bf1049b7e47ef9f70ffbd963dd09b13",
+            "numeric_files": 17,
+            "original_numeric_bytes": 33136949,
+            "part": "numeric-001",
+            "payload_files": 21,
+            "version": 0,
+            "zip_bytes": 28392388,
+            "zip_sha256": "5d0dba2f6501ba0dff4d98006ca5271582d30ff0b498d43ec0c312da8f5c60a8"
+          },
+          {
+            "library_file_id": "libfile_8eb27f3ad7e08191bd346cd08a236cdf",
+            "member_manifest_sha256": "5d22a5709666b96b83f4574865d32d864093875cf5972f06e6b8883e67bdd3c0",
+            "numeric_files": 16,
+            "original_numeric_bytes": 31902672,
+            "part": "numeric-002",
+            "payload_files": 20,
+            "version": 0,
+            "zip_bytes": 27305504,
+            "zip_sha256": "a1dd952b6bbe3fb9ca5fd2dae84d58201a6726e25c3b0af8a91d84d57f1ea040"
+          },
+          {
+            "library_file_id": "libfile_7e3993518f508191a28eab9b5530b3cb",
+            "member_manifest_sha256": "db827f958b29c0eb6595f135f04c68c1d5b9e76c49cbab0c07d62330f382e832",
+            "numeric_files": 15,
+            "original_numeric_bytes": 32374635,
+            "part": "numeric-003",
+            "payload_files": 19,
+            "version": 0,
+            "zip_bytes": 26740586,
+            "zip_sha256": "212bc312b2a59b9e4cb81378676c3013252f06dc523bb60a511d52bdf72435eb"
+          },
+          {
+            "library_file_id": "libfile_da4fae2320d88191974da12dc9af0d46",
+            "member_manifest_sha256": "820a786173fe421ed9fc24b23e45304388666ac23dbf7d2d3af77d4dfb2276d1",
+            "numeric_files": 16,
+            "original_numeric_bytes": 31986896,
+            "part": "numeric-004",
+            "payload_files": 20,
+            "version": 0,
+            "zip_bytes": 25092785,
+            "zip_sha256": "1b7010a1976e8605be4ffd17f4a93d2d31812c8be54ded035ffa4a3e39067900"
+          },
+          {
+            "library_file_id": "libfile_e98b56dbe48481919a4be36a97ea3cd2",
+            "member_manifest_sha256": "896247c439332e7df892f3cabae7f560ba05d5e0b9bdbd20efda975db0366b5e",
+            "numeric_files": 16,
+            "original_numeric_bytes": 33440144,
+            "part": "numeric-005",
+            "payload_files": 20,
+            "version": 0,
+            "zip_bytes": 28549155,
+            "zip_sha256": "299ad96fcd31745ed93db9f7506beefca5f294408f082b882eba45406073c262"
+          },
+          {
+            "library_file_id": "libfile_1f26819272288191a0e7f2df88c0093c",
+            "member_manifest_sha256": "ad60d59043cf4f7a0e514c1dc7ae7ce9a7556ac989a8b70608090e60f88df996",
+            "numeric_files": 17,
+            "original_numeric_bytes": 32673589,
+            "part": "numeric-006",
+            "payload_files": 21,
+            "version": 0,
+            "zip_bytes": 27905484,
+            "zip_sha256": "3d0a36e86f3d0e7c4703f8ce85b247d020c27a40ff547620ca62a506bd77e201"
+          },
+          {
+            "library_file_id": "libfile_14f8ea4faaec8191b2cc252c282a4ab4",
+            "member_manifest_sha256": "c2f66b8f720bef7ae7a63b741c25a154563991faf3b7a5d5faa17ca81316dd4d",
+            "numeric_files": 16,
+            "original_numeric_bytes": 30765200,
+            "part": "numeric-007",
+            "payload_files": 20,
+            "version": 0,
+            "zip_bytes": 26218953,
+            "zip_sha256": "c44b1c8613661e8f734448c922e599f1b5cbc1f673c3c6c57a776d00bd8a4b12"
+          },
+          {
+            "library_file_id": "libfile_0f41c2ed2d988191b1122719e216ee74",
+            "member_manifest_sha256": "c52479e5be5d639e9ca7b9ccc8c410346a523e23cb8ffeded8bcbc3de10423e6",
+            "numeric_files": 14,
+            "original_numeric_bytes": 33288838,
+            "part": "numeric-008",
+            "payload_files": 18,
+            "version": 0,
+            "zip_bytes": 26522201,
+            "zip_sha256": "4c3d92aaf5c1413a8da494dcb34b1253499cbadba27d91972cacfab3da2af1cf"
+          },
+          {
+            "library_file_id": "libfile_88aa6971deb08191b17c1b07c9885472",
+            "member_manifest_sha256": "e668a689a218a71f814138ee80683db64e11554b2cd4b85280cb8bd26ec7b995",
+            "numeric_files": 16,
+            "original_numeric_bytes": 32892880,
+            "part": "numeric-009",
+            "payload_files": 20,
+            "version": 0,
+            "zip_bytes": 28004483,
+            "zip_sha256": "f0fa5228b183e8f75a4a0d94a49bd570728535de98368bc8a2b25a4c3a01f6ae"
+          },
+          {
+            "library_file_id": "libfile_729c16c7c5308191a537b67f7f36497b",
+            "member_manifest_sha256": "534557bcbb74906cd5cb04404a936a585d243180de03abba50f7d63a6a43d6bf",
+            "numeric_files": 16,
+            "original_numeric_bytes": 32123984,
+            "part": "numeric-010",
+            "payload_files": 20,
+            "version": 0,
+            "zip_bytes": 27165383,
+            "zip_sha256": "ea0700558e3069d949f942ce9b52fb9b69ab90830c9b07bfa4ff78cc61c585f1"
+          },
+          {
+            "library_file_id": "libfile_c1eee0dc28e8819183fab99a5097a843",
+            "member_manifest_sha256": "e47ea78bb4a8518b36f7e9a188ba2f1b0aa337970d5df448749722cf04f78a59",
+            "numeric_files": 13,
+            "original_numeric_bytes": 31496417,
+            "part": "numeric-011",
+            "payload_files": 17,
+            "version": 0,
+            "zip_bytes": 23955973,
+            "zip_sha256": "bfeaacaf4340d65088a347734da53390ef6128f8e2f6e0e44ca156e97bcde17f"
+          },
+          {
+            "library_file_id": "libfile_967eab056384819196c790ce0bac1653",
+            "member_manifest_sha256": "7b000100b17a8fbaaec723d4bf3e78d62522df01f3a884f9bea07e7bb07ae5b2",
+            "numeric_files": 15,
+            "original_numeric_bytes": 32680107,
+            "part": "numeric-012",
+            "payload_files": 19,
+            "version": 0,
+            "zip_bytes": 26640061,
+            "zip_sha256": "eef12c6cdd5797b62b56ccba371510232e8d0e57519a5519b5fcce8c940a9c09"
+          },
+          {
+            "library_file_id": "libfile_11a89173afa08191b7064a7d5a2a2854",
+            "member_manifest_sha256": "d826d452994039dc9e6db8cdca836f26b6d610c0669c37a9ea46edb8ceb8de80",
+            "numeric_files": 14,
+            "original_numeric_bytes": 31877510,
+            "part": "numeric-013",
+            "payload_files": 18,
+            "version": 0,
+            "zip_bytes": 25976074,
+            "zip_sha256": "e41cc456e02e4d43e5a6fae804e9a2f3332bce6dbcf2804b169f5df8972e445f"
+          },
+          {
+            "library_file_id": "libfile_7ce087fb1b1081918782829b26b59689",
+            "member_manifest_sha256": "5509b6e9eb002eaf1c72680f86de20215765fee540c6b55233e4cb189c4278fb",
+            "numeric_files": 9,
+            "original_numeric_bytes": 20197901,
+            "part": "numeric-014",
+            "payload_files": 13,
+            "version": 0,
+            "zip_bytes": 16253549,
+            "zip_sha256": "3f9df4b7c58df4728a332461bbda97b78246f6ecdaa5e28720469713d32f8b4c"
+          },
+          {
+            "library_file_id": "libfile_c8a8e7e3efe4819194061858457d3889",
+            "member_manifest_sha256": "03db90d2d3ce7e30b382ff5e8273daa8f03a328cfa080f4b9dfe8458c432a198",
+            "numeric_files": 0,
+            "original_numeric_bytes": 0,
+            "part": "terminal-metadata-001",
+            "payload_files": 1135,
+            "version": 0,
+            "zip_bytes": 36002033,
+            "zip_sha256": "b58b0c7608ac96e375b886090c9ac54619dfe460f404b4fe3da9743f389d8c68"
+          }
+        ],
+        "no_local_paths_private_inputs_transcripts_or_metric_values": true,
+        "numeric_files": 210,
+        "original_numeric_bytes": 440837722,
+        "published_execution_source_commit": "9638393b777ad361e2567aee92db5a4f857f776b",
+        "remote_bytes_independently_retrieved": false,
+        "schema": "kws-context52-persistent-save-public-whitelist-v1",
+        "source_commit": "bcf5573dc59fe9a1401a6c10eb36f32319835477",
+        "standalone_checkpoint": {
+          "byte_identical_to_sealed_final_checkpoint": true,
+          "bytes": 2238883,
+          "file_name": "context52-c1-2000.pt",
+          "library_file_id": "libfile_3a8e807d62508191be218cb3aeceddb5",
+          "sha256": "92d1d0b3d98e39bb9d5739d5bce80dc4a93bd7eb2e6a97f6fd55308012b19857",
+          "version": 0
+        },
+        "status": "actual-provider-acknowledged"
+      },
+      "save_graph": {
+        "bytes": 113054,
+        "sha256": "15fb267d6f0e546ba53f2a252bca2f0221450b6d8b438b8c39a68a3efbfbdd98",
+        "separately_uploaded": false,
+        "intended_retention": "final handoff after PR and CI; not separately uploaded at this report snapshot"
+      },
+      "provider_acknowledgements_verified_against_current_sources": true,
+      "remote_bytes_independently_retrieved": false
+    },
+    "scientific_scope": {
+      "human_gold": false,
+      "independent_test": false,
+      "previously_exposed_development": true,
+      "single_variable_data_size_ablation": false,
+      "quality_winner": null,
+      "generalization_passed": null,
+      "labels_changed": false,
+      "development_optimizer_draws": 0,
+      "development_selection_or_tuning": false,
+      "threshold_selection": false,
+      "metrics_choose_training_settings": false,
+      "asr_or_tts_calls": 0,
+      "automatic_retry": false,
+      "training_logits_retained": false,
+      "training_ledger_replays_complete_optimization": false,
+      "natural_far_claimed": false,
+      "hardware_acceptance_claimed": false,
+      "all_repeated_keyword_mentions_correct_claimed": false,
+      "metric_definition": "Per-row binary presence of at least one complete contiguous keyword token sequence in greedy CTC; not correctness of all repeated mentions, word timestamps, or a wake-event decoder."
+    },
+    "saved_error_posthoc_analysis": {
+      "status": "completed-saved-observations-only",
+      "separate_from_original_sealed_terminal_capsules": true,
+      "new_model_calls": 0,
+      "training_settings_changed": false,
+      "source_or_label_changes": false,
+      "public_brief": {
+        "bytes": 7333,
+        "sha256": "c0181557ad402875edc4df319a22078c9a453a508b321410082ef59034e8059d"
+      },
+      "successful_analysis_receipt": {
+        "bytes": 912,
+        "sha256": "9d440a2325658cf0b756017e42bae94c5e9738da4c78d223bf428d118f9197c2",
+        "returncode": 0
+      },
+      "prior_unsuccessful_analysis_preserved_privately": true,
+      "model_retry": false,
+      "development_k1": {
+        "rows": 6,
+        "reference_mentions": 8,
+        "row_hits_any_complete_contiguous_occurrence": 1,
+        "xiao_and_wo_reference_matches_each": 8,
+        "hao_matches": 1,
+        "hao_deletions_in_every_optimal_text_alignment": 6,
+        "hao_canonical_substitutions": 1,
+        "rows_with_optimal_text_alignment_ambiguity": 1,
+        "aggregate_offset_scope_ms": [
+          0,
+          200,
+          500
+        ]
+      },
+      "training_k1_at_zero_offset": {
+        "rows": 17,
+        "reference_mentions": 21,
+        "row_hits_any_complete_contiguous_occurrence": 11,
+        "hao_matches": 13,
+        "hao_deletions_in_every_optimal_text_alignment": 8,
+        "missed_rows": 6,
+        "all_missed_rows_have_hao_deletion_between_ni_and_xiaowo": true
+      },
+      "interpretation_limits": [
+        "Edit-distance text alignment only; not temporal, acoustic or CTC forced alignment.",
+        "No acoustic cause, correction outcome, threshold tuning or new experiment is established.",
+        "Per-row keyword hit requires any one complete contiguous occurrence; it does not require all repeated mentions to be correct."
+      ]
+    }
+  },
+  "boundaries": {
+    "human_gold": false,
+    "independent_test": false,
+    "natural_negative_seconds_added": 0,
+    "natural_far_claimed": false,
+    "remote_watchdog_deployed": false,
+    "external_codex_or_paid_model_api_launched": false,
+    "pr759_head_changed": false,
+    "d2_1744_unknown_retried": false,
+    "hardware_acceptance_claimed": false,
+    "autonomous_iteration_daemon_deployed": false,
+    "no_claim_of_always_running_iteration": true,
+    "pr759_merged": false,
+    "private_context_rows_published": false,
+    "raw_or_reference_audio_published": false,
+    "full_asr_transcripts_published": false
+  },
+  "d2_retired_unknown": {
+    "loss_record": {
+      "bytes": 122089,
+      "sha256": "31ca61c6aa0a017797ffd224b0ca9c13cb0b89d09376a800d1d954bf77a2b9d4"
+    },
+    "declared_cells": 1792,
+    "archived_completed_cells": 48,
+    "post_checkpoint_outcome_unknown_cells": 1744,
+    "resubmission_allowed": false,
+    "newly_recovered_authentic_post_checkpoint_receipts": 0,
+    "not_a_pending_queue": true
+  },
+  "public_source_head": "39fdeacadf380f0815e30587af9bb06186332b79",
+  "source_publication_branch": "research/context-development-tail7-20261106",
+  "publication_scope": "Aggregate research results, exact evidence identities and authorized public natural-window provenance; no private context rows, reference audio or full ASR transcripts.",
+  "source_publication_review": {
+    "bytes": 106341,
+    "sha256": "c5b481b8cab4d40b44dd2413d5a2f4b2f105ac9965f7b0314ed3e68648c07166",
+    "status": "PASS",
+    "reviewed_public_head": "39fdeacadf380f0815e30587af9bb06186332b79",
+    "changed_files_relative_to_pr759": 11,
+    "original_retained_files_verified": 718,
+    "retention_events": 193
+  },
+  "pr759_adoption_boundary": {
+    "url": "https://github.com/jiying2007/kws-pipeline/pull/759",
+    "exact_head": "d833bb8920125802c7cea7013526e5ea84843a3f",
+    "head_unchanged": true,
+    "merged": false,
+    "ruleset_id": 22507875,
+    "require_extra_approval_for_unattributed_changes": true,
+    "specific_additional_confirmation_received": false,
+    "bypass_used": false,
+    "status": "held-for-specific-source-attribution-confirmation",
+    "source_publication_does_not_mean_main_adoption": true
+  }
+}
