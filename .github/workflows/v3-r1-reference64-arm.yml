@@ -56,11 +56,12 @@ jobs:
               if(fwrite("R1DREF1\0",1,8,stdout)!=8){r1d_destroy(s);return 2;}
               unsigned char b[640];size_t n,used;uint64_t bytes=0;int rc=0;
               while((n=fread(b,1,sizeof(b),stdin))>0){rc=r1d_feed(s,b,n,&used);bytes+=used;if(rc||used!=n){rc=1;break;}}
-              if(ferror(stdin))rc=1;if(!rc)rc=r1d_finish(s);if(fflush(stdout))rc=1;
+              if(ferror(stdin)){rc=1;}if(!rc){rc=r1d_finish(s);}if(fflush(stdout)){rc=1;}
               fprintf(stderr,"{\"status\":\"%s\",\"frames\":%" PRIu64 ",\"pcm_bytes\":%" PRIu64 ",\"state_bytes\":%zu,\"synthetic_eof\":false}\n",rc?"failed":"complete",st.rows,bytes,r1d_state_bytes());
               r1d_destroy(s);return rc?2:0;
           }
           '''
+          if hashlib.sha256(capture.encode()).hexdigest()!='0368c9d00a1622ddb08855a21ac828cf32bc148f06c4cd9e3840df719007415c':raise SystemExit('reviewed capture source changed')
           (out/'capture.c').write_text(capture)
           cc='/usr/bin/arm-linux-gnueabihf-gcc'
           flags=['-std=c11','-O2','-Wall','-Wextra','-Werror','-pedantic','-fno-fast-math','-ffp-contract=off','-fexcess-precision=standard','-mcpu=cortex-a32','-mfpu=neon-vfpv4','-mfloat-abi=hard','-I'+str(src)]
@@ -74,14 +75,13 @@ jobs:
               raw=(out/name).read_bytes();eflags=struct.unpack_from('<I',raw,36)[0]
               if raw[:6]!=b'\x7fELF\x01\x01' or struct.unpack_from('<H',raw,18)[0]!=40 or eflags&0xff000000!=0x05000000 or not eflags&0x400 or eflags&0x200:raise SystemExit('ELF contract')
               (out/(name+'.ELF.txt')).write_bytes(subprocess.check_output(['readelf','-h','-A',str(out/name)],timeout=5))
-          # The host emulator is transferred for isolated owner-side use only; it is not linked into the model.
           executor=pathlib.Path('transfer/executor');shutil.copyfile('/usr/bin/qemu-arm-static',executor/'qemu-arm-static')
           copyrights=pathlib.Path('/usr/share/doc/qemu-user-static/copyright')
           if copyrights.is_file():shutil.copyfile(copyrights,executor/'COPYRIGHT')
           (executor/'PACKAGE.txt').write_bytes(subprocess.check_output(['dpkg-query','-W','-f=${Package}\n${Version}\n${Source}\n','qemu-user-static'],timeout=5))
           (executor/'README.txt').write_text('Unmodified Ubuntu qemu-user-static executor, separate from the Apache-licensed model sources. See COPYRIGHT and PACKAGE.txt. Corresponding Ubuntu source is the qemu source package in the configured Ubuntu noble/noble-updates archive; retrieve with apt source qemu. This executor is not included in the model delivery ZIP. No private inputs were loaded on this hosted runner.\n')
           manifest={'schema':'kws-r1-reference64-arm-build-v1','source_commit':'71e6a93ab2a7bbae95387a662650a5ecbc8d0c29','target':'cortex-a32/neon-vfpv4/hard','compiler':subprocess.check_output([cc,'--version'],timeout=5).decode().splitlines()[0],
-              'commands':commands,'compiler_invocations':2,'model_loads':0,'private_audio':False,'model_forwards':0,'physical_ssc305':False,'scope':'cross-build and executor transfer only; local inference has a separate bounded declaration',
+              'commands':commands,'compiler_invocations':2,'model_loads':0,'private_audio':False,'model_forwards':0,'physical_ssc305':False,'previous_failed_build':42384580307,'scope':'cross-build and executor transfer only; local inference has a separate bounded declaration',
               'files':{p.relative_to('transfer').as_posix():{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in pathlib.Path('transfer').rglob('*') if p.is_file()}}
           pathlib.Path('transfer/BUILD.json').write_text(json.dumps(manifest,sort_keys=True,indent=2)+'\n');print(json.dumps({k:v for k,v in manifest.items() if k not in ('files','commands')}))
           PY
