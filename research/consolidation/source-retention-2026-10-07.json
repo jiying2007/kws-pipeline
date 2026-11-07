@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 82318,
-      "git_blob_sha1": "860a5b1c9b5abdf59e2e772cceb2458ef1ac5a0f",
-      "sha256": "fb97ee49412e805e0d1202e8e8698832822dfa1a29c63fdeda46bff0efa5be0d"
+      "bytes": 82526,
+      "git_blob_sha1": "cc97544f8e14888a1e1342e3e8fe7f04cbdcd196",
+      "sha256": "7e0d6e823ec355eac7df2c723f682e60adbfd5795b8670354697ee3b52eaf71a"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -51540,6 +51540,127 @@
             "bytes": 53041,
             "git_blob_sha1": "be69e59c9f451b1d9250ef240837e2ba9c3bb178",
             "sha256": "5170a188cb69c2beaae8c3200b196932e574860bcc7ab5aa8d43763e44bf03b1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "natural-coverage64-evidence-continuation-20261107",
+      "date": "2026-11-07",
+      "base_commit": "bc85709896891f86ce6ccff192433f06d4978626",
+      "base_tree": "d74669a1706d35b4534ec549f2db7f950841755e",
+      "public_source_commit": "16997a6de8f4e819eb9735657888fed48e7f32e3",
+      "source_tree": "2229b5d438735257a1980ec27dba1618b4b5a709",
+      "public_source_receipt_sha256": "f194e38b9f4d5b3e220020cc2bcb8a5e86afb91a10246c96519c6acb3f052ad3",
+      "previous_manifest_sha256": "fcd6b4f639e4afabf33a71d42a60cf6547129c63bad41707fe746fe3e38be17a",
+      "workflow_source_changed": true,
+      "scope": "Fixed natural64 planning, read-only natural73 coverage consumer, actual stage documentation and normal/-O/-OO CI contract integration.",
+      "rationale": "Preserve the original 718 source records and all 199 prior maintenance events while adding the exact reviewed source identities for the completed 64-new/73-total natural observation stage. Only the current ci.yml baseline identity changes; the retention verifier and its tests remain unchanged. The frozen weak policy admits no natural labels or negative exposure, and this maintenance performs no model work.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 82318,
+            "git_blob_sha1": "860a5b1c9b5abdf59e2e772cceb2458ef1ac5a0f",
+            "sha256": "fb97ee49412e805e0d1202e8e8698832822dfa1a29c63fdeda46bff0efa5be0d"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 82526,
+            "git_blob_sha1": "cc97544f8e14888a1e1342e3e8fe7f04cbdcd196",
+            "sha256": "7e0d6e823ec355eac7df2c723f682e60adbfd5795b8670354697ee3b52eaf71a"
+          }
+        },
+        {
+          "path": "README.md",
+          "before": {
+            "path": "README.md",
+            "mode": "100644",
+            "bytes": 18430,
+            "git_blob_sha1": "4e386237e7d52ac3c879cc035d18b085ce0adda7",
+            "sha256": "6f899d5eb54a7b13d0e45f500515f137d0b8d7c2e56de47e50d12d9e94bacade"
+          },
+          "after": {
+            "path": "README.md",
+            "mode": "100644",
+            "bytes": 18881,
+            "git_blob_sha1": "7c97abac06442f7b7707661f2612e21499661566",
+            "sha256": "1364af2ac6917b5babb592d746989d71ea04e0411e137b9a930515406452e5c2"
+          }
+        },
+        {
+          "path": "docs/KWS_NATURAL_COVERAGE_20261107.md",
+          "before": null,
+          "after": {
+            "path": "docs/KWS_NATURAL_COVERAGE_20261107.md",
+            "mode": "100644",
+            "bytes": 12694,
+            "git_blob_sha1": "3f8aeba49e8590a4d6be4b9124b8b6f65d255d48",
+            "sha256": "5155548cd5bbdb8f40ceb705aa6ec8af3ba9e0cb394f28ea5104f93ad7563c09"
+          }
+        },
+        {
+          "path": "docs/research-natural-coverage.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-natural-coverage.md",
+            "mode": "100644",
+            "bytes": 8608,
+            "git_blob_sha1": "10c9584f3c1e899f7d968213c56926b0f1b4080e",
+            "sha256": "a04b7e1af5b3a543c82fb7706de21e10a3552939b3a37ec5721b6fa6ba706f1d"
+          }
+        },
+        {
+          "path": "research/README.md",
+          "before": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 21749,
+            "git_blob_sha1": "3f6be83c57e67e72eb418b44f9d2414d286d09f8",
+            "sha256": "c36f37eab76a327aa8c3191c22c84ee103e53dbd0c4d883d73abc26f3af7e1dc"
+          },
+          "after": {
+            "path": "research/README.md",
+            "mode": "100644",
+            "bytes": 22327,
+            "git_blob_sha1": "909fc13ff56b11b4eb9974e8ff1b16bef5f1a81b",
+            "sha256": "cfec642a039fa67a2652b5e7575ccaf434caaeda0b41bdcccefee6638322ac1d"
+          }
+        },
+        {
+          "path": "research/natural-coverage-20261107/execution-summary.json",
+          "before": null,
+          "after": {
+            "path": "research/natural-coverage-20261107/execution-summary.json",
+            "mode": "100644",
+            "bytes": 21450,
+            "git_blob_sha1": "db24a7c9265cd4120cde091a566a2da6bae356ae",
+            "sha256": "e2ea06973f032a59946a7364c877a3b9e1acaa70f94c54111e2d311fac8a5b21"
+          }
+        },
+        {
+          "path": "tests/test_research_natural_coverage.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_natural_coverage.py",
+            "mode": "100644",
+            "bytes": 28265,
+            "git_blob_sha1": "d31fa44ae0cedb980f8aaa83c2253a68718e110d",
+            "sha256": "e3534219c7f0b6cb904ef5416591dd67cac5920d5793035ae830dd825a4ccbbf"
+          }
+        },
+        {
+          "path": "tools/research_natural_coverage.py",
+          "before": null,
+          "after": {
+            "path": "tools/research_natural_coverage.py",
+            "mode": "100644",
+            "bytes": 23229,
+            "git_blob_sha1": "728d9a64c8f2d11e4877422fb2e50d3e856be22f",
+            "sha256": "247a873701f7e423d01f4614b102b1a5a2b9fbf74439600f875b1129140247d0"
           }
         }
       ]
