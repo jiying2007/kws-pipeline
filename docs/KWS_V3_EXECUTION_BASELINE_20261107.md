@@ -1,131 +1,137 @@
-# KWS V3 execution baseline — 2026-11-07
+# KWS V3 execution baseline and first implementation — 2026-11-07
 
-## Purpose and scope
+This records the user-approved V3 research work, its inherited evidence and the
+actual first evaluation implementation. A plan, successful CI, or a label
+hash is not model training, independent acoustic success, or SSC305 evidence.
 
-This is the execution handoff for the V3 research plan. It records the verified starting point and the next bounded actions. It does not itself authorize a model invocation, admit data, or claim acoustic/SSC305 success.
+## Current scope and correction
 
-Scope: public `jiying2007/kws-data` and `jiying2007/kws-pipeline`; two Mandarin phrases only: `你好小窝` and `小窝小窝`. Research-only use. No Private repositories, no ChatGPT Work/Codex shared quota, no Scheduled/hourly polling.
+The active V3 lanes are **C1-CTC, pretrained FSMN-CTC, and the existing direct-KWS
+prototype**. RNN64 remains a low-cost reference where its evidence is applicable.
+Use one feasibility configuration/seed per eligible lane, then confirm at most
+two finalists with three declared seeds. These are research choices, not an
+unbounded sweep or permission to rerun consumed experiments.
 
-## Frozen starting identities
+The disabled October 10 architecture-only plan remains historical evidence.
+It does NOT override V3, reimpose its old eight-fit/1,000-update plan, require
+commercial/shipping files, demote direct-KWS from the user-approved research
+matrix, or require every C backend before acoustic screening. Its old results
+and source identity must not be rewritten. Every new V3 run still needs an
+exact, finite budget, authenticated inputs, split isolation and a real executor.
 
-- `kws-pipeline/main`: `f097f6667fb08fc16c4c0a4c7a3ee1518421f5f8`
-- `kws-data/main`: `d4c2a39e5c358bdd0770c8d2f8695898c0f54110`
-- Research runtime: CPython `3.12.16`, using the existing core/TTS/ASR role locks. Do not introduce a new Python compatibility matrix.
-- Current pipeline main CI run `42329708937`: success. The frozen-model FAR nightly `42312402130`: failure; preserve as a regression observation, not as a new-model result.
-- Existing open PRs #729 (pipeline) and #70 (data) are not presumed to be V3 blockers. Inspect their exact dependency before touching; do not duplicate or supersede their work without evidence.
+This corrects the previous revision of this document, which incorrectly made
+the old disabled plan a new prerequisite. It does not bypass existing data
+verification, source rights, queue ownership or mandatory repository checks.
 
-## Evidence already completed — reuse, do not repeat
+## Frozen inherited evidence
 
-1. Balanced first-64 C1 augmentation is completed and retained. It used 96 eligible train rows (52 old + 44 new), 34 development rows, 4 uncertain zero-loss rows, 2,000 optimizer steps / 8,000 draws, and 402 final observations. The checkpoint and paired evidence are retained.
-2. The fixed C1 3:1 old/new allocation experiment is completed and **not promoted**. Its change includes sampler composition/order as well as marginal quota; do not describe it as a pure 3:1 ratio ablation and do not repeat it.
-3. Saved C1 posterior diagnostics show residual K1 weaknesses at both “你” and “好”; they do not establish that a decoder change alone can recover all misses. Reuse saved tensors/logits; no duplicate forwards.
-4. Natural ASR evidence has 73 windows / 219 observations, 216 quality-usable observations, zero full-text quorum, zero known keyword-presence/absence labels under the frozen rule, and zero accepted natural-negative seconds. All 73 windows remain development. Reuse these observations; do not regenerate or relabel them as sealed test.
-5. The first synthetic 64-cell source batch and its ASR observations are already accounted for. Do not regenerate those 64 WAVs or repeat their completed ASR calls. Remaining 192 cells are not automatically authorized: first establish expected information gain, rights, source identity, and a bounded execution declaration.
-6. D2 unknown external-call history remains unknown. Never blindly replay unknown calls.
+- Pipeline main inspected: `f097f6667fb08fc16c4c0a4c7a3ee1518421f5f8`.
+- Data main inspected: `d4c2a39e5c358bdd0770c8d2f8695898c0f54110`.
+- Actual research runtime: existing CPython 3.12.16 and core/TTS/ASR role locks.
+  A different interpreter may run declared metadata-only regression tests but
+  cannot silently stand in for the pinned training/runtime environment.
+- Balanced64 C1 augmentation is completed: 96 eligible train rows, 34 development
+  rows, four uncertain zero-loss rows, 2,000 optimizer updates, 8,000 training
+  draws and 402 final observations. Reuse its actual checkpoint and observations.
+- The fixed old/new 3:1 sampler follow-up completed and was not promoted. Preserve
+  its negative decision; do not replay it or convert it into a quota sweep.
+- Saved C1 posterior diagnostics do not prove all K1 misses are decoder-only.
+- The 73 natural windows retain 219 observations (216 quality-usable), zero
+  frozen full-text quorum and zero accepted natural-negative seconds. They stay
+  development. Their existing TTS/ASR observations must not be repeated.
+- Historical D2 unknown calls stay unknown. Never automatically replay them.
+- The Local38 archive in data PR #70 is separate historical evidence, not the
+  balanced64 checkpoint. Its retention failure and runtime difference affect
+  that archive's use, not every other qualified V3 lane.
 
-## Corrected research matrix
+Exact existing reports: [balanced64 posterior](KWS_C1_POSTERIOR_20261106.md),
+[3:1 decision](KWS_C1_ALLOCATION_20261106.md),
+[C1 source allocation identity](research-c1-source-allocation.md), and the
+`kws-data/docs/NATURAL_ASR_EVIDENCE_20261107.md` record.
 
-The first three active model candidates must reuse existing code/assets, not create parallel frameworks:
+## Implemented in this change: per-keyword known-label scoring
 
-- Control: existing RNN64/CTC research baseline with exact checkpoint and vocabulary identity.
-- Candidate A: existing C1 causal encoder + CTC, using the completed balanced64 checkpoint as a retained comparator; any new training must have a distinct pre-registered hypothesis and new immutable experiment identity.
-- Candidate B: existing FSMN head/full-text CTC research path, with source/checkpoint/feature identities verified before execution.
-- Candidate C: existing direct-KWS prototype is a conditional challenger only. It requires valid event/window supervision and its own direct-event calibration; clip-presence labels must not be fabricated into event windows.
+`eval/score_keyword_presence.py` consumes explicit **development-only** labels
+for each of the two keywords: `present`, `absent`, or `unknown`. One word can be
+scored while the other remains unknown. It accepts named saved event streams
+from C1, FSMN, direct-KWS or another declared reference without imposing equal
+numeric thresholds or pretending their context is already comparable.
 
-Keep one heavy-model slot per shared host and the existing cross-repository lock. Do not start all models simultaneously on one constrained host. Start with one bounded feasibility run per eligible family, then retain at most two candidates for multi-seed confirmation. New BC-ResNet/CRNN architectures, loss sweeps, distillation and QAT are deferred until the current candidates identify a measured gap.
+It never derives labels from ASR non-detection, requested TTS text, forced
+alignment or vocabulary membership. It does not modify the natural full-text
+consumer, create a training manifest, establish independent truth, or promote a
+model. PCM/label hashes are recorded declarations, not authenticated evidence.
 
-## M0 — baseline and execution ledger
+The counts report known-positive hits/misses, known-negative clips/events,
+unknown clips/events and duplicate events separately. Repeated PCM recordings
+must be evaluated as separate conditions, not counted twice in one denominator.
+All-unknown inputs yield `UNSCORED`, not a zero-error PASS. There are no natural
+FAR/FRR, event timing, latency or automatic winner claims. Natural-negative
+exposure remains zero even for a declared absent-keyword clip.
 
-- [x] Verify both repositories are public and accessible.
-- [x] Pin the current main commits and active Python runtime.
-- [x] Record completed C1, 3:1 negative decision, natural 73-window result and frozen nightly failure.
-- [ ] Produce a single machine-readable V3 experiment ledger that references existing immutable artifacts; do not copy audio or duplicate registries.
-- [ ] Reconcile the current D1/D2 queue and local heavy-model lock from the execution owner. GitHub source alone cannot prove a private/local process is idle.
-- [ ] Confirm exact checkpoint, training-source hashes, admission receipts and available compute for each candidate.
+Reference JSONL has exactly these fields (digest strings are actual input
+identities, not the placeholder strings shown here):
 
-M0 is not complete until the owner-side queue/lock and exact checkpoint assets have been read back. A documentation merge alone does not complete M0.
+```json
+{"recording":"sample-a","duration_s":2.0,"pcm_sha256":"<actual PCM SHA-256>","label_evidence_sha256":"<actual label evidence SHA-256>","split":"development","keyword_states":{"1":"present","2":"unknown"}}
+```
 
-## M1 — labels and continuous-event evaluation
+The existing event format is retained:
 
-- [ ] Preserve the current full-text quorum consumer unchanged.
-- [ ] Implement a separately versioned keyword-presence evidence view; retain `present / absent / unknown`, source PCM binding, ASR quality and per-recognizer provenance. No quorum relaxation based solely on “all ASRs missed the phrase”.
-- [ ] Keep event timing as a separate label capability. CTC forced alignment/posterior alignment is diagnostic only unless independently validated against event annotations.
-- [ ] Validate the new label protocol on a small blinded, stratified audit set covering both complete phrases, ordinary negatives, near-homophones, incomplete prefixes, clipped speech and ASR-incomplete outputs.
-- [ ] Keep all 73 existing natural windows development-only. Any new audio window must be predeclared by source interval before recognition.
-- [ ] Use the existing event scorer for continuous event FAR/FRR. Clip-presence mode and event-window mode must not be mixed.
+```json
+{"recording":"sample-a","keyword_id":1,"time_s":1.0,"confidence":0.8}
+```
 
-M1 success means the new view has measured precision/coverage and explicit rejection reasons. It does not mean natural FAR is available until valid negative exposure exists.
+```sh
+python -I -S -B eval/score_keyword_presence.py \
+  --references /evidence/development-keywords.jsonl \
+  --events c1=/evidence/c1-events.jsonl \
+  --events fsmn=/evidence/fsmn-events.jsonl \
+  --events direct=/evidence/direct-events.jsonl \
+  --output /evidence/new-keyword-presence-report.json
+```
 
-## M2 — bounded parallel model experiments
+Use only streams actually produced by the named model and independently verify
+their model/source/audio/context identities. The scorer records input-file
+hashes and refuses output replacement. It cannot authenticate upstream labels
+or certify models by itself. Missing arms should be omitted, never fabricated.
 
-For each eligible family, freeze: source and data manifest hashes, group split, vocabulary, frontend, initial checkpoint, training objective, seed, sample order, optimizer, step/draw budget, checkpoint-selection rule, C runtime and evaluation protocol.
+Twenty-four new fictional-metadata regressions are integrated into the existing
+`test_existing_boundaries.py` suite, already executed by required CI and the
+existing offline quality-guard workflow in normal, `-O` and `-OO` modes. There
+is no added workflow, schedule, model fixture, ASR/TTS call or training job.
 
-- C1-CTC: no repeat of balanced64 or 3:1. New training requires a distinct evidence-backed hypothesis, such as a diagnosed label-quality or token-support change.
-- FSMN-CTC: verify the exact source weights and feature contract; train only on admitted rows; preserve old and new cohort metrics separately.
-- Direct-KWS: first prove event/window target validity and whole-vs-chunk state parity; otherwise keep it as software prototype only.
+## Execution order and dependency scope
 
-Use one seed for bounded feasibility. Only candidates with real retained checkpoints and valid evaluation proceed to three-seed confirmation. No mass architecture/threshold/weight sweep.
+1. Restore and verify the exact retained model/data assets available to the
+   selected executor. Existing qualified data may support research while a new
+   label protocol is being developed; the entire M1 audit is not a blanket
+   prerequisite for unrelated already-admitted inputs.
+2. Reconcile PID/lock/unknown status only for the host/campaign being resumed.
+   An inaccessible Dot host does not block source fixes or an independently
+   budgeted, isolated public-hosted task with verified inputs. It does prohibit
+   guessing that a Dot job is idle or stealing its task/lock.
+3. Run one genuinely new, preregistered experiment on the best-supported eligible
+   lane. Preserve old/new cohort and per-keyword outcomes. Conditional direct
+   training still requires valid window/event supervision and class coverage.
+4. Calibrate each viable system on calibration data; compare valid continuous
+   events under common external context and scoring rules. This new clip
+   diagnostic does not replace that continuous evaluator.
+5. Confirm at most two finalists, then export/quantize the supported candidate.
+   Complete clean-directory inference replay and explicitly declared retraining
+   reproduction before calling the research package reproducible.
+6. Independent human/final-AFE and physical SSC305 evidence stays `NOT_RUN`
+   until actually measured; absence blocks only the relevant verification claim.
 
-## M3 — candidate selection
+Use public repositories, existing authorized/free compute and the shared heavy
+slot on any shared host. No Private repositories, paid model APIs, Work/Codex
+shared quota, new hourly/Scheduled polling, or duplicate completed generation.
+Persist terminal evidence before advancing. Only an actual worker/job is
+`in_progress`; an immutable declaration without a worker is `queued`.
 
-Use a two-stage decision:
+## Completion accounting
 
-1. Validity gates: provenance, split isolation, numerical/runtime correctness, finite training, valid event semantics and resource feasibility.
-2. Quality comparison: per-keyword FRR at calibration-selected matched FAR operating points, valid continuous negative exposure and one-sided confidence bounds, latency distribution, subgroup support, memory/CPU cost.
-
-A candidate with insufficient independent exposure is `inconclusive`, not PASS. Do not use the sealed test set for iterative tuning. Preserve every negative result.
-
-## M4 — R1 engineering and independent research
-
-Only the selected development candidate proceeds to quantization/export and full C streaming implementation. Validate float C parity first, then INT8 separately, including chunk boundaries, discontinuity/reset, EOF, state persistence, event timestamps and worst-case processing time.
-
-Independent human/final-AFE evaluation and physical SSC305 evaluation remain separate evidence lanes. Until actually measured, statuses remain `NOT_RUN`. The research targets (per-word FRR, continuous FAR with confidence bound, latency, distance/accent/noise slices and board resource/soak) must be frozen before collection.
-
-## Event-driven orchestration rules
-
-- Advance only on a verified terminal receipt and exact input hashes.
-- Idempotency key: campaign + stage + input hash + recipe hash.
-- A completed stage is reused. A failed infrastructure attempt is retried only under its own bounded retry rule. An unknown external call is quarantined until reconciled.
-- Persist terminal evidence before enqueueing the next stage.
-- One heavy-model slot and shared lock across both repositories; record runner-minutes, wall time, CPU/RAM and model-load cost separately.
-- No new Scheduled/hourly polling. Use existing PR/push/workflow-dispatch and explicit stage-completion events; do not add an unbounded workflow_run chain.
-- Only an actual process/job may be marked `in_progress`; plan/preview/queue declaration remains `planned` or `queued`.
-
-## Immediate next actions
-
-1. Read the execution-owner's D1/D2 campaign manifests, terminal receipts, PIDs, locks and budget. This is required before any model launch.
-2. Read back the completed balanced64 checkpoint and 3:1 result manifests; verify their exact hashes and decision records.
-3. Inspect existing FSMN and direct-KWS model/data contracts and map each to the common event scorer. Do not train until actual-label admission and a compatible evaluation cohort are proven.
-4. Implement M1's new versioned keyword-presence view and blinded audit tests as a narrow PR; do not change the frozen full-text consumer or existing 73-window roles.
-5. After M1 and M0 owner-side gates pass, launch one bounded feasibility experiment on the best-supported eligible candidate; then schedule the next family through the shared heavy-model slot.
-
-## Status vocabulary
-
-- `planned`: no execution declaration yet.
-- `queued`: immutable declaration exists; no worker has started.
-- `in_progress`: worker/process identity and start receipt verified.
-- `completed`: terminal receipt, outputs and hashes independently read back.
-- `failed`: terminal failure retained with classification.
-- `unknown`: invocation may have occurred; do not retry until reconciled.
-- `NOT_RUN`: external/physical evidence not collected.
-
-No row may be promoted based on a PR merge, CI pass, generated clip count, ASR call count, or successful preparation alone.
-
-
-## V3 correction after candidate-plan audit — 2026-11-07
-
-The repository already contains a more specific disabled architecture-comparison contract at `configs/research/parallel-candidate-screen-2026-10-10.json` and its validator `tools/validate_parallel_candidate_plan.py`. This V3 ledger does not supersede or activate that plan. Before any candidate execution, reconcile its exact source pins, candidate contracts, resource ceilings, seed IDs, and data-admission requirements with current main.
-
-The existing plan's three architecture slots are:
-
-1. RNN64 matched-control, retrained on the same newly admitted data (the archived self-trained Local38 checkpoint is not a matched training control).
-2. Reduced causal depthwise-temporal TCN + CTC primary challenger; its reduced-width 32-bin cache adapter, chunk equivalence and C export are not yet established.
-3. Bounded zero-lookahead FSMN + CTC conditional challenger; it is not an automatically admitted third arm and requires all layers/frontend to be causal.
-
-The Direct-KWS prototype is a separate later objective/head experiment, not a substitute for the third architecture slot and not yet eligible for three-class/continuous-event ranking. It requires actual rights-bound labels, suitable window/event semantics, complete class coverage, and route-specific calibration at matched FAR. Keep it conditional until those conditions are proven.
-
-The plan explicitly caps screening at three arms × two seeds, at most six fits, and confirmation at one challenger × one fresh seed, for at most eight fits total; per-fit optimizer updates are capped at 1,000. Its execution remains disabled because data admission, exact hashes, compute/RSS limits, convergence review, seed IDs and preregistration are incomplete. Do not silently replace its 1,000-update cap with a 2,000-step C1 recipe or claim the budgets are equivalent. Any future superseding plan must preserve the no-sweep, group-isolation, no-cherry-picking and inconclusive/unknown verdict rules.
-
-The archived Local38 RNN64/C1 checkpoints in kws-data PR #70 are useful historical research assets, but the PR's saved-public-evidence check currently fails because its retained-file inventory does not match the branch Git tree. The checkpoint card also records Python 3.12.14 / Torch 2.15.0+cpu, which differs from current pipeline Python 3.12.16 / Torch 2.13.0+cpu. Do not merge, promote, or use these archives as canonical current-runtime inputs until the inventory failure is fixed and exact loading/parity is verified under the current pinned runtime. Preserve their bytes and historical evidence.
-
-The direct keyword evidence v2 must not be implemented by merely loosening the current natural full-text quorum. The current natural consumer intentionally requires complete usable transcripts before projecting keyword labels and explicitly keeps acoustic presence unknown, event times null, natural FAR unavailable, and training admission false. A new keyword-level protocol needs its own frozen schema, actual same-PCM recognizer bindings, independent blinded acoustic audit, source-family isolation, and explicit `present/absent/unknown` semantics. The 73 existing windows remain development-only and are not a fresh independent audit set.
+This change implements a scoring capability and regression tests. It does not
+claim M0 asset recovery, blinded M1 label validation, new training, a selected R1,
+canonical-runtime loading of Local38, natural FAR, or physical-board success.
+Those require their own real terminal receipts and retained outputs.
