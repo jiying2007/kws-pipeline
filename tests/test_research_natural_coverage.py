@@ -401,6 +401,50 @@ class CoverageTests(unittest.TestCase):
                 self.assertRaisesRegex(ValueError, "PREPARATION_SOURCE_CHANGED"):
             c.summarize(self.request([historical]))
 
+    def test_partial_clone_missing_blobs_are_rejected_without_lazy_fetch(self):
+        historical = self.historical_bundle()
+        spec = historical["preparation_verifier"]
+        origin = Path(spec["git_repository"])
+        environment = dict(c.os.environ, GIT_ALLOW_PROTOCOL="file", GIT_NO_REPLACE_OBJECTS="1")
+
+        def git(repository, *args, check=True):
+            return c.subprocess.run(["git", "--no-pager", "-C", str(repository), *args],
+                capture_output=True, env=environment, timeout=20, check=check)
+
+        git(origin, "config", "uploadpack.allowFilter", "true")
+        name = "tools/prepare_natural_asr_windows.py"
+        oid = git(origin, "rev-parse", spec["git_commit"] + ":" + name).stdout.strip().decode()
+        clones = [self.root / "guarded-partial", self.root / "old-unguarded-partial"]
+        for clone in clones:
+            git(self.root, "clone", "--quiet", "--filter=blob:none", "--no-checkout", origin.as_uri(), str(clone))
+            self.assertEqual(git(clone, "config", "--get", "remote.origin.promisor").stdout.strip(), b"true")
+            self.assertEqual(git(clone, "config", "--get", "remote.origin.partialclonefilter").stdout.strip(), b"blob:none")
+            self.assertNotEqual(git(clone, "--no-lazy-fetch", "cat-file", "-e", oid, check=False).returncode, 0)
+        guarded, control = clones
+        objects = guarded / ".git/objects"
+        before = {p.relative_to(objects).as_posix(): c.q.file_record(p)
+                  for p in objects.rglob("*") if p.is_file()}
+        changed = copy.deepcopy(historical)
+        changed["preparation_verifier"]["git_repository"] = str(guarded)
+        with mock.patch.dict(c.os.environ, environment, clear=True), \
+                self.assertRaisesRegex(ValueError, "PREPARATION_GIT_SOURCE_(CHANGED|UNAVAILABLE)"):
+            c.summarize(self.request([changed]))
+        after = {p.relative_to(objects).as_posix(): c.q.file_record(p)
+                 for p in objects.rglob("*") if p.is_file()}
+        self.assertEqual(before, after)
+        self.assertNotEqual(git(guarded, "--no-lazy-fetch", "cat-file", "-e", oid, check=False).returncode, 0)
+        # Control: the old plain cat-file invocation fetches the absent blob from
+        # this same local file:// origin. No external protocol is permitted.
+        fetched = git(control, "cat-file", "blob", spec["git_commit"] + ":" + name)
+        self.assertEqual(fetched.stdout, (origin / name).read_bytes())
+        self.assertEqual(git(control, "--no-lazy-fetch", "cat-file", "-e", oid).returncode, 0)
+        print(json.dumps({"schema": "kws-natural-git-offline-counterexample-v1",
+            "transport_allowed": "file", "partial_clone_filter": "blob:none", "checkout": False,
+            "initial_blob_absent_in_both_clones": True, "guarded_verifier_rejected": True,
+            "guarded_object_store_unchanged": before == after, "guarded_blob_still_absent": True,
+            "old_plain_cat_file_fetched_exact_blob": True, "blob_sha256": c.q.sha(fetched.stdout),
+            "guarded_object_files_before": before, "guarded_object_files_after": after}, sort_keys=True))
+
 
 if __name__ == "__main__":
     unittest.main()

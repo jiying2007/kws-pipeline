@@ -233,7 +233,7 @@ def preparation_source_checks(spec, binding, *, verify_git=True):
         environment = os.environ.copy(); environment["GIT_NO_REPLACE_OBJECTS"] = "1"
         queries = b"".join((spec["git_commit"] + ":" + name + "\n").encode() for name in sorted(expected))
         try:
-            result = subprocess.run(["git", "--no-pager", "-C", str(git_repository), "cat-file", "--batch"],
+            result = subprocess.run(["git", "--no-pager", "--no-lazy-fetch", "-C", str(git_repository), "cat-file", "--batch"],
                 input=queries, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment,
                 timeout=20, check=False)
         except subprocess.TimeoutExpired as error:
