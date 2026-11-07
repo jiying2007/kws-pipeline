@@ -1,0 +1,698 @@
+{
+  "authorship": "Root assistant aggregate with independent pipeline, data and runtime agents; no human annotation claimed.",
+  "boundary": {
+    "accepted_negative_seconds": 0,
+    "acoustic_target_presence": "unknown",
+    "acoustic_verbatim_completeness": "unknown",
+    "human_gold": false,
+    "independent_test": false,
+    "natural_far_established": false,
+    "new_generation_calls": 0,
+    "new_kws_model_forwards": 0,
+    "optimizer_steps": 0,
+    "physical_ssc305_measurements": false,
+    "previous_3_to_1_candidate_failure_revised": false,
+    "speaker_independence": "not_established",
+    "training_admitted": false,
+    "training_role_windows": 0,
+    "word_event_times": null
+  },
+  "coverage": {
+    "duration_scope": "Union of half-open sample intervals within each parent PCM; repeated ASR/model/keyword observations add no audio duration.",
+    "new64": {
+      "overlap_samples": 2560000,
+      "overlap_seconds": 160,
+      "unique_parent_samples": 28160000,
+      "unique_parent_seconds": 1760,
+      "window_input_samples": 30720000,
+      "window_input_seconds": 1920,
+      "windows": 64
+    },
+    "observed": {
+      "overlap_samples": 2640000,
+      "overlap_seconds": 165.0,
+      "sample_rate_hz": 16000,
+      "unique_parent_samples": 32366352,
+      "unique_parent_seconds": 2022.897,
+      "window_input_samples": 35006352,
+      "window_input_seconds": 2187.897,
+      "windows": 73
+    },
+    "observed_by_parent": [
+      {
+        "dataset_id": "openslr119-alimeeting",
+        "overlap_samples": 400000,
+        "parent_pcm_sha256": "9557fb6c4289d5884209a1036ed4f1d4bf91ac4d42702a261d023bb22969981e",
+        "sample_rate_hz": 16000,
+        "session_id": "R8001_M8004",
+        "source_family_id": "alimeeting-session-R8001_M8004",
+        "split": "development",
+        "union_sample_ranges": [
+          [
+            4860320,
+            5740320
+          ],
+          [
+            9720640,
+            10600640
+          ],
+          [
+            14580960,
+            15460960
+          ],
+          [
+            19441280,
+            20321280
+          ],
+          [
+            24335248,
+            25181600
+          ]
+        ],
+        "unique_parent_samples": 4366352,
+        "window_input_samples": 4766352,
+        "windows": 10
+      },
+      {
+        "dataset_id": "openslr119-alimeeting",
+        "overlap_samples": 320000,
+        "parent_pcm_sha256": "76d9a668e985e2f42e83f0ad8f100a433250dcf7e085a2b12201841fe07c21be",
+        "sample_rate_hz": 16000,
+        "session_id": "R8003_M8001",
+        "source_family_id": "alimeeting-session-R8003_M8001",
+        "split": "development",
+        "union_sample_ranges": [
+          [
+            6441600,
+            7321600
+          ],
+          [
+            12883200,
+            13763200
+          ],
+          [
+            19324800,
+            20204800
+          ],
+          [
+            25766400,
+            26646400
+          ],
+          [
+            32608000,
+            33088000
+          ]
+        ],
+        "unique_parent_samples": 4000000,
+        "window_input_samples": 4320000,
+        "windows": 9
+      },
+      {
+        "dataset_id": "openslr119-alimeeting",
+        "overlap_samples": 320000,
+        "parent_pcm_sha256": "8e7eb2648ff392f86abe352655f25b338f2b618b6ea6e011037418c27ef68389",
+        "sample_rate_hz": 16000,
+        "session_id": "R8007_M8010",
+        "source_family_id": "alimeeting-session-R8007_M8010",
+        "split": "development",
+        "union_sample_ranges": [
+          [
+            5764230,
+            6644230
+          ],
+          [
+            11528460,
+            12408460
+          ],
+          [
+            17292690,
+            18172690
+          ],
+          [
+            23056920,
+            23936920
+          ],
+          [
+            29221151,
+            29701151
+          ]
+        ],
+        "unique_parent_samples": 4000000,
+        "window_input_samples": 4320000,
+        "windows": 9
+      },
+      {
+        "dataset_id": "openslr119-alimeeting",
+        "overlap_samples": 320000,
+        "parent_pcm_sha256": "783167fa36feabe00d2f761636d1b6c95b2251f65bd4e9d2c8bdecb75bdd4943",
+        "sample_rate_hz": 16000,
+        "session_id": "R8007_M8011",
+        "source_family_id": "alimeeting-session-R8007_M8011",
+        "split": "development",
+        "union_sample_ranges": [
+          [
+            5780947,
+            6660947
+          ],
+          [
+            11561894,
+            12441894
+          ],
+          [
+            17342841,
+            18222841
+          ],
+          [
+            23123788,
+            24003788
+          ],
+          [
+            29304736,
+            29784736
+          ]
+        ],
+        "unique_parent_samples": 4000000,
+        "window_input_samples": 4320000,
+        "windows": 9
+      },
+      {
+        "dataset_id": "openslr119-alimeeting",
+        "overlap_samples": 320000,
+        "parent_pcm_sha256": "dde949cef1b1ad51355f777fa88931b2305d4bac504dc1896f11e47d30454aac",
+        "sample_rate_hz": 16000,
+        "session_id": "R8008_M8013",
+        "source_family_id": "alimeeting-session-R8008_M8013",
+        "split": "development",
+        "union_sample_ranges": [
+          [
+            6990305,
+            7870305
+          ],
+          [
+            13980611,
+            14860611
+          ],
+          [
+            20970916,
+            21850916
+          ],
+          [
+            27961222,
+            28841222
+          ],
+          [
+            35351528,
+            35831528
+          ]
+        ],
+        "unique_parent_samples": 4000000,
+        "window_input_samples": 4320000,
+        "windows": 9
+      },
+      {
+        "dataset_id": "openslr119-alimeeting",
+        "overlap_samples": 320000,
+        "parent_pcm_sha256": "f6f7f9b2fdaba90887d7949065163ad30dd66b7d933acd76299e16e26e87b47e",
+        "sample_rate_hz": 16000,
+        "session_id": "R8009_M8018",
+        "source_family_id": "alimeeting-session-R8009_M8018",
+        "split": "development",
+        "union_sample_ranges": [
+          [
+            5118902,
+            5998902
+          ],
+          [
+            10237804,
+            11117804
+          ],
+          [
+            15356707,
+            16236707
+          ],
+          [
+            20475609,
+            21355609
+          ],
+          [
+            25994512,
+            26474512
+          ]
+        ],
+        "unique_parent_samples": 4000000,
+        "window_input_samples": 4320000,
+        "windows": 9
+      },
+      {
+        "dataset_id": "openslr119-alimeeting",
+        "overlap_samples": 320000,
+        "parent_pcm_sha256": "96945e3a198855c728e3f12b282dff14db547d6e91bd4edeb822f096aee28442",
+        "sample_rate_hz": 16000,
+        "session_id": "R8009_M8019",
+        "source_family_id": "alimeeting-session-R8009_M8019",
+        "split": "development",
+        "union_sample_ranges": [
+          [
+            6140563,
+            7020563
+          ],
+          [
+            12281126,
+            13161126
+          ],
+          [
+            18421689,
+            19301689
+          ],
+          [
+            24562252,
+            25442252
+          ],
+          [
+            31102816,
+            31582816
+          ]
+        ],
+        "unique_parent_samples": 4000000,
+        "window_input_samples": 4320000,
+        "windows": 9
+      },
+      {
+        "dataset_id": "openslr119-alimeeting",
+        "overlap_samples": 320000,
+        "parent_pcm_sha256": "619d19a55238c767d51ac19c6c9ccdcf52bd9bdf774f6a1788a58d272347109d",
+        "sample_rate_hz": 16000,
+        "session_id": "R8009_M8020",
+        "source_family_id": "alimeeting-session-R8009_M8020",
+        "split": "development",
+        "union_sample_ranges": [
+          [
+            5937419,
+            6817419
+          ],
+          [
+            11874838,
+            12754838
+          ],
+          [
+            17812258,
+            18692258
+          ],
+          [
+            23749677,
+            24629677
+          ],
+          [
+            30087097,
+            30567097
+          ]
+        ],
+        "unique_parent_samples": 4000000,
+        "window_input_samples": 4320000,
+        "windows": 9
+      }
+    ],
+    "old9": {
+      "overlap_samples": 80000,
+      "overlap_seconds": 5,
+      "unique_parent_samples": 4206352,
+      "unique_parent_seconds": 262.897,
+      "window_input_samples": 4286352,
+      "window_input_seconds": 267.897,
+      "windows": 9
+    },
+    "prepared": {
+      "overlap_samples": 2640000,
+      "overlap_seconds": 165.0,
+      "sample_rate_hz": 16000,
+      "unique_parent_samples": 32366352,
+      "unique_parent_seconds": 2022.897,
+      "window_input_samples": 35006352,
+      "window_input_seconds": 2187.897,
+      "windows": 73
+    },
+    "prepared_only_windows": 0,
+    "weak_fulltext_quorum": {
+      "overlap_samples": 0,
+      "overlap_seconds": 0.0,
+      "sample_rate_hz": 16000,
+      "unique_parent_samples": 0,
+      "unique_parent_seconds": 0.0,
+      "window_input_samples": 0,
+      "window_input_seconds": 0.0,
+      "windows": 0
+    }
+  },
+  "coverage_replay": {
+    "changed_directory_rosters": [],
+    "changed_files": [],
+    "current_preparation_verifiers": 16,
+    "files_unchanged": 2576,
+    "historical_preparation_verifiers": 3,
+    "new_model_calls": 0,
+    "new_seals": 0,
+    "new_training_runs": 0,
+    "source_sha256": "247a873701f7e423d01f4614b102b1a5a2b9fbf74439600f875b1129140247d0"
+  },
+  "evidence": {
+    "contract_receipts": {
+      "artifact": "pipeline-audit/coverage-checks-005/receipts.json",
+      "bytes": 2127,
+      "sha256": "69afc2947e2d7ebec0feb514bc93b4a00ecb91b8f69b1ba06f486f7a35d9525b"
+    },
+    "coverage_checks": {
+      "artifact": "pipeline-audit/final-coverage-integration-001/checked-result.json",
+      "bytes": 3052,
+      "sha256": "e55a2e6ae90eb75d979ce9f3dd8cea62f197243b41590b3d0ade7611fcbbcba9"
+    },
+    "coverage_inputs_after": {
+      "artifact": "pipeline-audit/final-coverage-integration-001/inputs-after.json",
+      "bytes": 780592,
+      "sha256": "293b2f60a284599c44738410b88801dd3b2ef8da39e449bd05228d953c543078"
+    },
+    "coverage_inputs_before": {
+      "artifact": "pipeline-audit/final-coverage-integration-001/inputs-before.json",
+      "bytes": 780592,
+      "sha256": "293b2f60a284599c44738410b88801dd3b2ef8da39e449bd05228d953c543078"
+    },
+    "coverage_outer_receipt": {
+      "artifact": "pipeline-audit/final-coverage-integration-001-execution/receipt.json",
+      "bytes": 1067,
+      "sha256": "197511cd3bb5ad6a5f74c16dc5bf668f6eedf59b2cfd55a06613353a9fd97acd"
+    },
+    "coverage_replay": {
+      "artifact": "pipeline-audit/final-coverage-integration-001/replay-record.json",
+      "bytes": 2202,
+      "sha256": "efcdeefb031eaca20a1e09a77930129d70321e8233775a20f20c8841af03eb0a"
+    },
+    "coverage_report": {
+      "artifact": "pipeline-audit/final-coverage-integration-001/coverage-report.json",
+      "bytes": 28311,
+      "sha256": "8609d10420ee45404b5295a7e28da42dee3a10d8825e82356cece263f9e1a542"
+    },
+    "coverage_request": {
+      "artifact": "pipeline-audit/final-coverage-integration-001/request.json",
+      "bytes": 12879,
+      "sha256": "0aa50ae3320c66b370ce8cecbcb90cd34ddb45eff8f57fbcf788524bb117a12c"
+    },
+    "execution_audit": {
+      "artifact": "pipeline-audit/natural64-independent-final-001.json",
+      "bytes": 426196,
+      "sha256": "f807abff62645d7c94e0c534dd405f617edc26337ce9872dcdd4e8d1adc02c63"
+    },
+    "execution_audit_receipt": {
+      "artifact": "pipeline-audit/natural64-independent-final-001-execution/receipt.json",
+      "bytes": 1068,
+      "sha256": "488284e82e183bee6b9ba00e8464cb558ee0e84ded1477ed4e13ae7b71e553e8"
+    },
+    "executor_save_graph": {
+      "artifact": "natural64/executor-evidence/persistent-save-graph.json",
+      "bytes": 121942,
+      "sha256": "7eb76a5401e47a0700052c91287c4402e2ecbdbd7fc7d709da034d73a9135160"
+    },
+    "fixed_plan": {
+      "artifact": "pipeline-audit/fixed-pair-plan-001/plan.json",
+      "bytes": 7454,
+      "sha256": "3c98cd0b6e8ba55665e36b35d00eb12cb3e016dc91d7ed4cffb599068f8675d6"
+    },
+    "restoration_proof": {
+      "artifact": "data-audit/recovery/final-real-restoration-proof-001.json",
+      "bytes": 1158738,
+      "sha256": "bf0a52b684e7b8a1f1bad2498a8ccd0124e26a2a57022d2b6d71f0cefef05ae0"
+    },
+    "restoration_save": {
+      "artifact": "state/data-recovery-save.json",
+      "bytes": 942,
+      "sha256": "ab0f322db25adae373859c6ce47dad739159ef98c16ff435016f157159e8a4e6"
+    },
+    "source_recovery_map": {
+      "artifact": "pipeline-audit/source-recovery-map-final-002.json",
+      "bytes": 38296,
+      "sha256": "ffb12a068cada6f03e405dc48b0e9ef726845c8dddf1bab3013a67891151e605"
+    },
+    "view_manifest": {
+      "artifact": "data-audit/natural73-final-view-001/MANIFEST.json",
+      "bytes": 200142,
+      "sha256": "5dcf033a1c1897e8dfb387b5a3c520aeb8a4df3b30d9a7d24e55c6e16bdbaf03"
+    },
+    "view_report": {
+      "artifact": "data-audit/natural73-final-view-001/report.json",
+      "bytes": 1038670,
+      "sha256": "d3a108c7cc8c0335cb5700ff2d617252cba6083a8df9c92fa4e04bf476a0d05d"
+    }
+  },
+  "execution": {
+    "automatic_retries": 0,
+    "completed_generic_jobs": 16,
+    "completed_native_jobs": 16,
+    "cooperative_lock_evidence": "Pinned worker source and inherited/supervised common-lock receipts; no separately retained historical fd/inode or whole-host scheduler trace.",
+    "distinct_preparation_intent_terminal_graph_save_ids": 50,
+    "effective_interop_threads": 1,
+    "effective_threads": 4,
+    "failed_jobs": 0,
+    "heavy_model_concurrency": 1,
+    "independent_audit_unchanged_files": 1552,
+    "model_workers": 48,
+    "new_recognition_calls": 192,
+    "nonoverlapping_adjacent_batches": 15,
+    "old_recognition_calls_reexecuted": 0,
+    "outer_gap_seconds_max": 164.691268,
+    "outer_gap_seconds_min": 24.053267,
+    "reused_old_native_observations": 27,
+    "same_boot_monotonic_adjacencies": 15,
+    "timed_out_jobs": 0,
+    "unknown_generic_terminals": 0
+  },
+  "native_statistics": {
+    "combined73": {
+      "decision_reasons": {
+        "no_full_transcript_quorum": 70,
+        "three_clean_nonempty_observations_required": 3
+      },
+      "development_windows": 73,
+      "keywords": [
+        {
+          "keyword": "你好小窝",
+          "machine_weak_absent": 0,
+          "machine_weak_present": 0,
+          "masked_unknown": 73
+        },
+        {
+          "keyword": "小窝小窝",
+          "machine_weak_absent": 0,
+          "machine_weak_present": 0,
+          "masked_unknown": 73
+        }
+      ],
+      "machine_weak_three": 0,
+      "machine_weak_two": 0,
+      "uncertain_windows": 73,
+      "unusable_native_observations": 3,
+      "usable_native_observations": 216,
+      "verified_native_observations": 219,
+      "windows": 73
+    },
+    "new64": {
+      "decision_reasons": {
+        "no_full_transcript_quorum": 62,
+        "three_clean_nonempty_observations_required": 2
+      },
+      "development_windows": 64,
+      "keywords": [
+        {
+          "keyword": "你好小窝",
+          "machine_weak_absent": 0,
+          "machine_weak_present": 0,
+          "masked_unknown": 64
+        },
+        {
+          "keyword": "小窝小窝",
+          "machine_weak_absent": 0,
+          "machine_weak_present": 0,
+          "masked_unknown": 64
+        }
+      ],
+      "machine_weak_three": 0,
+      "machine_weak_two": 0,
+      "uncertain_windows": 64,
+      "unusable_native_observations": 2,
+      "usable_native_observations": 190,
+      "verified_native_observations": 192,
+      "windows": 64
+    },
+    "old9": {
+      "decision_reasons": {
+        "no_full_transcript_quorum": 8,
+        "three_clean_nonempty_observations_required": 1
+      },
+      "development_windows": 9,
+      "keywords": [
+        {
+          "keyword": "你好小窝",
+          "machine_weak_absent": 0,
+          "machine_weak_present": 0,
+          "masked_unknown": 9
+        },
+        {
+          "keyword": "小窝小窝",
+          "machine_weak_absent": 0,
+          "machine_weak_present": 0,
+          "masked_unknown": 9
+        }
+      ],
+      "machine_weak_three": 0,
+      "machine_weak_two": 0,
+      "uncertain_windows": 9,
+      "unusable_native_observations": 1,
+      "usable_native_observations": 26,
+      "verified_native_observations": 27,
+      "windows": 9
+    }
+  },
+  "recorded_at_utc": "2026-11-07T01:46:20.724280+00:00",
+  "research_decision": "Retain all 73 development windows as masked unknown; do not infer negative labels or empty CTC targets from absent keyword strings. Prioritize source-bound word/keyword evidence before any natural-label training consumer or FAR denominator.",
+  "restoration": {
+    "all_restored_nlink_one": true,
+    "existing_capsules_reused": 36,
+    "existing_capsules_unchanged": true,
+    "files_by_source": {
+      "capsule": 1634,
+      "empty": 34,
+      "git": 87,
+      "new-payload": 110
+    },
+    "git_lazy_fetch_disabled": true,
+    "saved_new_package_independently_redownloaded": false,
+    "model_calls": 0,
+    "network_fetches": 0,
+    "original_views_unchanged": true,
+    "restored_bytes": 405306517,
+    "restored_files": 1865,
+    "saved_package": {
+      "bytes": 689769,
+      "library_file_id": "libfile_03ee0e970054819197c1e8a2e8845089",
+      "sha256": "7db87506a42d1af3c93f3eb2628fd8f41d666fe2dc862e91f3f75f44c780d64c",
+      "version": 0
+    },
+    "verified_views": 4
+  },
+  "schema": "kws-natural73-observed-coverage-stage-v1",
+  "selection": {
+    "adaptive_relocation": false,
+    "all_windows_role": "development",
+    "anchor": "floor((N-880000)*i/5)",
+    "first_window": "[anchor,anchor+480000)",
+    "indices": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "new_windows": 64,
+    "overlap_with_old9_samples": 0,
+    "parents": 8,
+    "sample_rate_hz": 16000,
+    "second_window": "[anchor+400000,anchor+880000)",
+    "selection_uses_recognition_outputs": false,
+    "shards": 16,
+    "window_seconds": 30,
+    "windows_per_shard": 4,
+    "within_pair_overlap_seconds": 5
+  },
+  "source_archive_ref": {
+    "actual_head_sha": null,
+    "creation_result_in_this_record": "not-yet-bound",
+    "ref": "refs/heads/archive/natural-coverage-source-20261107",
+    "role": "Retain original source-chain commits across squash merge; actual ref/head is bound by the root final Git receipt."
+  },
+  "source_commits": {
+    "data_view_producer": "f4b3931545a7e0a17f75cad56b9c74a171276f90",
+    "final_offline_consumer": "a99fb5e9e572f73aff444d0955795b373e09dfd5",
+    "fixed_planner": "ce1f42e5e3a0fe5aef325a0599aba84df5e62b89",
+    "historical_preparation": "6f33a837896c38830e4de3a8a3be2e0c65669557",
+    "previous_23_case_consumer": "94a7186275e591b4afa447ca68e0b5f1cb8afca6",
+    "tail9_original_successful_consumer": "f1b9c331bace29bf3524279e15adc3910335d8d7"
+  },
+  "source_contract_validation": {
+    "cases_per_mode": 24,
+    "checks003_full_intermediate_source_retained": false,
+    "modes": [
+      {
+        "elapsed_ns": 2429085681,
+        "mode": "normal",
+        "returncode": 0
+      },
+      {
+        "elapsed_ns": 2639767455,
+        "mode": "O",
+        "returncode": 0
+      },
+      {
+        "elapsed_ns": 2546045805,
+        "mode": "OO",
+        "returncode": 0
+      }
+    ],
+    "partial_clone_counterexample": "Local file-only blob:none/no-checkout clones: old plain cat-file fetched a missing blob; guarded verifier rejected with an unchanged object-store roster/hash and the blob still absent.",
+    "previous_23_case_source_and_receipts_retained": true,
+    "python": "3.12.16"
+  },
+  "status": "observations-complete-readonly-coverage-passed-no-weak-label-admission",
+  "timing": {
+    "coverage_child_seconds_nested_in_outer": 15.921633705,
+    "final_contract_test_seconds": 7.614898941,
+    "final_coverage_replay_outer_seconds": 18.320055018,
+    "final_whole_stage_budget_minutes": null,
+    "independent_execution_audit_outer_seconds": 2.321481072,
+    "natural_queue_limit_minutes": 180,
+    "nested_durations_charged_twice": false,
+    "observed_asr_outer_seconds_already_accounted": 3721.912091,
+    "observed_generic_job_seconds_nested_in_asr_outer": 3719.343429454,
+    "stage_limit_runner_minutes": 480,
+    "whole_stage_budget_scope": "Root accounts all actual outer commands, separate persistence-service time and actual CI jobs; final total is recorded separately."
+  },
+  "unusable_native_observations": [
+    {
+      "batch_id": "tail2",
+      "clip_id": "clip-000",
+      "decoder_terminated": false,
+      "model": "whisper",
+      "quality_flags": [
+        "incomplete"
+      ]
+    },
+    {
+      "batch_id": "natural64-005",
+      "clip_id": "clip-003",
+      "decoder_terminated": false,
+      "model": "whisper",
+      "quality_flags": [
+        "incomplete"
+      ]
+    },
+    {
+      "batch_id": "natural64-013",
+      "clip_id": "clip-001",
+      "decoder_terminated": false,
+      "model": "whisper",
+      "quality_flags": [
+        "incomplete"
+      ]
+    }
+  ],
+  "weak_label_rule": {
+    "exactly_two_clean_equal_full_transcripts_and_three_literal_keyword_vectors_equal_weight": 0.5,
+    "ordered_nonliteral_paths": "diagnostic-only",
+    "other_ctc_mask": false,
+    "other_ctc_weight": 0,
+    "other_keyword_masks": [
+      false,
+      false
+    ],
+    "other_keyword_targets": [
+      null,
+      null
+    ],
+    "three_clean_equal_full_transcripts_weight": 1.0
+  }
+}

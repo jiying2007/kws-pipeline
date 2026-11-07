@@ -103,6 +103,7 @@ the separate model-smoke validation status.
 - [`active_asr_batch.py`](active_asr_batch.py) — Bind existing audio and resume a bounded private ASR batch without repeating completed calls.
 - [`active_asr_selective.py`](active_asr_selective.py) — Run two audio-only primary recognizers and the predeclared selective Whisper audit with explicit unrequested observations.
 - [`prepare_natural_asr_windows.py`](prepare_natural_asr_windows.py) — Prepare and recheck declared natural-recording sample windows with full parent identities and overlap-aware coverage; see the [natural window input guide](../docs/research-natural-asr-windows.md).
+- [`research_natural_coverage.py`](research_natural_coverage.py) — Freeze deterministic natural windows and summarize prepared, observed and transcript-quorum coverage by parent PCM sample union; see the [natural coverage guide](../docs/research-natural-coverage.md).
 - [`active_tts_expand.py`](active_tts_expand.py) — Continue the frozen D1 roster in bounded jobs while retaining raw failures and preventing repeated generation calls.
 - [`active_tts_continuation.py`](active_tts_continuation.py) — Continue only never-claimed cells after a preserved timeout, pause for verified recognition, and keep returned audio separate from consumed unknown calls.
 - [`research_tts_partial.py`](research_tts_partial.py) — Verify the original timed-out generation job in its exact isolated source environment without a model call.

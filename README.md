@@ -13,6 +13,8 @@
 
 Research: [reusable modules, retained results and independent evidence boundaries](research/README.md)
 
+2026-11-07 natural coverage: [64 new windows and complete 73-window replay](docs/KWS_NATURAL_COVERAGE_20261107.md) and [execution summary](research/natural-coverage-20261107/execution-summary.json). All 192 new native observations are preserved; the 73-window parent-PCM union is 2,022.897 seconds. Frozen full-text quorum yields zero weak-label candidates, so both keywords retain 73 masked unknowns and accepted natural negative time remains zero.
+
 Saved-output follow-up: [264-condition CTC results](docs/KWS_SAVED_CTC264_20261106.md) and [aggregate execution index](research/saved-ctc264-20261106/execution-index.json). The completed calculation and audit add no model forward or optimizer update; posthoc conditional alignment is not acoustic or decoder correctness evidence.
 
 2026-11-06 continuation: [current integration state](docs/KWS_CONTINUATION_ACCEPTANCE_20261106.md), [completed context52/tail7 results](docs/KWS_CONTEXT52_TAIL7_20261106.md) and [execution index](research/context52-tail7-20261106/execution-index.json). The fixed training and development observations retain their weak-label and exposed-development scope.
