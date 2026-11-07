@@ -117,13 +117,14 @@ class R1StreamSourceContracts(unittest.TestCase):
 
     def test_optin_numeric_source_contracts(self):
         spec = importlib.util.spec_from_file_location(
-            "r1_numeric_source_tests", self.root / "tests/test_r1_numeric_sources.py")
+            "r1_numeric_source_tests", self.root / "research/r1_stream_c/numeric_source_contracts.py")
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         suite = unittest.defaultTestLoader.loadTestsFromTestCase(module.NumericSourceContracts)
         result = unittest.TestResult()
         suite.run(result)
         self.assertEqual(result.testsRun, 13)
+        self.assertFalse(result.skipped)
         self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
 
 

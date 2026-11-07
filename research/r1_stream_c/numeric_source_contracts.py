@@ -1,4 +1,8 @@
-"""Read-only-base numerical source contracts: no trained weights or inference."""
+"""Read-only-base numerical source contracts, executed by the main stream suite.
+
+This component suite is imported by tests/test_research_fsmn_stream.py; it is
+not a separate top-level CI entry. No trained weights or model inference.
+"""
 import hashlib
 import importlib.util
 import os
@@ -9,7 +13,7 @@ import unittest
 
 class NumericSourceContracts(unittest.TestCase):
     def setUp(self):
-        self.repo = Path(__file__).resolve().parents[1]
+        self.repo = Path(__file__).resolve().parents[2]
         path = self.repo / 'research/r1_stream_c/numerics.py'
         spec = importlib.util.spec_from_file_location('r1_numeric_contract', path)
         self.module = importlib.util.module_from_spec(spec)
