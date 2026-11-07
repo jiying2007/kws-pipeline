@@ -115,6 +115,17 @@ class R1StreamSourceContracts(unittest.TestCase):
                        check=True, capture_output=True, timeout=30)
         self.assertTrue((self.output / "bin/r1_pcm").is_file())
 
+    def test_optin_numeric_source_contracts(self):
+        spec = importlib.util.spec_from_file_location(
+            "r1_numeric_source_tests", self.root / "tests/test_r1_numeric_sources.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(module.NumericSourceContracts)
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(result.testsRun, 13)
+        self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
