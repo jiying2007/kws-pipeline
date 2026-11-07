@@ -1,0 +1,62 @@
+name: V3 R1 ARM source build
+on:
+  push:
+    branches: ['research/v3-r1-arm-build-20261107']
+permissions:
+  contents: read
+concurrency:
+  group: v3-r1-arm-build-20261107
+  cancel-in-progress: false
+jobs:
+  arm-source:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/v3-r1-arm-build-20261107' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 6f38468219ce606617f03897b392479fecd1aed6
+          persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
+      - name: Install cross-toolchain using unchanged bounded dependency helper
+        run: sudo python3 -I -S -B tools/install_arm_dependencies.py
+      - name: Materialize fixed public source only
+        run: python3 -I -S -B research/r1_stream_c/port.py --output "$RUNNER_TEMP/r1-arm"
+      - name: Compile three bounded ARM artifacts; execute layout only under QEMU
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p arm-output/include
+          python3 -I -S - <<'PY'
+          import hashlib,json,os,pathlib,subprocess,time
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'r1-arm';src=root/'source';out=pathlib.Path('arm-output').resolve()
+          cc='/usr/bin/arm-linux-gnueabihf-gcc'
+          flags=['-std=c11','-O2','-Wall','-Wextra','-Werror','-pedantic','-fno-fast-math','-ffp-contract=off','-fexcess-precision=standard','-mcpu=cortex-a32','-mfpu=neon-vfpv4','-mfloat-abi=hard','-I'+str(src)]
+          sources=[str(src/n) for n in ('r1_stream.c','r1_pcm.c','canonical_fbank.c','r1fsmn.c','sha256.c')]
+          layout=root/'layout.c'
+          layout.write_text('#include "r1_stream.h"\n#include <stdio.h>\nint main(void){if(r1_create(NULL,0,NULL,0,NULL,NULL))return 1;printf("{\\"state_bytes\\":%zu,\\"weights_bytes\\":%zu,\\"model_loads\\":0,\\"model_forwards\\":0}\\n",r1_state_bytes(),r1_weight_bytes());return 0;}\n')
+          start=time.monotonic()
+          commands=[[cc,*flags,'-static',str(src/'r1_pcm_cli.c'),*sources,'-lm','-o',str(out/'r1_pcm_armhf_static')],
+                    [cc,*flags,'-fPIC','-shared','-Wl,-z,defs',*sources,'-lm','-o',str(out/'libr1_stream_armhf.so')],
+                    [cc,*flags,'-static',str(layout),*sources,'-lm','-o',str(out/'layout_armhf')]]
+          for command in commands:
+              subprocess.run(command,check=True,capture_output=True,timeout=max(1,60-(time.monotonic()-start)))
+          elf=subprocess.check_output(['/usr/bin/readelf','-h','-A',str(out/'r1_pcm_armhf_static')],timeout=5).decode()
+          if not all(x in elf for x in ('ELF32','little endian','ARM','EABI5','hard-float ABI')):raise SystemExit('ARM ELF contract')
+          (out/'ELF.txt').write_text(elf)
+          raw=subprocess.check_output(['/usr/bin/qemu-arm-static','-cpu','cortex-a15',str(out/'layout_armhf')],timeout=5)
+          observation=json.loads(raw)
+          if observation['weights_bytes']!=3028860 or observation['model_forwards']!=0:raise SystemExit('layout contract')
+          for name in ('r1_stream.h',): (out/'include'/name).write_bytes((src/name).read_bytes())
+          versions={name:subprocess.check_output([name,'--version'],timeout=5).decode().splitlines()[0] for name in (cc,'/usr/bin/qemu-arm-static')}
+          hashes={p.relative_to(out).as_posix():{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in out.rglob('*') if p.is_file()}
+          result={'schema':'kws-r1-arm-source-build-v1','source_commit':'6f38468219ce606617f03897b392479fecd1aed6','target':'cortex-a32/neon-vfpv4/hard','compiler_invocations':3,'layout':observation,'versions':versions,'files':hashes,'wall_seconds':time.monotonic()-start,'real_weights_or_audio_loaded':False,'physical_ssc305':False,'numerical_gate_pass':False,'scope':'cross compilation and emulator ABI/layout only; no model inference or board timing'}
+          (out/'ARM_BUILD.json').write_text(json.dumps(result,sort_keys=True,indent=2)+'\n')
+          print(json.dumps(result,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: v3-r1-arm-source-build
+          path: arm-output/
+          retention-days: 3
+          if-no-files-found: error
