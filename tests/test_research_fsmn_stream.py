@@ -57,6 +57,65 @@ class ResearchFsmnStreamTest(unittest.TestCase):
         self.assertFalse(report["qualification_allowed"])
 
 
+class R1StreamSourceContracts(unittest.TestCase):
+    """Source-only tests: no real weights, model forward, network or corpus."""
+    def setUp(self):
+        self.root = Path(__file__).resolve().parents[1]
+        spec = importlib.util.spec_from_file_location(
+            "r1_port_contract", self.root / "research/r1_stream_c/port.py")
+        self.port = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.port)
+        self.temporary = tempfile.TemporaryDirectory(prefix="r1-source-contract-")
+        self.addCleanup(self.temporary.cleanup)
+        self.output = Path(self.temporary.name) / "output"
+
+    def test_distinct_geometry_and_model_identity(self):
+        self.port.prepare_sources(self.root, self.output)
+        header = (self.output / "source/r1fsmn.h").read_text()
+        self.assertIn("R1FSMN_OUTPUTS 2601u", header)
+        self.assertIn("R1FSMN_FLOATS 757215u", header)
+        self.assertIn(self.port.MODEL_SHA, (self.output / "source/model_identity.h").read_text())
+
+    def test_no_synthetic_eof_tail(self):
+        self.port.prepare_sources(self.root, self.output)
+        source = (self.output / "source/r1_pcm.c").read_text()
+        self.assertNotIn("for (unsigned i=0;i<4800;i++)", source)
+        self.assertIn("if (s->have_low)", source)
+
+    def test_source_preparation_never_synthesizes_weights(self):
+        self.port.prepare_sources(self.root, self.output)
+        self.assertEqual(list((self.output / "weights").iterdir()), [])
+        self.assertTrue((self.output / "source/LICENSE.torchaudio").is_file())
+
+    def test_existing_output_is_not_overwritten(self):
+        self.output.mkdir()
+        with self.assertRaises(ValueError):
+            self.port.prepare_sources(self.root, self.output)
+
+    def test_missing_source_rejected_before_output(self):
+        with self.assertRaises(ValueError):
+            self.port.prepare_sources(Path(self.temporary.name), self.output)
+        self.assertFalse(self.output.exists())
+
+    def test_fake_model_card_rejected_before_import(self):
+        package = Path(self.temporary.name) / "fake-model"
+        package.mkdir()
+        (package / "MODEL.json").write_text("{}")
+        with self.assertRaisesRegex(ValueError, "untrusted model-card"):
+            self.port.export_weights(package, self.output)
+        self.assertNotIn("research_fsmn_weak", sys.modules)
+
+    def test_full_c_compiles_without_loading_weights(self):
+        import os
+        import subprocess
+        self.port.prepare_sources(self.root, self.output)
+        environment = dict(os.environ)
+        environment.pop("LD_LIBRARY_PATH", None)
+        subprocess.run(["bash", str(self.output / "build.sh")], env=environment,
+                       check=True, capture_output=True, timeout=30)
+        self.assertTrue((self.output / "bin/r1_pcm").is_file())
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--execute", action="store_true",
