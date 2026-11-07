@@ -13,6 +13,8 @@ policy controls the current technical-research workflow.
 
 ## Research navigation and retained checkpoints / 研究导航与历史检查点
 
+**2026-11-07 natural coverage / 自然语音覆盖：** [completed 64-new / 73-total observation report](../docs/KWS_NATURAL_COVERAGE_20261107.md) and [execution summary](natural-coverage-20261107/execution-summary.json) retain 192 new native results and a 2,022.897-second union of observed parent-PCM intervals. All 73 development windows remain uncertain under the frozen full-text rule; K1/K2 each have 73 masked unknowns, zero admitted weak targets and zero accepted natural negative seconds. The source verifier rejects missing partial-clone blobs without lazy fetching.
+
 **2026-11-06 continuation / 后续落地：** [current integration state / 当前集成状态](../docs/KWS_CONTINUATION_ACCEPTANCE_20261106.md), [completed context52/tail7 results](../docs/KWS_CONTEXT52_TAIL7_20261106.md) and [execution index](context52-tail7-20261106/execution-index.json). The [paired C1 development guide](../docs/research-c1-context-development.md) and [full context52 training guide](../docs/research-context52-known-silence.md) retain the fixed contracts; these weak-label, exposed-development results establish no independent test, natural FAR or device result.
 
 **Saved CTC264 result / 保存输出诊断：** [completed report](../docs/KWS_SAVED_CTC264_20261106.md) and [aggregate execution index](saved-ctc264-20261106/execution-index.json) retain 876 deletion contrasts across all four positions of both keywords, actual provider acknowledgements and posthoc hit/miss aggregates. Conditional alignment and pairwise target preference do not establish acoustic truth or decoder correctness.
