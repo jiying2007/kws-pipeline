@@ -43,9 +43,47 @@
 汇总请求为 `kws-natural-coverage-request-v1`，包含四个字段：`schema`、
 `prepared`、`views`、`verifier`。
 
-`prepared` 每项精确包含 `bundle`、`audio_root`、`declaration_sha256`。工具调用
+`prepared` 每项包含 `bundle`、`audio_root`、`declaration_sha256`。工具调用
 已有自然准备验证器，从完整父 WAV/PCM 重新构造输入并核验文件名单与哈希，
 不会只相信 `summary.json`。一份已准备输入包不必有识别结果。
+
+### 跨准备版本的严格回读
+
+旧准备包会记录当时的全部 `preparation_sources`。例如旧 tail9 的
+`active_asr_batch.py` 与本轮版本不同，即使窗口字节没有变化，直接用当前
+准备源码重放旧包也必须拒绝，不能把旧 bindings 改成当前哈希。
+
+这类包可单独增加 `preparation_verifier`，其他包继续使用当前源码：
+
+```json
+{
+  "path": "/private/historical-source/tools/prepare_natural_asr_windows.py",
+  "git_repository": "/private/kws-pipeline",
+  "git_commit": "ACTUAL_40_HEX_COMMIT",
+  "source_files_sha256": {"EACH_REQUIRED_SOURCE_FILE": "ACTUAL_SHA256"}
+}
+```
+
+映射必须完整覆盖准备器记录的 10 个源文件，以及导入所需的四个辅助源：
+`tools/research_d2_checkpoints.py`、`tools/research_job_lock.py`、
+`tools/research_no_network.py`、`training/research_acoustic_augment.py`。
+工具逐项核对本地文件、外部 SHA-256、bindings 的原始准备源记录，以及固定
+Git commit 的真实 blob 字节。历史源码快照必须只含这 14 个普通文件，拒绝
+额外模块、字节码缓存与符号链接；manifest 和 Git 仓库放在快照之外，以防
+未固定的模块进入导入搜索路径。Git 对象替换被禁用；不会联网取代码。
+指定的本地 Git 仓库必须已有该 commit。
+
+这条兼容路径只接受与当前相同的自然准备算法文件，允许其已记录的依赖
+版本不同。随后在同一 Python 解释器的独立 `-I -S -B` 进程中，只执行固定的
+`prepare_natural_asr_windows.py verify` 命令。解释器优化等级保持一致，最长
+60 秒；不接受模块名、任意 argv、prepare 或模型命令。返回值必须等于旧包的
+summary，完成后再核对全部源文件及 bindings 未变。固定的本地 Git blob
+读取最长 20 秒。结果中的 `preparation_verifications` 保留各包实际使用的来源。
+
+这样一次汇总可以同时核验旧版与当前准备包，并在相同父 PCM 的时间轴上
+计算并集；不会覆盖当前源码、重新准备旧音频、补 seal 或跳过旧来源校验。
+
+### 封存识别视图
 
 `views` 每项精确包含 `path` 和 `manifest_sha256`，指向 kws-data 的
 `automation/active_natural_asr_weak_view.py` 产生的自然 evidence view。
@@ -95,4 +133,7 @@
 重叠去重、整父篡改、未识别输入、缺失/未请求原生结果、重复/别名/多通道/角色
 冲突、固定规则冲突拒绝及只读性。数据 view 验证器在这些单元测试中使用明确
 的 double；原生 ASR 回放与机器弱标签政策由 data 侧契约测试及真实证据复核负责。
-测试不运行模型，不产生任何真实标签或效果结论。
+跨版本反例使用临时本地 Git 仓库和极短 PCM，真实执行两个准备来源的
+prepare/verify；拒绝无显式旧源、binding/源码/Git blob 不符、缺少辅助文件、
+任意命令、超时、伪造返回值及执行后源漂移。测试不运行模型，不产生任何
+真实标签或效果结论。

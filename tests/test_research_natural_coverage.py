@@ -293,6 +293,114 @@ class CoverageTests(unittest.TestCase):
                     self.assertRaisesRegex(ValueError, "MIXED_DATA_MODULES"):
                 c.load_verifier(source)
 
+    def historical_bundle(self):
+        """Two real preparation versions, using an explicit harmless fixture comment."""
+        folder = self.root / "historical-source"
+        names = set(c.natural.producer_sources()) | {
+            "tools/research_d2_checkpoints.py", "tools/research_job_lock.py",
+            "tools/research_no_network.py", "training/research_acoustic_augment.py"}
+        for name in names:
+            path = folder / name; path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes((ROOT / name).read_bytes())
+        changed = folder / "tools/active_asr_batch.py"
+        changed.write_bytes(changed.read_bytes() + b"\n# Synthetic historical preparation source fixture.\n")
+        git_folder = self.root / "historical-git-source"
+        for name in names:
+            path = git_folder / name; path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes((folder / name).read_bytes())
+        def git(*args):
+            result = c.subprocess.run(["git", "-C", str(git_folder), *args], capture_output=True,
+                timeout=20, check=True)
+            return result.stdout.decode().strip()
+        git("init", "--quiet"); git("add", ".")
+        git("-c", "user.name=Synthetic fixture", "-c", "user.email=fixture@example.invalid",
+            "commit", "--quiet", "-m", "Synthetic preparation-source contract fixture")
+        commit = git("rev-parse", "HEAD")
+        verifier = folder / "tools/prepare_natural_asr_windows.py"
+        bundle = self.root / "historical-inputs"
+        c.subprocess.run([sys.executable, "-I", "-S", "-B", str(verifier), "prepare",
+            "--declaration", str(self.root / "first.json"),
+            "--declaration-sha256", self.first["declaration_sha256"],
+            "--audio-root", str(self.audio), "--output", str(bundle)],
+            capture_output=True, timeout=20, check=True)
+        return {"bundle": str(bundle), "audio_root": str(self.audio),
+            "declaration_sha256": self.first["declaration_sha256"],
+            "preparation_verifier": {"path": str(verifier), "git_repository": str(git_folder),
+                "git_commit": commit, "source_files_sha256": {
+                    name: c.q.file_record(folder / name)["sha256"] for name in sorted(names)}}}
+
+    def test_mixed_preparation_versions_require_explicit_exact_source_and_keep_union(self):
+        historical = self.historical_bundle()
+        implicit = {k: v for k, v in historical.items() if k != "preparation_verifier"}
+        with self.assertRaisesRegex(ValueError, "BUNDLE_FILE_CHANGED"):
+            c.summarize(self.request([implicit, self.second]))
+        wrong = {**self.second, "preparation_verifier": historical["preparation_verifier"]}
+        with self.assertRaisesRegex(ValueError, "PREPARATION_BINDING_SOURCE_MISMATCH"):
+            c.summarize(self.request([wrong]))
+        tracked = [Path(historical["bundle"]), Path(historical["preparation_verifier"]["path"]).parents[1]]
+        before = {p: (p.read_bytes(), p.stat().st_mtime_ns) for folder in tracked
+                  for p in folder.rglob("*") if p.is_file() and ".git" not in p.parts}
+        result = c.summarize(self.request([historical, self.second]))
+        self.assertEqual((result["prepared"]["windows"], result["prepared"]["unique_parent_samples"]), (2, 12))
+        self.assertEqual(result["observed"]["windows"], 0)
+        self.assertEqual([r["mode"] for r in result["preparation_verifications"]],
+                         ["pinned-prepare-cli", "current-source"])
+        self.assertEqual(before, {p: (p.read_bytes(), p.stat().st_mtime_ns) for p in before})
+
+    def test_historical_verifier_rejects_arbitrary_command_missing_support_and_git_mismatch(self):
+        historical = self.historical_bundle()
+        for mutate in (lambda s: s.update(argv=["prepare"]),
+                       lambda s: s["source_files_sha256"].pop("tools/research_job_lock.py"),
+                       lambda s: s.update(git_commit="HEAD"),
+                       lambda s: s.update(path=str(Path(s["path"]).with_name("active_asr_batch.py")))):
+            changed = copy.deepcopy(historical); mutate(changed["preparation_verifier"])
+            with self.subTest(mutate=mutate), self.assertRaises(ValueError), \
+                    mock.patch.object(c.subprocess, "run", side_effect=AssertionError("invalid code was run")):
+                c.summarize(self.request([changed]))
+        spec = historical["preparation_verifier"]
+        extra = Path(spec["path"]).parent / "json.py"
+        extra.write_text("raise RuntimeError('unpinned module must never be imported')\n")
+        with self.assertRaisesRegex(ValueError, "PREPARATION_SNAPSHOT_ROSTER"), \
+                mock.patch.object(c.subprocess, "run", side_effect=AssertionError("unfixed imports were run")):
+            c.summarize(self.request([historical]))
+        extra.unlink()
+        support = Path(spec["path"]).parents[1] / "tools/research_job_lock.py"
+        support.write_bytes(support.read_bytes() + b"\n# Uncommitted source mutation.\n")
+        spec["source_files_sha256"]["tools/research_job_lock.py"] = c.q.file_record(support)["sha256"]
+        with self.assertRaisesRegex(ValueError, "PREPARATION_GIT_SOURCE_CHANGED"):
+            c.summarize(self.request([historical]))
+
+    def test_historical_verifier_rejects_timeout_and_forged_summary(self):
+        historical = self.historical_bundle(); real_run = c.subprocess.run
+        for fault in ("timeout", "summary"):
+            def run(command, **kwargs):
+                if command[0] == "git":
+                    return real_run(command, **kwargs)
+                self.assertEqual(command[1:4], ["-I", "-S", "-B"])
+                self.assertEqual(command[command.index(historical["preparation_verifier"]["path"]) + 1], "verify")
+                self.assertEqual(kwargs["timeout"], 60)
+                if fault == "timeout":
+                    raise c.subprocess.TimeoutExpired(command, kwargs["timeout"])
+                result = real_run(command, **kwargs)
+                result.stdout = c.q.canonical({"invented": "summary"})
+                return result
+            reason = "PREPARATION_VERIFY_TIMEOUT" if fault == "timeout" else "PREPARATION_VERIFIER_SUMMARY_DIFFERS"
+            with self.subTest(fault=fault), mock.patch.object(c.subprocess, "run", side_effect=run), \
+                    self.assertRaisesRegex(ValueError, reason):
+                c.summarize(self.request([historical]))
+
+    def test_historical_source_change_after_verification_is_rejected(self):
+        historical = self.historical_bundle(); real_run = c.subprocess.run
+        support = Path(historical["preparation_verifier"]["path"]).parents[1] / "tools/research_job_lock.py"
+        def run(command, **kwargs):
+            result = real_run(command, **kwargs)
+            if command[0] != "git":
+                support.write_bytes(support.read_bytes() + b"\n# Mutation after child verification.\n")
+            return result
+        with mock.patch.object(c.subprocess, "run", side_effect=run), \
+                self.assertRaisesRegex(ValueError, "PREPARATION_SOURCE_CHANGED"):
+            c.summarize(self.request([historical]))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,7 +8,10 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import os
 from pathlib import Path
+import re
+import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +25,10 @@ REQUEST = "kws-natural-coverage-request-v1"
 REPORT = "kws-natural-coverage-report-v1"
 VIEW = "kws-natural-asr-evidence-view-v1"
 VERIFIER = "automation/active_natural_asr_weak_view.py"
+PREPARATION_VERIFIER = "tools/prepare_natural_asr_windows.py"
+PREPARATION_IMPORTS = frozenset({"tools/research_d2_checkpoints.py", "tools/research_job_lock.py",
+    "tools/research_no_network.py", "training/research_acoustic_augment.py"})
+PREPARATION_TIMEOUT_SECONDS = 60
 RATE = 16000
 WINDOW, ADVANCE, PAIR = 30 * RATE, 25 * RATE, 55 * RATE
 # Preserve native receipt IDs (not display names such as "Qwen").
@@ -191,6 +198,92 @@ def load_verifier(spec):
     return module
 
 
+def preparation_source_checks(spec, binding, *, verify_git=True):
+    """Pin the same preparation algorithm with a recorded historical dependency set."""
+    require(type(spec) is dict and set(spec) == {
+        "path", "git_repository", "git_commit", "source_files_sha256"}, "PREPARATION_VERIFIER_FIELDS")
+    path, git_repository = q.safe_path(spec["path"]), q.safe_path(spec["git_repository"])
+    require(path.is_absolute() and path.name == Path(PREPARATION_VERIFIER).name and
+            path.parent.name == "tools" and git_repository.is_absolute() and git_repository.is_dir(),
+            "PREPARATION_VERIFIER_PATH")
+    require(type(spec["git_commit"]) is str and re.fullmatch(r"[0-9a-f]{40}", spec["git_commit"]),
+            "PREPARATION_GIT_COMMIT")
+    root, expected = path.parents[1], spec["source_files_sha256"]
+    producer_names = set(natural.producer_sources())
+    require(type(expected) is dict and set(expected) == producer_names | PREPARATION_IMPORTS,
+            "PREPARATION_SOURCE_ROSTER")
+    actual = set()
+    for item in root.rglob("*"):
+        q.safe_path(item)
+        require(item.is_file() or item.is_dir(), "PREPARATION_REGULAR_SOURCE_FILES")
+        if item.is_file():
+            actual.add(item.relative_to(root).as_posix())
+    require(actual == set(expected), "PREPARATION_SNAPSHOT_ROSTER")
+    records = {}
+    for name in sorted(expected):
+        require(natural.is_sha(expected[name]), "PREPARATION_SOURCE_PIN")
+        records[name] = q.file_record(root / name)
+        require(0 < records[name]["bytes"] <= 1024 ** 2 and records[name]["sha256"] == expected[name],
+                "PREPARATION_SOURCE_CHANGED:" + name)
+    require(records[PREPARATION_VERIFIER] == q.file_record(Path(natural.__file__)),
+            "PREPARATION_ALGORITHM_CHANGED")
+    require(binding["preparation_sources"] == {name: records[name] for name in producer_names},
+            "PREPARATION_BINDING_SOURCE_MISMATCH")
+    if verify_git:
+        environment = os.environ.copy(); environment["GIT_NO_REPLACE_OBJECTS"] = "1"
+        queries = b"".join((spec["git_commit"] + ":" + name + "\n").encode() for name in sorted(expected))
+        try:
+            result = subprocess.run(["git", "--no-pager", "-C", str(git_repository), "cat-file", "--batch"],
+                input=queries, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment,
+                timeout=20, check=False)
+        except subprocess.TimeoutExpired as error:
+            raise ValueError("NATURAL_COVERAGE_PREPARATION_GIT_TIMEOUT") from error
+        require(result.returncode == 0, "PREPARATION_GIT_SOURCE_UNAVAILABLE")
+        remaining = result.stdout
+        for name in sorted(expected):
+            header, separator, remaining = remaining.partition(b"\n")
+            parts = header.split()
+            require(separator and len(parts) == 3 and parts[1] == b"blob" and
+                    parts[2].isdigit() and int(parts[2]) == records[name]["bytes"],
+                    "PREPARATION_GIT_SOURCE_CHANGED:" + name)
+            size = records[name]["bytes"]
+            require(len(remaining) >= size + 1 and remaining[size:size+1] == b"\n" and
+                    q.sha(remaining[:size]) == expected[name], "PREPARATION_GIT_SOURCE_CHANGED:" + name)
+            remaining = remaining[size+1:]
+        require(not remaining, "PREPARATION_GIT_EXTRA_OUTPUT")
+    return path, records
+
+
+def verify_prepared(entry, bundle, audio_root):
+    """Only the fixed read-only prepare verifier CLI may use an explicit old closure."""
+    raw = q.read_bytes(bundle / "natural-window-bindings.json")
+    binding = q.loads(raw)
+    if "preparation_verifier" not in entry:
+        summary = natural.verify(bundle, audio_root, entry["declaration_sha256"])
+        receipt = {"mode": "current-source"}
+    else:
+        spec = entry["preparation_verifier"]
+        path, records = preparation_source_checks(spec, binding)
+        flags = ["-I", "-S", "-B"] + (["-" + "O" * sys.flags.optimize] if sys.flags.optimize else [])
+        command = [sys.executable, *flags, str(path), "verify", "--bundle", str(bundle),
+            "--audio-root", str(audio_root), "--declaration-sha256", entry["declaration_sha256"]]
+        try:
+            result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                cwd=path.parents[1], timeout=PREPARATION_TIMEOUT_SECONDS, check=False)
+        except subprocess.TimeoutExpired as error:
+            raise ValueError("NATURAL_COVERAGE_PREPARATION_VERIFY_TIMEOUT") from error
+        require(result.returncode == 0, "PREPARATION_VERIFY_FAILED:" + result.stderr.decode(errors="replace")[-2048:])
+        summary = q.loads(result.stdout)
+        require(summary == q.loads(q.read_bytes(bundle / "summary.json")), "PREPARATION_VERIFIER_SUMMARY_DIFFERS")
+        preparation_source_checks(spec, binding, verify_git=False)
+        receipt = {"mode": "pinned-prepare-cli", "verifier": spec,
+            "source_files": records, "stdout_sha256": q.sha(result.stdout),
+            "timeout_seconds": PREPARATION_TIMEOUT_SECONDS}
+    require(q.read_bytes(bundle / "natural-window-bindings.json") == raw, "PREPARATION_BINDINGS_CHANGED_DURING_VERIFY")
+    return {"bundle": str(bundle), "bindings_sha256": q.sha(raw),
+            "summary_sha256": q.sha(q.canonical(summary)), **receipt}
+
+
 def summarize(request):
     require(type(request) is dict and set(request) == {"schema", "prepared", "views", "verifier"} and
             request["schema"] == REQUEST, "REQUEST_FIELDS")
@@ -198,15 +291,20 @@ def summarize(request):
     require(type(packages) is list and 1 <= len(packages) <= 128 and
             type(views) is list and len(views) <= 128, "BOUNDED_PACKAGE_ROSTER")
     registry, prepared, bundles, package_ids = Parents(), {}, {}, set()
+    preparation_verifications = []
     for entry in packages:
-        require(type(entry) is dict and set(entry) == {"bundle", "audio_root", "declaration_sha256"}, "PREPARED_FIELDS")
+        require(type(entry) is dict and set(entry) in (
+            {"bundle", "audio_root", "declaration_sha256"},
+            {"bundle", "audio_root", "declaration_sha256", "preparation_verifier"}), "PREPARED_FIELDS")
         bundle, audio_root = q.safe_path(entry["bundle"]), q.safe_path(entry["audio_root"])
         require(bundle.is_absolute() and audio_root.is_absolute(), "ABSOLUTE_INPUT_PATHS")
         # The existing verifier reads each complete parent and reconstructs the
         # slices. It does not trust a summary or mutate a bundle.
-        natural.verify(bundle, audio_root, entry["declaration_sha256"])
+        verified = verify_prepared(entry, bundle, audio_root)
         bindings_raw = q.read_bytes(bundle / "natural-window-bindings.json")
         bindings, identity = q.loads(bindings_raw), q.sha(bindings_raw)
+        require(identity == verified["bindings_sha256"], "PREPARATION_BINDINGS_CHANGED_AFTER_VERIFY")
+        preparation_verifications.append(verified)
         require(identity not in package_ids, "DUPLICATE_PREPARED_PACKAGE")
         package_ids.add(identity)
         for parent in bindings["parents"]:
@@ -271,6 +369,7 @@ def summarize(request):
         "observed": intervals(list(observed.values()), registry.by_pcm),
         "weak_fulltext_quorum": intervals(list(quorum.values()), registry.by_pcm),
         "prepared_without_complete_observation": sorted(set(prepared) - set(observed)),
+        "preparation_verifications": preparation_verifications,
         "views": view_records, "boundary": BOUNDARY,
         "observed_semantics": "three actual native results from fully replayed existing sealed evidence; usability and transcript agreement are separate",
         "weak_fulltext_quorum_semantics": "machine-weak full-text candidate coverage only; no automatic training, acoustic truth, event labels or FAR denominator"}
