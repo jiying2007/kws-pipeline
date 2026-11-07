@@ -1,0 +1,54 @@
+{
+  "source_commit": "7bfcb33a47a1df3e317c835b81e419d14e07dbf8",
+  "files": {
+    "research/fsmn2599-stream-c/fsmn2599.c": {
+      "bytes": 10274,
+      "sha256": "12b237eb78fdccb16658e66f096c32cac60814131e2afcd457af648d3c6c1dd7"
+    },
+    "research/fsmn2599-stream-c/fsmn2599.h": {
+      "bytes": 3393,
+      "sha256": "a755fc8d58b425064e94ddfeaf60d3126b487588dd858e7c965d60857376f9c3"
+    },
+    "research/fsmn2599-stream-c/canonical_pcm.c": {
+      "bytes": 4084,
+      "sha256": "9631201666df788d1a40649ca43a0786d91408acea520c1235a25199847df57b"
+    },
+    "research/fsmn2599-stream-c/canonical_pcm.h": {
+      "bytes": 2717,
+      "sha256": "0049a01f57ebc475a53a23ace7f8cd0edd52c8dd326ab892a0353284c229bb31"
+    },
+    "research/fsmn2599-stream-c/canonical_fbank.c": {
+      "bytes": 5034,
+      "sha256": "7e84597f4bf55880301a26134a030b090aad4b4e42ca2f43e5ed7970fc954bc9"
+    },
+    "research/fsmn2599-stream-c/canonical_fbank.h": {
+      "bytes": 1627,
+      "sha256": "cd1fecdc364a0714f7ac8320d1c7ef47ef661c06a68e981bd9975c7f3142e6e5"
+    },
+    "research/fsmn2599-stream-c/sha256.c": {
+      "bytes": 6113,
+      "sha256": "28023c2b965033d60a8db9f65099a0855e1816f7251bfa95109e634cef34e6a1"
+    },
+    "research/fsmn2599-stream-c/sha256.h": {
+      "bytes": 222,
+      "sha256": "8272fb003f5ae29a116acc76252f17c02d276a7caea382dd652fa39ab5dd2aea"
+    },
+    "research/fsmn2599-stream-c/NOTICE.md": {
+      "bytes": 2970,
+      "sha256": "a5c8875be7c31a30f537dde8f1fcbfb1e9c2bbb842d23fa3833f0b3f89d12960"
+    },
+    "research/fsmn2599-stream-c/LICENSE": {
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "research/donor_fbank/fft_twiddles.h": {
+      "bytes": 12495,
+      "sha256": "fb628e5c3672a39dbd33bde612d48731f5abde72cbe401c4bc8273033ff01d0f"
+    },
+    "research/fsmn2599-stream-c/LICENSE.torchaudio": {
+      "bytes": 1338,
+      "sha256": "93a58861a858cc108e6b6b833e08e76e8b2a66339e4a8007c8a5a8c1ff9c40d6"
+    }
+  },
+  "historical2599_sources_modified_in_repository": false
+}
