@@ -51664,6 +51664,38 @@
           }
         }
       ]
+    },
+    {
+      "id": "natural-coverage64-engineering-tool-navigation-20261107",
+      "date": "2026-11-07",
+      "base_commit": "690ea36db2b1a3a5911ba15aa05d691a79d07ff0",
+      "base_tree": "09215b2e7fed6819359ff5349b76fe4496e38b5c",
+      "public_source_commit": "0c06d7cf221b68bfe9599f64d15147e5943bce86",
+      "source_tree": "f4d3d76aa32adfc203eafa1fb74a998e1e812004",
+      "public_source_receipt_sha256": "a702e0497e4f26bb1b9b3321f2bfdd051c8fa6c5468ea881c6cd9cfb2329143c",
+      "previous_manifest_sha256": "238c03dbdbd9adc25e6625f397e2484aef198058eeba900f1530d45afe44785b",
+      "workflow_source_changed": false,
+      "scope": "One engineering-tool navigation entry for the already implemented natural coverage tool.",
+      "rationale": "The first hosted CI rejected a missing tools/README.md entry under the unchanged terminal-documentation contract. Record the exact one-line navigation repair without rewriting event200, any earlier source record, current workflow identities, validators or research execution sources. The original terminal-documentation contract passed on the corrected document; failed CI and all consumed time remain retained.",
+      "files": [
+        {
+          "path": "tools/README.md",
+          "before": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 28432,
+            "git_blob_sha1": "a0f288af0468f0e02e34ef32ae566d307434e22e",
+            "sha256": "08136c59f788c56a9bc2307407c06b749148a63472cab0482865224393b5a761"
+          },
+          "after": {
+            "path": "tools/README.md",
+            "mode": "100644",
+            "bytes": 28702,
+            "git_blob_sha1": "de2e75c5f1f1cc186fb84bade5b94e538ca64993",
+            "sha256": "d87c16f21c5ca2ffc5b8b40f09d842ef87944c23547f9bd490bcd5325a870b28"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
