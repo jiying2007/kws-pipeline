@@ -1,303 +1,87 @@
-name: GitHub hosted resource probe
-
-# A fresh standard hosted job measures resources only, never model quality.
-# No checkout, setup, cache, artifact, package installation, or network request.
+# Isolated one-shot transfer branch only; never merge this workflow over main.
+# No audio, model weights, credentials, ASR/TTS or training are read/exported.
+name: V3 offline core runtime transfer
 on:
-  workflow_dispatch:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - '.github/workflows/github-hosted-resource-probe.yml'
-      - 'tests/test_github_hosted_resource_probe.py'
-      # Source-screen planning requires a fresh observation, not model execution.
-      - 'research/source-screen32-v1/**'
-      # Recheck capacity before the independent one-shot KW1 campaign.
-      - 'research/kw1-preset-supplement-v1/**'
-
-permissions: {}
-
-# One running probe for the repository; no overlapping manual/PR probes.
+  push:
+    branches: ['research/v3-core-offline-transfer-20261107']
+permissions:
+  contents: read
 concurrency:
-  group: github-hosted-resource-probe
+  group: v3-core-offline-transfer-20261107
   cancel-in-progress: false
-
 jobs:
-  probe:
+  transfer:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/v3-core-offline-transfer-20261107' && github.run_attempt == 1
     runs-on: ubuntu-24.04
-    timeout-minutes: 3
+    timeout-minutes: 18
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PIP_RETRIES: '0'
+      PIP_DEFAULT_TIMEOUT: '60'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
     steps:
-      - name: Measure allowlisted resources without loading models
-        shell: bash
-        env:
-          KWS_PROBE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 2
+      - uses: ./.github/actions/setup-research-python
+      - name: Verify frozen source and install the unchanged core lock
         run: |
-          python3 -I -S - <<'PY'
-          # Resource observations only: no model imports, package installs, or network.
-          import email.parser
-          import email.policy
-          import importlib.metadata
-          import itertools
-          import json
-          import os
-          import pathlib
-          import platform
-          import re
-          import shutil
-          import site
-          import stat
-          import sys
-
-          UNKNOWN = "unknown"
-          SCHEMA = "kws.github-hosted-resource-probe.v2"
-          MAX_OUTPUT_BYTES = 32 * 1024
-          MAX_READ_BYTES = 65536
-          MAX_TEXT_CHARS = 128
-          MAX_AFFINITY_IDS = 128
-          DISTRIBUTIONS = (
-              "torch", "torchaudio", "onnxruntime", "transformers", "numpy", "safetensors",
-          )
-          READ_PATHS = (
-              "/proc/meminfo",
-              "/sys/fs/cgroup/memory.max",
-              "/sys/fs/cgroup/cpu.max",
-              "/sys/fs/cgroup/memory/memory.limit_in_bytes",
-              "/sys/fs/cgroup/cpu/cpu.cfs_quota_us",
-              "/sys/fs/cgroup/cpu/cpu.cfs_period_us",
-          )
-
-
-          def text_value(value):
-              # Do not emit control characters, paths, markup, or arbitrary metadata text.
-              if not isinstance(value, str) or not value:
-                  return UNKNOWN
-              if not re.fullmatch(r"[A-Za-z0-9 ._+!~-]+", value):
-                  return UNKNOWN
-              return value[:MAX_TEXT_CHARS]
-
-
-          def integer(value):
-              if type(value) is int and 0 <= value <= 2**63 - 1:
-                  return value
-              return UNKNOWN
-
-
-          def decimal(value):
-              if isinstance(value, str) and re.fullmatch(r"[0-9]{1,19}", value):
-                  return integer(int(value))
-              return UNKNOWN
-
-
-          def read_fixed(path):
-              if path not in READ_PATHS:
-                  return UNKNOWN
-              try:
-                  with open(path, "r", encoding="ascii") as source:
-                      result = source.read(65537)
-                  return result if len(result) <= 65536 else UNKNOWN
-              except (OSError, UnicodeError):
-                  return UNKNOWN
-
-
-          def memory_bytes(source):
-              result = {"total_bytes": UNKNOWN, "available_bytes": UNKNOWN}
-              for name, field in (("MemTotal", "total_bytes"), ("MemAvailable", "available_bytes")):
-                  match = re.search(r"^" + name + r":\s+([0-9]{1,16}) kB$", source, re.M)
-                  if match:
-                      result[field] = integer(int(match.group(1)) * 1024)
-              return result
-
-
-          def cgroup_limit(source):
-              value = source.strip()
-              return "unlimited" if value == "max" else decimal(value)
-
-
-          def cpu_max(source):
-              parts = source.split()
-              if len(parts) != 2:
-                  return {"quota_us": UNKNOWN, "period_us": UNKNOWN}
-              return {"quota_us": cgroup_limit(parts[0]), "period_us": decimal(parts[1])}
-
-
-          def observe(operation):
-              try:
-                  return operation()
-              except Exception:
-                  # Never copy exception messages, filenames, environment, or command lines.
-                  return UNKNOWN
-
-
-          def metadata_version(name):
-              """Read one allowlisted wheel's metadata with a real byte cap; never import it.
-
-              PathDistribution._path is used only to locate its directory. Public .version,
-              .metadata and .read_text would load the whole file before we could bound it.
-              Unsupported finders, zip/egg metadata, symlinks and ambiguous installs fail
-              closed. Keep this function identical in the no-checkout hosted probe.
-              """
-              if name not in DISTRIBUTIONS:
-                  raise ValueError('distribution not allowlisted')
-              roots = {pathlib.Path(p).resolve() for p in site.getsitepackages()}
-              matches = list(itertools.islice(importlib.metadata.Distribution.discover(
-                  name=name, path=sorted(str(p) for p in roots)), 2))
-              if not matches:
-                  raise importlib.metadata.PackageNotFoundError(name)
-              if len(matches) != 1 or type(matches[0]) is not importlib.metadata.PathDistribution:
-                  raise ValueError('ambiguous or unsupported distribution')
-              directory = matches[0]._path
-              if (not isinstance(directory, pathlib.Path) or
-                      not directory.name.endswith('.dist-info') or
-                      directory.parent.resolve() not in roots):
-                  raise ValueError('unsupported metadata location')
-              # Directory-relative, no-follow opens also reject symlink substitution races.
-              flags = os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW
-              root_fd = os.open(directory.parent.resolve(), flags | os.O_DIRECTORY)
-              try:
-                  directory_fd = os.open(directory.name, flags | os.O_DIRECTORY, dir_fd=root_fd)
-                  try:
-                      fd = os.open('METADATA', flags | os.O_NONBLOCK, dir_fd=directory_fd)
-                      try:
-                          info = os.fstat(fd)
-                          if not stat.S_ISREG(info.st_mode) or info.st_size > MAX_READ_BYTES:
-                              raise ValueError('metadata is not a bounded regular file')
-                          with os.fdopen(fd, 'rb', closefd=False) as source:
-                              raw = source.read(MAX_READ_BYTES + 1)
-                      finally:
-                          os.close(fd)
-                  finally:
-                      os.close(directory_fd)
-              finally:
-                  os.close(root_fd)
-              if len(raw) > MAX_READ_BYTES:
-                  raise ValueError('metadata exceeds byte cap')
-              decoded = raw.decode('utf-8', errors='strict')
-              headers = email.parser.HeaderParser(policy=email.policy.strict).parsestr(decoded)
-              values = {}
-              for field in ('Metadata-Version', 'Name', 'Version'):
-                  entries = headers.get_all(field, [])
-                  if len(entries) != 1:
-                      raise ValueError('missing or duplicate identity field')
-                  values[field] = str(entries[0])
-              normalize = lambda value: re.sub(r'[-_.]+', '-', value).lower()
-              if (not re.fullmatch(r'[0-9]+\.[0-9]+', values['Metadata-Version']) or
-                      not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', values['Name']) or
-                      normalize(values['Name']) != normalize(name) or
-                      not re.fullmatch(r'[A-Za-z0-9._+!-]{1,64}', values['Version'])):
-                  raise ValueError('invalid metadata identity')
-              return values['Version']
-
-
-          def distribution_versions():
-              result = {}
-              for name in DISTRIBUTIONS:
-                  try:
-                      version = text_value(metadata_version(name))
-                      result[name] = {"version": version, "status": "metadata_only" if version != UNKNOWN else "unreadable"}
-                  except importlib.metadata.PackageNotFoundError:
-                      result[name] = {"version": UNKNOWN, "status": "not_installed"}
-                  except Exception:
-                      result[name] = {"version": UNKNOWN, "status": "unreadable"}
-              return result
-
-
-          def temporary_filesystem():
-              # Observe only the runner-provided work volume; never emit its path.
-              path = os.environ.get("RUNNER_TEMP", "")
-              result = {"available_bytes": UNKNOWN, "total_bytes": UNKNOWN,
-                        "same_device_as_root": UNKNOWN}
-              if (not isinstance(path, str) or not path.startswith("/") or
-                      "\x00" in path or ".." in pathlib.PurePosixPath(path).parts):
-                  return result
-              try:
-                  usage = shutil.disk_usage(path)
-                  result["available_bytes"] = integer(usage.free)
-                  result["total_bytes"] = integer(usage.total)
-              except Exception:
-                  return result
-              try:
-                  result["same_device_as_root"] = os.stat(path).st_dev == os.stat("/").st_dev
-              except Exception:
-                  pass
-              return result
-
-
-          def collect():
-              # Only these named environment values are read; summary destination is never emitted.
-              head = os.environ.get("KWS_PROBE_HEAD_SHA", "")
-              workflow_sha = os.environ.get("GITHUB_SHA", "")
-              affinity = observe(lambda: sorted(os.sched_getaffinity(0)))
-              if not isinstance(affinity, list) or any(integer(cpu) == UNKNOWN for cpu in affinity):
-                  affinity = UNKNOWN
-              v1_quota = read_fixed(READ_PATHS[4]).strip()
-              return {
-                  "schema": SCHEMA,
-                  "evidence_class": "hosted_resource_observation_only",
-                  "identity": {
-                      "run_id": decimal(os.environ.get("GITHUB_RUN_ID", "")),
-                      "run_attempt": decimal(os.environ.get("GITHUB_RUN_ATTEMPT", "")),
-                      "event": os.environ.get("GITHUB_EVENT_NAME", "")
-                          if os.environ.get("GITHUB_EVENT_NAME", "") in ("pull_request", "workflow_dispatch")
-                          else UNKNOWN,
-                      "head_sha": head if re.fullmatch(r"[0-9a-f]{40}", head) else UNKNOWN,
-                      "workflow_sha": workflow_sha if re.fullmatch(r"[0-9a-f]{40}", workflow_sha) else UNKNOWN,
-                  },
-                  "runner_image": {
-                      "ImageOS": text_value(os.environ.get("ImageOS", "")),
-                      "ImageVersion": text_value(os.environ.get("ImageVersion", "")),
-                  },
-                  "cpu": {
-                      "architecture": text_value(observe(platform.machine)),
-                      "logical_count": integer(observe(os.cpu_count)),
-                      "affinity_count": len(affinity) if isinstance(affinity, list) else UNKNOWN,
-                      "affinity_ids": affinity[:MAX_AFFINITY_IDS] if isinstance(affinity, list) else UNKNOWN,
-                      "affinity_ids_truncated": len(affinity) > MAX_AFFINITY_IDS if isinstance(affinity, list) else UNKNOWN,
-                  },
-                  "memory": memory_bytes(read_fixed(READ_PATHS[0])),
-                  "cgroup": {
-                      "scope": "visible_root_files_only_not_effective_process_limit",
-                      "v2_memory_max_bytes": cgroup_limit(read_fixed(READ_PATHS[1])),
-                      "v2_cpu_max": cpu_max(read_fixed(READ_PATHS[2])),
-                      # v1 very-large sentinel limits are kept verbatim, never guessed as unlimited.
-                      "v1_memory_limit_bytes": decimal(read_fixed(READ_PATHS[3]).strip()),
-                      "v1_cpu_quota_us": "unlimited" if v1_quota == "-1" else decimal(v1_quota),
-                      "v1_cpu_period_us": decimal(read_fixed(READ_PATHS[5]).strip()),
-                  },
-                  "root_filesystem_available_bytes": integer(observe(lambda: shutil.disk_usage("/").free)),
-                  "runner_temp_filesystem": temporary_filesystem(),
-                  "runtime": {
-                      "python": text_value(observe(platform.python_version)),
-                      "glibc": text_value(observe(lambda: os.confstr("CS_GNU_LIBC_VERSION"))),
-                  },
-                  "distribution_metadata_scope": "current_interpreter_system_site_directories_without_pth_or_user_site",
-                  "installed_distributions": distribution_versions(),
-                  "interpretation": "Fresh job measurements; metadata does not prove imports, wheel origin, model readiness, or model quality.",
-              }
-
-
-          def render(record):
-              payload = json.dumps(record, indent=2, sort_keys=True, ensure_ascii=True, allow_nan=False) + "\n"
-              summary = "```json\n" + payload + "```\n"
-              # Fail closed before emitting either destination; never silently cut JSON.
-              if len(payload.encode("utf-8")) > MAX_OUTPUT_BYTES or len(summary.encode("utf-8")) > MAX_OUTPUT_BYTES:
-                  raise ValueError("resource probe output exceeds byte cap")
-              return payload, summary
-
-
-          def main():
-              payload, summary = render(collect())
-              # Do not expose the destination path or a write exception in the public log.
-              destination = os.environ.get("GITHUB_STEP_SUMMARY", "")
-              try:
-                  if not destination:
-                      return 1
-                  with open(destination, "a", encoding="utf-8") as output:
-                      output.write(summary)
-              except OSError:
-                  return 1
-              sys.stdout.write(payload)
-              return 0
-
-
-          if __name__ == "__main__":
-              raise SystemExit(main())
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = 7bfcb33a47a1df3e317c835b81e419d14e07dbf8
+          test "$(git diff --name-only HEAD^ HEAD)" = .github/workflows/github-hosted-resource-probe.yml
+          timeout --signal=TERM --kill-after=10s 600 bash training/setup_core_runtime.sh "$RUNNER_TEMP/core-venv"
+      - name: Assemble a clean relocatable interpreter and locked packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/v3-core-transfer"
+          mkdir -p "$root/runtime/bin" "$root/runtime/lib" "$root/source/tools" "$root/source/configs/runtime"
+          cp -L "$pythonLocation/bin/python3.12" "$root/runtime/bin/python3.12"
+          cp -L "$pythonLocation/lib/libpython3.12.so.1.0" "$root/runtime/lib/libpython3.12.so.1.0"
+          cp -a "$pythonLocation/lib/python3.12" "$root/runtime/lib/"
+          rm -rf "$root/runtime/lib/python3.12/site-packages"
+          cp -a "$RUNNER_TEMP/core-venv/lib/python3.12/site-packages" "$root/runtime/lib/python3.12/site-packages"
+          find "$root" -type d -name '__pycache__' -prune -exec rm -rf {} +
+          find "$root" -type f \( -name '*.pyc' -o -name '*.ttf' -o -name '*.otf' -o -name '*.woff' -o -name '*.woff2' \) -delete
+          cp tools/research_runtime.py "$root/source/tools/"
+          cp configs/runtime/research-runtime.json "$root/source/configs/runtime/"
+          env -i PATH=/usr/bin:/bin HOME="$RUNNER_TEMP" PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 \
+            PYTHONHOME="$root/runtime" LD_LIBRARY_PATH="$root/runtime/lib" \
+            "$root/runtime/bin/python3.12" -B "$root/source/tools/research_runtime.py" check --role core --packages
+          KWS_TRANSFER_ROOT="$root" "$root/runtime/bin/python3.12" -B - <<'PY'
+          import hashlib,importlib.metadata,json,os,pathlib,platform,sys
+          root=pathlib.Path(os.environ['KWS_TRANSFER_ROOT'])
+          files={}
+          for path in sorted(root.rglob('*')):
+              if path.is_symlink():
+                  if not path.resolve().is_relative_to(root): raise SystemExit('external runtime symlink')
+                  continue
+              if path.is_file():
+                  h=hashlib.sha256()
+                  with path.open('rb') as f:
+                      for block in iter(lambda:f.read(1048576),b''):h.update(block)
+                  files[path.relative_to(root).as_posix()]={'bytes':path.stat().st_size,'sha256':h.hexdigest()}
+          total=sum(v['bytes'] for v in files.values())
+          if total>3*1024**3:raise SystemExit('runtime transfer exceeds 3GiB uncompressed')
+          result={'schema':'kws-v3-offline-core-runtime-transfer-v1','source_commit':'7bfcb33a47a1df3e317c835b81e419d14e07dbf8',
+                  'python':platform.python_version(),'platform':platform.platform(),'files':files,'bytes':total,
+                  'scope':'software runtime only; imported package versions are not model quality',
+                  'private_assets_included':False,'model_weights_included':False,'model_calls':0,'training_runs':0}
+          (root/'MANIFEST.json').write_text(json.dumps(result,sort_keys=True)+'\n')
+          print(json.dumps({k:v for k,v in result.items() if k!='files'}))
           PY
+          mkdir -p transfer-output
+          tar -C "$RUNNER_TEMP" -czf transfer-output/v3-core-runtime.tar.gz v3-core-transfer
+          test "$(stat -c %s transfer-output/v3-core-runtime.tar.gz)" -lt 943718400
+          sha256sum transfer-output/v3-core-runtime.tar.gz > transfer-output/SHA256SUMS
+          cp "$root/MANIFEST.json" transfer-output/runtime-manifest.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: v3-offline-core-runtime
+          path: transfer-output/
+          retention-days: 3
+          if-no-files-found: error
+          compression-level: 0
