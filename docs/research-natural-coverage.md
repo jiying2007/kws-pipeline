@@ -52,6 +52,8 @@
 `verifier` 包含该模块的绝对 `path` 和完整 `source_files_sha256` 映射；映射必须
 与其 `PRODUCER_FILES` 相同。导入前、导入后及全部复核后检查这些源文件，
 然后调用其只读 `verify_view(package, expected_manifest_sha256=...)`。
+已加载的 `automation` 命名空间及 data 模块也必须来自同一源码根，拒绝跨 checkout
+的模块缓存。原生模型身份保持 `qwen06`、`sensevoice`、`whisper`，不使用展示名称别名。
 如果没有 views，verifier 必须为 null，不加载 data 模块。
 
 每个 observed batch 必须已有最终 seal、输入/请求/清单身份和完整的三路原生

@@ -13,6 +13,7 @@ from pathlib import Path
 import struct
 import sys
 import tempfile
+import types
 import unittest
 from unittest import mock
 
@@ -163,7 +164,7 @@ class CoverageTests(unittest.TestCase):
                 "inventory_sha256": "c" * 64, "requested_native_results": 3 * len(binding["rows"])})
             rows.extend({**row, "batch_id": batch, "sample_rate_hz": 16000,
                 "observations": [{"model": model, "status": "complete", "requested": True, "usable": usable}
-                                 for model in sorted(c.MODELS)],
+                                 for model in ("qwen06", "sensevoice", "whisper")],
                 "decision": {"full_text_quorum": quorum, "ctc_mask": quorum}}
                 for row in binding["rows"])
         return {"schema": c.VIEW, "batches": batches, "rows": rows,
@@ -221,6 +222,7 @@ class CoverageTests(unittest.TestCase):
         changes = [lambda r: r["batches"][0].update(status="claimed"),
                    lambda r: r["rows"][0]["observations"][0].update(status="incomplete"),
                    lambda r: r["rows"][0]["observations"][0].update(requested=False),
+                   lambda r: r["rows"][0]["observations"][0].update(model="qwen"),
                    lambda r: r["rows"][0]["observations"].pop(),
                    lambda r: r["batches"][0].update(final_audit_sha256=None)]
         for change in changes:
@@ -276,6 +278,20 @@ class CoverageTests(unittest.TestCase):
         path.write_text("raise RuntimeError('must not execute an unpinned verifier')\n")
         with self.assertRaisesRegex(ValueError, "VERIFIER_SOURCE_CHANGED"):
             c.load_verifier({"path": str(path), "source_files_sha256": {c.VERIFIER: "0" * 64}})
+
+    def test_cached_foreign_automation_namespace_or_module_is_rejected(self):
+        folder = self.root / "fake-data/automation"; folder.mkdir(parents=True)
+        path = folder / Path(c.VERIFIER).name
+        path.write_text("raise RuntimeError('mixed namespace must be rejected first')\n")
+        source = {"path": str(path), "source_files_sha256": {c.VERIFIER: c.q.sha(path.read_bytes())}}
+        namespace = types.ModuleType("automation")
+        namespace.__path__ = [str(self.root / "other-data/automation")]
+        module = types.ModuleType("automation.active_asr_weak_view")
+        module.__file__ = str(self.root / "other-data/automation/active_asr_weak_view.py")
+        for name, cached in (("automation", namespace), ("automation.active_asr_weak_view", module)):
+            with self.subTest(name=name), mock.patch.dict(sys.modules, {name: cached}), \
+                    self.assertRaisesRegex(ValueError, "MIXED_DATA_MODULES"):
+                c.load_verifier(source)
 
 
 if __name__ == "__main__":

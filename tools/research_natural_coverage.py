@@ -24,7 +24,8 @@ VIEW = "kws-natural-asr-evidence-view-v1"
 VERIFIER = "automation/active_natural_asr_weak_view.py"
 RATE = 16000
 WINDOW, ADVANCE, PAIR = 30 * RATE, 25 * RATE, 55 * RATE
-MODELS = frozenset(("qwen", "sensevoice", "whisper"))
+# Preserve native receipt IDs (not display names such as "Qwen").
+MODELS = frozenset(natural.selective.batch.MODELS)
 BOUNDARY = {
     "target_acoustic_presence": "unknown", "accepted_negative_seconds": 0,
     "natural_far_available": False, "human_gold": False, "independent_test": False,
@@ -174,14 +175,18 @@ def source_checks(spec):
 def load_verifier(spec):
     path, root, expected = source_checks(spec)
     for name, module in list(sys.modules.items()):
-        if name in ("active_natural_asr_weak_view", "active_asr_weak_view") or name == "kws_data_contract" or name.startswith("kws_data_contract."):
+        if name in ("active_natural_asr_weak_view", "active_asr_weak_view", "automation", "kws_data_contract") or \
+                name.startswith(("automation.", "kws_data_contract.")):
             origin = getattr(module, "__file__", None)
-            require(origin and Path(origin).resolve().is_relative_to(root), "MIXED_DATA_MODULES")
+            origins = [origin] if origin else list(getattr(module, "__path__", ()))
+            require(origins and all(Path(item).resolve().is_relative_to(root) for item in origins),
+                    "MIXED_DATA_MODULES")
     module_spec = importlib.util.spec_from_file_location("active_natural_asr_weak_view", path)
     module = importlib.util.module_from_spec(module_spec)
     sys.modules[module_spec.name] = module
     module_spec.loader.exec_module(module)
-    require(set(module.PRODUCER_FILES) == set(expected), "VERIFIER_SOURCE_ROSTER_CHANGED")
+    require(len(module.PRODUCER_FILES) == len(expected) and set(module.PRODUCER_FILES) == set(expected),
+            "VERIFIER_SOURCE_ROSTER_CHANGED")
     source_checks(spec)
     return module
 
