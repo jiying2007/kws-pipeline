@@ -1,0 +1,50 @@
+name: V3 existing stream source transfer
+on:
+  push:
+    branches: ['research/v3-stream-source-transfer-20261107']
+permissions:
+  contents: read
+concurrency:
+  group: v3-stream-source-transfer-20261107
+  cancel-in-progress: false
+jobs:
+  source:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/v3-stream-source-transfer-20261107' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: 7bfcb33a47a1df3e317c835b81e419d14e07dbf8
+      - name: Archive fixed public source bytes, no audio or weights
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 7bfcb33a47a1df3e317c835b81e419d14e07dbf8
+          mkdir transfer
+          python3 -I -S - <<'PY'
+          import hashlib,json,pathlib,subprocess,zipfile
+          prefixes=('research/fsmn2599-stream-c/','research/fsmn2599-three-window-c/','research/donor_fbank/','research/model_comparison/','tests/','tools/','training/','configs/')
+          allowed={'.py','.c','.h','.md','.json','.txt','.yml','.yaml','.sh','.cmake'}
+          files={};total=0
+          with zipfile.ZipFile('transfer/existing-stream-source.zip','x',compression=zipfile.ZIP_DEFLATED) as z:
+              for name in subprocess.check_output(['git','ls-files','-z']).decode().split('\0'):
+                  if not name:continue
+                  if not(name.startswith(prefixes) or name in ('LICENSE','CMakeLists.txt')):continue
+                  p=pathlib.Path(name)
+                  if p.suffix not in allowed and p.name!='LICENSE':continue
+                  if p.is_symlink() or p.stat().st_size>8*1024**2:raise SystemExit('unbounded source')
+                  raw=p.read_bytes();total+=len(raw)
+                  if total>128*1024**2:raise SystemExit('archive budget')
+                  files[name]={'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}
+                  z.writestr(name,raw)
+              z.writestr('TRANSFER_MANIFEST.json',json.dumps({'source_commit':'7bfcb33a47a1df3e317c835b81e419d14e07dbf8','files':files,'new_model_calls':0,'scope':'existing public source only'},sort_keys=True)+'\n')
+          print(json.dumps({'files':len(files),'bytes':total,'archive_sha256':hashlib.sha256(pathlib.Path('transfer/existing-stream-source.zip').read_bytes()).hexdigest(),'new_model_calls':0}))
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: v3-existing-stream-source
+          path: transfer/
+          retention-days: 3
+          if-no-files-found: error
