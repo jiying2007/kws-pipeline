@@ -110,3 +110,22 @@ Independent human/final-AFE evaluation and physical SSC305 evaluation remain sep
 - `NOT_RUN`: external/physical evidence not collected.
 
 No row may be promoted based on a PR merge, CI pass, generated clip count, ASR call count, or successful preparation alone.
+
+
+## V3 correction after candidate-plan audit — 2026-11-07
+
+The repository already contains a more specific disabled architecture-comparison contract at `configs/research/parallel-candidate-screen-2026-10-10.json` and its validator `tools/validate_parallel_candidate_plan.py`. This V3 ledger does not supersede or activate that plan. Before any candidate execution, reconcile its exact source pins, candidate contracts, resource ceilings, seed IDs, and data-admission requirements with current main.
+
+The existing plan's three architecture slots are:
+
+1. RNN64 matched-control, retrained on the same newly admitted data (the archived self-trained Local38 checkpoint is not a matched training control).
+2. Reduced causal depthwise-temporal TCN + CTC primary challenger; its reduced-width 32-bin cache adapter, chunk equivalence and C export are not yet established.
+3. Bounded zero-lookahead FSMN + CTC conditional challenger; it is not an automatically admitted third arm and requires all layers/frontend to be causal.
+
+The Direct-KWS prototype is a separate later objective/head experiment, not a substitute for the third architecture slot and not yet eligible for three-class/continuous-event ranking. It requires actual rights-bound labels, suitable window/event semantics, complete class coverage, and route-specific calibration at matched FAR. Keep it conditional until those conditions are proven.
+
+The plan explicitly caps screening at three arms × two seeds, at most six fits, and confirmation at one challenger × one fresh seed, for at most eight fits total; per-fit optimizer updates are capped at 1,000. Its execution remains disabled because data admission, exact hashes, compute/RSS limits, convergence review, seed IDs and preregistration are incomplete. Do not silently replace its 1,000-update cap with a 2,000-step C1 recipe or claim the budgets are equivalent. Any future superseding plan must preserve the no-sweep, group-isolation, no-cherry-picking and inconclusive/unknown verdict rules.
+
+The archived Local38 RNN64/C1 checkpoints in kws-data PR #70 are useful historical research assets, but the PR's saved-public-evidence check currently fails because its retained-file inventory does not match the branch Git tree. The checkpoint card also records Python 3.12.14 / Torch 2.15.0+cpu, which differs from current pipeline Python 3.12.16 / Torch 2.13.0+cpu. Do not merge, promote, or use these archives as canonical current-runtime inputs until the inventory failure is fixed and exact loading/parity is verified under the current pinned runtime. Preserve their bytes and historical evidence.
+
+The direct keyword evidence v2 must not be implemented by merely loosening the current natural full-text quorum. The current natural consumer intentionally requires complete usable transcripts before projecting keyword labels and explicitly keeps acoustic presence unknown, event times null, natural FAR unavailable, and training admission false. A new keyword-level protocol needs its own frozen schema, actual same-PCM recognizer bindings, independent blinded acoustic audit, source-family isolation, and explicit `present/absent/unknown` semantics. The 73 existing windows remain development-only and are not a fresh independent audit set.
