@@ -38,11 +38,47 @@ def read_wav(raw):
     require(len(pcm) == samples * 2, "WAV PCM length mismatch")
     return pcm, samples
 
+def numeric_member_map(archives):
+    result = {}
+    for path in archives:
+        require(path.is_file(), "numeric archive missing: " + str(path))
+        with zipfile.ZipFile(str(path), "r") as archive:
+            for member in archive.namelist():
+                if member.startswith("numeric/") and member.endswith(".npz"):
+                    try:
+                        index = int(Path(member).stem)
+                    except ValueError:
+                        continue
+                    require(index not in result, "duplicate numeric archive index")
+                    result[index] = (path.name, member)
+    require(set(result) == set(range(134)), "numeric archives must cover indices0..133")
+    return result
+
+def verify_numeric_binding(binding, index, numeric_map, samples, numeric_root):
+    import numpy as np
+    archive_name, member = numeric_map[index]
+    with zipfile.ZipFile(str(numeric_root / archive_name), "r") as archive:
+        with archive.open(member, "r") as stream:
+            with np.load(stream) as data:
+                feature = np.asarray(data["feature"])
+                clock = np.asarray(data["clock"])
+                require(list(feature.shape) == binding["shape"],
+                        "feature/source order mismatch at index%d" % index)
+                require(clock.shape == (feature.shape[0], 3),
+                        "numeric clock shape mismatch at index%d" % index)
+                require(np.array_equal(clock[:, 0], np.arange(feature.shape[0])),
+                        "numeric frame index mismatch at index%d" % index)
+                require(0 <= samples - int(clock[-1, 2]) < 480,
+                        "numeric EOF residual mismatch at index%d" % index)
+    return archive_name, member
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--capsule", type=Path, required=True)
     ap.add_argument("--model-package", type=Path, required=True)
     ap.add_argument("--output", type=Path, required=True)
+    ap.add_argument("--numeric-root", type=Path)
+    ap.add_argument("--numeric-archive", type=Path, action="append", default=[])
     args = ap.parse_args()
     try:
         require(args.capsule.is_file() and not args.capsule.is_symlink(), "capsule missing")
@@ -57,9 +93,15 @@ def main():
         require(isinstance(pin, dict) and bind_path.stat().st_size == pin.get("bytes")
                 and sha_file(bind_path) == pin.get("sha256"), "feature-binding file mismatch")
         bindings = json.loads(bind_path.read_text(encoding="utf-8"))
-        require(isinstance(bindings, list) and len(bindings) == 134, "expected 134 retained inputs")
+        require(isinstance(bindings, list) and len(bindings) == 134, "expected134 retained inputs")
         require(args.output.is_absolute() and not args.output.exists() and
                 not args.output.is_symlink(), "output must be a fresh absolute directory")
+        if args.numeric_archive:
+            require(args.numeric_root is not None, "--numeric-root is required with numeric archives")
+            numeric_map = numeric_member_map(args.numeric_archive)
+        else:
+            require(args.numeric_root is None, "--numeric-root requires numeric archives")
+            numeric_map = {}
         ids = set()
         with zipfile.ZipFile(str(args.capsule), "r") as capsule:
             capsule_manifest = json.loads(capsule.read("MANIFEST.json"))
@@ -77,7 +119,8 @@ def main():
                 require(binding["split"] in ("train", "development"), "unexpected source role")
                 candidates = []
                 for member, info in files.items():
-                    if source_id in info.get("path", "") and info.get("path", "").lower().endswith(".wav"):
+                    path = info.get("path", "")
+                    if source_id in path and path.lower().endswith(".wav"):
                         raw = capsule.read(member)
                         require(len(raw) == info["bytes"] and sha_bytes(raw) == info["sha256"],
                                 "capsule WAV member hash mismatch")
@@ -91,15 +134,25 @@ def main():
                         candidates = preferred
                 require(len(candidates) == 1, "ambiguous WAV source: " + source_id)
                 member, info, raw, pcm, samples = candidates[0]
-                (wav_dir / ("%03d.wav" % index)).write_bytes(raw)
-                (pcm_dir / ("%03d.pcm" % index)).write_bytes(pcm)
-                records.append({
+                wav_path = wav_dir / ("%03d.wav" % index)
+                pcm_path = pcm_dir / ("%03d.pcm" % index)
+                with wav_path.open("xb") as f:
+                    f.write(raw)
+                with pcm_path.open("xb") as f:
+                    f.write(pcm)
+                row = {
                     "index": index, "source_id": source_id, "split": binding["split"],
                     "wav_bytes": len(raw), "wav_sha256": sha_bytes(raw),
                     "pcm_bytes": len(pcm), "pcm_sha256": sha_bytes(pcm),
                     "samples": samples, "feature_shape": binding["shape"],
                     "capsule_member": member
-                })
+                }
+                if numeric_map:
+                    archive_name, numeric_member = verify_numeric_binding(
+                        binding, index, numeric_map, samples, args.numeric_root)
+                    row["numeric_archive"] = archive_name
+                    row["numeric_member"] = numeric_member
+                records.append(row)
         counts = {}
         for row in records:
             counts[row["split"]] = counts.get(row["split"], 0) + 1
