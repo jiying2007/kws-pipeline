@@ -185,6 +185,23 @@ class CrossArchSourceContracts(unittest.TestCase):
         self.assertNotIn("threshold", source.lower())
         self.assertNotIn("wake event", source.lower())
 
+    def test_recovery_tool_is_offline_and_hash_bound(self):
+        source = (ROOT / "research/r1_stream_c/cross_arch_recover_inputs.py").read_text()
+        self.assertIn("CAPSULE_SHA256", source)
+        self.assertIn("MODEL_CARD_SHA256", source)
+        self.assertIn("CHECKPOINT_SHA256", source)
+        self.assertIn("binding[\"pcm_sha256\"]", source)
+        self.assertNotIn("urllib", source)
+        self.assertNotIn("requests", source)
+        self.assertNotIn("subprocess", source)
+        self.assertIn("raw_audio_published", source)
+
+    def test_recovery_tool_enforces_original_pcm_format(self):
+        source = (ROOT / "research/r1_stream_c/cross_arch_recover_inputs.py").read_text()
+        self.assertIn("(1, 2, 16000)", source)
+        self.assertIn("capsule WAV member hash mismatch", source)
+        self.assertIn("output must be a fresh absolute directory", source)
+
     def test_workflow_is_manual_and_source_only(self):
         workflow = (ROOT / ".github/workflows/r1-reference64-cross-arch.yml").read_text()
         self.assertIn("workflow_dispatch:", workflow)
