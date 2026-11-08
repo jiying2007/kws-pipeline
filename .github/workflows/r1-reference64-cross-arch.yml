@@ -1,0 +1,113 @@
+name: R1 Binary64 x86 and ARM cross-architecture capture build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r1-reference64-cross-arch-manual
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-research-python
+      - name: Install the pinned ARMv7 compiler and user-mode emulator
+        run: sudo python3 -I -S -B tools/install_arm_dependencies.py
+      - name: Materialize the source-only Binary64 reference
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -I -S -B research/r1_stream_c/numerics.py \
+            --mode reference64 --output "$RUNNER_TEMP/r1-reference64"
+          test -z "$(find "$RUNNER_TEMP/r1-reference64/weights" -type f -print -quit)"
+      - name: Build host and ARM capture binaries from the same source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p transfer/host transfer/arm transfer/executor
+          python3 -I -S - <<'PY'
+          import hashlib,json,os,pathlib,shutil,struct,subprocess,time
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'r1-reference64'
+          src=root/'source'
+          capture=pathlib.Path('research/r1_stream_c/cross_arch_capture.c')
+          if not capture.is_file(): raise SystemExit('capture source missing')
+          armout=pathlib.Path('transfer/arm').resolve()
+          hostout=pathlib.Path('transfer/host').resolve()
+          shutil.copyfile(capture,armout/'cross_arch_capture.c')
+          sources=[str(src/n) for n in ('r1d_stream.c','r1d_pcm.c','reference64_fbank.c','r1dfsmn.c','sha256.c')]
+          common=['-std=c11','-O2','-Wall','-Wextra','-Werror','-pedantic',
+                  '-fno-fast-math','-ffp-contract=off','-fexcess-precision=standard',
+                  '-I'+str(src)]
+          start=time.monotonic()
+          armcc='/usr/bin/arm-linux-gnueabihf-gcc'
+          armflags=common+['-mcpu=cortex-a32','-mfpu=neon-vfpv4','-mfloat-abi=hard']
+          armcmd=[armcc,*armflags,'-static',str(capture),*sources,'-lm',
+                  '-o',str(armout/'r1d_capture_armhf_static')]
+          result=subprocess.run(armcmd,capture_output=True,timeout=90)
+          (armout/'compile.log').write_bytes(result.stdout+result.stderr)
+          if result.returncode: raise SystemExit('ARM compile failed; preserve compile.log')
+          raw=(armout/'r1d_capture_armhf_static').read_bytes()
+          eflags=struct.unpack_from('<I',raw,36)[0]
+          if raw[:6]!=b'\\x7fELF\\x01\\x01' or struct.unpack_from('<H',raw,18)[0]!=40:
+              raise SystemExit('ARM ELF class/endian/machine mismatch')
+          if eflags&0xff000000!=0x05000000 or not eflags&0x400 or eflags&0x200:
+              raise SystemExit('ARM EABI5 hard-float ABI mismatch')
+          (armout/'ELF.txt').write_bytes(subprocess.check_output(
+              ['/usr/bin/readelf','-h','-A',str(armout/'r1d_capture_armhf_static')],timeout=5))
+          hostcc='/usr/bin/gcc'
+          hostcmd=[hostcc,*common,str(capture),*sources,'-lm',
+                   '-o',str(hostout/'r1d_capture_x86_64')]
+          result=subprocess.run(hostcmd,capture_output=True,timeout=60)
+          (hostout/'compile.log').write_bytes(result.stdout+result.stderr)
+          if result.returncode: raise SystemExit('x86-64 compile failed; preserve compile.log')
+          raw=(hostout/'r1d_capture_x86_64').read_bytes()
+          if raw[:6]!=b'\\x7fELF\\x02\\x01' or struct.unpack_from('<H',raw,18)[0]!=62:
+              raise SystemExit('x86-64 ELF class/endian/machine mismatch')
+          (hostout/'ELF.txt').write_bytes(subprocess.check_output(
+              ['/usr/bin/readelf','-h','-A',str(hostout/'r1d_capture_x86_64')],timeout=5))
+          qemu=pathlib.Path('/usr/bin/qemu-arm-static')
+          if not qemu.is_file(): raise SystemExit('qemu-arm-static not installed')
+          shutil.copyfile(qemu,'transfer/executor/qemu-arm-static')
+          (pathlib.Path('transfer/executor/qemu-arm-static')).chmod(0o755)
+          copyright_path=pathlib.Path('/usr/share/doc/qemu-user-static/copyright')
+          if copyright_path.is_file(): shutil.copyfile(copyright_path,'transfer/executor/COPYRIGHT')
+          (pathlib.Path('transfer/executor/PACKAGE.txt')).write_bytes(subprocess.check_output(
+              ['dpkg-query','-W','-f=${Package}\\n${Version}\\n${Source}\\n','qemu-user-static'],timeout=5))
+          (pathlib.Path('transfer/executor/README.txt')).write_text(
+              'Unmodified Ubuntu qemu-user-static user-mode emulator. Separate from model code. '
+              'See COPYRIGHT and PACKAGE.txt. No private weights or audio were loaded.\\n')
+          files={}
+          for p in sorted(pathlib.Path('transfer').rglob('*')):
+              if p.is_file():
+                  data=p.read_bytes()
+                  files[p.relative_to('transfer').as_posix()]={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+          result={'schema':'kws-r1-reference64-cross-arch-build-v1',
+              'source_commit':os.environ['GITHUB_SHA'],
+              'target':'Cortex-A32/ARMv7-A NEON-VFPv4 hard-float and x86-64',
+              'arm_compiler':subprocess.check_output([armcc,'--version'],timeout=5).decode().splitlines()[0],
+              'host_compiler':subprocess.check_output([hostcc,'--version'],timeout=5).decode().splitlines()[0],
+              'compiler_invocations':2,'elapsed_seconds':time.monotonic()-start,
+              'private_audio_loaded':False,'model_weights_loaded':False,'model_forwards':0,
+              'training_updates':0,'tts_calls':0,'asr_calls':0,
+              'files':files,'commands':{'arm':armcmd,'host':hostcmd}}
+          pathlib.Path('transfer/BUILD.json').write_text(json.dumps(result,sort_keys=True,indent=2)+'\\n')
+          print(json.dumps({k:v for k,v in result.items() if k not in ('files','commands')},sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: r1-reference64-cross-arch-capture
+          path: transfer/
+          retention-days: 3
+          if-no-files-found: error
+          compression-level: 0
