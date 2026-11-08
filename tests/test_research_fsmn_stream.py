@@ -127,6 +127,20 @@ class R1StreamSourceContracts(unittest.TestCase):
         self.assertFalse(result.skipped)
         self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
 
+    def test_cross_arch_source_contracts(self):
+        spec = importlib.util.spec_from_file_location(
+            "r1_cross_arch_source_tests",
+            self.root / "research/r1_stream_c/cross_arch_source_contracts.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(
+            module.CrossArchSourceContracts)
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(result.testsRun, 19)
+        self.assertFalse(result.skipped)
+        self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
