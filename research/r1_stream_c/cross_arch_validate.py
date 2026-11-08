@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-"""Run and compare the fixed R1 Binary64 reference on x86-64 and ARMv7-A.
+"""Bounded, streaming x86-64/ARMv7-A replay for the fixed R1 Binary64 reference.
 
-This is a research numerical-replay tool. It does not train, synthesize audio,
-call ASR, calibrate wake events, or qualify a physical SSC305.
+The default validator uses only the Python standard library and keeps memory
+bounded to one captured frame per architecture. NumPy is imported lazily only
+when optional saved-NPZ comparisons are requested.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import subprocess
 import sys
 import time
 from typing import Any, Dict, List, Optional, Tuple
-
-import numpy as np
+import struct
 
 MODEL_BYTES = 3028860
 TABLE_BYTES = 83840
@@ -23,14 +24,10 @@ MODEL_SHA256 = "e9a3c3360bab0485b309eb2a3ef50869a8e917f50f28dbfd30673f57a88c86bb
 TABLE_SHA256 = "49c42226c617fad81c5edb683a6332bdb82b52e37040f724eac23522a504db49"
 CHECKPOINT_SHA256 = "99ac2239807ce5a93c8723a01df2e53c446f868245caccb2e7809deb6e943571"
 MAGIC = b"R1DREF1\0"
-FRAME_DTYPE = np.dtype([
-    ("frame", "<u8"),
-    ("source_end", "<u8"),
-    ("delivery_end", "<u8"),
-    ("features", "<f8", (400,)),
-    ("logits", "<f8", (2601,)),
-])
-FRAME_BYTES = 8 * 3 + 8 * 400 + 8 * 2601
+CLOCK_STRUCT = struct.Struct("<QQQ")
+FEATURE_STRUCT = struct.Struct("<400d")
+LOGIT_STRUCT = struct.Struct("<2601d")
+FRAME_BYTES = CLOCK_STRUCT.size + FEATURE_STRUCT.size + LOGIT_STRUCT.size
 
 FEATURE_ATOL = 1.0e-8
 FEATURE_RTOL = 1.0e-8
@@ -73,7 +70,7 @@ def load_input_manifest(path: Path) -> Dict[str, Any]:
                 "invalid or duplicate source identity")
         require(index not in indices, "duplicate record index")
         require(record.get("split") in ("train", "development"),
-                "unexpected retained source role")
+                "unexpected source role")
         require(type(record.get("samples")) is int and record["samples"] > 0,
                 "invalid PCM sample count")
         require(type(record.get("pcm_bytes")) is int and
@@ -93,32 +90,131 @@ def load_input_manifest(path: Path) -> Dict[str, Any]:
     return data
 
 
-def read_capture(path: Path, expected_frames: int) -> np.ndarray:
-    raw = path.read_bytes()
-    expected_bytes = 8 + expected_frames * FRAME_BYTES
-    require(len(raw) == expected_bytes, "capture byte count mismatch: " + str(path))
-    require(raw[:8] == MAGIC, "capture magic mismatch: " + str(path))
-    return np.frombuffer(raw, dtype=FRAME_DTYPE, offset=8, count=expected_frames)
+def stable_softmax(logits: Tuple[float, ...]) -> Tuple[float, ...]:
+    maximum = max(logits)
+    exponentials = tuple(math.exp(value - maximum) for value in logits)
+    denominator = math.fsum(exponentials)
+    require(math.isfinite(denominator) and denominator > 0.0,
+            "stable-softmax denominator is invalid")
+    return tuple(value / denominator for value in exponentials)
 
 
-def stable_softmax(logits: np.ndarray) -> np.ndarray:
-    maximum = np.max(logits, axis=1, keepdims=True)
-    exp_values = np.exp(logits - maximum)
-    return exp_values / np.sum(exp_values, axis=1, keepdims=True)
+def append_greedy(sequence: List[int], previous: Optional[int],
+                  logits: Tuple[float, ...]) -> Optional[int]:
+    token = max(range(len(logits)), key=logits.__getitem__)
+    if token != 0 and token != previous:
+        sequence.append(token)
+    return token
 
 
-def greedy_sequence(logits: np.ndarray) -> List[int]:
-    sequence: List[int] = []
+def open_capture(path: Path, expected_frames: int):
+    expected_bytes = len(MAGIC) + expected_frames * FRAME_BYTES
+    require(path.is_file() and not path.is_symlink(),
+            "capture file missing or symlinked: " + str(path))
+    require(path.stat().st_size == expected_bytes,
+            "capture byte count mismatch: " + str(path))
+    stream = path.open("rb")
+    if stream.read(len(MAGIC)) != MAGIC:
+        stream.close()
+        raise ValueError("capture magic mismatch: " + str(path))
+    return stream
+
+
+def read_frame(stream, label: str, index: int):
+    raw = stream.read(FRAME_BYTES)
+    require(len(raw) == FRAME_BYTES,
+            "truncated capture frame %d (%s)" % (index, label))
+    frame, source_end, delivery_end = CLOCK_STRUCT.unpack_from(raw, 0)
+    feature_offset = CLOCK_STRUCT.size
+    logit_offset = feature_offset + FEATURE_STRUCT.size
+    features = FEATURE_STRUCT.unpack_from(raw, feature_offset)
+    logits = LOGIT_STRUCT.unpack_from(raw, logit_offset)
+    return raw, frame, source_end, delivery_end, features, logits
+
+
+def compare_record(x86_path: Path, arm_path: Path, samples: int,
+                   expected_frames: int) -> Dict[str, Any]:
+    require(expected_frames > 0, "expected frame count must be positive")
+    x86 = open_capture(x86_path, expected_frames)
+    arm = open_capture(arm_path, expected_frames)
+    feature_max = 0.0
+    logit_max = 0.0
+    posterior_max = 0.0
+    bitwise_identical = True
+    greedy: List[int] = []
     previous: Optional[int] = None
-    for value in np.argmax(logits, axis=1):
-        token = int(value)
-        if token != 0 and token != previous:
-            sequence.append(token)
-        previous = token
-    return sequence
+    try:
+        for index in range(expected_frames):
+            xraw, xf, xs, xd, xfeatures, xlogits = read_frame(x86, "x86", index)
+            araw, af, ass, ad, afeatures, alogits = read_frame(arm, "arm", index)
+            require((xf, xs, xd) == (af, ass, ad),
+                    "x86/ARM source clock mismatch")
+            require(xf == index, "non-contiguous model frame sequence")
+            require(xs == 720 + 480 * index,
+                    "unexpected source dependency clock")
+            require(xd >= xs and xd <= samples and xd % 320 == 0,
+                    "invalid delivery clock")
+            bitwise_identical = bitwise_identical and xraw == araw
+
+            for left, right in zip(xfeatures, afeatures):
+                require(math.isfinite(left) and math.isfinite(right),
+                        "non-finite cross-architecture feature")
+                difference = abs(left - right)
+                feature_max = max(feature_max, difference)
+                require(difference <= FEATURE_ATOL + FEATURE_RTOL * abs(left) and
+                        difference <= FEATURE_MAX_ABS,
+                        "cross-architecture feature numerical contract failed")
+
+            for left, right in zip(xlogits, alogits):
+                require(math.isfinite(left) and math.isfinite(right),
+                        "non-finite cross-architecture logit")
+                difference = abs(left - right)
+                logit_max = max(logit_max, difference)
+                require(difference <= LOGIT_ATOL + LOGIT_RTOL * abs(left) and
+                        difference <= LOGIT_MAX_ABS,
+                        "cross-architecture logit numerical contract failed")
+
+            xposterior = stable_softmax(xlogits)
+            aposterior = stable_softmax(alogits)
+            for left, right in zip(xposterior, aposterior):
+                difference = abs(left - right)
+                posterior_max = max(posterior_max, difference)
+                require(difference <= POSTERIOR_ATOL + POSTERIOR_RTOL * abs(left) and
+                        difference <= POSTERIOR_MAX_ABS,
+                        "cross-architecture posterior numerical contract failed")
+
+            x_top = max(range(len(xlogits)), key=xlogits.__getitem__)
+            a_top = max(range(len(alogits)), key=alogits.__getitem__)
+            require(x_top == a_top, "cross-architecture frame argmax mismatch")
+            previous = append_greedy(greedy, previous, xlogits)
+
+        require(x86.read(1) == b"" and arm.read(1) == b"",
+                "capture contains unaccounted trailing bytes")
+    finally:
+        x86.close()
+        arm.close()
+
+    with x86_path.open("rb") as stream:
+        stream.seek(len(MAGIC) + (expected_frames - 1) * FRAME_BYTES)
+        last_raw = stream.read(FRAME_BYTES)
+    _, _, _, final_delivery = CLOCK_STRUCT.unpack_from(last_raw, 0)
+    require(0 <= samples - final_delivery < 480,
+            "EOF residual sample accounting mismatch")
+
+    return {
+        "frames": expected_frames,
+        "bitwise_identical": bitwise_identical,
+        "max_feature_abs_difference": feature_max,
+        "max_logit_abs_difference": logit_max,
+        "max_posterior_abs_difference": posterior_max,
+        "source_clock_equal": True,
+        "argmax_equal": True,
+        "greedy_sequence": greedy,
+    }
 
 
-def check_status(path: Path, expected_frames: int, expected_pcm_bytes: int) -> Dict[str, Any]:
+def check_status(path: Path, expected_frames: int,
+                 expected_pcm_bytes: int) -> Dict[str, Any]:
     status = json.loads(path.read_text(encoding="utf-8"))
     require(status.get("status") == "complete", "capture did not complete")
     require(status.get("frames") == expected_frames, "capture frame count mismatch")
@@ -127,56 +223,10 @@ def check_status(path: Path, expected_frames: int, expected_pcm_bytes: int) -> D
     return status
 
 
-def compare_record(x86: np.ndarray, arm: np.ndarray, samples: int) -> Dict[str, Any]:
-    require(x86.shape == arm.shape, "x86/ARM frame count mismatch")
-    x_clock = np.column_stack((x86["frame"], x86["source_end"], x86["delivery_end"]))
-    a_clock = np.column_stack((arm["frame"], arm["source_end"], arm["delivery_end"]))
-    require(np.array_equal(x_clock, a_clock), "x86/ARM source clock mismatch")
-    frame_ids = x_clock[:, 0]
-    require(np.array_equal(frame_ids, np.arange(len(x86), dtype=np.uint64)),
-            "non-contiguous model frame sequence")
-    require(np.array_equal(x_clock[:, 1], 720 + 480 * frame_ids),
-            "unexpected source dependency clock")
-    require(np.all(x_clock[:, 2] >= x_clock[:, 1]) and
-            np.all(x_clock[:, 2] <= samples) and
-            np.all(x_clock[:, 2] % 320 == 0),
-            "invalid delivery clock")
-    require(0 <= samples - int(x_clock[-1, 2]) < 480,
-            "EOF residual sample accounting mismatch")
-
-    feature_diff = np.abs(x86["features"] - arm["features"])
-    logit_diff = np.abs(x86["logits"] - arm["logits"])
-    require(np.all(feature_diff <= FEATURE_ATOL + FEATURE_RTOL * np.abs(x86["features"])) and
-            float(np.max(feature_diff)) <= FEATURE_MAX_ABS,
-            "cross-architecture feature numerical contract failed")
-    require(np.all(logit_diff <= LOGIT_ATOL + LOGIT_RTOL * np.abs(x86["logits"])) and
-            float(np.max(logit_diff)) <= LOGIT_MAX_ABS,
-            "cross-architecture logit numerical contract failed")
-
-    x_posterior = stable_softmax(x86["logits"])
-    a_posterior = stable_softmax(arm["logits"])
-    posterior_diff = np.abs(x_posterior - a_posterior)
-    require(np.all(posterior_diff <= POSTERIOR_ATOL + POSTERIOR_RTOL * np.abs(x_posterior)) and
-            float(np.max(posterior_diff)) <= POSTERIOR_MAX_ABS,
-            "cross-architecture posterior numerical contract failed")
-    x_argmax = np.argmax(x86["logits"], axis=1)
-    a_argmax = np.argmax(arm["logits"], axis=1)
-    require(np.array_equal(x_argmax, a_argmax), "cross-architecture frame argmax mismatch")
-    return {
-        "frames": int(len(x86)),
-        "bitwise_identical": bool(np.array_equal(x86.view(np.uint8), arm.view(np.uint8))),
-        "max_feature_abs_difference": float(np.max(feature_diff)),
-        "max_logit_abs_difference": float(np.max(logit_diff)),
-        "max_posterior_abs_difference": float(np.max(posterior_diff)),
-        "source_clock_equal": True,
-        "argmax_equal": True,
-        "greedy_sequence": greedy_sequence(x86["logits"]),
-    }
-
-
 def compare_saved_numeric(result: Dict[str, Any], record: Dict[str, Any],
-                          x86: np.ndarray, numeric_root: Path,
+                          x86_path: Path, frames: int, numeric_root: Path,
                           final_index: Dict[str, Any]) -> None:
+    import numpy as np
     archive_path = numeric_root / record["numeric_archive"]
     member = record["numeric_member"]
     require(archive_path.is_file(), "saved numeric archive missing: " + str(archive_path))
@@ -185,17 +235,32 @@ def compare_saved_numeric(result: Dict[str, Any], record: Dict[str, Any],
         with archive.open(member, "r") as stream:
             with np.load(stream) as saved:
                 expected_clock = np.asarray(saved["clock"], dtype=np.uint64)
-                actual_clock = np.column_stack((
-                    x86["frame"], x86["source_end"], x86["delivery_end"])).astype(np.uint64)
-                require(np.array_equal(actual_clock, expected_clock),
-                        "saved FP32 source clock mismatch")
                 saved_logits = np.asarray(saved["logits"], dtype=np.float32)
-                require(np.array_equal(np.argmax(x86["logits"], axis=1),
-                                       np.argmax(saved_logits, axis=1)),
-                        "saved FP32 argmax mismatch")
+    require(expected_clock.shape == (frames, 3),
+            "saved FP32 clock shape mismatch")
+    require(saved_logits.shape == (frames, 2601),
+            "saved FP32 logit shape mismatch")
+    actual_clock = []
+    saved_argmax_equal = True
+    greedy: List[int] = []
+    previous: Optional[int] = None
+    with x86_path.open("rb") as stream:
+        require(stream.read(len(MAGIC)) == MAGIC, "x86 capture magic mismatch")
+        for index in range(frames):
+            raw = stream.read(FRAME_BYTES)
+            require(len(raw) == FRAME_BYTES, "x86 capture truncated during saved comparison")
+            frame, source_end, delivery_end = CLOCK_STRUCT.unpack_from(raw, 0)
+            logits = LOGIT_STRUCT.unpack_from(raw, CLOCK_STRUCT.size + FEATURE_STRUCT.size)
+            actual_clock.append((frame, source_end, delivery_end))
+            expected_top = int(np.argmax(saved_logits[index]))
+            actual_top = max(range(len(logits)), key=logits.__getitem__)
+            saved_argmax_equal = saved_argmax_equal and expected_top == actual_top
+            previous = append_greedy(greedy, previous, logits)
+    require(np.array_equal(np.asarray(actual_clock, dtype=np.uint64), expected_clock),
+            "saved FP32 source clock mismatch")
+    require(saved_argmax_equal, "saved FP32 argmax mismatch")
     expected = final_index[record["source_id"]]["greedy_token_ids"]
-    require(result["greedy_sequence"] == expected,
-            "saved greedy sequence mismatch")
+    require(greedy == expected, "saved greedy sequence mismatch")
     result["saved_fp32_clock_equal"] = True
     result["saved_fp32_argmax_equal"] = True
     result["saved_greedy_sequence_equal"] = True
@@ -228,8 +293,10 @@ def verify_build_manifest(path: Path, host_binary: Path, arm_binary: Path,
     for name, actual in expected.items():
         require(name in build.get("files", {}), "build manifest missing " + name)
         pin = build["files"][name]
-        require(actual.is_file() and actual.stat().st_size == pin["bytes"] and
-                sha256_file(actual) == pin["sha256"], "build artifact identity mismatch: " + name)
+        require(actual.is_file() and not actual.is_symlink() and
+                actual.stat().st_size == pin["bytes"] and
+                sha256_file(actual) == pin["sha256"],
+                "build artifact identity mismatch: " + name)
     return build
 
 
@@ -296,11 +363,10 @@ def main() -> int:
             frames = int(record["feature_shape"][0])
             check_status(x86_path.with_suffix(".stderr.json"), frames, record["pcm_bytes"])
             check_status(arm_path.with_suffix(".stderr.json"), frames, record["pcm_bytes"])
-            x86 = read_capture(x86_path, frames)
-            arm = read_capture(arm_path, frames)
-            result = compare_record(x86, arm, record["samples"])
+            result = compare_record(x86_path, arm_path, record["samples"], frames)
             if args.numeric_root is not None:
-                compare_saved_numeric(result, record, x86, args.numeric_root, final_index)
+                compare_saved_numeric(result, record, x86_path, frames,
+                                      args.numeric_root, final_index)
             result.update({
                 "index": index,
                 "source_id": record["source_id"],
@@ -315,9 +381,6 @@ def main() -> int:
             total_frames += frames
             total_pcm_bytes += record["pcm_bytes"]
 
-        feature_max = max(row["max_feature_abs_difference"] for row in records_out)
-        logit_max = max(row["max_logit_abs_difference"] for row in records_out)
-        posterior_max = max(row["max_posterior_abs_difference"] for row in records_out)
         summary = {
             "schema": "kws-r1-reference64-cross-arch-replay-v1",
             "status": "PASS_CROSS_ARCH_NUMERIC_CONTRACT",
@@ -335,9 +398,9 @@ def main() -> int:
             "accepted_inference_streams": 2 * len(records_out),
             "accepted_model_frames": 2 * total_frames,
             "bitwise_identical_records": sum(1 for row in records_out if row["bitwise_identical"]),
-            "max_feature_abs_difference": feature_max,
-            "max_logit_abs_difference": logit_max,
-            "max_posterior_abs_difference": posterior_max,
+            "max_feature_abs_difference": max(row["max_feature_abs_difference"] for row in records_out),
+            "max_logit_abs_difference": max(row["max_logit_abs_difference"] for row in records_out),
+            "max_posterior_abs_difference": max(row["max_posterior_abs_difference"] for row in records_out),
             "new_training_updates": 0,
             "new_training_forwards": 0,
             "new_tts": 0,
@@ -354,7 +417,7 @@ def main() -> int:
         print(json.dumps({key: value for key, value in summary.items()
                           if key != "records"}, sort_keys=True))
         return 0
-    except (OSError, ValueError, KeyError, subprocess.TimeoutExpired) as exc:
+    except (OSError, ValueError, KeyError, subprocess.TimeoutExpired, ImportError) as exc:
         failure = {"schema": "kws-r1-cross-arch-failure-v1",
                    "status": "FAILED_OR_INCOMPLETE", "reason": str(exc),
                    "model_training": 0, "tts": 0, "asr": 0}
