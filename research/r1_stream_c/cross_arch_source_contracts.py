@@ -145,7 +145,7 @@ class CrossArchSourceContracts(unittest.TestCase):
     def test_eof_does_not_add_synthetic_frames(self):
         self.assertIn('"synthetic_eof") is False', self.validator_text)
         self.assertIn("r1d_finish(stream)", self.capture_text)
-        self.assertIn('"synthetic_eof":false', self.capture_text)
+        self.assertIn('\\\"synthetic_eof\\\":false', self.capture_text)
         self.assertNotIn("pad", self.capture_text.lower())
 
     def test_feature_logit_and_posterior_checks_are_separate(self):
