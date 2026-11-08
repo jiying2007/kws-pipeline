@@ -1,7 +1,6 @@
 """Standard-library-only source contracts for the R1 cross-architecture lane."""
 import ast
 from pathlib import Path
-import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -86,9 +85,9 @@ class CrossArchSourceContracts(unittest.TestCase):
     def test_capture_header_and_record_geometry_are_fixed(self):
         _, values = parse_assignments(self.validator_text)
         self.assertEqual(values["MAGIC"], b"R1DREF1\0")
-        self.assertIn('("features", "<f8", (400,))', self.validator_text)
-        self.assertIn('("logits", "<f8", (2601,))', self.validator_text)
-        self.assertIn("FRAME_BYTES = 8 * 3 + 8 * 400 + 8 * 2601",
+        self.assertIn('FEATURE_STRUCT = struct.Struct("<400d")', self.validator_text)
+        self.assertIn('LOGIT_STRUCT = struct.Struct("<2601d")', self.validator_text)
+        self.assertIn("FRAME_BYTES = CLOCK_STRUCT.size + FEATURE_STRUCT.size + LOGIT_STRUCT.size",
                       self.validator_text)
 
     def test_input_manifest_schema_is_fixed(self):
