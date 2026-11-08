@@ -9,8 +9,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import math
-import os
 from pathlib import Path
 import subprocess
 import sys
@@ -83,9 +81,9 @@ def load_input_manifest(path: Path) -> Dict[str, Any]:
                 "PCM byte/sample geometry mismatch")
         require(isinstance(record.get("pcm_sha256"), str) and
                 len(record["pcm_sha256"]) == 64, "invalid PCM hash")
-        require(isinstance(record.get("feature_shape"), list) and
-                len(record["feature_shape"]) == 2 and
-                record["feature_shape"][1] == 400,
+        shape = record.get("feature_shape")
+        require(isinstance(shape, list) and len(shape) == 2 and
+                type(shape[0]) is int and shape[0] > 0 and shape[1] == 400,
                 "invalid saved feature geometry")
         ids.add(source_id)
         indices.add(index)
@@ -166,8 +164,7 @@ def compare_record(x86: np.ndarray, arm: np.ndarray, samples: int) -> Dict[str, 
     require(np.array_equal(x_argmax, a_argmax), "cross-architecture frame argmax mismatch")
     return {
         "frames": int(len(x86)),
-        "bitwise_identical": bool(np.array_equal(
-            x86.view(np.uint8), arm.view(np.uint8))),
+        "bitwise_identical": bool(np.array_equal(x86.view(np.uint8), arm.view(np.uint8))),
         "max_feature_abs_difference": float(np.max(feature_diff)),
         "max_logit_abs_difference": float(np.max(logit_diff)),
         "max_posterior_abs_difference": float(np.max(posterior_diff)),
@@ -186,16 +183,16 @@ def compare_saved_numeric(result: Dict[str, Any], record: Dict[str, Any],
     import zipfile
     with zipfile.ZipFile(str(archive_path), "r") as archive:
         with archive.open(member, "r") as stream:
-            saved = np.load(stream)
-            expected_clock = np.asarray(saved["clock"], dtype=np.uint64)
-            actual_clock = np.column_stack((
-                x86["frame"], x86["source_end"], x86["delivery_end"])).astype(np.uint64)
-            require(np.array_equal(actual_clock, expected_clock),
-                    "saved FP32 source clock mismatch")
-            saved_logits = np.asarray(saved["logits"], dtype=np.float32)
-            require(np.array_equal(np.argmax(x86["logits"], axis=1),
-                                   np.argmax(saved_logits, axis=1)),
-                    "saved FP32 argmax mismatch")
+            with np.load(stream) as saved:
+                expected_clock = np.asarray(saved["clock"], dtype=np.uint64)
+                actual_clock = np.column_stack((
+                    x86["frame"], x86["source_end"], x86["delivery_end"])).astype(np.uint64)
+                require(np.array_equal(actual_clock, expected_clock),
+                        "saved FP32 source clock mismatch")
+                saved_logits = np.asarray(saved["logits"], dtype=np.float32)
+                require(np.array_equal(np.argmax(x86["logits"], axis=1),
+                                       np.argmax(saved_logits, axis=1)),
+                        "saved FP32 argmax mismatch")
     expected = final_index[record["source_id"]]["greedy_token_ids"]
     require(result["greedy_sequence"] == expected,
             "saved greedy sequence mismatch")
@@ -220,6 +217,22 @@ def run_one(binary: Path, qemu: Optional[Path], model: Path, tables: Path,
     return output, json.loads(completed.stderr.decode("utf-8"))
 
 
+def verify_build_manifest(path: Path, host_binary: Path, arm_binary: Path,
+                          qemu: Path) -> Dict[str, Any]:
+    build = json.loads(path.read_text(encoding="utf-8"))
+    expected = {
+        "host/r1d_capture_x86_64": host_binary,
+        "arm/r1d_capture_armhf_static": arm_binary,
+        "executor/qemu-arm-static": qemu,
+    }
+    for name, actual in expected.items():
+        require(name in build.get("files", {}), "build manifest missing " + name)
+        pin = build["files"][name]
+        require(actual.is_file() and actual.stat().st_size == pin["bytes"] and
+                sha256_file(actual) == pin["sha256"], "build artifact identity mismatch: " + name)
+    return build
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input-manifest", type=Path, required=True)
@@ -229,6 +242,7 @@ def main() -> int:
     parser.add_argument("--host-binary", type=Path, required=True)
     parser.add_argument("--arm-binary", type=Path, required=True)
     parser.add_argument("--qemu", type=Path, required=True)
+    parser.add_argument("--build-manifest", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--numeric-root", type=Path)
     parser.add_argument("--final-index", type=Path)
@@ -238,12 +252,18 @@ def main() -> int:
         manifest = load_input_manifest(args.input_manifest)
         require(args.output.is_absolute() and not args.output.exists() and
                 not args.output.is_symlink(), "output must be a fresh absolute directory")
-        require(args.model.is_file() and args.model.stat().st_size == MODEL_BYTES and
+        require(args.model.is_file() and not args.model.is_symlink() and
+                args.model.stat().st_size == MODEL_BYTES and
                 sha256_file(args.model) == MODEL_SHA256, "model payload identity mismatch")
-        require(args.tables.is_file() and args.tables.stat().st_size == TABLE_BYTES and
+        require(args.tables.is_file() and not args.tables.is_symlink() and
+                args.tables.stat().st_size == TABLE_BYTES and
                 sha256_file(args.tables) == TABLE_SHA256, "frontend table identity mismatch")
         require(args.host_binary.is_file() and args.arm_binary.is_file() and
                 args.qemu.is_file(), "one or more capture executables are missing")
+        build = None
+        if args.build_manifest is not None:
+            build = verify_build_manifest(args.build_manifest, args.host_binary,
+                                          args.arm_binary, args.qemu)
         if args.numeric_root is not None:
             require(args.final_index is not None, "--final-index is required with --numeric-root")
             final_index = json.loads(args.final_index.read_text(encoding="utf-8"))
@@ -263,7 +283,8 @@ def main() -> int:
         for record in manifest["records"]:
             index = record["index"]
             pcm = args.pcm_dir / ("%03d.pcm" % index)
-            require(pcm.is_file() and pcm.stat().st_size == record["pcm_bytes"] and
+            require(pcm.is_file() and not pcm.is_symlink() and
+                    pcm.stat().st_size == record["pcm_bytes"] and
                     sha256_file(pcm) == record["pcm_sha256"],
                     "PCM identity mismatch for record %d" % index)
             x86_path = host_dir / ("%03d.bin" % index)
@@ -304,10 +325,15 @@ def main() -> int:
             "model_payload_sha256": sha256_file(args.model),
             "frontend_table_sha256": sha256_file(args.tables),
             "input_manifest_sha256": sha256_file(args.input_manifest),
+            "input_capsule_sha256": manifest.get("input_capsule_sha256"),
+            "build_manifest_sha256": sha256_file(args.build_manifest) if args.build_manifest else None,
+            "build_source_commit": build.get("source_commit") if build else None,
             "record_count": len(records_out),
             "total_frames_per_arch": total_frames,
             "total_pcm_bytes": total_pcm_bytes,
             "audio_seconds": total_pcm_bytes / 32000.0,
+            "accepted_inference_streams": 2 * len(records_out),
+            "accepted_model_frames": 2 * total_frames,
             "bitwise_identical_records": sum(1 for row in records_out if row["bitwise_identical"]),
             "max_feature_abs_difference": feature_max,
             "max_logit_abs_difference": logit_max,
