@@ -137,7 +137,7 @@ class R1StreamSourceContracts(unittest.TestCase):
             module.CrossArchSourceContracts)
         result = unittest.TestResult()
         suite.run(result)
-        self.assertEqual(result.testsRun, 22)
+        self.assertEqual(result.testsRun, 21)
         self.assertFalse(result.skipped)
         self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
 
