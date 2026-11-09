@@ -66,16 +66,29 @@ class Contracts(unittest.TestCase):
     def test_missing_terminal_rejected(self):
         m,r=self.results();r['whisper'].pop()
         with self.assertRaises(ValueError):host.score(m,r)
-    def test_export_no_runtime_or_logs(self):
-        p=self.root/'work';(p/'runtime-primary').mkdir(parents=True);(p/'runtime-primary/secret.json').write_text('{}');(p/'primary/qwen06').mkdir(parents=True);(p/'primary/qwen06/terminal-outcomes.json').write_text('{}');(p/'primary/qwen06/raw.log').write_text('secret');(p/'host-receipt.json').write_text('{}');host.export_public(p);names={q.relative_to(p/'artifact').as_posix() for q in (p/'artifact').rglob('*') if q.is_file()};self.assertEqual(names,{'artifact-index.json','host-receipt.json','primary/qwen06/terminal-outcomes.json'})
+    def test_export_strict_aggregate_only(self):
+        p=self.root/'work';(p/'runtime-primary').mkdir(parents=True)
+        (p/'runtime-primary/secret.json').write_text('PRIVATE_RUNTIME_CANARY')
+        (p/'primary/qwen06').mkdir(parents=True)
+        (p/'primary/qwen06/terminal-outcomes.json').write_text('RAW_TRANSCRIPT_CANARY')
+        (p/'primary/qwen06/raw-output.json').write_text('TARGET_TEXT_CANARY')
+        (p/'report.json').write_text('REQUESTED_TEXT_CANARY RAW_TRANSCRIPT_CANARY')
+        (p/'host-receipt.json').write_text(json.dumps({'status':'screened_pending_review','stages':{'qwen06':{'status':'success'}},'raw_text':'RAW_TRANSCRIPT_CANARY','requested_text':'TARGET_TEXT_CANARY'}))
+        result=host.export_public(p)
+        files=[q for q in (p/'artifact').rglob('*') if q.is_file()]
+        names={q.relative_to(p/'artifact').as_posix() for q in files}
+        self.assertEqual(names,{'artifact-index.json','aggregate-status.json'})
+        payload=''.join(q.read_text() for q in files)
+        for canary in ('RAW_TRANSCRIPT_CANARY','TARGET_TEXT_CANARY','REQUESTED_TEXT_CANARY','PRIVATE_RUNTIME_CANARY'):
+            self.assertNotIn(canary,payload)
+        self.assertFalse(result['human_gold']);self.assertFalse(result['training_admitted'])
+        self.assertFalse(result['raw_transcripts_published']);self.assertFalse(result['target_text_published'])
     def test_deadline_prevents_docker(self):
         b=Mock()
         with self.assertRaises(ValueError):host.launch(b,self.root,self.root,self.root/'out','image','qwen06',0,self.root)
         b.host_capacity.assert_not_called();b.container_args.assert_not_called();b.supervise_container.assert_not_called()
-    def test_unknown_public_receipt_excluded(self):
-        self.assertFalse(host.public_member('qwen06/secret.json','qwen06'))
-        self.assertFalse(host.public_member('clip-000001/unreviewed.json','whisper'))
-        self.assertTrue(host.public_member('qwen06/clip-000001.decoder.json','qwen06'))
+    def test_public_projection_has_no_worker_receipt_allowlist(self):
+        self.assertFalse(hasattr(host,'public_member'))
     def test_setup_failure_stops_all_later_stages(self):
         inputs=self.blind();here=self.root/'research/new';here.mkdir(parents=True);(here/'inputs').mkdir();inputs.rename(here/'inputs/blind')
         mapping,_=self.results();(here/'inputs/mapping.json').write_text(json.dumps(mapping));(here/'source-lock.json').write_text('{}')

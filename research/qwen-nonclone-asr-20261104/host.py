@@ -75,34 +75,52 @@ def launch(b,code,runtime,output,image,family,deadline,input_dir=None):
     require(time.monotonic()+120<deadline,'remaining launch cleanup reserve')
     return b.supervise_container(args,args[2],output,kind,min(deadline-60,time.monotonic()+(1200 if setup else 1500)))
 
-def public_member(relative,family):
-    if relative in ('terminal-outcomes.json','terminal-summary.json','progress.json'):
-        return True
-    if family=='whisper':
-        if relative in ('native-config.json','load-receipt.json','outcomes.json'):return True
-        return re.fullmatch(r'clip-00000[1-4]/(started|completed|input-capture|pre-finalize|raw-output|update-[0-9]{3})\.json',relative) is not None
-    if not relative.startswith(family+'/'):return False
-    name=relative[len(family)+1:]
-    fixed={'contract.json','blind-job.json','decoder-inputs.json','source-identity.json','scope.json','outcomes.initial.json','environment.json','model-load-started.json','model-load.json','stage-failure.json','outcomes.json','summary.json','raw-freeze.json'}
-    return name in fixed or re.fullmatch(r'(clip-00000[1-4]\.(started|decoder|receipt)|outcomes\.000[1-4])\.json',name) is not None
-
 def export_public(work):
-    dest=work/'artifact';dest.mkdir()
-    allowed=[work/'host-receipt.json',work/'report.json',work/'image.json']
-    for lane in ('primary','whisper'):
-        base=work/lane
-        allowed+=list(base.glob('container-*.json'))
-        allowed += [base/'setup'/n for n in ('setup-progress.json','setup-failure.json')]
-        for family in FAMILIES:
-            for p in (base/family).rglob('*.json'):
-                if public_member(p.relative_to(base/family).as_posix(),family):allowed.append(p)
-    files={};total=0
-    for p in allowed:
-        if not p.exists():continue
-        require(p.is_file() and not p.is_symlink() and p.stat().st_nlink==1 and p.stat().st_size<=8*1024**2,'bounded public receipt')
-        total+=p.stat().st_size;require(total<=32*1024**2,'public total budget')
-        rel=p.relative_to(work);q=dest/rel;q.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,q);files[str(rel)]=sha(q)
-    save(dest/'artifact-index.json',dict(campaign=CAMPAIGN,files=files,training_admitted=False,human_gold=False))
+    """Publish a deliberately tiny aggregate-only projection.
+
+    Raw recognizer receipts, target text, per-clip IDs, transcripts, native
+    captures, diagnostics and detailed host reports remain runner-local.
+    The public artifact is rebuilt from an explicit scalar schema; it never
+    recursively copies worker output or an allowlist of worker files.
+    """
+    work=Path(work)
+    receipt=json.loads((work/'host-receipt.json').read_text())
+    stages=receipt.get('stages',{})
+    require(type(stages) is dict,'bounded aggregate stage map')
+    aggregate={
+        'schema':'kws-asr-public-aggregate-v1',
+        'campaign':CAMPAIGN,
+        'status':receipt.get('status','stopped_no_retry'),
+        'stage_count':len(stages),
+        'completed_stage_count':sum(
+            1 for value in stages.values()
+            if type(value) is dict and value.get('status') in ('success','complete','completed')
+        ),
+        'new_tts_calls':0,
+        'new_training_runs':0,
+        'human_gold':False,
+        'training_admitted':False,
+        'raw_transcripts_published':False,
+        'target_text_published':False,
+        'native_evidence_published':False
+    }
+    dest=work/'artifact'
+    dest.mkdir()
+    summary=dest/'aggregate-status.json'
+    save(summary,aggregate)
+    save(dest/'artifact-index.json',{
+        'schema':'kws-asr-public-artifact-index-v1',
+        'campaign':CAMPAIGN,
+        'files':{'aggregate-status.json':sha(summary)}
+    })
+    names={p.relative_to(dest).as_posix() for p in dest.rglob('*') if p.is_file()}
+    require(names=={'aggregate-status.json','artifact-index.json'},
+            'public artifact must contain only aggregate status and its index')
+    for p in dest.rglob('*'):
+        if p.is_file():
+            require(not p.is_symlink() and p.stat().st_nlink==1 and p.stat().st_size<=65536,
+                    'bounded unaliased aggregate artifact')
+    return aggregate
 
 def run(env):
     eventpath=Path(env['GITHUB_EVENT_PATH']);require(eventpath.stat().st_size<=2*1024**2,'event budget');admission(env,json.loads(eventpath.read_text()))
