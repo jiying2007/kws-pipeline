@@ -117,6 +117,64 @@ class TargetResourceSourceTests(unittest.TestCase):
                      '-fsyntax-only','-I'+t,str(HERE/'target_resource_bench.c')],
                     check=True,timeout=20,capture_output=True)
 
+    def test_resource_receipt_is_complete_or_nonzero(self):
+        """Invented no-model SDK isolates real stdio success and ENOSPC paths."""
+        full = Path('/dev/full')
+        if not full.is_char_device():
+            self.skipTest('/dev/full is required for the Linux output-error case')
+        cc = shutil.which('gcc')
+        self.assertIsNotNone(cc, 'gcc compiler required in CI')
+        repo = HERE.parents[2]
+        archive = repo / ('research/r1_stream_c/deploy/archive-20261110/'
+                          'KWS_FSMN_R1_SOURCE_20261110.zip')
+        with ZipFile(archive) as z:
+            header = z.read(
+                'KWS_FSMN_R1_SOURCE_20261110/tree/research/r1_deploy_sdk/include/fsmn_sdk.h')
+        with tempfile.TemporaryDirectory(prefix='r1-resource-output-') as t:
+            root = Path(t)
+            (root / 'fsmn_sdk.h').write_bytes(header)
+            # These buffers satisfy file-size checks only. The stub deliberately
+            # performs no model identity check, acoustic forward or callbacks.
+            (root / 'model.bin').write_bytes(bytes(3028860))
+            (root / 'frontend.bin').write_bytes(bytes(83840))
+            (root / 'input.pcm').write_bytes(bytes(640))
+            stub = root / 'no_model_sdk.c'
+            stub.write_text(r'''
+#include "fsmn_sdk.h"
+struct fsmn_sdk { int unused; };
+static struct fsmn_sdk instance;
+fsmn_sdk *fsmn_sdk_create(const unsigned char *model,size_t model_bytes,
+    const unsigned char *tables,size_t table_bytes,uint64_t origin,
+    fsmn_event_fn event_fn,fsmn_frame_fn frame_fn,void *user) {
+    (void)model; (void)model_bytes; (void)tables; (void)table_bytes;
+    (void)origin; (void)event_fn; (void)frame_fn; (void)user;
+    return &instance;
+}
+int fsmn_sdk_feed(fsmn_sdk *s,const unsigned char *pcm,size_t bytes,size_t *consumed) {
+    (void)s; (void)pcm; *consumed=bytes; return FSMN_OK;
+}
+int fsmn_sdk_finish(fsmn_sdk *s) { (void)s; return FSMN_OK; }
+int fsmn_sdk_destroy(fsmn_sdk *s) { (void)s; return FSMN_OK; }
+''', encoding='utf-8')
+            binary = root / 'resource_bench'
+            subprocess.run(
+                [cc, '-std=c11', '-O2', '-Wall', '-Wextra', '-Werror', '-pedantic',
+                 '-I' + t, str(HERE / 'target_resource_bench.c'), str(stub),
+                 '-o', str(binary)], check=True, timeout=20, capture_output=True)
+            command = [str(binary), str(root / 'model.bin'),
+                       str(root / 'frontend.bin'), str(root / 'input.pcm')]
+            successful = subprocess.run(command, capture_output=True,
+                                        timeout=20, check=True)
+            receipt = json.loads(successful.stdout)
+            self.assertEqual(receipt['pcm_bytes'], 640)
+            self.assertEqual(receipt['feed_calls'], 1)
+            self.assertFalse(receipt['device_qualified'])
+            with full.open('wb') as sink:
+                failed = subprocess.run(command, stdout=sink, stderr=subprocess.PIPE,
+                                        timeout=20, check=False)
+            self.assertNotEqual(failed.returncode, 0)
+            self.assertIn(b'unable to write complete resource receipt', failed.stderr)
+
     def test_scientific_and_input_boundaries_explicit(self):
         source=(HERE/'target_resource_bench.c').read_text()
         guide=(HERE/'TARGET_RESOURCE_PROFILE.md').read_text()
@@ -133,3 +191,4 @@ class TargetResourceSourceTests(unittest.TestCase):
 
 
 if __name__=='__main__': unittest.main()
+
