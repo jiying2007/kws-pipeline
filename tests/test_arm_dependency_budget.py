@@ -77,6 +77,7 @@ class WorkflowContractTests(unittest.TestCase):
         self.assertNotIn('continue-on-error', dependency_step)
         for mode in ('', '-O ', '-OO '):
             self.assertIn('python3 -I -S -B ' + mode + 'tests/test_arm_dependency_budget.py', workflow)
+            self.assertIn('python3 -I -S -B ' + mode + 'research/r1_stream_c/quant_head8/test_owner_arm.py', workflow)
         self.assertTrue(HELPER.is_file())
 
     def test_failed_install_and_snapshot_evidence_are_always_retained(self):
