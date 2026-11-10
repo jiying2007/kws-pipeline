@@ -1,0 +1,71 @@
+# Single first-create-only, public toolchain bootstrap, measured revised budget.
+# No weights, PCM, ASR, private data, schedules or inference on hosted runner.
+name: R1 ARM public C-only toolchain handoff 20261110
+on:
+  push:
+    branches: [research/r1-arm-c-only-toolchain-20261110-v1]
+permissions:
+  contents: read
+jobs:
+  export:
+    if: ${{ github.ref == 'refs/heads/research/r1-arm-c-only-toolchain-20261110-v1' && github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install C-only cross GCC, ARM libc sysroot and static QEMU
+        timeout-minutes: 14
+        shell: bash
+        run: |
+          set -euo pipefail
+          log="$RUNNER_TEMP/r1-arm-public-apt.log"
+          sudo apt-get -o Acquire::Retries=0 -o Acquire::http::Timeout=70 \
+            -o APT::Get::AllowUnauthenticated=false \
+            -o APT::Update::Error-Mode=any update 2>&1 | tee "$log"
+          sudo apt-get -y --no-install-recommends -o Acquire::Retries=0 \
+            -o Acquire::http::Timeout=70 -o APT::Get::AllowUnauthenticated=false \
+            install gcc-arm-linux-gnueabihf qemu-user-static 2>&1 | tee -a "$log"
+          test -x /usr/bin/qemu-arm-static
+          test -x /usr/bin/arm-linux-gnueabihf-gcc
+          test -d /usr/arm-linux-gnueabihf
+          test -d /usr/lib/gcc-cross/arm-linux-gnueabihf
+          sudo dpkg --audit
+      - name: Create public-only bundle with checksums and package provenance
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/r1-arm-c-only-bundle"
+          mkdir -p "$out"
+          paths=(usr/arm-linux-gnueabihf usr/lib/gcc-cross/arm-linux-gnueabihf usr/bin/qemu-arm-static)
+          if test -d /usr/libexec/gcc/arm-linux-gnueabihf; then
+            paths+=(usr/libexec/gcc/arm-linux-gnueabihf)
+          fi
+          shopt -s nullglob
+          for file in /usr/bin/arm-linux-gnueabihf-*; do
+            if [[ -f "$file" || -L "$file" ]]; then paths+=("${file#/}"); fi
+          done
+          test "${#paths[@]}" -ge 20
+          tar -C / -czf "$out/toolchain.tar.gz" "${paths[@]}"
+          test "$(stat -c%s "$out/toolchain.tar.gz")" -le 350000000
+          (cd "$out"; sha256sum toolchain.tar.gz > SHA256SUMS)
+          dpkg-query -W -f='${Package} ${Version}\n' gcc-arm-linux-gnueabihf qemu-user-static binutils-arm-linux-gnueabihf > "$out/PACKAGES.txt"
+          printf '%s\n' 'Public cross compiler, ARM libc and static QEMU from Ubuntu 24.04; no owner model/PCM.' 'Upstream package source and licenses: https://packages.ubuntu.com and https://archive.ubuntu.com/ubuntu/pool/' 'Generic ARM hard-float emulation is not physical SSC305 validation.' > "$out/README.txt"
+          du -h "$out"/*
+      - if: success()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: r1-public-c-arm-toolchain-20261110-v1
+          path: ${{ runner.temp }}/r1-arm-c-only-bundle/
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: r1-public-arm-install-diagnostic-20261110-v1
+          path: ${{ runner.temp }}/r1-arm-public-apt.log
+          retention-days: 1
+          if-no-files-found: warn
