@@ -67,7 +67,10 @@ class WorkflowContractTests(unittest.TestCase):
         arm = workflow.split('  armv7-cross:\n', 1)[1]
         dependency_step = arm.split('      - name: Install cross compiler', 1)[1].split(
             '      - name: Locate ARM sysroot', 1)[0]
-        self.assertIn('timeout-minutes: 30', arm.split('    steps:', 1)[0])
+        header = arm.split('    steps:', 1)[0]
+        self.assertIn('runs-on: ubuntu-24.04', header)
+        self.assertNotIn('runs-on: ubuntu-latest', header)
+        self.assertIn('timeout-minutes: 30', header)
         self.assertIn('timeout-minutes: 8', dependency_step)
         self.assertIn('sudo python3 -I -S -B tools/install_arm_dependencies.py', dependency_step)
         self.assertNotIn('apt-get', dependency_step)
