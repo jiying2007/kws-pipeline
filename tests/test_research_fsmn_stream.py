@@ -164,6 +164,21 @@ class R1StreamSourceContracts(unittest.TestCase):
             module.prepare(self.root, self.output)
 
 
+    def test_optin_qhead8_source_contracts(self):
+        """Run archived-source INT8 head contracts; no models or PCM in CI."""
+        spec = importlib.util.spec_from_file_location(
+            "r1_qhead8_contracts",
+            self.root / "research/r1_stream_c/quant_head8/test_contracts.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(module.Head8SourceContracts)
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(result.testsRun, 9)
+        self.assertFalse(result.skipped)
+        self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--execute", action="store_true",

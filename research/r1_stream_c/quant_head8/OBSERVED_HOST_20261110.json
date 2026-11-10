@@ -1,0 +1,75 @@
+{
+  "base": {
+    "compute_io_median_s": 0.056824521,
+    "compute_io_total_s": 8.499824051,
+    "cpu_total_s": 9.450000000000001,
+    "max_rss_kib_max": 6912,
+    "max_rss_kib_median": 6912.0,
+    "max_rss_kib_min": 6912,
+    "max_rss_kib_p95": 6912,
+    "model_state_bytes": 249392,
+    "wall_total_s": 9.85,
+    "weight_bytes": 3028860
+  },
+  "benchmark_method": "independent /usr/bin/time per process from minimal shell; 134 x 3 executions rotated in ABC/BCA/CAB; includes file I/O and model compute but excludes model initialization; no physical device",
+  "calibrated_far_frr": "NOT_RUN",
+  "distinct_parent_pcm_rows": 134,
+  "event_and_clock_mismatch_rows": 0,
+  "exposed_cohort": "100 train-role + 34 exposed development; no independent test",
+  "frame_argmax_and_source_clock_equal_all_12534": true,
+  "frontend_tables_sha256": "49c42226c617fad81c5edb683a6332bdb82b52e37040f724eac23522a504db49",
+  "full_fp32_torch_parity": "FAIL_UNCHANGED",
+  "model_frames": 12534,
+  "model_id": "R1-DEV-FSMN-20261107",
+  "neon_execution": "NOT_RUN",
+  "original_model_sha256": "e9a3c3360bab0485b309eb2a3ef50869a8e917f50f28dbfd30673f57a88c86bb",
+  "par4": {
+    "compute_io_median_s": 0.051200957,
+    "compute_io_total_s": 7.865590097,
+    "cpu_total_s": 8.35,
+    "max_rss_kib_max": 4864,
+    "max_rss_kib_median": 4864.0,
+    "max_rss_kib_min": 4864,
+    "max_rss_kib_p95": 4864,
+    "model_state_bytes": 249424,
+    "wall_total_s": 8.56,
+    "weight_bytes": 1960140
+  },
+  "par4_vs_q8": {
+    "compute_io_slowdown_vs_base_pct": -7.4617303863529045,
+    "compute_io_speedup_pct": 11.403465813328806
+  },
+  "physical_ssc305": "NOT_RUN",
+  "private_frame_trace_sha256_all_variants": "3d115b436bba73d62da1dbd94be9a10e63b3e22dd7e7248745c8a0d54899756a",
+  "proposal_events_per_variant": {
+    "base": 88,
+    "par4": 88,
+    "q8": 88
+  },
+  "provenance_notes": [
+    "Reference original and compressed package weights kept owner-held; no private model package, audio, labels, numeric arrays, ASR or reference voices in this public aggregate.",
+    "Comparison uses previously exposed corpus; does not demonstrate real-human independent accuracy, natural continuous FAR, SSC305 performance or INT8 full-network activation quantization.",
+    "Par4 changes floating-point reduction order; agreement on observed data is not a proof of universal numeric equivalence."
+  ],
+  "q8": {
+    "compute_io_median_s": 0.057286648499999995,
+    "compute_io_total_s": 8.877988478,
+    "cpu_total_s": 9.34,
+    "max_rss_kib_max": 4864,
+    "max_rss_kib_median": 4864.0,
+    "max_rss_kib_min": 4864,
+    "max_rss_kib_p95": 4864,
+    "model_state_bytes": 249424,
+    "wall_total_s": 9.58,
+    "weight_bytes": 1960140
+  },
+  "q8_vs_base": {
+    "compute_io_slowdown_pct": 4.449085354366966,
+    "median_peak_rss_kib_reduction": 2048.0,
+    "weight_byte_reduction": 1068720
+  },
+  "quantization_scheme": "per-output-row symmetric signed int8 for 2596 classes; five full-precision blank/keyword rows; double scales",
+  "schema": "r1-head8-isolated-process-benchmark-v2",
+  "variant": "pretrained-reference64-vs-qhead8-and-unroll4",
+  "weight_model_sha256": "63f18045c64f95e0a57776a2860a2714fdf3fd8f21472d59fe865608030f3ed4"
+}
