@@ -10,6 +10,7 @@ import tempfile
 import time
 
 from run_research_three_window_arm import check_arm_dynamic_symbols
+from run_r1_qhead8_arm import execute as build_r1_quant_head8_arm
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 from research_python_entry import clear_interpreter_library_path
@@ -68,10 +69,11 @@ def execute(root):
             results[name] = {'cpp_link': True, 'exports': sorted(expected), 'defines': defines}
         if build.validate_sources(root) != binding:
             raise RuntimeError('source binding changed during cross-build')
+    qhead8_arm = build_r1_quant_head8_arm(root, cc, readelf)
     return {'schema': 2, 'full_B_ARM_compile_link': True, 'cpp_link': True,
             'compiler_invocations': 8, 'modes': results,
             'source_binding_sha256': binding, 'target': 'cortex-a32/neon-vfpv4/hard',
-            'binary_executions': 0, 'model_loads': 0, 'qualification_allowed': False}
+            'binary_executions': 0, 'model_loads': 0, 'qualification_allowed': False, 'qhead8_arm_source': qhead8_arm}
 
 
 
