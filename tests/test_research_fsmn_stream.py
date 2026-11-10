@@ -142,6 +142,28 @@ class R1StreamSourceContracts(unittest.TestCase):
         self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
 
 
+    def test_reference64_sdk_source_build(self):
+        import os
+        import subprocess
+        driver = self.root / "research/r1_stream_c/deploy/materialize.py"
+        spec = importlib.util.spec_from_file_location("r1_sdk_prepare", driver)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        report = module.prepare(self.root, self.output)
+        self.assertEqual(report["model_forwards"], 0)
+        self.assertFalse(report["weights_present"])
+        self.assertEqual(report["legacy_fp32_gate"], "FAIL_UNCHANGED")
+        build = Path(self.temporary.name) / "build-sdk"
+        env = dict(os.environ)
+        env.pop("LD_LIBRARY_PATH", None)
+        for command in (["cmake", "-S", str(self.output), "-B", str(build)],
+                        ["cmake", "--build", str(build), "--parallel", "2"],
+                        ["ctest", "--test-dir", str(build), "--output-on-failure"]):
+            subprocess.run(command, env=env, check=True, capture_output=True, timeout=30)
+        with self.assertRaises(ValueError):
+            module.prepare(self.root, self.output)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--execute", action="store_true",
