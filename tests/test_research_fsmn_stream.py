@@ -206,7 +206,7 @@ class R1StreamSourceContracts(unittest.TestCase):
             module.TargetResourceSourceTests)
         result = unittest.TestResult()
         suite.run(result)
-        self.assertEqual(result.testsRun, 2)
+        self.assertEqual(result.testsRun, 3)
         self.assertFalse(result.skipped)
         self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
 

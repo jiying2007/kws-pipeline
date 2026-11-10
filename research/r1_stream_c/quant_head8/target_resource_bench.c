@@ -177,5 +177,10 @@ int main(int argc, char **argv) {
     printf("\"offline_feed_wall_seconds\":%.9f,\"offline_feed_cpu_seconds\":%.9f,",wall_s,cpu_s);
     printf("\"offline_rtf\":%.9f,\"cpu_seconds_per_audio_second\":%.9f,",wall_s/audio_s,cpu_s/audio_s);
     printf("\"process_peak_rss_kib\":%ld}\n",usage.ru_maxrss);
+    if (fflush(stdout) != 0 || ferror(stdout)) {
+        fputs("FAILED: unable to write complete resource receipt\n", stderr);
+        return 2;
+    }
     return 0;
 }
+
