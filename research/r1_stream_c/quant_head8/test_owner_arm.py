@@ -99,4 +99,37 @@ class OwnerArmSourceTests(unittest.TestCase):
         self.assertNotIn('urllib.request',script)
 
 
+class TargetResourceSourceTests(unittest.TestCase):
+    """Standalone board resource source contracts only; zero model forwards."""
+
+    def test_compiles_against_byte_pinned_sdk_header(self):
+        repo=HERE.parents[2]
+        archive=repo/'research/r1_stream_c/deploy/archive-20261110/KWS_FSMN_R1_SOURCE_20261110.zip'
+        with ZipFile(archive) as z:
+            header=z.read('KWS_FSMN_R1_SOURCE_20261110/tree/research/r1_deploy_sdk/include/fsmn_sdk.h')
+        with tempfile.TemporaryDirectory(prefix='r1-target-resource-contract-') as t:
+            inc=Path(t)/'fsmn_sdk.h'
+            inc.write_bytes(header)
+            for cc in ('gcc','clang'):
+                self.assertIsNotNone(shutil.which(cc),cc+' compiler required in CI')
+                subprocess.run(
+                    [cc,'-std=c11','-O2','-Wall','-Wextra','-Werror','-pedantic',
+                     '-fsyntax-only','-I'+t,str(HERE/'target_resource_bench.c')],
+                    check=True,timeout=20,capture_output=True)
+
+    def test_scientific_and_input_boundaries_explicit(self):
+        source=(HERE/'target_resource_bench.c').read_text()
+        guide=(HERE/'TARGET_RESOURCE_PROFILE.md').read_text()
+        for marker in ('FSMN_MODEL_BYTES','FSMN_TABLE_BYTES','fsmn_sdk_create',
+                       'fsmn_sdk_feed','fsmn_sdk_finish','getrusage(RUSAGE_SELF',
+                       'CLOCK_PROCESS_CPUTIME_ID','PCM_LIMIT_BYTES',
+                       'device_qualified','live_afe',
+                       'power_mw','stack_high_water_bytes'):
+            self.assertIn(marker,source)
+        self.assertIn('not the strong R1 SDK format',guide)
+        self.assertIn('NOT_RUN',guide)
+        self.assertNotIn('curl ',guide)
+        self.assertNotIn('requests.get(',source)
+
+
 if __name__=='__main__': unittest.main()

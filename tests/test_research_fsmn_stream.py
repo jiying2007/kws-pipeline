@@ -195,6 +195,22 @@ class R1StreamSourceContracts(unittest.TestCase):
         self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
 
 
+    def test_r1_target_resource_bench_source_only(self):
+        """Compile owner-side board resource probe; CI cannot measure SSC305."""
+        spec = importlib.util.spec_from_file_location(
+            "r1_target_resource_contracts",
+            self.root / "research/r1_stream_c/quant_head8/test_owner_arm.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(
+            module.TargetResourceSourceTests)
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(result.testsRun, 2)
+        self.assertFalse(result.skipped)
+        self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--execute", action="store_true",
