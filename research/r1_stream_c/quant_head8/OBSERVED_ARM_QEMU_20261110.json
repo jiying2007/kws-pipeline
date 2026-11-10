@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-10",
+  "development_role_count": 34,
+  "event_comparison_successes": 402,
+  "executed_variants": [
+    "host_ref",
+    "arm_ref",
+    "arm_scalar",
+    "arm_par4"
+  ],
+  "exit_code": 0,
+  "frame_and_clock_comparison_successes": 402,
+  "frontend_sha256": "49c42226c617fad81c5edb683a6332bdb82b52e37040f724eac23522a504db49",
+  "host_toolchain": "Ubuntu 24.04 arm-linux-gnueabihf-gcc 13.3.0; qemu-arm-static 8.2.2; Cortex-A32 NEON-VFPv4 hardfloat",
+  "input_count": 134,
+  "input_manifest_sha256": "63d2f75e5e93e454bdf23624277fa728bba0cef6eee9cce311f037612198d6ab",
+  "keyword_event_counts_per_id": {
+    "1": 44,
+    "2": 44
+  },
+  "keyword_events_per_variant": 88,
+  "limits": [
+    "Exposed train/development audio only, not independent test",
+    "ARM usermode QEMU, not physical SSC305",
+    "Framewise argmax and event/clock parity only, not full-logit numeric parity",
+    "No physical target CPU/RSS/power/thermal, no natural continuous FAR, no real-human FRR",
+    "Original FP32-vs-Torch MKL numeric failure unchanged",
+    "No weights/audio/per-row evidence included in public aggregate"
+  ],
+  "mismatch_count": 0,
+  "model": "R1-DEV-FSMN-20261107",
+  "model_executions": 536,
+  "model_sha256": "e9a3c3360bab0485b309eb2a3ef50869a8e917f50f28dbfd30673f57a88c86bb",
+  "original_frames": 12534,
+  "private_trace_fingerprint_sha256": "d8c77af4af73eeea7c9328e743eabc8fe960c21fe20bd02415c6babcc7514cca",
+  "runner_wall_seconds": 384.777,
+  "schema": "r1-int8-armqemu-cross-runtime-aggregate-v1",
+  "software_main_sha": "6d995752021137141ae46e45099f9cc938675eb6",
+  "status": "SOURCE_ARCH_BOUND_REPLAY_PASS_NOT_BOARD_QUALIFICATION",
+  "trace_files_independently_hashed": 536,
+  "train_role_count": 100
+}
