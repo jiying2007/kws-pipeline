@@ -179,6 +179,22 @@ class R1StreamSourceContracts(unittest.TestCase):
         self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
 
 
+    def test_owner_r1_arm_replay_source_only(self):
+        """No private weights or PCM; validate the owner's ARM comparison tool."""
+        spec = importlib.util.spec_from_file_location(
+            "r1_owner_arm_tests",
+            self.root / "research/r1_stream_c/quant_head8/test_owner_arm.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(
+            module.OwnerArmSourceTests)
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(result.testsRun, 9)
+        self.assertFalse(result.skipped)
+        self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--execute", action="store_true",
