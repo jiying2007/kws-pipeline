@@ -1,0 +1,35 @@
+# Single-use export of public host-side ARM GNU binutils shared libraries.
+# Model weights, audio, training artifacts and user secrets are not accessed.
+name: R1 ARM GNU binutils runtime handoff 20261110
+on:
+  push:
+    branches: [research/r1-arm-binutils-runtime-20261110-v1]
+permissions:
+  contents: read
+jobs:
+  export:
+    if: ${{ github.ref == 'refs/heads/research/r1-arm-binutils-runtime-20261110-v1' && github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Export public GNU ARM cross linker/assembler shared libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/r1-arm-binutils-runtime"
+          mkdir -p "$out"
+          dpkg-query -W -f='${Package} ${Version}\n' binutils-arm-linux-gnueabihf > "$out/PACKAGES.txt"
+          for name in libbfd-2.42-armhf.so libopcodes-2.42-armhf.so libctf-armhf.so.0 libctf-nobfd-armhf.so.0; do
+            path="$(find /usr/lib -name "$name" -print -quit)"
+            test -n "$path"
+            cp -L -- "$path" "$out/$name"
+          done
+          (cd "$out"; sha256sum lib*.so* > SHA256SUMS)
+          printf '%s\n' 'Public GNU binutils host-side runtime libraries for Ubuntu24 ARM cross toolchain.' 'No model weights, audio or private data.' 'Upstream source/licensing: https://packages.ubuntu.com/noble/binutils-arm-linux-gnueabihf' > "$out/README.txt"
+          du -h "$out"/lib*
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: r1-public-arm-binutils-runtime-20261110-v1
+          path: ${{ runner.temp }}/r1-arm-binutils-runtime/
+          retention-days: 1
+          if-no-files-found: error
