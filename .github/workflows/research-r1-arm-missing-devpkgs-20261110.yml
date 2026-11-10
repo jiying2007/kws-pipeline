@@ -1,0 +1,41 @@
+# One-shot delta export: only publicly distributed Ubuntu ARM cross dev packages.
+# Excludes all user models, audio, transcripts and private metadata.
+name: R1 ARM missing public development packages 20261110
+on:
+  push:
+    branches: [research/r1-arm-missing-devpackages-20261110-v1]
+permissions:
+  contents: read
+jobs:
+  export:
+    if: ${{ github.ref == 'refs/heads/research/r1-arm-missing-devpackages-20261110-v1' && github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - name: Refresh signed public Ubuntu indexes
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          sudo apt-get -o Acquire::Retries=0 -o Acquire::http::Timeout=70 -o APT::Update::Error-Mode=any update
+      - name: Download precisely the omitted C backend and sysroot dev packages
+        timeout-minutes: 11
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/r1-arm-missing-devpkgs"
+          mkdir -p "$out"
+          cd "$out"
+          apt-get -o Acquire::Retries=0 -o Acquire::http::Timeout=70 download \
+            gcc-13-arm-linux-gnueabihf cpp-13-arm-linux-gnueabihf \
+            libc6-dev-armhf-cross linux-libc-dev-armhf-cross
+          test "$(find . -maxdepth 1 -name '*.deb' -type f | wc -l)" -eq 4
+          test "$(du -cb ./*.deb | tail -1 | awk '{print $1}')" -le 80000000
+          sha256sum ./*.deb > SHA256SUMS
+          for f in ./*.deb; do dpkg-deb --field "$f" Package Version Architecture; done > PACKAGES.txt
+          printf '%s\n' 'Four public Ubuntu ARM compiler frontend and glibc/Linux development packages.' 'Signed Ubuntu APT indices, SHA256 manifest. NO model weights, audio or private user data.' 'Package source and licenses: https://packages.ubuntu.com/ and https://archive.ubuntu.com/ubuntu/pool/' > README.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: r1-public-arm-devpackages-20261110-v1
+          path: ${{ runner.temp }}/r1-arm-missing-devpkgs/
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
