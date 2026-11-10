@@ -70,3 +70,18 @@ model weights and audio are intentionally absent from public GitHub.
 
 No new GitHub Actions workflow, recurring monitor, ASR/TTS job, training run,
 private repository, or Codex/ChatGPT Work quota is required.
+
+## Bounded subprocess recovery (2026-11-10)
+
+The owner replay driver now reads stdout and stderr concurrently in bounded
+chunks, rejecting either stream at **4 MiB** before accumulating more bytes.
+This fixes the previous `subprocess.run(capture_output=True)` behavior, which
+buffered unbounded output before checking its size. On a deadline or output
+limit, it kills the isolated child process group and retains the failing
+owner-local attempt; normal nonzero exit codes and stderr are not suppressed.
+A quiet hung runner and both-pipe backpressure are covered by invented-only
+tests. Mandatory build artifacts are checked explicitly even under `python -O`.
+
+No model, TTS, ASR, original PCM or owner checkpoint runs in this change. This
+does not change inference mathematics, observed ARM parity, model ranking,
+natural FAR/FRR, or actual SSC305 qualification.
