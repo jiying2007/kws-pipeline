@@ -39,7 +39,7 @@ def execute(root, compiler, readelf):
         raise ValueError('missing R1 qhead8 source generator')
     materializer = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(materializer)
-    cmake = shutil.which('cmake', path='/usr/bin:/bin')
+    cmake = shutil.which('cmake')
     if not cmake or not compiler or not readelf:
         raise RuntimeError('CMake, ARM hard-float GCC and readelf are mandatory')
     result = {}
