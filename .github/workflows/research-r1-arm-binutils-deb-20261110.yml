@@ -1,0 +1,38 @@
+# One-use public Ubuntu binutils cross package download for offline local ARM compiler.
+# No private model, audio, tokens, secrets or recurring trigger.
+name: R1 public ARM binutils DEB handoff 20261110
+on:
+  push:
+    branches: [research/r1-arm-binutils-deb-20261110-v1]
+permissions:
+  contents: read
+jobs:
+  export:
+    if: ${{ github.ref == 'refs/heads/research/r1-arm-binutils-deb-20261110-v1' && github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - name: Fetch signed public index and download ARM GNU binutils package only
+        shell: bash
+        timeout-minutes: 7
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/r1-binutils-deb"
+          mkdir -p "$out"
+          sudo apt-get -o Acquire::Retries=0 -o Acquire::http::Timeout=70 -o APT::Update::Error-Mode=any update
+          cd "$out"
+          apt-get -o Acquire::Retries=0 -o Acquire::http::Timeout=70 download binutils-arm-linux-gnueabihf
+          test "$(find . -maxdepth 1 -type f -name '*.deb' | wc -l)" -eq 1
+          test "$(du -cb ./*.deb | tail -1 | awk '{print $1}')" -le 15000000
+          dpkg-deb -c ./*.deb | grep -E 'libbfd-|libctf-|libopcodes-' > PACKAGE_CONTENTS.txt
+          test "$(wc -l < PACKAGE_CONTENTS.txt)" -ge 4
+          dpkg-deb --field ./*.deb Package Version Architecture > PACKAGES.txt
+          sha256sum ./*.deb > SHA256SUMS
+          printf '%s\n' 'Public Ubuntu cross-binutils shared objects, package and hash retained.' 'No model/audio or private input. License/source: https://packages.ubuntu.com/noble/binutils-arm-linux-gnueabihf' > README.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: r1-public-binutils-deb-20261110-v1
+          path: ${{ runner.temp }}/r1-binutils-deb/
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
