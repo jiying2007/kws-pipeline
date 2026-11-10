@@ -190,9 +190,9 @@ class R1StreamSourceContracts(unittest.TestCase):
             module.OwnerArmSourceTests)
         result = unittest.TestResult()
         suite.run(result)
-        self.assertEqual(result.testsRun, 9)
         self.assertFalse(result.skipped)
         self.assertTrue(result.wasSuccessful(), repr(result.errors + result.failures))
+        self.assertEqual(result.testsRun, 13)  # 9 retained + 4 bounded-process checks
 
 
     def test_r1_target_resource_bench_source_only(self):
