@@ -1,0 +1,163 @@
+{
+  "artifact_sources": [
+    {
+      "artifact_id": 13755687974,
+      "run_id": 42801676506,
+      "sha256": "830e6d11830ff76a90653cbd678b6a943f2251fbb324eddb1f1c9db02f81f5ed"
+    },
+    {
+      "artifact_id": 13757362176,
+      "run_id": 42802555925,
+      "sha256": "aec188fee5fba9e40bfe66d7d88d19f6f3ea9df697a4a1b1318da080279426a7"
+    },
+    {
+      "artifact_id": 13762189802,
+      "run_id": 42811783343,
+      "sha256": "deeec7bfa838a95a1831c6c2fa2bdba383b0d076afcee66ab8bbae4c530564c9"
+    }
+  ],
+  "baseline": "R1-DEV-FSMN-20261107 reference64 and classifier-head INT8 SDKs",
+  "compiler": "arm-linux-gnueabihf-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "date": "2026-11-10",
+  "delivery_packages": [
+    {
+      "bytes": 142286,
+      "exact_member_set_pass": true,
+      "identity_checked_payloads": 74,
+      "name": "KWS_R1_ARM_RESOURCE_PROBES_20261110.zip",
+      "sha256": "0ca4b8671be786cad0af07a9daaac1b44fda4af81cfc00b75015feb840c7ddcf",
+      "zip_crc_pass": true,
+      "zip_members": 75
+    },
+    {
+      "bytes": 65689464,
+      "exact_member_set_pass": true,
+      "identity_checked_payloads": 3,
+      "name": "KWS_R1_ARM_TOOLCHAIN_INPUTS_20261110.zip",
+      "sha256": "1a7f2c4eff08550052d9ccda1fe78aca0a87fa47a33c28e71e85757138f70f49",
+      "zip_crc_pass": true,
+      "zip_members": 4
+    }
+  ],
+  "flags": [
+    "-std=c11",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-pedantic",
+    "-fno-fast-math",
+    "-ffp-contract=off",
+    "-mcpu=cortex-a32",
+    "-mfpu=neon-vfpv4",
+    "-mfloat-abi=hard"
+  ],
+  "no_execution": {
+    "existing_workflows_rerun": 0,
+    "model_forwards": 0,
+    "new_workflows_created": 0,
+    "owner_model_weight_members_opened": false,
+    "pcm_opened": false,
+    "physical_board_runs": 0,
+    "qemu_runs": 0
+  },
+  "not_measured": [
+    "SSC305 firmware ABI/libc/rootfs/BSP compatibility",
+    "physical CPU and RSS",
+    "power",
+    "stack high-water",
+    "thermal/soak behavior",
+    "live final AFE",
+    "continuous FAR",
+    "independent human FRR",
+    "annotated word-end latency"
+  ],
+  "publication_scope": "Source/build metadata and aggregate hashes only; no model weights, audio, per-record inference traces, signed URLs, or local filesystem paths",
+  "rebuild": {
+    "all_three_binaries_byte_identical": true,
+    "same_host_and_pinned_toolchain": true,
+    "scope": "Initial manual build versus delivered offline build script; no model execution",
+    "separate_fresh_directory_build_completed": true
+  },
+  "schema": "r1-arm-resource-build-public-aggregate-v1",
+  "source": {
+    "build_commit": "c2f453a50b0b66608a5d57055d25dd8b44698701",
+    "path": "research/r1_stream_c/quant_head8/target_resource_bench.c",
+    "pull_request": 779,
+    "repository": "jiying2007/kws-pipeline",
+    "same_c_source_bytes_at_both_commits": true,
+    "sha256": "8e00ecd232b56eabddf5e4613d278596dec65d5d4f9ad811937e6d408062e7d6",
+    "verified_later_pr_head": "a4acf0cf795947238b46bc9a7951ff3b833eda8f"
+  },
+  "status": "COMPILED_AND_ELF_VERIFIED_NO_TARGET_EXECUTION",
+  "target": "cortex-a32-neon-vfpv4-hardfloat",
+  "target_qualification": false,
+  "variants": {
+    "int8-par4": {
+      "abi": "EABI5 hard-float",
+      "build_id": "006057ff11a851dfe5bc01039d555eccfa5bae2a",
+      "bytes": 33288,
+      "dynamic_dependencies": [
+        "libm.so.6",
+        "libc.so.6",
+        "ld-linux-armhf.so.3"
+      ],
+      "elf_class": "ELF32",
+      "endian": "little",
+      "interpreter": "/lib/ld-linux-armhf.so.3",
+      "machine": "ARM",
+      "maximum_required_glibc_version": "GLIBC_2.35",
+      "required_glibc_versions": [
+        "GLIBC_2.4",
+        "GLIBC_2.29",
+        "GLIBC_2.34",
+        "GLIBC_2.35"
+      ],
+      "sha256": "f9be3e1185577d728b6adf2cc97ac0d89a7c3df07badcaca487e92432ca366f5"
+    },
+    "int8-scalar": {
+      "abi": "EABI5 hard-float",
+      "build_id": "f1c7f834cdc26a125cf26957aabd82a58b4f3853",
+      "bytes": 33288,
+      "dynamic_dependencies": [
+        "libm.so.6",
+        "libc.so.6",
+        "ld-linux-armhf.so.3"
+      ],
+      "elf_class": "ELF32",
+      "endian": "little",
+      "interpreter": "/lib/ld-linux-armhf.so.3",
+      "machine": "ARM",
+      "maximum_required_glibc_version": "GLIBC_2.35",
+      "required_glibc_versions": [
+        "GLIBC_2.4",
+        "GLIBC_2.29",
+        "GLIBC_2.34",
+        "GLIBC_2.35"
+      ],
+      "sha256": "044a921e6c89d18b678a871ef396dbd39860cf4b0fd6ded57f513ad5a16e37c5"
+    },
+    "reference64": {
+      "abi": "EABI5 hard-float",
+      "build_id": "2e36c44b8bc8983280ddbebce8a0ade2e72bfd0d",
+      "bytes": 33280,
+      "dynamic_dependencies": [
+        "libm.so.6",
+        "libc.so.6",
+        "ld-linux-armhf.so.3"
+      ],
+      "elf_class": "ELF32",
+      "endian": "little",
+      "interpreter": "/lib/ld-linux-armhf.so.3",
+      "machine": "ARM",
+      "maximum_required_glibc_version": "GLIBC_2.35",
+      "required_glibc_versions": [
+        "GLIBC_2.4",
+        "GLIBC_2.29",
+        "GLIBC_2.34",
+        "GLIBC_2.35"
+      ],
+      "sha256": "06240db83c50e0fe67671c838e3d58acafb56f5882ef247a374455b7fd6c5419"
+    }
+  }
+}

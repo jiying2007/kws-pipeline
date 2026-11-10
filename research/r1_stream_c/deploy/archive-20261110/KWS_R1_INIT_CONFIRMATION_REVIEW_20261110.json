@@ -1,0 +1,108 @@
+{
+  "baseline_development_counts": [
+    {
+      "false_positive_rows": 0,
+      "hits": 10,
+      "keyword_id": 1,
+      "known_negative": 24,
+      "known_positive": 10,
+      "unknown": 0
+    },
+    {
+      "false_positive_rows": 0,
+      "hits": 10,
+      "keyword_id": 2,
+      "known_negative": 24,
+      "known_positive": 10,
+      "unknown": 0
+    }
+  ],
+  "blocking_findings": [],
+  "campaign_sha256": "53857a590ef5175d06dad09b515acd60e01ba1767d976d8dffaa374127e81948",
+  "finished_at": "2026-11-10T13:41:21.013844+00:00",
+  "method": "Independent JSON token-subsequence reconstruction plus weights_only saved-state comparison; existing saved numeric auditors supply logit-to-greedy verification.",
+  "new_model_constructions": 0,
+  "new_model_forwards": 0,
+  "new_optimizer_steps": 0,
+  "new_seed_reviews": [
+    {
+      "all_134_features_unchanged": true,
+      "greedy_sequences_matching_original": 133,
+      "independently_recomputed_c1_gate_pass": true,
+      "initial_changed_elements": 282,
+      "initial_changed_tensor_names": [
+        "backbone.out_linear2.linear.bias",
+        "backbone.out_linear2.linear.weight"
+      ],
+      "initial_checkpoint_sha256": "fd316d407b415706f3ff31ff86876cb49f04a7d92987db8c4535af42b8a86b40",
+      "original_2599_rows_bitwise_equal": true,
+      "original_r1_per_cohort_counts_preserved": true,
+      "other_28_initial_tensors_bitwise_equal": 28,
+      "saved_numeric_audit_sha256": "93fd1ee1b0cb3d661bdfac370d983c5697e97bd0654a7b7b2b44212665409ec4",
+      "seed": 2026111001
+    },
+    {
+      "all_134_features_unchanged": true,
+      "greedy_sequences_matching_original": 132,
+      "independently_recomputed_c1_gate_pass": true,
+      "initial_changed_elements": 282,
+      "initial_changed_tensor_names": [
+        "backbone.out_linear2.linear.bias",
+        "backbone.out_linear2.linear.weight"
+      ],
+      "initial_checkpoint_sha256": "8ab893a28941477377bd641eb1d18456cb0f81525e962cb442706b479b7d8e04",
+      "original_2599_rows_bitwise_equal": true,
+      "original_r1_per_cohort_counts_preserved": true,
+      "other_28_initial_tensors_bitwise_equal": 28,
+      "saved_numeric_audit_sha256": "f63ad2689236228c10d0aeb42853b2f609109c957c18d77d3501e10c26d69c1d",
+      "seed": 2026111002
+    }
+  ],
+  "original_initial_checkpoint_sha256": "58d74771e400f8c2fcb2c8d71467bfd3f2722a7e0f97dbdd3be13ed2efa64512",
+  "public_result_sha256": "feaae4122050b3a0f627ac2a13831bce097c51ffcc9f47a2ea0ea3f46f38f756",
+  "retained_c1_cohort_counts": {
+    "new-development": [
+      {
+        "false_positive_rows": 0,
+        "hits": 1,
+        "keyword_id": 1,
+        "known_negative": 12,
+        "known_positive": 4,
+        "unknown": 0
+      },
+      {
+        "false_positive_rows": 0,
+        "hits": 3,
+        "keyword_id": 2,
+        "known_negative": 12,
+        "known_positive": 4,
+        "unknown": 0
+      }
+    ],
+    "old-development": [
+      {
+        "false_positive_rows": 0,
+        "hits": 3,
+        "keyword_id": 1,
+        "known_negative": 12,
+        "known_positive": 6,
+        "unknown": 0
+      },
+      {
+        "false_positive_rows": 0,
+        "hits": 6,
+        "keyword_id": 2,
+        "known_negative": 12,
+        "known_positive": 6,
+        "unknown": 0
+      }
+    ]
+  },
+  "review_source_sha256": "a379287e1df6b7af53efe4965d8d603f79aea10ee3987dc6410dd482500dfdfd",
+  "reviewer": "assistant data_readiness; independent of experiment author",
+  "schema": "kws-r1-independent-saved-review-v1",
+  "scope": "Only initialization of the two appended output rows differs before training. Nine allowed tensors learn afterward. Same exposed synthetic weak-label data; no independent generalization or streaming qualification.",
+  "status": "PASS",
+  "summarizer_review_note": "The summarizer trusts the audited worker C1 pass boolean. This review independently reconstructs that gate and its baseline counts for these actual immutable runs.",
+  "summarizer_source_sha256": "6bc9ee28ff60e40674e30bd86c4646b36a8149317e7f4eca22a14ff9ad7a2577"
+}
