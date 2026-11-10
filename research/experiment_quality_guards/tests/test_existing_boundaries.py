@@ -252,5 +252,9 @@ class KeywordPresenceScoringTests(unittest.TestCase):
             self.assertFalse(output.exists())
 
 
+# Run complete-keyword regressions through this existing normal/-O/-OO CI entry.
+from research.cnative_landing_v1.test_metrics import MetricsTests
+
+
 if __name__ == '__main__':
     unittest.main()
