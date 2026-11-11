@@ -13,6 +13,8 @@
 
 Research: [reusable modules, retained results and independent evidence boundaries](research/README.md)
 
+2026-11-11 strong FSMN deployment: [R1 initialization confirmation](docs/KWS_V3_CONFIRMATION_20261110.md) and [immutable borrowed-weight SDK and resource results](docs/KWS_V3_RESOURCE_20261111.md). The new explicit constructor removes the second initialization model allocation while preserving the existing INT8 payload, arithmetic and copied API. Acoustic calibration and physical SSC305 measurements retain their separate evidence requirements.
+
 2026-11-07 natural coverage: [64 new windows and complete 73-window replay](docs/KWS_NATURAL_COVERAGE_20261107.md) and [execution summary](research/natural-coverage-20261107/execution-summary.json). All 192 new native observations are preserved; the 73-window parent-PCM union is 2,022.897 seconds. Frozen full-text quorum yields zero weak-label candidates, so both keywords retain 73 masked unknowns and accepted natural negative time remains zero.
 
 Saved-output follow-up: [264-condition CTC results](docs/KWS_SAVED_CTC264_20261106.md) and [aggregate execution index](research/saved-ctc264-20261106/execution-index.json). The completed calculation and audit add no model forward or optimizer update; posthoc conditional alignment is not acoustic or decoder correctness evidence.

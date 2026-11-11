@@ -1,0 +1,120 @@
+{
+  "arm_compiler": "arm-linux-gnueabihf-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "arm_interpreter": "/lib/ld-linux-armhf.so.3",
+  "arm_target": "Cortex-A32 NEON-VFPv4 hard-float, ELF32 ARM EABI5",
+  "arm_trace_binary_sha256": "e78183b77b41f6958a72b97a2eafd19f52bdb2dee0d7fb60d179ed50d164424b",
+  "automatic_retry": false,
+  "build_receipt_sha256": "9cbb230c7d6c4cf5c624825de9b8813e9fe808b932424777f1cd80dd3b89dcbf",
+  "build_script_sha256": "f70272474d6d4116c6b7d10b59840b58945074ae3f9b0199dd1cba6361eea29d",
+  "candidate_clip_invocations": 268,
+  "checkpoint_sha256": "99ac2239807ce5a93c8723a01df2e53c446f868245caccb2e7809deb6e943571",
+  "completed_utc": "2026-11-11T02:32:19Z",
+  "continuous_calibration": "NOT_RUN",
+  "distinct_input_rows": 134,
+  "exposed_development_rows": 34,
+  "final_afe_latency": "NOT_RUN",
+  "frame_argmax_event_source_delivery_trace_mismatches": 0,
+  "frontend_sha256": "49c42226c617fad81c5edb683a6332bdb82b52e37040f724eac23522a504db49",
+  "full_logit_parity": "NOT_MEASURED; F/E trace equivalence only",
+  "getrusage_ru_maxrss_use": "retained but excluded from improvement claim because inherited parent high-water exceeds current executable VmHWM",
+  "historical_fp32_torch_gate": "FAIL_UNCHANGED",
+  "host_compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+  "independent_far_frr": "NOT_RUN",
+  "init_only_invocations": 24,
+  "initialization_statistics": {
+    "copy": {
+      "model_init_wall_ms": {
+        "max": 17.721269,
+        "median": 9.4723165,
+        "min": 8.513764
+      },
+      "proc_self_vm_hwm_kib": {
+        "max": 4864,
+        "median": 4864.0,
+        "min": 4864
+      },
+      "proc_self_vm_rss_kib": {
+        "max": 3040,
+        "median": 3040.0,
+        "min": 3036
+      },
+      "process_peak_rss_kib": {
+        "max": 14700,
+        "median": 14572.0,
+        "min": 14572
+      },
+      "runs": 12
+    },
+    "view": {
+      "model_init_wall_ms": {
+        "max": 14.985435,
+        "median": 8.77877,
+        "min": 7.893913
+      },
+      "proc_self_vm_hwm_kib": {
+        "max": 3040,
+        "median": 3036.0,
+        "min": 3036
+      },
+      "proc_self_vm_rss_kib": {
+        "max": 3040,
+        "median": 3036.0,
+        "min": 3036
+      },
+      "process_peak_rss_kib": {
+        "max": 14700,
+        "median": 14572.0,
+        "min": 14572
+      },
+      "runs": 12
+    }
+  },
+  "initialization_vm_hwm_median_reduction_kib": 1828.0,
+  "initialization_vm_hwm_median_reduction_percent": 37.58223684210526,
+  "input_manifest_sha256": "63d2f75e5e93e454bdf23624277fa728bba0cef6eee9cce311f037612198d6ab",
+  "materializer_sha256": "baa9b40d9b3df55b3e30077e69124985c551b70dc380a1ba6dd3c61e5ea516c3",
+  "maximum_required_glibc": "GLIBC_2.35",
+  "memory_scope": "12 separate processes per mode, alternating copy/view order; /proc/self/status VmHWM sampled after initialization; no PCM fed in memory experiment",
+  "model_id": "R1-DEV-FSMN-20261107",
+  "model_payload_bytes": 1960140,
+  "model_payload_sha256": "63f18045c64f95e0a57776a2860a2714fdf3fd8f21472d59fe865608030f3ed4",
+  "new_admission": 0,
+  "new_asr": 0,
+  "new_optimizer_updates": 0,
+  "new_tts": 0,
+  "new_weight_quantization": false,
+  "physical_ssc305": "NOT_RUN",
+  "plan_sha256": "a802933874515528e604c0a5caa35b86c03a796ad8391f2f9808a24f98cbce81",
+  "post_init_vm_rss_scope": "post-construction resident memory, before streaming; not steady-stream RSS",
+  "preserved_arithmetic": "all original par4 inference, frontend, decoder, feed/reset/gap/destroy and copied constructors byte-identical",
+  "publication": "source and aggregate only; owner-held weights, PCM and per-row traces excluded",
+  "removed_model_allocation_and_copy_bytes": 1960140,
+  "retained_comparator_new_invocations": 0,
+  "runtime_totals": {
+    "arm_qemu": {
+      "clips": 134,
+      "events": 88,
+      "frames": 12534,
+      "words": {
+        "1": 44,
+        "2": 44
+      }
+    },
+    "host": {
+      "clips": 134,
+      "events": 88,
+      "frames": 12534,
+      "words": {
+        "1": 44,
+        "2": 44
+      }
+    }
+  },
+  "schema": "r1-borrowed-weights-observed-20261111-v1",
+  "source_audio_seconds": 380.0800625,
+  "source_base_commit": "c0178d8e7dd02aabd46e699b49d2b578f9e6ee11",
+  "status": "PASS_SAVED_TRACE_PARITY_NOT_BOARD_QUALIFICATION",
+  "terminal_sha256": "5f6acd87843ba972bdbce02b4fb5b50a4949c731d236802fd317d1be0e0b001e",
+  "train_role_rows": 100,
+  "validation_script_sha256": "77f310b1d814349f6f6a29f2267de53edc9c11dfe6bed02ffda787ae6c233bca"
+}

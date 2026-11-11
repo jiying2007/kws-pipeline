@@ -1,0 +1,177 @@
+{
+  "artifact_sha256": {
+    "build_receipt": "9cbb230c7d6c4cf5c624825de9b8813e9fe808b932424777f1cd80dd3b89dcbf",
+    "plan": "a802933874515528e604c0a5caa35b86c03a796ad8391f2f9808a24f98cbce81",
+    "run_script": "77f310b1d814349f6f6a29f2267de53edc9c11dfe6bed02ffda787ae6c233bca",
+    "terminal": "5f6acd87843ba972bdbce02b4fb5b50a4949c731d236802fd317d1be0e0b001e"
+  },
+  "audited_utc": "2026-11-11T02:35:37+00:00",
+  "auditor_changed_source_or_execution_files": false,
+  "auditor_model_invocations": 0,
+  "claims": {
+    "arm_qemu_candidate_clip_calls": 134,
+    "copy_constructor_only_calls": 12,
+    "duplicate_claims": 0,
+    "files": 292,
+    "fixed_claim_order_match": true,
+    "hash_method": "SHA256 compact sorted-key JSON list of {path,sha256}, sorted by claim filename",
+    "host_candidate_clip_calls": 134,
+    "old_clip_runner_commands": 0,
+    "sha256": "3c0103f4e615785d63f37d8ec88915ecd32e5c03069a7434e013ce204c4c3d8c",
+    "terminal_roster_exact_match": true,
+    "unique_names": 292,
+    "unknown_command_shapes": 0,
+    "view_constructor_only_calls": 12
+  },
+  "executable_identities_verified_against_plan_and_build": {
+    "arm_trace": {
+      "bytes": 33000,
+      "sha256": "e78183b77b41f6958a72b97a2eafd19f52bdb2dee0d7fb60d179ed50d164424b"
+    },
+    "host_init": {
+      "bytes": 44464,
+      "sha256": "13e429847473d30bd65b6940721a34d18286e7129831562d495ff87e45cc9fdb"
+    },
+    "host_trace": {
+      "bytes": 44408,
+      "sha256": "adf779c41b6ef6a69764d6f059b3b26593aadf15ca0ae9bcee1805e1bbbe9541"
+    }
+  },
+  "execution_inventory": {
+    "files": 878,
+    "hash_method": "SHA256 compact sorted-key JSON list of {path,bytes,sha256}, files sorted by relative path; paths relative to execution/",
+    "sha256": "c35e3f23b453cacf17095491a0af6922ca7a83c1d9df846607ee1b7d27c8cc01"
+  },
+  "frontend_sha256_recorded_in_plan": "49c42226c617fad81c5edb683a6332bdb82b52e37040f724eac23522a504db49",
+  "initialization_verification": {
+    "all_metrics_finite_nonnegative": true,
+    "copied_model_bytes_per_initialization": {
+      "copy": 1960140,
+      "view": 0
+    },
+    "initializations": 24,
+    "model_bytes": 1960140,
+    "model_forwards": 0,
+    "modes": {
+      "copy": 12,
+      "view": 12
+    },
+    "pcm_bytes": 0,
+    "receipt_files": 24,
+    "receipt_inventory_hash_method": "SHA256 compact sorted-key JSON list of {path,bytes,sha256}, sorted by receipt filename",
+    "receipt_inventory_sha256": "334545b1f69b039817ceac1ac5623091c2385e997c7eb4a302aa100c2a492270",
+    "receipt_values_match_terminal": true,
+    "recomputed_statistics": {
+      "copy": {
+        "model_init_wall_ms": {
+          "max": 17.721269,
+          "median": 9.4723165,
+          "min": 8.513764
+        },
+        "proc_self_vm_hwm_kib": {
+          "max": 4864,
+          "median": 4864.0,
+          "min": 4864
+        },
+        "proc_self_vm_rss_kib": {
+          "max": 3040,
+          "median": 3040.0,
+          "min": 3036
+        },
+        "process_peak_rss_kib": {
+          "max": 14700,
+          "median": 14572.0,
+          "min": 14572
+        },
+        "runs": 12
+      },
+      "view": {
+        "model_init_wall_ms": {
+          "max": 14.985435,
+          "median": 8.77877,
+          "min": 7.893913
+        },
+        "proc_self_vm_hwm_kib": {
+          "max": 3040,
+          "median": 3036.0,
+          "min": 3036
+        },
+        "proc_self_vm_rss_kib": {
+          "max": 3040,
+          "median": 3036.0,
+          "min": 3036
+        },
+        "process_peak_rss_kib": {
+          "max": 14700,
+          "median": 14572.0,
+          "min": 14572
+        },
+        "runs": 12
+      }
+    },
+    "stderr_files_empty": true
+  },
+  "input_manifest_sha256": "63d2f75e5e93e454bdf23624277fa728bba0cef6eee9cce311f037612198d6ab",
+  "metadata_second_reviewer": "PASS_READ_ONLY_IDENTITY_AND_CLAIM_ARGV_REVIEW",
+  "method": "Independent standard-library parsing, byte comparison, hashing and aggregation of stored outputs; no candidate modules imported or binaries executed.",
+  "model_sha256_recorded_in_plan": "63f18045c64f95e0a57776a2860a2714fdf3fd8f21472d59fe865608030f3ed4",
+  "resource_interpretation": {
+    "initialization_timing_scope": "Observed host samples only; no statistical significance or live-AFE latency claim.",
+    "measurement_environment": "host Linux; constructor-only observation",
+    "proc_vm_hwm_median_reduction_kib": 1828.0,
+    "proc_vm_hwm_median_reduction_percent": 37.58223684210526,
+    "proc_vm_rss_median_delta_kib": 4.0,
+    "ru_maxrss_reason": "Both modes have median 14572 KiB, above their /proc VmHWM. The inherited process high-water value is confounded and excluded from the benefit calculation.",
+    "ru_maxrss_usable_for_resource_benefit": false,
+    "steady_state_rss_conclusion": "Post-construction RSS is essentially unchanged; streaming steady-state RSS was not measured. Do not infer streaming memory saving from the 4 KiB median difference."
+  },
+  "saved_trace_manifest_sha256": "8a3d0fbd2822c383b40db2159785419a3b85ab926f06a14c3b3da2a056dd1e44",
+  "schema": "r1-borrowed-independent-terminal-audit-v1",
+  "scope_limits": {
+    "comparison": "Same 134 retained source clips; byte-exact F/E argmax, proposal and clock traces.",
+    "full_logit_parity": "NOT_TESTED",
+    "independent_far_frr": "NOT_RUN",
+    "new_asr": 0,
+    "new_independent_samples": 0,
+    "new_training": 0,
+    "new_tts": 0,
+    "old_model_clip_replay": false,
+    "physical_ssc305": "NOT_RUN"
+  },
+  "status": "PASS_RECOMPUTED_STORED_OUTPUTS_AND_IDENTITIES",
+  "trace_verification": {
+    "all_exact_matches": true,
+    "completed_hashes_counts_and_runtime_receipts_match_files": true,
+    "content_set_hash_method": "SHA256 compact JSON ordered list [index,byte_count,trace_sha256], indices 0 through 133",
+    "content_set_sha256": {
+      "arm_qemu": "b41de754497b19711840cd67b78b96ecfca8c705b2ca9347604d36133885157b",
+      "host": "b41de754497b19711840cd67b78b96ecfca8c705b2ca9347604d36133885157b",
+      "saved_arm_par4": "b41de754497b19711840cd67b78b96ecfca8c705b2ca9347604d36133885157b"
+    },
+    "frames_sequential_and_event_fields_valid": true,
+    "new_traces_compared_byte_for_byte": 268,
+    "runtime_totals": {
+      "arm_qemu": {
+        "clips": 134,
+        "events": 88,
+        "frames": 12534,
+        "words": {
+          "1": 44,
+          "2": 44
+        }
+      },
+      "host": {
+        "clips": 134,
+        "events": 88,
+        "frames": 12534,
+        "words": {
+          "1": 44,
+          "2": 44
+        }
+      }
+    },
+    "saved_reference_traces": 134,
+    "terminal_completed_unique_entries": 268,
+    "total_trace_bytes_per_runtime": 240365
+  }
+}
