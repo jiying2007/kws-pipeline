@@ -9,6 +9,7 @@
 #include <string.h>
 #include <limits.h>
 
+_Static_assert(140 * 32767 * 127 < INT32_MAX, "int32 dot cannot overflow");
 static const uint32_t precise[5]={0u,1027u,1401u,1462u,2093u};
 static int is_precise(uint32_t id) {
     for (size_t i=0;i<5u;i++) if (precise[i]==id) return 1;
@@ -120,9 +121,9 @@ int r1_i16_step(r1_i16_head *h,const double hidden[R1_I16_HIDDEN],
     for(uint32_t id=0u;id<R1_I16_CLASSES;id++) {
         if(is_precise(id))continue;
         const int8_t *w=h->quant_rows+(size_t)id*R1_I16_HIDDEN;
-        int64_t dot=0;
+        int32_t dot=0;
         for(size_t k=0u;k<R1_I16_HIDDEN;k++)
-            dot+=(int64_t)qx[k]*(int64_t)w[k];
+            dot+=(int32_t)qx[k]*(int32_t)w[k];
         /* Each term is exactly representable in binary64; |dot| <= 5.83e8. */
         double approx=((double)dot*unit)*h->scales[id]+(double)h->biases[id];
         if(!isfinite(approx))return scan_all(h,hidden,result);
