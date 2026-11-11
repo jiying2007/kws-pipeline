@@ -1,0 +1,663 @@
+{
+  "aggregate_only": true,
+  "data": {
+    "development_status": "previously exposed synthetic machine-weak observations; no independent admission",
+    "eligibility_rule": "original split with ctc_weight > 0; ctc_weight == 0 excluded from both fit and scoring",
+    "independent_natural_negative_admission_added": 0,
+    "original_clips": 134,
+    "original_frames": 12534,
+    "roles": {
+      "development": {
+        "clips": 34,
+        "frames": 3176
+      },
+      "train": {
+        "clips": 96,
+        "frames": 9079
+      },
+      "unknown": {
+        "clips": 4,
+        "frames": 279
+      }
+    }
+  },
+  "default_model_changed": false,
+  "default_model_id": "R1-DEV-FSMN-20261107",
+  "dependencies": {
+    "arm_execution": "qemu-arm plus pinned ARM hard-float sysroot; not physical SSC305",
+    "fit_numpy": "2.3.5",
+    "fit_python": "3.12.14",
+    "fit_scipy_used": false,
+    "fit_torch_used": false,
+    "fixed_owner_model_and_manifests_required": true,
+    "host_platform": {
+      "affinity_cpu": 0,
+      "machine": "x86_64",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41"
+    },
+    "matrix_arm_compiler": "arm-linux-gnueabihf-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "matrix_arm_extra_flags": [
+      "-mcpu=cortex-a32",
+      "-mfpu=neon-vfpv4",
+      "-mfloat-abi=hard"
+    ],
+    "matrix_host_compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "matrix_host_flags": [
+      "-std=c11",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-pedantic",
+      "-fno-fast-math",
+      "-ffp-contract=off",
+      "-fexcess-precision=standard",
+      "-fPIC"
+    ]
+  },
+  "execution_accounting": {
+    "asr": 0,
+    "audit_new_neural_forwards": 0,
+    "mlp_final_clip_evaluations": 130,
+    "mlp_optimizer_batches": 2000,
+    "new_audio_generation": 0,
+    "resource_matrix_clip_forwards": 843,
+    "retries": 0,
+    "saved_detector_only_replays": 398,
+    "teacher_extraction_clip_forwards": 134,
+    "total_existing_model_clip_invocations": 977,
+    "tts": 0
+  },
+  "experiment_date": "2026-11-11",
+  "historical_negative_results": {
+    "compact_affine_sum_probability_other_20260930": "FAIL_FIDELITY_UNCHANGED",
+    "historical_reference": "https://github.com/jiying2007/kws-data/tree/6f56614ba78273feb96024f4a7ec7ee4582af330/research/2026-09-30-compact-head-distillation",
+    "original_fp32_numeric_gate": "FAIL_UNCHANGED"
+  },
+  "matrix": {
+    "architecture_groups": [
+      "host",
+      "arm_qemu"
+    ],
+    "binaries_verified": 12,
+    "build_stderr_errors": 0,
+    "full_logit_parity": "NOT_TESTED",
+    "generated_source_files_verified": 124,
+    "groups": {
+      "arm_block2": {
+        "clips": 134,
+        "keyword1_events": 44,
+        "keyword2_events": 44,
+        "keyword_events": 88,
+        "sdk_model_frames": 12534
+      },
+      "arm_block4": {
+        "clips": 134,
+        "keyword1_events": 44,
+        "keyword2_events": 44,
+        "keyword_events": 88,
+        "sdk_model_frames": 12534
+      },
+      "arm_par4": {
+        "clips": 134,
+        "keyword1_events": 44,
+        "keyword2_events": 44,
+        "keyword_events": 88,
+        "sdk_model_frames": 12534
+      },
+      "host_block2": {
+        "clips": 134,
+        "keyword1_events": 44,
+        "keyword2_events": 44,
+        "keyword_events": 88,
+        "sdk_model_frames": 12534
+      },
+      "host_block4": {
+        "clips": 134,
+        "keyword1_events": 44,
+        "keyword2_events": 44,
+        "keyword_events": 88,
+        "sdk_model_frames": 12534
+      },
+      "host_par4": {
+        "clips": 134,
+        "keyword1_events": 44,
+        "keyword2_events": 44,
+        "keyword_events": 88,
+        "sdk_model_frames": 12534
+      }
+    },
+    "host_cpu": {
+      "median_cpu_seconds_per_audio_second": {
+        "block2": 0.019231485,
+        "block4": 0.019452843,
+        "par4": 0.019229659
+      },
+      "median_feed_p95_upper_us": {
+        "block2": 1024,
+        "block4": 1024,
+        "par4": 1024
+      },
+      "paired_median_cpu_savings_pct": {
+        "block2": -0.004472258192422807,
+        "block4": 0.009671953390388843
+      },
+      "paired_wins_of_9": {
+        "block2": 4,
+        "block4": 5
+      },
+      "rounds": 9
+    },
+    "host_cpu_decision": "NO_STABLE_GAIN_OBSERVED; retain par4 default; host-only screening",
+    "host_memory": {
+      "median_copy_minus_mmap_kib": {
+        "proc_self_private_dirty_kib": 1916.0,
+        "proc_self_pss_kib": 0.0
+      },
+      "own_process_medians_kib": {
+        "copy": {
+          "proc_self_private_dirty_kib": 2364.0,
+          "proc_self_pss_kib": 2495.0
+        },
+        "mmap": {
+          "proc_self_private_dirty_kib": 448.0,
+          "proc_self_pss_kib": 2495.0
+        }
+      },
+      "pairs": 6
+    },
+    "host_memory_decision": "Private_Dirty decreased; PSS unchanged; not a reduction in sampled process PSS, peak RAM, or target-board memory",
+    "independent_audit_status": "PASS_RETAINED_EVIDENCE_AUDIT",
+    "invocations": {
+      "captured_fe": 804,
+      "host_cpu": 27,
+      "host_memory": 12,
+      "total": 843,
+      "unique_completed_claims": 843
+    },
+    "kernels": [
+      "par4",
+      "block2",
+      "block4"
+    ],
+    "limitations": [
+      "Host timing is not SSC305 evidence; QEMU/capture timings excluded.",
+      "Receipt-only CPU counts do not establish per-frame parity for the 39 plain runs.",
+      "Numeric process exits were checked by the hash-bound runner, not separately stored per invocation.",
+      "PSS/Private_Dirty are sampled after streaming, not peak RSS or a runtime speed claim."
+    ],
+    "mismatching_traces": 0,
+    "model_input_posthash_unchanged": true,
+    "nonempty_invocation_stderr": 0,
+    "original_fp32_numeric_gate": "FAIL_UNCHANGED",
+    "plan": {
+      "feed_chunk_bytes": 640,
+      "host_memory_orders": [
+        [
+          "copy",
+          "mmap"
+        ],
+        [
+          "mmap",
+          "copy"
+        ]
+      ],
+      "host_perf_orders": [
+        [
+          "par4",
+          "block2",
+          "block4"
+        ],
+        [
+          "block2",
+          "block4",
+          "par4"
+        ],
+        [
+          "block4",
+          "par4",
+          "block2"
+        ]
+      ],
+      "memory_scope": "own-process PSS/Private_Dirty after actual streaming; no peak-RSS or speedup inference",
+      "performance_scope": "uninstrumented host-only; capture and QEMU timings excluded",
+      "process_timeout_seconds": 45,
+      "retry": false,
+      "total_deadline_seconds": 2400,
+      "trace_scope": "byte-exact F/E argmax, event and source/delivery clocks; full logits NOT_TESTED"
+    },
+    "source_build_input_drift": false,
+    "status": "PASS_FIXED_FE_MATRIX_HOST_SCREEN_ONLY"
+  },
+  "mlp_competitor": {
+    "audit": {
+      "individual_assertions_passed": 2835,
+      "initial_report_generation": "inline read-only audit; the subsequently retained audit source did not emit the original INDEPENDENT_AUDIT.json",
+      "new_detector_replays": 0,
+      "new_training_or_neural_forwards": 0,
+      "sampling_ledger_all2000_updates_verified": true,
+      "saved_event_files_compared": 130,
+      "saved_prediction_files_individually_verified": 130,
+      "training_normalization_exact": true,
+      "unknown_in_training_or_score": 0
+    },
+    "checkpoint_and_all_final_logits_persisted_before_scoring": true,
+    "config": {
+      "activation": "relu",
+      "batch_frames": 256,
+      "beta1": 0.9,
+      "beta2": 0.999,
+      "candidate_tie_rule": "precise wins when max_precise >= predicted_other; first original ID among precise ties",
+      "development_gate": "all 34 complete E-event byte streams including clocks exactly equal saved R1",
+      "dtype": "float64",
+      "early_stop": false,
+      "epsilon": 1e-08,
+      "fit_absolute_seconds": 600,
+      "gradient_clipping": false,
+      "hidden_dim": 64,
+      "historical_compact_affine_sum_other": "2026-09-30 FAIL_FIDELITY_UNCHANGED",
+      "input_dim": 140,
+      "loss": "SmoothL1(beta=1.0) mean over sampled frames",
+      "lr": 0.001,
+      "model_promotion_authorized": false,
+      "normalization": "pooled 9079 known-train frames only; population std ddof=0",
+      "normalization_std_floor": 1e-06,
+      "output_dim": 1,
+      "retry": false,
+      "runtime_classification": "isolated NumPy float64 head diagnostic; not canonical Torch retraining",
+      "sampling": "independent uniform known-train clip, then uniform frame, with replacement",
+      "seed": 20261111,
+      "sweep": false,
+      "train_gate": "all 96 candidate E-event multisets subset of saved R1; no added wrong-keyword weak-label event",
+      "updates": 2000,
+      "weight_decay": 0.0001
+    },
+    "decision": "REJECT; retain default R1; no retry, new training, calibration, or threshold change",
+    "development_exact_retention": false,
+    "event_totals": {
+      "development": {
+        "actual_events": 21,
+        "reference_events": 22
+      },
+      "train": {
+        "actual_events": 64,
+        "reference_events": 64
+      }
+    },
+    "failure_analysis": {
+      "limits": [
+        "Category proportions describe pooled training frames; actual fit sampled clips uniformly.",
+        "This diagnosis uses already exposed development evidence and is not independent FAR/FRR.",
+        "Max-other logit regression errors are not calibrated probability errors."
+      ],
+      "mechanism_inference": "Saved scores show OTHER overestimation suppressing two originally winning K1 tokens; with the unchanged four-token detector this explains the observed missing K1 event. No new detector replay or neural inference.",
+      "new_detector_replays": 0,
+      "new_training_or_neural_forwards": 0,
+      "next_decision": "Keep this candidate rejected. Record a separately preregistered future train-only critical-frame/decision-margin objective; no new run, budget, threshold change, calibration, or development tuning in this experiment.",
+      "owner_audit_source_omission_reason": "unchanged retained source contains specific private failure frame positions",
+      "owner_audit_source_published": false,
+      "owner_audit_source_sha256": "22f33af6c801b630e0ff2c50a224abd6dfe99ac0b4eb70c1758507a7c84e3d67",
+      "owner_report_sha256": "9c46c6cad9e9a98807fb224aa3f798f39ff03a5290aea924ea6033068da9a4df",
+      "status": "REJECTED_CANDIDATE_CAUSE_CHARACTERIZED",
+      "train_only_error_structure": {
+        "blank": {
+          "category_flips": 5,
+          "fraction_all_train_frames": 0.8705804604031281,
+          "frames": 7904,
+          "mae": 0.873426373052091,
+          "max_absolute_error": 7.250384002015245,
+          "mean_signed_error": 0.07989693732168,
+          "median_teacher_precise_margin": 20.535761794081413,
+          "p95_absolute_error": 2.5351117858704066
+        },
+        "keyword": {
+          "category_flips": 1,
+          "fraction_all_train_frames": 0.06784888203546646,
+          "frames": 616,
+          "mae": 1.2062626777493406,
+          "max_absolute_error": 5.121714222880705,
+          "mean_signed_error": 0.30581902122719123,
+          "median_teacher_precise_margin": 14.047438145527078,
+          "p95_absolute_error": 3.1095614085532715
+        },
+        "other": {
+          "category_flips": 7,
+          "fraction_all_train_frames": 0.061570657561405444,
+          "frames": 559,
+          "mae": 1.3552378188180207,
+          "max_absolute_error": 5.113770356022368,
+          "mean_signed_error": -0.3157884036891029,
+          "median_teacher_precise_margin": -11.338315804083308,
+          "p95_absolute_error": 3.383250845170205
+        }
+      }
+    },
+    "final_head_recordings": 130,
+    "fit_seconds": 1.1035224940001171,
+    "fit_wall_seconds_before_scoring": 1.2798103680001987,
+    "fixed_precise_parameters": 705,
+    "gradient_sanity": {
+      "branches": [
+        "active/inactive ReLU",
+        "positive/negative quadratic and linear SmoothL1"
+      ],
+      "finite_difference_step": 1e-06,
+      "maximum_absolute_error": 7.130182555492581e-11,
+      "parameters_checked": 11,
+      "real_model_or_audio_used": false,
+      "status": "PASS_INVENTED_ARRAY_GRADIENT_CHECK"
+    },
+    "groups": {
+      "development": {
+        "added_wrong_keyword_events_machine_weak": 0,
+        "baseline_wrong_keyword_events_machine_weak": 0,
+        "candidate_precise_other_ties": 0,
+        "event_exact_records": 33,
+        "frame_category_changes": 15,
+        "frames": 3176,
+        "max_other_error": {
+          "frames": 3176,
+          "mae": 1.5256333763587366,
+          "max_absolute_error": 11.378433916960738,
+          "p95_absolute_error": 4.731222324914549
+        },
+        "missing_events": 1,
+        "new_events": 0,
+        "records": 34,
+        "teacher_precise_other_ties": 0,
+        "weak_keywords": {
+          "1": {
+            "false_positive_records": 0,
+            "hit_positive_records": 9,
+            "negative_records": 24,
+            "positive_records": 10
+          },
+          "2": {
+            "false_positive_records": 0,
+            "hit_positive_records": 10,
+            "negative_records": 24,
+            "positive_records": 10
+          }
+        },
+        "wrong_keyword_events_machine_weak": 0
+      },
+      "train": {
+        "added_wrong_keyword_events_machine_weak": 0,
+        "baseline_wrong_keyword_events_machine_weak": 0,
+        "candidate_precise_other_ties": 0,
+        "event_exact_records": 96,
+        "frame_category_changes": 13,
+        "frames": 9079,
+        "max_other_error": {
+          "frames": 9079,
+          "mae": 0.9256743917630351,
+          "max_absolute_error": 7.250384002015245,
+          "p95_absolute_error": 2.6803281447626404
+        },
+        "missing_events": 0,
+        "new_events": 0,
+        "records": 96,
+        "teacher_precise_other_ties": 0,
+        "weak_keywords": {
+          "1": {
+            "false_positive_records": 0,
+            "hit_positive_records": 27,
+            "negative_records": 69,
+            "positive_records": 27
+          },
+          "2": {
+            "false_positive_records": 0,
+            "hit_positive_records": 28,
+            "negative_records": 68,
+            "positive_records": 28
+          }
+        },
+        "wrong_keyword_events_machine_weak": 0
+      }
+    },
+    "independent_audit_status": "PASS_AUDIT_OF_REJECTED_CANDIDATE",
+    "learned_parameters": 9089,
+    "limitations": [
+      "Exposed synthetic machine-weak development; no independent FAR/FRR.",
+      "Max-other scalar is not full 2601-class probability or CTC equivalence.",
+      "No standalone C export, target-board speed, calibration or promotion established.",
+      "Isolated NumPy diagnostic is not canonical Torch retraining."
+    ],
+    "loss_logged_incrementally": true,
+    "normalization_train_clips": 96,
+    "normalization_train_frames": 9079,
+    "optimizer_updates": 2000,
+    "runtime": {
+      "canonical_torch_retraining": false,
+      "classification": "isolated NumPy float64 head diagnostic; not canonical Torch retraining",
+      "cpu_affinity": [
+        0
+      ],
+      "numpy": "2.3.5",
+      "python": "3.12.14",
+      "threads_observed": 1
+    },
+    "sampled_train_frames": 512000,
+    "scoring_detector_only_replays": 130,
+    "status": "REJECTED_FIXED_RESEARCH_SCREEN",
+    "teacher_or_backbone_forwards_in_fit_and_score": 0,
+    "train_no_new_wrong_events": true,
+    "unknown_clips_excluded": 4
+  },
+  "model_promotion": false,
+  "not_established": [
+    "independent FAR/FRR",
+    "physical SSC305 performance",
+    "full 2601-class probability or CTC equivalence",
+    "learned max-other fidelity",
+    "production model promotion"
+  ],
+  "owner_receipt_sha256": {
+    "final_predictions_manifest": "21798c50945b5c695e96aeb49e7bbe5b3ae57ba89b1c576001cf5d0562340b79",
+    "finite_difference_precheck": "aca601c67de9fe2547ea1f9a302ffc16cb2bd32028dd7f86d8991768270d26f8",
+    "fit_checkpoint": "43d22a086b3ab86e4ad7a7c6f10636e1e1e2f33423a4576f098c3384596e6c10",
+    "fit_independent_audit": "1eaf3a831ab7d4af7d23dc9924a0940ef22fd1f96bf6fa43ec6f80d3f02867f4",
+    "fit_plan": "05858d79042d8328613ded1144402f98a2983068e2d9a53781bef2a706f05cdf",
+    "fit_terminal": "b466e635044ae94afd2f9d8132dfbce4512d9c07c1be8ac8132a2fcb262b06f1",
+    "matrix_build": "e3b5335d67d9db5c43878ad2c520c3493ddb52c183e6662c2a3efd689f88b477",
+    "matrix_independent_audit": "dcd6926fdbf66ff39e5b44d7e6572771e912dadb99b697b0e5ce573414d40f4f",
+    "matrix_plan": "1074eadcdb1783b4f50abc11c26aeaf15f09a3f23775361957864c54c2e801b2",
+    "matrix_terminal": "cf71302c8421f51f6604a7a394441cbf832525ba4a270a067495cb3c4d775e4c",
+    "other_collapse_aggregate": "b9d50d4b329a7fb4b167c6e334336f0c99c367d3cfe928ac0085435324453545",
+    "other_collapse_plan": "63f49158516a7a9cd4b770689188e5d271cdf82a911e2f1dc95e56a12e5f9189",
+    "other_collapse_terminal": "e223e5283587fb6f8bce2a6634d2df5d11b2cfcd8b49e5f238d6fb2360f0d5e8",
+    "retained_candidate_audit_source": "22f33af6c801b630e0ff2c50a224abd6dfe99ac0b4eb70c1758507a7c84e3d67",
+    "saved_failure_analysis": "9c46c6cad9e9a98807fb224aa3f798f39ff03a5290aea924ea6033068da9a4df",
+    "score_aggregate": "bd5079b02609fead70ea5815a2edc9685de2b1868bae974d08e209992acae0f6",
+    "score_plan": "a181df81356b76e98867a9b34c0cd6c4673f35d7c4df2bee6bb282e38c47549d",
+    "score_terminal": "20fb1423c218d0ab9eedd6d155c09367c56b1beeed36ae225f353a14a8373261",
+    "teacher_build": "3f6f290f73461854cec4f3ddc10d440b211b8abd4d01cfe59925f2b776a9e7cc",
+    "teacher_execution_plan": "c01bb955a19800eb4f49c92a9d6f7b46d287a17bcd213920a7cc3fd38e79a55c",
+    "teacher_independent_audit": "228740f6af4c201dbeea5db371a4ef85df88f3e6f87c7d498b47698e61cd9a79",
+    "teacher_predeclared_plan": "df2bd5b9fed99809f211672714f00a95a33db12dbc4c1475ba108f940145339d",
+    "teacher_result": "316befa7a528315edebe107dfe1371aacc144d997271cf7b1b64c7986baef448"
+  },
+  "pins": {
+    "detector_header_sha256": "539f40b0e8c81eed520da12d8256c01cfe54963a200dccb3a79aaee30e4b5098",
+    "detector_source_sha256": "5ef3fc5410d30588cb516253b3f40e9299316178d5e54fe46ad22fd720314dcb",
+    "frontend_sha256": "49c42226c617fad81c5edb683a6332bdb82b52e37040f724eac23522a504db49",
+    "input_manifest_sha256": "63d2f75e5e93e454bdf23624277fa728bba0cef6eee9cce311f037612198d6ab",
+    "model_sha256": "63f18045c64f95e0a57776a2860a2714fdf3fd8f21472d59fe865608030f3ed4",
+    "original_observations_sha256": "8d0b622ebd50570239e45f3092e97e8ea4fa646f051dedddec1291a8225ac7b2",
+    "saved_trace_manifest_sha256": "8a3d0fbd2822c383b40db2159785419a3b85ab926f06a14c3b3da2a056dd1e44"
+  },
+  "repository": "jiying2007/kws-pipeline",
+  "saved_other_collapse": {
+    "completed_detector_only_replays": 268,
+    "detector_parameters_changed": false,
+    "modes": {
+      "original": {
+        "frames": 12534,
+        "mismatching_recordings": 0,
+        "replays": 134,
+        "saved_events": 88,
+        "saved_events_k1": 44,
+        "saved_events_k2": 44
+      },
+      "other": {
+        "frames": 12534,
+        "mismatching_recordings": 0,
+        "replays": 134,
+        "saved_events": 88,
+        "saved_events_k1": 44,
+        "saved_events_k2": 44
+      }
+    },
+    "neural_model_forwards": 0,
+    "not_established": [
+      "Accuracy of any approximate or learned max-other head",
+      "Equivalence for unseen audio or full logits",
+      "Probability calibration",
+      "Independent FAR/FRR",
+      "Physical SSC305 runtime or latency"
+    ],
+    "other_mode_token_ids_changed_frames": 742,
+    "pcm_reads": 0,
+    "post_input_sources_unchanged": true,
+    "status": "PASS_SAVED_EVENT_EQUIVALENCE_ONLY",
+    "training_updates": 0,
+    "unique_inputs": 134
+  },
+  "schema": "r1-cpu-mmap-other64-public-aggregate-v1",
+  "source": {
+    "implementation_pr": 787,
+    "merged_head": "8d72fe408ba6801c2e98cbcbbbdf6ee55a26ddda",
+    "shared_git_tree": "5b8c67adbfd4c4b1b29c02412856a993b3b88970",
+    "tested_head": "13661a38064247d38bca88287e48db85bf2ccd79"
+  },
+  "source_files": {
+    "competitor-model/audit_extract.py": {
+      "byte_identical_to_retained_owner_source": true,
+      "bytes": 9175,
+      "recorded_role": "recorded execution, compiled wrapper, or completed audit source",
+      "sha256": "f11c92c8bb5e2a1cd7c9224bcc86c17bd88c5c3499f965807e9d827208595504"
+    },
+    "competitor-model/build_extract.py": {
+      "byte_identical_to_retained_owner_source": true,
+      "bytes": 2512,
+      "recorded_role": "recorded execution, compiled wrapper, or completed audit source",
+      "sha256": "bddad3f6131274347e03f26cdbba7a34c526db122ddbe9f5431256d9c83106be"
+    },
+    "competitor-model/extract_teacher.c": {
+      "byte_identical_to_retained_owner_source": true,
+      "bytes": 7722,
+      "recorded_role": "recorded execution, compiled wrapper, or completed audit source",
+      "sha256": "c7a0e3ad806e9955b7ef73f56954a688f6bd4d7fc793c5f36d8eec37523b9926"
+    },
+    "competitor-model/fit_competitor.py": {
+      "byte_identical_to_retained_owner_source": true,
+      "bytes": 34138,
+      "recorded_role": "recorded execution, compiled wrapper, or completed audit source",
+      "sha256": "b07559df3f6147575d15a145c109ef5d915a392deac65b732b33e6d206388b23"
+    },
+    "competitor-model/read_hidden.py": {
+      "byte_identical_to_retained_owner_source": true,
+      "bytes": 2768,
+      "recorded_role": "prepared optional reader; not invoked in recorded execution or audits",
+      "sha256": "11c6c03a9aeda11769aeab1d6167d723e0f05ec873e142a1136c0d4bedebd9dc"
+    },
+    "competitor-model/run_extract.py": {
+      "byte_identical_to_retained_owner_source": true,
+      "bytes": 9908,
+      "recorded_role": "recorded execution, compiled wrapper, or completed audit source",
+      "sha256": "82a6fdbd3c0b67949898644e03190aca13e1e118bd8cf70874ab9a9dc75a1d00"
+    },
+    "competitor-screen/replay_detector.c": {
+      "byte_identical_to_retained_owner_source": true,
+      "bytes": 2727,
+      "recorded_role": "recorded execution, compiled wrapper, or completed audit source",
+      "sha256": "fbc9fd2595cca55b790dd0d226d8037e6ba9441fa354a3b8047c283d3916f6f5"
+    },
+    "competitor-screen/run_screen.py": {
+      "byte_identical_to_retained_owner_source": true,
+      "bytes": 11016,
+      "recorded_role": "recorded execution, compiled wrapper, or completed audit source",
+      "sha256": "8ced2a7d45bc71fac930ac3b8dd0c8d35c9e50d9282c9e45769bc733eaf92e6f"
+    },
+    "matrix-validation/audit_matrix.py": {
+      "byte_identical_to_retained_owner_source": true,
+      "bytes": 20372,
+      "recorded_role": "recorded execution, compiled wrapper, or completed audit source",
+      "sha256": "412f574dc3e459b60e0c3e90cfebebd252345f7e39361d15600668c8111161bb"
+    },
+    "matrix-validation/build_matrix.py": {
+      "byte_identical_to_retained_owner_source": true,
+      "bytes": 5817,
+      "recorded_role": "recorded execution, compiled wrapper, or completed audit source",
+      "sha256": "07300ad658d9510329b8aeed08c75e213b30b2c0e8f8dc536bc07aceda3abb7e"
+    },
+    "matrix-validation/run_matrix.py": {
+      "byte_identical_to_retained_owner_source": true,
+      "bytes": 18125,
+      "recorded_role": "recorded execution, compiled wrapper, or completed audit source",
+      "sha256": "8a730ed31824d3d314e124a28de4af51d7bdcd0ea2246d95c876e448f5de3b53"
+    },
+    "matrix-validation/trace_wrap.c": {
+      "byte_identical_to_retained_owner_source": true,
+      "bytes": 4199,
+      "recorded_role": "recorded execution, compiled wrapper, or completed audit source",
+      "sha256": "4ef6f88f195d7325850ce9f1f6c884bd1449dc5040fa252099b39711b7fa3d2f"
+    }
+  },
+  "standalone_reproduction_bundle": false,
+  "suggested_prefix": "research/r1_stream_c/experiments/20261111-cpu-mmap-other64",
+  "teacher_extraction": {
+    "actual_clip_invocations": 134,
+    "actual_frames": 12534,
+    "full_logits_persisted": false,
+    "groups": {
+      "development": {
+        "clips": 34,
+        "frames": 3176
+      },
+      "train": {
+        "clips": 96,
+        "frames": 9079
+      },
+      "unknown": {
+        "clips": 4,
+        "frames": 279
+      }
+    },
+    "independent_audit_status": "PASS_RETAINED_EXTRACTION_AUDIT",
+    "mismatching_fe_traces": 0,
+    "output_format": {
+      "byte_order": "little",
+      "competitor": "max of other2596 plus original lower-ID tie winner",
+      "exact_logit_ids": [
+        0,
+        1027,
+        1401,
+        1462,
+        2093
+      ],
+      "floating_point": "IEEE binary64",
+      "header_bytes": 64,
+      "hidden_dimensions": 140,
+      "magic": "R1HD140 NUL",
+      "record_bytes": 1200,
+      "record_layout": "frame:u64,source:u64,delivery:u64,original_best_token:u32,other_best_token:u32,hidden:f64[140],exact_logits:f64[5],max_other:f64",
+      "stage": 19
+    },
+    "plan": {
+      "feed_chunk_bytes": 640,
+      "max_teacher_clip_calls": 134,
+      "original_arithmetic_modified": false,
+      "per_process_seconds": 30,
+      "retry": false,
+      "total_seconds": 900
+    },
+    "retained_events": 88,
+    "retained_hidden_values": 1754760,
+    "row_winner_and_clock_failures": 0,
+    "semantics": "single unchanged C teacher pass per original clip; copied stage19 embeddings and exact five logits plus max-other and original tie identity; no teacher retraining",
+    "source_input_model_frontend_drift": false,
+    "status": "PASS_FIXED_TEACHER_EXTRACTION",
+    "training": 0
+  }
+}
