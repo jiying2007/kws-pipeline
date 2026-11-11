@@ -263,6 +263,215 @@ class CpuBlock4Contracts(unittest.TestCase):
                     '--pcm',str(fake)],capture_output=True,timeout=10)
                 self.assertNotEqual(result.returncode,0)
 
+
+class DeviceReceiptContracts(unittest.TestCase):
+    """Invented receipt-only measurements: no physical board, PCM or model."""
+
+    def setUp(self):
+        self.temp_receipts = tempfile.TemporaryDirectory(prefix='r1-cpu-evidence-')
+        self.addCleanup(self.temp_receipts.cleanup)
+        self.work = Path(self.temp_receipts.name)
+        self.comparator = load(HERE/'device_compare.py', 'r1_cpu_receipt_comparator')
+        self.fixture_id = 0
+
+    @staticmethod
+    def put(path, value):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        raw = (json.dumps(value, sort_keys=True, allow_nan=False) + '\n').encode('utf-8')
+        path.write_bytes(raw)
+        return hashlib.sha256(raw).hexdigest()
+
+    def invent(self):
+        self.fixture_id += 1
+        root = self.work / ('fixture-' + str(self.fixture_id))
+        root.mkdir()
+        m = self.comparator
+        plan = {
+            'schema': m.PLAN_SCHEMA,
+            'model_sha256': m.MODEL_SHA,
+            'frontend_sha256': m.FRONTEND_SHA,
+            'pcm_sha256': 'e' * 64, 'pcm_bytes': 64000,
+            'input_mode': 'offline_pcm16k',
+            'binary_sha256': {'par4': 'a' * 64, 'block2': 'b' * 64, 'block4': 'c' * 64},
+            'board': {'id': 'INVENTED-NOT-AN-SSC305',
+                      'firmware_sha256': 'd' * 64, 'machine': 'armv7l',
+                      'governor': 'performance', 'frequency_khz': 800000,
+                      'affinity': '0'},
+            'rounds': [],
+        }
+        for i in range(9):
+            order = list(m.ORDERS[i % 3])
+            captures = {}
+            for v in order:
+                # Positive CPU contrast is intentionally fictional, for
+                # classifier contract tests only (never a measured result).
+                cpu_base = 0.4 + 0.002 * i
+                cpu_s = {'par4': cpu_base, 'block2': cpu_base * 0.8,
+                         'block4': cpu_base * 1.1}[v]
+                wall = 0.8 + 0.001 * i
+                receipt = {
+                    'schema': m.BENCH_SCHEMA,
+                    'device_qualified': False, 'live_afe': False,
+                    'independent_far_frr': False, 'power_mw': None,
+                    'stack_high_water_bytes': None,
+                    'model_kind': 'source-hash-checked-by-sdk',
+                    'arch': 'armv7l', 'kernel': '5.10.0-invented',
+                    'pcm_bytes': 64000, 'audio_seconds': 2.0,
+                    'sdk_model_frames': 60, 'keyword_events': 5,
+                    'keyword1_events': 2, 'keyword2_events': 3,
+                    'feed_chunk_bytes': 640, 'feed_calls': 100,
+                    'feed_p95_histogram_upper_us': {'par4': 128, 'block2': 64, 'block4': 256}[v],
+                    'feed_max_us': 200, 'model_init_wall_ms': 10.0,
+                    'offline_feed_wall_seconds': wall,
+                    'offline_feed_cpu_seconds': cpu_s,
+                    'offline_rtf': wall / 2.0,
+                    'cpu_seconds_per_audio_second': cpu_s / 2.0,
+                    'process_peak_rss_kib': 3000,
+                }
+                name = 'receipts/%02d-%s.json' % (i, v)
+                captures[v] = {'path': name, 'sha256': self.put(root / name, receipt)}
+            plan['rounds'].append({'round': i, 'order': order, 'receipts': captures})
+        self.put(root / 'PLAN.json', plan)
+        return root, plan
+
+    def modify_receipt(self, root, plan, index, variant, modify, bind=True):
+        entry = plan['rounds'][index]['receipts'][variant]
+        path = root / entry['path']
+        receipt = json.loads(path.read_text())
+        modify(receipt)
+        digest = self.put(path, receipt)
+        if bind:
+            entry['sha256'] = digest
+            self.put(root / 'PLAN.json', plan)
+
+    def test_rotated_synthetic_cpu_screen_never_grants_model_authority(self):
+        root, plan = self.invent()
+        report = self.comparator.examine(root)
+        self.assertEqual(report['rounds'], 9)
+        self.assertEqual(len(report['receipt_identities']), 27)
+        self.assertEqual(report['candidates']['block2']['screen'],
+                         'RESOURCE_SCREEN_PASS_NOT_QUALIFIED')
+        self.assertEqual(report['candidates']['block4']['screen'],
+                         'NO_CREDIBLE_CPU_GAIN')
+        self.assertEqual(report['candidates']['block2']['paired_cpu_wins'], 9)
+        self.assertEqual(report['candidates']['block2']['p95_upper_nonregressions'], 9)
+        self.assertEqual(report['reference']['variant'], 'par4')
+        self.assertFalse(report['model_promotion_authorized'])
+        self.assertFalse(report['device_qualified'])
+        self.assertFalse(report['physical_device_identity_independently_verified'])
+        self.assertFalse(report['model_and_binary_hashes_independently_verified'])
+        self.assertEqual(report['real_model_output_parity'], 'NOT_CHECKED_BY_THIS_TOOL')
+        self.assertEqual(report['analyzer_model_forwards'], 0)
+        self.assertEqual(report['model_sha256'], self.comparator.MODEL_SHA)
+        self.assertEqual(report['pcm_sha256'], 'e' * 64)
+        self.assertTrue(all(row['variant'] in self.comparator.VARIANTS
+                            and row['sha256'] for row in report['receipt_identities']))
+
+    def test_missing_tampered_and_repeated_receipts_fail_closed(self):
+        root, plan = self.invent()
+        entry = plan['rounds'][0]['receipts']['par4']
+        path = root / entry['path']
+        path.write_text(path.read_text().replace('"process_peak_rss_kib": 3000',
+                                                 '"process_peak_rss_kib": 3001'))
+        with self.assertRaisesRegex(ValueError, 'SHA256'):
+            self.comparator.examine(root)
+
+        root, plan = self.invent()
+        entry = plan['rounds'][0]['receipts']['par4']
+        (root / entry['path']).unlink()
+        with self.assertRaisesRegex(ValueError, 'missing evidence'):
+            self.comparator.examine(root)
+
+        root, plan = self.invent()
+        a = plan['rounds'][0]['receipts']['par4']
+        b = plan['rounds'][1]['receipts']['par4']
+        raw = (root / a['path']).read_bytes()
+        (root / b['path']).write_bytes(raw)
+        b['sha256'] = hashlib.sha256(raw).hexdigest()
+        self.put(root / 'PLAN.json', plan)
+        with self.assertRaisesRegex(ValueError, 'duplicate receipt payload'):
+            self.comparator.examine(root)
+
+    def test_reject_frame_event_cpu_histogram_and_qualification_forgery(self):
+        experiments = (
+            ('counts', lambda r: r.__setitem__('sdk_model_frames', 61), 'frame/event disagreement'),
+            ('events', lambda r: r.__setitem__('keyword_events', 99), 'keyword-event sum'),
+            ('ratio', lambda r: r.__setitem__('offline_feed_cpu_seconds', 7.0), 'inconsistent CPU'),
+            ('p95-shape', lambda r: r.__setitem__('feed_p95_histogram_upper_us', 123), 'histogram'),
+            ('p95-value', lambda r: r.__setitem__('feed_p95_histogram_upper_us', 1024), 'histogram'),
+            ('explicit-pass', lambda r: r.__setitem__('device_qualified', True),
+             'qualification boundary'),
+            ('negative-cpu', lambda r: r.__setitem__('offline_feed_cpu_seconds', -1.0),
+             'numeric range'),
+            ('pcm-exposure', lambda r: r.__setitem__('pcm_bytes', 60000), 'PCM byte exposure'),
+            ('machine', lambda r: r.__setitem__('arch', 'x86_64'), 'machine/kernel'),
+        )
+        for name, change, message in experiments:
+            with self.subTest(name=name):
+                root, plan = self.invent()
+                self.modify_receipt(root, plan, 0, 'block2', change)
+                with self.assertRaisesRegex(ValueError, message):
+                    self.comparator.examine(root)
+
+    def test_reject_plan_identity_order_and_sampling_claims(self):
+        experiments = (
+            ('model', lambda p: p.__setitem__('model_sha256', '0' * 64), 'pretrained R1'),
+            ('source', lambda p: p.__setitem__('frontend_sha256', '0' * 64), 'pretrained R1'),
+            ('unbalanced', lambda p: p['rounds'][1].__setitem__(
+                'order', ['par4', 'block2', 'block4']), 'run order'),
+            ('insufficient', lambda p: p.__setitem__('rounds', p['rounds'][:6]),
+             'rotated repetitions'),
+            ('same-binary', lambda p: p['binary_sha256'].__setitem__(
+                'block2', 'a' * 64), 'variant binaries'),
+            ('bad-governor', lambda p: p['board'].__setitem__(
+                'governor', 'unknown'), 'governor'),
+            ('false-pcm', lambda p: p.__setitem__('pcm_bytes', 64002), 'PCM byte exposure'),
+        )
+        for name, change, message in experiments:
+            with self.subTest(name=name):
+                root, plan = self.invent()
+                change(plan)
+                self.put(root / 'PLAN.json', plan)
+                with self.assertRaisesRegex(ValueError, message):
+                    self.comparator.examine(root)
+
+    def test_reject_duplicate_json_and_evidence_symlinks(self):
+        root, plan = self.invent()
+        path = root / plan['rounds'][0]['receipts']['par4']['path']
+        content = path.read_text()
+        self.assertIn('"arch": "armv7l"', content)
+        path.write_text(content.replace('"arch": "armv7l"',
+                                        '"arch": "armv7l", "arch": "armv7l"', 1))
+        with self.assertRaisesRegex(ValueError, 'duplicate JSON key'):
+            self.comparator.examine(root)
+
+        root, plan = self.invent()
+        entry = plan['rounds'][0]['receipts']['par4']
+        original = root / entry['path']
+        other = root / 'offsite-evidence.json'
+        other.write_bytes(original.read_bytes())
+        original.unlink()
+        original.symlink_to(other)
+        with self.assertRaisesRegex(ValueError, 'symlink'):
+            self.comparator.examine(root)
+
+    def test_cli_receipt_creation_never_overwrites_or_grants_authority(self):
+        root, plan = self.invent()
+        out = self.work / 'first-comparison.json'
+        argv = [sys.executable, '-I', '-S', '-B', HERE/'device_compare.py',
+                '--root', root, '--output', out]
+        result = run(argv, timeout=25)
+        self.assertEqual(json.loads(result.stdout)['status'], 'ANALYZED_NOT_QUALIFIED')
+        report = json.loads(out.read_text())
+        self.assertFalse(report['device_qualified'])
+        self.assertFalse(report['model_promotion_authorized'])
+        identity = hashlib.sha256(out.read_bytes()).hexdigest()
+        again = subprocess.run([str(x) for x in argv], capture_output=True,
+                               timeout=25)
+        self.assertNotEqual(again.returncode, 0)
+        self.assertEqual(hashlib.sha256(out.read_bytes()).hexdigest(), identity)
+
+
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--cc',action='append')
