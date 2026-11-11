@@ -190,7 +190,7 @@ int main(int argc,char **argv) {
     if(private_dirty<0)printf("null");else printf("%ld",private_dirty);
     printf(",\"process_minor_faults\":%ld,\"process_major_faults\":%ld,",
            usage.ru_minflt,usage.ru_majflt);
-    printf(",\"model_bytes\":%u,\"copied_model_bytes\":%u,",FSMN_MODEL_BYTES,
+    printf("\"model_bytes\":%u,\"copied_model_bytes\":%u,",FSMN_MODEL_BYTES,
            mode==0?FSMN_MODEL_BYTES:0u);
     printf("\"model_storage\":\"%s\",\"physical_ssc305\":false}\n",
            mapped?"read_only_private_file_mapping":(mode==1?"borrowed_heap":"sdk_owned_heap"));
