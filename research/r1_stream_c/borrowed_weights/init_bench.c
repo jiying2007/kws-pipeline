@@ -43,7 +43,8 @@ static unsigned char *read_exact(const char *path, size_t bytes) {
  */
 static unsigned char *map_exact(const char *path, size_t bytes) {
     if(!path || !bytes)return NULL;
-    int fd=open(path,O_RDONLY|O_CLOEXEC|O_NOFOLLOW);
+    /* Reach fstat even for a FIFO with no writer; regular files ignore this flag. */
+    int fd=open(path,O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK);
     if(fd<0)return NULL;
     struct stat st;
     int valid=fstat(fd,&st)==0 && S_ISREG(st.st_mode) &&

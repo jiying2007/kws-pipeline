@@ -81,7 +81,8 @@ static unsigned char *read_exact(const char *name, size_t bytes) {
 #error "Linux secure read-only model mmap requires O_NOFOLLOW and O_CLOEXEC"
 #endif
 static unsigned char *map_model_exact(const char *name, size_t bytes) {
-    int fd = open(name, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+    /* A FIFO must reach the regular-file check without waiting for a writer. */
+    int fd = open(name, O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK);
     if (fd < 0) return NULL;
     struct stat st;
     int valid = fstat(fd, &st) == 0 && S_ISREG(st.st_mode) &&

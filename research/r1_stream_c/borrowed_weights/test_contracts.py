@@ -223,7 +223,7 @@ class BorrowedContracts(unittest.TestCase):
     def test_mmap_fails_closed_for_symlink_bad_size_and_nonregular_files(self):
         """The stub SDK checks input bytes at destroy, proving mmap lifetime."""
         source = (HERE / "init_bench.c").read_text()
-        for required in ("O_NOFOLLOW", "O_CLOEXEC", "PROT_READ,MAP_PRIVATE",
+        for required in ("O_NOFOLLOW", "O_CLOEXEC", "O_NONBLOCK", "PROT_READ,MAP_PRIVATE",
                          "munmap(model,FSMN_MODEL_BYTES)", "S_ISREG(st.st_mode)"):
             self.assertIn(required, source)
         for cc, (build, inc, _) in self.builds.items():
@@ -245,10 +245,12 @@ class BorrowedContracts(unittest.TestCase):
                 link.symlink_to(self.model)
                 directory = build / "a-directory"
                 directory.mkdir(exist_ok=True)
-                for bad_model in (fake, link, directory, Path("/dev/null")):
+                fifo = build / "model-fifo-no-writer"
+                os.mkfifo(fifo)
+                for bad_model in (fake, link, directory, Path("/dev/null"), fifo):
                     result = subprocess.run([str(x) for x in
                         (exe, "mmap", bad_model, self.tables)],
-                        capture_output=True, timeout=10)
+                        capture_output=True, timeout=2)
                     self.assertNotEqual(result.returncode, 0, str(bad_model))
                     self.assertFalse(result.stdout)
                 not_table = build / "invalid-frontend"
@@ -309,10 +311,12 @@ class BorrowedContracts(unittest.TestCase):
                 link.symlink_to(self.model)
                 directory = build / "directory-not-model"
                 directory.mkdir(exist_ok=True)
-                for bad in (missing, link, directory, Path("/dev/null")):
+                fifo = build / "stream-model-fifo-no-writer"
+                os.mkfifo(fifo)
+                for bad in (missing, link, directory, Path("/dev/null"), fifo):
                     rejected = subprocess.run([str(x) for x in
                         (exe, bad, self.tables, self.pcm, "--mmap")],
-                        capture_output=True, timeout=10)
+                        capture_output=True, timeout=2)
                     self.assertNotEqual(rejected.returncode, 0, str(bad))
                     self.assertFalse(rejected.stdout)
                 failed_destroy = subprocess.run([str(x) for x in
