@@ -107,10 +107,13 @@ def validate_receipt(row, plan, expected_machine):
     e1 = integer(row.get("keyword1_events"), "keyword1_events")
     e2 = integer(row.get("keyword2_events"), "keyword2_events")
     require(e1 + e2 == events, "keyword-event sum mismatch")
-    require(integer(row.get("feed_p95_histogram_upper_us"),
-                    "feed_p95_histogram_upper_us", 1) > 0,
-            "missing feed latency upper")
-    integer(row.get("feed_max_us"), "feed_max_us", 1)
+    p95_upper = integer(row.get("feed_p95_histogram_upper_us"),
+                        "feed_p95_histogram_upper_us", 1)
+    feed_max = integer(row.get("feed_max_us"), "feed_max_us", 1)
+    require(p95_upper <= (1 << 31) and
+            p95_upper & (p95_upper - 1) == 0 and
+            p95_upper <= 2 * feed_max,
+            "invalid bounded power-of-two p95 histogram upper")
     integer(row.get("process_peak_rss_kib"), "process_peak_rss_kib", 1)
     number(row.get("model_init_wall_ms"), "model_init_wall_ms")
     wall_s = number(row.get("offline_feed_wall_seconds"), "offline_feed_wall_seconds")
@@ -159,6 +162,7 @@ def examine(root):
     expected_kernel = None
     expected_counts = None
     seen = set()
+    seen_receipt_hashes = set()
     cpu = {v: [] for v in VARIANTS}
     upper = {v: [] for v in VARIANTS}
     identities = []
@@ -181,6 +185,9 @@ def examine(root):
             seen.add(path)
             row, actual_sha = read_json(guarded_file(root, path))
             require(actual_sha == entry["sha256"], "receipt SHA256 mismatch")
+            require(actual_sha not in seen_receipt_hashes,
+                    "duplicate receipt payload cannot prove independent repetitions")
+            seen_receipt_hashes.add(actual_sha)
             counts, cpu_ratio = validate_receipt(row, plan, board["machine"])
             pair = (row["arch"], row["kernel"])
             if expected_kernel is None:
@@ -225,6 +232,7 @@ def examine(root):
         "pcm_sha256": plan["pcm_sha256"],
         "pcm_bytes": plan["pcm_bytes"],
         "board_operator_metadata": board,
+        "model_and_binary_hashes_independently_verified": False,
         "reference": {"variant": "par4",
                       "median_cpu_seconds_per_audio_second":
                           round(statistics.median(baseline), 9),
