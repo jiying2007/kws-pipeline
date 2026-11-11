@@ -27,6 +27,9 @@ C_HEADER=r'''#define _POSIX_C_SOURCE 200809L
 #include <time.h>
 #include <math.h>
 #define R1DFSMN_OUTPUTS 2601u
+#ifndef R1_CPU_BENCH_REPS
+#define R1_CPU_BENCH_REPS 96u
+#endif
 typedef struct {
     const int8_t *qhead;
     const double *scales;
@@ -79,7 +82,7 @@ int main(void) {
     }
     volatile double observed=0.0;
     uint64_t old=0u,neu=0u;
-    for (unsigned rep=0;rep<96u;rep++) {
+    for (unsigned rep=0;rep<R1_CPU_BENCH_REPS;rep++) {
         const int reverse=(rep%2u)!=0u;
         for (unsigned pass=0;pass<2u;pass++) {
             const int new_first=((pass==0u)==reverse);
