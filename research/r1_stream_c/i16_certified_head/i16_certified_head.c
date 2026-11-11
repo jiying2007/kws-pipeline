@@ -98,7 +98,7 @@ int r1_i16_step(r1_i16_head *h,const double hidden[R1_I16_HIDDEN],
     double worst=0.0;
     for(size_t k=0;k<R1_I16_HIDDEN;k++) {
         double ratio=hidden[k]/unit;
-        if(!isfinite(ratio)||ratio>32767.0||ratio< -32767.0)
+        if(!isfinite(ratio)||ratio>32767.5||ratio< -32767.5)
             return scan_all(h,hidden,result);
         double rounded=nearbyint(ratio);
         if(!isfinite(rounded)||rounded>32767.0||rounded< -32767.0)
