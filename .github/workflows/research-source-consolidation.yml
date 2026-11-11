@@ -88,6 +88,12 @@ jobs:
         env:
           CC: ${{ matrix.cc }}
         run: python3 -B research/bounded-local-retention-2026-10-20/activation/run_checks.py --cc "$CC"
+      - name: Certified full-OTHER par4 fallback (invented rows only)
+        env:
+          CC: ${{ matrix.cc }}
+        run: |
+          "$CC" -std=c11 -O2 -Wall -Wextra -Werror -pedantic -fno-fast-math -ffp-contract=off -fexcess-precision=standard research/r1_stream_c/certified_other_fallback/certified_other.c research/r1_stream_c/certified_other_fallback/test_certified_other.c -lm -o "$RUNNER_TEMP/certified-other-fallback"
+          "$RUNNER_TEMP/certified-other-fallback"
       - name: Retain synthetic scratch receipts
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
