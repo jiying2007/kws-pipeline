@@ -92,9 +92,40 @@ def execute(compiler,readelf,emulator,sysroot):
                 'synthetic_arm_qemu_head_bit_exact':True,
                 'fixture':result,'identities':identities,
                 'cpu_gain_qualified':False}
+        # New opt-in INT16 full-OTHER mechanism: two real ARM binaries, both
+        # execute invented 2,601-row fixture comparisons against full par4.
+        # Under QEMU these are functional tests only, never a CPU claim.
+        i16_root = HERE.parent/'i16_certified_head'
+        i16_results = {}
+        original_result = None
+        for variant, macros in (('scalar', []), ('neon', ['-DR1_I16_USE_NEON=1'])):
+            test_binary = root/('arm-i16-'+variant)
+            checked([compiler,'-std=c11','-O3','-Wall','-Wextra',
+                     '-Werror','-pedantic','-fno-fast-math',
+                     '-ffp-contract=off','-fexcess-precision=standard',
+                     '-mcpu=cortex-a32','-mfpu=neon-vfpv4','-mfloat-abi=hard',
+                     *macros,i16_root/'i16_certified_head.c',
+                     i16_root/'test_i16_certified_head.c',
+                     '-lm','-o',test_binary],timeout=100)
+            binary_sha = elf(readelf,test_binary)
+            raw = checked([emulator,'-L',sysroot,test_binary],timeout=120)
+            record = json.loads(raw)
+            if (record.get('status') != 'PASS_INVENTED_I16_CERTIFIED_OTHER' or
+                record.get('frames') != 135 or
+                record.get('model_calls') != 0 or
+                record.get('pcm_calls') != 0 or
+                record.get('decoder_calls') != 0):
+                raise ValueError('ARM/QEMU invented i16 source parity failed: '+variant)
+            if original_result is None:
+                original_result = record
+            elif record != original_result:
+                raise ValueError('NEON vs scalar invented source receipts differ')
+            i16_results[variant]={'binary_sha256':binary_sha,
+                                  'synthetic_qemu_full_other_bitwise':True,
+                                  'source_variant':variant,'receipt':record}
         return {'schema':'r1-head-blocks-arm-source-v2',
                 'target':'cortex-a32-neon-vfpv4-hardfloat',
-                'candidates':candidates,'model_executions':0,
+                'candidates':candidates,'i16_scalar_vs_neon':i16_results,'model_executions':0,
                 'physical_ssc305':False,'real_model_parity':'NOT_RUN',
                 'promote_model':False}
 
