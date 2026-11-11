@@ -202,7 +202,7 @@ def materialize(repo, output, model=None, frontend=None, kernel='block4'):
         old_report['frame_event_clock_parity']='NOT_RUN_FOR_THIS_BUILD'
         old_report_path.write_text(json.dumps(old_report,indent=2,sort_keys=True)+'\n')
         receipt={
-            'schema':'r1-cpu-output-block4-source-v1',
+            'schema':'r1-cpu-output-blocks-source-v2',
             'source_model_id':prior['source_model_id'],
             'model_sha256':prior['q8_model_sha256'],
             'model_bytes':prior['q8_model_bytes'],
