@@ -472,6 +472,35 @@ class DeviceReceiptContracts(unittest.TestCase):
         self.assertEqual(hashlib.sha256(out.read_bytes()).hexdigest(), identity)
 
 
+
+    def test_mmap_and_copy_receipts_cannot_be_mixed_in_cpu_ab(self):
+        root, plan = self.invent()
+        for batch in plan['rounds']:
+            for variant in self.comparator.VARIANTS:
+                entry = batch['receipts'][variant]
+                path = root / entry['path']
+                row = json.loads(path.read_text())
+                row['model_storage'] = 'read_only_mmap'
+                entry['sha256'] = self.put(path, row)
+        self.put(root / 'PLAN.json', plan)
+        result = self.comparator.examine(root)
+        self.assertEqual(result['model_storage'], 'read_only_mmap')
+        self.assertFalse(result['device_qualified'])
+        self.assertFalse(result['model_promotion_authorized'])
+        self.modify_receipt(root, plan, 0, 'par4',
+                            lambda row: row.__setitem__('model_storage','sdk_owned_copy'))
+        with self.assertRaisesRegex(ValueError, 'mixed model storage modes'):
+            self.comparator.examine(root)
+
+        root, plan = self.invent()
+        self.assertEqual(self.comparator.examine(root)['model_storage'],
+                         'legacy_unspecified')
+        self.modify_receipt(root, plan, 0, 'block2',
+                            lambda row: row.__setitem__('model_storage','mmap_unverified'))
+        with self.assertRaisesRegex(ValueError, 'invalid model storage'):
+            self.comparator.examine(root)
+
+
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--cc',action='append')
