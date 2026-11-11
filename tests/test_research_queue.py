@@ -245,9 +245,10 @@ class QueueTests(unittest.TestCase):
         self.assert_deadline_receipt(root, status["jobs"]["long"])
         self.assertFalse((root / "jobs/next/claim.json").exists())
 
-    def test_expired_claim_before_command_is_a_durable_timeout(self):
+    def test_expired_claim_before_command_is_accounted_without_launch(self):
         # Deterministic startup-overrun case: no child is ever started, even on
-        # a slow CI runner. This must not be reported as a generic failure.
+        # a slow CI runner. The generic failed status carries an exact reason;
+        # the queue budget remains exhausted with no success/retry authority.
         root = self.init([self.job("expired", timeout=1)], budget=.006)
         folder = root / "jobs/expired"
         _, _, request, queue_sha = queue.load_queue(root)
@@ -281,7 +282,7 @@ class QueueTests(unittest.TestCase):
         self.assertGreaterEqual(result["actual_elapsed_ns"], allowed)
         self.assertFalse((folder / "command-started.json").exists())
         self.assertFalse((folder / "outputs/answer.json").exists())
-        self.assertEqual(queue.inspect(root)["jobs"]["expired"]["status"], "timed_out")
+        self.assertEqual(queue.inspect(root)["jobs"]["expired"]["status"], "failed")
 
     def test_shell_metacharacters_are_literal_argv(self):
         job = self.job("literal", code="from pathlib import Path;import sys;Path(sys.argv[1],'answer.json').write_text(sys.argv[2])")
