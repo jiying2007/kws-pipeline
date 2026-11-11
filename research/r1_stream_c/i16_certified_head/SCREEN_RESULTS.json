@@ -22,7 +22,10 @@
       "two_candidate_frames": 12,
       "winner_misses": 0,
       "bound_violations": 0,
-      "max_abs_approx_error": 0.008334847277666313
+      "max_abs_approx_error": 0.008334847277666313,
+      "python_scalar_original_par4_bitwise_matches": 9079,
+      "python_scalar_original_id_matches": 9079,
+      "exact_candidate_rows_evaluated": 9091
     },
     "exposed_development": {
       "recordings": 34,
@@ -31,7 +34,10 @@
       "two_candidate_frames": 6,
       "winner_misses": 0,
       "bound_violations": 0,
-      "max_abs_approx_error": 0.006288347462827915
+      "max_abs_approx_error": 0.006288347462827915,
+      "python_scalar_original_par4_bitwise_matches": 3176,
+      "python_scalar_original_id_matches": 3176,
+      "exact_candidate_rows_evaluated": 3182
     }
   },
   "caveats": {
@@ -43,8 +49,10 @@
     "physical_ssc305": false,
     "independent_far_frr": false,
     "default_changed": false,
-    "promotion_allowed": false
+    "promotion_allowed": false,
+    "python_scalar_original_par4_bitwise_matches_not_compiled_new_C": true
   },
   "owner_train_screen_script_sha256": "caf9b90fac453549ef71e883f7ac2cb50f7a372b9ee5b8b6eb2ae21df53d11b8",
-  "owner_dev_screen_script_sha256": "951d8fec455e7fad4e19e14da51b38de755904961b8e23f5acb974fbf7868a46"
+  "owner_dev_screen_script_sha256": "951d8fec455e7fad4e19e14da51b38de755904961b8e23f5acb974fbf7868a46",
+  "owner_bitwise_readback_script_sha256": "0413945e56b07163d74317a732fccbb8d5b4685bfb65d06103f178d1cb8742dd"
 }
