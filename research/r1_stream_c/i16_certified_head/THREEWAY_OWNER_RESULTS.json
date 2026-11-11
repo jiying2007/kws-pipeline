@@ -1,0 +1,42 @@
+{
+  "schema": "r1-i16-vs-full-vs-active113-selected-owner-head-only-v1",
+  "status": "OWNER_SAVED_HEAD_ONLY_COMPILER_COMPARISON_NOT_MODEL_QUALIFIED",
+  "model_sha256": "63f18045c64f95e0a57776a2860a2714fdf3fd8f21472d59fe865608030f3ed4",
+  "source_c_git_blob_sha1": "9e5e7c2f6ad4cad8dd34a9d977ae2ceabe514361",
+  "selected_other_ids_u32le_sha256": "95ef05d49804172ff32b218fc108fa5bed8c9acefc099fee0d496cba80aacedb",
+  "sample_policy": "2 deterministic retained hidden140 frames per each 130 known recordings (at floor(frames/3), floor(2*frames/3)); total 260; nine interleaved three-arm rounds; CPU_PROCESS time",
+  "outputs": {
+    "gcc_O3": {
+      "full_other_2601_median_s": 0.05777319,
+      "int16_full_other_median_s": 0.026991077,
+      "selected113_proxy_median_s": 0.002479804,
+      "median_paired_i16_over_selected113": 10.846004071614233,
+      "i16_faster_than_selected": 0,
+      "pairs": 9
+    },
+    "clang_O3": {
+      "full_other_2601_median_s": 0.092473469,
+      "int16_full_other_median_s": 0.035643546,
+      "selected113_proxy_median_s": 0.004428247,
+      "median_paired_i16_over_selected113": 7.7255582011332455,
+      "i16_faster_than_selected": 0,
+      "pairs": 9
+    }
+  },
+  "comparability": {
+    "each_triplet_same_compiler_same_260_hidden_frames": true,
+    "original_full_and_i16_preserve_all_original_2596_other_competitors": true,
+    "active113_selected_proxy_uses_only_frozen_113_other_rows": true,
+    "proxy_is_not_complete_active113_sdk": true,
+    "full_2601_logits_not_materialized": true,
+    "not_full_streaming_pcm_or_target_optimization": true,
+    "no_independent_far_frr": true,
+    "no_model_promotion": true
+  },
+  "owner_evidence": {
+    "archive_name": "KWS_R1_I16_THREEWAY_EVIDENCE_20261111.zip",
+    "archive_sha256": "fac0a7a39e49efa1aed02f7679645911a4e4f4711f3b0cae36db7a9a48087d00",
+    "detailed_results_sha256": "d8aaab1ef6ca818d4a01c8d371e6c4ce4446fc9bcafde28610f3e8b9cec4d235",
+    "contains": "head-only comparison harness, frozen selected IDs, 9 round CPU triplets per compiler, compiler binaries; no model or audio/hidden data"
+  }
+}
