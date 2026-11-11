@@ -183,7 +183,7 @@ static int next_upper(const r1_cert_head *s, const double *x,
     return 1;
 }
 
-int r1_cert_step(r1_cert_head *s, const double *hidden,
+int r1_cert_step(r1_cert_head *s, const double hidden[R1_CERT_HIDDEN],
                  r1_cert_result *result)
 {
     if (!s || !s->quant_rows || !s->scales || !s->biases ||
