@@ -59,6 +59,32 @@ ACTIVE113 进行同编译器、同输入的整个 KWS 流式 CPU/PSS 对照。
 `711dd0fd6cdb3144bc5ebbfe3f6ddb19a86e0ba910d46188fda14e7380834e6a`。
 公开聚合结果见 [OWNER_C_HEAD_RESULTS.json](OWNER_C_HEAD_RESULTS.json)。
 
+## 同输入三路 OTHER 输出头筛查（新增）
+
+进一步复用每条已知记录中的两帧隐层、共 260 帧，固定
+GCC／Clang `-O3`，在同一轮交替执行三种**仅 OTHER 行**的算子：
+完整原 2,596 行、INT16 全类别保守预筛＋原 par4 回退、
+以及 ACTIVE113 冻结选择的 113 个 OTHER 行。第三组使用相同原权重
+直接计算选中的 113 行，属于 **ACTIVE113 头部代理**，不是完整
+紧凑 SDK、模型加载或系统级 benchmark。
+
+| host 编译器 | 完整 OTHER 头中位 | INT16 全类别中位 | 113 行代理中位 | INT16 / 113 行代理逐对倍数中位 |
+|---|---:|---:|---:|---:|
+| GCC `-O3` | 57.773 ms | 26.991 ms | 2.480 ms | **10.85× 更慢** |
+| Clang `-O3` | 92.473 ms | 35.644 ms | 4.428 ms | **7.73× 更慢** |
+
+两种编译器均为 **9／9 轮选中 113 行代理快于 INT16 全类别头**。
+这证明 INT16 的完整竞争保留确实有相当 CPU 代价；
+尽管它比原完整头更快，**不应以它替换当前轻量 ACTIVE113 候选**。
+但 ACTIVE113 对未选 OTHER 类别的风险并未因此消失，完整竞争
+INT16 仍可作为独立权衡的研究模式。此处不能推断真实音频
+FAR／FRR、整个 KWS CPU、设备内存或 SSC305 加速。
+
+详细可追溯结果见 [THREEWAY_OWNER_RESULTS.json](THREEWAY_OWNER_RESULTS.json)；
+所有者小包 `KWS_R1_I16_THREEWAY_EVIDENCE_20261111.zip`
+SHA256：`fac0a7a39e49efa1aed02f7679645911a4e4f4711f3b0cae36db7a9a48087d00`。
+该包仅含比较验证器、编译后程序及九组计时记录，不含音频或权重。
+
 ## 实现、测试、晋级
 
 - i16_certified_head.h/.c：head-only 的完整 OTHER 精确最大值与原 ID API，无默认启用、网络、音频读取、堆分配或额外模型文件。
