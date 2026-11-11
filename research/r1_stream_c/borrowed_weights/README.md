@@ -107,6 +107,25 @@ and compare load+init CPU, VmHWM, RSS and PSS. Neither source-only CI nor host
 init measurements certify real SSC305/BSP compatibility, long-run accuracy,
 FAR/FRR, AFE latency, power or thermal behavior.
 
+## Optional mmap for actual offline streaming
+
+The existing [source-bound target resource benchmark](../quant_head8/target_resource_bench.c)
+now accepts **`--mmap`** only when compiled against a generated borrowed-view
+SDK header and its matching library. This is a real file-fed streaming SDK
+application: it maps the verified model as read-only, constructs the existing
+view SDK, feeds genuine owner-held PCM, measures the complete stream CPU/RTF,
+then destroys the SDK before unmapping. Original three-argument (copied
+weight) behavior is unchanged.
+
+Use the compiler, `-I` SDK include path and static library from the same
+materialized SDK. Run a strictly identical PCM and target CPU frequency
+against the existing copy-mode control. The generated SDK already exposes
+`fsmn_sdk_create_view`; no extra inference engine, allocator or model format
+is introduced. See [target resource guide](../quant_head8/TARGET_RESOURCE_PROFILE.md)
+for the exact command and the separate device/acoustic qualification limits.
+The frozen historical SDK header explicitly rejects `--mmap` without a
+borrowed-view API instead of silently falling back to model copying.
+
 ## Bounded evaluation and tests
 
 The completed 2026-11-11 run is recorded in
