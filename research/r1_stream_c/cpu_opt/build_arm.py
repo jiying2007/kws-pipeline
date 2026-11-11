@@ -69,12 +69,12 @@ def execute(compiler,readelf,emulator,sysroot):
             symbols=checked([readelf,'-W','--dyn-syms',library],timeout=10)
             for symbol in ('fsmn_sdk_create_view','fsmn_sdk_feed',
                            'fsmn_sdk_finish','fsmn_sdk_model_sha256'):
-                if not re.search(r'\\b'+symbol+r'\\b',symbols):
+                if not re.search(r'\b'+symbol+r'\b',symbols):
                     raise ValueError('missing ARM SDK symbol: '+symbol)
             test=root/('head_fixture_'+kernel+'.c')
-            test.write_text(fixtures.C_HEADER+'\\n'
-                +fixtures.kernel(base/'core/r1dfsmn.c','reference_head')+'\\n'
-                +fixtures.kernel(sdk/'core/r1dfsmn.c','candidate_head')+'\\n'
+            test.write_text(fixtures.C_HEADER+'\n'
+                +fixtures.kernel(base/'core/r1dfsmn.c','reference_head')+'\n'
+                +fixtures.kernel(sdk/'core/r1dfsmn.c','candidate_head')+'\n'
                 +fixtures.C_FOOTER)
             exe=root/('arm-head-fixture-'+kernel)
             checked([compiler,'-std=c11','-O2','-Wall','-Wextra','-Werror','-pedantic',
