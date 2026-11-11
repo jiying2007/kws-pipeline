@@ -1,0 +1,87 @@
+{
+  "schema": "r1-int16-full-other-owner-c-20261111",
+  "status": "C_BITWISE_SAVED_HIDDEN_PASS_HOST_AND_ARM_QEMU_O3_CPU_COMPILER_DEPENDENT",
+  "candidate": "INT16 full-original-OTHER interval screen with exact par4 recheck",
+  "exact_source": {
+    "c_git_blob_sha1": "9e5e7c2f6ad4cad8dd34a9d977ae2ceabe514361",
+    "h_git_blob_sha1": "a1528f38dadf2bbb33a1ae36964bcdc4a2e0d3fe"
+  },
+  "inputs": {
+    "owner_archive_sha256": "23c9acf557d0a0c0c63d88c0b995d0d6c686b7a6297659c8a9570f9b101e7661",
+    "active113_archive_sha256": "5540f63c6ef87eb403568f008a0dc9b76985eb5185e549ea5288f5b67d3a6e05",
+    "complete_head_model_sha256": "63f18045c64f95e0a57776a2860a2714fdf3fd8f21472d59fe865608030f3ed4",
+    "recordings": 130,
+    "train_frames": 9079,
+    "exposed_development_frames": 3176,
+    "full_original_other_competitors": 2596
+  },
+  "actual_c_numeric": {
+    "host_compilers": [
+      "GCC 14.2.0 -O2",
+      "GCC 14.2.0 -O3",
+      "Clang 17.0.0 -O2",
+      "Clang 17.0.0 -O3"
+    ],
+    "arm": "GCC 13.3.0 -O3 Cortex-A32 hard-float NEON under qemu-arm-static 8.2.2; Ubuntu24 sysroot",
+    "total_frames_per_completed_build": 12255,
+    "exact_other_score_byte_equal": 12255,
+    "exact_original_other_id_equal": 12255,
+    "one_exact_row_frames": 12237,
+    "two_exact_rows_frames": 18,
+    "more_than_two_exact_rows_frames": 0,
+    "numeric_fallback_frames": 0,
+    "arm_gcc_O2": "NOT_QUALIFIED_TIMEOUT; full 12255 frame readback NOT completed"
+  },
+  "host_cpu_head_only": {
+    "method": "CLOCK_PROCESS_CPUTIME_ID, nine counterbalanced pairs, 260 saved hidden140 frames (2 deterministic frames per each of 130 recordings); not whole KWS or SSC305",
+    "gcc_O2": {
+      "baseline_median_s": 0.057529097,
+      "candidate_median_s": 0.06582284,
+      "paired_reduction_pct": -15.0604,
+      "winning_pairs": 0,
+      "pairs": 9
+    },
+    "gcc_O3": {
+      "baseline_median_s": 0.061088,
+      "candidate_median_s": 0.028336,
+      "paired_reduction_pct": 53.2665,
+      "winning_pairs": 9,
+      "pairs": 9
+    },
+    "clang_O2": {
+      "baseline_median_s": 0.092523614,
+      "candidate_median_s": 0.039396787,
+      "paired_reduction_pct": 56.0277,
+      "winning_pairs": 9,
+      "pairs": 9
+    },
+    "clang_O3": {
+      "baseline_median_s": 0.091503,
+      "candidate_median_s": 0.034874,
+      "paired_reduction_pct": 62.091,
+      "winning_pairs": 9,
+      "pairs": 9
+    },
+    "compiler_dependent": true,
+    "source_model_file_bytes": 1960140,
+    "additional_state_bytes": 26040,
+    "end_to_end_cpu_gain_not_measured": true,
+    "physical_board_cpu_gain_not_measured": true
+  },
+  "owner_package": {
+    "file": "KWS_R1_I16_C_HEAD_EVIDENCE_20261111.zip",
+    "sha256": "711dd0fd6cdb3144bc5ebbfe3f6ddb19a86e0ba910d46188fda14e7380834e6a",
+    "files": 17,
+    "includes": "source, harness, compiler-specific binaries, paired CPU logs, detailed aggregate receipt; no audio, hidden data or model weights",
+    "detailed_receipt_sha256": "08a0e9db7e7cbbe401d2bb9124370a7e6ea8adb49ae90f83753a1feb3447488a"
+  },
+  "limits": {
+    "independent_far_frr": false,
+    "real_ssc305": false,
+    "final_afe_latency": false,
+    "original_full_2601_logits_not_returned": true,
+    "model_promotion_authorized": false,
+    "default_model_or_data_admission_changed": false,
+    "system_backbone_pcm_tts_asr_calls": 0
+  }
+}
