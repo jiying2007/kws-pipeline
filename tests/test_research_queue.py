@@ -221,14 +221,68 @@ class QueueTests(unittest.TestCase):
         self.assertEqual(status["jobs"]["failed"]["exit_code"], 7)
         self.assertFalse((root / "jobs/next/claim.json").exists())
 
+    def assert_deadline_receipt(self, root, receipt, job_id="long"):
+        # A busy host may spend all 360 ms in Python worker startup, before
+        # Popen. That is a fail-closed budget rejection, not a runner timeout.
+        # Do not accept arbitrary 'failed' statuses, a false zero exit or a
+        # missing receipt as an alternative to a true runner deadline.
+        if receipt["status"] == "timed_out":
+            self.assertEqual(receipt["reason"], "actual_runner_deadline")
+        else:
+            self.assertEqual(receipt["status"], "failed")
+            self.assertEqual(receipt["reason"], "ValueError:BUDGET_EXHAUSTED_BEFORE_COMMAND")
+            self.assertIsNone(receipt["exit_code"])
+            self.assertFalse((root / "jobs" / job_id / "command-started.json").exists())
+        self.assertGreaterEqual(receipt["actual_elapsed_ns"], receipt["allowed_runner_nanoseconds"])
+        self.assertFalse(receipt["automatic_retry"])
+
     def test_max_jobs_does_not_hide_global_budget_exhaustion(self):
         root = self.init([self.job("long", code="import time;time.sleep(30)", timeout=1),
                           self.job("next")], budget=.006)
         status, code = queue.run(root, max_jobs=1)
         self.assertEqual((status["status"], code), ("budget_exhausted", 3))
         self.assertNotIn("stop_reason", status)
-        self.assertEqual(status["jobs"]["long"]["status"], "timed_out")
+        self.assert_deadline_receipt(root, status["jobs"]["long"])
         self.assertFalse((root / "jobs/next/claim.json").exists())
+
+    def test_expired_claim_before_command_is_accounted_without_launch(self):
+        # Deterministic startup-overrun case: no child is ever started, even on
+        # a slow CI runner. The generic failed status carries an exact reason;
+        # the queue budget remains exhausted with no success/retry authority.
+        root = self.init([self.job("expired", timeout=1)], budget=.006)
+        folder = root / "jobs/expired"
+        _, _, request, queue_sha = queue.load_queue(root)
+        job = request["jobs"][0]
+        dependencies = {}
+        queue.write_json(folder / "dependencies.json", dependencies)
+        started = time.monotonic_ns() - queue.minutes_ns(.006) - 100_000_000
+        allowed = queue.minutes_ns(.006)
+        claim = {
+            "schema": "kws-local-research-job-claim-v1",
+            **queue.job_binding(job, queue_sha),
+            "attempt": 1,
+            "started_at": queue.utc(),
+            "started_monotonic_ns": started,
+            "boot_id": queue.boot_id(),
+            "dependencies_sha256": queue.sha(queue.canonical(dependencies)),
+            "allowed_runner_nanoseconds": allowed,
+            "deadline_monotonic_ns": started + allowed,
+            "global_actual_before_nanoseconds": 0,
+            "automatic_retry": False,
+        }
+        queue.write_json(folder / "claim.json", claim)
+        with queue.exclusive(folder / "job.lock") as fd:
+            self.assertEqual(
+                queue.worker(root, "expired", fd, queue.sha(queue.canonical(claim))), 1)
+        result = json.loads((folder / "result.json").read_bytes())
+        self.assertEqual(result["status"], "failed")
+        self.assertEqual(result["reason"], "ValueError:BUDGET_EXHAUSTED_BEFORE_COMMAND")
+        self.assertIsNone(result["exit_code"])
+        self.assertFalse(result["automatic_retry"])
+        self.assertGreaterEqual(result["actual_elapsed_ns"], allowed)
+        self.assertFalse((folder / "command-started.json").exists())
+        self.assertFalse((folder / "outputs/answer.json").exists())
+        self.assertEqual(queue.inspect(root)["jobs"]["expired"]["status"], "failed")
 
     def test_shell_metacharacters_are_literal_argv(self):
         job = self.job("literal", code="from pathlib import Path;import sys;Path(sys.argv[1],'answer.json').write_text(sys.argv[2])")
@@ -260,7 +314,7 @@ class QueueTests(unittest.TestCase):
         self.assertLess(time.monotonic() - started, 3)
         self.assertEqual((status["status"], code), ("budget_exhausted", 3))
         receipt = status["jobs"]["long"]
-        self.assertEqual(receipt["status"], "timed_out")
+        self.assert_deadline_receipt(root, receipt)
         self.assertEqual(receipt["allowed_runner_nanoseconds"], queue.minutes_ns(.006))
         self.assertGreaterEqual(receipt["actual_elapsed_ns"], receipt["allowed_runner_nanoseconds"])
         self.assertEqual(status["actual_known_job_nanoseconds"], receipt["actual_elapsed_ns"])
