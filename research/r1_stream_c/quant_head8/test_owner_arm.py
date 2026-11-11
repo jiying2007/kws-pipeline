@@ -205,6 +205,13 @@ int fsmn_sdk_destroy(fsmn_sdk *s) { (void)s; return FSMN_OK; }
             self.assertEqual(receipt['pcm_bytes'], 640)
             self.assertEqual(receipt['feed_calls'], 1)
             self.assertFalse(receipt['device_qualified'])
+            # The frozen public reference header has no borrowed-view API.
+            # A requested mmap mode must stop, never silently copy/pretend.
+            unsupported = subprocess.run([*command, '--mmap'], capture_output=True,
+                                         timeout=20, check=False)
+            self.assertNotEqual(unsupported.returncode, 0)
+            self.assertFalse(unsupported.stdout)
+            self.assertIn(b'borrowed-view SDK header required', unsupported.stderr)
             with full.open('wb') as sink:
                 failed = subprocess.run(command, stdout=sink, stderr=subprocess.PIPE,
                                         timeout=20, check=False)
