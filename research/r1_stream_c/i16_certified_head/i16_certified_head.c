@@ -9,6 +9,13 @@
 #include <string.h>
 #include <limits.h>
 
+#if defined(R1_I16_USE_NEON)
+# if !defined(__ARM_NEON) && !defined(__ARM_NEON__)
+#  error "R1_I16_USE_NEON requires ARM NEON: do not silently fall back"
+# endif
+# include <arm_neon.h>
+#endif
+
 _Static_assert(140 * 32767 * 127 < INT32_MAX, "int32 dot cannot overflow");
 static const uint32_t precise[5]={0u,1027u,1401u,1462u,2093u};
 static int is_precise(uint32_t id) {
@@ -38,6 +45,37 @@ static double exact_par4(const r1_i16_head *h,uint32_t id,const double *x) {
     double sum=(a+b)+(c+d);
     sum*=h->scales[id];
     return sum+(double)h->biases[id];
+}
+
+/* Exact integer dot product, invariant to accumulator grouping.
+ * The proven absolute bound is 140 * 32767 * 127 = 582,597,260 < INT32_MAX;
+ * each NEON lane sees only 17 products and cannot overflow int32.
+ * ARMv7 NEON is an opt-in: default build retains the scalar operation.
+ */
+static int32_t integer_dot(const int16_t *x, const int8_t *w) {
+#if defined(R1_I16_USE_NEON)
+    int32x4_t low = vdupq_n_s32(0);
+    int32x4_t high = vdupq_n_s32(0);
+    size_t i = 0u;
+    for (; i + 8u <= R1_I16_HIDDEN; i += 8u) {
+        int16x8_t a = vld1q_s16(x + i);
+        int16x8_t b = vmovl_s8(vld1_s8(w + i));
+        low = vmlal_s16(low, vget_low_s16(a), vget_low_s16(b));
+        high = vmlal_s16(high, vget_high_s16(a), vget_high_s16(b));
+    }
+    int32x4_t sum = vaddq_s32(low, high);
+    int32_t answer = vgetq_lane_s32(sum, 0) + vgetq_lane_s32(sum, 1);
+    answer += vgetq_lane_s32(sum, 2);
+    answer += vgetq_lane_s32(sum, 3);
+    for (; i < R1_I16_HIDDEN; ++i)
+        answer += (int32_t)x[i] * (int32_t)w[i];
+    return answer;
+#else
+    int32_t answer = 0;
+    for (size_t i = 0u; i < R1_I16_HIDDEN; ++i)
+        answer += (int32_t)x[i] * (int32_t)w[i];
+    return answer;
+#endif
 }
 
 int r1_i16_init(r1_i16_head *h,const int8_t *rows,
@@ -121,9 +159,7 @@ int r1_i16_step(r1_i16_head *h,const double hidden[R1_I16_HIDDEN],
     for(uint32_t id=0u;id<R1_I16_CLASSES;id++) {
         if(is_precise(id))continue;
         const int8_t *w=h->quant_rows+(size_t)id*R1_I16_HIDDEN;
-        int32_t dot=0;
-        for(size_t k=0u;k<R1_I16_HIDDEN;k++)
-            dot+=(int32_t)qx[k]*(int32_t)w[k];
+        int32_t dot=integer_dot(qx,w);
         /* Each term is exactly representable in binary64; |dot| <= 5.83e8. */
         double approx=((double)dot*unit)*h->scales[id]+(double)h->biases[id];
         if(!isfinite(approx))return scan_all(h,hidden,result);
