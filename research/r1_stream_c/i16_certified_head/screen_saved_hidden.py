@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import os
+import struct
 from pathlib import Path
 import zipfile
 
@@ -56,7 +57,8 @@ def screen(reference, active, split):
                   "two_candidate": 0, "three_or_more": 0,
                   "missing_true_winner": 0, "interval_violations": 0,
                   "max_absolute_approx_error": 0.0, "max_candidate_count": 0,
-                  "full_max_mismatches": 0}
+                  "full_max_mismatches": 0, "bitwise_par4_score_matches": 0,
+                  "bitwise_original_id_matches": 0, "exact_candidates_evaluated": 0}
         for row in p["records"]:
             if row["split"] != split:
                 continue
@@ -103,6 +105,33 @@ def screen(reference, active, split):
             original_idx = other_ids[winners]
             if not np.array_equal(original_idx, original_id):
                 raise ValueError("original OTHER ID changed")
+            # Recalculate only candidate rows in the original 4-lane
+            # serial Python-double reduction order, not NumPy's BLAS.
+            for fi in range(n):
+                best = -float("inf")
+                best_id = 4294967295
+                xframe = x[fi]
+                positions = np.flatnonzero(eligible[fi])
+                for pos in positions:
+                    weight = q[pos]
+                    s0 = s1 = s2 = s3 = 0.0
+                    for j in range(0, 140, 4):
+                        s0 += float(xframe[j]) * int(weight[j])
+                        s1 += float(xframe[j + 1]) * int(weight[j + 1])
+                        s2 += float(xframe[j + 2]) * int(weight[j + 2])
+                        s3 += float(xframe[j + 3]) * int(weight[j + 3])
+                    exact = ((s0 + s1) + (s2 + s3)) * float(scale[pos]) + float(bias[pos])
+                    original = int(other_ids[pos])
+                    if exact > best or (exact == best and original < best_id):
+                        best, best_id = exact, original
+                if (struct.pack("<d", best) !=
+                        struct.pack("<d", float(original_max[fi]))):
+                    raise ValueError("candidate exact par4 result not byte-identical to retained teacher")
+                if best_id != int(original_id[fi]):
+                    raise ValueError("candidate original class ID differs from teacher")
+                result["bitwise_par4_score_matches"] += 1
+                result["bitwise_original_id_matches"] += 1
+                result["exact_candidates_evaluated"] += len(positions)
             result["recordings"] += 1
             result["frames"] += n
             result["one_candidate"] += int(np.count_nonzero(count == 1))
