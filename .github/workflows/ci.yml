@@ -136,6 +136,10 @@ jobs:
           python3 -I -S -B research/r1_stream_c/quant_head8/test_owner_arm.py
           python3 -I -S -B -O research/r1_stream_c/quant_head8/test_owner_arm.py
           python3 -I -S -B -OO research/r1_stream_c/quant_head8/test_owner_arm.py
+          python3 -I -S -B research/r1_stream_c/borrowed_weights/test_contracts.py --cc gcc --cc clang --sanitize
+          python3 -I -S -B -O research/r1_stream_c/borrowed_weights/test_contracts.py --cc gcc --cc clang
+          python3 -I -S -B -OO research/r1_stream_c/borrowed_weights/test_contracts.py --cc gcc --cc clang
+          python3 -B tools/test_inventory.py --root research/r1_stream_c/borrowed_weights --workflow .github/workflows/ci.yml
       - name: Verify tracked worktree after Strong R1 ARM mock contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Strong R1 ARM mock contracts"'
       - name: Local research queue and shared slot contracts with dummy commands

@@ -12,6 +12,8 @@
 
 研究入口：[可复用模块、保留的实验结论与资格边界](research/README.md)
 
+2026-11-11 强 FSMN 接入：[R1 初始化确认](docs/KWS_V3_CONFIRMATION_20261110.md)与[借用权重 SDK 和资源实测](docs/KWS_V3_RESOURCE_20261111.md)。新显式构造接口消除初始化时的第二份模型分配，保留现有 INT8 权重、推理数学和原复制接口；声学校准与真实 SSC305 测量继续按各自证据验收。
+
 保存输出后续：[264条件CTC诊断结果](docs/KWS_SAVED_CTC264_20261106.md)与[聚合执行索引](research/saved-ctc264-20261106/execution-index.json)。计算与独立审计已完成，没有新增模型前向或优化器更新；posthoc条件对齐不构成声学真值或解码器正确性证据。
 
 2026-11-06 后续落地：[当前集成状态](docs/KWS_CONTINUATION_ACCEPTANCE_20261106.md)、[已完成的 context52/tail7 结果](docs/KWS_CONTEXT52_TAIL7_20261106.md)与[执行索引](research/context52-tail7-20261106/execution-index.json)。固定训练与开发读回继续按弱标签、已曝光开发集的原范围解释。
