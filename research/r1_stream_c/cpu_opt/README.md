@@ -1,4 +1,4 @@
-# R1 strong FSMN CPU optimization — opt-in exact-arithmetic candidate
+# R1 strong FSMN CPU optimization — opt-in exact-arithmetic candidates
 
 This is a **research-only, source-bound experiment** extending the already merged
 `qhead8/par4` borrowed-view SDK. The FP32 source, pretrained checkpoint,
@@ -13,25 +13,26 @@ reduction. Five precise blank/keyword rows use the untouched serial FP32
 weight/double-accumulation path. The remaining rows retain the existing four
 separate double accumulators and the reduction order `(s0+s1)+(s2+s3)`.
 
-The candidate computes four adjacent **non-precise output rows together**,
-loads each four-element input group once, and updates the 16 row-lane
-accumulators in the same per-output index order. It never groups across a
+Two opt-in candidates compute **two or four adjacent non-precise output
+rows together**, load each input group once, and update eight (`block2`) or
+sixteen (`block4`) row-lane accumulators per block in the same output order.
+Block2 reduces FP register pressure relative to block4. It never groups across a
 precise row; residual rows use the original `par4` loop. This can reduce
 repeated input loads, loop overhead and head dispatch, but CPU speedup depends
 on architecture and compiler. It is **not** NEON FP32 or a precision change.
 
 The materializer refuses source drift before writing any output and does not
 overwrite the existing SDK. It reproduces the source authentication of the
-borrowed and qhead8 generators and records both source hashes. The only changed
+borrowed and qhead8 generators and records both source hashes. For each variant, the only changed
 generated SDK C file is `core/r1dfsmn.c`. Other generated changes are
 provenance receipts and this README. To generate source-only:
 
 ```sh
 python3 -I -S -B research/r1_stream_c/cpu_opt/materialize.py \
-  --repo . --output /fresh/r1-cpu-block4-sdk
-cmake -S /fresh/r1-cpu-block4-sdk -B /fresh/r1-cpu-block4-build \
+  --repo . --output /fresh/r1-cpu-block2-sdk --kernel block2
+cmake -S /fresh/r1-cpu-block2-sdk -B /fresh/r1-cpu-block2-build \
   -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
-cmake --build /fresh/r1-cpu-block4-build --parallel 2
+cmake --build /fresh/r1-cpu-block2-build --parallel 2
 ```
 
 Optional owner-held `--model ORIGINAL_MODEL --frontend FRONTEND` packs only
@@ -46,10 +47,10 @@ weights, PCM, trace rows or private manifests into this public repository.
    Require bitwise equal 2,601 output values across zero, alternating,
    near-zero, high-dynamic-range and random inputs with `-O2` and `-O3`,
    `-fno-fast-math` and `-ffp-contract=off`. A synthetic head-only
-   `CLOCK_PROCESS_CPUTIME_ID` timing is diagnostic, *not* a product speedup.
-2. **ARM source check**: compile/link a Cortex-A32, ARMhf library using the
-   existing repository ARM toolchain check; require correct ELF symbols/ABI,
-   no model execution. ARM intrinsics are deliberately **not** assumed.
+   `CLOCK_PROCESS_CPUTIME_ID` timing for each candidate is diagnostic, *not* a product speedup.
+2. **ARM source check**: compile/link both `block2` and `block4` Cortex-A32
+   ARMhf SDKs, and require real ARM/QEMU execution of invented bitwise head
+   fixtures plus correct ELF symbols/ABI, with no model execution. ARM intrinsics are deliberately **not** assumed.
 3. **Owner-only inference**: using the same saved 134 PCM inputs, source-verified
    original model and existing saved traces, compare every original F/E trace
    byte-for-byte against the new host and ARM/QEMU candidate **before promotion**.
