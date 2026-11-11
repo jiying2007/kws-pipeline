@@ -84,6 +84,30 @@ static void proc_memory(long *hwm, long *rss) {
     if(bad){*hwm=-1;*rss=-1;}
 }
 
+/* /proc/self/smaps_rollup is optional on older embedded Linux kernels.
+ * PSS and Private_Dirty distinguish shared file-backed pages from anonymous
+ * heap pressure; neither is a target-device measurement in host CI.
+ */
+static void proc_smaps(long *pss,long *dirty) {
+    FILE *file=fopen("/proc/self/smaps_rollup","r");
+    char line[256];
+    *pss=-1;*dirty=-1;
+    if(!file)return;
+    while(fgets(line,sizeof(line),file)) {
+        long value=-1;
+        char unit[3]={0};
+        if(!strncmp(line,"Pss:",4) &&
+           sscanf(line+4,"%ld %2s",&value,unit)==2 &&
+           value>=0 && !strcmp(unit,"kB"))*pss=value;
+        if(!strncmp(line,"Private_Dirty:",14) &&
+           sscanf(line+14,"%ld %2s",&value,unit)==2 &&
+           value>=0 && !strcmp(unit,"kB"))*dirty=value;
+    }
+    int bad=ferror(file);
+    if(fclose(file))bad=1;
+    if(bad){*pss=-1;*dirty=-1;}
+}
+
 static int valid_clock(const struct timespec *t) {
     return t->tv_sec>=0 && t->tv_nsec>=0 && t->tv_nsec<1000000000L;
 }
@@ -143,6 +167,8 @@ int main(int argc,char **argv) {
        getrusage(RUSAGE_SELF,&usage) || usage.ru_maxrss<0)bad=1;
     long hwm=-1,rss=-1;
     proc_memory(&hwm,&rss);
+    long pss=-1,private_dirty=-1;
+    proc_smaps(&pss,&private_dirty);
     if(fsmn_sdk_frame_count(sdk) || fsmn_sdk_consumed_bytes(sdk) ||
        fsmn_sdk_event_count(sdk))bad=1;
     if(fsmn_sdk_destroy(sdk))bad=1;
@@ -158,6 +184,12 @@ int main(int argc,char **argv) {
     if(hwm<0)printf("null");else printf("%ld",hwm);
     printf(",\"proc_self_vm_rss_kib\":");
     if(rss<0)printf("null");else printf("%ld",rss);
+    printf(",\"proc_self_pss_kib\":");
+    if(pss<0)printf("null");else printf("%ld",pss);
+    printf(",\"proc_self_private_dirty_kib\":");
+    if(private_dirty<0)printf("null");else printf("%ld",private_dirty);
+    printf(",\"process_minor_faults\":%ld,\"process_major_faults\":%ld,",
+           usage.ru_minflt,usage.ru_majflt);
     printf(",\"model_bytes\":%u,\"copied_model_bytes\":%u,",FSMN_MODEL_BYTES,
            mode==0?FSMN_MODEL_BYTES:0u);
     printf("\"model_storage\":\"%s\",\"physical_ssc305\":false}\n",
