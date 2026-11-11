@@ -42,56 +42,60 @@ def elf(readelf,path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 def execute(compiler,readelf,emulator,sysroot):
-    cpu=load(HERE/'materialize.py','r1_arm_block4_materialize')
-    borrowed=load(HERE.parent/'borrowed_weights/materialize.py','r1_arm_block4_borrowed')
-    fixtures=load(HERE/'test_contracts.py','r1_arm_block4_fixture')
-    with tempfile.TemporaryDirectory(prefix='r1-block4-arm-test-') as tmp:
+    cpu=load(HERE/'materialize.py','r1_arm_block_materialize')
+    borrowed=load(HERE.parent/'borrowed_weights/materialize.py','r1_arm_block_borrowed')
+    fixtures=load(HERE/'test_contracts.py','r1_arm_block_fixture')
+    with tempfile.TemporaryDirectory(prefix='r1-block-arm-test-') as tmp:
         root=Path(tmp)
         base=root/'base'
-        sdk=root/'sdk'
         borrowed.materialize(ROOT,base)
-        receipt=cpu.materialize(ROOT,sdk)
-        if receipt['private_model_packed'] or (sdk/'weights').exists():
-            raise ValueError('private weight accidentally included')
-        build=root/'build'
-        checked(['cmake','-S',sdk,'-B',build,
-                 '-DCMAKE_BUILD_TYPE=Release',
-                 '-DCMAKE_C_COMPILER='+str(compiler),
-                 '-DCMAKE_TOOLCHAIN_FILE='+str(sdk/'cmake/armv7-hardfloat.cmake'),
-                 '-DBUILD_TESTING=OFF'],timeout=120)
-        checked(['cmake','--build',build,'--parallel','2'],timeout=150)
-        binary=build/'fsmn_run_view'
-        library=build/'libfsmn_sdk.so.0.1.0'
-        identities={'binary_sha256':elf(readelf,binary),
-                    'shared_sha256':elf(readelf,library)}
-        symbols=checked([readelf,'-W','--dyn-syms',library],timeout=10)
-        for symbol in ('fsmn_sdk_create_view','fsmn_sdk_feed',
-                       'fsmn_sdk_finish','fsmn_sdk_model_sha256'):
-            if not re.search(r'\b'+symbol+r'\b',symbols):
-                raise ValueError('missing ARM SDK symbol: '+symbol)
-        test=root/'head_fixture.c'
-        test.write_text(fixtures.C_HEADER+'\n'
-            +fixtures.kernel(base/'core/r1dfsmn.c','reference_head')+'\n'
-            +fixtures.kernel(sdk/'core/r1dfsmn.c','candidate_head')+'\n'
-            +fixtures.C_FOOTER)
-        exe=root/'arm-head-fixture'
-        checked([compiler,'-std=c11','-O2','-Wall','-Wextra','-Werror','-pedantic',
-                 '-fno-fast-math','-ffp-contract=off','-fexcess-precision=standard',
-                 '-DR1_CPU_BENCH_REPS=4u',
-                 '-mcpu=cortex-a32','-mfpu=neon-vfpv4','-mfloat-abi=hard',
-                 test,'-lm','-o',exe],timeout=100)
-        identities['fixture_elf_sha256']=elf(readelf,exe)
-        result=json.loads(checked([emulator,'-L',sysroot,exe],timeout=120))
-        if (result.get('bit_exact') is not True or result.get('fixture_cases')!=8
-            or result.get('real_model') is not False or
-            result.get('physical_ssc305') is not False):
-            raise ValueError('ARM/QEMU invented-head fixture failed')
-        return {'schema':'r1-head-block4-arm-source-v1',
-                'target':'cortex-a32-neon-vfpv4-hardfloat',
-                'source_compiled':True,'synthetic_arm_qemu_head_bit_exact':True,
+        candidates={}
+        for kernel in ('block2','block4'):
+            sdk=root/('sdk-'+kernel)
+            receipt=cpu.materialize(ROOT,sdk,kernel=kernel)
+            if receipt['private_model_packed'] or (sdk/'weights').exists():
+                raise ValueError('private weight accidentally included')
+            build=root/('build-'+kernel)
+            checked(['cmake','-S',sdk,'-B',build,
+                     '-DCMAKE_BUILD_TYPE=Release',
+                     '-DCMAKE_C_COMPILER='+str(compiler),
+                     '-DCMAKE_TOOLCHAIN_FILE='+str(sdk/'cmake/armv7-hardfloat.cmake'),
+                     '-DBUILD_TESTING=OFF'],timeout=120)
+            checked(['cmake','--build',build,'--parallel','2'],timeout=150)
+            binary=build/'fsmn_run_view'
+            library=build/'libfsmn_sdk.so.0.1.0'
+            identities={'binary_sha256':elf(readelf,binary),
+                        'shared_sha256':elf(readelf,library)}
+            symbols=checked([readelf,'-W','--dyn-syms',library],timeout=10)
+            for symbol in ('fsmn_sdk_create_view','fsmn_sdk_feed',
+                           'fsmn_sdk_finish','fsmn_sdk_model_sha256'):
+                if not re.search(r'\\b'+symbol+r'\\b',symbols):
+                    raise ValueError('missing ARM SDK symbol: '+symbol)
+            test=root/('head_fixture_'+kernel+'.c')
+            test.write_text(fixtures.C_HEADER+'\\n'
+                +fixtures.kernel(base/'core/r1dfsmn.c','reference_head')+'\\n'
+                +fixtures.kernel(sdk/'core/r1dfsmn.c','candidate_head')+'\\n'
+                +fixtures.C_FOOTER)
+            exe=root/('arm-head-fixture-'+kernel)
+            checked([compiler,'-std=c11','-O2','-Wall','-Wextra','-Werror','-pedantic',
+                     '-fno-fast-math','-ffp-contract=off','-fexcess-precision=standard',
+                     '-DR1_CPU_BENCH_REPS=4u',
+                     '-mcpu=cortex-a32','-mfpu=neon-vfpv4','-mfloat-abi=hard',
+                     test,'-lm','-o',exe],timeout=100)
+            identities['fixture_elf_sha256']=elf(readelf,exe)
+            result=json.loads(checked([emulator,'-L',sysroot,exe],timeout=120))
+            if (result.get('bit_exact') is not True or result.get('fixture_cases')!=8
+                or result.get('real_model') is not False or
+                result.get('physical_ssc305') is not False):
+                raise ValueError('ARM/QEMU invented-head fixture failed: '+kernel)
+            candidates[kernel]={'source_compiled':True,
+                'synthetic_arm_qemu_head_bit_exact':True,
                 'fixture':result,'identities':identities,
-                'model_executions':0,'physical_ssc305':False,
-                'real_model_parity':'NOT_RUN',
+                'cpu_gain_qualified':False}
+        return {'schema':'r1-head-blocks-arm-source-v2',
+                'target':'cortex-a32-neon-vfpv4-hardfloat',
+                'candidates':candidates,'model_executions':0,
+                'physical_ssc305':False,'real_model_parity':'NOT_RUN',
                 'promote_model':False}
 
 def main():
