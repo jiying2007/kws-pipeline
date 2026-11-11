@@ -74,27 +74,27 @@ measurements alone.
 
 The read-only [device_compare.py](device_compare.py) evaluates **already
 collected** private target-board JSON receipts from the existing
-[\`target_resource_bench.c\`](../quant_head8/target_resource_bench.c).
+[`target_resource_bench.c`](../quant_head8/target_resource_bench.c).
 It never opens the original PCM or model and never launches a model forward.
 The existing target resource benchmark uses the **copied** SDK constructor for
 all variants to isolate steady-state CPU cost (rather than comparing
 constructor memory behavior). Each target library must be built separately
-from the identical saved input model, using \`par4\`, \`block2\` or \`block4\`
+from the identical saved input model, using `par4`, `block2` or `block4`
 materialization and the actual SSC305 BSP-compatible compiler/sysroot.
 
-Prepare a **new private** directory with \`PLAN.json\` and 27 or more raw
-resource receipts. The plan schema is \`r1-cpu-board-rotated-plan-v1\` with:
-- Exact \`model_sha256\`, \`frontend_sha256\`, \`pcm_sha256\`, and
-  \`pcm_bytes\`; \`input_mode: offline_pcm16k\`.
-- \`binary_sha256\` map containing three distinct operator-computed hashes
-  for \`par4\`, \`block2\`, \`block4\`.
-- \`board\` recording operator-reported \`id\`, \`firmware_sha256\`,
-  \`machine\`, \`governor\`, \`frequency_khz\`, and \`affinity\`.
-- \`rounds\`: 9–30 complete counterbalanced rounds in triples,
-  with exact orders \`[par4, block2, block4]\`,
-  \`[block2, block4, par4]\`, \`[block4, par4, block2]\`;
-  each round's \`receipts\` maps the three variant names to
-  \`{"path": "receipts/00-par4.json", "sha256": "<actual file SHA256>"}\`
+Prepare a **new private** directory with `PLAN.json` and 27 or more raw
+resource receipts. The plan schema is `r1-cpu-board-rotated-plan-v1` with:
+- Exact `model_sha256`, `frontend_sha256`, `pcm_sha256`, and
+  `pcm_bytes`; `input_mode: offline_pcm16k`.
+- `binary_sha256` map containing three distinct operator-computed hashes
+  for `par4`, `block2`, `block4`.
+- `board` recording operator-reported `id`, `firmware_sha256`,
+  `machine`, `governor`, `frequency_khz`, and `affinity`.
+- `rounds`: 9–30 complete counterbalanced rounds in triples,
+  with exact orders `[par4, block2, block4]`,
+  `[block2, block4, par4]`, `[block4, par4, block2]`;
+  each round's `receipts` maps the three variant names to
+  `{"path": "receipts/00-par4.json", "sha256": "<actual file SHA256>"}`
   and corresponding paths for the other variants.
 
 On the **actual** owner-controlled target, fix CPU governor, frequency,
@@ -103,19 +103,19 @@ the variants on the same hardware. Save **unmodified** stdout JSON receipts
 using exclusive filenames and preserve an independent SHA256 input/ELF index
 privately. Avoid live microphone claims when the input is an offline file.
 
-\`\`\`sh
+```sh
 python3 -I -S -B research/r1_stream_c/cpu_opt/device_compare.py \
   --root /private/r1-ssc305-cpu-evidence \
   --output /private/r1-ssc305-cpu-comparison.NEW.json
-\`\`\`
+```
 
 The analyzer validates exact counts, measured CPU/RTF arithmetic, balanced
 round order, immutable SHA256 bytes, no repeated receipt content, same model
 frame/event totals and conservative power-of-two p95 feed histogram bounds.
 It screens for at least 5% median **paired** process-CPU reduction, wins in
 all but at most two runs, and no p95-upper-bin regression in all but at most
-two runs. A passing \`RESOURCE_SCREEN_PASS_NOT_QUALIFIED\` is **not a deployment
-decision**. Even though all receipts include \`source-hash-checked-by-sdk\`,
+two runs. A passing `RESOURCE_SCREEN_PASS_NOT_QUALIFIED` is **not a deployment
+decision**. Even though all receipts include `source-hash-checked-by-sdk`,
 neither hardware identity, toolchain/binary hash claims nor per-frame model
 outputs can be **independently authenticated by this receipt-only analyzer**.
 Public GitHub must retain only generic code and synthetic tests; no private
@@ -129,7 +129,7 @@ hardware evidence remains NOT_RUN, not a zero. Existing FP32-vs-Torch numerical
 gate remains FAIL_UNCHANGED.
 
 The six new invented-receipt contract tests are executed via the existing
-\`cpu_opt/test_contracts.py\` required CI entry. They synthesize **no PCM or
+`cpu_opt/test_contracts.py` required CI entry. They synthesize **no PCM or
 weights**, and verify both pass/fail outcomes, source identity forgery
 rejection, symlinks, duplicate receipt payloads/JSON keys, malformed latency,
 and CLI no-overwrite behavior. No new workflow, scheduled job, new CI
