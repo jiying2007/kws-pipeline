@@ -188,7 +188,18 @@ class BorrowedContracts(unittest.TestCase):
                 if name == "fsmn_init_bench":
                     self.assertEqual(receipt["model_forwards"], 0)
                     self.assertEqual(receipt["pcm_bytes"], 0)
-                    checked([exe, "copy", self.model, self.tables])
+                    copy = json.loads(checked([exe, "copy", self.model, self.tables]).stdout)
+                    mapped = json.loads(checked([exe, "mmap", self.model, self.tables]).stdout)
+                    self.assertEqual(copy["model_forwards"], 0)
+                    self.assertEqual(mapped["model_forwards"], 0)
+                    self.assertEqual(mapped["pcm_bytes"], 0)
+                    self.assertEqual(mapped["model_storage"], "read_only_private_file_mapping")
+                    self.assertEqual(mapped["copied_model_bytes"], 0)
+                    self.assertEqual(copy["copied_model_bytes"], 1960140)
+                    for value in (receipt, copy, mapped):
+                        self.assertGreaterEqual(value["model_load_and_init_cpu_ms"], 0)
+                        self.assertGreaterEqual(value["model_load_and_init_wall_ms"],
+                                                value["model_init_wall_ms"])
                 else:
                     self.assertEqual(receipt["ok"] if name == "fsmn_trace_view" else receipt["status"],
                                      True if name == "fsmn_trace_view" else "complete")
@@ -207,6 +218,57 @@ class BorrowedContracts(unittest.TestCase):
                                                 stdout=full if channel == "stdout" else subprocess.PIPE,
                                                 stderr=full if channel == "stderr" else subprocess.PIPE)
                     self.assertNotEqual(result.returncode, 0, (cc, name, channel))
+
+
+    def test_mmap_fails_closed_for_symlink_bad_size_and_nonregular_files(self):
+        """The stub SDK checks input bytes at destroy, proving mmap lifetime."""
+        source = (HERE / "init_bench.c").read_text()
+        for required in ("O_NOFOLLOW", "O_CLOEXEC", "PROT_READ,MAP_PRIVATE",
+                         "munmap(model,FSMN_MODEL_BYTES)", "S_ISREG(st.st_mode)"):
+            self.assertIn(required, source)
+        for cc, (build, inc, _) in self.builds.items():
+            with self.subTest(compiler=cc):
+                exe = build / "mmap-model-stub"
+                checked([cc, *FLAGS, *inc, HERE / "init_bench.c",
+                         HERE / "test_runner_stubs.c", "-lm", "-o", exe])
+                valid = json.loads(checked([exe, "mmap", self.model, self.tables]).stdout)
+                self.assertEqual(valid["initializations"], 1)
+                self.assertEqual(valid["model_forwards"], 0)
+                self.assertEqual(valid["mode"], "mmap")
+                self.assertEqual(valid["model_storage"], "read_only_private_file_mapping")
+                self.assertEqual(valid["copied_model_bytes"], 0)
+                self.assertFalse(valid["physical_ssc305"])
+                self.assertGreaterEqual(valid["model_load_and_init_cpu_ms"], 0)
+                fake = build / "bad-size-model"
+                fake.write_bytes(b"\x37" * 640)
+                link = build / "linked-model"
+                link.symlink_to(self.model)
+                directory = build / "a-directory"
+                directory.mkdir(exist_ok=True)
+                for bad_model in (fake, link, directory, Path("/dev/null")):
+                    result = subprocess.run([str(x) for x in
+                        (exe, "mmap", bad_model, self.tables)],
+                        capture_output=True, timeout=10)
+                    self.assertNotEqual(result.returncode, 0, str(bad_model))
+                    self.assertFalse(result.stdout)
+                not_table = build / "invalid-frontend"
+                not_table.write_bytes(b"\x00" * 640)
+                result = subprocess.run([str(x) for x in
+                    (exe, "mmap", self.model, not_table)],
+                    capture_output=True, timeout=10)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse(result.stdout)
+                failed_destroy = subprocess.run([str(x) for x in
+                    (exe, "mmap", self.model, self.tables)],
+                    env=dict(os.environ, R1_TEST_FAIL_DESTROY="1"),
+                    capture_output=True, timeout=10)
+                self.assertNotEqual(failed_destroy.returncode, 0)
+                self.assertFalse(failed_destroy.stdout)
+                with open("/dev/full", "wb") as full:
+                    bad_output = subprocess.run([str(x) for x in
+                        (exe, "mmap", self.model, self.tables)],
+                        stdout=full, stderr=subprocess.PIPE, timeout=10)
+                self.assertNotEqual(bad_output.returncode, 0)
 
 
 if __name__ == "__main__":
