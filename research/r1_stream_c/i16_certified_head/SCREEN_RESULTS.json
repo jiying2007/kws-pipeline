@@ -1,0 +1,50 @@
+{
+  "schema": "r1-int16-certified-other-saved-hidden-screen-v1",
+  "status": "TRAIN_AND_EXPOSED_DEV_SCREEN_PASS_NOT_QUALIFIED",
+  "date": "2026-11-11",
+  "model_sha256": "63f18045c64f95e0a57776a2860a2714fdf3fd8f21472d59fe865608030f3ed4",
+  "source_zip_sha256": "23c9acf557d0a0c0c63d88c0b995d0d6c686b7a6297659c8a9570f9b101e7661",
+  "active113_zip_sha256": "5540f63c6ef87eb403568f008a0dc9b76985eb5185e549ea5288f5b67d3a6e05",
+  "params": {
+    "precision": "int16",
+    "quantizer": "max_abs_divided_by_32767",
+    "hidden_dimension": 140,
+    "other_rows": 2596,
+    "original_int8_weights": true,
+    "absolute_padding": 0.000001,
+    "relative_padding": 1e-8
+  },
+  "roles": {
+    "train": {
+      "recordings": 96,
+      "frames": 9079,
+      "one_candidate_frames": 9067,
+      "two_candidate_frames": 12,
+      "winner_misses": 0,
+      "bound_violations": 0,
+      "max_abs_approx_error": 0.008334847277666313
+    },
+    "exposed_development": {
+      "recordings": 34,
+      "frames": 3176,
+      "one_candidate_frames": 3170,
+      "two_candidate_frames": 6,
+      "winner_misses": 0,
+      "bound_violations": 0,
+      "max_abs_approx_error": 0.006288347462827915
+    }
+  },
+  "caveats": {
+    "existing_hidden_only": true,
+    "new_pcm_calls": 0,
+    "new_backbone_calls": 0,
+    "asr_tts_generation": 0,
+    "numpy_not_exact_original_C_arithmetic": true,
+    "physical_ssc305": false,
+    "independent_far_frr": false,
+    "default_changed": false,
+    "promotion_allowed": false
+  },
+  "owner_train_screen_script_sha256": "caf9b90fac453549ef71e883f7ac2cb50f7a372b9ee5b8b6eb2ae21df53d11b8",
+  "owner_dev_screen_script_sha256": "951d8fec455e7fad4e19e14da51b38de755904961b8e23f5acb974fbf7868a46"
+}
