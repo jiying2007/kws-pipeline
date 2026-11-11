@@ -131,7 +131,7 @@ jobs:
       - name: Verify tracked worktree after ARM dependency budget contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "ARM dependency budget contracts"'
       - name: Strong R1 ARM replay and resource mock contracts
-        timeout-minutes: 3
+        timeout-minutes: 7
         run: |
           python3 -I -S -B research/r1_stream_c/quant_head8/test_owner_arm.py
           python3 -I -S -B -O research/r1_stream_c/quant_head8/test_owner_arm.py
@@ -140,6 +140,10 @@ jobs:
           python3 -I -S -B -O research/r1_stream_c/borrowed_weights/test_contracts.py --cc gcc --cc clang
           python3 -I -S -B -OO research/r1_stream_c/borrowed_weights/test_contracts.py --cc gcc --cc clang
           python3 -B tools/test_inventory.py --root research/r1_stream_c/borrowed_weights --workflow .github/workflows/ci.yml
+          python3 -I -S -B research/r1_stream_c/cpu_opt/test_contracts.py --cc gcc --cc clang
+          python3 -I -S -B -O research/r1_stream_c/cpu_opt/test_contracts.py --cc gcc --cc clang
+          python3 -I -S -B -OO research/r1_stream_c/cpu_opt/test_contracts.py --cc gcc --cc clang
+          python3 -B tools/test_inventory.py --root research/r1_stream_c/cpu_opt --workflow .github/workflows/ci.yml
       - name: Verify tracked worktree after Strong R1 ARM mock contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Strong R1 ARM mock contracts"'
       - name: Local research queue and shared slot contracts with dummy commands
@@ -1307,6 +1311,11 @@ jobs:
           --emulator-sysroot "$KWS_ARM_SYSROOT"
       - name: Full B research ARM C and C++ compile/link (no execution)
         run: python3 -S -B tests/run_research_fsmn_stream_arm_build.py --execute
+      - name: Strong R1 CPU block4 Cortex-A32 build and synthetic QEMU parity
+        timeout-minutes: 5
+        run: >-
+          python3 -I -S -B research/r1_stream_c/cpu_opt/build_arm.py
+          --execute --emulator /usr/bin/qemu-arm-static --sysroot "$KWS_ARM_SYSROOT"
       - name: Extract pinned static i386 QEMU without replacing system tools
         timeout-minutes: 3
         run: |
