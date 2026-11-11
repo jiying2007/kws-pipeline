@@ -146,6 +146,8 @@ class CpuBlock4Contracts(unittest.TestCase):
         cls.sdk=cls.root/'block4'
         cls.borrowed.materialize(ROOT,cls.base)
         cls.report=cls.m.materialize(ROOT,cls.sdk)
+        cls.sdk2=cls.root/'block2'
+        cls.report2=cls.m.materialize(ROOT,cls.sdk2,kernel='block2')
 
     @classmethod
     def tearDownClass(cls):
@@ -212,6 +214,38 @@ class CpuBlock4Contracts(unittest.TestCase):
                     self.assertGreater(receipt['reference_cpu_ns'],0)
                     self.assertGreater(receipt['candidate_cpu_ns'],0)
                     print(json.dumps({'compiler':cc,'opt':opt,**receipt},sort_keys=True),flush=True)
+
+    def test_block2_exact_parity_and_lower_register_pressure(self):
+        old=kernel(self.base/'core/r1dfsmn.c','reference_head')
+        new=kernel(self.sdk2/'core/r1dfsmn.c','candidate_head')
+        q=load(HERE.parent/'quant_head8/materialize.py','r1_block2_quant_reference')
+        original=(self.base/'core/r1dfsmn.c').read_text()
+        self.assertEqual((self.sdk2/'core/r1dfsmn.c').read_text(),
+                         original.replace(q.Q8_HEAD_PAR4,self.m.BLOCK2_HEAD,1))
+        self.assertEqual(self.report2['candidate_kernel'],
+                         'qhead8_par4_output_block2_experimental')
+        harness=self.root/'test_head_block2.c'
+        harness.write_text(C_HEADER+'\n'+old+'\n'+new+'\n'+C_FOOTER)
+        for cc in COMPILERS:
+            for opt in ('-O2','-O3'):
+                with self.subTest(compiler=cc,optimization=opt):
+                    exe=self.root/('block2-'+cc+'-'+opt[1:])
+                    flags=[opt if flag=='-O2' else flag for flag in FLAGS]
+                    run([cc,*flags,harness,'-lm','-o',exe])
+                    receipt=json.loads(run([exe],timeout=40).stdout)
+                    self.assertTrue(receipt['bit_exact'])
+                    self.assertEqual(receipt['fixture_cases'],8)
+                    self.assertFalse(receipt['real_model'])
+                    print(json.dumps({'kernel':'block2','compiler':cc,
+                                      'opt':opt,**receipt},sort_keys=True),flush=True)
+
+    def test_block2_full_sdk_gcc_build(self):
+        build=self.root/'sdk-build-block2'
+        run(['cmake','-S',self.sdk2,'-B',build,
+             '-DCMAKE_C_COMPILER=gcc','-DCMAKE_BUILD_TYPE=Release',
+             '-DBUILD_TESTING=OFF'],timeout=100)
+        run(['cmake','--build',build,'--parallel','2'],timeout=120)
+        self.assertTrue((build/'fsmn_run_view').is_file())
 
     def test_complete_sdk_compiles_and_rejects_fake_model(self):
         fake=self.root/'invalid-model.r1hq8'
