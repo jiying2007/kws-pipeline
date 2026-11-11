@@ -230,6 +230,44 @@ class QueueTests(unittest.TestCase):
         self.assertEqual(status["jobs"]["long"]["status"], "timed_out")
         self.assertFalse((root / "jobs/next/claim.json").exists())
 
+    def test_expired_claim_before_command_is_a_durable_timeout(self):
+        # Deterministic startup-overrun case: no child is ever started, even on
+        # a slow CI runner. This must not be reported as a generic failure.
+        root = self.init([self.job("expired", timeout=1)], budget=.006)
+        folder = root / "jobs/expired"
+        _, _, request, queue_sha = queue.load_queue(root)
+        job = request["jobs"][0]
+        dependencies = {}
+        queue.write_json(folder / "dependencies.json", dependencies)
+        started = time.monotonic_ns() - queue.minutes_ns(.006) - 100_000_000
+        allowed = queue.minutes_ns(.006)
+        claim = {
+            "schema": "kws-local-research-job-claim-v1",
+            **queue.job_binding(job, queue_sha),
+            "attempt": 1,
+            "started_at": queue.utc(),
+            "started_monotonic_ns": started,
+            "boot_id": queue.boot_id(),
+            "dependencies_sha256": queue.sha(queue.canonical(dependencies)),
+            "allowed_runner_nanoseconds": allowed,
+            "deadline_monotonic_ns": started + allowed,
+            "global_actual_before_nanoseconds": 0,
+            "automatic_retry": False,
+        }
+        queue.write_json(folder / "claim.json", claim)
+        with queue.exclusive(folder / "job.lock") as fd:
+            self.assertEqual(
+                queue.worker(root, "expired", fd, queue.sha(queue.canonical(claim))), 1)
+        result = json.loads((folder / "result.json").read_bytes())
+        self.assertEqual(result["status"], "timed_out")
+        self.assertEqual(result["reason"], "actual_runner_deadline_before_command")
+        self.assertIsNone(result["exit_code"])
+        self.assertFalse(result["automatic_retry"])
+        self.assertGreaterEqual(result["actual_elapsed_ns"], allowed)
+        self.assertFalse((folder / "command-started.json").exists())
+        self.assertFalse((folder / "outputs/answer.json").exists())
+        self.assertEqual(queue.inspect(root)["jobs"]["expired"]["status"], "timed_out")
+
     def test_shell_metacharacters_are_literal_argv(self):
         job = self.job("literal", code="from pathlib import Path;import sys;Path(sys.argv[1],'answer.json').write_text(sys.argv[2])")
         literal = "$(touch SHOULD_NOT_EXIST); `printf surprise` *"
