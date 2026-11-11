@@ -501,6 +501,36 @@ class DeviceReceiptContracts(unittest.TestCase):
             self.comparator.examine(root)
 
 
+    def test_certified_other_full_class_par4_fallback(self):
+        """New research-only mechanism: invented full-vocab bitwise oracle."""
+        source = ROOT / 'research/r1_stream_c/certified_other_fallback'
+        self.assertTrue((source / 'certified_other.c').is_file())
+        self.assertTrue((source / 'test_certified_other.c').is_file())
+        with tempfile.TemporaryDirectory(prefix='certified-other-cpu-') as temp:
+            for cc in COMPILERS:
+                with self.subTest(compiler=cc):
+                    exe = Path(temp) / ('certified-other-' + cc)
+                    cmd = [cc, *FLAGS, str(source / 'certified_other.c'),
+                           str(source / 'test_certified_other.c'),
+                           '-lm', '-o', str(exe)]
+                    built = subprocess.run(cmd, capture_output=True, text=True,
+                                           timeout=60)
+                    self.assertEqual(built.returncode, 0,
+                                     built.stdout + '\n' + built.stderr)
+                    completed = subprocess.run([str(exe)], capture_output=True,
+                                               text=True, timeout=60)
+                    self.assertEqual(completed.returncode, 0,
+                                     completed.stdout + '\n' + completed.stderr)
+                    report = json.loads(completed.stdout)
+                    self.assertEqual(report['status'], 'PASS_INVENTED_EXACT_OTHER')
+                    self.assertEqual(report['frames'], 233)
+                    self.assertGreater(report['certified_skips'], 0)
+                    self.assertGreater(report['exact_fallbacks'], 0)
+                    self.assertEqual(report['owner_model_calls'], 0)
+                    self.assertEqual(report['pcm_calls'], 0)
+                    self.assertEqual(report['decoder_calls'], 0)
+
+
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--cc',action='append')
