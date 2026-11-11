@@ -501,6 +501,30 @@ class DeviceReceiptContracts(unittest.TestCase):
             self.comparator.examine(root)
 
 
+    def test_i16_certified_full_other_mechanism(self):
+        """Int16 screening with original par4 exact fallback; invented rows."""
+        source=ROOT / 'research/r1_stream_c/i16_certified_head'
+        with tempfile.TemporaryDirectory(prefix='r1-i16-oracle-') as temp:
+            for cc in COMPILERS:
+                with self.subTest(compiler=cc):
+                    binary=Path(temp)/('test-i16-'+cc)
+                    build=subprocess.run([cc,*FLAGS,
+                        source/'i16_certified_head.c',
+                        source/'test_i16_certified_head.c',
+                        '-lm','-o',binary],capture_output=True,text=True,timeout=60)
+                    self.assertEqual(build.returncode,0,build.stdout+build.stderr)
+                    run=subprocess.run([str(binary)],capture_output=True,text=True,
+                                       timeout=60)
+                    self.assertEqual(run.returncode,0,run.stdout+run.stderr)
+                    proof=json.loads(run.stdout)
+                    self.assertEqual(proof['status'],'PASS_INVENTED_I16_CERTIFIED_OTHER')
+                    self.assertEqual(proof['frames'],135)
+                    self.assertGreater(proof['ten_or_fewer_exact_rows'],0)
+                    self.assertEqual(proof['model_calls'],0)
+                    self.assertEqual(proof['pcm_calls'],0)
+                    self.assertEqual(proof['decoder_calls'],0)
+
+
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--cc',action='append')
