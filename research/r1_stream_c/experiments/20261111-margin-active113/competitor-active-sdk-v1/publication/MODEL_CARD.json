@@ -1,0 +1,309 @@
+{
+  "arithmetic": {
+    "backbone_frontend_detector": "Original arithmetic and timing retained; names and compact loader/parameter views isolated.",
+    "float_environment": "IEEE binary32/binary64, little-endian, RNE, gradual underflow, masked traps, no fast-math or FMA contraction.",
+    "full_other_rows_computed_then_discarded": false,
+    "other_rows": "Original par4 double accumulation: four independent lanes, (s0+s1)+(s2+s3), original scale then bias.",
+    "precise_rows": "Original float32 weights/biases, scalar i=0..139 double accumulation."
+  },
+  "candidate": "R1-ACTIVE113-research",
+  "default_r1_changed": false,
+  "evidence_receipts": {
+    "build_and_loader_tests": {
+      "sha256": "64ae9d331797d510019a7817e8e9043194fbfb4660993cb4905797c4d7a35f11",
+      "visibility": "Underlying owner-only receipt; aggregate facts and whole-receipt digest only are published."
+    },
+    "cached_head_screen": {
+      "sha256": "6fb94b8e60b7572166f5f5221a78e327d67d5dafb1a00b105a87254ad39f15a5",
+      "visibility": "Underlying owner-only receipt; aggregate facts and whole-receipt digest only are published."
+    },
+    "cached_screen_audit": {
+      "sha256": "b2f1b3d2d1a35b67da0235405f5f1fb65df9e04f0de58acb536856bf03af7ed7",
+      "visibility": "Underlying owner-only receipt; aggregate facts and whole-receipt digest only are published."
+    },
+    "complementary_saved_evidence_audit": {
+      "sha256": "238140d7702b0a22eacc5145d045dc3d7a3c7eadddb678faf22b8972c2144fc7",
+      "visibility": "Underlying owner-only receipt; aggregate facts and whole-receipt digest only are published."
+    },
+    "complementary_validation_aggregate": {
+      "sha256": "dac2670c6aab5fb7a5077266d2b43dc228cab459ca4ca588a7ac357a03da89ea",
+      "visibility": "Underlying owner-only receipt; aggregate facts and whole-receipt digest only are published."
+    },
+    "materialization": {
+      "sha256": "f64aa68f11d1e44f6597f10ca39282db7da07a96f47117f32f03eb8a62ce997a",
+      "visibility": "Underlying owner-only receipt; aggregate facts and whole-receipt digest only are published."
+    },
+    "pack": {
+      "sha256": "6d09395d508320daf74ddd4eaaceaa116a31f369ed3516f744d589b13e207cf4",
+      "visibility": "Underlying owner-only receipt; aggregate facts and whole-receipt digest only are published."
+    },
+    "preparation_plan": {
+      "sha256": "cd30ab66d17747d347ae243c03d9dbeb6dc3cbc6b0b540e582c076ae6574778f",
+      "visibility": "Underlying owner-only receipt; aggregate facts and whole-receipt digest only are published."
+    },
+    "same_arm_diagnostic": {
+      "sha256": "037113bf0e27364a96354b7415c0d466148db88f5684c2e9aede3458f1d35bc6",
+      "visibility": "Underlying owner-only receipt; aggregate facts and whole-receipt digest only are published."
+    },
+    "same_arm_diagnostic_audit": {
+      "sha256": "51edfeebf087338bdeee0d36170b99e5f8857543e7fefdee96bdf41bb86a2f32",
+      "visibility": "Underlying owner-only receipt; aggregate facts and whole-receipt digest only are published."
+    },
+    "static_review": {
+      "sha256": "8cabc27f4eb3a2b0be8fdef7844a66fd7a12dfabbb03851ae02f3c2fce2bd9d8",
+      "visibility": "Underlying owner-only receipt; aggregate facts and whole-receipt digest only are published."
+    },
+    "stopped_pcm_terminal": {
+      "sha256": "8f36a97bfde30ac8eba3fb3a1ec84ba725e49107b29e05d2cb4c1448725896a7",
+      "visibility": "Underlying owner-only receipt; aggregate facts and whole-receipt digest only are published."
+    },
+    "stopped_phase_audit": {
+      "sha256": "9d3010fe42ccb76073bd9ec6eb5ffa1008e13cf7022f92ad01dc94a9f703db50",
+      "visibility": "Underlying owner-only receipt; aggregate facts and whole-receipt digest only are published."
+    }
+  },
+  "frontend": {
+    "bytes": 83840,
+    "file_name": "frontend.f32le",
+    "sha256": "49c42226c617fad81c5edb683a6332bdb82b52e37040f724eac23522a504db49"
+  },
+  "interface": {
+    "abi_hex": "0xA1130001",
+    "borrowed_lifetime": "Caller owns immutable 8-byte-aligned read/malloc or read-only mmap storage through handle destruction; frontend tables are copied. Storage must not originate from a declared byte array.",
+    "borrowed_loader": "active113_sdk_create_view",
+    "clock_semantics": "Preserved source-dependency and delivery sample clocks, not acoustic event annotations.",
+    "copy_loader": "active113_sdk_create",
+    "ctc_equivalence": false,
+    "detector_other_token": "actual original winning ID",
+    "full2601_logits": false,
+    "full2601_probabilities": false,
+    "global_tie_rule": "maximum score, then lowest original class ID",
+    "header": "sdk-v2/include/active113_sdk.h",
+    "pcm": "Caller-AFE, 16000 Hz mono signed PCM16 little-endian; maximum 8192 bytes per feed.",
+    "precise_original_ids": [
+      0,
+      1027,
+      1401,
+      1462,
+      2093
+    ],
+    "score5": "Maximum of the frozen 113 original OTHER rows; its original winner ID is mandatory per-frame metadata.",
+    "sentinel_mapping": false,
+    "symbol_prefixes": [
+      "active113_",
+      "r1active113_",
+      "r1a113_"
+    ],
+    "within_other_tie_rule": "lowest original class ID"
+  },
+  "limitations": [
+    "The selected OTHER maximum can be lower than the full-vocabulary maximum; 17 exposed-development frames already demonstrate this.",
+    "An omitted OTHER row can win on unknown future input.",
+    "Known-record checks do not establish full probabilities, CTC equivalence, independent FAR/FRR or model promotion.",
+    "Original strict cross-architecture bit gate and original FP32 numeric qualification remain FAIL_UNCHANGED. The six-score complementary contract is separately declared.",
+    "Hidden140 values are diagnostic only; no acceptance bound is applied to stage19.",
+    "Host CPU and own-process memory measurements cover a single fixed input under the recorded same-round paired protocol; they are not physical SSC305 results.",
+    "Previously rejected MLP and historical affine/sum-OTHER outcomes remain rejected; no subsequent gate or threshold retuning is claimed."
+  ],
+  "model": {
+    "alignment_bytes": 8,
+    "bytes": 1582624,
+    "computed_output_rows": 118,
+    "endianness": "little",
+    "file_name": "model-active113.r1a113",
+    "file_reduction_bytes": 377516,
+    "file_reduction_percent": 19.259644719254744,
+    "format_magic": "R1A113V1",
+    "format_version": 1,
+    "header_bytes": 256,
+    "hidden_dimensions": 140,
+    "numerical_scores_per_frame": 6,
+    "original_model_bytes": 1960140,
+    "original_model_sha256": "63f18045c64f95e0a57776a2860a2714fdf3fd8f21472d59fe865608030f3ed4",
+    "original_vocabulary_size": 2601,
+    "preserved_precise_rows": 5,
+    "quantization_or_training_updates": 0,
+    "selected_other_rows": 113,
+    "sha256": "38818ee7ba00c9e9bb762f9d1d2efeca9c1bac349b8f1cf835913fd30ef75984",
+    "unchanged_trunk_float32_values": 390474
+  },
+  "model_promotion_authorized": false,
+  "prebuilt_libraries": {
+    "arm": {
+      "bytes": 33066,
+      "compiler_sha256": "73c40a8b836981da0da98dfae66073ed4b9d485cf786899d0c5ef3eeb311e548",
+      "relative_path": "build-v2/arm/libactive113_sdk_static.a",
+      "sha256": "4c61eb7c7bb55126afdc45ab3c67cb5b02ac5a1be859f46d730e6641e7680d61"
+    },
+    "host": {
+      "bytes": 46406,
+      "compiler_sha256": "a23ecab8ff08f09ad8c80602c2c5df7f49e09c25905cb8975902e101bf72635f",
+      "relative_path": "build-v2/host/libactive113_sdk_static.a",
+      "sha256": "3855306496d2af6815327c5c2ba3c59678fcd83fbf9d09e297febbdd279d8492"
+    }
+  },
+  "preserved_history": {
+    "first_build_failure": "Missing existing FFT vendor header stopped compilation. Fixed dependency copying and nested directory creation only; zero model/PCM calls in failed build.",
+    "first_build_failure_receipt_sha256": "8b7a5dc066563c6e05aa9cef73745678757a3c629a1019a255c02d6de0da5d3f",
+    "historical_affine_sum_other": "FAIL_FIDELITY retained.",
+    "original_sdk_preparation_plan_sha256": "c00323076672fbcf3e9a7bea5265fb507f0122b34bdc53e335dfe7aa5d4488a6",
+    "prior_balanced_margin_mlp": "REJECTED; train events retained, exposed-dev events exact on 33/34 records.",
+    "prior_max_other64_mlp": "REJECTED; train events retained, exposed-dev events exact on 33/34 records."
+  },
+  "publication": "Public repository: exact preparation, execution and audit sources plus aggregate metadata. Generated SDK tree, model/frontend files, compiled binaries, raw audio, private mappings, traces, hidden caches and predictions remain in the owner delivery/evidence bundle.",
+  "qualification": {
+    "build_and_loader": {
+      "architectures": [
+        "host_x86_64",
+        "arm_cortex_a32_hard_float"
+      ],
+      "baseline_symbol_overlap": 0,
+      "defined_prefixed_symbols_per_library": 46,
+      "independent_static_assertions": 307,
+      "invented_assertions_per_architecture": 87,
+      "model_calls_during_loader_checks": 0,
+      "pcm_calls_during_loader_checks": 0,
+      "status": "PASS_BUILD_AND_INVENTED_LOADER_CHECKS"
+    },
+    "cached_screen": {
+      "development_max_other_lower_frames": 17,
+      "development_total_frames": 3176,
+      "exposed_development_event_exact_records": 34,
+      "known_train_event_exact_records": 96,
+      "original_global_winner_ids_unchanged_records": 130,
+      "status": "PASS_RETAINED_EVENT_SCREEN_NOT_PROMOTED",
+      "training_max_other_bit_equal_frames": 9079
+    },
+    "continuation": {
+      "all_claims_completed": true,
+      "all_protected_identities_posthash_unchanged": true,
+      "complete_fe_clocks_global_ids_other_ids_equal": true,
+      "cumulative_pcm_calls": 291,
+      "events_per_architecture": 86,
+      "frames_per_architecture": 12255,
+      "independent_saved_audit_assertions": 63102,
+      "known_inputs_per_architecture": 130,
+      "new_candidate_arm_captures": 125,
+      "new_cpu_calls": 18,
+      "new_memory_calls": 12,
+      "repeated_candidate_functional_calls": 0,
+      "retained_candidate_functional_captures": 135,
+      "single_diagnostic_baseline_calls": 1,
+      "status": "PASS_COMPLEMENTARY_SIX_SCORE_CONTRACT_HOST_RESOURCES_STRICT_BIT_FAIL_RETAINED",
+      "training": 0,
+      "unknown_calls": 0
+    },
+    "cpu_and_memory": {
+      "host_cpu": {
+        "active_wins": 9,
+        "capture_or_qemu_timings_used": false,
+        "invocations": 18,
+        "median_cpu_seconds_per_audio_second": {
+          "active113": 0.013833457,
+          "baseline": 0.021045392
+        },
+        "paired_cpu_savings_percent_max": 40.755732136861845,
+        "paired_cpu_savings_percent_min": 28.78168508578002,
+        "paired_median_cpu_savings_percent": 35.146325285441826,
+        "pairs": 9,
+        "scope": "Same round, alternating paired baseline/full-head mmap versus ACTIVE113 mmap, uninstrumented full offline feed. No comparison with earlier rounds.",
+        "single_fixed_input": true,
+        "statistic_note": "Median of per-pair savings, not the ratio of marginal medians.",
+        "warmup_calls": 0
+      },
+      "host_memory": {
+        "invocations": 12,
+        "memory_phase_time_used_for_speedup": false,
+        "own_process_medians_kib": {
+          "active113": {
+            "proc_self_private_dirty_kib": 428.0,
+            "proc_self_pss_kib": 2107.0
+          },
+          "baseline": {
+            "proc_self_private_dirty_kib": 448.0,
+            "proc_self_pss_kib": 2495.0
+          }
+        },
+        "paired_median_baseline_minus_active113_kib": {
+          "proc_self_private_dirty_kib": 20.0,
+          "proc_self_pss_kib": 388.0
+        },
+        "pairs": 6,
+        "peak_rss_used_for_savings": false,
+        "scope": "Own process after streaming and before SDK destruction; both mmap, one fixed input."
+      },
+      "physical_ssc305": "NOT_RUN"
+    },
+    "cross_architecture_six_score_contract": {
+      "absolute_error_cap": 1e-06,
+      "atol": 1e-08,
+      "bit_different_records": 11,
+      "bit_different_values": 1605,
+      "full2601_logits": "NOT_TESTED",
+      "historical_bound_source": "research/r1_stream_c/CROSS_ARCH.md",
+      "historical_bound_source_commit": "8d72fe408ba6801c2e98cbcbbbdf6ee55a26ddda",
+      "historical_bound_source_sha256": "348ceceba83bd93388fe5f836326157077907a715b300c6eac4e2bdfa4d1850b",
+      "inequality": "abs(ARM-HOST)<=atol+rtol*abs(HOST), and every absolute difference<=1e-6",
+      "maximum_tolerance_ratio": 3.185930662829728e-06,
+      "observed_maximum_absolute_difference": 5.258016244624741e-13,
+      "original_fp32_numeric_gate": "FAIL_UNCHANGED",
+      "original_strict_bit_gate": "FAIL_UNCHANGED",
+      "passed": true,
+      "posterior_parity": "NOT_TESTED",
+      "reference": "Corresponding retained HOST ACTIVE113 six-score capture; not full-model OTHER or full2601 logits.",
+      "rtol": 1e-08
+    },
+    "hidden140_diagnostic_only": {
+      "acceptance_bound_applied": false,
+      "bit_different_values": 40393,
+      "maximum_absolute_difference": 1.9184653865522705e-13,
+      "scope": "Reported stage19 diagnostic only. The historical frontend-feature tolerance is not applied to hidden140."
+    },
+    "independent_far_frr": false,
+    "original_actual_pcm_run": {
+      "arm_known_records_passed_before_stop": 4,
+      "completed_candidate_captures": 135,
+      "completed_full_comparisons": 134,
+      "cpu_calls": 0,
+      "failing_capture_fe_byte_equal": true,
+      "host_known_records_passed": 130,
+      "memory_calls": 0,
+      "original_planned_total_calls": 290,
+      "status": "STOPPED_ACTIVE113_PCM_VALIDATION",
+      "strict_cross_architecture_hidden_bit_gate": "FAIL_UNCHANGED",
+      "unknown_pcm_calls": 0
+    },
+    "physical_ssc305_qualification": false,
+    "single_same_arm_diagnostic": {
+      "actual_baseline_pcm_calls": 1,
+      "candidate_reruns": 0,
+      "inherited_baseline_cross_architecture_difference_observed": true,
+      "resource_calls": 0,
+      "same_arm_fe_byte_equal": true,
+      "same_arm_global_ids_equal": true,
+      "same_arm_hidden140_bit_equal": true,
+      "same_arm_precise5_bit_equal": true,
+      "single_record_causal_scope": true,
+      "strict_original_bit_gate": "FAIL_UNCHANGED"
+    }
+  },
+  "schema": "active113-publication-model-card-v1",
+  "selection": {
+    "data_scope": "Previously exposed synthetic/weak machine labels; no independent FAR/FRR claim.",
+    "eligibility": "Original ctc_weight > 0 and original known-training split.",
+    "exposed_development_clips": 34,
+    "exposed_development_frames": 3176,
+    "known_training_clips": 96,
+    "known_training_frames": 9079,
+    "rule": "Sorted union of original OTHER-set maximum row ID over every eligible known-training frame; no top-k, cap, development selection, fitting or recalibration.",
+    "sha256": "8289f2ca46e40717747c1ed8d08152d8db2fbadcac5f4a84fdbb20d06375dc42",
+    "unknown_clips_excluded_from_selection_and_scoring": 4
+  },
+  "snapshot": "Completed cached screen, retained original strict-bit failure, single same-ARM diagnostic, separately preregistered complementary validation and same-round host resource measurements; independently audited from saved artifacts.",
+  "source_identity": {
+    "canonical_merged_source": "8d72fe408ba6801c2e98cbcbbbdf6ee55a26ddda",
+    "identical_git_tree": "5b8c67adbfd4c4b1b29c02412856a993b3b88970",
+    "tested_teacher_source": "13661a38064247d38bca88287e48db85bf2ccd79"
+  },
+  "status": "PASS_COMPLEMENTARY_SIX_SCORE_CONTRACT_HOST_RESOURCES_STRICT_BIT_FAIL_RETAINED"
+}
