@@ -461,13 +461,7 @@ def worker(root, job_id, lease_fd, claim_sha):
                 kill_group(process)
                 process.wait()
                 result["exit_code"] = process.returncode
-            # Deadline expiry before Popen is an actual timeout, not an
-            # arbitrary command failure. The command was never launched.
-            # Preserve all other validation/I/O failures as failed.
-            if type(error) is ValueError and str(error) == "BUDGET_EXHAUSTED_BEFORE_COMMAND":
-                result.update(status="timed_out", reason="actual_runner_deadline_before_command")
-            else:
-                result.update(status="failed", reason=type(error).__name__ + ":" + str(error))
+            result.update(status="failed", reason=type(error).__name__ + ":" + str(error))
         finally:
             for signum, handler in previous.items():
                 signal.signal(signum, handler)
