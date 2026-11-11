@@ -13,6 +13,8 @@ import importlib.util
 import json
 import os
 import re
+import selectors
+import signal
 from pathlib import Path
 import shutil
 import subprocess
@@ -115,12 +117,57 @@ def parse_trace(raw: bytes) -> tuple[list[tuple], list[tuple]]:
 
 
 def checked(argv: list[str], timeout: int = 90) -> subprocess.CompletedProcess:
+    """Capture both pipes incrementally and stop the whole Linux child group.
+
+    subprocess.run(capture_output=True) stores arbitrary bytes before its caller
+    can enforce MAX_OUTPUT. A stuck or noisy emulator must not exhaust owner RAM.
+    """
+    if timeout <= 0:
+        raise ValueError('positive subprocess timeout required')
     env = dict(os.environ)
     env.pop('LD_LIBRARY_PATH', None)
-    out = subprocess.run(argv, capture_output=True, timeout=timeout, env=env, check=True)
-    if len(out.stdout)>MAX_OUTPUT or len(out.stderr)>MAX_OUTPUT:
-        raise ValueError('unbounded external process output')
-    return out
+    deadline = time.monotonic() + timeout
+    with subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                          env=env, start_new_session=True) as process:
+        if process.stdout is None or process.stderr is None:
+            raise RuntimeError('subprocess pipes unavailable')
+        buffers = {process.stdout: bytearray(), process.stderr: bytearray()}
+        try:
+            with selectors.DefaultSelector() as selector:
+                for pipe in buffers:
+                    os.set_blocking(pipe.fileno(), False)
+                    selector.register(pipe, selectors.EVENT_READ)
+                while selector.get_map():
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise subprocess.TimeoutExpired(argv, timeout)
+                    for key, _ in selector.select(remaining):
+                        pipe = key.fileobj
+                        # Read at most one byte beyond the per-stream limit.
+                        data = os.read(pipe.fileno(),
+                                       min(65536, MAX_OUTPUT + 1 - len(buffers[pipe])))
+                        if not data:
+                            selector.unregister(pipe)
+                            pipe.close()
+                        else:
+                            buffers[pipe].extend(data)
+                            if len(buffers[pipe]) > MAX_OUTPUT:
+                                raise ValueError('unbounded external process output')
+            rc = process.wait(timeout=max(0, deadline - time.monotonic()))
+        except BaseException:
+            # A compiler/QEMU wrapper may spawn descendants that hold the pipes.
+            # A fresh session makes this a child-only kill, not a caller kill.
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.wait()
+            raise
+        stdout = bytes(buffers[process.stdout])
+        stderr = bytes(buffers[process.stderr])
+    if rc:
+        raise subprocess.CalledProcessError(rc, argv, stdout, stderr)
+    return subprocess.CompletedProcess(argv, rc, stdout, stderr)
 
 
 def build_sdk(source: Path, out: Path, compiler: str, toolchain: Path | None) -> tuple[Path,Path]:
@@ -225,7 +272,8 @@ def execute(args) -> dict:
         ref_arm_build=output/'arm-ref-build'
         host_model_lib,_=build_sdk(src_ref,ref_host_build,'gcc',None)
         arm_model_lib,_=build_sdk(src_ref,ref_arm_build,str(armcc),src_ref/'cmake/armv7-hardfloat.cmake')
-        assert host_model_lib.is_file() and arm_model_lib.is_file()
+        if not host_model_lib.is_file() or not arm_model_lib.is_file():
+            raise ValueError('incomplete reference SDK build')
         trace_host=build_trace(src_ref,ref_host_build,'gcc',source_c,'host')
         trace_arm_ref=build_trace(src_ref,ref_arm_build,str(armcc),source_c,'arm')
         binaries={'host_ref':trace_host,'arm_ref':trace_arm_ref}
@@ -236,7 +284,8 @@ def execute(args) -> dict:
             sources.materialize_from_repository(repo,src,model=owner_model,frontend=frontend,kernel=kernel)
             b=output/(f'arm-{kernel}-build')
             lib,_=build_sdk(src,b,str(armcc),src/'cmake/armv7-hardfloat.cmake')
-            assert lib.is_file()
+            if not lib.is_file():
+                raise ValueError('incomplete quantized SDK build')
             binaries['arm_'+kernel]=build_trace(src,b,str(armcc),source_c,'arm')
             verify_arm_elf(readelf,binaries['arm_'+kernel])
             models['arm_'+kernel]=src/'weights/model.r1hq8'

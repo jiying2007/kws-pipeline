@@ -77,6 +77,42 @@ class OwnerArmSourceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'ARM target'):
             self.r.verify_arm_elf(fake,artifact)
 
+    def test_checked_drains_both_pipes_and_preserves_return_code(self):
+        script = ("import sys; "
+                  "sys.stdout.buffer.write(b'A'*131072); "
+                  "sys.stderr.buffer.write(b'B'*131072)")
+        result = self.r.checked([sys.executable, '-c', script], timeout=10)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(len(result.stdout), 131072)
+        self.assertEqual(len(result.stderr), 131072)
+        with self.assertRaises(subprocess.CalledProcessError) as caught:
+            self.r.checked([sys.executable, '-c',
+                            "import sys; sys.stderr.write('failed'); sys.exit(7)"],
+                           timeout=10)
+        self.assertEqual(caught.exception.returncode, 7)
+        self.assertEqual(caught.exception.stderr, b'failed')
+
+    def test_checked_aborts_on_each_pipe_output_limit(self):
+        for which in ('stdout', 'stderr'):
+            with self.subTest(which=which):
+                # Repeated bounded writes avoid allocating a huge child buffer.
+                script = ("import sys; f=sys." + which + ".buffer; "
+                          "[(f.write(b'X'*8192),f.flush()) for _ in range(513)]")
+                with self.assertRaisesRegex(ValueError, 'unbounded external'):
+                    self.r.checked([sys.executable, '-c', script], timeout=15)
+
+    def test_checked_enforces_deadline_with_silent_child(self):
+        with self.assertRaises(subprocess.TimeoutExpired):
+            self.r.checked([sys.executable, '-c',
+                            'import time; time.sleep(30)'], timeout=1)
+
+    def test_required_build_artifacts_use_explicit_runtime_checks(self):
+        script = (HERE / 'owner_arm_replay.py').read_text()
+        self.assertIn("raise ValueError('incomplete reference SDK build')", script)
+        self.assertIn("raise ValueError('incomplete quantized SDK build')", script)
+        self.assertNotIn('assert host_model_lib', script)
+        self.assertNotIn('assert lib.is_file()', script)
+
     def test_public_header_compiles_without_private_assets(self):
         repo=HERE.parents[2]
         archive=repo/'research/r1_stream_c/deploy/archive-20261110/KWS_FSMN_R1_SOURCE_20261110.zip'

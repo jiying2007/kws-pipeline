@@ -130,6 +130,14 @@ jobs:
           python3 -I -S -B -OO tests/test_arm_dependency_budget.py
       - name: Verify tracked worktree after ARM dependency budget contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "ARM dependency budget contracts"'
+      - name: Strong R1 ARM replay and resource mock contracts
+        timeout-minutes: 3
+        run: |
+          python3 -I -S -B research/r1_stream_c/quant_head8/test_owner_arm.py
+          python3 -I -S -B -O research/r1_stream_c/quant_head8/test_owner_arm.py
+          python3 -I -S -B -OO research/r1_stream_c/quant_head8/test_owner_arm.py
+      - name: Verify tracked worktree after Strong R1 ARM mock contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Strong R1 ARM mock contracts"'
       - name: Local research queue and shared slot contracts with dummy commands
         timeout-minutes: 3
         run: |
@@ -1250,7 +1258,8 @@ jobs:
         run: ./build-fuzz/kws_fuzz_keyword_pack -runs=2000 -max_len=2048 -timeout=5 build-fuzz/corpus/keyword_pack
 
   armv7-cross:
-    runs-on: ubuntu-latest
+    # Ubuntu 26.04 removed the qemu-user-static APT candidate; keep known ABI tests reproducible.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
