@@ -163,6 +163,7 @@ def examine(root):
     expected_counts = None
     seen = set()
     seen_receipt_hashes = set()
+    observed_storage = set()
     cpu = {v: [] for v in VARIANTS}
     upper = {v: [] for v in VARIANTS}
     identities = []
@@ -189,6 +190,12 @@ def examine(root):
                     "duplicate receipt payload cannot prove independent repetitions")
             seen_receipt_hashes.add(actual_sha)
             counts, cpu_ratio = validate_receipt(row, plan, board["machine"])
+            if "model_storage" in row:
+                require(row["model_storage"] in ("sdk_owned_copy", "read_only_mmap"),
+                        "invalid model storage label")
+            observed_storage.add(row.get("model_storage", "legacy_unspecified"))
+            require(len(observed_storage) == 1,
+                    "mixed model storage modes across CPU A/B receipts")
             pair = (row["arch"], row["kernel"])
             if expected_kernel is None:
                 expected_kernel = pair
@@ -231,6 +238,7 @@ def examine(root):
         "frontend_sha256": FRONTEND_SHA,
         "pcm_sha256": plan["pcm_sha256"],
         "pcm_bytes": plan["pcm_bytes"],
+        "model_storage": next(iter(observed_storage)),
         "board_operator_metadata": board,
         "model_and_binary_hashes_independently_verified": False,
         "reference": {"variant": "par4",

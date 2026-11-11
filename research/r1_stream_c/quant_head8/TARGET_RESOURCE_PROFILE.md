@@ -29,6 +29,42 @@ In the **owner-controlled** build environment, obtain an actual SSC305 firmware-
 "$OUTPUT_BENCH" "$MODEL" "$FRONTEND" "$POST_AFE_PCM" > "$PRIVATE_RECEIPT"
 ```
 
+### Optional immutable-model mapping, same resource probe
+
+With the **generated borrowed-view SDK header and corresponding static library**
+(`FSMN_MODEL_VIEW_ALIGNMENT` exposed), the same C resource benchmark has a
+Linux opt-in `--mmap` mode. The default, three-argument invocation keeps its
+original copied-model behavior. The frozen reference64 header lacks the view
+constructor and explicitly **rejects** `--mmap` rather than pretending that
+copying was an optimized run.
+
+```sh
+# Build with each generated borrowed qhead8/par4 or cpu_opt block2/block4 SDK:
+"$TARGET_CC" -std=c11 -O2 -Wall -Wextra -Werror -pedantic \
+  -fno-fast-math -ffp-contract=off -I"$BORROWED_SDK_INCLUDE" \
+  research/r1_stream_c/quant_head8/target_resource_bench.c \
+  "$BORROWED_SDK_STATIC" -lm -o "$OUTPUT_BENCH"
+
+# The model must be a verified, immutable, exact-size regular file.
+"$OUTPUT_BENCH" "$MODEL" "$FRONTEND" "$POST_AFE_PCM" --mmap > "$PRIVATE_RECEIPT"
+```
+
+The mapping path uses `O_NOFOLLOW`/`O_CLOEXEC`, exact regular-file size,
+`MAP_PRIVATE|PROT_READ`, the unchanged `fsmn_sdk_create_view` model
+SHA-256/layout validation, and SDK destruction **before** unmapping. It does
+not eliminate file-backed residency, reduce the actual FSMN math, prove sound
+quality, or prevent another process from changing/truncating a writable
+underlying file. Prefer immutable rootfs/squashfs model assets. The receipt
+now identifies `model_storage` plus caller heap bytes and optional PSS and
+private-dirty memory (null if unsupported), without altering the existing
+offline feed CPU/RTF/schema fields.
+
+**Do not compare mixed loader modes** in a paired CPU A/B. For `par4`,
+`block2` and `block4` choose *all copy* or *all mmap*; the optional-model
+storage verifier rejects mixed or forged labels. True physical-board CPU,
+power, file-cache pressure, AFE and natural/human accuracy evidence are
+separate from CI's invented-only source tests.
+
 Requirements for a comparative run:
 1. Preserve the exact `main` source SHA, **binary ELF/build-id and SHA256**, shared/static library identity, rootfs and board revision, actual `uname` / `/proc/cpuinfo`, toolchain/sysroot identities, CPU affinity/governor/frequency and the post-AFE PCM SHA256 and byte count.
 2. Run a bounded warm-up and measured series **on the board**, rotating FP32/scalar/par4 order; measure model initialization separately, RTF, p95 upper bound, max, RSS, and process CPU. Note thermal state and other system load; if the board doesn't support a metric leave it **NOT_RUN**, never zero.

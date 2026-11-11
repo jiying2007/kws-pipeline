@@ -76,9 +76,11 @@ The read-only [device_compare.py](device_compare.py) evaluates **already
 collected** private target-board JSON receipts from the existing
 [`target_resource_bench.c`](../quant_head8/target_resource_bench.c).
 It never opens the original PCM or model and never launches a model forward.
-The existing target resource benchmark uses the **copied** SDK constructor for
-all variants to isolate steady-state CPU cost (rather than comparing
-constructor memory behavior). Each target library must be built separately
+The existing target resource benchmark **defaults to the copied** SDK
+constructor for all variants to isolate steady-state CPU cost. When compiled
+against a generated borrowed-view SDK, it also supports explicit `--mmap`
+for immutable file-backed weights; compare all three variants using the
+**same** loader mode. The receipt analyzer rejects mixed copy/mmap A/B. Each target library must be built separately
 from the identical saved input model, using `par4`, `block2` or `block4`
 materialization and the actual SSC305 BSP-compatible compiler/sysroot.
 

@@ -223,7 +223,7 @@ class BorrowedContracts(unittest.TestCase):
     def test_mmap_fails_closed_for_symlink_bad_size_and_nonregular_files(self):
         """The stub SDK checks input bytes at destroy, proving mmap lifetime."""
         source = (HERE / "init_bench.c").read_text()
-        for required in ("O_NOFOLLOW", "O_CLOEXEC", "PROT_READ,MAP_PRIVATE",
+        for required in ("O_NOFOLLOW", "O_CLOEXEC", "O_NONBLOCK", "PROT_READ,MAP_PRIVATE",
                          "munmap(model,FSMN_MODEL_BYTES)", "S_ISREG(st.st_mode)"):
             self.assertIn(required, source)
         for cc, (build, inc, _) in self.builds.items():
@@ -245,10 +245,12 @@ class BorrowedContracts(unittest.TestCase):
                 link.symlink_to(self.model)
                 directory = build / "a-directory"
                 directory.mkdir(exist_ok=True)
-                for bad_model in (fake, link, directory, Path("/dev/null")):
+                fifo = build / "model-fifo-no-writer"
+                os.mkfifo(fifo)
+                for bad_model in (fake, link, directory, Path("/dev/null"), fifo):
                     result = subprocess.run([str(x) for x in
                         (exe, "mmap", bad_model, self.tables)],
-                        capture_output=True, timeout=10)
+                        capture_output=True, timeout=2)
                     self.assertNotEqual(result.returncode, 0, str(bad_model))
                     self.assertFalse(result.stdout)
                 not_table = build / "invalid-frontend"
@@ -269,6 +271,82 @@ class BorrowedContracts(unittest.TestCase):
                         (exe, "mmap", self.model, self.tables)],
                         stdout=full, stderr=subprocess.PIPE, timeout=10)
                 self.assertNotEqual(bad_output.returncode, 0)
+
+
+    def test_offline_stream_mmap_preserves_sdk_lifetime_and_receipt(self):
+        """Real stream resource source, explicit no-model stub only."""
+        source = REPO / "research/r1_stream_c/quant_head8/target_resource_bench.c"
+        for cc, (build, inc, _) in self.builds.items():
+            with self.subTest(compiler=cc):
+                exe = build / "mmap-offline-stream-stub"
+                checked([cc, *FLAGS, *inc, source,
+                         HERE / "test_runner_stubs.c", "-lm", "-o", exe])
+                arguments = [self.model, self.tables, self.pcm]
+                copied = json.loads(checked([exe, *arguments]).stdout)
+                mapped = json.loads(checked([exe, *arguments, "--mmap"]).stdout)
+                self.assertEqual(copied["schema"], "r1-strong-fsmn-offline-board-resource-v1")
+                self.assertEqual(mapped["schema"], copied["schema"])
+                self.assertEqual(copied["model_storage"], "sdk_owned_copy")
+                self.assertEqual(mapped["model_storage"], "read_only_mmap")
+                self.assertEqual(copied["model_caller_heap_bytes"], 1960140)
+                self.assertEqual(mapped["model_caller_heap_bytes"], 0)
+                for item in (copied, mapped):
+                    self.assertEqual(item["pcm_bytes"], 640)
+                    self.assertEqual(item["feed_calls"], 1)
+                    self.assertEqual(item["sdk_model_frames"], 1)
+                    self.assertEqual(item["keyword_events"], 1)
+                    self.assertEqual(item["keyword1_events"], 1)
+                    self.assertFalse(item["device_qualified"])
+                    self.assertFalse(item["live_afe"])
+                    self.assertFalse(item["independent_far_frr"])
+                    self.assertGreaterEqual(item["offline_feed_cpu_seconds"], 0)
+                    self.assertGreater(item["process_peak_rss_kib"], 0)
+                    self.assertIn("proc_self_pss_kib", item)
+                    self.assertIn("proc_self_private_dirty_kib", item)
+                self.assertEqual(mapped["sdk_model_frames"], copied["sdk_model_frames"])
+                self.assertEqual(mapped["keyword_events"], copied["keyword_events"])
+                missing = build / "wrong-size-mmap"
+                missing.write_bytes(b"\x37" * 640)
+                link = build / "symlink-mmap-model"
+                link.symlink_to(self.model)
+                directory = build / "directory-not-model"
+                directory.mkdir(exist_ok=True)
+                fifo = build / "stream-model-fifo-no-writer"
+                os.mkfifo(fifo)
+                for bad in (missing, link, directory, Path("/dev/null"), fifo):
+                    rejected = subprocess.run([str(x) for x in
+                        (exe, bad, self.tables, self.pcm, "--mmap")],
+                        capture_output=True, timeout=2)
+                    self.assertNotEqual(rejected.returncode, 0, str(bad))
+                    self.assertFalse(rejected.stdout)
+                failed_destroy = subprocess.run([str(x) for x in
+                    (exe, self.model, self.tables, self.pcm, "--mmap")],
+                    env=dict(os.environ, R1_TEST_FAIL_DESTROY="1"),
+                    capture_output=True, timeout=10)
+                self.assertNotEqual(failed_destroy.returncode, 0)
+                self.assertFalse(failed_destroy.stdout)
+                self.assertTrue(Path("/dev/full").is_char_device())
+                with open("/dev/full", "wb") as full:
+                    output_error = subprocess.run([str(x) for x in
+                        (exe, self.model, self.tables, self.pcm, "--mmap")],
+                        stdout=full, stderr=subprocess.PIPE, timeout=10)
+                self.assertNotEqual(output_error.returncode, 0)
+                self.assertIn(b"unable to write complete resource receipt",
+                              output_error.stderr)
+
+    def test_offline_mmap_real_sdk_rejects_invented_model(self):
+        source = REPO / "research/r1_stream_c/quant_head8/target_resource_bench.c"
+        for cc, (build, inc, objects) in self.builds.items():
+            with self.subTest(compiler=cc):
+                exe = build / "mmap-offline-real-sdk"
+                checked([cc, *FLAGS, *inc, source, *objects, "-lm", "-o", exe])
+                for flags in ([], ["--mmap"]):
+                    rejected = subprocess.run([str(x) for x in
+                        (exe, self.model, self.tables, self.pcm, *flags)],
+                        capture_output=True, timeout=15)
+                    self.assertNotEqual(rejected.returncode, 0)
+                    self.assertFalse(rejected.stdout)
+
 
 
 if __name__ == "__main__":
