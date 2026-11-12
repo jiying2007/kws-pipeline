@@ -1,0 +1,80 @@
+{
+  "schema": "r1-i16-arm-neon-owner-saved-hidden-qemu-v1",
+  "observation_date": "2026-11-11",
+  "status": "PASS_CORTEX_A32_NEON_ORIGINAL_PAR4_OTHER_BITWISE_ON_SAVED_HIDDEN_NOT_TARGET_BOARD",
+  "scope": "offline new candidate only, original full 2596 OTHER competitors; no PCM/backbone/ASR/TTS",
+  "source": {
+    "revision": "fd1f4224ceab3b592ed2137f2ce1bdbd2586eed1",
+    "c_git_blob_sha1": "10b13908e1ab9eb3afbccd496c5ee533ff86bfc0",
+    "c_sha256": "b1f4e610583fa9acab448be7ce10b2d812a5f498d6d290df89e5a888b6136209",
+    "h_git_blob_sha1": "a1528f38dadf2bbb33a1ae36964bcdc4a2e0d3fe",
+    "h_sha256": "186daa3ea7adb1b7888141f43c409a8a8491c5f34170e2a8b73119e1a0c1f106",
+    "exact_git_source_byte_reconstructed": true
+  },
+  "owner_inputs": {
+    "original_owner_archive_sha256": "23c9acf557d0a0c0c63d88c0b995d0d6c686b7a6297659c8a9570f9b101e7661",
+    "active113_owner_archive_sha256": "5540f63c6ef87eb403568f008a0dc9b76985eb5185e549ea5288f5b67d3a6e05",
+    "model_sha256": "63f18045c64f95e0a57776a2860a2714fdf3fd8f21472d59fe865608030f3ed4",
+    "extracted_hidden_frame_bytes_sha256_verified": true,
+    "input_kind": "retained hidden140, not audio",
+    "known_train": {
+      "clips": 96,
+      "frames": 9079
+    },
+    "exposed_synthetic_development": {
+      "clips": 34,
+      "frames": 3176
+    }
+  },
+  "toolchain": {
+    "bundled_input_archive_sha256": "1a7f2c4eff08550052d9ccda1fe78aca0a87fa47a33c28e71e85757138f70f49",
+    "toolchain_tar_sha256": "d1f09666fdd61294a32fd33671547ba68faee24e7bc94e179cd53e2134dd2cd6",
+    "cross_compiler": "Ubuntu 24.04 GCC 13.3.0 arm-linux-gnueabihf",
+    "compiler_executable_sha256": "73c40a8b836981da0da98dfae66073ed4b9d485cf786899d0c5ef3eeb311e548",
+    "qemu": "qemu-arm-static 8.2.2",
+    "qemu_executable_sha256": "47a63bcbdf3030cf42230a0521dae38ff9d62ba1268d5cafc7d8ccf7da7c761c",
+    "flags": [
+      "-std=c11",
+      "-O3",
+      "-mcpu=cortex-a32",
+      "-mfpu=neon-vfpv4",
+      "-mfloat-abi=hard",
+      "-fno-fast-math",
+      "-ffp-contract=off",
+      "-fexcess-precision=standard",
+      "-DR1_I16_USE_NEON=1"
+    ],
+    "target_elf": "ARM ELF32 hard-float EABI5",
+    "host_libc": "Ubuntu ARM sysroot glibc 2.39; binary requires GLIBC_2.34 or newer",
+    "actual_neon_opcodes_confirmed": [
+      "vld1.8",
+      "vmovl.s8",
+      "vmlal.s16"
+    ],
+    "binary_sha256": "24e0df36a07db7d63ba4c1c3e5cbb7b4c40fe0c87d6549295511f7a0be6338bb"
+  },
+  "observations": {
+    "saved_hidden_frames": 12255,
+    "exact_original_other_max_bitwise_matches": 12255,
+    "exact_original_other_id_matches": 12255,
+    "exactly_one_par4_row": 12237,
+    "exactly_two_par4_rows": 18,
+    "more_than_two_par4_rows": 0,
+    "numeric_fallback_frames": 0,
+    "max_exact_rows_in_any_frame": 2,
+    "return_code": 0,
+    "stdout_sha256": "49294e37c5af0e6918e73776d9257a63e205f6551868d5a950a92d1dd0a76fbc",
+    "stderr_empty": true
+  },
+  "limitations": {
+    "github_arm_ci_blocked_by_ubuntu_apt_mirror_timeout_not_compilation": true,
+    "physical_ssc305_not_run": true,
+    "target_bsp_abi_not_proven": true,
+    "qemu_cpu_wall_clock_not_a_performance_measurement": true,
+    "active113_still_preferred_for_lightweight": true,
+    "model_promotion_authorized": false,
+    "baseline_r1_unchanged": true,
+    "independent_far_frr_not_measured": true,
+    "compiled_scalar_vs_neon_performance_on_board_not_measured": true
+  }
+}
