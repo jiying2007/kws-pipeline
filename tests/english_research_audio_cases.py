@@ -36,7 +36,12 @@ def invented_sources(folder: Path):
             raw = buf.getvalue()
             row["wav_sha256"] = sha(raw)
             row["pcm_sha256"] = sha(pcm)
-            z.writestr("original/" + row["cell_id"] + ".wav", raw)
+            prefix = ("english-seven-voice-actual/capture/cells/" +
+                      row["cell_id"] + "/")
+            z.writestr(prefix + "audio-16k.wav", raw)
+            # Pinned real source contains a second 24-kHz FLOAT WAV
+            # for each cell. The PCM16 intake must ignore these bytes.
+            z.writestr(prefix + "native-f32.wav", b"invented-native-float")
         z.writestr("original/metadata.json", "{}")
     review = folder / "invented-review.json"
     review.write_text(json.dumps(report, ensure_ascii=False, sort_keys=True),
@@ -113,7 +118,7 @@ class EnglishOriginalAudioIntakeTests(unittest.TestCase):
                 z.writestr("original/extra.wav",
                            (root / "not-a-source").as_posix().encode())
             with self.assertRaisesRegex(ValueError,
-                                        "EN_AUDIO_WAV_INVALID"):
+                                        "EN_AUDIO_UNEXPECTED_WAV_MEMBER"):
                 self.run_frozen(archive, review, root / "blocked")
             self.assertFalse((root / "blocked").exists())
 
@@ -126,6 +131,40 @@ class EnglishOriginalAudioIntakeTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,
                                         "EN_AUDIO_ZIP_TRAVERSAL_OR_ALIAS"):
                 self.run_frozen(archive, review, root / "blocked")
+
+
+    def test_missing_native_float_companion_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            archive, review, _ = invented_sources(root)
+            rebuilt = root / "missing-companion.zip"
+            with zipfile.ZipFile(archive) as source:
+                with zipfile.ZipFile(rebuilt, "w", compression=zipfile.ZIP_STORED) as sink:
+                    lost = False
+                    for item in source.infolist():
+                        if item.filename.endswith("/native-f32.wav") and not lost:
+                            lost = True
+                            continue
+                        sink.writestr(item, source.read(item.filename))
+            self.assertTrue(lost)
+            with self.assertRaisesRegex(
+                    ValueError,
+                    "EN_AUDIO_EXPECTED_63_PCM16_PLUS_63_NATIVE_FLOAT_WAVS"):
+                self.run_frozen(rebuilt, review, root / "blocked")
+            self.assertFalse((root / "blocked").exists())
+
+    def test_source_cell_cannot_be_reassigned_even_if_wav_hashes_match(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            archive, review, record = invented_sources(root)
+            left, right = record["rows"][:2]
+            for field in ("wav_sha256", "pcm_sha256"):
+                left[field], right[field] = right[field], left[field]
+            review.write_text(json.dumps(record, ensure_ascii=False, sort_keys=True),
+                              encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "EN_AUDIO_PCM_OR_ADMISSION_DRIFT"):
+                self.run_frozen(archive, review, root / "blocked")
+            self.assertFalse((root / "blocked").exists())
 
     def test_strict_original_pin_rejects_invented_zip_without_patch(self):
         with tempfile.TemporaryDirectory() as temp:

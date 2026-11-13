@@ -23,7 +23,15 @@ python3 -I -S -B training/english_research_audio_intake.py \
   --output-dir /restricted/english63-weak-audio-intake
 ```
 
-The program checks the original ZIP bytes, all 63 unique WAV/PCM hashes,
+The original artifact contains **126 WAVs per 63 recording cells**:
+63 `audio-16k.wav` (16-kHz mono PCM16, the ONLY files consumed by the
+intake) and 63 `native-f32.wav` (native floating-point companions, NOT
+PCM16 trainer inputs). The intake requires exactly one of each path per
+cell, rejects any unexpected WAV layout, and requires the exact 63 saved
+cell/WAV/PCM identities. Both native and PCM16 members are covered by
+the unchanged original ZIP SHA256; there is no new model conversion.
+
+The program checks the original ZIP bytes, all 63 unique PCM16 WAV/PCM hashes,
 16-kHz mono PCM16 geometry, exact cell IDs, five train-role and two
 development-only synthetic voice-family roles, and all 21 nearphone
 quarantines **before creating any output**. It copies bytes unchanged to
@@ -53,3 +61,14 @@ Original GitHub Actions audio artifacts have limited retention; verify the
 saved ZIP SHA256 before expiry rather than regenerating the 63 original WAVs.
 All tests here use invented PCM only, and run in the existing normal/-O/-OO
 training-admission CI inventory. No new workflow or scheduled task is added.
+
+## Original-artifact readback correction
+
+The first imported version only tested a mock ZIP with one WAV per cell;
+it rejected the authentic source ZIP because it incorrectly counted the
+63 native float companions as additional PCM16 WAVs. The corrected
+archive-member policy is keyed by **exact path, cell and variant**, not
+filename extension alone. Fixed source analysis independently confirmed
+63/63 PCM16 file digests, 63/63 matching source cell IDs, 63/63 PCM
+digests, 63 companion native WAV cell IDs, and 16-kHz mono PCM16 geometry.
+These checks alone are not formal label authority or new model training.
