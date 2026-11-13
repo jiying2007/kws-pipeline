@@ -105,3 +105,53 @@ then run fixed-budget strong-pretrained FSMN and light alternatives on
 Reject nearphones only with trustworthy acoustic labels; never tune a
 prototype on the exposed 12/21 records. Finally measure C export parity,
 SSC305 A32 CPU/RSS/p99 end-of-word event latency and continuous FAR/hour.
+
+
+## Executed saved-weight encoder chunk parity (2026-11-13)
+
+The original **unmodified** weak GRU and causal DS-TCN checkpoints also admit
+memory-bounded *causal encoder + mean/max accumulator* replay. The separate
+`streaming_parity.py` loads only their already saved safe NPZ weights and the
+byte-verified 63-clip source archive. It never trains, downloads models,
+changes a threshold or rewrites an admitted dataset. No input/source hash,
+speaker split or model weight was modified.
+
+On the same 63 synthetic clips, each encoder was compared to its exact
+whole-clip forward pass under four input-frame partitions:
+`1`, `5`, `31` and `whole`. Recorded in `STREAMING_PARITY.json`:
+
+| Measurement | GRU | DS-TCN |
+| --- | ---: | ---: |
+| Source clips | 63 | 63 |
+| Total chunk/batch comparisons | 252 | 252 |
+| Changed final clip class | 0 | 0 |
+| Maximum absolute final-logit difference | 9.536743164e-7 | 7.152557373e-7 |
+
+History is explicitly retained across frames/chunks: GRU hidden state,
+causal convolution history per dilation, running mean numerator/frame count,
+and running elementwise maximum. No full-sequence intermediate encoder
+activation needs to be retained. These measurements do **not** benchmark
+target RAM or CPU and do not imply real-time / SSC305 qualification.
+
+To reproduce from the original private input ZIP and the safely decoded
+saved result directory (as described above):
+
+```sh
+python3 research/english63_weak_pilot/streaming_parity.py \
+  --input-zip /restricted/english63-verified-weak-intake.zip \
+  --result-dir /restricted/english63-saved-result \
+  --output /restricted/english63-new-chunk-parity.json
+```
+
+The output is create-only, binds the unmodified research source, input
+and checkpoint identities, and refuses any partition with changed final
+class or absolute logit difference above 2e-5. Existing normal/-O/-OO
+CI imports only source/receipt safety checks; no model or audio is loaded
+there.
+
+**Boundary:** This is stateful *precomputed-feature encoder* parity, not
+streaming PCM frontend parity or a continuous keyword-event detector.
+The existing mean/max head still produces a whole-clip classification; it
+does not establish trigger timing, wake-event FAR/hour, genuine accent
+recall, human label truth or final model suitability. Do not select either
+weak classifier as the final English KWS model from this evidence.
