@@ -33,7 +33,7 @@ DIRS = {
     "EXPOSED_DEVELOPMENT_NO_TUNE": "development_no_tune",
     "QUARANTINE_AMBIGUOUS_NEARPHONE": "nearphone_quarantine",
 }
-HEX64 = re.compile(r"[0-9a-f]{64}\\Z")
+HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 
 
 def need(condition: bool, why: str) -> None:
@@ -78,8 +78,8 @@ def verify_zip(source: Path) -> dict:
             path = PurePosixPath(name)
             mode = item.external_attr >> 16
             need(type(name) is str and bool(name) and
-                 not path.is_absolute() and "\\\\" not in name and
-                 "\\x00" not in name and all(p not in (".", "..", "") for p in path.parts)
+                 not path.is_absolute() and "\\" not in name and
+                 "\x00" not in name and all(p not in (".", "..", "") for p in path.parts)
                  and name not in seen_paths and not stat.S_ISLNK(mode),
                  "EN_AUDIO_ZIP_TRAVERSAL_OR_ALIAS")
             seen_paths.add(name)
@@ -168,7 +168,7 @@ def materialize(source_zip: Path, review_path: Path, output: Path) -> dict:
     }
     with (output / "MANIFEST.json").open("x", encoding="utf-8") as stream:
         json.dump(result, stream, ensure_ascii=False, sort_keys=True, indent=2)
-        stream.write("\\n")
+        stream.write("\n")
     (output / "MANIFEST.json").chmod(0o600)
     return result
 
