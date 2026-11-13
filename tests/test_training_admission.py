@@ -22,6 +22,10 @@ from training_admission import (verify_training_manifests, require_promotable_ad
 from corpus_identity import (canonical_audio_path, corpus_digest, audio_identity,
                              training_manifest_audio_bindings, canonical_hash, training_corpus_identity)
 
+# Retained main CI executes this suite in normal/-O/-OO. Reuse that entrypoint
+# for English-only, no-model label counterexamples; no new workflow inventory.
+from english_research_label_cases import EnglishResearchLabelTests
+
 
 class ThreeASRTrainerMetadataTests(unittest.TestCase):
     """No audio/model work: exercise the consumer using invented lineage only."""
