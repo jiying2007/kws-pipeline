@@ -136,5 +136,48 @@ class EnglishWeakPilotSourceCases(unittest.TestCase):
             verify_metadata_receipts(forged)
 
 
+class EnglishWeakStreamingSourceCases(unittest.TestCase):
+    """Read back the exact 63-clip measured parity without Torch or new audio."""
+
+    def test_saved_parity_is_hash_bound_and_non_promotable(self):
+        import streaming_parity as parity
+        measured = json.loads((HERE/'STREAMING_PARITY.json').read_text())
+        original = json.loads((HERE/'RESULT.json').read_text())
+        self.assertTrue(parity.verify_public_parity_receipt(measured, original))
+        self.assertEqual({r['kind'] for r in measured['models']},
+                         {'gru', 'dsc_tcn'})
+        self.assertEqual(sum(r['comparisons'] for r in measured['models']), 504)
+        self.assertFalse(measured['model_promotion_allowed'])
+
+    def test_forged_chunk_evidence_fails_closed(self):
+        import streaming_parity as parity
+        saved = json.loads((HERE/'RESULT.json').read_text())
+        value = json.loads((HERE/'STREAMING_PARITY.json').read_text())
+        changes = (
+            lambda v: v.__setitem__('model_promotion_allowed', True),
+            lambda v: v.__setitem__('threshold_selection', True),
+            lambda v: v.__setitem__('streaming_parity_code_sha256', '0'*64),
+            lambda v: v['models'][0]['final_clip_class_drift_by_plan'].__setitem__('1', 1),
+            lambda v: v['models'][0].__setitem__('weights_sha256', '0'*64),
+            lambda v: v['models'][1].__setitem__('comparisons', 251),
+            lambda v: v['models'][1]['max_abs_logit_diff_by_plan'].__setitem__('5', 0.01),
+            lambda v: v.__setitem__('continuous_negative_far_per_hour', 0.0),
+        )
+        for change in changes:
+            tampered = copy.deepcopy(value)
+            change(tampered)
+            with self.assertRaises(ValueError):
+                parity.verify_public_parity_receipt(tampered, saved)
+
+    def test_chunk_boundaries_are_total_and_reject_invalid_geometry(self):
+        import streaming_parity as parity
+        self.assertEqual(parity.chunks_for_frames(12, 5), (5, 5, 2))
+        self.assertEqual(parity.chunks_for_frames(12, 'whole'), (12,))
+        self.assertEqual(parity.chunks_for_frames(1, 1), (1,))
+        for args in ((0, 1), (1300, 1), (12, 0), (12, -1), (12, 1201)):
+            with self.assertRaises(ValueError):
+                parity.chunks_for_frames(*args)
+
+
 if __name__=='__main__':
     unittest.main()
