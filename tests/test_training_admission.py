@@ -31,6 +31,7 @@ from english_research_audio_cases import EnglishOriginalAudioIntakeTests
 sys.path.insert(0, str(ROOT / "research" / "english63_weak_pilot"))
 from english63_weak_pilot_cases import EnglishWeakPilotSourceCases, EnglishWeakStreamingSourceCases
 from pcm_frontend_parity_cases import EnglishPCMFrontendSourceCases
+from integrated_pcm_encoder_cases import EnglishFullChainSourceCases
 
 
 class ThreeASRTrainerMetadataTests(unittest.TestCase):
