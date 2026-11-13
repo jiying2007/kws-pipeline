@@ -1,0 +1,59 @@
+{
+  "audio_clips_verified": 63,
+  "continuous_far_per_hour": "NOT_RUN",
+  "continuous_wake_detector_tested": false,
+  "formal_training_admitted": false,
+  "human_gold": false,
+  "independent_frr": "NOT_RUN",
+  "model_inference_executed": false,
+  "model_promotion_allowed": false,
+  "new_tts_asr_ipa_calls": 0,
+  "plans": [
+    {
+      "chunk_samples": 159,
+      "clips": 63,
+      "frames": 13010,
+      "max_abs_logmel_error": 1.9073486328125e-06,
+      "max_buffer_samples": 558
+    },
+    {
+      "chunk_samples": 160,
+      "clips": 63,
+      "frames": 13010,
+      "max_abs_logmel_error": 1.9073486328125e-06,
+      "max_buffer_samples": 480
+    },
+    {
+      "chunk_samples": 161,
+      "clips": 63,
+      "frames": 13010,
+      "max_abs_logmel_error": 1.9073486328125e-06,
+      "max_buffer_samples": 560
+    },
+    {
+      "chunk_samples": 1600,
+      "clips": 63,
+      "frames": 13010,
+      "max_abs_logmel_error": 1.9073486328125e-06,
+      "max_buffer_samples": 1920
+    },
+    {
+      "chunk_samples": 3199,
+      "clips": 63,
+      "frames": 13010,
+      "max_abs_logmel_error": 1.9073486328125e-06,
+      "max_buffer_samples": 3518
+    }
+  ],
+  "runner_sha256": "693a282d490c2d2a7f8468a4ed9ae569f2c8b0dde3bc4714001ed537520a12ae",
+  "runtime": {
+    "numpy": "2.3.5",
+    "python": "3.13.5"
+  },
+  "schema": "english63-original-pcm-streaming-frontend-parity-v1",
+  "source_review_json_sha256": "89f20b7ac5a672840013b3cf780422dcf68451b6f5d618e8f494a0e5f5dc6b12",
+  "source_tts_zip_sha256": "f180004a27ea14c0575f4dd0e2a8476ca048442c76c2dcc186ede6d731cdffcc",
+  "ssc305_qualified": false,
+  "status": "MEASURED_ORIGINAL_ENGLISH63_PCM_FRONTEND_PARITY_NOT_KWS",
+  "train_or_threshold_tuned": false
+}
