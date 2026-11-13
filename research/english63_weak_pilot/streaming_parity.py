@@ -125,6 +125,68 @@ def verify_saved_result(report, path):
     return states
 
 
+
+def verify_public_parity_receipt(value, saved):
+    """Model-free audit of retained measurements, never acoustic qualification."""
+    import math
+    require(type(value) is dict and value.get('schema') == POLICY and
+            value.get('status') ==
+            'MEASURED_WEAK_CLIP_ENCODER_CHUNK_PARITY_NOT_CONTINUOUS_KWS' and
+            value.get('source_input_zip_sha256') == pilot.INPUT_SHA256 and
+            value.get('source_tts_zip_sha256') == pilot.SOURCE_TTS_SHA256 and
+            value.get('source_review_sha256') == pilot.SOURCE_REVIEW_SHA256 and
+            value.get('source_training_code_sha256') ==
+            pilot.sha(Path(pilot.__file__).read_bytes()) and
+            value.get('streaming_parity_code_sha256') ==
+            pilot.sha(Path(__file__).read_bytes()) and
+            value.get('split_policy') == {
+                'weak_train': 30, 'exposed_development': 12,
+                'quarantined_nearphones': 21} and
+            value.get('new_audio_generated') is False and
+            value.get('new_asr_calls') == value.get('new_ipa_calls') == 0 and
+            value.get('optimizer_updates') == 0 and
+            value.get('new_training_started') is False and
+            value.get('threshold_selection') is False and
+            value.get('human_gold') is False and
+            value.get('formal_training_admitted') is False and
+            value.get('model_promotion_allowed') is False and
+            value.get('continuous_negative_far_per_hour') == 'NOT_RUN' and
+            value.get('independent_human_frr') == 'NOT_RUN' and
+            value.get('ssc305_board_profile') == 'NOT_RUN' and
+            type(value.get('models')) is list and len(value['models']) == 2,
+            'EN_CHUNK_RETAINED_RECEIPT_UNSAFE')
+    require(type(saved) is dict and
+            saved.get('training_script_sha256') ==
+            value['source_training_code_sha256'] and
+            type(saved.get('models')) is list and len(saved['models']) == 2,
+            'EN_CHUNK_SAVED_BASELINE_INVALID')
+    original = {m['architecture']: m for m in saved['models']}
+    require(set(original) == set(KINDS), 'EN_CHUNK_ORIGINAL_MODEL_ROSTER')
+    seen = set()
+    for entry in value['models']:
+        kind = entry.get('kind')
+        require(kind in KINDS and kind not in seen and
+                entry.get('weights_sha256') == original[kind]['weights_sha256'] and
+                entry.get('input_clip_count') == 63 and
+                entry.get('comparisons') == 252 and
+                entry.get('chunk_plans') == [str(n) for n in CHUNK_SIZES] and
+                entry.get('frame_frontend_streaming_tested') is False and
+                entry.get('continuous_keyword_event_tested') is False and
+                entry.get('streaming_farr_tested') is False and
+                entry.get('model_promotion_allowed') is False,
+                'EN_CHUNK_RETAINED_MODEL_UNSAFE')
+        seen.add(kind)
+        diffs = entry.get('max_abs_logit_diff_by_plan')
+        errors = entry.get('final_clip_class_drift_by_plan')
+        require(type(diffs) is dict and type(errors) is dict and
+                set(diffs) == set(errors) == {str(n) for n in CHUNK_SIZES} and
+                all(type(errors[k]) is int and errors[k] == 0 for k in errors) and
+                all(type(diffs[k]) in (float, int) and
+                    math.isfinite(diffs[k]) and 0 <= diffs[k] <= MAX_ABS_DIFF
+                    for k in diffs), 'EN_CHUNK_RETAINED_NUMERIC_UNSAFE')
+    return True
+
+
 def run(input_zip, result_dir, output):
     import numpy as np
     import torch
@@ -211,6 +273,7 @@ def run(input_zip, result_dir, output):
         'ssc305_board_profile': 'NOT_RUN',
         'model_promotion_allowed': False,
     }
+    verify_public_parity_receipt(result, report)
     with output.open('x', encoding='utf-8') as stream:
         json.dump(result, stream, ensure_ascii=False, sort_keys=True, indent=2)
         stream.write('\n')
