@@ -35,7 +35,7 @@ DIRS = {
 }
 WAV_MEMBER = re.compile(
     r"english-seven-voice-actual/capture/cells/"
-    r"(en-[0-9a-f]{24})/(audio-16k|native-f32)\\.wav\\Z"
+    r"(en-[0-9a-f]{24})/(audio-16k|native-f32)\.wav\Z"
 )
 
 
