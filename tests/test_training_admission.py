@@ -30,6 +30,7 @@ from english_research_audio_cases import EnglishOriginalAudioIntakeTests
 # Source-only, no-Torch validation of executed English weak research receipts.
 sys.path.insert(0, str(ROOT / "research" / "english63_weak_pilot"))
 from english63_weak_pilot_cases import EnglishWeakPilotSourceCases, EnglishWeakStreamingSourceCases
+from pcm_frontend_parity_cases import EnglishPCMFrontendSourceCases
 
 
 class ThreeASRTrainerMetadataTests(unittest.TestCase):

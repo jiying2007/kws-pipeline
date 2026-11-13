@@ -155,3 +155,43 @@ The existing mean/max head still produces a whole-clip classification; it
 does not establish trigger timing, wake-event FAR/hour, genuine accent
 recall, human label truth or final model suitability. Do not select either
 weak classifier as the final English KWS model from this evidence.
+
+
+## Executed original-PCM streaming frontend parity (2026-11-13)
+
+A **new and separate** source-bound PCM-to-log-Mel research check was executed
+against the **unchanged original** synthetic English63 TTS ZIP, not newly
+generated audio, and the exact three-evidence source-review JSON:
+
+- Original TTS artifact 13954744587, ZIP SHA256
+  f180004a27ea14c0575f4dd0e2a8476ca048442c76c2dcc186ede6d731cdffcc
+- Three-evidence joined JSON SHA256
+  89f20b7ac5a672840013b3cf780422dcf68451b6f5d618e8f494a0e5f5dc6b12
+- Original **63/63 PCM16 WAV + PCM hashes** rechecked against the pinned review.
+- Five PCM chunk sizes: **159, 160, 161, 1600, 3199 samples**. Each yielded
+  the same 13,010 25-ms/10-ms feature frames across 63 clips.
+- Across **315 clip/chunk-plan comparisons** (65,050 compared frames),
+  maximum absolute log-Mel difference was **1.9073486328125e-6**,
+  below the fixed 1e-5 budget. No truncation or EOF padding.
+- The largest observed pending-window + input-chunk sample count was 3,518,
+  measured in the frontend implementation. It is **not** total process RAM
+  nor SSC305 measured memory.
+- The machine result PCM_FRONTEND_PARITY.json binds the source archives,
+  execution script SHA256 and explicit non-promotion boundaries. The existing
+  hash-bound saved model and encoder-parity sources were **not modified**.
+
+To reproduce with privately retained exact original ZIP and reviewed JSON
+(extracted from the original source-bound review artifact):
+
+    python3 research/english63_weak_pilot/pcm_frontend_parity.py \
+      --tts-zip /restricted/english63-original-tts.zip \
+      --review-json /restricted/english63-three-evidence-review.json \
+      --output /restricted/new-pcm-frontend-parity.json
+
+Only the small result, algorithm source and **no-audio/no-numpy/no-Torch**
+source-only tests enter Git or existing normal/-O/-OO CI. No raw WAV, new
+scheduled job, model inference, TTS, ASR, IPA or optimizer execution is added
+to CI. This proves a streaming **frontend's frame/log-Mel parity** against its
+existing batch algorithm, **not** PCM-to-model logit parity, continuous wake
+event emission, independent FAR/hour, human FRR, acoustic truth, legitimate
+English FSMN training, model selection or SSC305 deployability.
