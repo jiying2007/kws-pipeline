@@ -33,7 +33,10 @@ DIRS = {
     "EXPOSED_DEVELOPMENT_NO_TUNE": "development_no_tune",
     "QUARANTINE_AMBIGUOUS_NEARPHONE": "nearphone_quarantine",
 }
-HEX64 = re.compile(r"[0-9a-f]{64}\Z")
+WAV_MEMBER = re.compile(
+    r"english-seven-voice-actual/capture/cells/"
+    r"(en-[0-9a-f]{24})/(audio-16k|native-f32)\\.wav\\Z"
+)
 
 
 def need(condition: bool, why: str) -> None:
@@ -68,6 +71,7 @@ def verify_zip(source: Path) -> dict:
     need(sha(source.read_bytes()) == SOURCE_TTS_ZIP_SHA256,
          "EN_AUDIO_ORIGINAL_TTS_DIGEST_DRIFT")
     sounds = {}
+    pcm_cells, native_cells = set(), set()
     with zipfile.ZipFile(source) as z:
         infos = z.infolist()
         need(0 < len(infos) <= MAX_MEMBERS, "EN_AUDIO_ZIP_MEMBER_COUNT")
@@ -89,12 +93,26 @@ def verify_zip(source: Path) -> dict:
             need(total <= MAX_UNPACKED_BYTES, "EN_AUDIO_ZIP_UNPACK_BUDGET")
             if item.is_dir() or not name.lower().endswith(".wav"):
                 continue
+            match = WAV_MEMBER.fullmatch(name)
+            need(match is not None, "EN_AUDIO_UNEXPECTED_WAV_MEMBER")
+            cell_id, kind = match.groups()
+            if kind == "native-f32":
+                # The original archive also retains 63 FLOAT/native WAVs.
+                # They are provenance companions, NOT PCM16 trainer inputs.
+                need(cell_id not in native_cells, "EN_AUDIO_DUPLICATE_NATIVE_CELL")
+                native_cells.add(cell_id)
+                continue
+            need(cell_id not in pcm_cells, "EN_AUDIO_DUPLICATE_PCM16_CELL")
+            pcm_cells.add(cell_id)
             raw = z.read(item)
             need(len(raw) == item.file_size, "EN_AUDIO_ZIP_MEMBER_SHORT_READ")
             identity = sha(raw)
             need(identity not in sounds, "EN_AUDIO_DUPLICATE_WAV")
-            sounds[identity] = {"wav": raw, "pcm_sha256": verify_wav(raw)}
-    need(len(sounds) == 63, "EN_AUDIO_EXPECTED_63_WAVS")
+            sounds[identity] = {"wav": raw, "pcm_sha256": verify_wav(raw),
+                                "cell_id": cell_id}
+    need(len(sounds) == len(pcm_cells) == len(native_cells) == 63 and
+         pcm_cells == native_cells,
+         "EN_AUDIO_EXPECTED_63_PCM16_PLUS_63_NATIVE_FLOAT_WAVS")
     return sounds
 
 
@@ -107,6 +125,7 @@ def prepare(source_zip: Path, review_path: Path) -> tuple[dict, dict]:
          "EN_AUDIO_SOURCE_WAV_ROSTER_DRIFT")
     for identity, row in roster.items():
         need(row["pcm_sha256"] == sounds[identity]["pcm_sha256"] and
+             row["cell_id"] == sounds[identity]["cell_id"] and
              row["action"] in DIRS and row["training_admitted"] is False and
              row["human_gold"] is False and
              row["ctc_target_ids"] is None,
