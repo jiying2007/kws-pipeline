@@ -66,8 +66,8 @@ def invented_report() -> dict:
     return {
         "schema":en.SOURCE_SCHEMA,
         "status":"MACHINE_EVIDENCE_JOINED_REVIEW_NOT_GOLD",
-        "source_archive_sha256":en.SOURCE_ZIP_SHA256,
-        "source_payload_sha256":en.SOURCE_PAYLOAD_SHA256,
+        "source_archive_sha256":dict(en.SOURCE_ZIP_SHA256),
+        "source_payload_sha256":dict(en.SOURCE_PAYLOAD_SHA256),
         "source_tts_run_id":43242278962,
         "original_three_asr_run_id":43246104418,
         "source_ipa_run_id":43340235981,
