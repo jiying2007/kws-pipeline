@@ -1,0 +1,26 @@
+{
+  "formal_training_admitted": false,
+  "identical_fresh_start_count": 3,
+  "model_promoted": false,
+  "observations": [
+    {
+      "kind": "gru",
+      "readback_all_63_predictions_matched": true,
+      "repeated_two_extra_runs_match": true,
+      "replay_is_not_independent_kws_test": true,
+      "weights_sha256": "142a02b4fc0b6c6ec3b404e85bcc5383e17c4551f15341c386c61bf99740d54f"
+    },
+    {
+      "kind": "dsc_tcn",
+      "readback_all_63_predictions_matched": true,
+      "repeated_two_extra_runs_match": true,
+      "replay_is_not_independent_kws_test": true,
+      "weights_sha256": "42ed3f8479b30aec4e639e59075beac60ad84e242dbedbb601d2bc362d403971"
+    }
+  ],
+  "original_audio_regenerated": false,
+  "real_human_metrics": "NOT_RUN",
+  "schema": "english63-weak-model-reproduction-v1",
+  "script_sha256": "4ffa8b8c700b3d1413711be2a2329767dfc9bbdee13b77ca990a2c22a64e0719",
+  "source_zip_sha256": "c4c3cdfe363317f0b24fbb948183e5cf7ed433e7c2eef9bb46131651c9350007"
+}
