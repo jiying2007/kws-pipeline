@@ -1,0 +1,50 @@
+name: English research whole-clip label bridge - source only
+
+on:
+  pull_request:
+    paths:
+      - 'training/english_research_label_bridge.py'
+      - 'tests/test_english_research_label_bridge.py'
+      - 'docs/ENGLISH_RESEARCH_LABEL_BRIDGE_20261113.md'
+      - '.github/workflows/english-research-label-contracts.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'training/english_research_label_bridge.py'
+      - 'tests/test_english_research_label_bridge.py'
+      - 'docs/ENGLISH_RESEARCH_LABEL_BRIDGE_20261113.md'
+      - '.github/workflows/english-research-label-contracts.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: english-weak-label-contract-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  isolated-english-label-contract:
+    if: >-
+      github.repository == 'jiying2007/kws-pipeline' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pinned
+        with:
+          persist-credentials: false
+      - name: Fail-closed weak English role, pronunciation and CTC separation tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for mode in normal optimized stripped; do
+            args=()
+            case "$mode" in
+              optimized) args=(-O);;
+              stripped) args=(-OO);;
+            esac
+            python3 -I -S -B "${args[@]}" tests/test_english_research_label_bridge.py -v
+          done
+          python3 -I -S -B training/english_research_label_bridge.py
+          test -z "$(git status --porcelain)"
