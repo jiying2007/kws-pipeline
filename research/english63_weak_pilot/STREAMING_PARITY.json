@@ -1,0 +1,89 @@
+{
+  "continuous_negative_far_per_hour": "NOT_RUN",
+  "formal_training_admitted": false,
+  "human_gold": false,
+  "independent_human_frr": "NOT_RUN",
+  "model_promotion_allowed": false,
+  "models": [
+    {
+      "chunk_plans": [
+        "1",
+        "5",
+        "31",
+        "whole"
+      ],
+      "comparisons": 252,
+      "continuous_keyword_event_tested": false,
+      "final_clip_class_drift_by_plan": {
+        "1": 0,
+        "31": 0,
+        "5": 0,
+        "whole": 0
+      },
+      "frame_frontend_streaming_tested": false,
+      "input_clip_count": 63,
+      "kind": "gru",
+      "max_abs_logit_diff_by_plan": {
+        "1": 9.5367431640625e-07,
+        "31": 2.384185791015625e-07,
+        "5": 4.76837158203125e-07,
+        "whole": 0.0
+      },
+      "model_promotion_allowed": false,
+      "streaming_farr_tested": false,
+      "weights_sha256": "142a02b4fc0b6c6ec3b404e85bcc5383e17c4551f15341c386c61bf99740d54f"
+    },
+    {
+      "chunk_plans": [
+        "1",
+        "5",
+        "31",
+        "whole"
+      ],
+      "comparisons": 252,
+      "continuous_keyword_event_tested": false,
+      "final_clip_class_drift_by_plan": {
+        "1": 0,
+        "31": 0,
+        "5": 0,
+        "whole": 0
+      },
+      "frame_frontend_streaming_tested": false,
+      "input_clip_count": 63,
+      "kind": "dsc_tcn",
+      "max_abs_logit_diff_by_plan": {
+        "1": 7.152557373046875e-07,
+        "31": 2.980232238769531e-07,
+        "5": 2.384185791015625e-07,
+        "whole": 0.0
+      },
+      "model_promotion_allowed": false,
+      "streaming_farr_tested": false,
+      "weights_sha256": "42ed3f8479b30aec4e639e59075beac60ad84e242dbedbb601d2bc362d403971"
+    }
+  ],
+  "new_asr_calls": 0,
+  "new_audio_generated": false,
+  "new_ipa_calls": 0,
+  "new_training_started": false,
+  "optimizer_updates": 0,
+  "runtime": {
+    "numpy": "2.3.5",
+    "python": "3.13.5",
+    "torch": "2.10.0+cpu"
+  },
+  "schema": "english63-weak-pilot-encoder-chunk-parity-v1",
+  "source_input_zip_sha256": "c4c3cdfe363317f0b24fbb948183e5cf7ed433e7c2eef9bb46131651c9350007",
+  "source_review_sha256": "89f20b7ac5a672840013b3cf780422dcf68451b6f5d618e8f494a0e5f5dc6b12",
+  "source_training_code_sha256": "4ffa8b8c700b3d1413711be2a2329767dfc9bbdee13b77ca990a2c22a64e0719",
+  "source_tts_zip_sha256": "f180004a27ea14c0575f4dd0e2a8476ca048442c76c2dcc186ede6d731cdffcc",
+  "split_policy": {
+    "exposed_development": 12,
+    "quarantined_nearphones": 21,
+    "weak_train": 30
+  },
+  "ssc305_board_profile": "NOT_RUN",
+  "status": "MEASURED_WEAK_CLIP_ENCODER_CHUNK_PARITY_NOT_CONTINUOUS_KWS",
+  "streaming_parity_code_sha256": "e53f23ee5a2ade0f33b8ac21f4ac67bcc8338d8b3f9a378c980ce312f19d87f0",
+  "threshold_selection": false
+}
