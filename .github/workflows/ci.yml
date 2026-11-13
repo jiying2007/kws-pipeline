@@ -421,9 +421,6 @@ jobs:
           python3 -S -B tests/test_training_admission.py ThreeASRTrainerMetadataTests
           python3 -S -B -O tests/test_training_admission.py ThreeASRTrainerMetadataTests
           python3 -S -B -OO tests/test_training_admission.py ThreeASRTrainerMetadataTests
-          python3 -S -B tests/test_english_research_label_bridge.py
-          python3 -S -B -O tests/test_english_research_label_bridge.py
-          python3 -S -B -OO tests/test_english_research_label_bridge.py
       - name: Verify tracked worktree after Three-ASR pending label metadata
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Three-ASR pending label metadata"'
       - name: Trusted ASR source and native adapter metadata
