@@ -84,6 +84,6 @@
   },
   "ssc305_board_profile": "NOT_RUN",
   "status": "MEASURED_WEAK_CLIP_ENCODER_CHUNK_PARITY_NOT_CONTINUOUS_KWS",
-  "streaming_parity_code_sha256": "5b4f72fa4f78a14aecd9cd8cbeb0dff200ce1e18900e82cdf575fa8ee7c61723",
+  "streaming_parity_code_sha256": "e53f23ee5a2ade0f33b8ac21f4ac67bcc8338d8b3f9a378c980ce312f19d87f0",
   "threshold_selection": false
 }
