@@ -27,6 +27,10 @@ from corpus_identity import (canonical_audio_path, corpus_digest, audio_identity
 from english_research_label_cases import EnglishResearchLabelTests
 from english_research_audio_cases import EnglishOriginalAudioIntakeTests
 
+# Source-only, no-Torch validation of executed English weak research receipts.
+sys.path.insert(0, str(ROOT / "research" / "english63_weak_pilot"))
+from english63_weak_pilot_cases import EnglishWeakPilotSourceCases
+
 
 class ThreeASRTrainerMetadataTests(unittest.TestCase):
     """No audio/model work: exercise the consumer using invented lineage only."""
