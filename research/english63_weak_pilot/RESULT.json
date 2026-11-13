@@ -1,0 +1,2548 @@
+{
+  "architecture_comparison_is_independent_evaluation": false,
+  "exact_input_sha256": "c4c3cdfe363317f0b24fbb948183e5cf7ed433e7c2eef9bb46131651c9350007",
+  "exposed_dev_source_families": [
+    "qwen3-preset-serena",
+    "qwen3-preset-uncle_fu"
+  ],
+  "exposed_development_count": 12,
+  "formal_promotion_allowed": false,
+  "human_gold": false,
+  "model_selection_made": false,
+  "models": [
+    {
+      "architecture": "gru",
+      "architecture_frame_encoder_causal": true,
+      "batch_size": 30,
+      "board_SSC305": "NOT_RUN",
+      "class_roster": {
+        "Hey Mero": 2,
+        "Hey Vosen": 1,
+        "background": 0
+      },
+      "continuous_FAR_per_hour": "NOT_RUN",
+      "exposed_development_total": 12,
+      "exposed_development_weak_agreement_not_independent_accuracy": 10,
+      "feature_bands": 32,
+      "frame_hop_ms": 10,
+      "frame_length_ms": 25,
+      "gradient_clip": 1.0,
+      "human_gold": false,
+      "independent_human_test": "NOT_RUN",
+      "lr": 0.003,
+      "model_hidden": 32,
+      "model_promotion_allowed": false,
+      "optimizer": "AdamW",
+      "parameter_count": 6531,
+      "per_record": [
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-00909b1119dcef0bb08efe12",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.221752,
+            0.634982,
+            0.143266
+          ],
+          "requested_weak_intent_id": null,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-0118aba0ca82235e475cd093",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.007251,
+            0.069945,
+            0.922805
+          ],
+          "requested_weak_intent_id": null,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-0662e7eebe9db001e69fe9d1",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.375075,
+            0.535356,
+            0.089569
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-09222b6705484be6fc4980e3",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.002978,
+            0.02053,
+            0.976492
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-0b7ab837d82cc11f0975372c",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.237284,
+            0.539791,
+            0.222925
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-19f5bada5f41bc45a5be3d13",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.819138,
+            0.174041,
+            0.006822
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-1b8778d3c8627ce0b271b55b",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.432153,
+            0.542309,
+            0.025539
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-1b9570bf2d6095d332a754fb",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.156336,
+            0.679032,
+            0.164632
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-20b84148a2356897085bef2d",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.089075,
+            0.801862,
+            0.109064
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-23981ff4edd7cb74566b8c6a",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.771369,
+            0.200628,
+            0.028003
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-265e85750535b30475157dec",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.058439,
+            0.817443,
+            0.124118
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-2b8f52c5b4db7f22eeb02dfc",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.67144,
+            0.294374,
+            0.034186
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-2c56f692a31083da3cd5cf4f",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.145783,
+            0.790589,
+            0.063627
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-2e0b9e74354dfac6a49aed78",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.138781,
+            0.792986,
+            0.068233
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-36e757e143f7951be745fc69",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.224621,
+            0.713633,
+            0.061746
+          ],
+          "requested_weak_intent_id": null,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-38dc2ad84cf5705bfd1f8607",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.742873,
+            0.251729,
+            0.005398
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-3c27784d3cd320b4141a36c6",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.791836,
+            0.195538,
+            0.012626
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-3fdb4b64eaf86c92b5fdc23b",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.794778,
+            0.202529,
+            0.002692
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-561c53672a982a1e084c51d7",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.848213,
+            0.133526,
+            0.018261
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-5b2a92401d2ba9888bd342d7",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.350753,
+            0.608585,
+            0.040662
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-5e11f812cab40cb9d6917db2",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.014839,
+            0.079211,
+            0.90595
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-600f565d0c5d16506cd90fc3",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.276256,
+            0.680638,
+            0.043106
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-616abc6a8e624301aac3fed9",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.12325,
+            0.273679,
+            0.603072
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-631f4fda148a0d021a64cf7b",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.684581,
+            0.314619,
+            0.0008
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-66a302338bb93b10582f57f6",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.064968,
+            0.782933,
+            0.152099
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-6af5dd69b909ba54f064963b",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.01487,
+            0.075495,
+            0.909636
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-6b4f3ec7165124620a71d74d",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.25539,
+            0.617476,
+            0.127134
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-71b1cbb47d069cfada05c474",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.846026,
+            0.153119,
+            0.000855
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-76b63bd5971415358694f3ae",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.687022,
+            0.287616,
+            0.025362
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-772cc0c4e16df53f591eebea",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.72792,
+            0.264807,
+            0.007273
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-7837d0eeeccba2cd9dfa1940",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.189417,
+            0.68963,
+            0.120953
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-7bf087cdc987da7621cbda03",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.038563,
+            0.096517,
+            0.86492
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-7f19ada0494ae743115db6bb",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.008791,
+            0.099636,
+            0.891573
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-848ba7e032ece0e2edd672e3",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.56055,
+            0.361309,
+            0.078141
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-849efd3affed4ed9d0b1cf4d",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.154663,
+            0.728243,
+            0.117094
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-85fa95925c392bbc6abf8f20",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.002486,
+            0.02699,
+            0.970524
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-8666fb01e1e91f380b62d961",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.758,
+            0.229322,
+            0.012678
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-8ed1540c9784e17dc1386be7",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.013319,
+            0.098067,
+            0.888614
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-9098388f9e9549000cf02c52",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.362587,
+            0.359169,
+            0.278243
+          ],
+          "requested_weak_intent_id": null,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-94b4f61245b9a2752ea3b691",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.453672,
+            0.506668,
+            0.03966
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-968be7ea633e42194fb1951f",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.0098,
+            0.087487,
+            0.902712
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-99528afbb91f32c5ca5d93f4",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.234808,
+            0.693519,
+            0.071673
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-99e2a852b5e903a75a690851",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.006355,
+            0.04742,
+            0.946225
+          ],
+          "requested_weak_intent_id": null,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-9bb527e871c5bcaa81bf0939",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.00537,
+            0.026579,
+            0.968051
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-9d4698ccb8b31f96ed9f5e30",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.267103,
+            0.531148,
+            0.201749
+          ],
+          "requested_weak_intent_id": null,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-a1dadbccb534b3f6d838b13e",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.010108,
+            0.037866,
+            0.952026
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-b38d7af46e95b44df8d1db98",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.221188,
+            0.618721,
+            0.160091
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-b7091fedd2c0faac099d487d",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.786661,
+            0.206646,
+            0.006693
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-c035c946bda134e0f0687e62",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.01732,
+            0.044429,
+            0.938251
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-c39ad4f1a36d783d9fd076cd",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.021111,
+            0.04225,
+            0.93664
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-cc02c78acb21b8ba5dd7686e",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.001828,
+            0.013883,
+            0.98429
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-cc9987f1129c42611547d2fb",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.014184,
+            0.058802,
+            0.927013
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-d3f157f847c87cd7c707eda1",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.008252,
+            0.052631,
+            0.939117
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-d45172aa12d8405194c5518e",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.757714,
+            0.234076,
+            0.008209
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-d8fcc659b7999fe72a9b0e66",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.032531,
+            0.092261,
+            0.875209
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-dfc7727430813d1d5b5ce552",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.115825,
+            0.788346,
+            0.095828
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-eceac855791f3a887959420f",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.041224,
+            0.077746,
+            0.881029
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-efb0b84d4bed5847539e622c",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.32427,
+            0.57865,
+            0.09708
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-f81a1f074268078d4304565c",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.698804,
+            0.285644,
+            0.015552
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-f9cb8099b3e0b0e7829fd1a5",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.219253,
+            0.693979,
+            0.086768
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-fc71d2c572a45060c5f9cfdc",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.727983,
+            0.265545,
+            0.006471
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-fdcb4338be92a946e4658e14",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.067029,
+            0.157722,
+            0.775249
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-ff3bb1e16e10844b62d08308",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.272986,
+            0.622716,
+            0.104298
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        }
+      ],
+      "qualification_allowed": false,
+      "quarantined_nearphone_total": 21,
+      "quarantined_nearphone_wake_proposal_not_false_accept_count": 17,
+      "readout": "whole-clip-mean-max-pool-not-streaming-event",
+      "requested_weak_train_agreement": 29,
+      "requested_weak_train_total": 30,
+      "seed": 20261113,
+      "tensor_shapes": {
+        "classifier.bias": [
+          3
+        ],
+        "classifier.weight": [
+          3,
+          64
+        ],
+        "rnn.bias_hh_l0": [
+          96
+        ],
+        "rnn.bias_ih_l0": [
+          96
+        ],
+        "rnn.weight_hh_l0": [
+          96,
+          32
+        ],
+        "rnn.weight_ih_l0": [
+          96,
+          32
+        ]
+      },
+      "train_loss_end": 0.264593,
+      "train_loss_start": 1.11365,
+      "training_admitted": false,
+      "training_wall_sec": 3.556,
+      "updates": 48,
+      "weights_file": "gru-weights.npz",
+      "weights_sha256": "142a02b4fc0b6c6ec3b404e85bcc5383e17c4551f15341c386c61bf99740d54f"
+    },
+    {
+      "architecture": "dsc_tcn",
+      "architecture_frame_encoder_causal": true,
+      "batch_size": 30,
+      "board_SSC305": "NOT_RUN",
+      "class_roster": {
+        "Hey Mero": 2,
+        "Hey Vosen": 1,
+        "background": 0
+      },
+      "continuous_FAR_per_hour": "NOT_RUN",
+      "exposed_development_total": 12,
+      "exposed_development_weak_agreement_not_independent_accuracy": 6,
+      "feature_bands": 32,
+      "frame_hop_ms": 10,
+      "frame_length_ms": 25,
+      "gradient_clip": 1.0,
+      "human_gold": false,
+      "independent_human_test": "NOT_RUN",
+      "lr": 0.003,
+      "model_hidden": 32,
+      "model_promotion_allowed": false,
+      "optimizer": "AdamW",
+      "parameter_count": 4803,
+      "per_record": [
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-00909b1119dcef0bb08efe12",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.370159,
+            0.330153,
+            0.299688
+          ],
+          "requested_weak_intent_id": null,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-0118aba0ca82235e475cd093",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.226334,
+            0.336802,
+            0.436864
+          ],
+          "requested_weak_intent_id": null,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-0662e7eebe9db001e69fe9d1",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.620015,
+            0.167488,
+            0.212497
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-09222b6705484be6fc4980e3",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.154183,
+            0.172052,
+            0.673765
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-0b7ab837d82cc11f0975372c",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.205324,
+            0.263956,
+            0.53072
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-19f5bada5f41bc45a5be3d13",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.616597,
+            0.247903,
+            0.1355
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-1b8778d3c8627ce0b271b55b",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.36157,
+            0.384131,
+            0.254299
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-1b9570bf2d6095d332a754fb",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.222015,
+            0.38161,
+            0.396375
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-20b84148a2356897085bef2d",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.239582,
+            0.569916,
+            0.190502
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-23981ff4edd7cb74566b8c6a",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.511397,
+            0.324159,
+            0.164444
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-265e85750535b30475157dec",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.316506,
+            0.360923,
+            0.322571
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-2b8f52c5b4db7f22eeb02dfc",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.233903,
+            0.299084,
+            0.467013
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-2c56f692a31083da3cd5cf4f",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.332526,
+            0.504816,
+            0.162658
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-2e0b9e74354dfac6a49aed78",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.236708,
+            0.50704,
+            0.256252
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-36e757e143f7951be745fc69",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.282319,
+            0.345577,
+            0.372104
+          ],
+          "requested_weak_intent_id": null,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-38dc2ad84cf5705bfd1f8607",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.50946,
+            0.303444,
+            0.187097
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-3c27784d3cd320b4141a36c6",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.385061,
+            0.286896,
+            0.328043
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-3fdb4b64eaf86c92b5fdc23b",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.566958,
+            0.237654,
+            0.195389
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-561c53672a982a1e084c51d7",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.67822,
+            0.209014,
+            0.112766
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-5b2a92401d2ba9888bd342d7",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.313408,
+            0.361566,
+            0.325026
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-5e11f812cab40cb9d6917db2",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.141049,
+            0.301207,
+            0.557744
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-600f565d0c5d16506cd90fc3",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.273066,
+            0.502661,
+            0.224273
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-616abc6a8e624301aac3fed9",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.342909,
+            0.252911,
+            0.40418
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-631f4fda148a0d021a64cf7b",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.310294,
+            0.456166,
+            0.23354
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-66a302338bb93b10582f57f6",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.20064,
+            0.389955,
+            0.409405
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-6af5dd69b909ba54f064963b",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.170929,
+            0.281059,
+            0.548012
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-6b4f3ec7165124620a71d74d",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.426119,
+            0.37154,
+            0.202341
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-71b1cbb47d069cfada05c474",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.731809,
+            0.153251,
+            0.114939
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-76b63bd5971415358694f3ae",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.619047,
+            0.258476,
+            0.122477
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-772cc0c4e16df53f591eebea",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.526736,
+            0.269301,
+            0.203963
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-7837d0eeeccba2cd9dfa1940",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.292314,
+            0.498178,
+            0.209507
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-7bf087cdc987da7621cbda03",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.182002,
+            0.246766,
+            0.571233
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-7f19ada0494ae743115db6bb",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.311272,
+            0.292078,
+            0.396649
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-848ba7e032ece0e2edd672e3",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.476972,
+            0.282751,
+            0.240277
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-849efd3affed4ed9d0b1cf4d",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.183757,
+            0.541285,
+            0.274958
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-85fa95925c392bbc6abf8f20",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.16863,
+            0.203441,
+            0.627929
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-8666fb01e1e91f380b62d961",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.440194,
+            0.257896,
+            0.301911
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-8ed1540c9784e17dc1386be7",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.192813,
+            0.374146,
+            0.433041
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-9098388f9e9549000cf02c52",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.406579,
+            0.359381,
+            0.234039
+          ],
+          "requested_weak_intent_id": null,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-94b4f61245b9a2752ea3b691",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.675592,
+            0.159201,
+            0.165207
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-968be7ea633e42194fb1951f",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.159532,
+            0.263393,
+            0.577075
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-99528afbb91f32c5ca5d93f4",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.33953,
+            0.476729,
+            0.183741
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-99e2a852b5e903a75a690851",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.184697,
+            0.264721,
+            0.550582
+          ],
+          "requested_weak_intent_id": null,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-9bb527e871c5bcaa81bf0939",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.258251,
+            0.203334,
+            0.538415
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-9d4698ccb8b31f96ed9f5e30",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.295837,
+            0.306533,
+            0.39763
+          ],
+          "requested_weak_intent_id": null,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-a1dadbccb534b3f6d838b13e",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.167514,
+            0.225775,
+            0.606711
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-b38d7af46e95b44df8d1db98",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.226577,
+            0.229338,
+            0.544086
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-vivian",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-b7091fedd2c0faac099d487d",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.412878,
+            0.21777,
+            0.369353
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-c035c946bda134e0f0687e62",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.166886,
+            0.243674,
+            0.589441
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-c39ad4f1a36d783d9fd076cd",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.163378,
+            0.30811,
+            0.528512
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-cc02c78acb21b8ba5dd7686e",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.220258,
+            0.181543,
+            0.598199
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-cc9987f1129c42611547d2fb",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.174736,
+            0.297722,
+            0.527542
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-d3f157f847c87cd7c707eda1",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.143881,
+            0.243671,
+            0.612448
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-eric",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-d45172aa12d8405194c5518e",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.594501,
+            0.210731,
+            0.194767
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-d8fcc659b7999fe72a9b0e66",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.267472,
+            0.509346,
+            0.223182
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-dfc7727430813d1d5b5ce552",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.303236,
+            0.602177,
+            0.094587
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-eceac855791f3a887959420f",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.209315,
+            0.219627,
+            0.571057
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "QUARANTINE_AMBIGUOUS_NEARPHONE",
+          "cell_id": "en-efb0b84d4bed5847539e622c",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.465708,
+            0.369728,
+            0.164564
+          ],
+          "requested_weak_intent_id": null,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-sohee",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-f81a1f074268078d4304565c",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.30683,
+            0.357037,
+            0.336133
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-uncle_fu",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-f9cb8099b3e0b0e7829fd1a5",
+          "human_gold": false,
+          "predicted_class": 0,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.397466,
+            0.324965,
+            0.277569
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "EXPOSED_DEVELOPMENT_NO_TUNE",
+          "cell_id": "en-fc71d2c572a45060c5f9cfdc",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.384864,
+            0.401082,
+            0.214054
+          ],
+          "requested_weak_intent_id": 0,
+          "role": "development-only",
+          "source_family_id": "qwen3-preset-serena",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-fdcb4338be92a946e4658e14",
+          "human_gold": false,
+          "predicted_class": 2,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.143214,
+            0.262317,
+            0.594469
+          ],
+          "requested_weak_intent_id": 2,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-dylan",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        },
+        {
+          "action": "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY",
+          "cell_id": "en-ff3bb1e16e10844b62d08308",
+          "human_gold": false,
+          "predicted_class": 1,
+          "prediction_is_acoustic_truth": false,
+          "raw_clip_probabilities": [
+            0.341546,
+            0.450327,
+            0.208127
+          ],
+          "requested_weak_intent_id": 1,
+          "role": "train-candidate",
+          "source_family_id": "qwen3-preset-ono_anna",
+          "training_admitted": false,
+          "trusted_negative": false,
+          "window_or_streaming_event": false
+        }
+      ],
+      "qualification_allowed": false,
+      "quarantined_nearphone_total": 21,
+      "quarantined_nearphone_wake_proposal_not_false_accept_count": 14,
+      "readout": "whole-clip-mean-max-pool-not-streaming-event",
+      "requested_weak_train_agreement": 29,
+      "requested_weak_train_total": 30,
+      "seed": 20261214,
+      "tensor_shapes": {
+        "blocks.0.dw.bias": [
+          32
+        ],
+        "blocks.0.dw.weight": [
+          32,
+          1,
+          3
+        ],
+        "blocks.0.pw.bias": [
+          32
+        ],
+        "blocks.0.pw.weight": [
+          32,
+          32,
+          1
+        ],
+        "blocks.1.dw.bias": [
+          32
+        ],
+        "blocks.1.dw.weight": [
+          32,
+          1,
+          3
+        ],
+        "blocks.1.pw.bias": [
+          32
+        ],
+        "blocks.1.pw.weight": [
+          32,
+          32,
+          1
+        ],
+        "blocks.2.dw.bias": [
+          32
+        ],
+        "blocks.2.dw.weight": [
+          32,
+          1,
+          3
+        ],
+        "blocks.2.pw.bias": [
+          32
+        ],
+        "blocks.2.pw.weight": [
+          32,
+          32,
+          1
+        ],
+        "classifier.bias": [
+          3
+        ],
+        "classifier.weight": [
+          3,
+          64
+        ],
+        "proj.bias": [
+          32
+        ],
+        "proj.weight": [
+          32,
+          32,
+          1
+        ]
+      },
+      "train_loss_end": 0.64268,
+      "train_loss_start": 1.247726,
+      "training_admitted": false,
+      "training_wall_sec": 5.858,
+      "updates": 48,
+      "weights_file": "dsc_tcn-weights.npz",
+      "weights_sha256": "42ed3f8479b30aec4e639e59075beac60ad84e242dbedbb601d2bc362d403971"
+    }
+  ],
+  "nearphone_quarantine_count": 21,
+  "new_asr_calls": 0,
+  "new_ipa_calls": 0,
+  "new_tts_calls": 0,
+  "pretrained_checkpoint_used": false,
+  "runtime": {
+    "backend": "cpu-deterministic-single-thread-mkldnn-off",
+    "numpy": "2.3.5",
+    "python": "3.13.5",
+    "torch": "2.10.0+cpu"
+  },
+  "schema": "english63-weak-clip-two-architecture-pilot-v1",
+  "source_intent_is_truth": false,
+  "source_three_evidence_join_sha256": "89f20b7ac5a672840013b3cf780422dcf68451b6f5d618e8f494a0e5f5dc6b12",
+  "source_tts_sha256": "f180004a27ea14c0575f4dd0e2a8476ca048442c76c2dcc186ede6d731cdffcc",
+  "status": "EXECUTED_SYNTHETIC_WEAK_LABEL_TRAINING_NOT_KWS_QUALIFICATION",
+  "train_only_frontend_norm": {
+    "mean32": [
+      -8.115610122680664,
+      -7.565402030944824,
+      -7.144026756286621,
+      -7.407831192016602,
+      -7.729039669036865,
+      -7.916067600250244,
+      -8.302997589111328,
+      -8.636795043945312,
+      -8.858538627624512,
+      -9.22128677368164,
+      -9.606913566589355,
+      -9.847044944763184,
+      -10.126641273498535,
+      -10.208864212036133,
+      -10.208780288696289,
+      -10.385112762451172,
+      -10.673148155212402,
+      -10.774600982666016,
+      -10.625428199768066,
+      -10.490376472473145,
+      -10.592604637145996,
+      -10.7764253616333,
+      -10.916495323181152,
+      -11.198299407958984,
+      -11.187743186950684,
+      -11.415227890014648,
+      -11.745739936828613,
+      -12.174442291259766,
+      -12.481900215148926,
+      -12.647415161132812,
+      -12.680262565612793,
+      -12.572654724121094
+    ],
+    "std32": [
+      5.205148696899414,
+      6.707243919372559,
+      7.330870628356934,
+      7.464084148406982,
+      7.42748498916626,
+      7.440280914306641,
+      7.185846328735352,
+      7.05903434753418,
+      6.939958095550537,
+      6.6091790199279785,
+      6.335188865661621,
+      6.336503982543945,
+      6.188275337219238,
+      6.098937511444092,
+      6.141858100891113,
+      6.021031856536865,
+      6.022955417633057,
+      6.086548328399658,
+      6.290628910064697,
+      6.468584060668945,
+      6.51541805267334,
+      6.486119747161865,
+      6.334749221801758,
+      6.1259236335754395,
+      6.219613552093506,
+      6.155635356903076,
+      5.934713840484619,
+      5.710262775421143,
+      5.510854721069336,
+      5.45992374420166,
+      5.534065246582031,
+      5.7021355628967285
+    ]
+  },
+  "train_source_families": [
+    "qwen3-preset-dylan",
+    "qwen3-preset-eric",
+    "qwen3-preset-ono_anna",
+    "qwen3-preset-sohee",
+    "qwen3-preset-vivian"
+  ],
+  "training_admitted": false,
+  "training_script_sha256": "4ffa8b8c700b3d1413711be2a2329767dfc9bbdee13b77ca990a2c22a64e0719",
+  "weak_train_count": 30
+}
