@@ -24,7 +24,7 @@ from corpus_identity import (canonical_audio_path, corpus_digest, audio_identity
 
 # Retained main CI executes this suite in normal/-O/-OO. Reuse that entrypoint
 # for English-only, no-model label counterexamples; no new workflow inventory.
-from test_english_research_label_bridge import EnglishResearchLabelTests
+from english_research_label_cases import EnglishResearchLabelTests
 
 
 class ThreeASRTrainerMetadataTests(unittest.TestCase):
