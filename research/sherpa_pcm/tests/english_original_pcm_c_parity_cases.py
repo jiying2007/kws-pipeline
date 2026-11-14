@@ -93,5 +93,37 @@ class EnglishNativeMeroSourceCases(unittest.TestCase):
         self.assertEqual(manifest["limits"]["true_ssc305_arm_board"],"NOT_RUN")
 
 
+    def test_actual_research_candidate_cannot_be_mistaken_for_deployed_model(self):
+        import json
+        m=json.loads((HERE.parent/"ENGLISH_INT8_C16_RESEARCH_CANDIDATE.json").read_text())
+        self.assertEqual(m["schema"],"english-research-model-candidate-v1")
+        self.assertEqual(m["status"],
+                         "HOST_NATIVE_C_REPRODUCED_RESEARCH_ONLY_NO_PROMOTION")
+        self.assertEqual(m["keyword_alias"],research.KEYWORD)
+        self.assertEqual(m["keyword_c_abi_id"],3)
+        self.assertEqual(m["second_keyword_status"],
+                         "BLOCKED_UNVERIFIED_OFFICIAL_LEXICON_OOV")
+        self.assertEqual(m["model"]["original_release_sha256"],
+                         research.quant.MODEL_SHA)
+        self.assertEqual(m["runtime"]["official_host_runtime_archive_sha256"],
+                         ARCHIVE_SHA)
+        self.assertEqual(m["runtime"]["official_host_C_api_sha256"],
+                         LIBRARIES["libsherpa-onnx-c-api.so"][1])
+        self.assertEqual(m["runtime"]["official_host_ONNX_Runtime_sha256"],
+                         LIBRARIES["libonnxruntime.so"][1])
+        self.assertEqual(m["evidence"]["actual_C_abi_run_id"],43547980797)
+        self.assertEqual(m["evidence"]["real_native_C_tests"]["total_replays"],189)
+        self.assertEqual(m["evidence"]["real_native_C_tests"]["per_pattern_deviation_vs_python"],0)
+        self.assertEqual(m["evidence"]["synthetic_source"]["after_artificial_tail_only"],4)
+        self.assertEqual(m["evidence"]["natural_source"]["sampled_utterances"],517)
+        self.assertFalse(m["runtime"]["SSC305_SDK_ABI_qualified"])
+        self.assertFalse(m["runtime"]["SSC305_CPU_RSS_p99_qualified"])
+        self.assertFalse(m["model_selected_for_shipping"])
+        self.assertFalse(m["model_promotion_allowed"])
+        self.assertEqual(m["true_independent_FAR_per_hour"],"NOT_RUN")
+        self.assertEqual(m["true_independent_FRR"],"NOT_RUN")
+        self.assertGreaterEqual(len(m["pending_gates"]),5)
+
+
 if __name__=="__main__":
     unittest.main()
