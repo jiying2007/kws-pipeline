@@ -86,3 +86,46 @@ dependency lock unchanged. The research driver independently verifies
 the build receipt, matching original archive and extracted libraries
 before loading the native C API. No unpinned runtime-library substitution
 or safety-gate bypass is permitted.
+
+
+## Actual native C event evidence (2026-11-14)
+
+Source-owned [Actions run 43547980797](https://github.com/jiying2007/kws-data/actions/runs/43547980797)
+completed successfully. Its original uploaded artifact 14094504790 was
+independently fetched (ZIP SHA256
+c1a0a60f517bee59e1900306df66fe652b9674ca437486075d3a60c915a027cc).
+Original real native C event JSON SHA256
+14bdee27275094a9e6074269e6376a4ef1771fbb34cb53ebfbfdd73393136b1a,
+original build receipt SHA256
+2174c524705f61fe2977b71c70eccdc6de9a6d5745c42053febf6af505697c7d.
+
+The real host native runtime and model were initialized from the exact
+original public Sherpa release and unchanged official Zh-En 3M INT8 chunk16
+models. With **only original PCM and no synthetic 660ms end padding**,
+each of the fixed320, network1600 and irregular caller partition plans
+replayed all 63 original Qwen WAVs. All 189 real C model replays completed.
+Each partition produced the **same five Hey Mero events**, every one with
+C callback ID3, identical per-event input-available sample counts across
+plans, zero new EOF-only events and zero per-clip event-count drift against
+the original Python no-padding research receipt.
+
+The host loop times (same hosted runner; model already loaded) were
+1.397616, 1.378256 and 1.409235 seconds respectively across 131.36 sec
+of synthetic original audio. Process peak RSS 101,808 KiB includes Python,
+source preparation and other host overhead; it does **not** measure target
+C runtime working memory or SSC305 CPU, and the three loop wall values are
+not a controlled multi-run performance comparison.
+
+The existing Mandarin mappings still use keyword IDs 1 and 2; the new
+English HEY_MERO alias uses ID3. Hey Vosen remains unsupported in this
+official model's English lexicon. No fake G2P is introduced. Retained
+machine binding and explicit pending qualifications are in
+ENGLISH_REAL_PARITY_RESULT.json and ENGLISH_INT8_C16_RESEARCH_CANDIDATE.json.
+The temporary data-owned execution PR #116 was closed without merge;
+the model and source PCM are not committed here.
+
+**This is a completed reproducible host native C research candidate**,
+not an accepted production/SSC305 model. Independent human FRR, multi-hour
+continuous household FAR, end-of-word event latency, target sysroot
+compatibility, target CPU/RSS and research license components remain hard
+requirements, not inferred PASS statuses.
