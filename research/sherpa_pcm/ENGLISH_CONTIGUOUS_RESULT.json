@@ -92,7 +92,6 @@
     "authentic_accent_far_field_test": "NOT_RUN",
     "SSC305_qualified": "NOT_RUN",
     "no_new_TTS_ASR_or_training": true,
-    "model_selected_for_shipping": false,
     "model_promotion_allowed": false
   }
 }

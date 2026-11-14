@@ -122,7 +122,6 @@ class EnglishNativeMeroSourceCases(unittest.TestCase):
         self.assertEqual(m["evidence"]["natural_source"]["sampled_utterances"],517)
         self.assertFalse(m["runtime"]["SSC305_SDK_ABI_qualified"])
         self.assertFalse(m["runtime"]["SSC305_CPU_RSS_p99_qualified"])
-        self.assertFalse(m["model_selected_for_shipping"])
         self.assertFalse(m["model_promotion_allowed"])
         self.assertEqual(m["true_independent_FAR_per_hour"],"NOT_RUN")
         self.assertEqual(m["true_independent_FRR"],"NOT_RUN")

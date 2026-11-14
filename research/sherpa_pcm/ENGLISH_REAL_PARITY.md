@@ -125,7 +125,7 @@ The temporary data-owned execution PR #116 was closed without merge;
 the model and source PCM are not committed here.
 
 **This is a completed reproducible host native C research candidate**,
-not an accepted production/SSC305 model. Independent human FRR, multi-hour
+not a qualified SSC305 research model. Independent human FRR, multi-hour
 continuous household FAR, end-of-word event latency, target sysroot
 compatibility, target CPU/RSS and research license components remain hard
 requirements, not inferred PASS statuses.

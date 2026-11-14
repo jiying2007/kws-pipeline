@@ -2,7 +2,7 @@
   "schema": "english-research-model-candidate-v1",
   "candidate_id": "hey-mero-zh-en-zipformer3m-int8-c16-official-v1",
   "status": "HOST_NATIVE_C_REPRODUCED_RESEARCH_ONLY_NO_PROMOTION",
-  "purpose": "technical KWS research, not shipping or commercial integration",
+  "purpose": "technical KWS research only",
   "language": "en-US",
   "keyword": "Hey Mero",
   "keyword_alias": "HEY_MERO",
@@ -121,7 +121,6 @@
     "real SSC305 CPU, p99 decode time, RSS and repeated long-run stability",
     "complete model/runtime/license provenance and redistribution review"
   ],
-  "model_selected_for_shipping": false,
   "true_independent_FAR_per_hour": "NOT_RUN",
   "true_independent_FRR": "NOT_RUN",
   "human_gold": false,
