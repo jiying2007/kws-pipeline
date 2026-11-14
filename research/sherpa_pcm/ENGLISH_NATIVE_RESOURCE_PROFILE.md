@@ -93,3 +93,52 @@ continuous household false-wake FAR/hour, acoustic accent acceptance,
 far-field 3–5m or verified lexical end-of-word trigger delay. The original
 Chinese wake runtime remains unchanged. No model promotion, threshold
 selection or synthetic-speech data regeneration is allowed from this step.
+
+
+## Actual original-source C-only profile (2026-11-14)
+
+Source-owning [Actions run 43569419467](https://github.com/jiying2007/kws-data/actions/runs/43569419467)
+**completed successfully**. Its original machine artifact ID 14103930651,
+ZIP SHA256 f349fd8c8f55533a8b1cb8e9545bf481c69fb7ac7b1df4a92d28032bf644c9e8,
+was independently downloaded, and original JSON (2,587 bytes) SHA256
+676fe3304d916d5612d91a31790320ec77918ede2a3b42ffeb6c994be689b012
+was read back. Source and code SHA256s, model/runtime source and exact
+measurements are retained in ENGLISH_NATIVE_RESOURCE_RESULT.json.
+
+The independent Linux x86_64 C process loaded the unchanged official
+Zh-En INT8 chunk16 model, replayed all **63 original Qwen synthetic WAVs**
+(2,101,760 source PCM samples; 131.36 seconds) in 320-sample C calls,
+without adding silence. It reproduced **5** actual HEY_MERO ID3 events,
+zero unexpected/EOF-only events. No Python interpreter/audio buffers were
+present in the *profiled child process*.
+
+| Original measurement, one host process | Measured value |
+| --- | ---: |
+| Whole C process RSS before model creation | 17,568 KiB |
+| Whole C process RSS after model creation | 52,340 KiB |
+| Whole C process RSS after all clips / peak | 57,720 KiB |
+| Approx. RSS increase at create (not tensor memory) | 34,772 KiB |
+| Original model encoder+decoder+joiner disk bytes | 5,446,114 B |
+| Native C feed callbacks, <=320 PCM samples each | 6,568 |
+| Actual wall feed latency p50 / p95 / p99 / max | 0.014954 / 3.423519 / 3.561917 / 5.971256 ms |
+| Actual feed CPU latency p50 / p95 / p99 / max | 0.014696 / 3.422283 / 3.560257 / 5.970135 ms |
+| Total C feed CPU time | 1.339160119 sec |
+| CPU-seconds / original audio-second (feed calls only) | 0.010194581 |
+| Host C feed calls exceeding their input-audio duration | 0 |
+
+Important: the above feed calls were executed in a fast, **offline** loop.
+Their 20ms per-chunk comparison is not a real audio device scheduling
+guarantee. RSS values measure the **whole host child process**, not
+the 5.45MB model file sizes or exact isolated tensor buffers; true
+memory includes Sherpa, ONNX Runtime, dynamic libraries, allocator state,
+model initialization and overhead. No native target/SSC305 performance was
+measured. No second benchmark run occurred; there are no multi-run
+confidence bounds on host p99 or the process RSS.
+
+The prerequisite data-owned one-shot PR #119 is closed without merging
+after source-bound measurement readback, so its execution-only workflow
+does not become unnecessary permanent CI. Formal model qualification is
+still blocked by target SSC305 BSP/sysroot runtime compatibility,
+target ARM CPU/RSS/p99 under actual device workload, independent
+microphone wake-word positives/accent review, real continuous household
+background FAR and verified wake-word-end-to-event latency.
