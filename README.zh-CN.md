@@ -12,6 +12,8 @@
 
 研究入口：[可复用模块、保留的实验结论与资格边界](research/README.md)
 
+2026-11-14 中英文迭代：[V4 执行基线与首轮实际实验](docs/KWS_V4_EXECUTION_BASELINE_20261114.md)。中文继续强 FSMN 主线；英文 Hey Mero / Hey Vosen 复用原 63 条音频和既有 ASR，推进有界在线学生模型实验。独立声学确认与真实 SSC305 确认分别记账。
+
 2026-11-11 强 FSMN 接入：[R1 初始化确认](docs/KWS_V3_CONFIRMATION_20261110.md)与[借用权重 SDK 和资源实测](docs/KWS_V3_RESOURCE_20261111.md)。新显式构造接口消除初始化时的第二份模型分配，保留现有 INT8 权重、推理数学和原复制接口；声学校准与真实 SSC305 测量继续按各自证据验收。
 
 保存输出后续：[264条件CTC诊断结果](docs/KWS_SAVED_CTC264_20261106.md)与[聚合执行索引](research/saved-ctc264-20261106/execution-index.json)。计算与独立审计已完成，没有新增模型前向或优化器更新；posthoc条件对齐不构成声学真值或解码器正确性证据。

@@ -35,6 +35,10 @@ from integrated_pcm_encoder_cases import EnglishFullChainSourceCases
 from pretrained_quant_events_cases import EnglishPretrainedQuantSourceCases
 from pretrained_live_timing_cases import EnglishUnpaddedTimingSourceCases
 
+# The new finite-window weak pilot keeps real execution on its public runner.
+sys.path.insert(0, str(ROOT / "research" / "english63_online_pilot"))
+from online_contract_cases import EnglishOnlinePilotSourceCases
+
 
 class ThreeASRTrainerMetadataTests(unittest.TestCase):
     """No audio/model work: exercise the consumer using invented lineage only."""
