@@ -261,7 +261,8 @@ def verify(root, manifest):
     # is accepted only when its explicit identity is present and the active
     # checkout exactly matches the declared set; no arbitrary workflow escapes.
     approved_with_clone = approved + ['.github/workflows/authorized-voice-clone-contracts.yml']
-    if additions not in (approved, approved_with_clone):
+    approved_with_public_zh64 = approved_with_clone + ['.github/workflows/public-zh64-asr-once.yml']
+    if additions not in (approved, approved_with_clone, approved_with_public_zh64):
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed additions
     # both bind CURRENT bytes. Historical maintenance receipts are evidence,

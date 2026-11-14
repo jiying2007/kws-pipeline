@@ -1,0 +1,157 @@
+name: Public Chinese64 first native three-ASR once
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/public-zh64-asr-once.yml'
+      - 'research/public-zh64-asr-20261114/**'
+  push:
+    branches: [main]
+    paths:
+      - 'research/public-zh64-asr-20261114/request.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-zh64-first-asr-20261114
+  cancel-in-progress: false
+
+jobs:
+  source-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          path: control
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 22505bf68b6c57747a8da35fd83e6ea4982d096c
+          persist-credentials: false
+          path: retained
+      - name: Check exact retained source and source-only boundary tests
+        env:
+          KWS_PUBLIC64_RETAINED: ${{ github.workspace }}/retained
+        run: |
+          set -euo pipefail
+          cd control
+          python3 -B research/public-zh64-asr-20261114/host.py --retained "$KWS_PUBLIC64_RETAINED" --check-source
+          python3 -B research/public-zh64-asr-20261114/test_contract.py
+          python3 -B -O research/public-zh64-asr-20261114/test_contract.py
+          python3 -B -OO research/public-zh64-asr-20261114/test_contract.py
+
+  claim:
+    needs: source-contract
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.repository.private == false && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      acquired: ${{ steps.claim.outputs.acquired }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Create the one permanent campaign claim
+        id: claim
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import json, os, pathlib, subprocess, sys
+          sys.path.insert(0, 'research/public-zh64-asr-20261114')
+          import input_adapter, host
+          value, raw_sha = input_adapter.frozen_request(pathlib.Path('research/public-zh64-asr-20261114/request.json'))
+          ref = host.claim_ref(raw_sha)
+          endpoint = 'repos/' + os.environ['GITHUB_REPOSITORY'] + '/git/ref/' + ref.removeprefix('refs/')
+          existing = subprocess.run(['gh','api',endpoint], capture_output=True, text=True, timeout=30)
+          if existing.returncode == 0:
+              saved = json.loads(existing.stdout)
+              if saved.get('ref') != ref:
+                  raise ValueError('claim identity mismatch')
+              with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+                  output.write('acquired=false\n')
+              print('Existing campaign claim retained; zero new ASR calls.')
+          else:
+              if 'HTTP 404' not in existing.stderr:
+                  raise RuntimeError('claim lookup did not establish absence')
+              body = pathlib.Path(os.environ['RUNNER_TEMP']) / 'new-zh64-claim.json'
+              body.write_text(json.dumps({'ref':ref,'sha':os.environ['GITHUB_SHA']}))
+              result = subprocess.run(['gh','api','--method','POST','repos/'+os.environ['GITHUB_REPOSITORY']+'/git/refs','--input',str(body)], capture_output=True, text=True, timeout=30)
+              if result.returncode != 0:
+                  raise RuntimeError('atomic claim creation failed; no execution')
+              saved = json.loads(result.stdout)
+              if saved.get('ref') != ref or saved.get('object',{}).get('sha') != os.environ['GITHUB_SHA']:
+                  raise ValueError('claim creation readback mismatch')
+              with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+                  output.write('acquired=true\n')
+              print('Created permanent campaign claim for request',raw_sha)
+          PY
+
+  actual-native-asr:
+    needs: [source-contract, claim]
+    if: needs.claim.outputs.acquired == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 165
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          path: control
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 22505bf68b6c57747a8da35fd83e6ea4982d096c
+          persist-credentials: false
+          path: retained
+      - name: Read the immutable claim and the exact existing public artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/public-zh64-asr-20261114-v1-consumed" > "$RUNNER_TEMP/zh64-claim.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/41814320901/artifacts" > "$RUNNER_TEMP/zh64-source-artifacts.json"
+          python3 -B - <<'PY'
+          import json,os,pathlib
+          value=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'zh64-source-artifacts.json').read_bytes())
+          rows=[r for r in value['artifacts'] if r['id']==13314781496]
+          if len(rows)!=1:raise ValueError('exact original public artifact missing')
+          row=rows[0]
+          if row['expired'] or row['name']!='qwen-nonclone64-20261104-v1-public' or row['size_in_bytes']!=11560534 or row['digest']!='sha256:0704e28608f636fa14e8bfa30ebc5ed5b870b9576ec8c80fbe15da9e05033ac5':raise ValueError('original public artifact identity changed')
+          if row['workflow_run']['head_sha']!='f0a26c5f39910ae6a8cb674a31cf08e57fcfc2f2':raise ValueError('original TTS source head changed')
+          PY
+          ulimit -f 20480
+          timeout 120s gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/13314781496/zip" > "$RUNNER_TEMP/zh64-source.zip"
+      - name: Verify original public audio before runtime installation
+        run: |
+          set -euo pipefail
+          python3 -B control/research/public-zh64-asr-20261114/input_adapter.py --verify "$RUNNER_TEMP/zh64-source.zip"
+      - name: First exact-audio three-ASR execution with retained native evidence
+        run: |
+          set -euo pipefail
+          test -z "${GH_TOKEN-}"
+          test -z "${GITHUB_TOKEN-}"
+          python3 -B control/research/public-zh64-asr-20261114/host.py \
+            --retained "$GITHUB_WORKSPACE/retained" \
+            --source "$RUNNER_TEMP/zh64-source.zip" \
+            --claim "$RUNNER_TEMP/zh64-claim.json" \
+            --work "$RUNNER_TEMP/zh64-first-native-work" \
+            --artifact "$RUNNER_TEMP/zh64-first-native-evidence"
+      - name: Retain complete public synthetic observations and failure states
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: public-zh64-first-native-three-asr-${{ github.run_id }}
+          path: ${{ runner.temp }}/zh64-first-native-evidence/
+          retention-days: 30
+          compression-level: 6
+          if-no-files-found: error
