@@ -66,3 +66,31 @@ Even zero detected events on this subset means neither zero field FAR nor
 independent accuracy. The model is still blocked on independent genuine
 English positive voice/accent and nearphone review, long continuous background
 audio evaluation and real SSC305 BSP/board CPU/RAM/latency measurements.
+
+
+## Actual fixed-source execution
+
+Public data-owning Actions [run 43538998200](https://github.com/jiying2007/kws-data/actions/runs/43538998200)
+finished successfully. Artifact 14090383839 was independently downloaded:
+original ZIP SHA256 7f28b4eddbee87435b9dc5b4c44e47a6d6ed200cbf9f4b8688d9b93cabeb4db4;
+the complete 517-row machine JSON SHA256
+788a1b04b9ecb22fb96d4036d19456f460ce3ccecd4da69d53d96fea53b29510,
+259,931 bytes. Full source/audio/model digests and result identities are
+retained in LIBRISPEECH_NEGATIVE_RESULT.json.
+
+The predeclared 20% filename hash sample selected **517** actual
+LibriSpeech dev-clean FLAC utterances, **40** distinct natural audiobook
+speakers, and **3,665.38525 seconds = 61.089754 minutes** of original audio.
+Both actual pretrained FP32/chunk16 and INT8/chunk16 decoders produced
+**zero Hey Mero event** in these recordings with unchanged score and
+threshold. Inference-loop timing (excluding FLAC decode but not necessarily
+all Python overhead): 74.90342 sec FP32 vs 70.20134 sec INT8; one hosted
+run only, not a controlled resource benchmark or SSC305 timing.
+
+Unlike source-verified 63 synthetic Qwen prompts, these are independent
+original read-speech recordings; however, the pre-trained vendor's training
+corpus disjointness is not established and the original audiobook text is not
+human KWS acoustic gold. Zero detections **does not mean FAR/hour=0**.
+The 660ms EOF padding per clip and stream reset differs from continuous
+household audio, so the only supported conclusion is zero observed events
+on 61.09 min of this particular segmented read-speech subset.
