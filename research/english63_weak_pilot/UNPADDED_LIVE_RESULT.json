@@ -1,0 +1,65 @@
+{
+  "schema": "english63-unpadded-event-measured-summary-v1",
+  "status": "ACTUAL_MODEL_REPLAY_VERIFIED_NOT_QUALIFIED",
+  "execution": {
+    "repository": "jiying2007/kws-data",
+    "run_id": 43546014483,
+    "url": "https://github.com/jiying2007/kws-data/actions/runs/43546014483",
+    "artifact_id": 14093802841,
+    "artifact_zip_sha256": "4f006138eb9dcc6f856ef0e61da8dcf10034904e4e683255db302775a19a62f6",
+    "machine_json_filename": "english63-unpadded-events.json",
+    "machine_json_size_bytes": 74779,
+    "machine_json_sha256": "d5cfbd295299ff8c0ee7524538e44c9755ad25a943f5178455816bc691dbe521",
+    "runner_sha256": "c183751ffeb0056a7331b05e97a583bb5dcac790c514eca9ae4ecf24e20224b8",
+    "source_code_commit": "0d68e35ee7862f781aa99533fe3dbd0b978e3a66"
+  },
+  "source": {
+    "original_audio_zip_sha256": "f180004a27ea14c0575f4dd0e2a8476ca048442c76c2dcc186ede6d731cdffcc",
+    "review_json_sha256": "89f20b7ac5a672840013b3cf780422dcf68451b6f5d618e8f494a0e5f5dc6b12",
+    "official_pretrained_model_archive_sha256": "68447f4fbc67e70eee3a93961f36e81e98f47aef73ce7e7ca00885c6cd3616a6",
+    "prior_event_artifact_sha256": "5f76390b557ab58c6d6ae131b8dad91ec232f3efb708466dcb4fc850b0eb13b5",
+    "clip_count": 63,
+    "mero_requested_clip_count": 14,
+    "other_requested_clip_count": 49,
+    "source_pcm_samples": 2101760,
+    "original_audio_regenerated": false
+  },
+  "results": {
+    "fp32_c16": {
+      "previous_with_660ms_tail": 9,
+      "prior_only_after_real_audio": 4,
+      "original_pcm_events_without_tail": 5,
+      "eof_only_events_without_padding": 0
+    },
+    "int8_c16": {
+      "previous_with_660ms_tail": 9,
+      "prior_only_after_real_audio": 4,
+      "original_pcm_events_without_tail": 5,
+      "eof_only_events_without_padding": 0
+    }
+  },
+  "original_pcm_event_cell_ids": [
+    "en-7bf087cdc987da7621cbda03",
+    "en-7f19ada0494ae743115db6bb",
+    "en-8ed1540c9784e17dc1386be7",
+    "en-c39ad4f1a36d783d9fd076cd",
+    "en-cc02c78acb21b8ba5dd7686e"
+  ],
+  "original_extra_tail_dependent_event_cell_ids": [
+    "en-09222b6705484be6fc4980e3",
+    "en-85fa95925c392bbc6abf8f20",
+    "en-968be7ea633e42194fb1951f",
+    "en-fdcb4338be92a946e4658e14"
+  ],
+  "interpretation": {
+    "main_finding": "Four of nine original source events depended on artificial 660 ms zero-valued PCM after WAV; 5 fired with original PCM only for both models.",
+    "true_end_of_word_latency_measured": false,
+    "continuous_environment_far_per_hour": "NOT_RUN",
+    "genuine_human_frr": "NOT_RUN",
+    "natural_acoustic_truth": false,
+    "ssc305_qualified": false,
+    "new_training_or_tts_or_asr": false,
+    "formal_training_admitted": false,
+    "model_promotion_allowed": false
+  }
+}
