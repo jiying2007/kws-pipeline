@@ -61,3 +61,28 @@ Mero prompts are not genuine human FRR or complete keyword recall, while
 continuous FAR/hour. End-of-word latency, accents, 3–5m microphones,
 continuous environmental speech and real target power/resource budgets
 remain NOT_RUN. Do not promote a model based on C ABI parity alone.
+
+
+## Official host shared-runtime identity correction
+
+The exact original x64 release archive (SHA256 c0bdb790...) is authentic,
+but its libsherpa-onnx-c-api.so differs from the older research host
+dependency lock. A fail-closed trial stopped before model execution.
+The source-bound read-only inner-library audit run 43547649795, artifact
+14094464166, ZIP SHA256
+23cb476839b4225075f54f6ee0caffe539ebc41c1ad636112e41c684eafd43b3
+confirmed the original official v1.13.8 members:
+
+- libsherpa-onnx-c-api.so: 5,124,192 bytes;
+  SHA256 b8351ca1632571ac108adbb317bcc4bf7cfe84b72690e3017316b0da3e1e344f
+- libonnxruntime.so: 27,026,609 bytes;
+  SHA256 4b3607aebd1784b26b6f9b20e4bd974c7ab8287043e4d095cb40b5e566e
+
+The older C API hash e50ae8... must not be silently treated as
+the original release hash. The separate research-only
+build_official_x64.py verifies the exact original parent archive AND both
+inner library files, while leaving the existing build.py and its original
+dependency lock unchanged. The research driver independently verifies
+the build receipt, matching original archive and extracted libraries
+before loading the native C API. No unpinned runtime-library substitution
+or safety-gate bypass is permitted.
