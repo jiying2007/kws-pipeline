@@ -32,6 +32,7 @@ sys.path.insert(0, str(ROOT / "research" / "english63_weak_pilot"))
 from english63_weak_pilot_cases import EnglishWeakPilotSourceCases, EnglishWeakStreamingSourceCases
 from pcm_frontend_parity_cases import EnglishPCMFrontendSourceCases
 from integrated_pcm_encoder_cases import EnglishFullChainSourceCases
+from pretrained_quant_events_cases import EnglishPretrainedQuantSourceCases
 
 
 class ThreeASRTrainerMetadataTests(unittest.TestCase):
