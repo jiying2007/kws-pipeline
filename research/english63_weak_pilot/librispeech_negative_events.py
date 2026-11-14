@@ -189,8 +189,8 @@ def execute(source_archive,model_archive,out):
             records=[]
             duration=0
             speaker_count=set()
-            counts=Counter()
-            times=Counter()
+            counts=Counter({mode:0 for mode in MODES})
+            times=Counter({mode:0.0 for mode in MODES})
             for member in picked:
                 m=NAME.fullmatch(member.name)
                 assert m is not None
