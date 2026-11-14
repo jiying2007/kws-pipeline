@@ -123,5 +123,51 @@ class EnglishContiguousSourceCases(unittest.TestCase):
             cont.verify_receipt(forged)
 
 
+    def test_actual_source_locked_contiguous_result_is_nonpromotable(self):
+        report=json.loads((HERE.parent/"ENGLISH_CONTIGUOUS_RESULT.json").read_text())
+        self.assertEqual(report["schema"],"english63-contiguous-native-c-actual-readback-summary-v1")
+        self.assertEqual(report["status"],
+                         "MEASURED_SYNTHETIC_CONTIGUOUS_HOST_KWS_EVENTS_NOT_FIELD_QUALIFICATION")
+        original=report["source"]
+        self.assertEqual(original["runner_sha256"],
+                         cont.hashlib.sha256(Path(cont.__file__).read_bytes()).hexdigest())
+        self.assertEqual(original["native_c_library_sha256"],
+                         "b43d258c127ce5e8563b81273f4f36ad7f728a9968ca46caa970c57d8f954d3e")
+        self.assertEqual(original["official_model_sha256"],cont.native.quant.MODEL_SHA)
+        self.assertEqual(original["original_audio_zip_sha256"],
+                         cont.native.quant.source.TTS_SHA256)
+        self.assertEqual(original["original_review_sha256"],
+                         cont.native.quant.source.REVIEW_SHA256)
+        self.assertEqual(original["unpadded_per_clip_baseline_zip_sha256"],
+                         cont.native.REFERENCE_ARTIFACT_SHA)
+        experiment=report["experiment"]
+        self.assertEqual(experiment["continuous_sessions"],6)
+        self.assertEqual(experiment["source_clips_per_session"],63)
+        self.assertEqual(experiment["source_audio_samples_per_session"],cont.TOTAL_SOURCE_SAMPLES)
+        self.assertEqual(experiment["ordered_variants"],list(cont.ORDERS))
+        self.assertEqual(experiment["caller_pcm_partitions"],list(cont.CHUNK_PLANS))
+        self.assertTrue(experiment["same_order_same_events_and_sample_positions_all_partitions"])
+        self.assertFalse(experiment["inserted_inter_utterance_silence"])
+        self.assertFalse(experiment["reset_between_source_clips"])
+        self.assertEqual(experiment["eof_only_event_count_each_session"],0)
+        self.assertEqual(set(report["results"]),set(cont.ORDERS))
+        for order,expected,other in (("cell_id",11,4),
+                                     ("source_family_then_requested_text",7,2)):
+            evidence=report["results"][order]
+            self.assertEqual(evidence["actual_events_per_caller_partition"],expected)
+            self.assertEqual(evidence["events_in_other_requested_source_intervals"],other)
+            self.assertEqual(evidence["events_at_exact_source_splice_boundary"],1)
+            self.assertEqual(len(evidence["event_available_sample_positions"]),expected)
+            self.assertEqual(sorted(evidence["event_available_sample_positions"]),
+                             evidence["event_available_sample_positions"])
+        lim=report["scientific_limits"]
+        self.assertTrue(lim["contiguous_source_is_synthetically_spliced_recordings"])
+        self.assertFalse(lim["requested_text_is_human_acoustic_gold"])
+        self.assertFalse(lim["other_prompt_intervals_are_confirmed_false_alarms"])
+        self.assertEqual(lim["continuous_household_FAR_per_hour"],"NOT_RUN")
+        self.assertEqual(lim["SSC305_qualified"],"NOT_RUN")
+        self.assertFalse(lim["model_promotion_allowed"])
+
+
 if __name__=="__main__":
     unittest.main()
