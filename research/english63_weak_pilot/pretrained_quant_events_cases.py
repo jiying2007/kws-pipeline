@@ -6,7 +6,9 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pretrained_quant_events as q
 
 
