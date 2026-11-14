@@ -95,7 +95,7 @@ class EnglishContiguousSourceCases(unittest.TestCase):
             lambda r:r["measurements"]["uneven__cell_id"][
                 "source_interval_boundaries"][0].__setitem__("end_sample",1234),
             lambda r:r["measurements"]["fixed320__cell_id"][
-                "ordered_cell_ids"][0:1].__setitem__(slice(None),["WRONG"]),
+                "ordered_cell_ids"].__setitem__(0,"WRONG"),
             lambda r:r["measurements"]["fixed320__cell_id"].__setitem__(
                 "event_count",1),
         )
