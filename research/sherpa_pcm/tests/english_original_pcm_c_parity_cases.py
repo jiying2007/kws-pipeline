@@ -9,6 +9,7 @@ import unittest
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE))
 import english_original_pcm_c_parity as research
+from build_official_x64 import ARCHIVE_SHA, ARCHIVE_BYTES, LIBRARIES, verify_original_archive
 
 
 class EnglishNativeMeroSourceCases(unittest.TestCase):
@@ -40,6 +41,21 @@ class EnglishNativeMeroSourceCases(unittest.TestCase):
             missing=Path(d)/"build.json"
             with self.assertRaisesRegex(ValueError,"EN_C_NATIVE_PATH"):
                 research.verify_build_receipt(fake,missing)
+
+
+    def test_original_official_x64_runtime_has_distinct_immutable_sherpa_hash(self):
+        self.assertEqual(ARCHIVE_SHA,
+                         "c0bdb7907d3a74bba1d55d22bf4d9fa75586cf1530614ebe88a27b9118e015c4")
+        self.assertEqual(ARCHIVE_BYTES,28156791)
+        self.assertEqual(LIBRARIES["libsherpa-onnx-c-api.so"],(
+            5124192,"b8351ca1632571ac108adbb317bcc4bf7cfe84b72690e3017316b0da3e1e344f"))
+        self.assertEqual(LIBRARIES["libonnxruntime.so"],(
+            27026609,"4b3607aebd1784b26b6f9b20e4bd974c7ab8287043e4d095cb7d2cb40b5e566e"))
+        with tempfile.TemporaryDirectory() as d:
+            fake=Path(d)/"official.tar.bz2"
+            fake.write_bytes(b"not-original-runtime")
+            with self.assertRaisesRegex(ValueError,"EN_C_OFFICIAL_HOST_ARCHIVE_CHANGED"):
+                verify_original_archive(fake)
 
 
 if __name__=="__main__":
