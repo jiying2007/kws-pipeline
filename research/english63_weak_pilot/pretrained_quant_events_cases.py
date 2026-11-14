@@ -128,5 +128,35 @@ class EnglishPretrainedQuantSourceCases(unittest.TestCase):
                 q.compare_receipts(paths,out)
 
 
+    def test_actual_retained_evidence_is_hash_bound_and_nonpromotable(self):
+        path=Path(q.__file__).with_name("PRETRAINED_QUANT_RESULT.json")
+        measured=json.loads(path.read_text())
+        self.assertEqual(measured["schema"],
+                         "english63-pretrained-zh-en-quant-measured-research-readback-v1")
+        self.assertEqual(measured["source"]["script_sha256"],
+                         q.sha256_bytes(Path(q.__file__).read_bytes()))
+        self.assertEqual(measured["source"]["model_archive_sha256"],q.MODEL_SHA)
+        self.assertEqual(measured["source"]["original_tts_zip_sha256"],
+                         q.source.TTS_SHA256)
+        self.assertEqual(measured["source"]["three_evidence_review_json_sha256"],
+                         q.source.REVIEW_SHA256)
+        self.assertEqual(measured["source_clips"],63)
+        self.assertEqual(measured["source_audio_samples"],2101760)
+        self.assertEqual(set(measured["measurements"]),set(q.MODES))
+        self.assertEqual(measured["measurements"]["fp32_c16"]["total_events"],9)
+        self.assertEqual(measured["measurements"]["int8_c16"]["total_events"],9)
+        self.assertEqual(measured["measurements"]["int8_c16"]
+                         ["event_count_diff_clip_count_vs_fp32_c16"],0)
+        self.assertEqual(measured["measurements"]["int8_c8"]["total_events"],8)
+        self.assertEqual(measured["measurements"]["int8_c8"]
+                         ["event_count_diff_clip_count_vs_fp32_c16"],1)
+        self.assertFalse(measured["human_gold"])
+        self.assertFalse(measured["model_promotion_allowed"])
+        self.assertFalse(measured["formal_training_admitted"])
+        self.assertEqual(measured["continuous_negative_far_per_hour"],"NOT_RUN")
+        self.assertEqual(measured["ssc305_board_profile"],"NOT_RUN")
+        self.assertEqual(measured["new_tts_asr_training_calls"],0)
+
+
 if __name__ == "__main__":
     unittest.main()
