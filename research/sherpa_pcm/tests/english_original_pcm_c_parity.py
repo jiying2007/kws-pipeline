@@ -21,6 +21,8 @@ RESEARCH=HERE.parents[1]
 ROOT=HERE.parents[2]
 sys.path.insert(0,str(RESEARCH/"english63_weak_pilot"))
 import pretrained_quant_events as quant
+sys.path.insert(0,str(HERE.parent))
+import build_official_x64 as host
 
 POLICY="english63-native-c-mero-unpadded-event-parity-v1"
 REFERENCE_ARTIFACT_SHA="4f006138eb9dcc6f856ef0e61da8dcf10034904e4e683255db302775a19a62f6"
@@ -88,12 +90,29 @@ def verify_build_receipt(native_library, receipt_path):
             } and
             all(quant.sha256_file(src_root/name)==digest for name,digest in source_files.items()),
             "EN_C_ADAPTER_SOURCE_CHANGED")
-    lib_hashes={x["filename"]:x["sha256"] for x in receipt["runtime_libraries"]}
-    required={x["filename"]:x["sha256"] for x in lock["host_runtime"]["runtime_libraries"]}
-    require(lib_hashes==required and len(receipt["runtime_libraries"])==2,
-            "EN_C_RUNTIME_DEPENDENCY_DRIFT")
-    for x in receipt["runtime_libraries"]:
-        require(quant.sha256_file(Path(x["path"]))==x["sha256"],
+    require(receipt.get("runtime_profile")==
+                "original-sherpa-v1.13.8-x64-release" and
+            receipt.get("runtime_archive_sha256")==host.ARCHIVE_SHA and
+            receipt.get("runtime_archive_bytes")==host.ARCHIVE_BYTES and
+            type(receipt.get("runtime_archive_path")) is str,
+            "EN_C_NATIVE_RUNTIME_PROFILE_DRIFT")
+    archive=Path(receipt["runtime_archive_path"])
+    host.verify_original_archive(archive)
+    expected={name:{"sha256":digest,"bytes":size}
+              for name,(size,digest) in host.LIBRARIES.items()}
+    found=receipt.get("runtime_libraries")
+    require(type(found) is list and len(found)==2 and
+            {v.get("filename") for v in found}==set(expected),
+            "EN_C_RUNTIME_LIBRARY_ROSTER")
+    for value in found:
+        name=value["filename"]
+        path=Path(value.get("path",""))
+        require(value.get("sha256")==expected[name]["sha256"] and
+                value.get("bytes")==expected[name]["bytes"] and
+                path.is_file() and not path.is_symlink() and
+                path.resolve()==(native_library.parent/"runtime"/name).resolve() and
+                path.stat().st_size==value["bytes"] and
+                quant.sha256_file(path)==value["sha256"],
                 "EN_C_RUNTIME_BINARY_CHANGED")
     return receipt
 
