@@ -1,0 +1,97 @@
+{
+  "schema": "english63-contiguous-native-c-actual-readback-summary-v1",
+  "status": "MEASURED_SYNTHETIC_CONTIGUOUS_HOST_KWS_EVENTS_NOT_FIELD_QUALIFICATION",
+  "source": {
+    "run_id": 43551611855,
+    "repository": "jiying2007/kws-data",
+    "run_url": "https://github.com/jiying2007/kws-data/actions/runs/43551611855",
+    "artifact_id": 14095938700,
+    "artifact_name": "english63-contiguous-native-kws-events",
+    "artifact_zip_sha256": "e72a9f1af5b645504f8504f97474c8a0dc337bbd90f3956407c76315bdde9bea",
+    "inner_json_filename": "english63-contiguous-native.json",
+    "inner_json_bytes": 133134,
+    "inner_json_sha256": "d9dae86d9547069063cc8adfb342ea964d63ee65940e4d92d35ce1ef49a367ab",
+    "runner_sha256": "881ec1a0c4d2f8bf4f60aa32fcc4d06f9d9ccc1ad8c38a1d65581a79aa19d39e",
+    "runner_source_commit": "54a8b2cc00309e1572542c06c16a5f17f4b04b1e",
+    "native_c_library_sha256": "b43d258c127ce5e8563b81273f4f36ad7f728a9968ca46caa970c57d8f954d3e",
+    "official_model_sha256": "68447f4fbc67e70eee3a93961f36e81e98f47aef73ce7e7ca00885c6cd3616a6",
+    "original_audio_zip_sha256": "f180004a27ea14c0575f4dd0e2a8476ca048442c76c2dcc186ede6d731cdffcc",
+    "original_review_sha256": "89f20b7ac5a672840013b3cf780422dcf68451b6f5d618e8f494a0e5f5dc6b12",
+    "unpadded_per_clip_baseline_zip_sha256": "4f006138eb9dcc6f856ef0e61da8dcf10034904e4e683255db302775a19a62f6"
+  },
+  "experiment": {
+    "keyword": "HEY_MERO",
+    "c_callback_id": 3,
+    "pretrained_model_mode": "int8_c16",
+    "source_clips_per_session": 63,
+    "source_audio_samples_per_session": 2101760,
+    "source_audio_seconds_per_session": 131.36,
+    "continuous_sessions": 6,
+    "ordered_variants": [
+      "cell_id",
+      "source_family_then_requested_text"
+    ],
+    "caller_pcm_partitions": [
+      "fixed320",
+      "network1600",
+      "uneven"
+    ],
+    "exact_pcm_original_reused": true,
+    "inserted_inter_utterance_silence": false,
+    "reset_between_source_clips": false,
+    "eof_only_event_count_each_session": 0,
+    "same_order_same_events_and_sample_positions_all_partitions": true,
+    "host_process_peak_rss_kib_including_Python": 97504
+  },
+  "results": {
+    "cell_id": {
+      "actual_events_per_caller_partition": 11,
+      "events_in_requested_Hey_Mero_source_intervals": 7,
+      "events_in_other_requested_source_intervals": 4,
+      "events_at_exact_source_splice_boundary": 1,
+      "event_available_sample_positions": [
+        683520,
+        821760,
+        1031680,
+        1067520,
+        1169920,
+        1226240,
+        1333760,
+        1646080,
+        1681920,
+        1896960,
+        2065920
+      ],
+      "host_loop_wall_sec_fixed320": 1.605973
+    },
+    "source_family_then_requested_text": {
+      "actual_events_per_caller_partition": 7,
+      "events_in_requested_Hey_Mero_source_intervals": 5,
+      "events_in_other_requested_source_intervals": 2,
+      "events_at_exact_source_splice_boundary": 1,
+      "event_available_sample_positions": [
+        38400,
+        243200,
+        386560,
+        949760,
+        1062400,
+        1487360,
+        1999360
+      ],
+      "host_loop_wall_sec_fixed320": 1.606734
+    }
+  },
+  "scientific_limits": {
+    "contiguous_source_is_synthetically_spliced_recordings": true,
+    "mixed_train_development_roles_reused_for_diagnostic_only": true,
+    "requested_text_is_human_acoustic_gold": false,
+    "other_prompt_intervals_are_confirmed_false_alarms": false,
+    "event_latency_from_true_word_end_measured": false,
+    "continuous_household_FAR_per_hour": "NOT_RUN",
+    "independent_human_Frr": "NOT_RUN",
+    "authentic_accent_far_field_test": "NOT_RUN",
+    "SSC305_qualified": "NOT_RUN",
+    "no_new_TTS_ASR_or_training": true,
+    "model_promotion_allowed": false
+  }
+}

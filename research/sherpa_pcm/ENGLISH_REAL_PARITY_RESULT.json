@@ -1,0 +1,72 @@
+{
+  "schema": "english63-actual-native-c-int8-parity-readback-v1",
+  "status": "SOURCE_VERIFIED_HOST_NATIVE_C_RESEARCH_EXECUTION_NOT_QUALIFIED",
+  "evidence": {
+    "data_run_id": 43547980797,
+    "data_run_url": "https://github.com/jiying2007/kws-data/actions/runs/43547980797",
+    "data_artifact_id": 14094504790,
+    "data_artifact_zip_sha256": "c1a0a60f517bee59e1900306df66fe652b9674ca437486075d3a60c915a027cc",
+    "original_json_member": "native-original-mero-result.json",
+    "original_json_member_sha256": "14bdee27275094a9e6074269e6376a4ef1771fbb34cb53ebfbfdd73393136b1a",
+    "original_build_receipt_member": "native/build-receipt.json",
+    "original_build_receipt_sha256": "2174c524705f61fe2977b71c70eccdc6de9a6d5745c42053febf6af505697c7d",
+    "pinned_pipeline_source_commit": "771d081f7a853d523838b575b16bcd723a2f7a46",
+    "c_adapter_source_sha256": "20ce55eea29e52efa3b33a3f5069f55cb6581478644f19f2b6fdd331b93807dd",
+    "real_c_parity_runner_sha256": "819f006a16fbd9a2f1827db19cd35a83b030573b1f0735d0bf52cf0700eab25d",
+    "built_native_adapter_sha256": "b43d258c127ce5e8563b81273f4f36ad7f728a9968ca46caa970c57d8f954d3e",
+    "official_host_release_sha256": "c0bdb7907d3a74bba1d55d22bf4d9fa75586cf1530614ebe88a27b9118e015c4",
+    "official_host_c_api_sha256": "b8351ca1632571ac108adbb317bcc4bf7cfe84b72690e3017316b0da3e1e344f",
+    "official_host_ort_sha256": "4b3607aebd1784b26b6f9b20e4bd974c7ab8287043e4d095cb7d2cb40b5e566e",
+    "official_model_archive_sha256": "68447f4fbc67e70eee3a93961f36e81e98f47aef73ce7e7ca00885c6cd3616a6",
+    "original_qwen_audio_zip_sha256": "f180004a27ea14c0575f4dd0e2a8476ca048442c76c2dcc186ede6d731cdffcc",
+    "original_review_json_sha256": "89f20b7ac5a672840013b3cf780422dcf68451b6f5d618e8f494a0e5f5dc6b12",
+    "unpadded_python_baseline_zip_sha256": "4f006138eb9dcc6f856ef0e61da8dcf10034904e4e683255db302775a19a62f6"
+  },
+  "experiment": {
+    "source_original_synthetic_pcm16_clips": 63,
+    "model": "official-zh-en-3m-int8-encoder-joiner-c16-fp32-decoder",
+    "keyword_alias": "HEY_MERO",
+    "event_id": 3,
+    "no_artificial_tail": true,
+    "input_partition_patterns": [
+      "fixed320",
+      "network1600",
+      "uneven"
+    ],
+    "all_patterns_same_source_cell_event_counts": true,
+    "per_pattern_actual_events": 5,
+    "per_pattern_baseline_python_events": 5,
+    "per_pattern_changed_event_count_cells": 0,
+    "per_pattern_eof_flush_events": 0,
+    "source_wake_clip_ids": [
+      "en-7bf087cdc987da7621cbda03",
+      "en-7f19ada0494ae743115db6bb",
+      "en-8ed1540c9784e17dc1386be7",
+      "en-c39ad4f1a36d783d9fd076cd",
+      "en-cc02c78acb21b8ba5dd7686e"
+    ],
+    "per_pattern_event_sample_availability": [
+      38400,
+      28160,
+      28160,
+      23040,
+      28160
+    ],
+    "host_loop_elapsed_seconds": {
+      "fixed320": 1.397616,
+      "network1600": 1.378256,
+      "uneven": 1.409235
+    },
+    "host_process_peak_rss_kib_includes_python": 101808
+  },
+  "limits": {
+    "model_or_source_modified": false,
+    "human_gold": false,
+    "formal_training_admitted": false,
+    "independent_human_frr": "NOT_RUN",
+    "continuous_household_far_per_hour": "NOT_RUN",
+    "true_end_of_word_latency": "NOT_RUN",
+    "true_ssc305_arm_board": "NOT_RUN",
+    "final_model_promotion_allowed": false
+  }
+}

@@ -2,6 +2,8 @@
 import json,pathlib,tempfile,types,unittest
 from unittest.mock import patch
 import parity_inputs as g
+from english_original_pcm_c_parity_cases import EnglishNativeMeroSourceCases
+from english_contiguous_pcm_c_cases import EnglishContiguousSourceCases
 class Guards(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.r=pathlib.Path(self.tmp.name);self.src=self.r/'src';self.src.mkdir();self.data=self.r/'data';self.data.mkdir();(self.data/'x.wav').write_bytes(b'fixture')
