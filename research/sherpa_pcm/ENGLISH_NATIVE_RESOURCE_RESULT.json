@@ -1,0 +1,88 @@
+{
+  "schema": "english63-native-C-only-resource-measured-summary-v1",
+  "status": "ACTUAL_NATIVE_HOST_KWS_PROFILE_SOURCE_LOCKED_NOT_SSC305",
+  "source": {
+    "run_id": 43569419467,
+    "url": "https://github.com/jiying2007/kws-data/actions/runs/43569419467",
+    "data_one_shot_pr": 119,
+    "artifact_id": 14103930651,
+    "artifact_name": "english63-native-C-only-resource-profile",
+    "artifact_zip_sha256": "f349fd8c8f55533a8b1cb8e9545bf481c69fb7ac7b1df4a92d28032bf644c9e8",
+    "original_machine_receipt_name": "english63-native-C-only-profile.json",
+    "original_machine_receipt_bytes": 2587,
+    "original_machine_receipt_sha256": "676fe3304d916d5612d91a31790320ec77918ede2a3b42ffeb6c994be689b012",
+    "source_commit": "18bda33b9de4f82d18a093f1e7d668be5b3f9f14",
+    "source_parent_runner_sha256": "4e8fdebbf46e894b6861c7b906178b78d66f04d2cc51c17bf9c722fe4c3ae294",
+    "source_profiler_C_sha256": "1e9740350bec2d8a06d4cb5e751aa0988d903ba0684c2badf6a30ce7b40589e3",
+    "compiled_standalone_C_profiler_sha256": "d735c0cb08264e8d3603b7ba8e223b23a9cf3445bc96cf079d4a19a8189a93ee",
+    "native_adapter_sha256": "b43d258c127ce5e8563b81273f4f36ad7f728a9968ca46caa970c57d8f954d3e",
+    "official_host_release_sha256": "c0bdb7907d3a74bba1d55d22bf4d9fa75586cf1530614ebe88a27b9118e015c4",
+    "original_model_archive_sha256": "68447f4fbc67e70eee3a93961f36e81e98f47aef73ce7e7ca00885c6cd3616a6",
+    "original_audio_zip_sha256": "f180004a27ea14c0575f4dd0e2a8476ca048442c76c2dcc186ede6d731cdffcc",
+    "original_review_json_sha256": "89f20b7ac5a672840013b3cf780422dcf68451b6f5d618e8f494a0e5f5dc6b12"
+  },
+  "experiment": {
+    "host": "Linux x86_64",
+    "model": "official-zh-en-3m-INT8-c16-FP32-decoder",
+    "keyword": "HEY_MERO",
+    "C_callback_keyword_id": 3,
+    "source_recordings": 63,
+    "source_pcm_samples": 2101760,
+    "source_audio_sec": 131.36,
+    "actual_native_keyword_events": 5,
+    "unexpected_keyword_events": 0,
+    "events_emitted_from_eof_only": 0,
+    "actual_C_pcm_feed_calls": 6568,
+    "chunk_audio_samples_at_most": 320,
+    "chunk_nominal_duration_ms": 20,
+    "feed_wall_time_over_own_chunk_duration": 0,
+    "model_3files_bytes": {
+      "encoder": 4599656,
+      "decoder": 759829,
+      "joiner": 86629
+    },
+    "model_weights_only_bytes": 5446114,
+    "source_audio_regenerated": false,
+    "readback_original_wav_and_pcm_hashes_verified": true,
+    "no_python_runtime_or_audio_array_in_measured_child": true
+  },
+  "host_native_measurements": {
+    "rss_kib_before_model_create": 17568,
+    "rss_kib_after_model_create": 52340,
+    "rss_kib_after_original_PCM_replay": 57720,
+    "rss_kib_peak_process": 57720,
+    "model_create_process_RSS_increment_kib_approx": 34772,
+    "wall_pcm_feed_ms": {
+      "p50": 0.014954,
+      "p95": 3.423519,
+      "p99": 3.561917,
+      "max": 5.971256,
+      "sum": 1341.303292
+    },
+    "cpu_pcm_feed_ms": {
+      "p50": 0.014696,
+      "p95": 3.422283,
+      "p99": 3.560257,
+      "max": 5.970135,
+      "sum": 1339.160119
+    },
+    "host_cpu_seconds_per_audio_second_feed_only": 0.010194581,
+    "rss_is_complete_process_not_model_tensor_only": true,
+    "host_single_execution_not_statistically_repeated_benchmark": true
+  },
+  "limits": {
+    "cpu_architecture_differs_from_SSC305": true,
+    "hardware_audio_io_interrupt_and_task_scheduling_not_included": true,
+    "native_model_create_included_in_feed_latency": false,
+    "preprocessing_from_device_capture_not_included": true,
+    "host_20ms_feed_deadline_not_target_realtime_qualification": true,
+    "SSC305_BSP_sysroot_loader_abi_cpu_rss": "NOT_RUN",
+    "independent_english_human_positive_FRR": "NOT_RUN",
+    "continuous_household_background_FAR_per_hour": "NOT_RUN",
+    "end_of_word_to_event_latency_p99": "NOT_RUN",
+    "trained_new_Model_weights": false,
+    "model_selected_for_deployment": false,
+    "new_TTS_ASR_or_training_calls": 0,
+    "model_promotion_allowed": false
+  }
+}
