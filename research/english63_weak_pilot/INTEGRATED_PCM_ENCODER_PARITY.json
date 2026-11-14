@@ -1,0 +1,80 @@
+{
+  "continuous_negative_far_per_hour": "NOT_RUN",
+  "continuous_wake_event_tested": false,
+  "exposed_development_role": 12,
+  "formal_training_admitted": false,
+  "human_gold": false,
+  "independent_english_frr": "NOT_RUN",
+  "model_promotion_allowed": false,
+  "model_selection_made": false,
+  "models": [
+    {
+      "changed_final_classes": 0,
+      "chunk_samples": [
+        159,
+        160,
+        161,
+        1600,
+        3199
+      ],
+      "clip_count": 63,
+      "continuous_event_or_far": false,
+      "final_clip_only": true,
+      "kind": "gru",
+      "max_abs_logit_diff_by_chunk": {
+        "159": 8.940696716308594e-07,
+        "160": 8.940696716308594e-07,
+        "1600": 8.046627044677734e-07,
+        "161": 8.344650268554688e-07,
+        "3199": 7.152557373046875e-07
+      },
+      "model_promotion_allowed": false,
+      "streamed_clip_comparisons": 315,
+      "weights_sha256": "142a02b4fc0b6c6ec3b404e85bcc5383e17c4551f15341c386c61bf99740d54f"
+    },
+    {
+      "changed_final_classes": 0,
+      "chunk_samples": [
+        159,
+        160,
+        161,
+        1600,
+        3199
+      ],
+      "clip_count": 63,
+      "continuous_event_or_far": false,
+      "final_clip_only": true,
+      "kind": "dsc_tcn",
+      "max_abs_logit_diff_by_chunk": {
+        "159": 5.960464477539062e-07,
+        "160": 5.960464477539062e-07,
+        "1600": 4.172325134277344e-07,
+        "161": 5.960464477539062e-07,
+        "3199": 2.980232238769531e-07
+      },
+      "model_promotion_allowed": false,
+      "streamed_clip_comparisons": 315,
+      "weights_sha256": "42ed3f8479b30aec4e639e59075beac60ad84e242dbedbb601d2bc362d403971"
+    }
+  ],
+  "nearphone_quarantined": 21,
+  "new_audio_or_asr_generated": false,
+  "optimizer_updates": 0,
+  "runner_sha256": "37a1887e5822d73bb9f6c681d93feb4cceb383412406c6c5627bbd345caa944f",
+  "runtime": {
+    "numpy": "2.3.5",
+    "python": "3.13.18",
+    "torch": "2.10.0+cpu"
+  },
+  "saved_frontend_script_sha256": "693a282d490c2d2a7f8468a4ed9ae569f2c8b0dde3bc4714001ed537520a12ae",
+  "saved_streaming_encoder_script_sha256": "e53f23ee5a2ade0f33b8ac21f4ac67bcc8338d8b3f9a378c980ce312f19d87f0",
+  "saved_training_script_sha256": "4ffa8b8c700b3d1413711be2a2329767dfc9bbdee13b77ca990a2c22a64e0719",
+  "schema": "english63-original-pcm-to-saved-encoder-final-logit-parity-v1",
+  "source_audio_clips": 63,
+  "source_review_json_sha256": "89f20b7ac5a672840013b3cf780422dcf68451b6f5d618e8f494a0e5f5dc6b12",
+  "source_tts_zip_sha256": "f180004a27ea14c0575f4dd0e2a8476ca048442c76c2dcc186ede6d731cdffcc",
+  "ssc305_board_qualification": "NOT_RUN",
+  "status": "MEASURED_WEAK_ORIGINAL_PCM_END_LOGITS_NOT_CONTINUOUS_KWS",
+  "threshold_selection": false,
+  "weak_train_role": 30
+}
