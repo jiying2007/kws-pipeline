@@ -23,7 +23,7 @@ static void drain(PcmKws*x,bool eof){
   if(!r)throw std::runtime_error("null keyword result");
   std::unique_ptr<const SherpaOnnxKeywordResult,decltype(&SherpaOnnxDestroyKeywordResult)> holder(r,SherpaOnnxDestroyKeywordResult);
   if(r->keyword&&r->keyword[0]){
-   int id=!std::strcmp(r->keyword,"你好小窝")?1:(!std::strcmp(r->keyword,"小窝小窝")?2:0);
+   int id=!std::strcmp(r->keyword,"你好小窝")?1:(!std::strcmp(r->keyword,"小窝小窝")?2:(!std::strcmp(r->keyword,"HEY_MERO")?3:0));
    PcmKwsEvent e{r->keyword,id,x->fed,int(eof)};
    if(x->callback)x->callback(x->user,&e);
    SherpaOnnxResetKeywordStream(x->model,x->stream);
