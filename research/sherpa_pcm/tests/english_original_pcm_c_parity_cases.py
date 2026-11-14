@@ -58,5 +58,40 @@ class EnglishNativeMeroSourceCases(unittest.TestCase):
                 verify_original_archive(fake)
 
 
+    def test_retained_actual_native_model_receipt_is_hash_bound_and_nonpromotable(self):
+        import json
+        manifest=json.loads((HERE.parent/"ENGLISH_REAL_PARITY_RESULT.json").read_text())
+        self.assertEqual(manifest["schema"],
+                         "english63-actual-native-c-int8-parity-readback-v1")
+        self.assertEqual(manifest["status"],
+                         "SOURCE_VERIFIED_HOST_NATIVE_C_RESEARCH_EXECUTION_NOT_QUALIFIED")
+        observed=manifest["evidence"]
+        self.assertEqual(observed["c_adapter_source_sha256"],
+                         research.sha((HERE.parent/"pcm_kws.cc").read_bytes()))
+        self.assertEqual(observed["real_c_parity_runner_sha256"],
+                         research.sha(Path(research.__file__).read_bytes()))
+        self.assertEqual(observed["official_model_archive_sha256"],research.quant.MODEL_SHA)
+        self.assertEqual(observed["official_host_release_sha256"],ARCHIVE_SHA)
+        self.assertEqual(observed["original_qwen_audio_zip_sha256"],research.quant.source.TTS_SHA256)
+        self.assertEqual(observed["unpadded_python_baseline_zip_sha256"],
+                         research.REFERENCE_ARTIFACT_SHA)
+        d=manifest["experiment"]
+        self.assertEqual(d["source_original_synthetic_pcm16_clips"],63)
+        self.assertEqual(len(d["input_partition_patterns"]),3)
+        self.assertEqual(len(d["source_wake_clip_ids"]),5)
+        self.assertEqual(len(set(d["source_wake_clip_ids"])),5)
+        self.assertTrue(d["all_patterns_same_source_cell_event_counts"])
+        self.assertEqual(d["per_pattern_actual_events"],5)
+        self.assertEqual(d["per_pattern_baseline_python_events"],5)
+        self.assertEqual(d["per_pattern_changed_event_count_cells"],0)
+        self.assertEqual(d["per_pattern_eof_flush_events"],0)
+        self.assertEqual(d["event_id"],3)
+        self.assertTrue(d["no_artificial_tail"])
+        self.assertFalse(manifest["limits"]["human_gold"])
+        self.assertFalse(manifest["limits"]["final_model_promotion_allowed"])
+        self.assertEqual(manifest["limits"]["continuous_household_far_per_hour"],"NOT_RUN")
+        self.assertEqual(manifest["limits"]["true_ssc305_arm_board"],"NOT_RUN")
+
+
 if __name__=="__main__":
     unittest.main()
