@@ -59,3 +59,35 @@ the official phoneme lexicon and is not tested; do not invent pronunciation.
 The event readout cannot establish genuine end-of-word latency, SSC305
 A32 CPU/RAM or an English research model winner. The fixed-policy INT8
 candidate must not be promoted solely on host runtime or smaller files.
+
+
+## Executed original-source outcome (2026-11-14)
+
+Source-owning GitHub Actions run:
+https://github.com/jiying2007/kws-data/actions/runs/43537391922 (success).
+Artifact ID 14090411896, ZIP SHA256
+5f76390b557ab58c6d6ae131b8dad91ec232f3efb708466dcb4fc850b0eb13b5.
+Original JSON SHA256 values, source/program commits and measured aggregates
+are retained in PRETRAINED_QUANT_RESULT.json. This exact artifact was
+independently downloaded and read back, not inferred from CI setup logs.
+
+| Original pretrained mode | Events on Mero-requested 14 | Other-requested 49 | Model components | Host loop wall | Process peak RSS |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| FP32 / chunk16 | 9 | 0 | 13,074,255 B | 3.271188 s | 105,448 KiB |
+| INT8 / chunk16 | 9 | 0 | 5,446,114 B | 2.871730 s | 100,708 KiB |
+| INT8 / chunk8 | 8 | 0 | 5,447,115 B | 3.930516 s | 97,788 KiB |
+
+INT8/chunk16 has zero per-clip event-count changes versus FP32/chunk16 on
+this source. This is a **measured screening outcome**, not independent accuracy.
+INT8/chunk8 missed one event on cell en-85fa95925c392bbc6abf8f20
+(the Qwen synthetic Eric requested Hey, Mero!). It is rejected for this
+next research step, not globally proven inferior.
+
+INT8/chunk16 is the **next research candidate** for host and Cortex-A32
+runtime validation, NOT a deployable/promotable winner. A one-off host wall
+time reduction is not a controlled repeated-performance benchmark.
+The process RSS includes model loading/setup and Python, and the official
+chunk sizes describe architecture latency constraints, not actual
+end-of-word trigger latency. Genuine continuous FAR/hour, independent
+human FRR, multi-accent/far-field 3–5m and SSC305 resource qualification
+remain NOT_RUN. No unverified nearphones were treated as certified negatives.
