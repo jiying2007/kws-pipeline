@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 84263,
-      "git_blob_sha1": "18cc89f720fca4dc60e8b1f97769a333e5e5b47e",
-      "sha256": "2d9a09d208c033ef80e95e7e23689ef1b14d8be66bda06af4e0519e6b3d258b8"
+      "bytes": 84633,
+      "git_blob_sha1": "c464e23d5d7d8a420fc75fe3fb9addc40e7658d7",
+      "sha256": "571cfde47925f6eae030520c9680fd46c5ae5e874f9a2c8287ca4932f3d520e8"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -51693,6 +51693,35 @@
             "bytes": 28702,
             "git_blob_sha1": "de2e75c5f1f1cc186fb84bade5b94e538ca64993",
             "sha256": "d87c16f21c5ca2ffc5b8b40f09d842ef87944c23547f9bd490bcd5325a870b28"
+          }
+        }
+      ]
+    },
+    {
+      "id": "english-online-c-source-checks-20261114",
+      "date": "2026-11-14",
+      "base_commit": "b0e4d32dae9a8108fb115f3a154dea0760f20f1e",
+      "public_source_commit": "b09d1436fb05fce6bf1548cb8127f84566d64ee7",
+      "previous_manifest_sha256": "9bfee0020d64846a989499e83cc228895873d15e8597552d15f6f08e204dcd4c",
+      "workflow_source_changed": true,
+      "scope": "Record the five-line GCC/Clang invented-weight C source-check addition in PR #808.",
+      "rationale": "The initial CI failed because the current ci.yml identity was stale. Preserve the original 718 files/provenance and all prior maintenance entries; update only the current workflow identity and append this receipt. No validator, historical source, training, audio, threshold or model weight changes.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 84263,
+            "git_blob_sha1": "18cc89f720fca4dc60e8b1f97769a333e5e5b47e",
+            "sha256": "2d9a09d208c033ef80e95e7e23689ef1b14d8be66bda06af4e0519e6b3d258b8"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 84633,
+            "git_blob_sha1": "c464e23d5d7d8a420fc75fe3fb9addc40e7658d7",
+            "sha256": "571cfde47925f6eae030520c9680fd46c5ae5e874f9a2c8287ca4932f3d520e8"
           }
         }
       ]
