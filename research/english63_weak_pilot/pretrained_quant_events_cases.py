@@ -10,6 +10,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pretrained_quant_events as q
+from librispeech_negative_cases import EnglishNaturalSpeechSourceCases
 
 
 def synthetic_result(mode):
@@ -45,7 +46,7 @@ def synthetic_result(mode):
     }
 
 
-class EnglishPretrainedQuantSourceCases(unittest.TestCase):
+class EnglishPretrainedQuantSourceCases(EnglishNaturalSpeechSourceCases):
     def test_fixed_quant_variants_and_official_lexicon_contract(self):
         self.assertEqual(list(q.MODES), ["fp32_c16","int8_c16","int8_c8"])
         names = {m:q.model_component_names(m) for m in q.MODES}
