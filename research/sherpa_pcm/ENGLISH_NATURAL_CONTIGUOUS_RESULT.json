@@ -1,0 +1,106 @@
+{
+  "schema": "english-natural-read-speech-contiguous-native-readback-summary-v1",
+  "status": "MEASURED_CONTIGUOUS_REAL_AUDIOBOOK_NATIVE_C_RESEARCH_ONLY",
+  "provenance": {
+    "actions_repository": "jiying2007/kws-data",
+    "run_id": 43561538859,
+    "run_url": "https://github.com/jiying2007/kws-data/actions/runs/43561538859",
+    "ephemeral_execution_pr": 118,
+    "artifact_id": 14100332962,
+    "artifact_zip_sha256": "4ebdfb5dd9fbf7f882497b17d178dcc527bdfadb761bf05b014dea8fe08728d2",
+    "original_result_member": "english-natural-uninterrupted-native.json",
+    "original_result_sha256": "f4a44e3b91e148832becd9f486be7a4cc97d1693bc42cb0cd8f8f4fd8ed6dca5",
+    "original_result_bytes": 224834,
+    "original_runner_script_sha256": "ec5d4336a3f1d67a200826c9b75b81f7bb3325943376d3cd36b6c08578e55e07",
+    "source_commit": "658955dcddd8e6e782b295b469e0eed6050eddb5",
+    "native_library_sha256": "b43d258c127ce5e8563b81273f4f36ad7f728a9968ca46caa970c57d8f954d3"
+  },
+  "source": {
+    "dataset": "OpenSLR-SLR12-LibriSpeech-dev-clean",
+    "license": "CC-BY-4.0",
+    "original_corpus_sha256": "76f87d090650617fca0cac8f88b9416e0ebf80350acb97b343a85fa903728ab3",
+    "prior_segmented_actions_receipt_sha256": "7f28b4eddbee87435b9dc5b4c44e47a6d6ed200cbf9f4b8688d9b93cabeb4db4",
+    "prior_segmented_original_json_sha256": "788a1b04b9ecb22fb96d4036d19456f460ce3ccecd4da69d53d96fea53b29510",
+    "model_archive_sha256": "68447f4fbc67e70eee3a93961f36e81e98f47aef73ce7e7ca00885c6cd3616a6",
+    "original_host_archive_sha256": "c0bdb7907d3a74bba1d55d22bf4d9fa75586cf1530614ebe88a27b9118e015c4",
+    "original_utterances_per_session": 517,
+    "source_speakers": 40,
+    "original_samples_per_session": 58646164,
+    "source_audio_seconds_per_session": 3665.38525,
+    "source_audio_hours_per_session": 1.0181625694444445,
+    "original_flac_and_transcript_sha_verified_for_every_record": true
+  },
+  "fixed_experiment": {
+    "C_event_keyword": "HEY_MERO",
+    "C_event_id": 3,
+    "original_INT8_chunk16_encoder_joiner_FP32_decoder": true,
+    "decoder_threshold": 0.25,
+    "decoder_score": 1,
+    "CPU_threads": 1,
+    "input_pcm_sample_rate": 16000,
+    "orders": [
+      "source_member",
+      "speaker_round_robin"
+    ],
+    "caller_partitions": [
+      "fixed320",
+      "network1600"
+    ],
+    "uninterrupted_sessions": 4,
+    "no_silence_inserted_between_original_recordings": true,
+    "no_stream_reset_between_original_recordings": true,
+    "exact_original_source_reused": true,
+    "whole_source_audio_hours_replayed_sum": 4.072650277777778,
+    "independent_audio_hours_counted_once": 1.0181625694444445
+  },
+  "sessions": {
+    "fixed320__source_member": {
+      "observed_hey_mero_events": 0,
+      "eof_only_events": 0,
+      "source_boundary_near_200ms_events": 0,
+      "host_C_loop_wall_seconds_excluding_model_and_FLAC_load": 49.15344,
+      "order_sha256": "f2e3ad1696e29e01de53f99e1e6e674fdec745e4ef1ac8c295c873fcce3c5905"
+    },
+    "fixed320__speaker_round_robin": {
+      "observed_hey_mero_events": 0,
+      "eof_only_events": 0,
+      "source_boundary_near_200ms_events": 0,
+      "host_C_loop_wall_seconds_excluding_model_and_FLAC_load": 48.86146,
+      "order_sha256": "92e91a8ad7ba66a9365568af852360e9f2e3864c194e1925fb442a1c8edf1f95"
+    },
+    "network1600__source_member": {
+      "observed_hey_mero_events": 0,
+      "eof_only_events": 0,
+      "source_boundary_near_200ms_events": 0,
+      "host_C_loop_wall_seconds_excluding_model_and_FLAC_load": 48.48618,
+      "order_sha256": "f2e3ad1696e29e01de53f99e1e6e674fdec745e4ef1ac8c295c873fcce3c5905"
+    },
+    "network1600__speaker_round_robin": {
+      "observed_hey_mero_events": 0,
+      "eof_only_events": 0,
+      "source_boundary_near_200ms_events": 0,
+      "host_C_loop_wall_seconds_excluding_model_and_FLAC_load": 48.59999,
+      "order_sha256": "92e91a8ad7ba66a9365568af852360e9f2e3864c194e1925fb442a1c8edf1f95"
+    }
+  },
+  "host_profile": {
+    "peak_process_rss_kib_includes_preloaded_517_FLAC_PCM_and_Python": 434196,
+    "profile_is_not_native_model_only_memory": true,
+    "single_host_execution_not_controlled_multirun_benchmark": true,
+    "SSC305_board_CPU_memory_p99": "NOT_RUN"
+  },
+  "scientific_limits": {
+    "synthetic_audio_generation_performed": false,
+    "natural_read_speech_source_disjoint_from_audited_Qwen_synthetic": true,
+    "training_source_disjointness_of_official_pretrained_model": "NOT_ESTABLISHED",
+    "original_audiobook_transcripts_are_human_wake_acoustic_gold": false,
+    "continuous_audio_is_artificially_concatenated": true,
+    "authentic_household_noise_and_reverb": "NOT_RUN",
+    "genuine_human_english_wake_FRR": "NOT_RUN",
+    "genuine_household_continuous_far_per_hour": "NOT_RUN",
+    "actual_word_end_to_event_latency_p99": "NOT_RUN",
+    "SSC305_board_qualification": "NOT_RUN",
+    "model_promoted": false,
+    "new_audio_TTS_ASR_or_model_training_calls": 0
+  }
+}
