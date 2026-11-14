@@ -72,6 +72,10 @@ class EnglishNativeMeroSourceCases(unittest.TestCase):
                          research.sha(Path(research.__file__).read_bytes()))
         self.assertEqual(observed["official_model_archive_sha256"],research.quant.MODEL_SHA)
         self.assertEqual(observed["official_host_release_sha256"],ARCHIVE_SHA)
+        self.assertEqual(observed["official_host_c_api_sha256"],
+                         LIBRARIES["libsherpa-onnx-c-api.so"][1])
+        self.assertEqual(observed["official_host_ort_sha256"],
+                         LIBRARIES["libonnxruntime.so"][1])
         self.assertEqual(observed["original_qwen_audio_zip_sha256"],research.quant.source.TTS_SHA256)
         self.assertEqual(observed["unpadded_python_baseline_zip_sha256"],
                          research.REFERENCE_ARTIFACT_SHA)
