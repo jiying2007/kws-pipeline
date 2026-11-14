@@ -82,9 +82,37 @@
       "duration_seconds": 3665.38525,
       "event_count": 0,
       "continuous_household_far": false
+    },
+    "contiguous_unreset_native_pcm": {
+      "run_id": 43551611855,
+      "artifact_id": 14095938700,
+      "artifact_zip_sha256": "e72a9f1af5b645504f8504f97474c8a0dc337bbd90f3956407c76315bdde9bea",
+      "original_json_sha256": "d9dae86d9547069063cc8adfb342ea964d63ee65940e4d92d35ce1ef49a367ab",
+      "sessions": 6,
+      "original_audio_clips_per_session": 63,
+      "source_samples_per_session": 2101760,
+      "no_reset_between_clips": true,
+      "no_extra_silence": true,
+      "all_three_partitions_identical_per_order": true,
+      "event_count_by_source_order": {
+        "cell_id": 11,
+        "voice_then_requested_text": 7
+      },
+      "events_in_other_prompt_intervals_by_source_order": {
+        "cell_id": 4,
+        "voice_then_requested_text": 2
+      },
+      "source_splice_boundary_events_by_source_order": {
+        "cell_id": 1,
+        "voice_then_requested_text": 1
+      },
+      "field_false_alarm_classification": "NOT_RUN_AND_NOT_AUTHENTICATED",
+      "decoder_context_sensitivity_observed": true,
+      "model_promotion_allowed": false
     }
   },
   "pending_gates": [
+    "independent continuous connected-speech event and cross-boundary replay with authenticated positive/negative labels; synthetic concatenation is context sensitive",
     "independent genuine English positive voice and pronunciation review",
     "far-field 3–5m acoustic capture across accents, devices and rooms",
     "multi-hour continuous household background false-wake event measurement",
