@@ -100,5 +100,40 @@ class EnglishUnpaddedTimingSourceCases(unittest.TestCase):
                 timing.source_locked_baselines(path)
 
 
+    def test_actual_original_event_receipt_is_hash_bound_and_nonpromotable(self):
+        report=json.loads((HERE/"UNPADDED_LIVE_RESULT.json").read_text())
+        self.assertEqual(report["schema"],
+                         "english63-unpadded-event-measured-summary-v1")
+        self.assertEqual(report["status"],
+                         "ACTUAL_MODEL_REPLAY_VERIFIED_NOT_QUALIFIED")
+        self.assertEqual(report["execution"]["runner_sha256"],
+                         timing.sha(Path(timing.__file__).read_bytes()))
+        self.assertEqual(report["source"]["original_audio_zip_sha256"],
+                         timing.original.source.TTS_SHA256)
+        self.assertEqual(report["source"]["review_json_sha256"],
+                         timing.original.source.REVIEW_SHA256)
+        self.assertEqual(report["source"]["official_pretrained_model_archive_sha256"],
+                         timing.original.MODEL_SHA)
+        self.assertEqual(report["source"]["prior_event_artifact_sha256"],
+                         timing.BASELINE_ARTIFACT_SHA)
+        self.assertEqual(report["source"]["clip_count"],63)
+        self.assertEqual(report["source"]["source_pcm_samples"],2101760)
+        self.assertEqual(len(report["original_pcm_event_cell_ids"]),5)
+        self.assertEqual(len(report["original_extra_tail_dependent_event_cell_ids"]),4)
+        self.assertFalse(set(report["original_pcm_event_cell_ids"]) &
+                         set(report["original_extra_tail_dependent_event_cell_ids"]))
+        for mode in timing.MODES:
+            numbers=report["results"][mode]
+            self.assertEqual(numbers["previous_with_660ms_tail"],9)
+            self.assertEqual(numbers["prior_only_after_real_audio"],4)
+            self.assertEqual(numbers["original_pcm_events_without_tail"],5)
+            self.assertEqual(numbers["eof_only_events_without_padding"],0)
+        self.assertFalse(report["interpretation"]["model_promotion_allowed"])
+        self.assertFalse(report["interpretation"]["natural_acoustic_truth"])
+        self.assertEqual(report["interpretation"]["continuous_environment_far_per_hour"],
+                         "NOT_RUN")
+        self.assertFalse(report["interpretation"]["true_end_of_word_latency_measured"])
+
+
 if __name__=="__main__":
     unittest.main()
