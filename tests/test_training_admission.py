@@ -33,6 +33,7 @@ from english63_weak_pilot_cases import EnglishWeakPilotSourceCases, EnglishWeakS
 from pcm_frontend_parity_cases import EnglishPCMFrontendSourceCases
 from integrated_pcm_encoder_cases import EnglishFullChainSourceCases
 from pretrained_quant_events_cases import EnglishPretrainedQuantSourceCases
+from pretrained_live_timing_cases import EnglishUnpaddedTimingSourceCases
 
 
 class ThreeASRTrainerMetadataTests(unittest.TestCase):
