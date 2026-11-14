@@ -213,3 +213,100 @@ python3 -B research/public-zh64-asr-20261114/test_continuation.py
 python3 -B -O research/public-zh64-asr-20261114/test_continuation.py
 python3 -B -OO research/public-zh64-asr-20261114/test_continuation.py
 ```
+
+## V2: prove the fresh installer caches before the same first sixteen calls
+
+The preceding continuation was actually attempted in run `43614492600` at
+`7fdc4b28ee1c04f8b9fd17f00dbc74a1aadcafd2`. It stopped at its strict identity
+comparison after successful runtime setup and guarded zero-forward Whisper
+preparation. It made **zero audio calls** and created no fresh policy or
+inference subtree. Its 203-member artifact `14121059857` is 4,609,883 bytes,
+SHA256 `b5a2d3bdb95f06cf952752a6edf7da07911e206bca94cc235c4befeed13f4c19`.
+The original 192 observation objects, including the sixteen `not_run` slots,
+were unchanged. Its failed terminal and permanent claim are retained.
+
+The observed source difference was confined to `installed-inventory.json`:
+the same 17,688 paths and sizes, with exactly 411 differing cache hashes at
+fixed `pip/**/__pycache__/*.cpython-312.pyc` paths. Their 411 corresponding
+Python sources and the other 17,277 inventory records were identical.
+Neither earlier artifact saved cache payloads. **Historical cache payload
+equivalence or a header-only difference has not been established.** V2 does
+not claim either. The native model, assets, recognizer source and effective
+decoder settings remain frozen.
+
+`continuation_v2_request.json` fixes both failed ZIP identities and their
+closed inventories, both prior live claims, the exact sixteen input cells,
+and every permitted cache/source identity. `continuation_v2.py` verifies both
+parents before installing anything. The original host, worker, request,
+continuation and continuation request are unchanged; no old claim is moved,
+deleted or reused. The distinct permanent V2 claim is
+`refs/tags/public-zh64-whisper16-first-v2-20261114-v1-consumed`. Request
+formatting cannot reset it. The existing workflow adds one request trigger
+and separate claim/actual jobs; its old actual jobs continue to skip on their
+already-existing claims. PR jobs remain source-only. Write permission is
+limited to claim jobs, and actual runtime containers have no host credential.
+
+After the unchanged Whisper-only setup, `cache_verify_v2.py` runs directly
+under the pinned runtime Python 3.12.14 in the original offline, read-only,
+12 GiB container. It does not use the old native-entry shim. Before loading a
+model it verifies the full actual inventory, reads the 411 exact cache bodies
+and their fixed source files, checks the interpreter MAGIC and legal cache
+headers against the actual source stat/hash, and parses one bounded marshal
+code object with no trailing data. It independently compiles the exact
+source bytes using the actual `/runtime/...` filename, `dont_inherit=True`
+and `optimize=0`. It compares all eighteen persistent code-object fields,
+nested code and typed constants, including exact floating-point bits and
+surrogate-safe strings. Neither cache payload nor compiled source is executed.
+It then verifies all 17,688 files again and checks inventory-byte stability.
+
+Only the declared cache hashes may differ across runs. Cache paths and sizes,
+every corresponding source, all other installed records, and all native
+source/model/asset/decoder settings must match. The actual fresh inventory is
+fully retained and remains subject to the original complete within-run
+verification during both prepare and inference. Fresh preparation records the
+actual new head and inventory. The allowed complete-identity differences are
+those two source-provenance changes and their dependent source/config hashes;
+V2 does not present its runtime as byte-identical to either earlier runtime.
+
+`cache-check/output/` retains the fixed contract, actual installed inventory,
+raw caches under `cache/`, matching source under `source/`, and associated pip
+license texts under `licenses/`. `read-observations.jsonl` records actual
+cache/source identities and independent source stat before semantic checks.
+The success proof `cache-verification.json` includes before/after source
+stat and full-runtime verification. A rejection preserves the encountered
+raw cache, source and stat plus `failure.json` with the exact path, phase and
+exception chain; it never emits a verified proof or proceeds to preparation.
+Each cache/source/log write group has a 0.1-second quiet interval so the
+unchanged whole-output supervisor can take a stable sample. The 411 intervals
+total 41.1 seconds within the same 300-second cache-check limit; no output
+limit, scan deadline or retry bound is relaxed.
+
+The artifact preserves all 203 members of the intermediate failed result
+under `provenance/failed-continuation/`, the original seven parent bindings
+under `provenance/parent/`, both closed-run API records and all three claims.
+It records new observations as `public-zh64-first-whisper16-v2-observations-v1`
+and terminal/index schemas as `public-zh64-first-whisper16-v2-terminal-v1`
+and `public-zh64-whisper16-v2-retained-evidence-index-v1`. The cross-run
+composition preserves the original 176 objects and substitutes only the
+sixteen original absent Whisper cells. Its lineage explicitly includes the
+zero-audio failed middle run. Original raw result ZIPs remain separately
+retained with their original bytes.
+
+The 14 GiB host-memory guard, fresh 16-call maximum, one attempt per cell,
+300-second cell and 1,500-second inference limits remain unchanged. No Qwen or
+SenseVoice model is loaded. There is no retry, replay, new TTS, resampling or
+training. All sixteen cells remain nearphone quarantine, with the original
+eight train/eight dev research roles and no optimizer loss. Existing 176
+observations keep their original policy; only fresh Whisper receives the new
+provenance-bound identity. All formal admission and human-gold flags remain
+false, and a combined result is explicitly a cross-run weak observation.
+
+Source-only checks do not install runtimes or call models:
+
+```sh
+python3 -B research/public-zh64-asr-20261114/continuation_v2.py --retained /path/to/22505bf-checkout --check-source
+python3 -B research/public-zh64-asr-20261114/continuation_v2.py --verify-parents --original-artifact /path/to/original.zip --failed-artifact /path/to/failed-continuation.zip
+python3 -B research/public-zh64-asr-20261114/test_continuation_v2.py
+python3 -B -O research/public-zh64-asr-20261114/test_continuation_v2.py
+python3 -B -OO research/public-zh64-asr-20261114/test_continuation_v2.py
+```

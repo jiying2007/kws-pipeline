@@ -10,6 +10,7 @@ on:
     paths:
       - 'research/public-zh64-asr-20261114/request.json'
       - 'research/public-zh64-asr-20261114/continuation_request.json'
+      - 'research/public-zh64-asr-20261114/continuation_v2_request.json'
 
 permissions:
   contents: read
@@ -47,6 +48,10 @@ jobs:
           python3 -B research/public-zh64-asr-20261114/test_continuation.py
           python3 -B -O research/public-zh64-asr-20261114/test_continuation.py
           python3 -B -OO research/public-zh64-asr-20261114/test_continuation.py
+          python3 -B research/public-zh64-asr-20261114/continuation_v2.py --retained "$KWS_PUBLIC64_RETAINED" --check-source
+          python3 -B research/public-zh64-asr-20261114/test_continuation_v2.py
+          python3 -B -O research/public-zh64-asr-20261114/test_continuation_v2.py
+          python3 -B -OO research/public-zh64-asr-20261114/test_continuation_v2.py
 
   claim:
     needs: source-contract
@@ -216,6 +221,156 @@ jobs:
           with open(os.environ['GITHUB_OUTPUT'],'a') as output:
               output.write('acquired='+str(acquired).lower()+'\n')
           PY
+
+  claim-first-whisper16-v2:
+    needs: source-contract
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.repository.private == false && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      actions: read
+    outputs:
+      acquired: ${{ steps.claim.outputs.acquired }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Retain both failed claims and claim only the still-unstarted sixteen cells
+        id: claim
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import json, os, pathlib, subprocess, sys
+          sys.path.insert(0, 'research/public-zh64-asr-20261114')
+          import continuation_v2 as continuation
+          request, digest = continuation.frozen_request()
+          continuation.verify_control(request)
+          original, _ = continuation.prior.frozen_request()
+          failed = request['failed_parent']
+          repo = 'repos/' + os.environ['GITHUB_REPOSITORY']
+          def get(path):
+              return json.loads(subprocess.check_output(['gh','api',repo+path], timeout=30))
+          continuation.verify_live_parents(
+              get('/git/ref/'+original['parent_claim_ref'].removeprefix('refs/')),
+              get('/actions/runs/'+str(original['parent_run_id'])),
+              get('/git/ref/'+failed['claim_ref'].removeprefix('refs/')),
+              get('/actions/runs/'+str(failed['run_id'])), request)
+          ref = continuation.claim_ref(digest)
+          existing = subprocess.run(['gh','api',repo+'/git/ref/'+ref.removeprefix('refs/')], capture_output=True, text=True, timeout=30)
+          if existing.returncode == 0:
+              if json.loads(existing.stdout).get('ref') != ref:
+                  raise ValueError('v2 continuation claim identity mismatch')
+              acquired = False
+              print('Existing v2 permanent claim retained; zero additional audio calls.')
+          else:
+              if 'HTTP 404' not in existing.stderr:
+                  raise RuntimeError('claim lookup did not establish absence')
+              body = pathlib.Path(os.environ['RUNNER_TEMP']) / 'first-whisper16-v2-claim.json'
+              body.write_text(json.dumps({'ref':ref,'sha':os.environ['GITHUB_SHA']}))
+              result = subprocess.run(['gh','api','--method','POST',repo+'/git/refs','--input',str(body)], capture_output=True, text=True, timeout=30)
+              if result.returncode != 0:
+                  raise RuntimeError('atomic v2 first-Whisper16 claim failed; no execution')
+              saved = json.loads(result.stdout)
+              if saved.get('ref') != ref or saved.get('object',{}).get('sha') != os.environ['GITHUB_SHA'] or saved['object'].get('type') != 'commit':
+                  raise ValueError('v2 claim creation readback mismatch')
+              acquired = True
+              print('Created v2 first-Whisper16 claim for request', digest)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+              output.write('acquired='+str(acquired).lower()+'\n')
+          PY
+
+  actual-first-whisper16-v2:
+    needs: [source-contract, claim-first-whisper16-v2]
+    if: needs.claim-first-whisper16-v2.outputs.acquired == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          path: control
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 22505bf68b6c57747a8da35fd83e6ea4982d096c
+          persist-credentials: false
+          path: retained
+      - name: Read both immutable failed parents and all three permanent claims
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/public-zh64-asr-20261114-v1-consumed" > "$RUNNER_TEMP/zh64-v2-original-claim.json"
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/public-zh64-whisper16-first-20261114-v1-consumed" > "$RUNNER_TEMP/zh64-v2-failed-claim.json"
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/public-zh64-whisper16-first-v2-20261114-v1-consumed" > "$RUNNER_TEMP/zh64-v2-claim.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/43608230908" > "$RUNNER_TEMP/zh64-v2-original-run.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/43614492600" > "$RUNNER_TEMP/zh64-v2-failed-run.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/43608230908/artifacts" > "$RUNNER_TEMP/zh64-v2-original-artifacts.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/43614492600/artifacts" > "$RUNNER_TEMP/zh64-v2-failed-artifacts.json"
+          python3 -B - <<'PY'
+          import json, os, pathlib, sys
+          sys.path.insert(0, 'control/research/public-zh64-asr-20261114')
+          import continuation_v2 as continuation
+          request, _ = continuation.frozen_request()
+          original, _ = continuation.prior.frozen_request()
+          failed = request['failed_parent']
+          root = pathlib.Path(os.environ['RUNNER_TEMP'])
+          def load(name):
+              return json.loads((root/('zh64-v2-'+name+'.json')).read_bytes())
+          continuation.verify_live_parents(load('original-claim'), load('original-run'), load('failed-claim'), load('failed-run'), request)
+          expected = [dict(prefix='original', id=original['parent_artifact_id'], name=original['parent_artifact_name'],
+                          size=original['parent_artifact_bytes'], sha=original['parent_artifact_sha256'], head=original['parent_head_sha']),
+                      dict(prefix='failed', id=failed['artifact_id'], name=failed['artifact_name'], size=failed['artifact_bytes'],
+                          sha=failed['artifact_sha256'], head=failed['head_sha'])]
+          for item in expected:
+              rows = [row for row in load(item['prefix']+'-artifacts')['artifacts'] if row['id']==item['id']]
+              if len(rows)!=1: raise ValueError('exact failed-parent artifact missing')
+              row = rows[0]
+              if row['expired'] or row['name']!=item['name'] or row['size_in_bytes']!=item['size'] or row['digest']!='sha256:'+item['sha'] or row['workflow_run']['head_sha']!=item['head']:
+                  raise ValueError('failed-parent artifact identity changed')
+          PY
+          ulimit -f 65536
+          timeout 120s gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/14119952748/zip" > "$RUNNER_TEMP/zh64-v2-original.zip"
+          timeout 120s gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/14121059857/zip" > "$RUNNER_TEMP/zh64-v2-failed.zip"
+      - name: Verify both closed parent artifacts and all sixteen absent audio attempts before setup
+        run: |
+          set -euo pipefail
+          python3 -B control/research/public-zh64-asr-20261114/continuation_v2.py \
+            --verify-parents \
+            --original-artifact "$RUNNER_TEMP/zh64-v2-original.zip" \
+            --failed-artifact "$RUNNER_TEMP/zh64-v2-failed.zip"
+      - name: Verify fresh cache source code then run only sixteen first Whisper calls
+        run: |
+          set -euo pipefail
+          test -z "${GH_TOKEN-}"
+          test -z "${GITHUB_TOKEN-}"
+          python3 -B control/research/public-zh64-asr-20261114/continuation_v2.py \
+            --retained "$GITHUB_WORKSPACE/retained" \
+            --original-artifact "$RUNNER_TEMP/zh64-v2-original.zip" \
+            --failed-artifact "$RUNNER_TEMP/zh64-v2-failed.zip" \
+            --original-claim "$RUNNER_TEMP/zh64-v2-original-claim.json" \
+            --original-run "$RUNNER_TEMP/zh64-v2-original-run.json" \
+            --failed-claim "$RUNNER_TEMP/zh64-v2-failed-claim.json" \
+            --failed-run "$RUNNER_TEMP/zh64-v2-failed-run.json" \
+            --claim "$RUNNER_TEMP/zh64-v2-claim.json" \
+            --work "$RUNNER_TEMP/zh64-first-whisper16-v2-work" \
+            --artifact "$RUNNER_TEMP/zh64-first-whisper16-v2-evidence"
+      - name: Retain both failed lineages, actual cache proof and new native terminal
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: public-zh64-first-whisper16-v2-${{ github.run_id }}
+          path: ${{ runner.temp }}/zh64-first-whisper16-v2-evidence/
+          retention-days: 30
+          compression-level: 6
+          if-no-files-found: error
 
   actual-first-whisper16:
     needs: [source-contract, claim-first-whisper16]
