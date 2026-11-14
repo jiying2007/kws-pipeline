@@ -1,0 +1,266 @@
+{
+  "schema": "kws-v4-english-native-c-measured-receipt-v1",
+  "status": "MEASURED_NATIVE_C_STREAM_PARITY_NOT_KWS_QUALIFICATION",
+  "run_url": "https://github.com/jiying2007/kws-data/actions/runs/43605922752",
+  "run_id": 43605922752,
+  "artifact_id": 14117638750,
+  "artifact_bytes": 22016580,
+  "artifact_sha256": "e85d14c87727f93b6e33edc196af00a6c9ce023d9e7d41d844109617fa5fb397",
+  "pipeline_pr": 808,
+  "pipeline_merged_commit": "376034f7037b797cc29f6e654b0b891d54825ccd",
+  "pipeline_executed_commit": "6eab7c5e72d44483a14c5095a53805ea94126070",
+  "data_pr": 121,
+  "data_executed_commit": "0d5db0eaa0101ee8009882aa86dc85dc513cd174",
+  "source_training_run_id": 43595338774,
+  "request_sha256": "2221d418d8890b16ffb1a65973b364b89bacb440946b634e76f2e4b675d64a27",
+  "terminal_sha256": "e78d5d623675a08d39dbf20b39814ab7de15fffda669768ffa23ecc2d05387cb",
+  "summary_sha256": "bea98d1bb097488432b2b3cac21affda61daf99ef64cfbf526b2b2a1012e1d89",
+  "binary_bytes": 80040,
+  "source_audio_clips": 63,
+  "source_pcm_samples": 2101760,
+  "audio_seconds": 131.36,
+  "numeric_tolerances": {
+    "features": 0.0002,
+    "logits": 0.0002,
+    "probabilities": 0.0002
+  },
+  "role_counts": {
+    "EXPOSED_DEVELOPMENT_NO_TUNE": 12,
+    "QUARANTINE_AMBIGUOUS_NEARPHONE": 21,
+    "TRAIN_ROLE_WEAK_INTENT_DIAGNOSTIC_ONLY": 30
+  },
+  "runtime": {
+    "device": "cpu",
+    "mkldnn": false,
+    "numpy": "2.3.5",
+    "python": "3.12.16",
+    "threads": 1,
+    "torch": "2.10.0+cpu"
+  },
+  "build_machine": "x86_64",
+  "compiler_version": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "models": [
+    {
+      "kind": "gru",
+      "source_weights_sha256": "71f731155a19538b533e4253d2e4b19d5c03328bd26da5263542159df066e623",
+      "max_feature_abs_error": 4.76837158203125e-07,
+      "max_logit_abs_error": 1.1205673217773438e-05,
+      "max_probability_abs_error": 2.6226043701171875e-06,
+      "chunk_events_identical": true,
+      "chunk_probabilities_bit_identical": true,
+      "python_c_events_identical": true,
+      "isolated_frames": 13010,
+      "continuous_frames": 13134,
+      "continuous_state_resets": 0,
+      "eof_events": 0,
+      "eof_padding_samples": 0,
+      "native_profile_without_trace_io": {
+        "chunk_plan": "160",
+        "cpu_seconds": 0.147479,
+        "eof_events": 0,
+        "eof_padding_samples": 0,
+        "feed_calls": 13136,
+        "feed_max_us": 50.877,
+        "feed_p50_us": 10.787,
+        "feed_p95_us": 11.588,
+        "feed_p99_us": 16.314,
+        "frames": 13134,
+        "frontend_table_bytes": 3894,
+        "kind": "gru",
+        "mode": "continuous",
+        "pcm_samples": 2101760,
+        "process_peak_rss_kib": 2440,
+        "proposal_count": 66,
+        "rss_scope": "native-C-process-self-linux-kib-not-python-parent",
+        "ssc305_measured": false,
+        "stack_bytes": null,
+        "state_bytes": 38168,
+        "supervisor": "fresh-child-from-small-native-process-before-state-allocation",
+        "trace_io_enabled": false,
+        "wall_seconds": 0.147490277,
+        "weight_parameter_bytes": 26124
+      },
+      "isolated_proposal_count": 34,
+      "continuous_proposal_count": 66
+    },
+    {
+      "kind": "dsc_tcn",
+      "source_weights_sha256": "167282c1037a28152bed4afaf49e53a4307bd8d5576a486b41c0a2291fdca935",
+      "max_feature_abs_error": 4.76837158203125e-07,
+      "max_logit_abs_error": 1.430511474609375e-06,
+      "max_probability_abs_error": 3.5762786865234375e-07,
+      "chunk_events_identical": true,
+      "chunk_probabilities_bit_identical": true,
+      "python_c_events_identical": true,
+      "isolated_frames": 13010,
+      "continuous_frames": 13134,
+      "continuous_state_resets": 0,
+      "eof_events": 0,
+      "eof_padding_samples": 0,
+      "native_profile_without_trace_io": {
+        "chunk_plan": "160",
+        "cpu_seconds": 0.130467,
+        "eof_events": 0,
+        "eof_padding_samples": 0,
+        "feed_calls": 13136,
+        "feed_max_us": 78.749,
+        "feed_p50_us": 9.495,
+        "feed_p95_us": 10.315,
+        "feed_p99_us": 14.913,
+        "frames": 13134,
+        "frontend_table_bytes": 3894,
+        "kind": "dsc_tcn",
+        "mode": "continuous",
+        "pcm_samples": 2101760,
+        "process_peak_rss_kib": 2396,
+        "proposal_count": 1,
+        "rss_scope": "native-C-process-self-linux-kib-not-python-parent",
+        "ssc305_measured": false,
+        "stack_bytes": null,
+        "state_bytes": 38168,
+        "supervisor": "fresh-child-from-small-native-process-before-state-allocation",
+        "trace_io_enabled": false,
+        "wall_seconds": 0.130472464,
+        "weight_parameter_bytes": 19212
+      },
+      "isolated_proposal_count": 7,
+      "continuous_proposal_count": 1
+    }
+  ],
+  "independent_saved_bytes_audit": {
+    "status": "PASS_INDEPENDENT_SAVED_BYTES_AUDIT",
+    "model_calls": 0,
+    "checked_files": 17,
+    "models": [
+      {
+        "kind": "gru",
+        "maximum_absolute_errors": {
+          "features": 4.76837158203125e-07,
+          "logits": 1.1205673217773438e-05,
+          "probabilities": 2.6226043701171875e-06
+        },
+        "modes": {
+          "isolated": {
+            "frames": 13010,
+            "events": 34,
+            "chunk_bytes_equal": true
+          },
+          "continuous": {
+            "frames": 13134,
+            "events": 66,
+            "chunk_bytes_equal": true
+          }
+        }
+      },
+      {
+        "kind": "dsc_tcn",
+        "maximum_absolute_errors": {
+          "features": 4.76837158203125e-07,
+          "logits": 1.430511474609375e-06,
+          "probabilities": 3.5762786865234375e-07
+        },
+        "modes": {
+          "isolated": {
+            "frames": 13010,
+            "events": 7,
+            "chunk_bytes_equal": true
+          },
+          "continuous": {
+            "frames": 13134,
+            "events": 1,
+            "chunk_bytes_equal": true
+          }
+        }
+      }
+    ],
+    "native_profiles": [
+      {
+        "kind": "gru",
+        "state_bytes": 38168,
+        "weight_parameter_bytes": 26124,
+        "frontend_table_bytes": 3894,
+        "process_peak_rss_kib": 2440,
+        "cpu_seconds": 0.147479,
+        "wall_seconds": 0.147490277,
+        "feed_calls": 13136,
+        "feed_p50_us": 10.787,
+        "feed_p95_us": 11.588,
+        "feed_p99_us": 16.314,
+        "feed_max_us": 50.877,
+        "feed_calls_over_10ms": 0,
+        "feed_calls_over_20ms": 0
+      },
+      {
+        "kind": "dsc_tcn",
+        "state_bytes": 38168,
+        "weight_parameter_bytes": 19212,
+        "frontend_table_bytes": 3894,
+        "process_peak_rss_kib": 2396,
+        "cpu_seconds": 0.130467,
+        "wall_seconds": 0.130472464,
+        "feed_calls": 13136,
+        "feed_p50_us": 9.495,
+        "feed_p95_us": 10.315,
+        "feed_p99_us": 14.913,
+        "feed_max_us": 78.749,
+        "feed_calls_over_10ms": 0,
+        "feed_calls_over_20ms": 0
+      }
+    ],
+    "rss_scope_note": "High-water captured after inference, before timing sorting and JSON output; not full-lifetime peak.",
+    "not_measured": [
+      "independent FRR",
+      "natural negative FAR/hour",
+      "word-end latency",
+      "SSC305"
+    ]
+  },
+  "optimizer_updates": 0,
+  "new_tts_asr_ipa_calls": 0,
+  "formal_training_admitted": false,
+  "human_gold": false,
+  "model_promotion_allowed": false,
+  "model_selection_made": false,
+  "threshold_selection": false,
+  "independent_english_frr": "NOT_RUN",
+  "continuous_negative_far_per_hour": "NOT_RUN",
+  "word_end_latency": "NOT_RUN",
+  "ssc305_board_profile": "NOT_RUN",
+  "independent_source_audit": {
+    "build_sources_verified_at_pinned_commit": 9,
+    "data_commit": "0d5db0eaa0101ee8009882aa86dc85dc513cd174",
+    "exported_C_parameter_arrays_bit_identical_to_original_NPZ": true,
+    "formal_training_admitted": false,
+    "model_promotion_allowed": false,
+    "native_artifact_id": 14117638750,
+    "native_attempt": 1,
+    "native_run_id": 43605922752,
+    "native_zip_bytes": 22016580,
+    "native_zip_sha256": "e85d14c87727f93b6e33edc196af00a6c9ce023d9e7d41d844109617fa5fb397",
+    "new_model_forwards": 0,
+    "new_tts_asr_calls": 0,
+    "optimizer_updates": 0,
+    "original_artifact_id": 14114695344,
+    "original_manifest_files_checked": 12,
+    "original_trace_identity": {
+      "dsc_tcn": {
+        "bit_identical_reference_traces_to_original_training": 64,
+        "checked_reference_traces": 64
+      },
+      "gru": {
+        "bit_identical_reference_traces_to_original_training": 64,
+        "checked_reference_traces": 64
+      }
+    },
+    "original_training_run_id": 43595338774,
+    "original_zip_sha256": "bc76805934df8eb158fa4259a75c26a4ea4276c15b83542acad5948a1f954b54",
+    "outer_manifest_files_checked": 22,
+    "pipeline_commit": "6eab7c5e72d44483a14c5095a53805ea94126070",
+    "request_sha256": "2221d418d8890b16ffb1a65973b364b89bacb440946b634e76f2e4b675d64a27",
+    "source_events_exact_class_sample_identity": {
+      "dsc_tcn": 8,
+      "gru": 100
+    },
+    "status": "PASS_INDEPENDENT_SOURCE_CHAIN_AND_EXPORT_AUDIT"
+  }
+}

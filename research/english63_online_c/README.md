@@ -86,8 +86,10 @@ Use `-` instead of the trace path for native profiling without trace-output I/O.
 Each native launch uses a fresh child of a small native supervisor, created
 before state allocation. This prevents inherited high-water RSS of the Python
 or Torch parent from being mislabeled as native C RSS. The child reports its
-own Linux `RUSAGE_SELF` peak RSS, CPU/wall times, raw feed durations and quantiles.
-The dedicated continuous/160 profile disables trace I/O. It still includes the
+own Linux `RUSAGE_SELF` high-water RSS through inference completion, CPU/wall
+times, raw feed durations and quantiles. The RSS observation occurs before the
+CLI copies/sorts timing samples and writes JSON, so it is not a full-process-
+lifetime peak measurement. The dedicated continuous/160 profile disables trace I/O. It still includes the
 CLI's PCM input file reads in process CPU/wall time; feed timings wrap the core
 call only. State bytes, FP32 parameter bytes, frontend-table bytes, binary bytes
 and process RSS are distinct. Stack usage is **not measured**. QEMU, if used,
@@ -120,3 +122,7 @@ Real audio/model execution belongs exclusively to the authorized public runner.
 All receipts keep formal training admission, human gold, promotion and selection
 false; independent FRR, continuous-negative FAR/hour, word-end latency and
 SSC305 performance remain `NOT_RUN` even if the C implementation agrees.
+
+The first real saved-weight comparison completed successfully in public run
+`43605922752`. See the [measured result and its limits](../../docs/KWS_V4_ENGLISH_NATIVE_C_20261114.md)
+and [machine-readable receipt](measured-20261114.json).

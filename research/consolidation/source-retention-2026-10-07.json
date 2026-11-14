@@ -15594,7 +15594,8 @@
     ".github/workflows/tts-pilot-asr-20261014-v1.yml",
     ".github/workflows/kw1-preset-supplement-20261014-v1.yml",
     ".github/workflows/kw1-supplement-observation.yml",
-    ".github/workflows/authorized-voice-clone-contracts.yml"
+    ".github/workflows/authorized-voice-clone-contracts.yml",
+    ".github/workflows/public-zh64-asr-once.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -51725,6 +51726,112 @@
           }
         }
       ]
+    },
+    {
+      "id": "public-zh64-first-native-asr-20261114",
+      "date": "2026-11-14",
+      "base_commit": "376034f7037b797cc29f6e654b0b891d54825ccd",
+      "previous_manifest_sha256": "84b875976132292dc6a0408ae3e0ce9b3de9612b00808bf3bee5fb07002e923e",
+      "workflow_source_changed": true,
+      "scope": "Register one new protected-main, atomically claimed first three-ASR observation of an existing public synthetic nonclone64 batch; PR events run source checks only.",
+      "rationale": "The original public audio has no native ASR consumption. Reuse exact source artifact and 127 pinned native source files in a separately declared at-most-192-call research lane. Preserve all original retained files, provenance, workflow identities, old claims and earlier maintenance. No audio regeneration, training, label admission, scheduler or private audio publication.",
+      "request_sha256": "868aa3fb60ada992888859fb3019059a75b12de3e826ce1fa7ada16caa3cace7",
+      "files": [
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 19542,
+            "git_blob_sha1": "4092111e61047a255fd88203f4f79ffdd88d32fa",
+            "sha256": "9b1ac67c37907d351bffd725ab2fec7d2e96abb3f774679c5d88320f6582e57c"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 19670,
+            "git_blob_sha1": "b9ea11870ed48d6bceed9b8d62d6878e7e0a76d1",
+            "sha256": "662693acd26d4398c83145043e0c6fa46b575a22596916e460088822b670cf85"
+          }
+        },
+        {
+          "path": ".github/workflows/public-zh64-asr-once.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/public-zh64-asr-once.yml",
+            "mode": "100644",
+            "bytes": 7439,
+            "git_blob_sha1": "20afd7f5164e0891efa8ff1846ab64a902c9c838",
+            "sha256": "43db36fa74a52c8f7e668a3b0cf9d5d331b4548c03b284ba7abebbbf88f18892"
+          }
+        },
+        {
+          "path": "research/public-zh64-asr-20261114/README.md",
+          "before": null,
+          "after": {
+            "path": "research/public-zh64-asr-20261114/README.md",
+            "mode": "100644",
+            "bytes": 7937,
+            "git_blob_sha1": "455e0df0b621bf4ff791536f61e12c4b59804e41",
+            "sha256": "885f4569ef91f4e078ad16edf80fd534bca404a9f3b38cdbdee6999e46f54acf"
+          }
+        },
+        {
+          "path": "research/public-zh64-asr-20261114/host.py",
+          "before": null,
+          "after": {
+            "path": "research/public-zh64-asr-20261114/host.py",
+            "mode": "100644",
+            "bytes": 30713,
+            "git_blob_sha1": "589d9e77415427db88d622357a57c2ee0fd644ff",
+            "sha256": "cbdce469f5886a0d9dff11918088bef29a3de70110c6f0eed72857d3a42108cf"
+          }
+        },
+        {
+          "path": "research/public-zh64-asr-20261114/input_adapter.py",
+          "before": null,
+          "after": {
+            "path": "research/public-zh64-asr-20261114/input_adapter.py",
+            "mode": "100644",
+            "bytes": 14578,
+            "git_blob_sha1": "76b30b9ac62acb26ae0e780f74921adf4b21816e",
+            "sha256": "70537317db8b081c5e00e22c6fc1e41b3213071e3c7ab616bc663806fea6a9a2"
+          }
+        },
+        {
+          "path": "research/public-zh64-asr-20261114/request.json",
+          "before": null,
+          "after": {
+            "path": "research/public-zh64-asr-20261114/request.json",
+            "mode": "100644",
+            "bytes": 2087,
+            "git_blob_sha1": "599d814abc15949a95d19e0bcca45fb6203c9563",
+            "sha256": "868aa3fb60ada992888859fb3019059a75b12de3e826ce1fa7ada16caa3cace7"
+          }
+        },
+        {
+          "path": "research/public-zh64-asr-20261114/test_contract.py",
+          "before": null,
+          "after": {
+            "path": "research/public-zh64-asr-20261114/test_contract.py",
+            "mode": "100644",
+            "bytes": 12077,
+            "git_blob_sha1": "75c9726a5ca517f83379bceb2ff4ddb4febfe975",
+            "sha256": "d4d73987543c440ff4d103b8d846efac261aa42a83b28d73dbae2fdc1b1547db"
+          }
+        },
+        {
+          "path": "research/public-zh64-asr-20261114/worker.py",
+          "before": null,
+          "after": {
+            "path": "research/public-zh64-asr-20261114/worker.py",
+            "mode": "100644",
+            "bytes": 1828,
+            "git_blob_sha1": "706420d50db25912bf31635a6864dcc93477cf54",
+            "sha256": "6a1de9f22607b90fb682787d8c7e2e878d4dfcf51a70762fc0a35fefa6b239e1"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -51825,6 +51932,13 @@
       "bytes": 1325,
       "sha256": "1ee1bbab8324c38516446a121a86c72c1f4d7d8940fed812e6ac1dc0cf3e4027",
       "git_blob_sha1": "6447b780ace7062db71814e341d3f183f080131d"
+    },
+    {
+      "path": ".github/workflows/public-zh64-asr-once.yml",
+      "mode": "100644",
+      "bytes": 7439,
+      "git_blob_sha1": "20afd7f5164e0891efa8ff1846ab64a902c9c838",
+      "sha256": "43db36fa74a52c8f7e668a3b0cf9d5d331b4548c03b284ba7abebbbf88f18892"
     }
   ],
   "current_source_revision": {
