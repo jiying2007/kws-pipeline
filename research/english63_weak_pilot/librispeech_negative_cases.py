@@ -102,5 +102,28 @@ class EnglishNaturalSpeechSourceCases(unittest.TestCase):
                 neg.verify_receipt(broken)
 
 
+    def test_retained_real_exposure_receipt_is_source_pinned_and_nonpromotable(self):
+        summary=json.loads((Path(neg.__file__).with_name(
+            "LIBRISPEECH_NEGATIVE_RESULT.json")).read_text())
+        self.assertEqual(summary["schema"],
+                         "english-librispeech-dev-clean-hash20-actual-readback-summary-v1")
+        self.assertEqual(summary["source"]["corpus_archive_sha256"],neg.ARCHIVE_SHA)
+        self.assertEqual(summary["source"]["corpus_official_md5"],neg.ARCHIVE_MD5)
+        self.assertEqual(summary["source"]["official_model_archive_sha256"],
+                         neg.quant.MODEL_SHA)
+        self.assertEqual(summary["source"]["original_runner_sha256"],
+                         neg.quant.sha256_bytes(Path(neg.__file__).read_bytes()))
+        self.assertEqual(summary["sampling"]["sampled_utterances"],517)
+        self.assertEqual(summary["sampling"]["distinct_human_read_speech_speakers"],40)
+        self.assertAlmostEqual(summary["sampling"]["source_audio_seconds"],3665.38525)
+        self.assertEqual(summary["models"]["fp32_c16"]["events"],0)
+        self.assertEqual(summary["models"]["int8_c16"]["events"],0)
+        self.assertFalse(summary["caveats"]["human_gold"])
+        self.assertFalse(summary["caveats"]["model_promotion_allowed"])
+        self.assertEqual(summary["caveats"]["continuous_household_background_far_per_hour"],
+                         "NOT_RUN")
+        self.assertEqual(summary["caveats"]["ssc305_arm_board_runtime"],"NOT_RUN")
+
+
 if __name__=="__main__":
     unittest.main()
