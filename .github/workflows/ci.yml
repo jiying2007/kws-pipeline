@@ -896,6 +896,11 @@ jobs:
         run: ctest --test-dir build --output-on-failure
       - name: Verify tracked worktree after Test
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Test"'
+      - name: English saved-weight C runtime source contracts with invented weights only
+        timeout-minutes: 3
+        run: python3 -I -S -B research/english63_online_c/check_source.py --cc "${{ matrix.cc }}"
+      - name: Verify tracked worktree after English C source contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "English C source contracts"'
       - name: Causal research stdlib and artificial oracle contracts
         run: |
           python3 -S -B tests/test_research_python_entry.py
