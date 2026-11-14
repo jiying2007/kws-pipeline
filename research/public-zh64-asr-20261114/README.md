@@ -133,3 +133,83 @@ These commands install nothing, download nothing and perform no model calls.
 The same tests run under normal, optimized and stripped Python in the new
 workflow. Source-only tests cannot establish a successful real ASR run; only
 the first actual Actions execution and retained native evidence can do that.
+# First execution of the sixteen unstarted Whisper cells
+
+Run `43608230908` ended `incomplete_no_retry`. Its immutable artifact
+`14119952748` is 42,715,116 bytes with SHA256
+`e731141401bea5220c5fdb9dd066c044ece7bb860fb615a6cc50768acffe40e6`.
+It contains 176 independently validated native observations: Qwen 64,
+SenseVoice 64, Whisper 48. Batch 3 SenseVoice reported an output-stability
+supervisor error after writing its sixteen complete native records; the
+container cleanup completed. Those sixteen records remain consumed.
+
+Batch 3 Whisper failed at the unchanged host-capacity check, before output
+directory creation or any Docker operation. Its entire inference subtree is
+absent from the 3,746-member closed original artifact and index, and global
+cells 49–64 are `not_run`, `attempt_consumed=false`, with no native start,
+claim, completion or text. `continuation_request.json` freezes only those
+sixteen cells, the exact original WAV/PCM identities, local/global mapping,
+blind job, identity map and preset roles. They are all nearphone quarantine
+rows: eight research-train roles and eight research-dev roles; no optimizer
+loss is authorized.
+
+`continuation.py` verifies the original ZIP and every indexed member before
+runtime setup. It copies the original derived PCM16 WAVs, blind `job.json`
+and `identity-map-3.json` byte for byte. It neither generates audio nor
+resamples, retries, reprocesses the previous 176 observations, loads Qwen or
+SenseVoice, or runs training. It installs only the original pinned Whisper
+runtime and performs fresh guarded zero-forward preparation immediately
+before the sixteen first audio calls in the same actual job. The retained
+14 GiB available-host-memory requirement, 12 GiB container limit, offline
+recognition, decoder criteria, 300-second per-cell and 1,500-second stage
+limits are unchanged. This controller has a 3,600-second inner limit and at
+most sixteen new audio calls. Container cleanup uncertainty stops the route
+and preserves unknown/reserved outcomes; it does not permit another launch.
+
+The existing workflow gains a push path for the new request and separate
+claim/actual jobs. Its fixed permanent claim is
+`refs/tags/public-zh64-whisper16-first-20261114-v1-consumed`. The first campaign
+request, `host.py`, original worker and old claim remain unchanged. The old
+actual job skips when its already-existing claim is read. Formatting the new
+request cannot create a second claim. PR runs execute source-only checks;
+only the main-push claim job has write permission, and the model host and
+containers receive no repository credential.
+
+Fresh preparation records the **actual new controller head**. The original
+Whisper source lock included the executed head, so the complete identity hash
+must reflect that provenance change. The continuation allows exactly that
+source-lock field and its dependent source/config identity hashes to change.
+All source inventory entries and their saved bytes, installed-runtime
+inventory, assets, model, effective decoding, input and execution settings
+must remain identical. It does not claim an unchanged complete identity hash
+or write the old head as a new execution's head. The new policy retains the
+old Qwen/SenseVoice identity references and replaces only the freshly checked
+Whisper identity; those two models are not loaded in this run. The previous
+176 receipts retain their original policy and are never rebound to the new
+one.
+
+The new artifact separately retains the parent summary, observations,
+policy, Whisper identity/source lock and index under `provenance/parent/`;
+`provenance/parent-binding.json` records the exact parent ZIP, member hashes
+and sixteen-cell exclusion proof. It also preserves both claims, the closed
+parent-run API record, fresh prepare proof, actual native records and a
+complete sixteen-slot terminal. `combined-observations.json` is an explicit
+cross-run composition: it copies the 176 original observations and replaces
+only the sixteen original unstarted Whisper entries. This is not a new
+single-run three-model experiment. The original failed terminal remains
+`incomplete_no_retry`, including both recorded supervisor failures.
+
+All labels remain candidate/challenge evidence: `training_admitted=false`,
+`human_gold=false`, `optimizer_loss_authorized=false`, and natural-negative,
+evaluation and production qualification remain false. The two raw result
+ZIPs are independently retained; the second artifact references the original
+42 MB ZIP by exact identity rather than duplicating it.
+
+Source-only checks:
+
+```sh
+python3 -B research/public-zh64-asr-20261114/continuation.py --retained /path/to/22505bf-checkout --check-source
+python3 -B research/public-zh64-asr-20261114/test_continuation.py
+python3 -B -O research/public-zh64-asr-20261114/test_continuation.py
+python3 -B -OO research/public-zh64-asr-20261114/test_continuation.py
+```

@@ -51832,6 +51832,87 @@
           }
         }
       ]
+    },
+    {
+      "id": "public-zh64-first-whisper16-continuation-20261114",
+      "date": "2026-11-14",
+      "base_commit": "0107772bb90110ad2deb3aaf96e99cdfa121af8f",
+      "previous_manifest_sha256": "11faff09d7de98aeb6ee705f642d1bfdb58179325a8a0a86144b3098afffa100",
+      "workflow_source_changed": true,
+      "scope": "First execution of only the sixteen original Whisper cells independently proved unstarted in the failed public64 run; reuse the same allowed workflow with a separate permanent claim.",
+      "rationale": "Preserve run 43608230908, its original claim, request, control source and 176 complete native observations. Authenticate the full saved parent artifact, unchanged source/runtime/model/decode identities and original batch-three PCM/job/map. Permit only actual new executed-head provenance and dependent hashes. Fresh Whisper-only execution retains the original 14 GiB host reserve and all admission/quarantine restrictions. No replay, resampling, TTS, training, private audio publication or scheduler.",
+      "request_sha256": "9a82efd43fb6ce6f93f2e44ca5b564beead4aeb3ce1d1eef57dc0232283363c8",
+      "parent_run_id": 43608230908,
+      "parent_artifact_sha256": "e731141401bea5220c5fdb9dd066c044ece7bb860fb615a6cc50768acffe40e6",
+      "files": [
+        {
+          "path": ".github/workflows/public-zh64-asr-once.yml",
+          "before": {
+            "path": ".github/workflows/public-zh64-asr-once.yml",
+            "mode": "100644",
+            "bytes": 7439,
+            "git_blob_sha1": "20afd7f5164e0891efa8ff1846ab64a902c9c838",
+            "sha256": "43db36fa74a52c8f7e668a3b0cf9d5d331b4548c03b284ba7abebbbf88f18892"
+          },
+          "after": {
+            "path": ".github/workflows/public-zh64-asr-once.yml",
+            "mode": "100644",
+            "bytes": 15021,
+            "git_blob_sha1": "d156d03d915a7d3c59e2d317a7f750edd78ef174",
+            "sha256": "d601825b660888943883a1138f74f41d7b57b58f4cf3f9fa7b52137922621713"
+          }
+        },
+        {
+          "path": "research/public-zh64-asr-20261114/README.md",
+          "before": {
+            "path": "research/public-zh64-asr-20261114/README.md",
+            "mode": "100644",
+            "bytes": 7937,
+            "git_blob_sha1": "455e0df0b621bf4ff791536f61e12c4b59804e41",
+            "sha256": "885f4569ef91f4e078ad16edf80fd534bca404a9f3b38cdbdee6999e46f54acf"
+          },
+          "after": {
+            "path": "research/public-zh64-asr-20261114/README.md",
+            "mode": "100644",
+            "bytes": 12818,
+            "git_blob_sha1": "c146e57d870ac2e17e12f39f0bd388d4a0ed6870",
+            "sha256": "b939e756010136563324135357b5bf717fb0ec110175325b25d5325f59abee72"
+          }
+        },
+        {
+          "path": "research/public-zh64-asr-20261114/continuation.py",
+          "before": null,
+          "after": {
+            "path": "research/public-zh64-asr-20261114/continuation.py",
+            "mode": "100644",
+            "bytes": 29096,
+            "git_blob_sha1": "ff210ff414d24abe9c003163f8ab82ec324d470b",
+            "sha256": "661abf4c5f6aef67c2b4ce4e664ae10251067eb0332db0fef7cbd205c439b7c5"
+          }
+        },
+        {
+          "path": "research/public-zh64-asr-20261114/continuation_request.json",
+          "before": null,
+          "after": {
+            "path": "research/public-zh64-asr-20261114/continuation_request.json",
+            "mode": "100644",
+            "bytes": 19094,
+            "git_blob_sha1": "8c23ab541c5666aeb6c03088d19b6fe4642a541d",
+            "sha256": "9a82efd43fb6ce6f93f2e44ca5b564beead4aeb3ce1d1eef57dc0232283363c8"
+          }
+        },
+        {
+          "path": "research/public-zh64-asr-20261114/test_continuation.py",
+          "before": null,
+          "after": {
+            "path": "research/public-zh64-asr-20261114/test_continuation.py",
+            "mode": "100644",
+            "bytes": 14300,
+            "git_blob_sha1": "9b74805b81b5d6bf13ed619350c33e52f9c1a53d",
+            "sha256": "b62459134f23370b5b50f0ca3efe4e95366fef6a62dcc9ea7e058bdb062c8fc0"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -51936,9 +52017,9 @@
     {
       "path": ".github/workflows/public-zh64-asr-once.yml",
       "mode": "100644",
-      "bytes": 7439,
-      "git_blob_sha1": "20afd7f5164e0891efa8ff1846ab64a902c9c838",
-      "sha256": "43db36fa74a52c8f7e668a3b0cf9d5d331b4548c03b284ba7abebbbf88f18892"
+      "bytes": 15021,
+      "git_blob_sha1": "d156d03d915a7d3c59e2d317a7f750edd78ef174",
+      "sha256": "d601825b660888943883a1138f74f41d7b57b58f4cf3f9fa7b52137922621713"
     }
   ],
   "current_source_revision": {
