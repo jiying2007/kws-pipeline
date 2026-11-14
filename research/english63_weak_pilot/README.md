@@ -227,3 +227,32 @@ pronunciation truth, continuous wake event emission, FAR/hour, human FRR,
 an accent/generalization result, strong-pretrained FSMN, C/int8 export or
 SSC305 board qualification. No champion, formal data admission or candidate
 promotion is authorized. Hey Mero and Hey Vosen remain unselected.
+
+
+### Actual measured full-chain execution and exact receipt
+
+Data-owning repository one-shot Actions run
+[43532002008](https://github.com/jiying2007/kws-data/actions/runs/43532002008)
+completed **success**, using pinned pipeline research source commit
+8c6f34b110bea6d21fcf4659a85f0f6a635b5469. Its run artifact
+14087074624 was independently downloaded. Original artifact ZIP SHA256:
+f208fc4ab911c67f4bb988671ce67dde927b4f0d6421e5552642c24ab9b2733e.
+The extracted machine receipt, now retained **byte-identically** as
+INTEGRATED_PCM_ENCODER_PARITY.json, has SHA256
+0200368be4813885b3229411cf1821c49ad27ea899b85056d5483238fe292e1a.
+
+Both models consumed the exact original 63 WAVs with the same train-only
+normalizer and unchanged saved weights. For each model, five PCM chunk sizes
+were compared against a fresh one-clip full-batch forward (315 comparisons):
+
+| Saved research model | Final clip class differences | Largest abs. final-logit difference |
+| --- | ---: | ---: |
+| GRU | 0/315 | 8.940696716308594e-7 |
+| DS-TCN | 0/315 | 5.960464477539062e-7 |
+
+The fixed preregistered 2e-4 difference cap passed without tuning or changing
+weights. The experiment does **not** measure keyword event emission at any
+intermediate frame: whole-clip mean/max pooling is still a final clip
+classifier. Neither original prompt weak intent nor three ASR agreement is
+independent acoustic gold. No FAR/hour, FRR, target latency, int8/C export,
+real speaker generalization or SSC305 runtime can be inferred.
