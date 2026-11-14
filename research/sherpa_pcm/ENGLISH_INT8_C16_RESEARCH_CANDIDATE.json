@@ -1,0 +1,101 @@
+{
+  "schema": "english-research-model-candidate-v1",
+  "candidate_id": "hey-mero-zh-en-zipformer3m-int8-c16-official-v1",
+  "status": "HOST_NATIVE_C_REPRODUCED_RESEARCH_ONLY_NO_PROMOTION",
+  "purpose": "technical KWS research, not shipping or commercial integration",
+  "language": "en-US",
+  "keyword": "Hey Mero",
+  "keyword_alias": "HEY_MERO",
+  "keyword_c_abi_id": 3,
+  "second_keyword": "Hey Vosen",
+  "second_keyword_status": "BLOCKED_UNVERIFIED_OFFICIAL_LEXICON_OOV",
+  "model": {
+    "architecture": "pretrained_zh_en_zipformer3m",
+    "source": "sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20",
+    "original_release_sha256": "68447f4fbc67e70eee3a93961f36e81e98f47aef73ce7e7ca00885c6cd3616a6",
+    "encoder": "encoder-epoch-13-avg-2-chunk-16-left-64.int8.onnx",
+    "decoder": "decoder-epoch-13-avg-2-chunk-16-left-64.onnx",
+    "joiner": "joiner-epoch-13-avg-2-chunk-16-left-64.int8.onnx",
+    "tokens": "tokens.txt",
+    "english_lexicon": "en.phone",
+    "official_phone_line": "HH EY1 M EH1 R OW0 @HEY_MERO",
+    "selected_model_files_total_bytes": 5446114,
+    "network_download_or_model_weights_in_repository": false,
+    "no_new_training_or_finetuning": true
+  },
+  "runtime": {
+    "sample_rate_hz": 16000,
+    "channels": 1,
+    "sample_width_bits": 16,
+    "feature_dimension": 80,
+    "num_threads": 1,
+    "max_active_paths": 4,
+    "keywords_score": 1,
+    "keywords_threshold": 0.25,
+    "num_trailing_blanks": 1,
+    "stage_samples": 320,
+    "same_host_model_inference_confirmed": true,
+    "native_C_abi_entry": "research/sherpa_pcm/pcm_kws.h",
+    "C_facing_uses_Cpp_sherpa_native_backend": true,
+    "official_host_runtime_archive_sha256": "c0bdb7907d3a74bba1d55d22bf4d9fa75586cf1530614ebe88a27b9118e015c4",
+    "official_host_C_api_sha256": "b8351ca1632571ac108adbb317bcc4bf7cfe84b72690e3017316b0da3e1e344f",
+    "official_host_ONNX_Runtime_sha256": "4b3607aebd1784b26b6f9b20e4bd974c7ab8287043e4d095cb40b5e566e",
+    "official_host_runtime_2libs_bytes": 32150801,
+    "native_compiled_library_sha256": "b43d258c127ce5e8563b81273f4f36ad7f728a9968ca46caa970c57d8f954d3e",
+    "host_process_peak_rss_kib_includes_python": 101808,
+    "target_platform": "SigmaStar SSC305 Cortex-A32",
+    "SSC305_SDK_ABI_qualified": false,
+    "SSC305_CPU_RSS_p99_qualified": false,
+    "ARM32_runtime_known_requirements": {
+      "glibc": "GLIBC_2.34",
+      "glibcxx": "GLIBCXX_3.4.29",
+      "cxxabi": "CXXABI_1.3.13"
+    },
+    "real_board_build": "NOT_RUN"
+  },
+  "evidence": {
+    "actual_C_abi_run_id": 43547980797,
+    "actual_C_abi_artifact_id": 14094504790,
+    "actual_C_abi_artifact_sha256": "c1a0a60f517bee59e1900306df66fe652b9674ca437486075d3a60c915a027cc",
+    "real_native_C_tests": {
+      "original_synthetic_audio_clips": 63,
+      "caller_patterns": 3,
+      "total_replays": 189,
+      "events_per_pattern": 5,
+      "all_events_keyword_id": 3,
+      "per_pattern_deviation_vs_python": 0,
+      "EOF_only_events": 0,
+      "artificial_tail_added": false
+    },
+    "synthetic_source": {
+      "actual_clip_count": 63,
+      "requested_mero_clips": 14,
+      "unpad_pcm_events": 5,
+      "prior_padded_events": 9,
+      "after_artificial_tail_only": 4,
+      "independent_recall": false
+    },
+    "natural_source": {
+      "dataset": "LibriSpeech dev-clean",
+      "real_read_speech_speakers": 40,
+      "sampled_utterances": 517,
+      "duration_seconds": 3665.38525,
+      "event_count": 0,
+      "continuous_household_far": false
+    }
+  },
+  "pending_gates": [
+    "independent genuine English positive voice and pronunciation review",
+    "far-field 3–5m acoustic capture across accents, devices and rooms",
+    "multi-hour continuous household background false-wake event measurement",
+    "true end-of-word annotated wake-event latency P99",
+    "real SSC305 toolchain/sysroot loader ABI and dynamic runtime dependency closure",
+    "real SSC305 CPU, p99 decode time, RSS and repeated long-run stability",
+    "complete model/runtime/license provenance and redistribution review"
+  ],
+  "model_selected_for_shipping": false,
+  "true_independent_FAR_per_hour": "NOT_RUN",
+  "true_independent_FRR": "NOT_RUN",
+  "human_gold": false,
+  "model_promotion_allowed": false
+}
