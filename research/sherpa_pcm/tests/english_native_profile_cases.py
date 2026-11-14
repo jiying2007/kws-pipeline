@@ -165,7 +165,7 @@ class EnglishNativeResourceSourceCases(unittest.TestCase):
         self.assertTrue(experiment["no_python_runtime_or_audio_array_in_measured_child"])
         self.assertEqual(experiment["model_weights_only_bytes"],5446114)
         self.assertEqual(source["limits"]["SSC305_BSP_sysroot_loader_abi_cpu_rss"],"NOT_RUN")
-        self.assertFalse(source["limits"]["host_20ms_feed_deadline_not_target_realtime_qualification"] is False)
+        self.assertTrue(source["limits"]["host_20ms_feed_deadline_not_target_realtime_qualification"])
         self.assertFalse(source["limits"]["model_promotion_allowed"])
 
 
