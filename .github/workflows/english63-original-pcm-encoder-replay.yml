@@ -43,7 +43,7 @@ jobs:
       - name: Fetch exactly existing public source artifacts (not new TTS or ASR)
         timeout-minutes: 6
         env:
-          FAMILY_READ_TOKEN: ${ secrets.CODEX_SAFE_FAMILY_READ_TOKEN }}
+          FAMILY_READ_TOKEN: ${{ secrets.CODEX_SAFE_FAMILY_READ_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
@@ -84,6 +84,6 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: english63-original-pcm-encoder-parity
-          path: ${ runner.temp }}/english63-integrated-pcm-encoder-parity.json
+          path: ${{ runner.temp }}/english63-integrated-pcm-encoder-parity.json
           if-no-files-found: error
           retention-days: 14
