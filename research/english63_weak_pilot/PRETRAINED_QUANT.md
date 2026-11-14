@@ -91,3 +91,32 @@ chunk sizes describe architecture latency constraints, not actual
 end-of-word trigger latency. Genuine continuous FAR/hour, independent
 human FRR, multi-accent/far-field 3–5m and SSC305 resource qualification
 remain NOT_RUN. No unverified nearphones were treated as certified negatives.
+
+
+## Critical on-audio vs artificially padded event correction (2026-11-14)
+
+The original FP32/INT8 event comparison recorded 9 events per 14
+Mero-requested synthetic clips, but each clip included an **artificial
+660 ms zero-valued PCM tail**. Original per-event timestamps and original
+WAV sample lengths prove that **four** of these nine only appeared after the
+extra zeros. They cannot count as source-PCM-triggered online events.
+
+A separate actual one-shot replay [run 43546014483](https://github.com/jiying2007/kws-data/actions/runs/43546014483)
+used identical published FP32/chunk16 and INT8/chunk16 weights, fixed
+threshold and original 63 source WAVs with NO added silence. Both emitted
+**5 original-PCM events**, **0 EOF-only events**. The four omitted events
+are exactly those that previously needed the artificial PCM tail.
+Raw machine receipt artifact 14093802841, ZIP SHA256
+4f006138eb9dcc6f856ef0e61da8dcf10034904e4e683255db302775a19a62f6,
+inner JSON SHA256
+d5cfbd295299ff8c0ee7524538e44c9755ad25a943f5178455816bc691dbe521.
+The exact runner and per-model original readbacks remain unchanged.
+See UNPADDED_LIVE_TIMING.md and UNPADDED_LIVE_RESULT.json for source binding,
+individual clip IDs and explicit non-promotion flags.
+
+This does not prove a 5/14 independent recall metric because these are
+requested synthetic labels and the lexical end-of-word boundaries are not
+verified. Even the five PCM-ingress event times do not measure true
+end-of-word-to-wake latency. Fixed INT8/chunk16 remains a resource research
+candidate, **NOT a qualified wake-event model** until actual continuous
+speech, human positive/accent and SSC305 resource evidence is obtained.
