@@ -187,7 +187,7 @@ def run(native_library,build_receipt,original_audio_zip,original_review,
         runner=root/"native-kws-only-profile"
         args=[
             "gcc","-O2","-std=c11","-Wall","-Wextra","-Werror",
-            str(profile_source()),"-I"+str(HERE),"-L"+str(native_library.parent),
+            str(profile_source()),"-I"+str(HERE.parent),"-L"+str(native_library.parent),
             "-Wl,-rpath,"+str(native_library.parent),
             "-lkws_sherpa_pcm","-lm","-o",str(runner),
         ]
