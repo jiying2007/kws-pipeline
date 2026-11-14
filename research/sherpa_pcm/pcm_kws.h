@@ -8,6 +8,10 @@ extern "C" {
 typedef struct PcmKws PcmKws;
 typedef struct {const char *encoder,*decoder,*joiner,*tokens,*keywords;} PcmKwsFiles;
 typedef struct {const char *keyword;int keyword_id;uint64_t available_samples;int eof_flush;} PcmKwsEvent;
+/* Research-only keyword ID mapping: 0 unknown, 1 你好小窝, 2 小窝小窝, 3 HEY_MERO.
+ * HEY_VOSEN remains unsupported by the official Zh-En model/lexicon.
+ * Keyword text and ID are independent: callers must validate the supplied
+ * model/token/keyword source before using an event as a trusted wake. */
 /* Strings in event live only during callback. Single-threaded, non-reentrant;
  * callback must not throw, call this API, or destroy the instance. */
 typedef void (*PcmKwsCallback)(void *user,const PcmKwsEvent *event);

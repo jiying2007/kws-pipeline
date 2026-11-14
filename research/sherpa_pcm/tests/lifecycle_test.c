@@ -1,7 +1,8 @@
 #include "pcm_kws.h"
 #include <assert.h>
 #include <string.h>
-static int hits;static uint64_t last;
+static int hits;static uint64_t last;static int english_hits;
+static void english_event(void*u,const PcmKwsEvent*e){(void)u;assert(!strcmp(e->keyword,"HEY_MERO"));assert(e->keyword_id==3);assert(e->eof_flush==0);assert(e->available_samples==640);english_hits++;}
 static void event(void*u,const PcmKwsEvent*e){(void)u;assert(!strcmp(e->keyword,"你好小窝"));assert(e->keyword_id==1);assert(e->eof_flush==0);hits++;last=e->available_samples;}
 int main(void){
  PcmKwsFiles f={"e","d","j","t","k"};PcmKws*x=NULL;char err[128];int16_t pcm[640]={0};
@@ -18,5 +19,11 @@ int main(void){
   assert(!pcm_kws_feed(x,pcm,639,err,sizeof(err)));assert(!hits);assert(!pcm_kws_finish(x,err,sizeof(err)));assert(!hits);
   assert(!pcm_kws_reset(x,err,sizeof(err)));assert(!pcm_kws_feed(x,pcm,640,err,sizeof(err)));assert(hits==1&&last==640);pcm_kws_destroy(x);x=NULL;
  }
+ f.keywords="meroonly";english_hits=0;
+ assert(pcm_kws_create(&f,english_event,NULL,&x,err,sizeof(err))==PCM_KWS_OK);
+ assert(!pcm_kws_feed(x,pcm,640,err,sizeof(err)));
+ assert(english_hits==1);
+ assert(!pcm_kws_finish(x,err,sizeof(err)));
+ pcm_kws_destroy(x);x=NULL;
  return 0;
 }
