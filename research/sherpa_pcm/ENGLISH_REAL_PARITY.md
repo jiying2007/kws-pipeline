@@ -76,7 +76,7 @@ confirmed the original official v1.13.8 members:
 - libsherpa-onnx-c-api.so: 5,124,192 bytes;
   SHA256 b8351ca1632571ac108adbb317bcc4bf7cfe84b72690e3017316b0da3e1e344f
 - libonnxruntime.so: 27,026,609 bytes;
-  SHA256 4b3607aebd1784b26b6f9b20e4bd974c7ab8287043e4d095cb40b5e566e
+  SHA256 4b3607aebd1784b26b6f9b20e4bd974c7ab8287043e4d095cb7d2cb40b5e566e
 
 The older C API hash e50ae8... must not be silently treated as
 the original release hash. The separate research-only
