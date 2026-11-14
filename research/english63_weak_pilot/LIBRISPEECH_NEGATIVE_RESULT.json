@@ -1,0 +1,69 @@
+{
+  "schema": "english-librispeech-dev-clean-hash20-actual-readback-summary-v1",
+  "status": "MEASURED_REAL_READ_SPEECH_NOT_FIELD_FAR",
+  "source": {
+    "dataset": "OpenSLR-SLR12-LibriSpeech-dev-clean",
+    "license": "CC-BY-4.0",
+    "corpus_archive_bytes": 337926286,
+    "corpus_archive_sha256": "76f87d090650617fca0cac8f88b9416e0ebf80350acb97b343a85fa903728ab3",
+    "corpus_official_md5": "42e2234ba48799c1f50f24a7926300a1",
+    "official_model_archive_sha256": "68447f4fbc67e70eee3a93961f36e81e98f47aef73ce7e7ca00885c6cd3616a6",
+    "original_runner_sha256": "2ed629ddd2b8aa3ec3b2dc03e8e6e825e6608fa7719c27e9b253380f7267c32b",
+    "pinned_runner_commit": "5aff4bd7a9e9dd9905e2cd7f8ccf7b9174b66180",
+    "source_only_data_workflow_run": 43538998200,
+    "source_only_data_workflow_url": "https://github.com/jiying2007/kws-data/actions/runs/43538998200",
+    "source_only_artifact_id": 14090383839,
+    "artifact_zip_sha256": "7f28b4eddbee87435b9dc5b4c44e47a6d6ed200cbf9f4b8688d9b93cabeb4db4",
+    "artifact_inner_json_name": "english-natural-read-speech-result.json",
+    "artifact_inner_json_bytes": 259931,
+    "artifact_inner_json_sha256": "788a1b04b9ecb22fb96d4036d19456f460ce3ccecd4da69d53d96fea53b29510"
+  },
+  "sampling": {
+    "source_member_rule": "SHA256(member_name) first8 big-endian modulo5==0",
+    "source_partition": "independent sentences, stream reset each record; 660ms zero EOF flush not counted as read-speech duration",
+    "sampled_utterances": 517,
+    "distinct_human_read_speech_speakers": 40,
+    "source_audio_seconds": 3665.38525,
+    "source_audio_hours": 1.0181625694444445,
+    "original_transcripts_exclude_exact_requested_hey_mero_vosen": true
+  },
+  "models": {
+    "fp32_c16": {
+      "requested_keyword": "HEY_MERO",
+      "events": 0,
+      "host_inference_wall_sec_excludes_flac_decode": 74.90342
+    },
+    "int8_c16": {
+      "requested_keyword": "HEY_MERO",
+      "events": 0,
+      "host_inference_wall_sec_excludes_flac_decode": 70.20134
+    }
+  },
+  "inference": {
+    "pretrained": true,
+    "keyword": "HH EY1 M EH1 R OW0 @HEY_MERO",
+    "num_threads": 1,
+    "feature_dim": 80,
+    "max_active_paths": 4,
+    "keywords_score": 1,
+    "keywords_threshold": 0.25,
+    "num_trailing_blanks": 1,
+    "input_chunk_samples": 1600,
+    "per_clip_tail_samples": 10560
+  },
+  "decision": "RETAIN_INT8_C16_AS_RESEARCH_CANDIDATE_NO_PROMOTION",
+  "caveats": {
+    "training_or_finetuning_performed": false,
+    "any_tts_asr_calls": false,
+    "human_gold": false,
+    "independent_test_qualified": false,
+    "confidence_interval_for_field_far": "NOT_ESTIMATED",
+    "natural_read_speech_event_rate_per_hour_not_continuous_field_far": 0,
+    "continuous_household_background_far_per_hour": "NOT_RUN",
+    "human_mic_real_english_frr": "NOT_RUN",
+    "english_accent_far_field_3to5m": "NOT_RUN",
+    "ssc305_arm_board_runtime": "NOT_RUN",
+    "formal_training_admitted": false,
+    "model_promotion_allowed": false
+  }
+}
