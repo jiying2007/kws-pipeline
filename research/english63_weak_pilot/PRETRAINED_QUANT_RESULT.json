@@ -1,0 +1,91 @@
+{
+  "schema": "english63-pretrained-zh-en-quant-measured-research-readback-v1",
+  "status": "SOURCE_BOUND_REPRODUCIBLE_HOST_SCREEN_NOT_KWS_QUALIFICATION",
+  "source": {
+    "data_run_id": 43537391922,
+    "data_run_url": "https://github.com/jiying2007/kws-data/actions/runs/43537391922",
+    "data_one_shot_pr": 113,
+    "pipeline_source_commit": "8de2da63ae4a2e89957890871aa84cc51dd705d9",
+    "script_sha256": "97714a6d9cd7fecf1c98d0b0f24a091d4644c4924dacdd564b527ad8b2962348",
+    "model_archive_sha256": "68447f4fbc67e70eee3a93961f36e81e98f47aef73ce7e7ca00885c6cd3616a6",
+    "original_tts_zip_sha256": "f180004a27ea14c0575f4dd0e2a8476ca048442c76c2dcc186ede6d731cdffcc",
+    "three_evidence_review_json_sha256": "89f20b7ac5a672840013b3cf780422dcf68451b6f5d618e8f494a0e5f5dc6b12",
+    "output_artifact_id": 14090411896,
+    "output_artifact_sha256": "5f76390b557ab58c6d6ae131b8dad91ec232f3efb708466dcb4fc850b0eb13b5",
+    "output_summary_sha256": "4d3ae547162fb819162421d34cfacaea32f1f68510a38ec24f25ebd72227ba84",
+    "output_fp32_c16_sha256": "978b967ba64b15d4cd4679fcf3d53dc4553c67975740427b2a354a38cca3c6c0",
+    "output_int8_c16_sha256": "d6db3248e4317e7d9d22b5e7f9145dc1c15b79b926496658f4e25c2f971c69e6",
+    "output_int8_c8_sha256": "99bb92d79fe394c447bd42adc81b805feaa1cdc45bf0ad29845900541ee2a588"
+  },
+  "source_clips": 63,
+  "source_audio_samples": 2101760,
+  "source_audio_duration_sec": 131.36,
+  "source_synthetic_voice_families": 7,
+  "requested_mero_clips": 14,
+  "other_requested_clips": 49,
+  "pretrained_keyword": "HH EY1 M EH1 R OW0 @HEY_MERO",
+  "fixed_decoder": {
+    "num_threads": 1,
+    "feature_dim": 80,
+    "max_active_paths": 4,
+    "keywords_score": 1,
+    "keywords_threshold": 0.25,
+    "trailing_blanks": 1,
+    "input_pcm_chunk_samples": 1600,
+    "tail_pcm_samples": 10560
+  },
+  "measurements": {
+    "fp32_c16": {
+      "total_events": 9,
+      "clips_with_event": 9,
+      "requested_mero_events": 9,
+      "other_requested_events": 0,
+      "event_count_diff_clip_count_vs_fp32_c16": 0,
+      "model_3files_bytes": 13074255,
+      "host_loop_wall_sec_excludes_load": 3.271188,
+      "host_process_peak_rss_kib_includes_setup": 105448
+    },
+    "int8_c16": {
+      "total_events": 9,
+      "clips_with_event": 9,
+      "requested_mero_events": 9,
+      "other_requested_events": 0,
+      "event_count_diff_clip_count_vs_fp32_c16": 0,
+      "model_3files_bytes": 5446114,
+      "host_loop_wall_sec_excludes_load": 2.87173,
+      "host_process_peak_rss_kib_includes_setup": 100708
+    },
+    "int8_c8": {
+      "total_events": 8,
+      "clips_with_event": 8,
+      "requested_mero_events": 8,
+      "other_requested_events": 0,
+      "event_count_diff_clip_count_vs_fp32_c16": 1,
+      "model_3files_bytes": 5447115,
+      "host_loop_wall_sec_excludes_load": 3.930516,
+      "host_process_peak_rss_kib_includes_setup": 97788
+    }
+  },
+  "int8_c8_missing_fp32_event_cell": {
+    "cell_id": "en-85fa95925c392bbc6abf8f20",
+    "requested_text": "Hey, Mero!",
+    "synthetic_voice_family": "qwen3-preset-eric",
+    "baseline_event_count": 1,
+    "quant8_event_count": 0,
+    "wav_sha256": "36d007699d61484cb002bd1838e26375c19dcadf0bbbca3fb2f5587a82095980"
+  },
+  "research_next_variant": "int8_c16",
+  "int8_c16_reason": "No per-clip event count drift on original source, smaller model component bytes; requires independent validation",
+  "int8_c8_status": "REJECTED_FOR_NEXT_STAGE_DUE_TO_ORIGINAL_CLIP_EVENT_LOSS",
+  "host_timing_is_one_uncontrolled_environment_run": true,
+  "confidence_limited_by_requested_synthetic_audio": true,
+  "human_gold": false,
+  "independent_human_frr": "NOT_RUN",
+  "continuous_negative_far_per_hour": "NOT_RUN",
+  "natural_accents_far_field": "NOT_RUN",
+  "ssc305_board_profile": "NOT_RUN",
+  "model_selection_made": false,
+  "model_promotion_allowed": false,
+  "formal_training_admitted": false,
+  "new_tts_asr_training_calls": 0
+}
