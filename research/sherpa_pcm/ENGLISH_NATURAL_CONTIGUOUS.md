@@ -98,3 +98,42 @@ Sherpa binary requires GLIBC_2.34, GLIBCXX_3.4.29 and CXXABI_1.3.13, so
 do not assume compatibility by CPU architecture alone. Use the existing
 read-only SSC305 SDK probes rather than patching libc or installing a
 generic ARM runtime on the product board.
+
+
+## Actual original-speech native C run (2026-11-14)
+
+Public source-owning [Actions run 43561538859](https://github.com/jiying2007/kws-data/actions/runs/43561538859)
+**completed successfully** on original LibriSpeech dev-clean 517 FLAC recordings
+from 40 audiobook speakers. Exact artifact ID 14100332962, ZIP SHA256
+4ebdfb5dd9fbf7f882497b17d178dcc527bdfadb761bf05b014dea8fe08728d2,
+original JSON SHA256
+f4a44e3b91e148832becd9f486be7a4cc97d1693bc42cb0cd8f8f4fd8ed6dca5
+(224,834 bytes), independently downloaded and hash checked.
+
+**All four actual uninterrupted native-C sessions emitted zero Hey Mero events**:
+lexical source order and 40-speaker round-robin, each under fixed320 and
+network1600 caller PCM chunk plans. Each session processed exactly 517
+original recordings, 58,646,164 mono PCM16 samples (3,665.38525 seconds),
+with NO inserted silence, NO between-utterance model reset and NO
+artificial EOF tail. Both input patterns yielded identical results for
+each source order. Host native decode loops took 48.48618–49.15344 sec
+per 3,665.38525 sec of input on the hosted x64 runner, single thread.
+One-shot host process peak RSS 434,196 KiB includes all 517 decoded
+FLAC arrays buffered in Python and runtime/setup overhead: it **cannot**
+be used as model-only memory or SSC305 RSS.
+
+These four sessions repeat and reorder the same original 61.09 minutes,
+not four independent hours. No events were emitted on this fixed
+*concatenated real audiobook* screen, which strengthens the earlier
+segmented-speech observation but does not prove a field FAR=0.
+Results and source/runner/binary digest are retained in
+ENGLISH_NATURAL_CONTIGUOUS_RESULT.json. The authentic original 517-row
+machine receipt remains available from the source Actions artifact while
+GitHub retains it; no audio, pretrained model or runtime binary was copied
+to the research repository.
+
+Strict next qualification gates remain genuine wake-positive human
+microphone audio and accent/nearphone review, multi-hour household
+background TV/noise/reverberation, actual end-of-word trigger latency
+and SSC305 BSP/sysroot CPU/RAM/dependency verification. Neither this
+experiment nor synthetic concatenation can discharge those gates.

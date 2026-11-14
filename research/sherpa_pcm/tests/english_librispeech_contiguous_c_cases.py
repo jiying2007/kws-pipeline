@@ -161,5 +161,52 @@ class EnglishNaturalContiguousHostSourceCases(unittest.TestCase):
                 study.reference_readback(f)
 
 
+    def test_actual_read_speech_receipt_is_hash_bound_and_not_field_FAR(self):
+        report=json.loads((HERE.parent/"ENGLISH_NATURAL_CONTIGUOUS_RESULT.json").read_text())
+        self.assertEqual(report["schema"],
+                         "english-natural-read-speech-contiguous-native-readback-summary-v1")
+        self.assertEqual(report["provenance"]["original_runner_script_sha256"],
+                         study.digest(Path(study.__file__).read_bytes()))
+        self.assertEqual(report["provenance"]["run_id"],43561538859)
+        self.assertEqual(report["provenance"]["original_result_bytes"],224834)
+        self.assertEqual(report["source"]["original_corpus_sha256"],study.ARCHIVE_SHA)
+        self.assertEqual(report["source"]["model_archive_sha256"],
+                         study.native.quant.MODEL_SHA)
+        self.assertEqual(report["source"]["original_host_archive_sha256"],
+                         study.native.host.ARCHIVE_SHA)
+        self.assertEqual(report["source"]["prior_segmented_actions_receipt_sha256"],
+                         study.BASELINE_ZIP_SHA)
+        self.assertEqual(report["source"]["prior_segmented_original_json_sha256"],
+                         study.BASELINE_JSON_SHA)
+        self.assertEqual(report["source"]["original_utterances_per_session"],517)
+        self.assertEqual(report["source"]["source_speakers"],40)
+        self.assertEqual(report["source"]["original_samples_per_session"],58646164)
+        self.assertEqual(report["fixed_experiment"]["uninterrupted_sessions"],4)
+        self.assertEqual(report["fixed_experiment"]["orders"],list(study.ORDERS))
+        self.assertEqual(report["fixed_experiment"]["caller_partitions"],
+                         list(study.CHUNK_PLANS))
+        self.assertTrue(report["fixed_experiment"]
+                        ["no_silence_inserted_between_original_recordings"])
+        self.assertTrue(report["fixed_experiment"]
+                        ["no_stream_reset_between_original_recordings"])
+        self.assertAlmostEqual(report["fixed_experiment"]["independent_audio_hours_counted_once"],
+                               3665.38525/3600)
+        self.assertEqual(set(report["sessions"]),
+                         {p+"__"+o for p in study.CHUNK_PLANS for o in study.ORDERS})
+        for key,val in report["sessions"].items():
+            self.assertEqual(val["observed_hey_mero_events"],0)
+            self.assertEqual(val["eof_only_events"],0)
+            self.assertEqual(val["source_boundary_near_200ms_events"],0)
+        self.assertEqual(report["host_profile"]["peak_process_rss_kib_includes_preloaded_517_FLAC_PCM_and_Python"],
+                         434196)
+        self.assertTrue(report["host_profile"]["profile_is_not_native_model_only_memory"])
+        self.assertFalse(report["scientific_limits"]["original_audiobook_transcripts_are_human_wake_acoustic_gold"])
+        self.assertEqual(report["scientific_limits"]["genuine_household_continuous_far_per_hour"],
+                         "NOT_RUN")
+        self.assertEqual(report["scientific_limits"]["SSC305_board_qualification"],
+                         "NOT_RUN")
+        self.assertFalse(report["scientific_limits"]["model_promoted"])
+
+
 if __name__=="__main__":
     unittest.main()
