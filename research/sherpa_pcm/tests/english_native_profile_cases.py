@@ -131,5 +131,43 @@ class EnglishNativeResourceSourceCases(unittest.TestCase):
                 p.validate_readback(bad)
 
 
+    def test_actual_retained_C_only_measurement_is_source_bound_and_nonpromotable(self):
+        import json
+        source=json.loads((HERE.parent/"ENGLISH_NATIVE_RESOURCE_RESULT.json").read_text())
+        self.assertEqual(source["schema"],"english63-native-C-only-resource-measured-summary-v1")
+        self.assertEqual(source["status"],
+                         "ACTUAL_NATIVE_HOST_KWS_PROFILE_SOURCE_LOCKED_NOT_SSC305")
+        ids=source["source"]
+        self.assertEqual(ids["run_id"],43569419467)
+        self.assertEqual(ids["original_machine_receipt_bytes"],2587)
+        self.assertEqual(ids["source_parent_runner_sha256"],
+                         hashlib.sha256(Path(p.__file__).read_bytes()).hexdigest())
+        self.assertEqual(ids["source_profiler_C_sha256"],p.source_digest())
+        self.assertEqual(ids["original_model_archive_sha256"],p.native.quant.MODEL_SHA)
+        self.assertEqual(ids["original_audio_zip_sha256"],p.native.quant.source.TTS_SHA256)
+        self.assertEqual(ids["original_review_json_sha256"],p.native.quant.source.REVIEW_SHA256)
+        self.assertEqual(ids["official_host_release_sha256"],p.native.host.ARCHIVE_SHA)
+        self.assertEqual(ids["native_adapter_sha256"],
+                         "b43d258c127ce5e8563b81273f4f36ad7f728a9968ca46caa970c57d8f954d3e")
+        measured=source["host_native_measurements"]
+        self.assertEqual(measured["rss_kib_before_model_create"],17568)
+        self.assertEqual(measured["rss_kib_after_model_create"],52340)
+        self.assertEqual(measured["rss_kib_peak_process"],57720)
+        self.assertAlmostEqual(measured["wall_pcm_feed_ms"]["p99"],3.561917)
+        self.assertAlmostEqual(measured["cpu_pcm_feed_ms"]["p99"],3.560257)
+        self.assertTrue(measured["rss_is_complete_process_not_model_tensor_only"])
+        experiment=source["experiment"]
+        self.assertEqual(experiment["source_recordings"],63)
+        self.assertEqual(experiment["source_pcm_samples"],2101760)
+        self.assertEqual(experiment["actual_native_keyword_events"],5)
+        self.assertEqual(experiment["actual_C_pcm_feed_calls"],6568)
+        self.assertEqual(experiment["feed_wall_time_over_own_chunk_duration"],0)
+        self.assertTrue(experiment["no_python_runtime_or_audio_array_in_measured_child"])
+        self.assertEqual(experiment["model_weights_only_bytes"],5446114)
+        self.assertEqual(source["limits"]["SSC305_BSP_sysroot_loader_abi_cpu_rss"],"NOT_RUN")
+        self.assertFalse(source["limits"]["host_20ms_feed_deadline_not_target_realtime_qualification"] is False)
+        self.assertFalse(source["limits"]["model_promotion_allowed"])
+
+
 if __name__=="__main__":
     unittest.main()
