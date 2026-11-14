@@ -79,3 +79,41 @@ No new TTS, ASR, training, model tuning, corpus additions, voice cloning,
 shipped or SSC305 KWS claim is authorized. Genuine English microphone
 positives/accents, continuous multi-hour home audio, objective false
 alarm rate, SSC305 BSP/ABI, CPU/RSS and decode P99 remain NOT_RUN.
+
+
+## Actual pinned native C model experiment (2026-11-14)
+
+The real GitHub Actions run 43551611855 succeeded using authentic unchanged
+original Qwen PCM, three-evidence review, original no-padding reference,
+pretrained Zh-En INT8 chunk16 model, and the previously verified actual
+Sherpa v1.13.8 x64 C API library. The original machine artifact
+14095938700 has ZIP SHA256
+e72a9f1af5b645504f8504f97474c8a0dc337bbd90f3956407c76315bdde9bea.
+An independent byte readback verified the inner JSON file (133,134 bytes)
+has SHA256
+d9dae86d9547069063cc8adfb342ea964d63ee65940e4d92d35ce1ef49a367ab.
+The source implementation and exact 6-session observations are bound in
+ENGLISH_CONTIGUOUS_RESULT.json.
+
+All six uninterrupted native C runs completed:
+- Original cell-ID ordering: 11 events, identical event sample positions
+  for all 320/1600/uneven caller input patterns; zero EOF-only events
+- Original synthetic voice/phrase ordering: 7 events, again identical
+  input-pattern event positions; zero EOF-only events
+- Of the 11 recorded events in cell-ID ordering, 7 were mapped to source
+  intervals requesting Hey Mero and 4 to other requested phrases; one
+  event fell exactly on a source splice boundary
+- Of the 7 events in voice/phrase ordering, 5 were mapped to Hey Mero
+  request intervals and 2 to other request intervals; one event fell
+  exactly on a splice boundary
+- The model is **partition invariant under the tested caller boundaries**,
+  but **depends on the synthetic order and preceding decoder context**.
+  Counts differ from the five previously observed individually reset
+  source events. Both results remain genuine machine observations
+
+An event mapped to a non-Hey-Mero requested interval is NOT automatically
+a trusted false alarm: the synthetic clips were artificially concatenated,
+recorded request text is not independently human-reviewed acoustic truth,
+and the decoder may span splice boundaries. No field FAR/hour or FRR can be
+inferred. The variation makes real unbroken background and correct
+end-of-word event timing higher priority than further quantization tuning.
