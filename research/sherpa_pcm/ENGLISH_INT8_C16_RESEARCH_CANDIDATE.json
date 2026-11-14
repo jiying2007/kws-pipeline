@@ -39,7 +39,7 @@
     "C_facing_uses_Cpp_sherpa_native_backend": true,
     "official_host_runtime_archive_sha256": "c0bdb7907d3a74bba1d55d22bf4d9fa75586cf1530614ebe88a27b9118e015c4",
     "official_host_C_api_sha256": "b8351ca1632571ac108adbb317bcc4bf7cfe84b72690e3017316b0da3e1e344f",
-    "official_host_ONNX_Runtime_sha256": "4b3607aebd1784b26b6f9b20e4bd974c7ab8287043e4d095cb40b5e566e",
+    "official_host_ONNX_Runtime_sha256": "4b3607aebd1784b26b6f9b20e4bd974c7ab8287043e4d095cb7d2cb40b5e566e",
     "official_host_runtime_2libs_bytes": 32150801,
     "native_compiled_library_sha256": "b43d258c127ce5e8563b81273f4f36ad7f728a9968ca46caa970c57d8f954d3e",
     "host_process_peak_rss_kib_includes_python": 101808,
