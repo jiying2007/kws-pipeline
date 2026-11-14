@@ -161,20 +161,35 @@ def verify_retained_receipt(result):
                 v.get("model_promotion_allowed") is False and
                 type(v.get("records")) is list and len(v["records"])==63,
                 "EN_LIVE_RESULT_MEASUREMENTS_UNSAFE")
-        for row in v["records"]:
+        records=v["records"]
+        require(len({r.get("cell_id") for r in records})==63,
+                "EN_LIVE_DUPLICATE_CLIP")
+        for row in records:
             require(type(row) is dict and original.source.CELL.fullmatch(
                        str(row.get("cell_id"))) and
                     row.get("requested_text") in original.PROMPTS and
                     row.get("human_gold") is False and
                     row.get("training_admitted") is False and
-                    type(row.get("events")) is list and
+                    type(row.get("source_pcm_samples")) is int and
+                    8000<=row["source_pcm_samples"]<=16000*12 and
+                    type(row.get("original_with_tail_event_count")) is int and
+                    0<=row["original_with_tail_event_count"]<16 and
+                    type(row.get("original_after_audio_event_count")) is int and
+                    0<=row["original_after_audio_event_count"]<=row["original_with_tail_event_count"] and
+                    type(row.get("events")) is list and len(row["events"])<16 and
                     all(type(e) is dict and e.get("phase") in
                         ("source_pcm","eof_no_padding") and
                         e.get("keyword")=="HEY_MERO" and
                         type(e.get("input_samples_available")) is int and
-                        e["input_samples_available"] >= 0
+                        0<=e["input_samples_available"]<=row["source_pcm_samples"]
                         for e in row["events"]),
                     "EN_LIVE_RESULT_ROW_UNSAFE")
+        require(sum(r["source_pcm_samples"] for r in records)==original.EXPECTED_PCM_SAMPLES and
+                sum(r["original_with_tail_event_count"] for r in records)==9 and
+                sum(r["original_after_audio_event_count"] for r in records)==4 and
+                sum(sum(e["phase"]=="source_pcm" for e in r["events"]) for r in records)==v["raw_pcm_events"] and
+                sum(sum(e["phase"]=="eof_no_padding" for e in r["events"]) for r in records)==v["eof_only_events"],
+                "EN_LIVE_EVENT_SUM_DRIFT")
     return True
 
 
