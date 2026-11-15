@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 85638,
-      "git_blob_sha1": "5f3e79f392558106ab1e9f633cdaf7b917d68d80",
-      "sha256": "11df2326606f07a2bc516c75501bf0e4ea41d4131d005c645646e2df45537c88"
+      "bytes": 85876,
+      "git_blob_sha1": "9d9857b2e99d5bff7c4b44e06506c475a49c474e",
+      "sha256": "5c4c539eca663a55bd3fa967d4aef544f2cf3d6287b3be12592c6da30bd66609"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -26756,7 +26756,7 @@
       "public_main_base_tree": "a296feacc661c0a45401c7bdd6bca584168d5389",
       "workflow_source_changed": false,
       "scope": "Close all nine r5 source execution/publication/claim approvals after the single terminal run; preserve original executed source, result evidence, scientific contracts and resource budgets.",
-      "rationale": "Close all nine r5 execution/publication/claim approvals after immutable run 38518609834 at a1159dc902634e65b1fb2a7bbf219389f84089d5 received root-pinned, independent complete_native_verified acceptance for all eighteen original native slots. Preserve ledger_reported_attempts=18 and consumed_attempts=null; archive exact six-by-three transcripts and original resource commitments, including 57 acknowledged single owned-CID removals and zero actual fallback probes. Only k1p6-002 agrees on non-target \u4f60\u597d\u5c0f\u5c4b; human_gold/training_admitted remain false and acoustic completeness unknown. Restore explicitly closed current-control test expectations while retaining enabled synthetic positives, negative owner/admission gates and existing future-name lookalike regressions; refresh only derived freezes/dependency pins/public retention metadata. Original executed source, result/checkpoint evidence, prior failure interpretation, 47 scientific bodies, six inputs, prepare proof and all model/resource/API budgets are unchanged. This ordinary closeout source grants no execution, retry or new allowance.",
+      "rationale": "Close all nine r5 execution/publication/claim approvals after immutable run 38518609834 at a1159dc902634e65b1fb2a7bbf219389f84089d5 received root-pinned, independent complete_native_verified acceptance for all eighteen original native slots. Preserve ledger_reported_attempts=18 and consumed_attempts=null; archive exact six-by-three transcripts and original resource commitments, including 57 acknowledged single owned-CID removals and zero actual fallback probes. Only k1p6-002 agrees on non-target 你好小屋; human_gold/training_admitted remain false and acoustic completeness unknown. Restore explicitly closed current-control test expectations while retaining enabled synthetic positives, negative owner/admission gates and existing future-name lookalike regressions; refresh only derived freezes/dependency pins/public retention metadata. Original executed source, result/checkpoint evidence, prior failure interpretation, 47 scientific bodies, six inputs, prepare proof and all model/resource/API budgets are unchanged. This ordinary closeout source grants no execution, retry or new allowance.",
       "files": [
         {
           "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
@@ -52220,6 +52220,140 @@
             "bytes": 35547,
             "git_blob_sha1": "e209443dc33e895ad5bd7964435a6b313ad1d035",
             "sha256": "6ad00fb911da0f947e6db208dc4e0dcb1629fdf53178135c0695db8cbe5cb059"
+          }
+        }
+      ]
+    },
+    {
+      "id": "v4-native-pool-time-major-20261115",
+      "date": "2026-11-15",
+      "base_commit": "0df50dd033bd37fd9dee41d0f9bc335e784e39b9",
+      "previous_manifest_sha256": "865f212473ab43dfce40679bd471c9c3e0a36b4abbbdda089be1db14267cd93f",
+      "workflow_source_changed": true,
+      "scope": "Add an opt-in lossless time-major pooling implementation and one bounded paired full-feed CPU profile through existing source CI and the existing data-owned executor.",
+      "rationale": "Preserve chronological per-channel binary32 addition, strict max comparisons, weights, state layout, decoder, thresholds and default path. Compare the two compiled macro variants on the original full63 PCM in a consumed public-Actions request, with exact old baseline trace identity, single CPU affinity, fixed 32 passes, six alternating timed pairs per model, raw timing/lifetime records and saved-only verification. Retain NO_BENEFIT without extra runs. No training, ASR, new audio, independent exposure, private input upload, workflow, scheduler, model promotion or board qualification. Local source CI uses invented arrays, analytic parameters and invented PCM only.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 85638,
+            "git_blob_sha1": "5f3e79f392558106ab1e9f633cdaf7b917d68d80",
+            "sha256": "11df2326606f07a2bc516c75501bf0e4ea41d4131d005c645646e2df45537c88"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 85876,
+            "git_blob_sha1": "9d9857b2e99d5bff7c4b44e06506c475a49c474e",
+            "sha256": "5c4c539eca663a55bd3fa967d4aef544f2cf3d6287b3be12592c6da30bd66609"
+          }
+        },
+        {
+          "path": "research/english63_online_c/README.md",
+          "before": {
+            "path": "research/english63_online_c/README.md",
+            "mode": "100644",
+            "bytes": 12761,
+            "git_blob_sha1": "09aacf939517a49ea86a91192057c8aa75f225b8",
+            "sha256": "1de186f8f532bf6af58d0fc5403b882973cff35f5e5cfa46c1124f5da5c33761"
+          },
+          "after": {
+            "path": "research/english63_online_c/README.md",
+            "mode": "100644",
+            "bytes": 14694,
+            "git_blob_sha1": "c6b089ffff1fe054b59d6dfc2d08ac3834804e18",
+            "sha256": "982215093001eb5ef8b2d04c4322dda9f14f3ade212334321fc9d9a68a0e5de0"
+          }
+        },
+        {
+          "path": "research/english63_online_c/check_source.py",
+          "before": {
+            "path": "research/english63_online_c/check_source.py",
+            "mode": "100644",
+            "bytes": 6575,
+            "git_blob_sha1": "c094d52ebc9b13d0757fff691ab6af44a711c44e",
+            "sha256": "e620ae1afcfcfe3b02d4df6a3760ae792bb12df13d5a2b945649a28b077612cc"
+          },
+          "after": {
+            "path": "research/english63_online_c/check_source.py",
+            "mode": "100644",
+            "bytes": 12565,
+            "git_blob_sha1": "27624f6edd4cf5d91f9cbf1f9b9925cdb4889705",
+            "sha256": "756f3476dd8abbb52aeb1c094abbdc4ce7f095d4c01a1f30f589d50900e6df05"
+          }
+        },
+        {
+          "path": "research/english63_online_c/en63_stream.c",
+          "before": {
+            "path": "research/english63_online_c/en63_stream.c",
+            "mode": "100644",
+            "bytes": 10826,
+            "git_blob_sha1": "d6958f7c709207ccd748170055aa53fe0786a878",
+            "sha256": "01395518e3a38563762bcef39ab021ca21e572a70aafa48f2fadd59c95151a5b"
+          },
+          "after": {
+            "path": "research/english63_online_c/en63_stream.c",
+            "mode": "100644",
+            "bytes": 11894,
+            "git_blob_sha1": "b3aff316f97111da003755ca8e31cb2c4394d9de",
+            "sha256": "b8cb0926c185d1200d27dae194dd83d27d7f08d83acd49d9526bc363d3cee500"
+          }
+        },
+        {
+          "path": "research/english63_online_c/pool_contract_cases.c",
+          "before": null,
+          "after": {
+            "path": "research/english63_online_c/pool_contract_cases.c",
+            "mode": "100644",
+            "bytes": 12446,
+            "git_blob_sha1": "acf1d7808206c65e0dad5ef98cfe8e5f3a639eda",
+            "sha256": "8b7f0fffe0f136ce57ee2bd69b5e3fd85235cd3588daec37912eb08ba8ef2251"
+          }
+        },
+        {
+          "path": "research/english63_online_c/pool_contract_cases.py",
+          "before": null,
+          "after": {
+            "path": "research/english63_online_c/pool_contract_cases.py",
+            "mode": "100644",
+            "bytes": 3571,
+            "git_blob_sha1": "a16eb1d11bd82ab5d107bbddceeade0721e3950c",
+            "sha256": "0172318006e0f43ce73244f1f24c6f508bce24d2fd5c3939cd850f9d5fb3cb20"
+          }
+        },
+        {
+          "path": "research/english63_online_c/pool_profile.c",
+          "before": null,
+          "after": {
+            "path": "research/english63_online_c/pool_profile.c",
+            "mode": "100644",
+            "bytes": 9545,
+            "git_blob_sha1": "bdaa1056fd8d2d5b4cda17036075002992e2bba7",
+            "sha256": "92a8ee6246d252311608c8b1973939102b571f5c9ec917ee456e8eefde24317a"
+          }
+        },
+        {
+          "path": "research/english63_online_c/pool_profile.py",
+          "before": null,
+          "after": {
+            "path": "research/english63_online_c/pool_profile.py",
+            "mode": "100644",
+            "bytes": 50276,
+            "git_blob_sha1": "bdc69bc7f2a08e35d6eb59c73614d9086a8c7dbc",
+            "sha256": "cc9485e64e31e3f80d6a2f9b951346e7ebcf3c94b06406f61eebc0dc6d93a577"
+          }
+        },
+        {
+          "path": "research/english63_online_c/pool_profile_cases.py",
+          "before": null,
+          "after": {
+            "path": "research/english63_online_c/pool_profile_cases.py",
+            "mode": "100644",
+            "bytes": 25520,
+            "git_blob_sha1": "3743ded43fbe8acb68d54345cf81b608b1f5f697",
+            "sha256": "8e9c400b875f47ab0580172184f18ea268e8ad1215b8f17f7ac69f177ed1025a"
           }
         }
       ]

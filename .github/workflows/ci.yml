@@ -902,6 +902,9 @@ jobs:
           python3 -I -S -B research/english63_online_c/state_contract_cases.py
           python3 -I -S -B -O research/english63_online_c/state_contract_cases.py
           python3 -I -S -B -OO research/english63_online_c/state_contract_cases.py
+          python3 -I -S -B research/english63_online_c/pool_profile_cases.py
+          python3 -I -S -B -O research/english63_online_c/pool_profile_cases.py
+          python3 -I -S -B -OO research/english63_online_c/pool_profile_cases.py
           python3 -I -S -B research/english63_online_c/check_source.py --cc "${{ matrix.cc }}"
       - name: Verify tracked worktree after English C source contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "English C source contracts"'
