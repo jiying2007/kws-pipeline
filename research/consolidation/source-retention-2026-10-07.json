@@ -52446,6 +52446,100 @@
           }
         }
       ]
+    },
+    {
+      "id": "v4-english-natural-background48-20261115",
+      "date": "2026-11-15",
+      "base_commit": "e15823e343d7cbdb5a0c207c6baa042c9ff47baa",
+      "previous_manifest_sha256": "9912bd5428c2ea6d9c5ab214302d31818ff2e06abbca8b336f8adc8cddceffe4",
+      "workflow_source_changed": false,
+      "scope": "Add one frozen English natural-background continuation control/treatment experiment and its invented source checks through the existing public data executor.",
+      "rationale": "Keep current online GRU/DS-TCN warm starts, original 30-clip MIL loss, normalizer, unchanged C core, pooling zero and decoder. Train control=old30 and treatment=old30+0.5*mean128 natural background MIL for 48 updates each, 192 total; 32/8 already-exposed speaker split and fixed center 3-second crops. Evaluate frozen baseline and four new checkpoints on the same dev-only stream and 12 isolated TTS clips, six native children/78 logical streams/431790 frames. Freeze per-arm/group training and native timeouts with outer group and parent-death shutdown, incrementally retain completed NPZs on failure, and verify saved probability traces/NPZ/header bindings with zero forward calls. Predeclare total/per-keyword natural reduction and unique positive-clip/ordinary-background safeguards. Retain NO_BENEFIT as successful research with no retries, independent-exposure claim, threshold scan, model selection, promotion, new workflow or schedule. Local checks use invented scalar losses, NPZs, probabilities, PCM and constant fake C weights only.",
+      "files": [
+        {
+          "path": "research/english63_background_ab/PREDECLARATION.md",
+          "before": null,
+          "after": {
+            "path": "research/english63_background_ab/PREDECLARATION.md",
+            "mode": "100644",
+            "bytes": 13084,
+            "git_blob_sha1": "02f06d0eff18134ad0571c76d55b1cc74201a2e4",
+            "sha256": "5809dd7aed7bd7aa4f3165f2e6815cadf25b7f1b7e7d9042204a14b246279eae"
+          }
+        },
+        {
+          "path": "research/english63_background_ab/ab_cases.py",
+          "before": null,
+          "after": {
+            "path": "research/english63_background_ab/ab_cases.py",
+            "mode": "100644",
+            "bytes": 25717,
+            "git_blob_sha1": "2290ac1fafe13f0e02f025b1d818cc8d3acf322f",
+            "sha256": "e0c1856d6075a64ea54ab9f39f432bb293c5237958062f5d5ae20634d80198ac"
+          }
+        },
+        {
+          "path": "research/english63_background_ab/ab_contract.py",
+          "before": null,
+          "after": {
+            "path": "research/english63_background_ab/ab_contract.py",
+            "mode": "100644",
+            "bytes": 33450,
+            "git_blob_sha1": "8c8941892c35912acc8c61c644bd16ecb968b1be",
+            "sha256": "74d1328adf55af0d89b4758b300e518de88e7e21960c9f349f44b948ca288680"
+          }
+        },
+        {
+          "path": "research/english63_background_ab/ab_replay.c",
+          "before": null,
+          "after": {
+            "path": "research/english63_background_ab/ab_replay.c",
+            "mode": "100644",
+            "bytes": 8987,
+            "git_blob_sha1": "28ce9b9363ff624167f9710a9ea2fc2a55c346ef",
+            "sha256": "24d902be2de3a5b18efac68a41a107040f012332c5bce912137d7475944989aa"
+          }
+        },
+        {
+          "path": "research/english63_background_ab/protocol.json",
+          "before": null,
+          "after": {
+            "path": "research/english63_background_ab/protocol.json",
+            "mode": "100644",
+            "bytes": 4542,
+            "git_blob_sha1": "00a5e00839a20c45f5156caeb6d3d5a6ffc29c53",
+            "sha256": "ac7c7c80cd84b3ea2327c70f8eed06fb787680856b422ac8841f7c84fe6ba7a3"
+          }
+        },
+        {
+          "path": "research/english63_background_ab/run_ab.py",
+          "before": null,
+          "after": {
+            "path": "research/english63_background_ab/run_ab.py",
+            "mode": "100644",
+            "bytes": 25368,
+            "git_blob_sha1": "581525a8ec7886fad9ebb8e9488432749def1bf2",
+            "sha256": "c00b51f5249755b9c5637c9fe8d9c1436c2164e5e78a6ed0bec569c72a0ae8c0"
+          }
+        },
+        {
+          "path": "research/english63_online_c/check_source.py",
+          "before": {
+            "path": "research/english63_online_c/check_source.py",
+            "mode": "100644",
+            "bytes": 12875,
+            "git_blob_sha1": "420d1c436937381ea34c0061606890caee5b9155",
+            "sha256": "cb00445189e3e55189aaa12a4490d5429689892659b871facb9f1b64b665e84a"
+          },
+          "after": {
+            "path": "research/english63_online_c/check_source.py",
+            "mode": "100644",
+            "bytes": 13232,
+            "git_blob_sha1": "43b7d079d19120848a2a9a99c6d2fed63e860c82",
+            "sha256": "cb48a2783d8bd0c32e1c1acb33385ee8655cf3877e16942747185cf27bd8d647"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
