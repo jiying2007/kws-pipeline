@@ -1,0 +1,168 @@
+{
+  "schema": "kws-research-v4-projection-continuation-request-v1",
+  "experiment": "english63-one-sided-background-gradient-projection",
+  "request_id": "en63-projection48-20261115-v1",
+  "pipeline_repository": "jiying2007/kws-pipeline",
+  "entrypoint": "research/english63_projection_ab/run_projection.py",
+  "source_artifacts": {
+    "trained": {
+      "run_id": 43595338774,
+      "artifact_id": 14114695344,
+      "zip_bytes": 100653,
+      "zip_sha256": "bc76805934df8eb158fa4259a75c26a4ea4276c15b83542acad5948a1f954b54",
+      "data_commit": "14547faa42299ae9d819ba4bff9824c2471c412e",
+      "pipeline_commit": "fc59bef7fe108ce6accbf51d8de0bfcaae19e0bc",
+      "terminal_sha256": "7c840f2877c0d80a147b5d1287261faeb01495e61f8a2d8ab8cf9053c6cc91a4",
+      "summary_sha256": "09db16f5947d39c1824565b20defc16a2349f09fea5621b8a935989f65555295",
+      "weights_sha256": {
+        "gru": "71f731155a19538b533e4253d2e4b19d5c03328bd26da5263542159df066e623",
+        "dsc_tcn": "167282c1037a28152bed4afaf49e53a4307bd8d5576a486b41c0a2291fdca935"
+      }
+    },
+    "tts": {
+      "artifact_id": 13954744587,
+      "zip_sha256": "f180004a27ea14c0575f4dd0e2a8476ca048442c76c2dcc186ede6d731cdffcc"
+    },
+    "review": {
+      "artifact_id": 14001747172,
+      "zip_sha256": "f83d6a2f399c20af5bbc920ef6c38c42ac1e44b516d2b7291f4510557491cec8",
+      "member": "english63-three-evidence-review.json",
+      "member_sha256": "89f20b7ac5a672840013b3cf780422dcf68451b6f5d618e8f494a0e5f5dc6b12"
+    },
+    "negative_reference": {
+      "run_id": 43538998200,
+      "artifact_id": 14090383839,
+      "zip_bytes": 47199,
+      "zip_sha256": "7f28b4eddbee87435b9dc5b4c44e47a6d6ed200cbf9f4b8688d9b93cabeb4db4",
+      "member": "english-natural-read-speech-result.json",
+      "member_sha256": "788a1b04b9ecb22fb96d4036d19456f460ce3ccecd4da69d53d96fea53b29510"
+    },
+    "corpus": {
+      "url": "https://www.openslr.org/resources/12/dev-clean.tar.gz",
+      "bytes": 337926286,
+      "sha256": "76f87d090650617fca0cac8f88b9416e0ebf80350acb97b343a85fa903728ab3",
+      "license": "CC-BY-4.0"
+    },
+    "background": {
+      "run_id": 43681928374,
+      "artifact_id": 14149230666,
+      "zip_bytes": 7850625,
+      "zip_sha256": "d1ac243201a7c29db5d1bef188812d77e2e3906c3d2f084da77557f505a8b9e7",
+      "data_commit": "48e1234a506334d05e962f6a30367f2d50947598",
+      "pipeline_commit": "849040b48bb813d61722de7e1cdd0d0df20ca828",
+      "request_id": "en63-background48-20261115-v1",
+      "request_sha256": "e48b5f6d7a22198c254fb1971d00702cee1b1af25061ee08dbee8337e4a8dd0a",
+      "inputs_sha256": "f1723743acbe564285bac570b0e0574b3da34e3a45e6c9420e7e40b7a8e32c80",
+      "summary_sha256": "fc7eac1e3f10e6fdcea8ce915d12e74878a41c25c1aced64177ec444d2df2d4b",
+      "replay_sha256": "0a5d11320e98bec053a3f716df809b8bc5dfcd852598459c8ad51b4dcf8d9535",
+      "weights_sha256": {
+        "control-dsc_tcn.npz": "47c0e3bf66c9211194130edba7abb41c3df9f1d3a8151957b30ce60d818bf627",
+        "control-gru.npz": "9e034303f5101f3a74929c89a385af5f3a11519707bced99acd100fe619178c0",
+        "treatment-dsc_tcn.npz": "31f47fb380c1bf4bef3b0806f3966ae6dd19d8c97cf3664e42f442103e467e76",
+        "treatment-gru.npz": "94bfb50f87ec70bc1d9f25bad808ae5e0ccf38d3a60a1394983405ccd3e2aa2f"
+      }
+    }
+  },
+  "profile": {
+    "models": [
+      "gru",
+      "dsc_tcn"
+    ],
+    "variants": [
+      "baseline",
+      "control",
+      "treatment",
+      "projected"
+    ],
+    "speaker_hash_domain": "en63-bg48-speaker-v1/",
+    "record_hash_domain": "en63-bg48-record-v1/",
+    "natural_source_clips": 517,
+    "natural_source_speakers": 40,
+    "natural_source_samples": 58646164,
+    "train_speakers": 32,
+    "study_dev_speakers": 8,
+    "records_per_train_speaker": 4,
+    "natural_train_windows": 128,
+    "crop_samples": 48000,
+    "crop_rule": "floor((source_samples-48000)/2)",
+    "crop_frames": 298,
+    "natural_train_samples": 6144000,
+    "natural_study_dev_clips": 102,
+    "natural_study_dev_samples": 11124244,
+    "natural_study_dev_frames": 69525,
+    "natural_study_dev_order": "lexical-source-member",
+    "original_train_clips": 30,
+    "tts_study_dev_clips": 12,
+    "tts_study_dev_frames": 2440,
+    "tts_study_dev_order": "lexical-cell-id-independent-reset",
+    "steps_per_arm": 48,
+    "training_arms": 2,
+    "optimizer_updates": 96,
+    "train_microbatch_natural": 32,
+    "natural_loss_weight": 0.5,
+    "objective": "same old30-MIL-CE and new128-background-MIL-CE losses; one-sided global weighted-background gradient projection",
+    "seeds": {
+      "gru": 20261114,
+      "dsc_tcn": 20261215
+    },
+    "learning_rate": 0.001,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "cpu_threads": 1,
+    "mkldnn": false,
+    "training_arm_seconds": 180,
+    "training_group_seconds": 360,
+    "native_model_seconds": 120,
+    "native_group_seconds": 180,
+    "native_model_passes": 8,
+    "native_segments_per_model": 13,
+    "native_eval_frames": 575720,
+    "feed_chunk_samples": 160,
+    "pool_time_major": 0,
+    "window_frames": 200,
+    "minimum_observed_frames": 50,
+    "mil_temperature": 0.25,
+    "threshold": 0.8,
+    "confirm_frames": 3,
+    "cooldown_frames": 100,
+    "baseline_header_sha256": "912f443a85fddbc77c49f6cc52c2dbde6c395436d7d8d0818a4e6225cd90fc16",
+    "benefit_gate": "B>0,C>0,2*P<=B,2*P<=C;each-natural-class-P<=min(B,C);each-keyword-correct-clips>=max(B,C,2);each-keyword-wrong-other-clips<=min(B,C);ordinary-background-proposals<=min(B,C)",
+    "training_forward_calls": 480,
+    "training_padded_forward_frames": 4669824,
+    "reused_frozen_training_arms": 4,
+    "gradient_projection": {
+      "old_gradient": "g=grad(old30-MIL-CE)",
+      "weighted_background_gradient": "h=sum(four microbatch gradients weighted 0.125 each)=0.5*grad(mean new128-MIL-CE)",
+      "order": "model.named_parameters(), verified against frozen exporter parameter roster",
+      "dot_product": "math.fsum of elementwise products of exact FP32 gradient values converted to Python double",
+      "projection": "d=dot(g,h);n=dot(g,g);if d<0 and n>0:h_prime=h-(d/n)*g;else:h_prime=h",
+      "zero_reference": "leave h unchanged when n==0",
+      "epsilon": null,
+      "cast": "compute projection and g+h_prime in FP64; one cast of combined gradient to FP32 before original clipping and AdamW",
+      "gradient_tolerance": 1e-06,
+      "tape_arrays": [
+        "old_gradient",
+        "weighted_background_gradient",
+        "combined_preclip",
+        "actual_clipped_gradient",
+        "actual_parameter_delta",
+        "parameter_after"
+      ],
+      "tape_dtype": "<f4",
+      "tape_shape": "(48,parameter_count)",
+      "delta": "FP32(theta_after-theta_before); verify against successive parameter_after rows and original baseline",
+      "per_class_old_loss": "classes 0,1,2 from same old30 forward; diagnostic only",
+      "optimizer": "fresh original AdamW, learning_rate=0.001, weight_decay=0.01, clip_grad_norm_=1.0"
+    }
+  },
+  "max_execution_seconds": 1200,
+  "max_verification_seconds": 180,
+  "new_audio_generated": false,
+  "new_tts_asr_ipa_calls": 0,
+  "new_independent_audio_seconds": 0,
+  "formal_training_admitted": false,
+  "human_gold": false,
+  "model_promotion_allowed": false,
+  "model_selection_made": false,
+  "threshold_selection": false
+}
