@@ -219,7 +219,7 @@ def saved_forgery_case(root):
                 'weights': weight_meta[arm + '-' + kind + '.npz'][0], 'warm_start_parameter_payload_sha256':
                 c.digest(c.baseline_payloads(baseline)[kind]), 'changed_state_tensors': 1,
                 'runtime': {'numpy': '2.3.5', 'torch': '2.10.0+cpu', 'threads': 1, 'mkldnn': False},
-                'child_wall_seconds': 1, 'child_exit_code': 0, 'child_peak_rss_kib': 1,
+                'child_wall_seconds': 1, 'child_exit_code': 0, 'child_peak_rss_kib': 1, 'timed_out': False,
                 'updates': [{'step': i, 'old30_mil_ce': 1., 'new128_mil_ce': 2. if arm == 'treatment' else None,
                              'objective': 2. if arm == 'treatment' else 1., 'gradient_norm': 1.} for i in range(1, 49)]})
         integrity = {'source_before': hashes, 'source_after': hashes,
@@ -272,6 +272,15 @@ def saved_forgery_case(root):
             if name == 'SUMMARY.json':
                 receipt['summary_sha256'] = identity['sha256']
             (root / 'REPLAY.json').write_text(json.dumps(receipt))
+        training_raw = (root / 'TRAINING.json').read_bytes()
+        for key, value in (('timed_out', True), ('child_exit_code', False)):
+            forged_training = copy.deepcopy(training)
+            forged_training['arms'][0][key] = value
+            (root / 'TRAINING.json').write_text(json.dumps(forged_training))
+            rehash_receipt('TRAINING.json')
+            rejected(lambda: c.verify_saved(root), 'AB_TRAINING_ARM')
+        (root / 'TRAINING.json').write_bytes(training_raw)
+        rehash_receipt('TRAINING.json')
         summary_raw = (root / 'SUMMARY.json').read_bytes()
         (root / 'SUMMARY.json').write_text(json.dumps({**summary, 'decision': 'RESEARCH_BENEFIT'}))
         rehash_receipt('SUMMARY.json')

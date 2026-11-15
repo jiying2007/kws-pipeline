@@ -356,7 +356,8 @@ def verify_training(training, inputs, weights, baseline):
              meta['npz_sha256'] != p.c.SOURCE_WEIGHTS[kind] and
              record['runtime']['numpy'] == '2.3.5' and record['runtime']['torch'] == '2.10.0+cpu' and
              record['runtime']['threads'] == 1 and record['runtime']['mkldnn'] is False and
-             0 < record['child_wall_seconds'] <= 180 and record['child_exit_code'] == 0 and
+             0 < record['child_wall_seconds'] <= 180 and exact(record['child_exit_code'], 0) and
+             record['timed_out'] is False and
              p.is_int(record['child_peak_rss_kib'], 1) and len(record['updates']) == 48, 'AB_TRAINING_ARM')
         changes = changed_tensors(original_payloads[kind], payload, kind)
         need(changes > 0 and exact(record['changed_state_tensors'], changes) and
