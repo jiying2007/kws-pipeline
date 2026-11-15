@@ -52357,6 +52357,95 @@
           }
         }
       ]
+    },
+    {
+      "id": "v4-english-librispeech-screen-20261115",
+      "date": "2026-11-15",
+      "base_commit": "30919eed9506d9dbf6872f789406be804cb0021a",
+      "previous_manifest_sha256": "3c93ab9e042c01ef7b9837acaf95744698c93ac17e1fd2d8f536fb2ce6c9e898",
+      "workflow_source_changed": false,
+      "scope": "Close the completed native pooling experiment as NO_BENEFIT and add one fixed two-model continuous LibriSpeech screening through the existing public data executor and existing invented source checks.",
+      "rationale": "Preserve all trained weights, original exported header, default pooling zero, decoder, threshold and source selection. Reuse the 517 original FLAC/transcript/speaker/sample identities without resampling, inter-record reset or padding; each model receives exactly one lexical stream of 58,646,164 samples. Freeze two passes, 733,074 frames, 180-second child and 420-second group limits. Save compact probability traces and independently replay only the decoder during saved verification. Keep nonzero proposals as valid observations, transcript negatives untrusted, all FAR/FRR/latency/board qualification NOT_RUN. Include the independently verified 32-pass pooling NO_BENEFIT receipt without rerun or default change. Local checks use invented tensors, PCM and saved evidence only. No training, TTS/ASR, added independent exposure, scheduler, new workflow or model promotion.",
+      "files": [
+        {
+          "path": "research/english63_online_c/librispeech_screen.py",
+          "before": null,
+          "after": {
+            "path": "research/english63_online_c/librispeech_screen.py",
+            "mode": "100644",
+            "bytes": 37015,
+            "git_blob_sha1": "a1fba7dc46cb8509aad63368e7f0f2511e9d8a34",
+            "sha256": "e416b11e501a3f788c3d13a221a9b9747a4e32819e03aaaf3f65cf2dc4da99d2"
+          }
+        },
+        {
+          "path": "research/english63_online_c/librispeech_screen.c",
+          "before": null,
+          "after": {
+            "path": "research/english63_online_c/librispeech_screen.c",
+            "mode": "100644",
+            "bytes": 7115,
+            "git_blob_sha1": "c9037eb765bfabe5d99421a50afff0afbd34d67e",
+            "sha256": "14a82fbe3383edde9903c0addf6a1a0590c55c1c16ca0d383060ece9835cc2e5"
+          }
+        },
+        {
+          "path": "research/english63_online_c/librispeech_screen_cases.py",
+          "before": null,
+          "after": {
+            "path": "research/english63_online_c/librispeech_screen_cases.py",
+            "mode": "100644",
+            "bytes": 19374,
+            "git_blob_sha1": "1e1aa5ec9b6769ab60de7e798407f2fcc8d08272",
+            "sha256": "aba10ea282f959be89c72f2e14d654d408b99f5f7fe83e8f646d05160f9c9534"
+          }
+        },
+        {
+          "path": "research/english63_online_c/check_source.py",
+          "before": {
+            "path": "research/english63_online_c/check_source.py",
+            "mode": "100644",
+            "bytes": 12565,
+            "git_blob_sha1": "27624f6edd4cf5d91f9cbf1f9b9925cdb4889705",
+            "sha256": "756f3476dd8abbb52aeb1c094abbdc4ce7f095d4c01a1f30f589d50900e6df05"
+          },
+          "after": {
+            "path": "research/english63_online_c/check_source.py",
+            "mode": "100644",
+            "bytes": 12875,
+            "git_blob_sha1": "420d1c436937381ea34c0061606890caee5b9155",
+            "sha256": "cb00445189e3e55189aaa12a4490d5429689892659b871facb9f1b64b665e84a"
+          }
+        },
+        {
+          "path": "research/english63_online_c/README.md",
+          "before": {
+            "path": "research/english63_online_c/README.md",
+            "mode": "100644",
+            "bytes": 14694,
+            "git_blob_sha1": "c6b089ffff1fe054b59d6dfc2d08ac3834804e18",
+            "sha256": "982215093001eb5ef8b2d04c4322dda9f14f3ade212334321fc9d9a68a0e5de0"
+          },
+          "after": {
+            "path": "research/english63_online_c/README.md",
+            "mode": "100644",
+            "bytes": 19233,
+            "git_blob_sha1": "bdb2b41da1a5d2ca4f1e21e492d8a98c64717ddd",
+            "sha256": "80aee6d84b29dc9a30ff3dc3189cba29854710ae70248ebe611d37026c2bb4e0"
+          }
+        },
+        {
+          "path": "research/english63_online_c/pool-measured-20261115.json",
+          "before": null,
+          "after": {
+            "path": "research/english63_online_c/pool-measured-20261115.json",
+            "mode": "100644",
+            "bytes": 34722,
+            "git_blob_sha1": "927c1fb90950f51aa81f0d1be26e21d81802353b",
+            "sha256": "9cd68f4c6a8b00b4a8e0f8880747893db5d735155f75ca649c7659123fe60078"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
