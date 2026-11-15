@@ -3,9 +3,12 @@
 import argparse
 import importlib.util
 import json
+import math
+import os
 from pathlib import Path
 import resource
 import shutil
+import struct
 import subprocess
 import tempfile
 
@@ -26,6 +29,10 @@ def main():
                  '-Wall', '-Wextra', '-Werror', '-pedantic']
         if args.sanitize:
             flags += ['-O1', '-g', '-fsanitize=address,undefined', '-fno-omit-frame-pointer']
+        pool_spec = importlib.util.spec_from_file_location('en63_pool_source_fixture', HERE/'pool_contract_cases.py')
+        pool_contract = importlib.util.module_from_spec(pool_spec)
+        pool_spec.loader.exec_module(pool_contract)
+        pool_contract.run(compiler, flags, temp)
         subprocess.run([compiler, *flags, str(HERE/'en63_stream.c'), str(HERE/'synthetic_cases.c'),
                         '-lm', '-o', str(temp/'synthetic')], check=True)
         subprocess.run([str(temp/'synthetic')], check=True, timeout=60)
@@ -39,6 +46,8 @@ def main():
         print('PASS core object has no allocation/thread/lock/stdio/process symbols')
         if not args.sanitize:
             # A fake constant classifier, not either retained project checkpoint.
+            if (HERE/'en63_generated.h').exists() or (HERE/'en63_generated.h').is_symlink():
+                raise ValueError('Invented fixture header would be shadowed by a source-directory header')
             def row(kind, name, values):
                 return 'static const '+kind+' '+name+'['+str(len(values))+']={'+','.join(map(str, values))+'};\n'
             header = '#include "en63_stream.h"\n'
@@ -94,6 +103,74 @@ def main():
                         raise ValueError('Invented state reset/interleave/gap trace comparison failed')
                 print('PASS invented state harness', kind, '4773 frames / 769475 supplied samples;',
                       'original checkpoint and original audio executions = 0')
+            # The new paired profile driver is exercised with this same invented
+            # header and a constant invented PCM stream, never retained inputs.
+            subprocess.run([compiler, *flags, '-DEN63_POOL_TIME_MAJOR=0', '-I', str(HERE), '-I', str(temp),
+                            str(HERE/'en63_stream.c'), str(HERE/'pool_profile.c'), '-lm',
+                            '-o', str(temp/'fake-pool-profile')], check=True)
+            profile_pcm = temp/'invented-pool-profile.pcm'
+            profile_pcm.write_bytes(b'\xe8\x03'*2101760)
+            cpu = min(os.sched_getaffinity(0))
+            full_trace = temp/'invented-pool-profile.trace'
+            record = struct.Struct('<IQ38fI')
+            expected_signature = None
+            expected_events = None
+            for phase in ('trace', 'warmup', 'timed'):
+                raw = subprocess.check_output([str(temp/'fake-pool-profile'), '--supervise', 'gru', phase,
+                                               str(profile_pcm), str(full_trace) if phase == 'trace' else '-',
+                                               str(cpu)], text=True, timeout=30)
+                lines = raw.splitlines()
+                if len(lines) != 2:
+                    raise ValueError('Invented profile must retain both worker and lifetime JSON lines')
+                body, lifetime = map(json.loads, lines)
+                expected = {'schema': 'english63-pool-native-pass-v1', 'kind': 'gru', 'variant': 0,
+                            'phase': phase, 'affinity_cpu': cpu, 'affinity_single_cpu': True,
+                            'pcm_samples': 2101760, 'frames': 13134, 'feed_calls': 13136,
+                            'input_pcm_bytes': 4203520, 'trace_io_enabled': phase == 'trace',
+                            'eof_padding_samples': 0, 'eof_events': 0,
+                            'timed_region': 'preloaded-pcm-en63_feed-and-constant-signature-callback'}
+                for key, value in expected.items():
+                    if type(body.get(key)) is not type(value) or body[key] != value:
+                        raise ValueError('Invented profile identity/count mismatch: '+key)
+                integers = ('proposal_count', 'state_bytes', 'weight_parameter_bytes', 'frontend_table_bytes',
+                            'cpu_ns', 'wall_ns', 'inference_end_high_water_rss_kib')
+                if any(type(body.get(key)) is not int or body[key] < 0 for key in integers):
+                    raise ValueError('Invented profile must report integer resource/counter values')
+                if not (lifetime.get('schema') == 'english63-pool-child-lifetime-v1' and
+                        type(lifetime.get('child_exit_code')) is int and lifetime['child_exit_code'] == 0 and
+                        lifetime.get('child_signaled') is False and
+                        type(lifetime.get('process_lifetime_peak_rss_kib')) is int and
+                        lifetime['process_lifetime_peak_rss_kib'] >= body['inference_end_high_water_rss_kib'] > 0 and
+                        all(type(lifetime.get(key)) is int and lifetime[key] >= 0
+                            for key in ('child_user_us', 'child_system_us'))):
+                    raise ValueError('Invented profile child exit/lifetime RSS accounting failed')
+                feed_ns = body.get('feed_ns')
+                if phase == 'timed':
+                    if not (type(feed_ns) is list and len(feed_ns) == 13136 and
+                            all(type(value) is int and value > 0 for value in feed_ns) and
+                            body['cpu_ns'] > 0 and body['wall_ns'] >= sum(feed_ns) > 0):
+                        raise ValueError('Invented profile raw feed timings/CPU clock failed')
+                elif feed_ns != [] or body['cpu_ns'] != 0 or body['wall_ns'] != 0:
+                    raise ValueError('Untimed invented phases must not pretend to have CPU/feed measurements')
+                if phase == 'trace':
+                    trace_bytes = full_trace.read_bytes()
+                    if trace_bytes[:16] != b'EN63TRC1'+struct.pack('<II', 1, 168) or len(trace_bytes) != 16+13134*168:
+                        raise ValueError('Invented profile complete binary trace layout/count failed')
+                    signature = 14695981039346656037
+                    for value in trace_bytes[16:]:
+                        signature = ((signature ^ value)*1099511628211) & ((1 << 64)-1)
+                    expected_signature = format(signature, '016x')
+                    expected_events = 0
+                    for index, row in enumerate(record.iter_unpack(trace_bytes[16:])):
+                        if not (row[0] == 0 and row[1] == 400+index*160 and
+                                all(math.isfinite(value) for value in row[2:-1]) and row[-1] in (0, 1, 2)):
+                            raise ValueError('Invented profile trace clock/finiteness/proposal failed')
+                        expected_events += row[-1] != 0
+                if (body.get('signature64') != expected_signature or body['proposal_count'] != expected_events
+                        or expected_events is None or expected_events <= 0):
+                    raise ValueError('Invented trace/warmup/timed complete-payload FNV/event identity failed')
+                print('PASS invented profile phase', phase, '13134 frames / 13136 calls; complete-payload FNV',
+                      body['signature64'], 'matches saved invented trace; original inputs executed = 0')
 
 
 if __name__ == '__main__':

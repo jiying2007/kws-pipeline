@@ -10,6 +10,17 @@
 
 #define EN63_MAGIC UINT32_C(0x454e3633)
 #define EN63_PI 3.14159265358979323846264338327950288
+#ifndef EN63_POOL_TIME_MAJOR
+#define EN63_POOL_TIME_MAJOR 0
+#endif
+#if EN63_POOL_TIME_MAJOR != 0 && EN63_POOL_TIME_MAJOR != 1
+#error "EN63_POOL_TIME_MAJOR must be 0 or 1"
+#endif
+#if defined(__FAST_MATH__) || (defined(__FINITE_MATH_ONLY__) && __FINITE_MATH_ONLY__ > 0)
+#error "EN63 pooling requires strict floating-point operations, not fast-math"
+#endif
+_Static_assert(EN63_POOL_TIME_MAJOR == 0 || EN63_POOL_TIME_MAJOR == 1,
+               "EN63_POOL_TIME_MAJOR must be 0 or 1");
 _Static_assert(sizeof(float) == 4 && FLT_RADIX == 2 && FLT_MANT_DIG == 24,
                "IEEE binary32 is required");
 
@@ -202,17 +213,21 @@ static uint32_t decode(en63_state *s)
     return chosen;
 }
 
-static int process_frame(en63_state *s, en63_callback callback, void *user)
+static void pool_window(const en63_state *s, float pooled[64])
 {
-    float encoded[32], pooled[64], largest, sum = 0;
-    const float *classifier;
     unsigned i, j;
-    uint32_t proposal;
-    frontend(s);
-    classifier = encode(s, encoded);
-    memcpy(s->pool[s->pool_write], encoded, sizeof(encoded));
-    s->pool_write = (s->pool_write+1)%200;
-    if (s->pool_count < 200) ++s->pool_count;
+#if EN63_POOL_TIME_MAJOR == 1
+    for (i = 0; i < 32; ++i) { pooled[i] = 0; pooled[32+i] = -FLT_MAX; }
+    for (j = 0; j < s->pool_count; ++j) {
+        unsigned index = (s->pool_write+200-s->pool_count+j)%200;
+        for (i = 0; i < 32; ++i) {
+            float value = s->pool[index][i];
+            pooled[i] += value;
+            if (value > pooled[32+i]) pooled[32+i] = value;
+        }
+    }
+    for (i = 0; i < 32; ++i) pooled[i] /= (float)s->pool_count;
+#else
     for (i = 0; i < 32; ++i) {
         float total = 0, maximum = -FLT_MAX;
         for (j = 0; j < s->pool_count; ++j) {
@@ -222,6 +237,21 @@ static int process_frame(en63_state *s, en63_callback callback, void *user)
         }
         pooled[i] = total/(float)s->pool_count; pooled[32+i] = maximum;
     }
+#endif
+}
+
+static int process_frame(en63_state *s, en63_callback callback, void *user)
+{
+    float encoded[32], pooled[64], largest, sum = 0;
+    const float *classifier;
+    unsigned i;
+    uint32_t proposal;
+    frontend(s);
+    classifier = encode(s, encoded);
+    memcpy(s->pool[s->pool_write], encoded, sizeof(encoded));
+    s->pool_write = (s->pool_write+1)%200;
+    if (s->pool_count < 200) ++s->pool_count;
+    pool_window(s, pooled);
     for (i = 0; i < 3; ++i) s->logits[i] = dot(classifier+i*64, pooled, 64, classifier[192+i]);
     largest = fmaxf(s->logits[0], fmaxf(s->logits[1], s->logits[2]));
     for (i = 0; i < 3; ++i) { s->probabilities[i] = expf(s->logits[i]-largest); sum += s->probabilities[i]; }

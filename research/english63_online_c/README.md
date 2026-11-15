@@ -81,6 +81,39 @@ clock, 32 features, three logits, three probabilities and proposal class. All
 binary fields are explicitly little-endian and the record is 168 bytes.
 Use `-` instead of the trace path for native profiling without trace-output I/O.
 
+## Opt-in pooling traversal
+
+`EN63_POOL_TIME_MAJOR=0` is the default and retains the original channel-first
+pooling loop. Compile the same source with `-DEN63_POOL_TIME_MAJOR=1` to visit
+the ring in its original chronological order and update all 32 channels in
+each contiguous row. Each channel keeps the original FP32 addition order and
+strict `>` maximum comparison, including the first equal signed-zero maximum.
+The index formula is unchanged and is evaluated once per row. Both branches
+use the existing `pooled[64]` scratch; caller state, API, ring storage, weights,
+division, classifier and event decoder remain the same. Values other than
+0 or 1 and fast-math/finite-only compilation are rejected. The paired builds
+use `-ffp-contract=off -fno-fast-math`.
+
+The source fixture compares the actual two compiled pooling implementations
+for all 200 nonempty counts and all 200 ring write positions, using five
+invented finite-value patterns: signed zeros, alternating `FLT_MAX`, ordered
+cancellation, normal/subnormal minima, and mixed signs/exponents. These are
+200,000 cases and 12,800,000 FP32 output comparisons. Separate invented,
+nonzero GRU/DS-TCN tensors and generated PCM compare complete 401-frame traces,
+events and clocks across both variants, 160/mixed chunks, reset and gap recovery.
+No saved project header, checkpoint or audio is loaded by these fixtures.
+
+```sh
+python3 -I -S -B research/english63_online_c/pool_contract_cases.py --cc gcc
+python3 -I -S -B research/english63_online_c/pool_contract_cases.py --cc clang
+python3 -I -S -B research/english63_online_c/pool_contract_cases.py --cc gcc --sanitize
+```
+
+`check_source.py` also invokes these fixtures. Their success establishes the
+source contract. CPU benefit requires the separately bounded, paired public
+Actions measurement with the original fixed inputs and saved byte-identity
+evidence; it is not inferred from source-level index-operation counts.
+
 ## Resource accounting and saved evidence
 
 Each native launch uses a fresh child of a small native supervisor, created
