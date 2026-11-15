@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 84633,
-      "git_blob_sha1": "c464e23d5d7d8a420fc75fe3fb9addc40e7658d7",
-      "sha256": "571cfde47925f6eae030520c9680fd46c5ae5e874f9a2c8287ca4932f3d520e8"
+      "bytes": 85638,
+      "git_blob_sha1": "5f3e79f392558106ab1e9f633cdaf7b917d68d80",
+      "sha256": "11df2326606f07a2bc516c75501bf0e4ea41d4131d005c645646e2df45537c88"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -26756,7 +26756,7 @@
       "public_main_base_tree": "a296feacc661c0a45401c7bdd6bca584168d5389",
       "workflow_source_changed": false,
       "scope": "Close all nine r5 source execution/publication/claim approvals after the single terminal run; preserve original executed source, result evidence, scientific contracts and resource budgets.",
-      "rationale": "Close all nine r5 execution/publication/claim approvals after immutable run 38518609834 at a1159dc902634e65b1fb2a7bbf219389f84089d5 received root-pinned, independent complete_native_verified acceptance for all eighteen original native slots. Preserve ledger_reported_attempts=18 and consumed_attempts=null; archive exact six-by-three transcripts and original resource commitments, including 57 acknowledged single owned-CID removals and zero actual fallback probes. Only k1p6-002 agrees on non-target 你好小屋; human_gold/training_admitted remain false and acoustic completeness unknown. Restore explicitly closed current-control test expectations while retaining enabled synthetic positives, negative owner/admission gates and existing future-name lookalike regressions; refresh only derived freezes/dependency pins/public retention metadata. Original executed source, result/checkpoint evidence, prior failure interpretation, 47 scientific bodies, six inputs, prepare proof and all model/resource/API budgets are unchanged. This ordinary closeout source grants no execution, retry or new allowance.",
+      "rationale": "Close all nine r5 execution/publication/claim approvals after immutable run 38518609834 at a1159dc902634e65b1fb2a7bbf219389f84089d5 received root-pinned, independent complete_native_verified acceptance for all eighteen original native slots. Preserve ledger_reported_attempts=18 and consumed_attempts=null; archive exact six-by-three transcripts and original resource commitments, including 57 acknowledged single owned-CID removals and zero actual fallback probes. Only k1p6-002 agrees on non-target \u4f60\u597d\u5c0f\u5c4b; human_gold/training_admitted remain false and acoustic completeness unknown. Restore explicitly closed current-control test expectations while retaining enabled synthetic positives, negative owner/admission gates and existing future-name lookalike regressions; refresh only derived freezes/dependency pins/public retention metadata. Original executed source, result/checkpoint evidence, prior failure interpretation, 47 scientific bodies, six inputs, prepare proof and all model/resource/API budgets are unchanged. This ordinary closeout source grants no execution, retry or new allowance.",
       "files": [
         {
           "path": "research/k1-asr18-offline-posterior-v1/asr_posterior.py",
@@ -52008,6 +52008,218 @@
             "bytes": 21093,
             "git_blob_sha1": "47e9bcd3b4b66009002ebe48fb9bb9ae8c8d4b94",
             "sha256": "8e44e6a6c6f569f93559fb36049d1b71cc152760cfcd02909e730237489778e9"
+          }
+        }
+      ]
+    },
+    {
+      "id": "v4-keyword-controlled-input-and-native-state-20261115",
+      "date": "2026-11-15",
+      "base_commit": "e5f12dfae6cbb42960dffade957456fa68d97590",
+      "previous_manifest_sha256": "098f1fd98b3e7b0b125351a8db5e9cebdb99652572136b415800742512a7149e",
+      "workflow_source_changed": true,
+      "scope": "Implement V4 per-keyword weak-presence inputs, exact private Chinese cohort planning, and English C discontinuity/session-state contracts through existing source CI and the existing data-owned executor.",
+      "rationale": "Keep every historical source record, failed experiment, consumed request and formal admission boundary. Private Chinese rows remain outside public Git. Public64 outputs are reused under a new positive-only typed research protocol, without ASR absence negatives or invented event times. The new native experiment uses the already exported trained header and original PCM for bounded state cases; no new training, recognition, independent audio exposure, workflow, scheduler or deployment surface. Source CI uses only invented metadata and analytic classifiers.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 84633,
+            "git_blob_sha1": "c464e23d5d7d8a420fc75fe3fb9addc40e7658d7",
+            "sha256": "571cfde47925f6eae030520c9680fd46c5ae5e874f9a2c8287ca4932f3d520e8"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 85638,
+            "git_blob_sha1": "5f3e79f392558106ab1e9f633cdaf7b917d68d80",
+            "sha256": "11df2326606f07a2bc516c75501bf0e4ea41d4131d005c645646e2df45537c88"
+          }
+        },
+        {
+          "path": "docs/research-controlled-chinese-plan.md",
+          "before": null,
+          "after": {
+            "path": "docs/research-controlled-chinese-plan.md",
+            "mode": "100644",
+            "bytes": 8559,
+            "git_blob_sha1": "dd4bfc08f5ba955e731f5829575c86168ef7bb1b",
+            "sha256": "8c8c04658ec05a3a40923286b6635761c89054d1c0a39864e6e7935aa932532e"
+          }
+        },
+        {
+          "path": "research/english63_online_c/README.md",
+          "before": {
+            "path": "research/english63_online_c/README.md",
+            "mode": "100644",
+            "bytes": 7339,
+            "git_blob_sha1": "fdcdb5c67edc6548ea38d18b9f282f530858bdc3",
+            "sha256": "5839c7620f3f359a50f12d63af4642ca0344043e04d004156426ecb094c0d99f"
+          },
+          "after": {
+            "path": "research/english63_online_c/README.md",
+            "mode": "100644",
+            "bytes": 12761,
+            "git_blob_sha1": "09aacf939517a49ea86a91192057c8aa75f225b8",
+            "sha256": "1de186f8f532bf6af58d0fc5403b882973cff35f5e5cfa46c1124f5da5c33761"
+          }
+        },
+        {
+          "path": "research/english63_online_c/check_source.py",
+          "before": {
+            "path": "research/english63_online_c/check_source.py",
+            "mode": "100644",
+            "bytes": 4241,
+            "git_blob_sha1": "c068f5fc35ad7ea82a7c2c86283d9cc2e116082b",
+            "sha256": "f9f2478e4378da33d6c4a0c5a3e80a30c8ed554b3cd2ab0f4bf5c9894d85cdaa"
+          },
+          "after": {
+            "path": "research/english63_online_c/check_source.py",
+            "mode": "100644",
+            "bytes": 6575,
+            "git_blob_sha1": "c094d52ebc9b13d0757fff691ab6af44a711c44e",
+            "sha256": "e620ae1afcfcfe3b02d4df6a3760ae792bb12df13d5a2b945649a28b077612cc"
+          }
+        },
+        {
+          "path": "research/english63_online_c/en63_stream.c",
+          "before": {
+            "path": "research/english63_online_c/en63_stream.c",
+            "mode": "100644",
+            "bytes": 9932,
+            "git_blob_sha1": "da821d18b6c160a423dbd559815f3540668d71d5",
+            "sha256": "11d788709bace6713577aee7e65f1d22634ba076b7a9013dcde989abc07f0733"
+          },
+          "after": {
+            "path": "research/english63_online_c/en63_stream.c",
+            "mode": "100644",
+            "bytes": 10826,
+            "git_blob_sha1": "d6958f7c709207ccd748170055aa53fe0786a878",
+            "sha256": "01395518e3a38563762bcef39ab021ca21e572a70aafa48f2fadd59c95151a5b"
+          }
+        },
+        {
+          "path": "research/english63_online_c/en63_stream.h",
+          "before": {
+            "path": "research/english63_online_c/en63_stream.h",
+            "mode": "100644",
+            "bytes": 2168,
+            "git_blob_sha1": "3a7355509c6edc1fa0a5489952401fdd614201a1",
+            "sha256": "d4347d38efbdbf26d6d31dc4e722f3b98f205b92dd6cc727eb03fbd3ad2aa071"
+          },
+          "after": {
+            "path": "research/english63_online_c/en63_stream.h",
+            "mode": "100644",
+            "bytes": 2962,
+            "git_blob_sha1": "622dfcefe5000178840ae0a12bcfe9bc47f9cbbd",
+            "sha256": "627f18dacede547d6aed9988a745071f4e4f988252d16a4646ebe4a09eeebeb7"
+          }
+        },
+        {
+          "path": "research/english63_online_c/state_cases.c",
+          "before": null,
+          "after": {
+            "path": "research/english63_online_c/state_cases.c",
+            "mode": "100644",
+            "bytes": 15576,
+            "git_blob_sha1": "caeb38d15f43b36645fa729c773d174eea85f403",
+            "sha256": "8ad741768e65eba5c040f684b94c8b86a41b650e057bfda30fbab45a9b4e567e"
+          }
+        },
+        {
+          "path": "research/english63_online_c/state_contract_cases.py",
+          "before": null,
+          "after": {
+            "path": "research/english63_online_c/state_contract_cases.py",
+            "mode": "100644",
+            "bytes": 7642,
+            "git_blob_sha1": "aab8e1b53477e475e4d95da39588e9ff0b9f6b77",
+            "sha256": "32c40967e5539c587792fd350edc821f4ac26a26264cc3b8aefb9703b3bf78be"
+          }
+        },
+        {
+          "path": "research/english63_online_c/state_replay.py",
+          "before": null,
+          "after": {
+            "path": "research/english63_online_c/state_replay.py",
+            "mode": "100644",
+            "bytes": 30878,
+            "git_blob_sha1": "9e078cd4b30bce7b0da2ceb073d49d2984ac1c15",
+            "sha256": "ada24a8929d91f6442c009a5859cb14439ba882f9b404cb89075d5a54c183649"
+          }
+        },
+        {
+          "path": "research/english63_online_c/synthetic_cases.c",
+          "before": {
+            "path": "research/english63_online_c/synthetic_cases.c",
+            "mode": "100644",
+            "bytes": 5385,
+            "git_blob_sha1": "6de9847e41f0be7376affd32db7262c88fc96fdd",
+            "sha256": "5adf9a2df6f36379520dccf45458b37668c71069d1136b61848cccfb632c606d"
+          },
+          "after": {
+            "path": "research/english63_online_c/synthetic_cases.c",
+            "mode": "100644",
+            "bytes": 6792,
+            "git_blob_sha1": "f43a78bf542f6d06e72256705be6661845ae17a2",
+            "sha256": "add05fc266267d49d5317bd191dff3b0e1e13eab992037a90f264c3a56659219"
+          }
+        },
+        {
+          "path": "research/v4-d01-public-zh64-keywords-v1/README.md",
+          "before": null,
+          "after": {
+            "path": "research/v4-d01-public-zh64-keywords-v1/README.md",
+            "mode": "100644",
+            "bytes": 8192,
+            "git_blob_sha1": "0adf8382737086a4d629701ee387f09da6c803e1",
+            "sha256": "a4991890d3e11d9dbbdf998ff3566a6d31273739a33ca1a44f3dfd66f780a5ee"
+          }
+        },
+        {
+          "path": "research/v4-d01-public-zh64-keywords-v1/project.py",
+          "before": null,
+          "after": {
+            "path": "research/v4-d01-public-zh64-keywords-v1/project.py",
+            "mode": "100644",
+            "bytes": 28507,
+            "git_blob_sha1": "3356d0b5b6230e3e8195291bf94e0f1681931432",
+            "sha256": "b231a0d6349dc1c9d4cb78a26c90f8ac5532753e5020973ef12ca815096e7d57"
+          }
+        },
+        {
+          "path": "research/v4-d01-public-zh64-keywords-v1/test_project.py",
+          "before": null,
+          "after": {
+            "path": "research/v4-d01-public-zh64-keywords-v1/test_project.py",
+            "mode": "100644",
+            "bytes": 10561,
+            "git_blob_sha1": "2e299d3a7dfba2ea3f45e7355e79a670a31cf73e",
+            "sha256": "2853aeda7ff6d2c23c193073d0ca92b7852381fafed4233952479921fbb2c1d6"
+          }
+        },
+        {
+          "path": "tests/test_research_controlled_chinese_plan.py",
+          "before": null,
+          "after": {
+            "path": "tests/test_research_controlled_chinese_plan.py",
+            "mode": "100644",
+            "bytes": 24602,
+            "git_blob_sha1": "d84bf9e356e2999f096dfc58cb10035fb170ac46",
+            "sha256": "11c74aea2044fddb5a88f27959115bcea3c2325bed87cb97b33faae198f49b5e"
+          }
+        },
+        {
+          "path": "training/research_controlled_chinese_plan.py",
+          "before": null,
+          "after": {
+            "path": "training/research_controlled_chinese_plan.py",
+            "mode": "100644",
+            "bytes": 35547,
+            "git_blob_sha1": "e209443dc33e895ad5bd7964435a6b313ad1d035",
+            "sha256": "6ad00fb911da0f947e6db208dc4e0dcb1629fdf53178135c0695db8cbe5cb059"
           }
         }
       ]

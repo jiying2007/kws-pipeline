@@ -126,3 +126,92 @@ SSC305 performance remain `NOT_RUN` even if the C implementation agrees.
 The first real saved-weight comparison completed successfully in public run
 `43605922752`. See the [measured result and its limits](../../docs/KWS_V4_ENGLISH_NATIVE_C_20261114.md)
 and [machine-readable receipt](measured-20261114.json).
+
+## Explicit discontinuities: a separate bounded state experiment
+
+`en63_reset` starts a new session and clears all counters. The added
+`en63_discontinuity` clears PCM overlap, encoder history, the trailing pool,
+confirmation/cooldown and the 50-observed-frame warmup while preserving the
+session's supplied-PCM sample count, cumulative processed frames and proposal
+count. `segment_samples` and `segment_frames` describe the current uninterrupted
+segment; `discontinuities` counts accepted notifications. Neither operation
+creates a frame or callback. Discontinuity rejects finished/faulted states and
+all reentrant calls. A finished or faulted state can start a new session through
+explicit reset. The product KWSP ABI is unchanged; research callers must compile
+with the matching header and allocate `en63_state_bytes()` bytes.
+
+After a gap the callback reports its actual cumulative supplied-PCM sample
+index, rather than reconstructing that index from a frame number. Previously
+supplied, unfinished tail samples remain counted even though their acoustic
+carry is discarded. Missing capture samples, wall time and acoustic word ends
+are not inferred. An ordinary file boundary is not a discontinuity unless the
+caller explicitly reports one.
+
+The new public Actions entry is stdlib-only apart from GCC:
+
+```sh
+python3 -I -S -B research/english63_online_c/state_replay.py \
+  --baseline-result-dir /absolute/unpacked-native-c-43605922752 \
+  --tts-zip /absolute/original-english63.zip \
+  --review-json /absolute/original-joined-review.json \
+  --output-dir /absolute/new-state-contracts
+
+python3 -I -S -B research/english63_online_c/state_replay.py \
+  --verify-result-dir /absolute/saved-state-contracts
+```
+
+The first command requires first-attempt public Actions execution metadata. It
+uses the already exported FP32 header from artifact `14117638750`; it neither
+exports weights again nor imports Torch or NumPy. All 63 original WAV/PCM
+identities and the 30/12/21 source roles are checked, but only the first **128,246
+original samples** of the fixed sorted-cell concatenation enter the experiment.
+Two 64,123-sample windows provide distinct inputs. This is an exposed diagnostic
+selection, not new independent audio or a new measurement on all 63 recordings.
+
+Each model has ten fixed cases: old saved baseline prefix, midstream reset,
+reset after EOF, two interleaved instances, discontinuities at samples 399,
+400 and 32,401, unpadded EOF, invalid-call atomicity and invalid-model atomicity.
+The first cut precedes a complete frame; the second follows one frame; the third
+follows 201 frames and leaves a non-hop-aligned tail after a full readout pool.
+These are programmatic gap notifications between saved PCM bytes, not measured
+capture overruns. Each model completes exactly 4,773 native frame forwards and
+consumes 769,475 samples including repeated diagnostic reads. Repeated inputs
+contribute **zero new independent audio samples or seconds**.
+
+The unchanged baseline must reproduce all FP32 bytes, proposal classes and
+sample clocks of the old continuous trace's first 399 frames. Original `2e-4`
+error bounds are retained as diagnostics and do not waive this new bit-identity
+gate. Reset/interleaving must match fresh controls. Every post-gap suffix must
+match a fresh suffix at every FP32 value and proposal, with the preserved
+session clock offset. Fixed thresholds and checkpoint identities are unchanged.
+No failure authorizes a retry or a relaxed comparison.
+
+Seven case results are recomputed from saved numeric traces. The three EOF and
+invalid-input/model cases additionally rely on the executed C return-code and
+full-state `memcmp` guards, fixed guard counters, native exit status and their
+original stdout. Their evidence is labeled `executed_native_guard_receipt`;
+full state snapshots are not retained for independent offline reconstruction.
+The saved verifier re-parses both native stdout records and binds them to the
+parsed observations. The trace proves frame/proposal clocks and contains no
+padding or EOF-only observations.
+
+A successful result has exactly 16 files: two complete state traces, two native
+JSON records, two stderr logs, two unchanged baseline-prefix traces, exported
+header, executable, `BUILD.json`, `INPUTS.json`, `PROTOCOL.json`, `SOURCE.zip`,
+`SUMMARY.json` and `REPLAY.json`. The last receipt covers the other 15 files;
+missing or extra files are rejected. Failure retains its partial files and
+`FAILED.json`, without a successful verification receipt. Raw PCM is temporary.
+
+The native supervisor also records Linux `wait4` peak RSS after child exit.
+That is a process-lifetime observation including this test harness, input
+buffer, trace I/O and output serialization. It is separate from the old
+inference-end RSS observation and is not a core-only, latency, real-time or
+SSC305 benchmark. Overflow and fault gates use explicit test-state fixtures;
+they are not a 24-hour soak. The two finite-window weak-MIL checkpoints remain
+research proposals, with acoustic truth, training admission, selection, natural
+negative FAR/FRR and word-end latency unqualified.
+
+`state_contract_cases.py` tests only invented saved binary records. Existing
+`check_source.py --cc gcc` / `--cc clang` also compile and run the new driver with
+their own invented constant-classifier header and generated PCM; no original
+checkpoint or original audio enters those analytic fixtures.

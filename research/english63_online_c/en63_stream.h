@@ -35,6 +35,7 @@ typedef struct {
     uint32_t magic, finished, faulted, busy;
     uint32_t pcm_fill, pool_count, pool_write, candidate, confirmations;
     uint64_t samples, frames, blocked_until, events;
+    uint64_t segment_samples, segment_frames, discontinuities;
     int16_t pcm[EN63_FRAME];
     float hidden[EN63_HIDDEN];
     float history[3][8][EN63_HIDDEN];
@@ -43,14 +44,24 @@ typedef struct {
     float features[EN63_BANDS], logits[3], probabilities[3];
 } en63_state;
 
-/* Callback data is valid only during the call. No callbacks occur at EOF.
+/* frame and available_sample are cumulative in the current session. The sample
+ * clock counts supplied PCM, including incomplete tails discarded at a gap; it
+ * does not count missing capture samples or wall time. Callback data is valid
+ * only during the call. No callbacks occur at EOF or a discontinuity.
  * callback must not mutate/reenter state. The core does no I/O or allocation. */
 typedef void (*en63_callback)(void *user, uint64_t frame, uint64_t available_sample,
                              const float features[32], const float logits[3],
                              const float probabilities[3], uint32_t proposal_class);
 
 int en63_init(en63_state *state, const en63_model *model);
+/* A new session: resets both acoustic state and all counters. */
 int en63_reset(en63_state *state);
+/* An explicitly reported gap: discards PCM overlap, encoder/pool/decoder state
+ * and restarts the 50-observed-frame warmup, preserving session samples, frames
+ * and event counters. No padding, inferred lost duration, or callback. A
+ * finished/faulted state requires reset, not discontinuity. Neither reset nor
+ * discontinuity is accepted during the state's synchronous callback. */
+int en63_discontinuity(en63_state *state);
 int en63_feed(en63_state *state, const int16_t *pcm, size_t count,
               en63_callback callback, void *user);
 int en63_finish(en63_state *state);

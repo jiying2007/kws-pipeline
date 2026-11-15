@@ -898,9 +898,24 @@ jobs:
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Test"'
       - name: English saved-weight C runtime source contracts with invented weights only
         timeout-minutes: 3
-        run: python3 -I -S -B research/english63_online_c/check_source.py --cc "${{ matrix.cc }}"
+        run: |
+          python3 -I -S -B research/english63_online_c/state_contract_cases.py
+          python3 -I -S -B -O research/english63_online_c/state_contract_cases.py
+          python3 -I -S -B -OO research/english63_online_c/state_contract_cases.py
+          python3 -I -S -B research/english63_online_c/check_source.py --cc "${{ matrix.cc }}"
       - name: Verify tracked worktree after English C source contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "English C source contracts"'
+      - name: V4 Chinese input and per-keyword source contracts
+        timeout-minutes: 3
+        run: |
+          python3 -I -S -B tests/test_research_controlled_chinese_plan.py
+          python3 -I -S -B -O tests/test_research_controlled_chinese_plan.py
+          python3 -I -S -B -OO tests/test_research_controlled_chinese_plan.py
+          python3 -I -S -B research/v4-d01-public-zh64-keywords-v1/test_project.py
+          python3 -I -S -B -O research/v4-d01-public-zh64-keywords-v1/test_project.py
+          python3 -I -S -B -OO research/v4-d01-public-zh64-keywords-v1/test_project.py
+      - name: Verify tracked worktree after V4 Chinese source contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "V4 Chinese source contracts"'
       - name: Causal research stdlib and artificial oracle contracts
         run: |
           python3 -S -B tests/test_research_python_entry.py

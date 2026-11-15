@@ -58,6 +58,23 @@ int en63_reset(en63_state *s)
     return en63_init(s, s->model);
 }
 
+int en63_discontinuity(en63_state *s)
+{
+    uint64_t samples, frames, events, gaps;
+    int status;
+    if (!s || s->magic != EN63_MAGIC || s->busy || s->finished || s->faulted)
+        return EN63_STATE;
+    if (s->discontinuities == UINT64_MAX) return EN63_ARGUMENT;
+    samples = s->samples; frames = s->frames; events = s->events;
+    gaps = s->discontinuities;
+    /* init validates the borrowed immutable model before touching the state. */
+    status = en63_init(s, s->model);
+    if (status != EN63_OK) return status;
+    s->samples = samples; s->frames = frames; s->events = events;
+    s->discontinuities = gaps+1;
+    return EN63_OK;
+}
+
 static void fft512(en63_state *s)
 {
     unsigned i, j = 0, len, stage = 0;
@@ -174,7 +191,7 @@ static uint32_t decode(en63_state *s)
     uint32_t chosen = 0;
     unsigned i;
     for (i = 1; i < 3; ++i) if (s->probabilities[i] > s->probabilities[chosen]) chosen = i;
-    if (s->frames < 50 || s->frames < s->blocked_until || chosen == 0 || s->probabilities[chosen] < 0.8f) {
+    if (s->segment_frames < 50 || s->frames < s->blocked_until || chosen == 0 || s->probabilities[chosen] < 0.8f) {
         s->candidate = 0; s->confirmations = 0; return 0;
     }
     s->confirmations = chosen == s->candidate ? s->confirmations+1 : 1;
@@ -211,9 +228,9 @@ static int process_frame(en63_state *s, en63_callback callback, void *user)
     for (i = 0; i < 3; ++i) s->probabilities[i] /= sum;
     for (i = 0; i < 32; ++i) if (!isfinite(s->features[i]) || !isfinite(encoded[i])) return EN63_NUMERIC;
     for (i = 0; i < 3; ++i) if (!isfinite(s->logits[i]) || !isfinite(s->probabilities[i])) return EN63_NUMERIC;
-    ++s->frames;
+    ++s->frames; ++s->segment_frames;
     proposal = decode(s);
-    callback(user, s->frames, 400+(s->frames-1)*160, s->features, s->logits, s->probabilities, proposal);
+    callback(user, s->frames, s->samples, s->features, s->logits, s->probabilities, proposal);
     return EN63_OK;
 }
 
@@ -222,7 +239,8 @@ int en63_feed(en63_state *s, const int16_t *pcm, size_t count, en63_callback cal
     size_t i;
     uintptr_t source, target;
     if (!s || !pcm || !callback || count == 0 || count > EN63_MAX_CHUNK) return EN63_ARGUMENT;
-    if (s->magic != EN63_MAGIC || s->finished || s->faulted || s->busy || s->pcm_fill >= 400 || s->pool_count > 200 || s->pool_write >= 200)
+    if (s->magic != EN63_MAGIC || s->finished || s->faulted || s->busy || s->pcm_fill >= 400 || s->pool_count > 200 || s->pool_write >= 200 ||
+        s->segment_samples > s->samples || s->segment_frames > s->frames || s->frames > s->samples/160)
         return EN63_STATE;
     if ((uint64_t)count > UINT64_MAX-s->samples || s->samples > UINT64_MAX-16000) return EN63_ARGUMENT;
     source = (uintptr_t)pcm; target = (uintptr_t)s;
@@ -231,7 +249,7 @@ int en63_feed(en63_state *s, const int16_t *pcm, size_t count, en63_callback cal
     s->busy = 1;
     for (i = 0; i < count; ++i) {
         int status;
-        s->pcm[s->pcm_fill++] = pcm[i]; ++s->samples;
+        s->pcm[s->pcm_fill++] = pcm[i]; ++s->samples; ++s->segment_samples;
         if (s->pcm_fill < 400) continue;
         status = process_frame(s, callback, user);
         if (status != EN63_OK) { s->faulted = 1; s->busy = 0; return status; }
@@ -245,8 +263,9 @@ int en63_finish(en63_state *s)
 {
     uint64_t expected;
     if (!s || s->magic != EN63_MAGIC || s->faulted || s->busy) return EN63_STATE;
-    expected = s->samples < 400 ? 0 : 1+(s->samples-400)/160;
-    if (expected != s->frames || s->pcm_fill >= 400) return EN63_STATE;
+    expected = s->segment_samples < 400 ? 0 : 1+(s->segment_samples-400)/160;
+    if (expected != s->segment_frames || s->segment_samples > s->samples ||
+        s->segment_frames > s->frames || s->pcm_fill >= 400) return EN63_STATE;
     s->finished = 1; /* No padding, frame, score, callback or event is produced. */
     return EN63_OK;
 }
