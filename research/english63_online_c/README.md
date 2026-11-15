@@ -114,6 +114,84 @@ source contract. CPU benefit requires the separately bounded, paired public
 Actions measurement with the original fixed inputs and saved byte-identity
 evidence; it is not inferred from source-level index-operation counts.
 
+### Measured pooling result (2026-11-15)
+
+The fixed public run [43673334274](https://github.com/jiying2007/kws-data/actions/runs/43673334274)
+completed all 32 passes and returned `NO_BENEFIT`. Both baseline and candidate
+full traces matched the frozen earlier traces byte for byte; the state remained
+38,192 bytes. An independent saved-only verification reproduced the result
+without model execution. The machine receipt is
+[`pool-measured-20261115.json`](pool-measured-20261115.json).
+
+| Model | Median paired CPU time change | Faster candidate pairs | Median paired p99 change |
+| --- | ---: | ---: | ---: |
+| GRU | +3.35% | 0/6 | +3.96% |
+| DS-TCN | +0.19% | 1/6 | +2.29% |
+
+The candidate did not meet the predefined CPU benefit gate. The default stays
+`EN63_POOL_TIME_MAJOR=0`; no extra measurements, changed thresholds or model
+promotion follow this completed experiment. These timings describe the fixed
+Linux-host feed path and do not measure SSC305 performance.
+
+## Frozen LibriSpeech continuous screening
+
+`librispeech_screen.py` applies the two already trained native C classifiers to
+the existing filename-hash sample of LibriSpeech dev-clean: 517 original FLAC
+recordings, 40 speakers, 58,646,164 samples (3,665.38525 seconds). Every selected
+FLAC, transcript hash, speaker and sample count must match the pinned earlier
+read-speech evidence before either classifier runs. The original archive is
+decoded losslessly as PCM16 with NumPy 2.3.5 / SoundFile 0.13.1. The earlier
+receipt has no PCM hash; this run records the decoded per-record and concatenated
+PCM hashes, without claiming a historical PCM comparison.
+
+The source-member lexical order is frozen. One native process per model reads
+the byte-concatenated PCM in 160-sample chunks, carrying frontend, encoder,
+200-frame pool and decoder state across all source boundaries. There are no
+inter-record resets, inserted silence, resampling, or EOF padding. The final
+feed contains 84 samples; each pass produces exactly 366,537 frames from
+366,539 feeds. The two models reuse the same 61.09-minute source sequence and
+do not create additional independent exposure.
+
+The native header, model weights, pooling default (`EN63_POOL_TIME_MAJOR=0`),
+0.8 threshold, three confirmations, 50-frame warmup and 100-frame cooldown
+remain fixed. Class names come from the original training bridge:
+`1 = Hey Vosen`, `2 = Hey Mero`. No training, threshold search, extra order,
+candidate pooling mode, result-driven retry or automatic model selection is
+part of this experiment. Nonzero proposals are valid completed observations.
+
+Each model runs once on one pinned CPU. A native pass has a 180-second wall
+limit; the two-pass group has a 420-second limit, and the existing data-owned
+executor caps the complete entrypoint at 900 seconds. The C reader keeps only
+one 160-sample chunk and the existing state in memory; it has no 64-file CLI
+limit. Original FLACs are decoded one at a time into temporary PCM parts.
+
+The result contains compact 32-byte records for every frame (`frame`,
+exclusive-end supplied-sample clock, three FP32 probabilities, proposal class),
+both native stdout records, the source roster, fixed request/claim, compiler,
+binary, header and source identities. Saved verification replays the unchanged
+decoder from those probabilities and recomputes every proposal and count.
+`source_interval_member` identifies the interval containing the last contributing
+sample, not an acoustic attribution: the model's preceding window can span
+multiple recordings. An endpoint exactly at a splice belongs to the preceding
+recording. Splice proximity is descriptive only.
+
+The transcript exclusion rule is an untrusted read-speech screen. These already
+exposed recordings do not establish human acoustic gold, household FAR/hour,
+independent FRR, word-end latency or SSC305 performance. Results preserve those
+qualification fields as `NOT_RUN`; no raw source audio or transcript text is
+included in the result or committed to this repository.
+
+```sh
+python3 -I -S -B research/english63_online_c/librispeech_screen_cases.py --cc gcc
+python3 -I -S -B research/english63_online_c/librispeech_screen_cases.py --cc clang
+```
+
+The existing source-check entrypoint includes these invented-only fixtures,
+covering more than 64 file boundaries, a proposal exactly at a splice, the
+84-sample final feed, both original class names, and saved verification that
+rejects rehashed false summaries or spurious trace events. It never loads the
+retained header, source corpus or trained weights.
+
 ## Resource accounting and saved evidence
 
 Each native launch uses a fresh child of a small native supervisor, created
