@@ -52540,6 +52540,89 @@
           }
         }
       ]
+    },
+    {
+      "id": "v4-english-projection48-20261115",
+      "date": "2026-11-15",
+      "base_commit": "54c7a19bccffd8d8cb633d4d0931f7bfacb99358",
+      "previous_manifest_sha256": "7c71e15442dbdb7ecef5ba35c0de394d73401e94b7ac63694288a3986640930f",
+      "workflow_source_changed": false,
+      "scope": "Add one frozen one-sided background-gradient projection study and independent saved-vector replay through the existing public data executor and source CI.",
+      "rationale": "Retain original online GRU/DS-TCN warm starts, original30 and fixed natural128 losses, seeds, AdamW, learning rate, clip, speaker split, normalization and native decoder. Project the weighted background gradient only when its global dot product with the original gradient is negative; use FP64 scalar arithmetic and one FP32 combined cast. Train exactly two 48-update arms, 96 updates and 480 forward/backward microbatches total. Reuse four exact previous NPZ checkpoints and evaluate baseline/control/weighted/projected variants in eight native children, 104 logical streams and 575720 frames. Preserve per-step old/background/combined/clipped gradients, actual parameter deltas and post-step parameters; independently verify the saved tape chain, checkpoint exports, probabilities and unchanged benefit gate without model forwards. Expose actual AdamW update geometry without claiming keyword preservation. Keep old24 runtime sources, old consumed request, prior NO_BENEFIT, C core and original inputs immutable. No adaptive extension, retry, new audio, TTS/ASR, private data upload, workflow, scheduler, model selection, promotion or qualification. Local checks use invented vectors, numeric NPZs and saved metadata only.",
+      "files": [
+        {
+          "path": "research/english63_projection_ab/PREDECLARATION.md",
+          "before": null,
+          "after": {
+            "path": "research/english63_projection_ab/PREDECLARATION.md",
+            "mode": "100644",
+            "bytes": 8170,
+            "git_blob_sha1": "a8fd5afe707c0639c4c416211e02bc0a17a5d60b",
+            "sha256": "189ee0ce673ada9815b075113de92e72d28daf346b7b46cd61b2fb1beb87d150"
+          }
+        },
+        {
+          "path": "research/english63_projection_ab/projection_cases.py",
+          "before": null,
+          "after": {
+            "path": "research/english63_projection_ab/projection_cases.py",
+            "mode": "100644",
+            "bytes": 20323,
+            "git_blob_sha1": "76797e838fd4581724b20615d9faee681c31cff4",
+            "sha256": "b2a13331203179c6ea7c36a9159132bc42cb4ad98f772d3f4b69d7c2768db060"
+          }
+        },
+        {
+          "path": "research/english63_projection_ab/projection_contract.py",
+          "before": null,
+          "after": {
+            "path": "research/english63_projection_ab/projection_contract.py",
+            "mode": "100644",
+            "bytes": 27675,
+            "git_blob_sha1": "95c150ebec613abe7f4a782aae106493e3260e0d",
+            "sha256": "596473598c13f95a15c4fb8e5510e46be3fbac033158316c48f6af3e38e8afdf"
+          }
+        },
+        {
+          "path": "research/english63_projection_ab/protocol.json",
+          "before": null,
+          "after": {
+            "path": "research/english63_projection_ab/protocol.json",
+            "mode": "100644",
+            "bytes": 7270,
+            "git_blob_sha1": "81d820007941ddcb869191b328d8adfbe8df429d",
+            "sha256": "68db9ba92de313160b772b1950d3cf3e80ea41c607564e1a01c1a9a40a744b45"
+          }
+        },
+        {
+          "path": "research/english63_projection_ab/run_projection.py",
+          "before": null,
+          "after": {
+            "path": "research/english63_projection_ab/run_projection.py",
+            "mode": "100644",
+            "bytes": 32293,
+            "git_blob_sha1": "c739e99c53250614526a44606f0ec75682e4ad65",
+            "sha256": "020b651bb08d6eebb1e228fbdf947b30331e6357c5319eb3ce229bf43d9770ff"
+          }
+        },
+        {
+          "path": "research/english63_online_c/check_source.py",
+          "before": {
+            "path": "research/english63_online_c/check_source.py",
+            "mode": "100644",
+            "bytes": 13232,
+            "git_blob_sha1": "43b7d079d19120848a2a9a99c6d2fed63e860c82",
+            "sha256": "cb48a2783d8bd0c32e1c1acb33385ee8655cf3877e16942747185cf27bd8d647"
+          },
+          "after": {
+            "path": "research/english63_online_c/check_source.py",
+            "mode": "100644",
+            "bytes": 13597,
+            "git_blob_sha1": "f6ef2c643227a29d12f76a896c58d411037bc0ed",
+            "sha256": "23c54bd862061c8c247d32860bf043b9066b064c3c2df86f03f09f3625a2113e"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
