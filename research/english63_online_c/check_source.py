@@ -29,6 +29,11 @@ def main():
                  '-Wall', '-Wextra', '-Werror', '-pedantic']
         if args.sanitize:
             flags += ['-O1', '-g', '-fsanitize=address,undefined', '-fno-omit-frame-pointer']
+        background_spec = importlib.util.spec_from_file_location(
+            'en63_background_ab_fixture', HERE.parent/'english63_background_ab/ab_cases.py')
+        background_contract = importlib.util.module_from_spec(background_spec)
+        background_spec.loader.exec_module(background_contract)
+        background_contract.run(compiler, flags, temp)
         screen_spec = importlib.util.spec_from_file_location('en63_librispeech_source_fixture', HERE/'librispeech_screen_cases.py')
         screen_contract = importlib.util.module_from_spec(screen_spec)
         screen_spec.loader.exec_module(screen_contract)

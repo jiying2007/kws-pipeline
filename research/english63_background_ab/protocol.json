@@ -1,0 +1,121 @@
+{
+  "schema": "kws-research-v4-background-continuation-request-v1",
+  "experiment": "english63-natural-background-continuation",
+  "request_id": "en63-background48-20261115-v1",
+  "pipeline_repository": "jiying2007/kws-pipeline",
+  "entrypoint": "research/english63_background_ab/run_ab.py",
+  "source_artifacts": {
+    "trained": {
+      "run_id": 43595338774,
+      "artifact_id": 14114695344,
+      "zip_bytes": 100653,
+      "zip_sha256": "bc76805934df8eb158fa4259a75c26a4ea4276c15b83542acad5948a1f954b54",
+      "data_commit": "14547faa42299ae9d819ba4bff9824c2471c412e",
+      "pipeline_commit": "fc59bef7fe108ce6accbf51d8de0bfcaae19e0bc",
+      "terminal_sha256": "7c840f2877c0d80a147b5d1287261faeb01495e61f8a2d8ab8cf9053c6cc91a4",
+      "summary_sha256": "09db16f5947d39c1824565b20defc16a2349f09fea5621b8a935989f65555295",
+      "weights_sha256": {
+        "gru": "71f731155a19538b533e4253d2e4b19d5c03328bd26da5263542159df066e623",
+        "dsc_tcn": "167282c1037a28152bed4afaf49e53a4307bd8d5576a486b41c0a2291fdca935"
+      }
+    },
+    "tts": {
+      "artifact_id": 13954744587,
+      "zip_sha256": "f180004a27ea14c0575f4dd0e2a8476ca048442c76c2dcc186ede6d731cdffcc"
+    },
+    "review": {
+      "artifact_id": 14001747172,
+      "zip_sha256": "f83d6a2f399c20af5bbc920ef6c38c42ac1e44b516d2b7291f4510557491cec8",
+      "member": "english63-three-evidence-review.json",
+      "member_sha256": "89f20b7ac5a672840013b3cf780422dcf68451b6f5d618e8f494a0e5f5dc6b12"
+    },
+    "negative_reference": {
+      "run_id": 43538998200,
+      "artifact_id": 14090383839,
+      "zip_bytes": 47199,
+      "zip_sha256": "7f28b4eddbee87435b9dc5b4c44e47a6d6ed200cbf9f4b8688d9b93cabeb4db4",
+      "member": "english-natural-read-speech-result.json",
+      "member_sha256": "788a1b04b9ecb22fb96d4036d19456f460ce3ccecd4da69d53d96fea53b29510"
+    },
+    "corpus": {
+      "url": "https://www.openslr.org/resources/12/dev-clean.tar.gz",
+      "bytes": 337926286,
+      "sha256": "76f87d090650617fca0cac8f88b9416e0ebf80350acb97b343a85fa903728ab3",
+      "license": "CC-BY-4.0"
+    }
+  },
+  "profile": {
+    "models": [
+      "gru",
+      "dsc_tcn"
+    ],
+    "variants": [
+      "baseline",
+      "control",
+      "treatment"
+    ],
+    "speaker_hash_domain": "en63-bg48-speaker-v1/",
+    "record_hash_domain": "en63-bg48-record-v1/",
+    "natural_source_clips": 517,
+    "natural_source_speakers": 40,
+    "natural_source_samples": 58646164,
+    "train_speakers": 32,
+    "study_dev_speakers": 8,
+    "records_per_train_speaker": 4,
+    "natural_train_windows": 128,
+    "crop_samples": 48000,
+    "crop_rule": "floor((source_samples-48000)/2)",
+    "crop_frames": 298,
+    "natural_train_samples": 6144000,
+    "natural_study_dev_clips": 102,
+    "natural_study_dev_samples": 11124244,
+    "natural_study_dev_frames": 69525,
+    "natural_study_dev_order": "lexical-source-member",
+    "original_train_clips": 30,
+    "tts_study_dev_clips": 12,
+    "tts_study_dev_frames": 2440,
+    "tts_study_dev_order": "lexical-cell-id-independent-reset",
+    "steps_per_arm": 48,
+    "training_arms": 4,
+    "optimizer_updates": 192,
+    "train_microbatch_natural": 32,
+    "natural_loss_weight": 0.5,
+    "objective": "control=old30-MIL-CE;treatment=old30-MIL-CE+0.5*new128-background-MIL-CE",
+    "seeds": {
+      "gru": 20261114,
+      "dsc_tcn": 20261215
+    },
+    "learning_rate": 0.001,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "cpu_threads": 1,
+    "mkldnn": false,
+    "training_arm_seconds": 180,
+    "training_group_seconds": 720,
+    "native_model_seconds": 120,
+    "native_group_seconds": 180,
+    "native_model_passes": 6,
+    "native_segments_per_model": 13,
+    "native_eval_frames": 431790,
+    "feed_chunk_samples": 160,
+    "pool_time_major": 0,
+    "window_frames": 200,
+    "minimum_observed_frames": 50,
+    "mil_temperature": 0.25,
+    "threshold": 0.8,
+    "confirm_frames": 3,
+    "cooldown_frames": 100,
+    "baseline_header_sha256": "912f443a85fddbc77c49f6cc52c2dbde6c395436d7d8d0818a4e6225cd90fc16",
+    "benefit_gate": "B>0,C>0,2*T<=B,2*T<=C;each-natural-class-T<=min(B,C);each-keyword-correct-clips>=max(B,C,2);each-keyword-wrong-other-clips<=min(B,C);ordinary-background-proposals<=min(B,C)"
+  },
+  "max_execution_seconds": 1200,
+  "max_verification_seconds": 180,
+  "new_audio_generated": false,
+  "new_tts_asr_ipa_calls": 0,
+  "new_independent_audio_seconds": 0,
+  "formal_training_admitted": false,
+  "human_gold": false,
+  "model_promotion_allowed": false,
+  "model_selection_made": false,
+  "threshold_selection": false
+}
