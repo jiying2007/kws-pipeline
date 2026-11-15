@@ -10,7 +10,7 @@ static uint16_t starts[32], counts[32], offsets[33];
 static en63_state state_a, state_b, snapshot;
 static int16_t pcm[3199];
 
-typedef struct { uint64_t rows, events, hash, first_sample; } observed;
+typedef struct { uint64_t rows, events, hash, first_sample, frame_base, sample_base; } observed;
 
 static void observe(void *opaque, uint64_t frame, uint64_t sample,
                     const float features[32], const float logits[3],
@@ -18,6 +18,7 @@ static void observe(void *opaque, uint64_t frame, uint64_t sample,
 {
     observed *o = opaque;
     unsigned i;
+    frame -= o->frame_base; sample -= o->sample_base;
     assert(sample == 400+(frame-1)*160);
     ++o->rows;
     if (proposal) { if (!o->events) o->first_sample = sample; ++o->events; }
@@ -110,7 +111,24 @@ int main(void)
         assert(en63_reset(&state_a) == EN63_OK && state_a.frames == 0 && state_a.events == 0);
         a = (observed){0}; feed(&state_a, 480123, 1, &a);
         assert(a.hash == b.hash && a.events == b.events);
+        {
+            uint64_t old_frames = state_a.frames, old_events = state_a.events;
+            assert(en63_discontinuity(&state_a) == EN63_OK);
+            assert(state_a.samples == 480123 && state_a.frames == old_frames && state_a.events == old_events);
+            assert(state_a.segment_samples == 0 && state_a.segment_frames == 0 && state_a.pcm_fill == 0 &&
+                   state_a.pool_count == 0 && state_a.candidate == 0 && state_a.confirmations == 0 && state_a.blocked_until == 0);
+            a = (observed){0}; a.frame_base = old_frames; a.sample_base = 480123;
+            assert(en63_init(&state_b, &m) == EN63_OK);
+            b = (observed){0};
+            feed(&state_a, 32001, 1, &a); feed(&state_b, 32001, 0, &b);
+            assert(a.hash == b.hash && a.events == b.events && a.first_sample == 8560);
+            assert(state_a.events == old_events+a.events && state_a.samples == 512124 && state_a.discontinuities == 1);
+            assert(en63_finish(&state_a) == EN63_OK && en63_finish(&state_b) == EN63_OK);
+            snapshot = state_a;
+            assert(en63_discontinuity(&state_a) == EN63_STATE && memcmp(&state_a, &snapshot, sizeof(snapshot)) == 0);
+            assert(en63_reset(&state_a) == EN63_OK && state_a.samples == 0 && state_a.discontinuities == 0);
+        }
     }
-    puts("PASS synthetic GRU reset bias, causal TCN history, frontend DC, chunk identity, long stream, reset, EOF, invalid-input atomicity");
+    puts("PASS synthetic GRU reset bias, causal TCN history, frontend DC, chunk identity, long stream, reset, gap recovery/warmup, EOF, invalid-input atomicity");
     return 0;
 }

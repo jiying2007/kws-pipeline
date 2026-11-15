@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Compile/run invented numeric fixtures only; no saved project model execution."""
 import argparse
+import importlib.util
 import json
 from pathlib import Path
 import resource
@@ -66,6 +67,33 @@ def main():
             print('PASS fake-model native child peak RSS', stats['process_peak_rss_kib'],
                   'KiB versus Python parent', parent_peak, 'KiB; no project model executed')
             del parent_buffer
+            # Exercise the new driver only with this invented header and PCM.
+            # No original header/checkpoint/audio is opened by this source test.
+            spec = importlib.util.spec_from_file_location('en63_state_source_fixture', HERE/'state_replay.py')
+            state_contract = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(state_contract)
+            subprocess.run([compiler, *flags, '-I', str(HERE), '-I', str(temp), str(HERE/'en63_stream.c'),
+                            str(HERE/'state_cases.c'), '-lm', '-o', str(temp/'fake-state-cases')], check=True)
+            invented = temp/'invented-state-input.pcm'
+            invented.write_bytes(b'\xe8\x03'*64123 + b'\x30\xf8'*64123)
+            for kind in ('gru', 'dsc_tcn'):
+                trace = temp/(kind+'-invented-state.trace')
+                raw = subprocess.check_output([str(temp/'fake-state-cases'), '--supervise', kind,
+                                               str(invented), str(trace)], text=True, timeout=60)
+                body, lifetime = [json.loads(line) for line in raw.splitlines()]
+                if not (body['forward_frames'] == 4773 and body['supplied_samples_including_replays'] == 769475
+                        and body['native_checks_passed'] is True and lifetime['child_exit_code'] == 0
+                        and lifetime['child_signaled'] is False
+                        and lifetime['process_lifetime_peak_rss_kib'] >= body['inference_end_high_water_rss_kib'] > 0):
+                    raise ValueError('Invented state harness did not close its fixed execution budget')
+                groups = state_contract.read_trace(trace.read_bytes())
+                for actual, expected, frame_base, sample_base in (
+                        (2, 0, 0, 0), (3, 1, 0, 0), (5, 1, 0, 0), (6, 0, 0, 0),
+                        (8, 9, 0, 399), (11, 12, 1, 400), (14, 15, 201, 32401)):
+                    if not state_contract.identical(groups[actual], groups[expected], frame_base, sample_base):
+                        raise ValueError('Invented state reset/interleave/gap trace comparison failed')
+                print('PASS invented state harness', kind, '4773 frames / 769475 supplied samples;',
+                      'original checkpoint and original audio executions = 0')
 
 
 if __name__ == '__main__':
