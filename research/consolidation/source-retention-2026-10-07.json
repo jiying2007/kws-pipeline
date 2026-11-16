@@ -53244,6 +53244,54 @@
           }
         }
       ]
+    },
+    {
+      "id": "english-mel512-actual-readback-20261116",
+      "date": "2026-11-16",
+      "base_commit": "6ed95e5ffcb680d2b9c68778c14289025eeefebd",
+      "previous_manifest_sha256": "016dee0c2d3e13128c44ff4eda54ea182851dd290aeb3f7b87c8527849ff3456",
+      "workflow_source_changed": false,
+      "scope": "Retain the completed exact mel512 implementation run and independent saved-artifact readback; documentation only.",
+      "rationale": "Public-main run 43836587076 completed the single new C implementation within its fixed budget. Independent standard-library readback verified all six same-backend traces byte-for-byte and recomputed 878592 saved-ORT element comparisons with zero violations. Retain actual source, artifact, build, accounting, timing and readback identities without altering any model, source, workflow, consumed guard or execution pin. Preserve all 214 prior history entries, 718 retained files, 834 provenance rows and 29 registered English sources. Different-job historical timings are not a matched benchmark or SSC305 qualification. Current-target training remains disabled at train Vosen 5<8; feature extraction and the second minimum gate are NOT_RUN; complete L1/L2/L3 remain unfinished.",
+      "actual_execution": {
+        "run_id": "43836587076",
+        "github_sha": "6ed95e5ffcb680d2b9c68778c14289025eeefebd",
+        "run_attempt": 1,
+        "artifact_id": 14211845823,
+        "zip_bytes": 55470166,
+        "zip_sha256": "6d27ec26868a545fa5e2c930eb03fbd20173961c605656cfe033f653988a553f",
+        "result_sha256": "a02142d7f8b37b5207bd1fab152f10f196f3822025b86e9c5dae5b60e9bdb9d9",
+        "independent_readback_sha256": "4d4be2b22e642310f25c2534bae2b4c3c214e58b8739def7ff3d33e03bc1ec26"
+      },
+      "completed_evidence_package": {
+        "file_name": "english_mel512_native_arm_evidence_20261116.zip",
+        "bytes": 33236661,
+        "sha256": "c1b6c17339c0153dc84eb5966a18eabe2175f9b1ce19562e3438de049cf62636"
+      },
+      "files": [
+        {
+          "path": "docs/ENGLISH_MEL512_EXECUTION_20261116.md",
+          "before": null,
+          "after": {
+            "path": "docs/ENGLISH_MEL512_EXECUTION_20261116.md",
+            "mode": "100644",
+            "bytes": 10465,
+            "sha256": "6bd7e203d595e7a9127e21a8311c6d3f00a41a56d612d37a82a68693864cd93c",
+            "git_blob_sha1": "5318e5a22e1b3a04fdbbb34637c880fc8f04c4d2"
+          }
+        },
+        {
+          "path": "docs/research-v4/en-mel512-execution-20261116.json",
+          "before": null,
+          "after": {
+            "path": "docs/research-v4/en-mel512-execution-20261116.json",
+            "mode": "100644",
+            "bytes": 78627,
+            "sha256": "70f9a5173f05fbbd0721b4cdfb99918e368caa41302040bffe66f2d23e1ebd71",
+            "git_blob_sha1": "1fe5a5c211066603145f66090f504f2352fd6cae"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
