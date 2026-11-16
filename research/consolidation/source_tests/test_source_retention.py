@@ -62,6 +62,48 @@ class RetentionTests(unittest.TestCase):
                 '.github/workflows/kw1-supplement-observation.yml'])
     def test_valid_retention(self):
         self.assertEqual(verify(self.root,self.manifest),1)
+    def add_embedding_asset_workflow(self):
+        for name in ('authorized-voice-clone-contracts.yml',
+                     'public-zh64-asr-once.yml',
+                     'english-embedding-backbone-assets-once.yml'):
+            path = '.github/workflows/' + name
+            row = self.file(path, b'name: invented source-only fixture\n')
+            self.manifest['allowed_new_active_workflows'].append(path)
+            self.manifest['current_added_active_workflows'].append(row)
+        return row
+    def test_embedding_asset_workflow_requires_registration_and_exact_name(self):
+        current = self.add_embedding_asset_workflow()
+        path = self.root / current['path']
+        raw = path.read_bytes()
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        self.manifest['allowed_new_active_workflows'].pop()
+        self.manifest['current_added_active_workflows'].pop()
+        with self.assertRaisesRegex(ValueError, 'inventory changed'):
+            verify(self.root, self.manifest)
+        path.unlink()
+        lookalike = '.github/workflows/english-embedding-backbone-assets-extra.yml'
+        self.manifest['allowed_new_active_workflows'].append(lookalike)
+        self.manifest['current_added_active_workflows'].append(self.file(lookalike, raw))
+        with self.assertRaisesRegex(ValueError, 'unexpected active workflow addition'):
+            verify(self.root, self.manifest)
+    def test_embedding_asset_workflow_binds_complete_current_identity(self):
+        current = self.add_embedding_asset_workflow()
+        path = self.root / current['path']
+        raw = path.read_bytes()
+        for key, value in (('bytes', True), ('bytes', current['bytes'] + 1),
+                           ('mode', '100755'), ('sha256', '0' * 64),
+                           ('git_blob_sha1', '0' * 40)):
+            with self.subTest(field=key, value=value):
+                self.manifest['current_added_active_workflows'][-1] = dict(current, **{key: value})
+                with self.assertRaisesRegex(ValueError, 'byte count|mode|identity changed'):
+                    verify(self.root, self.manifest)
+        self.manifest['current_added_active_workflows'][-1] = current
+        path.write_bytes(raw.replace(b'invented', b'Invented'))
+        with self.assertRaisesRegex(ValueError, 'identity changed'):
+            verify(self.root, self.manifest)
+        path.unlink()
+        with self.assertRaisesRegex(ValueError, 'missing retained file'):
+            verify(self.root, self.manifest)
     def test_changed_bytes(self):
         (self.root/self.manifest['files'][0]['path']).write_text('changed')
         with self.assertRaises(ValueError):verify(self.root,self.manifest)
