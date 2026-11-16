@@ -9,7 +9,8 @@ import tempfile
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'tools'))
 # source_tests -> consolidation -> research -> repository
-from verify_research_sources import ARM, DISABLED_ARM, ENGLISH_FINAL_EMBEDDING_PATHS, check_file, relative, verify
+from verify_research_sources import (ARM, DISABLED_ARM, ENGLISH_FINAL_EMBEDDING_PATHS,
+                                    ENGLISH_FINAL_EMBEDDING_FRONTEND_PATHS, check_file, relative, verify)
 from run_research_source_checks import selected_checks
 
 class RetentionTests(unittest.TestCase):
@@ -142,6 +143,54 @@ class RetentionTests(unittest.TestCase):
         rows[0] = current
         (self.root / current['path']).write_bytes(b'invented source retention fixture only\n')
         with self.assertRaisesRegex(ValueError, 'identity changed'):
+            verify(self.root, self.manifest)
+    def add_final_embedding_frontend_sources(self):
+        self.manifest['current_english_final_embedding_frontend_sources'] = [
+            self.file(name, b'INVENTED FIXED FRONTEND SOURCE FIXTURE ONLY\n')
+            for name in ENGLISH_FINAL_EMBEDDING_FRONTEND_PATHS]
+    def test_fixed_frontend_preserves_original_inventory_provenance_and_head(self):
+        self.add_final_embedding_sources()
+        original = copy.deepcopy((self.manifest['files'], self.manifest['provenance'],
+                                  self.manifest['current_english_final_embedding_sources']))
+        self.add_final_embedding_frontend_sources()
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        self.assertEqual((self.manifest['files'], self.manifest['provenance'],
+                          self.manifest['current_english_final_embedding_sources']), original)
+        del self.manifest['current_english_final_embedding_frontend_sources']
+        with self.assertRaisesRegex(ValueError, 'source registration required'):
+            verify(self.root, self.manifest)
+    def test_fixed_frontend_has_exact_paths_without_extra_sources(self):
+        self.add_final_embedding_frontend_sources()
+        key = 'current_english_final_embedding_frontend_sources'
+        current = copy.deepcopy(self.manifest[key])
+        for rows in (None, [], current + current[:1], list(reversed(current)),
+                     [dict(current[0], path='research/english_final_embedding_frontend/lookalike.py')] + current[1:]):
+            with self.subTest(rows=rows):
+                self.manifest[key] = rows
+                with self.assertRaisesRegex(ValueError, 'fixed source paths'):
+                    verify(self.root, self.manifest)
+        self.manifest[key] = current
+        self.file('research/english_final_embedding_frontend/unregistered.py', b'INVENTED\n')
+        with self.assertRaisesRegex(ValueError, 'source directory changed'):
+            verify(self.root, self.manifest)
+    def test_fixed_frontend_binds_all_current_bytes_modes_and_symlinks(self):
+        self.add_final_embedding_frontend_sources()
+        rows = self.manifest['current_english_final_embedding_frontend_sources']
+        current = copy.deepcopy(rows[0])
+        for key, value in (('bytes', True), ('bytes', current['bytes'] + 1),
+                           ('sha256', '0' * 64), ('git_blob_sha1', '0' * 40), ('mode', '100755')):
+            with self.subTest(key=key):
+                rows[0] = dict(current, **{key: value})
+                with self.assertRaises(ValueError): verify(self.root, self.manifest)
+        rows[0] = current
+        path = self.root / current['path']
+        raw = path.read_bytes()
+        path.write_bytes(raw.lower())
+        with self.assertRaisesRegex(ValueError, 'identity changed'):
+            verify(self.root, self.manifest)
+        path.unlink()
+        path.symlink_to(self.root / rows[1]['path'])
+        with self.assertRaisesRegex(ValueError, 'symlink'):
             verify(self.root, self.manifest)
     def test_changed_bytes(self):
         (self.root/self.manifest['files'][0]['path']).write_text('changed')
@@ -655,7 +704,7 @@ class SourceRevisionTests(unittest.TestCase):
 
     def populate_complete_fixture(self):
         for group in ('files', 'baseline_active_workflows', 'current_added_active_workflows',
-                      'current_english_final_embedding_sources'):
+                      'current_english_final_embedding_sources', 'current_english_final_embedding_frontend_sources'):
             for row in self.manifest[group]:
                 if row['path'] == HOTPATH_RETENTION.CURRENT_REVISION_PATH:
                     continue

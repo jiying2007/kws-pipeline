@@ -6,12 +6,14 @@ on:
       - research/english_embedding_backbone/audit_openwakeword_assets.py
       - research/english_embedding_backbone/test_asset_contract.py
       - research/english_final_embedding/**
+      - research/english_final_embedding_frontend/**
       - .github/workflows/english-embedding-backbone-assets-once.yml
   push:
     branches: [main]
     paths:
       - configs/research/english-embedding-backbone-assets-20261116.json
       - research/english_final_embedding/**
+      - research/english_final_embedding_frontend/**
       - .github/workflows/english-embedding-backbone-assets-once.yml
 permissions:
   contents: read
@@ -39,6 +41,70 @@ jobs:
           python3 -I -S -B research/english_final_embedding/test_portable_head.py -v
           python3 -I -S -B -O research/english_final_embedding/test_portable_head.py -v
           python3 -I -S -B -OO research/english_final_embedding/test_portable_head.py -v
+      - name: Fixed feature frontend invented tensor and C source tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -I -S -B research/english_final_embedding_frontend/test_fixed_frontend.py -v
+          python3 -I -S -B -O research/english_final_embedding_frontend/test_fixed_frontend.py -v
+          python3 -I -S -B -OO research/english_final_embedding_frontend/test_fixed_frontend.py -v
+          python3 -I -S -B research/english_final_embedding_frontend/test_fixed_frontend_independent.py -v
+          python3 -I -S -B -O research/english_final_embedding_frontend/test_fixed_frontend_independent.py -v
+          python3 -I -S -B -OO research/english_final_embedding_frontend/test_fixed_frontend_independent.py -v
+  export-fixed-frontend:
+    needs: source-contract
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event.repository.private == false && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.before == '31238cafe3d6668874d446eae5dfa7c55028fb13' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Start one static export receipt before downloads
+        run: >-
+          python3 -I -S -B research/english_final_embedding_frontend/export_fixed_frontend_once.py
+          --stage start --assets "${{ runner.temp }}/fixed-frontend-assets"
+          --output "${{ runner.temp }}/fixed-frontend-static-export"
+      - name: Download only the two exact public ONNX feature assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/fixed-frontend-assets"
+          for name in melspectrogram.onnx embedding_model.onnx; do
+            curl --proto '=https' --tlsv1.2 --fail --location --silent --show-error \
+              --retry 0 --connect-timeout 20 --max-time 120 \
+              "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/$name" \
+              -o "$RUNNER_TEMP/fixed-frontend-assets/$name"
+          done
+      - name: Install fixed protobuf graph parser dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/fixed-frontend-parser"
+          "$RUNNER_TEMP/fixed-frontend-parser/bin/pip" install --disable-pip-version-check \
+            "numpy==1.26.4" "onnx==1.17.0"
+      - name: Export static C and metadata with zero model inference calls
+        run: >-
+          "${{ runner.temp }}/fixed-frontend-parser/bin/python" -I -B
+          research/english_final_embedding_frontend/export_fixed_frontend_once.py
+          --stage export --assets "${{ runner.temp }}/fixed-frontend-assets"
+          --output "${{ runner.temp }}/fixed-frontend-static-export"
+      - name: Preserve incomplete export failure receipt
+        if: always()
+        env:
+          STATIC_EXPORT_JOB_STATUS: ${{ job.status }}
+        run: >-
+          python3 -I -S -B research/english_final_embedding_frontend/export_fixed_frontend_once.py
+          --stage finalize --assets "${{ runner.temp }}/fixed-frontend-assets"
+          --output "${{ runner.temp }}/fixed-frontend-static-export"
+      - name: Upload static source export and receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: english-fixed-frontend-static-export-${{ github.run_id }}
+          path: ${{ runner.temp }}/fixed-frontend-static-export
+          retention-days: 30
+          if-no-files-found: warn
   inspect-assets:
     needs: source-contract
     if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && github.sha == '511ccee46dc2fc01483b0d598cfd7fefb286bf31'
