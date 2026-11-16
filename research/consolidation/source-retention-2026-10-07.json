@@ -15596,7 +15596,8 @@
     ".github/workflows/kw1-supplement-observation.yml",
     ".github/workflows/authorized-voice-clone-contracts.yml",
     ".github/workflows/public-zh64-asr-once.yml",
-    ".github/workflows/english-embedding-backbone-assets-once.yml"
+    ".github/workflows/english-embedding-backbone-assets-once.yml",
+    ".github/workflows/english-backbone-parity-once.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -52957,6 +52958,123 @@
           }
         }
       ]
+    },
+    {
+      "id": "english-fixed-shared-backbone-parity-20261116",
+      "date": "2026-11-16",
+      "base_commit": "cfc69dcd7535ea909403f10a91bcfe26ccc1b331",
+      "previous_manifest_sha256": "cb8ebc3fd52ee03550a74090ce4a989c147c1402912c0c6003fcb3a68e5d55bc",
+      "workflow_source_changed": true,
+      "scope": "One explicitly bounded PCM-to-feature numerical profile on three fixed artificial signals; no keyword head, training, TTS, ASR or real audio.",
+      "rationale": "Continue independent C deployment verification while the separate terminal144 classifier remains blocked by its unchanged train-Vosen minimum (5<8). Consume exact successful static-export C bytes without re-export, keep feature assets/signals/three numerical tolerances unchanged, and allow exactly 156 ONNX session runs and three native plus three ARM replay processes. Restrict execution to one first public-main successor of cfc69dcd7535ea909403f10a91bcfe26ccc1b331 with a pinned worker and clean source. Register exactly four new profile source paths and one explicit workflow; preserve every historical retained/source/frontend/head identity and consumed guard. No head/KWS/SSC305 qualification is produced. The existing integrated archive-versus-active fixture now copies the same exact four registered profile sources when it copies the new workflow; production source registration remains mandatory.",
+      "files": [
+        {
+          "path": "research/english_backbone_parity/README.md",
+          "before": null,
+          "after": {
+            "path": "research/english_backbone_parity/README.md",
+            "mode": "100644",
+            "bytes": 10746,
+            "sha256": "c05ca35dd6a3245c2549dff85e5ca6f1e6d0a18fe42acce258248572266f0156",
+            "git_blob_sha1": "6b9fec4916f314b9a5d8d1a9c7818df7874efe98"
+          }
+        },
+        {
+          "path": "research/english_backbone_parity/backbone_parity_once.py",
+          "before": null,
+          "after": {
+            "path": "research/english_backbone_parity/backbone_parity_once.py",
+            "mode": "100644",
+            "bytes": 36710,
+            "sha256": "5f077922dbebf018a026a96340e417464bcc71e248c36d9990a7de6e0933a376",
+            "git_blob_sha1": "ee036384f5687fe7acd061672e4e4e1d26999820"
+          }
+        },
+        {
+          "path": "research/english_backbone_parity/backbone_parity_pins.json",
+          "before": null,
+          "after": {
+            "path": "research/english_backbone_parity/backbone_parity_pins.json",
+            "mode": "100644",
+            "bytes": 2635,
+            "sha256": "6c12d8d8bb49e9ec991dfff8272d70891c844939dd2bc0ef431aca48133f47b0",
+            "git_blob_sha1": "1639d2d1fed23762b928634122e3f592e8736ec9"
+          }
+        },
+        {
+          "path": "research/english_backbone_parity/test_backbone_parity_once.py",
+          "before": null,
+          "after": {
+            "path": "research/english_backbone_parity/test_backbone_parity_once.py",
+            "mode": "100644",
+            "bytes": 18924,
+            "sha256": "9d47d966dd91efaf8ce1997b16f9e48b88d653507e05b0411e8a8a2daba628e9",
+            "git_blob_sha1": "4e5d58ece9ba216cd9d5d5397870718c77a83fe1"
+          }
+        },
+        {
+          "path": ".github/workflows/english-backbone-parity-once.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/english-backbone-parity-once.yml",
+            "mode": "100644",
+            "bytes": 12158,
+            "sha256": "8bc672a1183a570b90e9826f877c81f17abc58e0a74f08700bd2dfb844f694e2",
+            "git_blob_sha1": "2281041685ebd024ab6b0ca29909320d18983517"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 23188,
+            "sha256": "19b0f9ba1b1b7ac188115ca9f2714118d8a65815a8daac54d41a70a3a2a928d2",
+            "git_blob_sha1": "3a795026cfd94e9b85b30b2f58f060bbdfb1e569"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 24965,
+            "sha256": "2e40fdb7b01d253fe4bb295e037fc35dd7813004644c7a9d6f04d8d30e067a9f",
+            "git_blob_sha1": "49f615eea1cc56534e9fd644c9ba9f17e8a7a4b2"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 71391,
+            "sha256": "f89ed18a3442b634094371ccde084fe8c5ea7d1f6cd0b39b5ff379ad2ef9f509",
+            "git_blob_sha1": "1a2dbb031d0b2b3181915c131368cc113dc847c6"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 76661,
+            "sha256": "f9ade584e973f673fe5bc23385bf4c8c28547b19f5d394caac6163f884f3f9e5",
+            "git_blob_sha1": "41c9fb0f09c7baa18cd25e6997814091a52260a8"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_research_consolidation.py",
+          "before": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 14389,
+            "sha256": "8c957e34a9607c5c46ea9fc61a7d84861dbf82210cea60088f236190b6a0ba2e",
+            "git_blob_sha1": "16e7e61762a9f8f88ed6bb1d1a2c6c00f996d1c6"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 14726,
+            "sha256": "17b9fd967312175162fe1dfb7e3bbb6bfdc4a90056a5bd63e298831bebd79b67",
+            "git_blob_sha1": "6f272e547d44e6c703812260881e3b5b118ce23c"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -53071,6 +53189,13 @@
       "bytes": 7985,
       "sha256": "a752d0cfeb706f5d191eeb81781dfc28716601f076ebc18caa58ca555cb2df8c",
       "git_blob_sha1": "bce6c7c3743ac65c9e02406edd06f4ad6057812c"
+    },
+    {
+      "path": ".github/workflows/english-backbone-parity-once.yml",
+      "mode": "100644",
+      "bytes": 12158,
+      "sha256": "8bc672a1183a570b90e9826f877c81f17abc58e0a74f08700bd2dfb844f694e2",
+      "git_blob_sha1": "2281041685ebd024ab6b0ca29909320d18983517"
     }
   ],
   "current_source_revision": {
@@ -53472,6 +53597,36 @@
       "bytes": 14277,
       "sha256": "aac89301da49cf9bd74b6f85794fc5cd8d48d0541606a5ea208ebb24849d7eb1",
       "git_blob_sha1": "da1b9fda6568c27b9f9902b65dd314509f85d24b"
+    }
+  ],
+  "current_english_backbone_parity_sources": [
+    {
+      "path": "research/english_backbone_parity/README.md",
+      "mode": "100644",
+      "bytes": 10746,
+      "sha256": "c05ca35dd6a3245c2549dff85e5ca6f1e6d0a18fe42acce258248572266f0156",
+      "git_blob_sha1": "6b9fec4916f314b9a5d8d1a9c7818df7874efe98"
+    },
+    {
+      "path": "research/english_backbone_parity/backbone_parity_once.py",
+      "mode": "100644",
+      "bytes": 36710,
+      "sha256": "5f077922dbebf018a026a96340e417464bcc71e248c36d9990a7de6e0933a376",
+      "git_blob_sha1": "ee036384f5687fe7acd061672e4e4e1d26999820"
+    },
+    {
+      "path": "research/english_backbone_parity/backbone_parity_pins.json",
+      "mode": "100644",
+      "bytes": 2635,
+      "sha256": "6c12d8d8bb49e9ec991dfff8272d70891c844939dd2bc0ef431aca48133f47b0",
+      "git_blob_sha1": "1639d2d1fed23762b928634122e3f592e8736ec9"
+    },
+    {
+      "path": "research/english_backbone_parity/test_backbone_parity_once.py",
+      "mode": "100644",
+      "bytes": 18924,
+      "sha256": "9d47d966dd91efaf8ce1997b16f9e48b88d653507e05b0411e8a8a2daba628e9",
+      "git_blob_sha1": "4e5d58ece9ba216cd9d5d5397870718c77a83fe1"
     }
   ]
 }
