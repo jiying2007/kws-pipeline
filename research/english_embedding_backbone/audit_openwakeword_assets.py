@@ -18,6 +18,13 @@ EXPECTED={
  "embedding_model.onnx":(129656245,1326578,"ONNX speech embedding"),
 }
 TRIGGER=Path(__file__).resolve().parents[2]/"configs/research/english-embedding-backbone-assets-20261116.json"
+# The fixed upstream openwakeword/utils.py supplies float32 (batch, samples)
+# to input, and (batch, 76, 32, 1) mel windows to input_1. A one-sample
+# waveform is not a valid frontend fixture; choose one second of zero PCM.
+SYNTHETIC_INPUTS={
+ "melspectrogram.onnx":("input",(1,16000)),
+ "embedding_model.onnx":("input_1",(1,76,32,1)),
+}
 
 def need(ok,msg):
  if not ok: raise ValueError(msg)
@@ -27,6 +34,18 @@ def sha(path):
   for block in iter(lambda:f.read(1024*1024),b""):h.update(block)
  return h.hexdigest()
 def read_json(p):return json.loads(Path(p).read_text(encoding="utf-8"))
+def synthetic_input_shape(asset_name,input_name,declared_shape,input_type):
+ need(asset_name in SYNTHETIC_INPUTS,"ONNX_SYNTHETIC_ASSET:"+asset_name)
+ expected_name,shape=SYNTHETIC_INPUTS[asset_name]
+ need(input_name==expected_name and input_type=="tensor(float)",
+      "ONNX_SYNTHETIC_INPUT_IDENTITY:"+asset_name)
+ need(type(declared_shape) in (list,tuple) and len(declared_shape)==len(shape),
+      "ONNX_SYNTHETIC_INPUT_RANK:"+asset_name)
+ for declared,expected in zip(declared_shape,shape):
+  need((type(declared) is int and declared==expected) or declared is None or
+       (type(declared) is str and bool(declared)),
+       "ONNX_SYNTHETIC_STATIC_DIMENSION:"+asset_name)
+ return list(shape)
 def verify_trigger():
  x=read_json(TRIGGER)
  need(x.get("schema")==POLICY and x.get("upstream_repo")==UPSTREAM and
@@ -80,13 +99,13 @@ def onnx_report(path):
  sess=ort.InferenceSession(str(path),providers=["CPUExecutionProvider"])
  inputs=[]
  feed={}
- for x in sess.get_inputs():
-  shape=[d if isinstance(d,int) and d>0 else 1 for d in x.shape]
-  dt={"tensor(float)":np.float32,"tensor(double)":np.float64,
-      "tensor(int64)":np.int64,"tensor(int32)":np.int32}.get(x.type)
-  need(dt is not None,"ONNX_INPUT_TYPE:"+x.type)
-  feed[x.name]=np.zeros(shape,dtype=dt)
-  inputs.append({"name":x.name,"type":x.type,"shape":x.shape})
+ runtime_inputs=sess.get_inputs()
+ need(len(runtime_inputs)==1,"ONNX_SYNTHETIC_INPUT_COUNT")
+ for x in runtime_inputs:
+  shape=synthetic_input_shape(Path(path).name,x.name,x.shape,x.type)
+  feed[x.name]=np.zeros(shape,dtype=np.float32)
+  inputs.append({"name":x.name,"type":x.type,"shape":x.shape,
+                 "synthetic_fixture_shape":shape})
  values=sess.run(None,feed)
  outputs=[]
  for meta,val in zip(sess.get_outputs(),values):

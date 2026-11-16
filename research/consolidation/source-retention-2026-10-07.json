@@ -15595,7 +15595,8 @@
     ".github/workflows/kw1-preset-supplement-20261014-v1.yml",
     ".github/workflows/kw1-supplement-observation.yml",
     ".github/workflows/authorized-voice-clone-contracts.yml",
-    ".github/workflows/public-zh64-asr-once.yml"
+    ".github/workflows/public-zh64-asr-once.yml",
+    ".github/workflows/english-embedding-backbone-assets-once.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -52730,6 +52731,13 @@
       "bytes": 24346,
       "git_blob_sha1": "e5b5c6775cff99bfa3a6f80dee9ff777c5aef313",
       "sha256": "68efe17d2bda047c4b86811ca1ec46e7e4e776480a13146d35bc8c0b7ffe4048"
+    },
+    {
+      "path": ".github/workflows/english-embedding-backbone-assets-once.yml",
+      "mode": "100644",
+      "bytes": 3361,
+      "sha256": "c44890f9caa3bc7d433e59c1138a22e93faef360c394edd98cae68b29c14f949",
+      "git_blob_sha1": "3821027144c587fbfe56c63232b2cdc727487453"
     }
   ],
   "current_source_revision": {
