@@ -1,0 +1,85 @@
+{
+  "accepted_samples_per_backend": 144000,
+  "authority": "future first public kws-data main successor, attempt1, exact source/plan/fullchain artifact pins and fixed pipeline component commit; no executor is enabled by these preparation files",
+  "backends": [
+    "native",
+    "arm"
+  ],
+  "build_session_contents": [
+    "CMake configure and compiler inspection",
+    "one build invocation, library and linked runner",
+    "one install invocation",
+    "pure installed file/export identity readback"
+  ],
+  "build_session_timeout_seconds": 300,
+  "build_sessions_per_backend": 1,
+  "callback_reentry_must_be_rejected": true,
+  "cases": [
+    {
+      "boundary": "reset",
+      "input_origin_sample": 0,
+      "name": "zero"
+    },
+    {
+      "boundary": "reset",
+      "input_origin_sample": 0,
+      "name": "sine400"
+    },
+    {
+      "boundary": "discontinuity-route-change",
+      "input_origin_sample": 48000,
+      "name": "lcg14"
+    }
+  ],
+  "chunk_pattern": [
+    1,
+    1279,
+    257,
+    4096
+  ],
+  "component_repository": "jiying2007/kws-pipeline",
+  "current_source_commit_may_differ_when_pinned_kernel_bytes_match": true,
+  "embeddings_per_backend": 78,
+  "embeddings_per_case": 26,
+  "empty_event_list_cannot_replace_score_checks": true,
+  "eof_padding_samples": 0,
+  "events_checked_independently": true,
+  "executable_from": "installed bin/ekws_pcm_stream",
+  "execution_repository": "jiying2007/kws-data",
+  "formal_training_admitted": false,
+  "human_gold": false,
+  "inference_processes_per_backend": 1,
+  "legacy_kwsp_kwkp_compatibility": false,
+  "model_format": "EHKWS01",
+  "model_promotion_allowed": false,
+  "namespace": "KwsEnglishResearch::stream",
+  "new_ort_inference_calls": 0,
+  "no_retry": true,
+  "optimizer_updates": 0,
+  "overall_timeout_seconds": 1800,
+  "parameter_search": false,
+  "process_timeout_seconds": 900,
+  "profile": "SAVED_FULLCHAIN_ENGLISH_STREAM_SOFTWARE_INTEGRATION",
+  "pronunciation_verified": false,
+  "purpose": "separate research-only install/streaming adapter integration; not a repeat of the original numeric experiment",
+  "qualification_allowed": false,
+  "ready_outputs_per_backend": 33,
+  "ready_outputs_per_case": 11,
+  "real_audio_cases": 0,
+  "reference_frontend_or_head_reexecution": false,
+  "reset_discontinuity_clear_both_histories": true,
+  "sample_rate": 16000,
+  "samples_per_case": 48000,
+  "saved_stage4_comparison": "all 26 ready/event/sample values and six float32 score bit patterns per case; same backend; clock translated only by declared input_origin_sample",
+  "schema": "english-stream-integration-plan-v1",
+  "separate_benchmark_processes": 0,
+  "separate_inference_consumer_processes": 0,
+  "source_kernel_baseline_commit": "6ed95e5ffcb680d2b9c68778c14289025eeefebd",
+  "speed_pass_threshold": null,
+  "ssc305_qualification": false,
+  "timing_scope": "sum of monotonic accept calls including in-memory verification callbacks; excludes file I/O; host only",
+  "training_admitted": false,
+  "trusted_negative": false,
+  "tts_asr_phone_calls": 0,
+  "zero_input_and_rejected_clock_add_no_samples": true
+}
