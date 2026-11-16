@@ -74,4 +74,4 @@ The earlier research profile used Hey Mero /heɪ ˈmɪəroʊ/ and Hey Vosen /he�
 - the four Piper raw-phoneme WAVs generated against the superseded IPA remain unqualified for the new target;
 - no prior ASR agreement, raw eSpeak string, or requested text establishes acoustic gold.
 
-Current target-specific generation must use raw phoneme inputs equivalent to eSpeak hˈeɪ mˈiːɹoʊ and hˈeɪ vˈoʊzən, after confirming the pinned phonemizer maps the symbols exactly. The user's American IPA is the primary target; British variants are tracked separately, not silently mixed into the primary training label.
+Current target-specific generation must preserve the image's prosody: **Hey is light/unstressed**, while the first syllable of Mero or Vosen carries primary stress. With the pinned eSpeak phonemizer, the exact raw sequences are `heɪ mˈiːɹoʊ` and `heɪ vˈoʊzən` (no primary-stress mark on Hey). Confirm the phonemizer's actual output against the pinned voice config before generation. The user's American IPA is the primary target; British variants are tracked separately, not silently mixed into the primary training label.
