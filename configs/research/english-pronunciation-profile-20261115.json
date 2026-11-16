@@ -9,7 +9,10 @@
       "accent": "American",
       "british_ipa": "/heɪ ˈmiːrəʊ/",
       "pronunciation_hint": "MEE-roh; long stressed /iː/; first-syllable stress",
-      "stress": "name_first_syllable"
+      "stress": "name_first_syllable",
+      "raw_espeak_ipa": "heɪ mˈiːɹoʊ",
+      "hey_stress": "unstressed_light",
+      "name_stress": "first_syllable_primary"
     },
     {
       "id": "hey_vosen",
@@ -18,7 +21,10 @@
       "accent": "American",
       "british_ipa": "/heɪ ˈvəʊzən/",
       "pronunciation_hint": "VOH-zən; voiced medial /z/; first-syllable stress",
-      "stress": "name_first_syllable"
+      "stress": "name_first_syllable",
+      "raw_espeak_ipa": "heɪ vˈoʊzən",
+      "hey_stress": "unstressed_light",
+      "name_stress": "first_syllable_primary"
     }
   ],
   "data_policy": {
@@ -62,5 +68,6 @@
       "ipa": "/heɪ ˈvoʊsən/",
       "status": "superseded_not_relabelled"
     }
-  ]
+  ],
+  "prosody_policy": "Hey remains light/unstressed; primary stress belongs to the first syllable of the name."
 }
