@@ -1,0 +1,39 @@
+{
+  "schema": "english-embedding-backbone-asset-audit-v1",
+  "upstream_repo": "dscripka/openWakeWord",
+  "upstream_commit": "368c03716d1e92591906a84949bc477f3a834455",
+  "release_tag": "v0.5.1",
+  "assets": [
+    {
+      "id": 129656230,
+      "name": "melspectrogram.tflite",
+      "bytes": 1092516,
+      "role": "TFLite mel frontend"
+    },
+    {
+      "id": 129656244,
+      "name": "embedding_model.tflite",
+      "bytes": 1330312,
+      "role": "TFLite speech embedding"
+    },
+    {
+      "id": 129656233,
+      "name": "melspectrogram.onnx",
+      "bytes": 1087958,
+      "role": "ONNX mel frontend"
+    },
+    {
+      "id": 129656245,
+      "name": "embedding_model.onnx",
+      "bytes": 1326578,
+      "role": "ONNX speech embedding"
+    }
+  ],
+  "code_license": "Apache-2.0",
+  "feature_model_license": "Apache-2.0",
+  "excluded_classifier_license": "CC-BY-NC-SA-4.0",
+  "download_once": true,
+  "training": false,
+  "audio_inference": false,
+  "model_promotion": false
+}
