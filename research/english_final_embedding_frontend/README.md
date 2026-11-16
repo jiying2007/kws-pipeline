@@ -107,7 +107,7 @@ accumulation order or for different `libm` implementations before measurement.
 
 ## Export and replay interfaces for the separate bounded task
 
-The existing asset workflow adds one **static export only** job for public
+The first static attempt added one **static export only** job for public
 repository `jiying2007/kws-pipeline`, main push with exact `before`
 `31238cafe3d6668874d446eae5dfa7c55028fb13`, attempt1. The small
 `export_fixed_frontend_once.py` wrapper repeats those checks against the actual
@@ -122,6 +122,34 @@ actual verified assets when available, and record **zero model inference,
 training, TTS, ASR and phone calls**. This job does not compile or run C models.
 The earlier asset inference audit retains its consumed exact-commit guard
 `511ccee46dc2fc01483b0d598cfd7fefb286bf31`; it is not repeated.
+
+### Observed first export failure and finite follow-up
+
+Actual run [43820454034](https://github.com/jiying2007/kws-pipeline/actions/runs/43820454034)
+at source `6bf94d542572c5302dcccc449cd999cc3ddafa8f` verified both exact assets,
+then stopped with `NONFINITE_CONSTANT`. Artifact `14204202178` is 3,693 bytes,
+ZIP SHA256 `0198b8d1ac2b988616368b4276287a3346bebe1ef14c7c9f9df0ed83f6249f1b`.
+It retains STARTED, EXPORT_STARTED and FAILED_NO_RETRY; no inference or optimizer
+was run. That failure does not identify the original constant node or its uses.
+
+The successor static export is separately guarded by first public main push
+with `before=6bf94d542572c5302dcccc449cd999cc3ddafa8f`, attempt1, and a new
+`english-fixed-frontend-static-export-clip-bound-fix-v2` receipt schema.
+It retains the preceding failure identity in every receipt. Its only added
+lowering permits a scalar float32 negative infinity used exclusively as Clip
+minimum, or positive infinity used exclusively as Clip maximum. Such a bound
+becomes an absent optional input. For this runtime's finite input/intermediate
+domain, the default float32 extreme and the corresponding infinite bound have
+the same result. See the [ONNX Clip13 definition](https://onnx.ai/onnx/operators/onnx__Clip.html#clip-13).
+Both original IEEE bits and all bound-consumer positions are recorded in the
+manifest. The dummy compile-time tensor has no emitted use or weight storage.
+
+NaN, nonscalar infinity, reversed-sign bounds, nonfinite weights, graph outputs,
+arithmetic/alias uses and any additional consumer remain rejected. No C kernel,
+feature asset, numeric comparison tolerance or head policy changes. If actual
+graph lowering still fails, GRAPH_FAILURE records node attributes and
+initializer shape/type metadata without inference. The new actual result must
+establish which constants, if any, meet this rule; source tests alone do not.
 
 Source tests call only the wrapper's pure validator with invented dictionaries;
 they do not mutate the environment to impersonate Actions or invoke the guarded

@@ -53069,8 +53069,8 @@
       "path": ".github/workflows/english-embedding-backbone-assets-once.yml",
       "mode": "100644",
       "bytes": 7985,
-      "sha256": "58e8b954483080cb3dc8bbcc3a72fd994079457f491d600a6108b820677c5585",
-      "git_blob_sha1": "c2a79356b848b712a7069e20c517d3c219f245d2"
+      "sha256": "a752d0cfeb706f5d191eeb81781dfc28716601f076ebc18caa58ca555cb2df8c",
+      "git_blob_sha1": "bce6c7c3743ac65c9e02406edd06f4ad6057812c"
     }
   ],
   "current_source_revision": {
@@ -53420,23 +53420,23 @@
     {
       "path": "research/english_final_embedding_frontend/README.md",
       "mode": "100644",
-      "bytes": 12730,
-      "sha256": "22aca3811b760ce228d9a11bb18dbfac8afc2aa28526e2a60c5873696c0e8167",
-      "git_blob_sha1": "c3f5205214e813f1c3085bdee08fcbf91ff26e04"
+      "bytes": 14620,
+      "sha256": "ceb6849a72ef152f247b0824ddb16e0ef0f00e283e0dfd15d4ade0a8140c52ef",
+      "git_blob_sha1": "1fc41bff1b7c4c8200e19128b3ac7da4aa4d6cfa"
     },
     {
       "path": "research/english_final_embedding_frontend/export_fixed_frontend.py",
       "mode": "100644",
-      "bytes": 25813,
-      "sha256": "ff93bfd579da36eba0a20e946e157c1d3e2fc5f2389ee8bf34f10327cc767062",
-      "git_blob_sha1": "92a61f4cd8ab8f28dfcf7875ef734f806450b86a"
+      "bytes": 29014,
+      "sha256": "f2ad4192114e0acb158ad2597f79a03e0e77e1a58716aff1971a4a87c9856c76",
+      "git_blob_sha1": "6ced2fced3099d6d78ba5e50dd183957124eb234"
     },
     {
       "path": "research/english_final_embedding_frontend/export_fixed_frontend_once.py",
       "mode": "100644",
-      "bytes": 8406,
-      "sha256": "ffe42e0990dafc50074d3303d3e71311d29f9eae71136e7a65e008a07f299470",
-      "git_blob_sha1": "35c5f2530000788b1881e9254fbe1358d28c3845"
+      "bytes": 8960,
+      "sha256": "6eac897b18cf7594c10d25cfa1902874c6c65da530704583be62f2e060a82257",
+      "git_blob_sha1": "d073b5602866e7adfe326484b0be94e3cbfa191a"
     },
     {
       "path": "research/english_final_embedding_frontend/fixed_frontend.c",
@@ -53462,9 +53462,9 @@
     {
       "path": "research/english_final_embedding_frontend/test_fixed_frontend.py",
       "mode": "100644",
-      "bytes": 22412,
-      "sha256": "8f71c94978b7c63ab22f475f00cc17ee8494d0eac2f7bc02c5933fb19f222180",
-      "git_blob_sha1": "d0dc2c86a1e6c30924f24879f570611d35c0aa48"
+      "bytes": 25332,
+      "sha256": "fb028a0bc101be71604c7ebc8e8170fa6693afc2d4e29a6da5170634b63173ea",
+      "git_blob_sha1": "70af85fc37a7ba17f378c64886fd7bde88bd8a3b"
     },
     {
       "path": "research/english_final_embedding_frontend/test_fixed_frontend_independent.py",

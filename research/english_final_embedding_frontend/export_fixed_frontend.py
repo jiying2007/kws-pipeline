@@ -62,6 +62,24 @@ def f32(value):
     return value
 
 
+def json_floats(value):
+    """Describe original IEEE infinities without emitting nonstandard JSON."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return {'ieee754_float32': struct.pack('>f', value).hex(),
+                'value': 'NaN' if math.isnan(value) else ('+Infinity' if value > 0 else '-Infinity')}
+    if isinstance(value, dict):
+        return {key: json_floats(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_floats(item) for item in value]
+    return value
+
+
+class GraphExportError(ValueError):
+    def __init__(self, reason, diagnostic):
+        super().__init__(reason)
+        self.graph_diagnostic = diagnostic
+
+
 def integer(value, what):
     need(type(value) is int and -0x7fffffff <= value <= 0x7fffffff, what)
     return value
@@ -180,9 +198,37 @@ def lower_graph(spec):
     inp = spec['input']
     need(set(inp) == {'name', 'shape', 'dtype'} and inp['dtype'] == 'float32', 'GRAPH_INPUT')
     tensors = {inp['name']: Tensor(inp['name'], shape(inp['shape']), base=inp['name'])}
+    unbounded = {}
+
+    def graph_constant(name, data):
+        # An explicit +/-infinity used solely as the corresponding Clip bound
+        # is an absent limit for finite float32 runtime values. No nonfinite
+        # weight, arithmetic input, output or NaN is accepted by this rule.
+        values = data.get('data', ())
+        nonfinite = data.get('dtype') == 'float32' and any(
+            not math.isfinite(float(v)) for v in values)
+        if not nonfinite:
+            return constant(name, data)
+        need(set(data) == {'shape', 'dtype', 'data'} and tuple(data['shape']) == () and
+             len(values) == 1 and math.isinf(float(values[0])) and name != spec['output'],
+             'NONFINITE_CONSTANT_NOT_SCALAR_CLIP_BOUND:' + name)
+        position = 2 if values[0] > 0 else 1
+        uses = [{'node_index': index, 'node_name': node.get('name', ''),
+                 'op': node['op'], 'input_index': slot}
+                for index, node in enumerate(spec['nodes'])
+                for slot, source in enumerate(node.get('inputs', [])) if source == name]
+        need(uses and all(use['op'] == 'Clip' and use['input_index'] == position for use in uses),
+             'NONFINITE_CONSTANT_NOT_EXCLUSIVE_CLIP_LIMIT:' + name)
+        unbounded[name] = {'tensor': name, 'original_value': json_floats(float(values[0])),
+                          'clip_input_index': position, 'uses': uses,
+                          'lowered_to': 'ABSENT_OPTIONAL_CLIP_BOUND_FOR_FINITE_INPUTS'}
+        # This placeholder is removed from every use and therefore never
+        # enters the emitted constant array or C runtime graph.
+        return constant(name, {'shape': [], 'dtype': 'float32', 'data': [0.0]})
+
     for name, data in spec.get('initializers', {}).items():
         need(name not in tensors and name, 'DUPLICATE_TENSOR')
-        tensors[name] = constant(name, data)
+        tensors[name] = graph_constant(name, data)
     nodes, original = [], []
     for raw in spec['nodes']:
         need(set(raw) <= {'op', 'inputs', 'output', 'attrs', 'name', 'domain'}, 'NODE_FIELDS')
@@ -204,8 +250,9 @@ def lower_graph(spec):
                 values = list(val) if plural else [val]
                 data = {'shape': [len(values)] if plural else [],
                         'dtype': 'int64' if key.startswith('value_int') else 'float32', 'data': values}
-            tensors[out] = constant(out, data)
+            tensors[out] = graph_constant(out, data)
             continue
+        inputs = ['' if name in unbounded else name for name in inputs]
         need(inputs and inputs[0], 'REQUIRED_INPUT')
         xs = [tensors[n] if n else None for n in inputs]
         x = xs[0]
@@ -372,6 +419,7 @@ def lower_graph(spec):
         n['output_id'] = ids[n['output']]
     return {'tensors': entries, 'nodes': nodes, 'input': ids[inp['name']], 'output': ids[output],
             'constants': weights, 'workspace_floats': high, 'original_nodes': original,
+            'unbounded_clip_limits': list(unbounded.values()),
             'lifetimes': {b: {'born': tensors[b].born, 'last': last[b], 'offset': offsets.get(b)}
                           for b in sorted(bases)}}
 
@@ -481,7 +529,15 @@ def read_pinned_onnx(path, expected):
     spec = {'input': {'name': input_name, 'shape': input_shape, 'dtype': 'float32'},
             'output': output_name, 'output_shape': output_shape,
             'initializers': initializers, 'nodes': rows}
-    return lower_graph(spec)
+    try:
+        return lower_graph(spec)
+    except (ValueError, OverflowError) as error:
+        diagnostic = {'asset_name': path.name, 'asset_sha256': sha,
+            'reason': str(error), 'original_nodes': json_floats(rows),
+            'initializers': {name: {key: value[key] for key in ('shape', 'dtype')}
+                             for name, value in initializers.items()},
+            'model_inference_calls': 0}
+        raise GraphExportError(path.name + ':' + str(error), diagnostic) from error
 
 
 def export_pair(asset_dir, output_dir):
@@ -501,9 +557,11 @@ def export_pair(asset_dir, output_dir):
             'input': g['tensors'][g['input']], 'output': g['tensors'][g['output']],
             'constant_bytes': len(g['constants']) * 4, 'workspace_bytes': g['workspace_floats'] * 4,
             'tensors': g['tensors'], 'nodes': g['nodes'], 'lifetimes': g['lifetimes'],
-            'original_node_attributes': g['original_nodes']}
+            'original_node_attributes': json_floats(g['original_nodes']),
+            'unbounded_clip_limits': g['unbounded_clip_limits']}
     report['generated_c_sha256'] = hashlib.sha256(source.encode()).hexdigest()
-    (output_dir / 'export_manifest.json').write_text(json.dumps(report, indent=2, sort_keys=True) + '\n')
+    (output_dir / 'export_manifest.json').write_text(json.dumps(report, indent=2, sort_keys=True,
+                                                              allow_nan=False) + '\n')
     return report
 
 

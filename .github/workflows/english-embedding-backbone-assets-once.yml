@@ -53,7 +53,7 @@ jobs:
           python3 -I -S -B -OO research/english_final_embedding_frontend/test_fixed_frontend_independent.py -v
   export-fixed-frontend:
     needs: source-contract
-    if: github.repository == 'jiying2007/kws-pipeline' && github.event.repository.private == false && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.before == '31238cafe3d6668874d446eae5dfa7c55028fb13' && github.run_attempt == 1
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event.repository.private == false && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.before == '6bf94d542572c5302dcccc449cd999cc3ddafa8f' && github.run_attempt == 1
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
