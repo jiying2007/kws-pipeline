@@ -1,0 +1,2014 @@
+{
+  "actual": {
+    "accounting": {
+      "build_attempts": {
+        "arm": 1,
+        "native": 1
+      },
+      "build_completions": {
+        "arm": 1,
+        "native": 1
+      },
+      "c_frontend_windows_completed": {
+        "arm": 78,
+        "native": 78
+      },
+      "c_process_attempts": {
+        "arm": 3,
+        "native": 3
+      },
+      "c_process_completions": {
+        "arm": 3,
+        "native": 3
+      },
+      "head_evaluations": 0,
+      "new_model_asset_downloads": 0,
+      "new_onnx_session_attempts": 0,
+      "new_onnx_session_completions": 0,
+      "new_tts_asr_phone_calls": 0,
+      "old_implementation_processes": 0,
+      "optimizer_updates": 0,
+      "real_audio_cases": 0
+    },
+    "all_process_summaries_unchanged": true,
+    "all_same_backend_trace_bytes_equal": true,
+    "all_saved_ort_comparisons_passed": true,
+    "api_raw_identities": {
+      "artifacts.json": {
+        "bytes": 746,
+        "sha256": "2f41a43ba65a3fe9eb9a8d526069eedababdad92c599c3cefe1c77522b7b24f3"
+      },
+      "jobs.json": {
+        "bytes": 4457,
+        "sha256": "9940ce710fcb68186e7898e87a8eecbf87f570ae13829aa50eab31910b0770be"
+      },
+      "run.json": {
+        "bytes": 12577,
+        "sha256": "1537f0251b8c88129c335340746fead138dffb960994493daaff686b40fccf35"
+      }
+    },
+    "artifact_api_digest": "sha256:6d27ec26868a545fa5e2c930eb03fbd20173961c605656cfe033f653988a553f",
+    "artifact_id": 14211845823,
+    "artifact_name": "english-mel-specialization-43836587076",
+    "baseline_implementation_reexecuted": false,
+    "build_identity": {
+      "bytes": 2456,
+      "member": "mel-specialization-result/BUILD.json",
+      "sha256": "9599568be0e7454fb248e6139e95b5e3082f78074ec1bc3b6b69c86e85e76a5b"
+    },
+    "closed_result_manifest_files": 50,
+    "command_exit": {
+      "failure_receipt_present": false,
+      "missing_terminal_receipt_means": "UNKNOWN_INTERRUPTED_C_ATTEMPTS_REQUIRE_STARTED_LEDGER",
+      "new_onnx_session_runs": 0,
+      "new_tts_asr_phone_calls": 0,
+      "optimizer_updates": 0,
+      "result_receipt_present": true,
+      "retry_count": 0,
+      "returncode": 0
+    },
+    "command_exit_identity": {
+      "bytes": 260,
+      "member": "mel-specialization-evidence/COMMAND_EXIT.json",
+      "sha256": "c4e0a914c525fa377e27970b155a0f9bc1396c5b1135c0d8fcacc093c5412664"
+    },
+    "comparisons": [
+      {
+        "backend": "native",
+        "baseline_timing": {
+          "host_child_cpu_seconds": 5.9319880000000005,
+          "returncode": 0,
+          "scope": "whole host process including startup and trace I/O; ARM includes QEMU emulation",
+          "stderr": "",
+          "stdout": "{\"samples\":48000,\"embeddings\":26,\"head_ready\":0,\"events\":0,\"workspace_bytes\":528384,\"frontend_state_bytes\":32080,\"head_enabled\":false,\"ssc305_qualification\":false}\n",
+          "wall_seconds": 5.9326955659999925
+        },
+        "bit_identity": {
+          "first_different_byte": null,
+          "new_trace": {
+            "bytes": 586984,
+            "sha256": "2ebccfb54de0ad20bfbc796381083562be01416fe7d79ca9d64db3b34a5c1e7f"
+          },
+          "old_trace": {
+            "bytes": 586984,
+            "sha256": "2ebccfb54de0ad20bfbc796381083562be01416fe7d79ca9d64db3b34a5c1e7f"
+          },
+          "passed": true,
+          "rule": "SAME_BACKEND_FULL_TRACE_BYTES"
+        },
+        "case": "zero",
+        "comparison_file_identity": {
+          "bytes": 4383,
+          "member": "mel-specialization-result/zero/native-comparison.json",
+          "sha256": "0b464399f5031865e879e6a0e5405c833de4a9f8744a905cb44134ed4d29e803"
+        },
+        "embeddings": 26,
+        "head_checked": false,
+        "historical_cpu_ratio_baseline_over_candidate": 1.2658356207120323,
+        "historical_wall_ratio_baseline_over_candidate": 1.2656029572518022,
+        "passed": true,
+        "pcm_sha256": "55873fecc61a79e87ca550c7072e38ccdd7ecb600ace286fe4717952a97c42b0",
+        "process_summary": {
+          "embeddings": 26,
+          "events": 0,
+          "frontend_state_bytes": 32080,
+          "head_enabled": false,
+          "head_ready": 0,
+          "samples": 48000,
+          "ssc305_qualification": false,
+          "workspace_bytes": 528384
+        },
+        "profiling_scope": "whole-process elapsed and host child CPU; historical comparison is not a matched benchmark; ARM includes QEMU",
+        "saved_ort_comparison": {
+          "checked_stages": [
+            "raw_mel",
+            "normalized_mel",
+            "embedding"
+          ],
+          "exact_embedding_clocks": true,
+          "head_checked": false,
+          "metrics": {
+            "embedding": {
+              "atol": 0.001,
+              "elements": 2496,
+              "max_abs_at": {
+                "candidate": -5.886362552642822,
+                "component": 85,
+                "embedding_index": 0,
+                "reference": -5.886323928833008,
+                "sample": 16000
+              },
+              "max_abs_error": 3.8623809814453125e-05,
+              "max_relative_at": {
+                "candidate": -0.08124738931655884,
+                "component": 70,
+                "embedding_index": 0,
+                "reference": -0.0812525749206543,
+                "sample": 16000
+              },
+              "max_relative_error_nonzero_reference": 6.382079707040535e-05,
+              "max_tolerance_ratio": 0.02946190792338067,
+              "max_tolerance_ratio_at": {
+                "candidate": 0.6849021911621094,
+                "component": 53,
+                "embedding_index": 0,
+                "reference": 0.6849356889724731,
+                "sample": 16000
+              },
+              "nonzero_reference_elements": 2496,
+              "rtol": 0.0002,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            },
+            "normalized_mel": {
+              "atol": 0.001,
+              "elements": 63232,
+              "max_abs_at": {
+                "candidate": -7.999999046325684,
+                "component": 0,
+                "embedding_index": 0,
+                "reference": -8.0,
+                "sample": 16000
+              },
+              "max_abs_error": 9.5367431640625e-07,
+              "max_relative_at": {
+                "candidate": -7.999999046325684,
+                "component": 0,
+                "embedding_index": 0,
+                "reference": -8.0,
+                "sample": 16000
+              },
+              "max_relative_error_nonzero_reference": 1.1920928955078125e-07,
+              "max_tolerance_ratio": 0.0008221330313846983,
+              "max_tolerance_ratio_at": {
+                "candidate": -7.999999046325684,
+                "component": 0,
+                "embedding_index": 0,
+                "reference": -8.0,
+                "sample": 16000
+              },
+              "nonzero_reference_elements": 63232,
+              "rtol": 2e-05,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            },
+            "raw_mel": {
+              "atol": 0.01,
+              "elements": 80704,
+              "max_abs_at": {
+                "candidate": -99.99999237060547,
+                "component": 0,
+                "embedding_index": 0,
+                "reference": -100.0,
+                "sample": 16000
+              },
+              "max_abs_error": 7.62939453125e-06,
+              "max_relative_at": {
+                "candidate": -99.99999237060547,
+                "component": 0,
+                "embedding_index": 0,
+                "reference": -100.0,
+                "sample": 16000
+              },
+              "max_relative_error_nonzero_reference": 7.62939453125e-08,
+              "max_tolerance_ratio": 0.0006357828776041666,
+              "max_tolerance_ratio_at": {
+                "candidate": -99.99999237060547,
+                "component": 0,
+                "embedding_index": 0,
+                "reference": -100.0,
+                "sample": 16000
+              },
+              "nonzero_reference_elements": 80704,
+              "rtol": 2e-05,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            }
+          },
+          "passed": true
+        },
+        "saved_reference_trace": {
+          "bytes": 586984,
+          "sha256": "ee2292a6602dcd4aab03f3ead15fb82f1900e45d559617cb4d9891aa7aa019b4"
+        },
+        "speed_is_not_an_acceptance_gate": true,
+        "status": "PASSED",
+        "timing": {
+          "command": [
+            "/home/runner/work/_temp/mel-specialization-result/mel-specialization-native",
+            "/home/runner/work/_temp/mel-specialization-result/zero/input.pcm",
+            "/home/runner/work/_temp/mel-specialization-result/zero/native.bin",
+            "1,1279,257,4096"
+          ],
+          "error_type": null,
+          "host_child_cpu_seconds": 4.686222999999999,
+          "retry_count": 0,
+          "returncode": 0,
+          "scope": "whole-process elapsed and host child CPU; historical comparison is not a matched benchmark; ARM includes QEMU",
+          "status": "COMPLETED",
+          "stderr": "",
+          "stdout": "{\"samples\":48000,\"embeddings\":26,\"head_ready\":0,\"events\":0,\"workspace_bytes\":528384,\"frontend_state_bytes\":32080,\"head_enabled\":false,\"ssc305_qualification\":false}\n",
+          "timeout_seconds": 300,
+          "wall_seconds": 4.687643570999995
+        },
+        "unchanged_workspace_and_state": true
+      },
+      {
+        "backend": "arm",
+        "baseline_timing": {
+          "host_child_cpu_seconds": 118.015903,
+          "returncode": 0,
+          "scope": "whole host process including startup and trace I/O; ARM includes QEMU emulation",
+          "stderr": "",
+          "stdout": "{\"samples\":48000,\"embeddings\":26,\"head_ready\":0,\"events\":0,\"workspace_bytes\":528384,\"frontend_state_bytes\":32056,\"head_enabled\":false,\"ssc305_qualification\":false}\n",
+          "wall_seconds": 118.028081026
+        },
+        "bit_identity": {
+          "first_different_byte": null,
+          "new_trace": {
+            "bytes": 586984,
+            "sha256": "2ebccfb54de0ad20bfbc796381083562be01416fe7d79ca9d64db3b34a5c1e7f"
+          },
+          "old_trace": {
+            "bytes": 586984,
+            "sha256": "2ebccfb54de0ad20bfbc796381083562be01416fe7d79ca9d64db3b34a5c1e7f"
+          },
+          "passed": true,
+          "rule": "SAME_BACKEND_FULL_TRACE_BYTES"
+        },
+        "case": "zero",
+        "comparison_file_identity": {
+          "bytes": 4375,
+          "member": "mel-specialization-result/zero/arm-comparison.json",
+          "sha256": "21645fd96f837e7d662e35a730b545ab356a1b7fe8bf4aee533bd020b8b68d97"
+        },
+        "embeddings": 26,
+        "head_checked": false,
+        "historical_cpu_ratio_baseline_over_candidate": 1.180232475866973,
+        "historical_wall_ratio_baseline_over_candidate": 1.1802310592720198,
+        "passed": true,
+        "pcm_sha256": "55873fecc61a79e87ca550c7072e38ccdd7ecb600ace286fe4717952a97c42b0",
+        "process_summary": {
+          "embeddings": 26,
+          "events": 0,
+          "frontend_state_bytes": 32056,
+          "head_enabled": false,
+          "head_ready": 0,
+          "samples": 48000,
+          "ssc305_qualification": false,
+          "workspace_bytes": 528384
+        },
+        "profiling_scope": "whole-process elapsed and host child CPU; historical comparison is not a matched benchmark; ARM includes QEMU",
+        "saved_ort_comparison": {
+          "checked_stages": [
+            "raw_mel",
+            "normalized_mel",
+            "embedding"
+          ],
+          "exact_embedding_clocks": true,
+          "head_checked": false,
+          "metrics": {
+            "embedding": {
+              "atol": 0.001,
+              "elements": 2496,
+              "max_abs_at": {
+                "candidate": -5.886362552642822,
+                "component": 85,
+                "embedding_index": 0,
+                "reference": -5.886323928833008,
+                "sample": 16000
+              },
+              "max_abs_error": 3.8623809814453125e-05,
+              "max_relative_at": {
+                "candidate": -0.08124738931655884,
+                "component": 70,
+                "embedding_index": 0,
+                "reference": -0.0812525749206543,
+                "sample": 16000
+              },
+              "max_relative_error_nonzero_reference": 6.382079707040535e-05,
+              "max_tolerance_ratio": 0.02946190792338067,
+              "max_tolerance_ratio_at": {
+                "candidate": 0.6849021911621094,
+                "component": 53,
+                "embedding_index": 0,
+                "reference": 0.6849356889724731,
+                "sample": 16000
+              },
+              "nonzero_reference_elements": 2496,
+              "rtol": 0.0002,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            },
+            "normalized_mel": {
+              "atol": 0.001,
+              "elements": 63232,
+              "max_abs_at": {
+                "candidate": -7.999999046325684,
+                "component": 0,
+                "embedding_index": 0,
+                "reference": -8.0,
+                "sample": 16000
+              },
+              "max_abs_error": 9.5367431640625e-07,
+              "max_relative_at": {
+                "candidate": -7.999999046325684,
+                "component": 0,
+                "embedding_index": 0,
+                "reference": -8.0,
+                "sample": 16000
+              },
+              "max_relative_error_nonzero_reference": 1.1920928955078125e-07,
+              "max_tolerance_ratio": 0.0008221330313846983,
+              "max_tolerance_ratio_at": {
+                "candidate": -7.999999046325684,
+                "component": 0,
+                "embedding_index": 0,
+                "reference": -8.0,
+                "sample": 16000
+              },
+              "nonzero_reference_elements": 63232,
+              "rtol": 2e-05,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            },
+            "raw_mel": {
+              "atol": 0.01,
+              "elements": 80704,
+              "max_abs_at": {
+                "candidate": -99.99999237060547,
+                "component": 0,
+                "embedding_index": 0,
+                "reference": -100.0,
+                "sample": 16000
+              },
+              "max_abs_error": 7.62939453125e-06,
+              "max_relative_at": {
+                "candidate": -99.99999237060547,
+                "component": 0,
+                "embedding_index": 0,
+                "reference": -100.0,
+                "sample": 16000
+              },
+              "max_relative_error_nonzero_reference": 7.62939453125e-08,
+              "max_tolerance_ratio": 0.0006357828776041666,
+              "max_tolerance_ratio_at": {
+                "candidate": -99.99999237060547,
+                "component": 0,
+                "embedding_index": 0,
+                "reference": -100.0,
+                "sample": 16000
+              },
+              "nonzero_reference_elements": 80704,
+              "rtol": 2e-05,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            }
+          },
+          "passed": true
+        },
+        "saved_reference_trace": {
+          "bytes": 586984,
+          "sha256": "ee2292a6602dcd4aab03f3ead15fb82f1900e45d559617cb4d9891aa7aa019b4"
+        },
+        "speed_is_not_an_acceptance_gate": true,
+        "status": "PASSED",
+        "timing": {
+          "command": [
+            "/usr/bin/qemu-arm",
+            "/home/runner/work/_temp/mel-specialization-result/mel-specialization-arm",
+            "/home/runner/work/_temp/mel-specialization-result/zero/input.pcm",
+            "/home/runner/work/_temp/mel-specialization-result/zero/arm.bin",
+            "1,1279,257,4096"
+          ],
+          "error_type": null,
+          "host_child_cpu_seconds": 99.99377700000001,
+          "retry_count": 0,
+          "returncode": 0,
+          "scope": "whole-process elapsed and host child CPU; historical comparison is not a matched benchmark; ARM includes QEMU",
+          "status": "COMPLETED",
+          "stderr": "",
+          "stdout": "{\"samples\":48000,\"embeddings\":26,\"head_ready\":0,\"events\":0,\"workspace_bytes\":528384,\"frontend_state_bytes\":32056,\"head_enabled\":false,\"ssc305_qualification\":false}\n",
+          "timeout_seconds": 300,
+          "wall_seconds": 100.00421536
+        },
+        "unchanged_workspace_and_state": true
+      },
+      {
+        "backend": "native",
+        "baseline_timing": {
+          "host_child_cpu_seconds": 5.971936000000001,
+          "returncode": 0,
+          "scope": "whole host process including startup and trace I/O; ARM includes QEMU emulation",
+          "stderr": "",
+          "stdout": "{\"samples\":48000,\"embeddings\":26,\"head_ready\":0,\"events\":0,\"workspace_bytes\":528384,\"frontend_state_bytes\":32080,\"head_enabled\":false,\"ssc305_qualification\":false}\n",
+          "wall_seconds": 5.972631650000011
+        },
+        "bit_identity": {
+          "first_different_byte": null,
+          "new_trace": {
+            "bytes": 586984,
+            "sha256": "70ab53048314094d7307b3842676c76d0a5b98cca923661d2795bc65a20c3030"
+          },
+          "old_trace": {
+            "bytes": 586984,
+            "sha256": "70ab53048314094d7307b3842676c76d0a5b98cca923661d2795bc65a20c3030"
+          },
+          "passed": true,
+          "rule": "SAME_BACKEND_FULL_TRACE_BYTES"
+        },
+        "case": "sine400",
+        "comparison_file_identity": {
+          "bytes": 4475,
+          "member": "mel-specialization-result/sine400/native-comparison.json",
+          "sha256": "89f52dfd29ec94db011003d188cd9cb0362f7d5f1b2c699e54a97b6de5d79d11"
+        },
+        "embeddings": 26,
+        "head_checked": false,
+        "historical_cpu_ratio_baseline_over_candidate": 1.2908129961102288,
+        "historical_wall_ratio_baseline_over_candidate": 1.2906891038725186,
+        "passed": true,
+        "pcm_sha256": "f81681f58003475f0e81e7625f1bf7d76fb018585d3757c0e3083af83c1a8b01",
+        "process_summary": {
+          "embeddings": 26,
+          "events": 0,
+          "frontend_state_bytes": 32080,
+          "head_enabled": false,
+          "head_ready": 0,
+          "samples": 48000,
+          "ssc305_qualification": false,
+          "workspace_bytes": 528384
+        },
+        "profiling_scope": "whole-process elapsed and host child CPU; historical comparison is not a matched benchmark; ARM includes QEMU",
+        "saved_ort_comparison": {
+          "checked_stages": [
+            "raw_mel",
+            "normalized_mel",
+            "embedding"
+          ],
+          "exact_embedding_clocks": true,
+          "head_checked": false,
+          "metrics": {
+            "embedding": {
+              "atol": 0.001,
+              "elements": 2496,
+              "max_abs_at": {
+                "candidate": -15.468522071838379,
+                "component": 58,
+                "embedding_index": 0,
+                "reference": -15.468940734863281,
+                "sample": 16000
+              },
+              "max_abs_error": 0.00041866302490234375,
+              "max_relative_at": {
+                "candidate": 0.7324211597442627,
+                "component": 68,
+                "embedding_index": 0,
+                "reference": 0.7325165271759033,
+                "sample": 16000
+              },
+              "max_relative_error_nonzero_reference": 0.00013019150845414835,
+              "max_tolerance_ratio": 0.1588980704236248,
+              "max_tolerance_ratio_at": {
+                "candidate": 6.193711280822754,
+                "component": 80,
+                "embedding_index": 0,
+                "reference": 6.193355560302734,
+                "sample": 16000
+              },
+              "nonzero_reference_elements": 2496,
+              "rtol": 0.0002,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            },
+            "normalized_mel": {
+              "atol": 0.001,
+              "elements": 63232,
+              "max_abs_at": {
+                "candidate": 4.439314365386963,
+                "component": 12,
+                "embedding_index": 0,
+                "reference": 4.4393720626831055,
+                "sample": 16000
+              },
+              "max_abs_error": 5.7697296142578125e-05,
+              "max_relative_at": {
+                "candidate": 4.439314365386963,
+                "component": 12,
+                "embedding_index": 0,
+                "reference": 4.4393720626831055,
+                "sample": 16000
+              },
+              "max_relative_error_nonzero_reference": 1.299672461057624e-05,
+              "max_tolerance_ratio": 0.052992249870317885,
+              "max_tolerance_ratio_at": {
+                "candidate": 4.439314365386963,
+                "component": 12,
+                "embedding_index": 0,
+                "reference": 4.4393720626831055,
+                "sample": 16000
+              },
+              "nonzero_reference_elements": 63232,
+              "rtol": 2e-05,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            },
+            "raw_mel": {
+              "atol": 0.01,
+              "elements": 80704,
+              "max_abs_at": {
+                "candidate": 24.393144607543945,
+                "component": 12,
+                "embedding_index": 0,
+                "reference": 24.393718719482422,
+                "sample": 16000
+              },
+              "max_abs_error": 0.0005741119384765625,
+              "max_relative_at": {
+                "candidate": 24.393144607543945,
+                "component": 12,
+                "embedding_index": 0,
+                "reference": 24.393718719482422,
+                "sample": 16000
+              },
+              "max_relative_error_nonzero_reference": 2.353523647126582e-05,
+              "max_tolerance_ratio": 0.05474054302924213,
+              "max_tolerance_ratio_at": {
+                "candidate": 24.393144607543945,
+                "component": 12,
+                "embedding_index": 0,
+                "reference": 24.393718719482422,
+                "sample": 16000
+              },
+              "nonzero_reference_elements": 80704,
+              "rtol": 2e-05,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            }
+          },
+          "passed": true
+        },
+        "saved_reference_trace": {
+          "bytes": 586984,
+          "sha256": "69ac85b419fe25fb082394b6a9300ffd8cf0da2c2570ef34ab4011507c217ca7"
+        },
+        "speed_is_not_an_acceptance_gate": true,
+        "status": "PASSED",
+        "timing": {
+          "command": [
+            "/home/runner/work/_temp/mel-specialization-result/mel-specialization-native",
+            "/home/runner/work/_temp/mel-specialization-result/sine400/input.pcm",
+            "/home/runner/work/_temp/mel-specialization-result/sine400/native.bin",
+            "1,1279,257,4096"
+          ],
+          "error_type": null,
+          "host_child_cpu_seconds": 4.626491999999997,
+          "retry_count": 0,
+          "returncode": 0,
+          "scope": "whole-process elapsed and host child CPU; historical comparison is not a matched benchmark; ARM includes QEMU",
+          "status": "COMPLETED",
+          "stderr": "",
+          "stdout": "{\"samples\":48000,\"embeddings\":26,\"head_ready\":0,\"events\":0,\"workspace_bytes\":528384,\"frontend_state_bytes\":32080,\"head_enabled\":false,\"ssc305_qualification\":false}\n",
+          "timeout_seconds": 300,
+          "wall_seconds": 4.627475068999985
+        },
+        "unchanged_workspace_and_state": true
+      },
+      {
+        "backend": "arm",
+        "baseline_timing": {
+          "host_child_cpu_seconds": 116.77251000000001,
+          "returncode": 0,
+          "scope": "whole host process including startup and trace I/O; ARM includes QEMU emulation",
+          "stderr": "",
+          "stdout": "{\"samples\":48000,\"embeddings\":26,\"head_ready\":0,\"events\":0,\"workspace_bytes\":528384,\"frontend_state_bytes\":32056,\"head_enabled\":false,\"ssc305_qualification\":false}\n",
+          "wall_seconds": 116.78123829100002
+        },
+        "bit_identity": {
+          "first_different_byte": null,
+          "new_trace": {
+            "bytes": 586984,
+            "sha256": "70ab53048314094d7307b3842676c76d0a5b98cca923661d2795bc65a20c3030"
+          },
+          "old_trace": {
+            "bytes": 586984,
+            "sha256": "70ab53048314094d7307b3842676c76d0a5b98cca923661d2795bc65a20c3030"
+          },
+          "passed": true,
+          "rule": "SAME_BACKEND_FULL_TRACE_BYTES"
+        },
+        "case": "sine400",
+        "comparison_file_identity": {
+          "bytes": 4474,
+          "member": "mel-specialization-result/sine400/arm-comparison.json",
+          "sha256": "5ec3f410d66d79440f6b9fc7fc779f2617d8ce7f45194ef96d70eed405f90f0b"
+        },
+        "embeddings": 26,
+        "head_checked": false,
+        "historical_cpu_ratio_baseline_over_candidate": 1.185237758283177,
+        "historical_wall_ratio_baseline_over_candidate": 1.1852192681135991,
+        "passed": true,
+        "pcm_sha256": "f81681f58003475f0e81e7625f1bf7d76fb018585d3757c0e3083af83c1a8b01",
+        "process_summary": {
+          "embeddings": 26,
+          "events": 0,
+          "frontend_state_bytes": 32056,
+          "head_enabled": false,
+          "head_ready": 0,
+          "samples": 48000,
+          "ssc305_qualification": false,
+          "workspace_bytes": 528384
+        },
+        "profiling_scope": "whole-process elapsed and host child CPU; historical comparison is not a matched benchmark; ARM includes QEMU",
+        "saved_ort_comparison": {
+          "checked_stages": [
+            "raw_mel",
+            "normalized_mel",
+            "embedding"
+          ],
+          "exact_embedding_clocks": true,
+          "head_checked": false,
+          "metrics": {
+            "embedding": {
+              "atol": 0.001,
+              "elements": 2496,
+              "max_abs_at": {
+                "candidate": -15.468522071838379,
+                "component": 58,
+                "embedding_index": 0,
+                "reference": -15.468940734863281,
+                "sample": 16000
+              },
+              "max_abs_error": 0.00041866302490234375,
+              "max_relative_at": {
+                "candidate": 0.7324211597442627,
+                "component": 68,
+                "embedding_index": 0,
+                "reference": 0.7325165271759033,
+                "sample": 16000
+              },
+              "max_relative_error_nonzero_reference": 0.00013019150845414835,
+              "max_tolerance_ratio": 0.1588980704236248,
+              "max_tolerance_ratio_at": {
+                "candidate": 6.193711280822754,
+                "component": 80,
+                "embedding_index": 0,
+                "reference": 6.193355560302734,
+                "sample": 16000
+              },
+              "nonzero_reference_elements": 2496,
+              "rtol": 0.0002,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            },
+            "normalized_mel": {
+              "atol": 0.001,
+              "elements": 63232,
+              "max_abs_at": {
+                "candidate": 4.439314365386963,
+                "component": 12,
+                "embedding_index": 0,
+                "reference": 4.4393720626831055,
+                "sample": 16000
+              },
+              "max_abs_error": 5.7697296142578125e-05,
+              "max_relative_at": {
+                "candidate": 4.439314365386963,
+                "component": 12,
+                "embedding_index": 0,
+                "reference": 4.4393720626831055,
+                "sample": 16000
+              },
+              "max_relative_error_nonzero_reference": 1.299672461057624e-05,
+              "max_tolerance_ratio": 0.052992249870317885,
+              "max_tolerance_ratio_at": {
+                "candidate": 4.439314365386963,
+                "component": 12,
+                "embedding_index": 0,
+                "reference": 4.4393720626831055,
+                "sample": 16000
+              },
+              "nonzero_reference_elements": 63232,
+              "rtol": 2e-05,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            },
+            "raw_mel": {
+              "atol": 0.01,
+              "elements": 80704,
+              "max_abs_at": {
+                "candidate": 24.393144607543945,
+                "component": 12,
+                "embedding_index": 0,
+                "reference": 24.393718719482422,
+                "sample": 16000
+              },
+              "max_abs_error": 0.0005741119384765625,
+              "max_relative_at": {
+                "candidate": 24.393144607543945,
+                "component": 12,
+                "embedding_index": 0,
+                "reference": 24.393718719482422,
+                "sample": 16000
+              },
+              "max_relative_error_nonzero_reference": 2.353523647126582e-05,
+              "max_tolerance_ratio": 0.05474054302924213,
+              "max_tolerance_ratio_at": {
+                "candidate": 24.393144607543945,
+                "component": 12,
+                "embedding_index": 0,
+                "reference": 24.393718719482422,
+                "sample": 16000
+              },
+              "nonzero_reference_elements": 80704,
+              "rtol": 2e-05,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            }
+          },
+          "passed": true
+        },
+        "saved_reference_trace": {
+          "bytes": 586984,
+          "sha256": "69ac85b419fe25fb082394b6a9300ffd8cf0da2c2570ef34ab4011507c217ca7"
+        },
+        "speed_is_not_an_acceptance_gate": true,
+        "status": "PASSED",
+        "timing": {
+          "command": [
+            "/usr/bin/qemu-arm",
+            "/home/runner/work/_temp/mel-specialization-result/mel-specialization-arm",
+            "/home/runner/work/_temp/mel-specialization-result/sine400/input.pcm",
+            "/home/runner/work/_temp/mel-specialization-result/sine400/arm.bin",
+            "1,1279,257,4096"
+          ],
+          "error_type": null,
+          "host_child_cpu_seconds": 98.522435,
+          "retry_count": 0,
+          "returncode": 0,
+          "scope": "whole-process elapsed and host child CPU; historical comparison is not a matched benchmark; ARM includes QEMU",
+          "status": "COMPLETED",
+          "stderr": "",
+          "stdout": "{\"samples\":48000,\"embeddings\":26,\"head_ready\":0,\"events\":0,\"workspace_bytes\":528384,\"frontend_state_bytes\":32056,\"head_enabled\":false,\"ssc305_qualification\":false}\n",
+          "timeout_seconds": 300,
+          "wall_seconds": 98.531336296
+        },
+        "unchanged_workspace_and_state": true
+      },
+      {
+        "backend": "native",
+        "baseline_timing": {
+          "host_child_cpu_seconds": 5.99051800000002,
+          "returncode": 0,
+          "scope": "whole host process including startup and trace I/O; ARM includes QEMU emulation",
+          "stderr": "",
+          "stdout": "{\"samples\":48000,\"embeddings\":26,\"head_ready\":0,\"events\":0,\"workspace_bytes\":528384,\"frontend_state_bytes\":32080,\"head_enabled\":false,\"ssc305_qualification\":false}\n",
+          "wall_seconds": 5.991225474000032
+        },
+        "bit_identity": {
+          "first_different_byte": null,
+          "new_trace": {
+            "bytes": 586984,
+            "sha256": "2b8e0362acb8956ab0fe546840f06fc578966b854c7446c4d51d2671e806b18c"
+          },
+          "old_trace": {
+            "bytes": 586984,
+            "sha256": "2b8e0362acb8956ab0fe546840f06fc578966b854c7446c4d51d2671e806b18c"
+          },
+          "passed": true,
+          "rule": "SAME_BACKEND_FULL_TRACE_BYTES"
+        },
+        "case": "lcg14",
+        "comparison_file_identity": {
+          "bytes": 4476,
+          "member": "mel-specialization-result/lcg14/native-comparison.json",
+          "sha256": "5544a7e427e8b44d96bdfbb637fa906b3568ec05f6379ad92647b4aa7335f93d"
+        },
+        "embeddings": 26,
+        "head_checked": false,
+        "historical_cpu_ratio_baseline_over_candidate": 1.283283052552858,
+        "historical_wall_ratio_baseline_over_candidate": 1.2831493191194203,
+        "passed": true,
+        "pcm_sha256": "4e97af4846861db16ce7461517d405f60dca4473b515ae1efcb0f505221142dc",
+        "process_summary": {
+          "embeddings": 26,
+          "events": 0,
+          "frontend_state_bytes": 32080,
+          "head_enabled": false,
+          "head_ready": 0,
+          "samples": 48000,
+          "ssc305_qualification": false,
+          "workspace_bytes": 528384
+        },
+        "profiling_scope": "whole-process elapsed and host child CPU; historical comparison is not a matched benchmark; ARM includes QEMU",
+        "saved_ort_comparison": {
+          "checked_stages": [
+            "raw_mel",
+            "normalized_mel",
+            "embedding"
+          ],
+          "exact_embedding_clocks": true,
+          "head_checked": false,
+          "metrics": {
+            "embedding": {
+              "atol": 0.001,
+              "elements": 2496,
+              "max_abs_at": {
+                "candidate": -1.8833715915679932,
+                "component": 70,
+                "embedding_index": 18,
+                "reference": -1.8832931518554688,
+                "sample": 39040
+              },
+              "max_abs_error": 7.843971252441406e-05,
+              "max_relative_at": {
+                "candidate": -0.004233002662658691,
+                "component": 0,
+                "embedding_index": 18,
+                "reference": -0.004187345504760742,
+                "sample": 39040
+              },
+              "max_relative_error_nonzero_reference": 0.010903604167852873,
+              "max_tolerance_ratio": 0.05697833202358218,
+              "max_tolerance_ratio_at": {
+                "candidate": -1.8833715915679932,
+                "component": 70,
+                "embedding_index": 18,
+                "reference": -1.8832931518554688,
+                "sample": 39040
+              },
+              "nonzero_reference_elements": 2496,
+              "rtol": 0.0002,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            },
+            "normalized_mel": {
+              "atol": 0.001,
+              "elements": 63232,
+              "max_abs_at": {
+                "candidate": 9.67655086517334,
+                "component": 11,
+                "embedding_index": 0,
+                "reference": 9.676552772521973,
+                "sample": 16000
+              },
+              "max_abs_error": 1.9073486328125e-06,
+              "max_relative_at": {
+                "candidate": 9.042424201965332,
+                "component": 2308,
+                "embedding_index": 4,
+                "reference": 9.0424222946167,
+                "sample": 21120
+              },
+              "max_relative_error_nonzero_reference": 2.1093337279193626e-07,
+              "max_tolerance_ratio": 0.0016152357564997854,
+              "max_tolerance_ratio_at": {
+                "candidate": 9.042424201965332,
+                "component": 2308,
+                "embedding_index": 4,
+                "reference": 9.0424222946167,
+                "sample": 21120
+              },
+              "nonzero_reference_elements": 63232,
+              "rtol": 2e-05,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            },
+            "raw_mel": {
+              "atol": 0.01,
+              "elements": 80704,
+              "max_abs_at": {
+                "candidate": 73.07073211669922,
+                "component": 2892,
+                "embedding_index": 15,
+                "reference": 73.07075500488281,
+                "sample": 35200
+              },
+              "max_abs_error": 2.288818359375e-05,
+              "max_relative_at": {
+                "candidate": 73.07073211669922,
+                "component": 2892,
+                "embedding_index": 15,
+                "reference": 73.07075500488281,
+                "sample": 35200
+              },
+              "max_relative_error_nonzero_reference": 3.1323316136832776e-07,
+              "max_tolerance_ratio": 0.0019969771091839245,
+              "max_tolerance_ratio_at": {
+                "candidate": 73.07073211669922,
+                "component": 2892,
+                "embedding_index": 15,
+                "reference": 73.07075500488281,
+                "sample": 35200
+              },
+              "nonzero_reference_elements": 80704,
+              "rtol": 2e-05,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            }
+          },
+          "passed": true
+        },
+        "saved_reference_trace": {
+          "bytes": 586984,
+          "sha256": "f167ce7df2e0e02dee9580cdc69bdd088ddbb4fdc2568217d544f91776daecc3"
+        },
+        "speed_is_not_an_acceptance_gate": true,
+        "status": "PASSED",
+        "timing": {
+          "command": [
+            "/home/runner/work/_temp/mel-specialization-result/mel-specialization-native",
+            "/home/runner/work/_temp/mel-specialization-result/lcg14/input.pcm",
+            "/home/runner/work/_temp/mel-specialization-result/lcg14/native.bin",
+            "1,1279,257,4096"
+          ],
+          "error_type": null,
+          "host_child_cpu_seconds": 4.6681190000000194,
+          "retry_count": 0,
+          "returncode": 0,
+          "scope": "whole-process elapsed and host child CPU; historical comparison is not a matched benchmark; ARM includes QEMU",
+          "status": "COMPLETED",
+          "stderr": "",
+          "stdout": "{\"samples\":48000,\"embeddings\":26,\"head_ready\":0,\"events\":0,\"workspace_bytes\":528384,\"frontend_state_bytes\":32080,\"head_enabled\":false,\"ssc305_qualification\":false}\n",
+          "timeout_seconds": 300,
+          "wall_seconds": 4.669156881999982
+        },
+        "unchanged_workspace_and_state": true
+      },
+      {
+        "backend": "arm",
+        "baseline_timing": {
+          "host_child_cpu_seconds": 116.19533799999996,
+          "returncode": 0,
+          "scope": "whole host process including startup and trace I/O; ARM includes QEMU emulation",
+          "stderr": "",
+          "stdout": "{\"samples\":48000,\"embeddings\":26,\"head_ready\":0,\"events\":0,\"workspace_bytes\":528384,\"frontend_state_bytes\":32056,\"head_enabled\":false,\"ssc305_qualification\":false}\n",
+          "wall_seconds": 116.20280151199995
+        },
+        "bit_identity": {
+          "first_different_byte": null,
+          "new_trace": {
+            "bytes": 586984,
+            "sha256": "2b8e0362acb8956ab0fe546840f06fc578966b854c7446c4d51d2671e806b18c"
+          },
+          "old_trace": {
+            "bytes": 586984,
+            "sha256": "2b8e0362acb8956ab0fe546840f06fc578966b854c7446c4d51d2671e806b18c"
+          },
+          "passed": true,
+          "rule": "SAME_BACKEND_FULL_TRACE_BYTES"
+        },
+        "case": "lcg14",
+        "comparison_file_identity": {
+          "bytes": 4488,
+          "member": "mel-specialization-result/lcg14/arm-comparison.json",
+          "sha256": "c1f7afea9af44723bf17897368534d626dcc2cba8dfa2ba5939060a0fdd81151"
+        },
+        "embeddings": 26,
+        "head_checked": false,
+        "historical_cpu_ratio_baseline_over_candidate": 1.1781755495423372,
+        "historical_wall_ratio_baseline_over_candidate": 1.17812869962536,
+        "passed": true,
+        "pcm_sha256": "4e97af4846861db16ce7461517d405f60dca4473b515ae1efcb0f505221142dc",
+        "process_summary": {
+          "embeddings": 26,
+          "events": 0,
+          "frontend_state_bytes": 32056,
+          "head_enabled": false,
+          "head_ready": 0,
+          "samples": 48000,
+          "ssc305_qualification": false,
+          "workspace_bytes": 528384
+        },
+        "profiling_scope": "whole-process elapsed and host child CPU; historical comparison is not a matched benchmark; ARM includes QEMU",
+        "saved_ort_comparison": {
+          "checked_stages": [
+            "raw_mel",
+            "normalized_mel",
+            "embedding"
+          ],
+          "exact_embedding_clocks": true,
+          "head_checked": false,
+          "metrics": {
+            "embedding": {
+              "atol": 0.001,
+              "elements": 2496,
+              "max_abs_at": {
+                "candidate": -1.8833715915679932,
+                "component": 70,
+                "embedding_index": 18,
+                "reference": -1.8832931518554688,
+                "sample": 39040
+              },
+              "max_abs_error": 7.843971252441406e-05,
+              "max_relative_at": {
+                "candidate": -0.004233002662658691,
+                "component": 0,
+                "embedding_index": 18,
+                "reference": -0.004187345504760742,
+                "sample": 39040
+              },
+              "max_relative_error_nonzero_reference": 0.010903604167852873,
+              "max_tolerance_ratio": 0.05697833202358218,
+              "max_tolerance_ratio_at": {
+                "candidate": -1.8833715915679932,
+                "component": 70,
+                "embedding_index": 18,
+                "reference": -1.8832931518554688,
+                "sample": 39040
+              },
+              "nonzero_reference_elements": 2496,
+              "rtol": 0.0002,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            },
+            "normalized_mel": {
+              "atol": 0.001,
+              "elements": 63232,
+              "max_abs_at": {
+                "candidate": 9.67655086517334,
+                "component": 11,
+                "embedding_index": 0,
+                "reference": 9.676552772521973,
+                "sample": 16000
+              },
+              "max_abs_error": 1.9073486328125e-06,
+              "max_relative_at": {
+                "candidate": 9.042424201965332,
+                "component": 2308,
+                "embedding_index": 4,
+                "reference": 9.0424222946167,
+                "sample": 21120
+              },
+              "max_relative_error_nonzero_reference": 2.1093337279193626e-07,
+              "max_tolerance_ratio": 0.0016152357564997854,
+              "max_tolerance_ratio_at": {
+                "candidate": 9.042424201965332,
+                "component": 2308,
+                "embedding_index": 4,
+                "reference": 9.0424222946167,
+                "sample": 21120
+              },
+              "nonzero_reference_elements": 63232,
+              "rtol": 2e-05,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            },
+            "raw_mel": {
+              "atol": 0.01,
+              "elements": 80704,
+              "max_abs_at": {
+                "candidate": 73.07073211669922,
+                "component": 2892,
+                "embedding_index": 15,
+                "reference": 73.07075500488281,
+                "sample": 35200
+              },
+              "max_abs_error": 2.288818359375e-05,
+              "max_relative_at": {
+                "candidate": 73.07073211669922,
+                "component": 2892,
+                "embedding_index": 15,
+                "reference": 73.07075500488281,
+                "sample": 35200
+              },
+              "max_relative_error_nonzero_reference": 3.1323316136832776e-07,
+              "max_tolerance_ratio": 0.0019969771091839245,
+              "max_tolerance_ratio_at": {
+                "candidate": 73.07073211669922,
+                "component": 2892,
+                "embedding_index": 15,
+                "reference": 73.07075500488281,
+                "sample": 35200
+              },
+              "nonzero_reference_elements": 80704,
+              "rtol": 2e-05,
+              "violations": 0,
+              "zero_reference_mismatch_count": 0
+            }
+          },
+          "passed": true
+        },
+        "saved_reference_trace": {
+          "bytes": 586984,
+          "sha256": "f167ce7df2e0e02dee9580cdc69bdd088ddbb4fdc2568217d544f91776daecc3"
+        },
+        "speed_is_not_an_acceptance_gate": true,
+        "status": "PASSED",
+        "timing": {
+          "command": [
+            "/usr/bin/qemu-arm",
+            "/home/runner/work/_temp/mel-specialization-result/mel-specialization-arm",
+            "/home/runner/work/_temp/mel-specialization-result/lcg14/input.pcm",
+            "/home/runner/work/_temp/mel-specialization-result/lcg14/arm.bin",
+            "1,1279,257,4096"
+          ],
+          "error_type": null,
+          "host_child_cpu_seconds": 98.62311100000004,
+          "retry_count": 0,
+          "returncode": 0,
+          "scope": "whole-process elapsed and host child CPU; historical comparison is not a matched benchmark; ARM includes QEMU",
+          "status": "COMPLETED",
+          "stderr": "",
+          "stdout": "{\"samples\":48000,\"embeddings\":26,\"head_ready\":0,\"events\":0,\"workspace_bytes\":528384,\"frontend_state_bytes\":32056,\"head_enabled\":false,\"ssc305_qualification\":false}\n",
+          "timeout_seconds": 300,
+          "wall_seconds": 98.63336794099996
+        },
+        "unchanged_workspace_and_state": true
+      }
+    ],
+    "event": "push",
+    "expected_identity_file": {
+      "bytes": 310,
+      "sha256": "6f06e29d2123203a91c08c7941110cb9cd436c8467222b30473839603198c2b7"
+    },
+    "failure_identity": null,
+    "github_sha": "6ed95e5ffcb680d2b9c68778c14289025eeefebd",
+    "hardware_realtime": "NOT_ESTABLISHED",
+    "head_branch": "main",
+    "head_parity": "NOT_RUN_NO_HEAD",
+    "jobs": [
+      {
+        "completed_at": "2026-11-16T09:05:33Z",
+        "conclusion": "success",
+        "elapsed_seconds": 23.0,
+        "head_sha": "6ed95e5ffcb680d2b9c68778c14289025eeefebd",
+        "html_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/43836587076/job/133194619695",
+        "id": 133194619695,
+        "name": "source-contract",
+        "run_attempt": 1,
+        "run_id": 43836587076,
+        "started_at": "2026-11-16T09:05:10Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-11-16T09:11:52Z",
+        "conclusion": "success",
+        "elapsed_seconds": 376.0,
+        "head_sha": "6ed95e5ffcb680d2b9c68778c14289025eeefebd",
+        "html_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/43836587076/job/133194828092",
+        "id": 133194828092,
+        "name": "verify-new-mel-implementation",
+        "run_attempt": 1,
+        "run_id": 43836587076,
+        "started_at": "2026-11-16T09:05:36Z",
+        "status": "completed"
+      }
+    ],
+    "manifest_identity": {
+      "bytes": 8600,
+      "member": "mel-specialization-result/MANIFEST.json",
+      "sha256": "fe8cbead0b052bbcf542467e2a7677fc740306d3c79115e0a06c0e409922629d"
+    },
+    "outer_zip_members": 62,
+    "partial_evidence": {
+      "actual_c_process_count_is_known": true,
+      "failure_receipt_present": false,
+      "missing_success_evidence_files": [],
+      "missing_success_files": [],
+      "missing_terminal_policy": "本次有完整终态；一般情况下缺终态只能记 UNKNOWN，STARTED 仅预留尝试，局部 trace 仅证明已保存进度，不可当作零 C 推理。",
+      "observed_receipt_counts": {
+        "build_started_receipts": {
+          "arm": 1,
+          "native": 1
+        },
+        "build_success_timings": {
+          "arm": 1,
+          "native": 1
+        },
+        "complete_new_trace_windows": {
+          "arm": 78,
+          "native": 78
+        },
+        "partial_new_trace_prefix_windows": {
+          "arm": 0,
+          "native": 0
+        },
+        "replay_started_receipts": {
+          "arm": 3,
+          "native": 3
+        },
+        "replay_success_timings": {
+          "arm": 3,
+          "native": 3
+        },
+        "saved_comparison_windows": {
+          "arm": 78,
+          "native": 78
+        }
+      },
+      "retry_count": 0,
+      "status": "COMPLETE_TERMINAL_SUCCESS"
+    },
+    "pins_canonical_sha256": "8f0a38536d9836efcdb40a7a4ca1e071b8b510d107a3066c7b4550e90d08e808",
+    "public_repository": true,
+    "reference_inference_reexecuted": false,
+    "repository": "jiying2007/kws-pipeline",
+    "resource_summary": {
+      "build_processes": {
+        "arm": {
+          "error_type": null,
+          "host_child_cpu_seconds": 1.6181839999999998,
+          "retry_count": 0,
+          "returncode": 0,
+          "status": "COMPLETED",
+          "timeout_seconds": 180,
+          "wall_seconds": 1.61898380800001
+        },
+        "native": {
+          "error_type": null,
+          "host_child_cpu_seconds": 1.4286939999999997,
+          "retry_count": 0,
+          "returncode": 0,
+          "status": "COMPLETED",
+          "timeout_seconds": 180,
+          "wall_seconds": 2.6306608180000097
+        }
+      },
+      "complete_runtime_ram_bytes": null,
+      "executable_identities": {
+        "arm": {
+          "bytes": 2875396,
+          "sha256": "ab26be6d8c03fcca77d5e34a1bad5a9aa778b893ae59c13d260fd1319e0d25c6"
+        },
+        "native": {
+          "bytes": 2442632,
+          "sha256": "7ba65591fecd15201c05c22d599e3ead06e31c5e55a0f565eefd70b6724c4eee"
+        }
+      },
+      "frontend_state_bytes": {
+        "arm": 32056,
+        "native": 32080
+      },
+      "head_compiled_or_linked": false,
+      "peak_rss_bytes": null,
+      "physical_ssc305_measurement": "NOT_RUN",
+      "scope": "workspace 与 frontend state 来自各真实 C 进程 summary 的缓冲区/结构体大小；不是峰值 RSS、模型完整 RAM 或目标板测量。可执行文件大小也不是运行内存。",
+      "tool_versions": {
+        "arm-linux-gnueabihf-gcc": "arm-linux-gnueabihf-gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+        "gcc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+        "qemu-arm": "qemu-arm version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.18)"
+      },
+      "unchanged_from_same_backend_baseline": true,
+      "workspace_bytes": 528384
+    },
+    "result_files_including_manifest": 51,
+    "result_identity": {
+      "bytes": 33282,
+      "member": "mel-specialization-result/RESULT.json",
+      "sha256": "a02142d7f8b37b5207bd1fab152f10f196f3822025b86e9c5dae5b60e9bdb9d9"
+    },
+    "run_attempt": 1,
+    "run_conclusion": "success",
+    "run_created_at": "2026-11-16T09:05:07Z",
+    "run_id": "43836587076",
+    "run_started_at": "2026-11-16T09:05:07Z",
+    "run_status": "completed",
+    "run_updated_at": "2026-11-16T09:11:52Z",
+    "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/43836587076",
+    "saved_ort_metrics_summary": {
+      "embedding": {
+        "atol": 0.001,
+        "elements": 14976,
+        "max_abs_at": {
+          "backend": "native",
+          "candidate": -15.468522071838379,
+          "case": "sine400",
+          "component": 58,
+          "embedding_index": 0,
+          "reference": -15.468940734863281,
+          "sample": 16000
+        },
+        "max_abs_error": 0.00041866302490234375,
+        "max_relative_at": {
+          "backend": "native",
+          "candidate": -0.004233002662658691,
+          "case": "lcg14",
+          "component": 0,
+          "embedding_index": 18,
+          "reference": -0.004187345504760742,
+          "sample": 39040
+        },
+        "max_relative_error_nonzero_reference": 0.010903604167852873,
+        "max_tolerance_ratio": 0.1588980704236248,
+        "max_tolerance_ratio_at": {
+          "backend": "native",
+          "candidate": 6.193711280822754,
+          "case": "sine400",
+          "component": 80,
+          "embedding_index": 0,
+          "reference": 6.193355560302734,
+          "sample": 16000
+        },
+        "nonzero_reference_elements": 14976,
+        "rtol": 0.0002,
+        "violations": 0,
+        "zero_reference_mismatch_count": 0
+      },
+      "normalized_mel": {
+        "atol": 0.001,
+        "elements": 379392,
+        "max_abs_at": {
+          "backend": "native",
+          "candidate": 4.439314365386963,
+          "case": "sine400",
+          "component": 12,
+          "embedding_index": 0,
+          "reference": 4.4393720626831055,
+          "sample": 16000
+        },
+        "max_abs_error": 5.7697296142578125e-05,
+        "max_relative_at": {
+          "backend": "native",
+          "candidate": 4.439314365386963,
+          "case": "sine400",
+          "component": 12,
+          "embedding_index": 0,
+          "reference": 4.4393720626831055,
+          "sample": 16000
+        },
+        "max_relative_error_nonzero_reference": 1.299672461057624e-05,
+        "max_tolerance_ratio": 0.052992249870317885,
+        "max_tolerance_ratio_at": {
+          "backend": "native",
+          "candidate": 4.439314365386963,
+          "case": "sine400",
+          "component": 12,
+          "embedding_index": 0,
+          "reference": 4.4393720626831055,
+          "sample": 16000
+        },
+        "nonzero_reference_elements": 379392,
+        "rtol": 2e-05,
+        "violations": 0,
+        "zero_reference_mismatch_count": 0
+      },
+      "raw_mel": {
+        "atol": 0.01,
+        "elements": 484224,
+        "max_abs_at": {
+          "backend": "native",
+          "candidate": 24.393144607543945,
+          "case": "sine400",
+          "component": 12,
+          "embedding_index": 0,
+          "reference": 24.393718719482422,
+          "sample": 16000
+        },
+        "max_abs_error": 0.0005741119384765625,
+        "max_relative_at": {
+          "backend": "native",
+          "candidate": 24.393144607543945,
+          "case": "sine400",
+          "component": 12,
+          "embedding_index": 0,
+          "reference": 24.393718719482422,
+          "sample": 16000
+        },
+        "max_relative_error_nonzero_reference": 2.353523647126582e-05,
+        "max_tolerance_ratio": 0.05474054302924213,
+        "max_tolerance_ratio_at": {
+          "backend": "native",
+          "candidate": 24.393144607543945,
+          "case": "sine400",
+          "component": 12,
+          "embedding_index": 0,
+          "reference": 24.393718719482422,
+          "sample": 16000
+        },
+        "nonzero_reference_elements": 484224,
+        "rtol": 2e-05,
+        "violations": 0,
+        "zero_reference_mismatch_count": 0
+      }
+    },
+    "source_binding": {
+      "baseline": {
+        "artifact_id": 14208696183,
+        "artifact_name": "english-backbone-parity-43829765872",
+        "github_sha": "cd3e07ebc25505648d10166a806a05afade37703",
+        "manifest_files": 49,
+        "result_member": "backbone-parity-result/RESULT.json",
+        "result_sha256": "75d48edbd790f17c55c887b4fb4af9980bdeea3f3925530183822eac89f63737",
+        "run_attempt": 1,
+        "run_id": "43829765872",
+        "zip_bytes": 27306350,
+        "zip_members": 61,
+        "zip_sha256": "dfe28da9c5a35fef3768f7958ff7945e587645554d838dcbb4aa1d0508a9db1f"
+      },
+      "baseline_artifact_api": {
+        "bytes": 711,
+        "sha256": "9439b514dcd01d45ef5ab3284f2f663068968b0ebe5785ee92069e5d43eb032b"
+      },
+      "baseline_manifest": {
+        "bytes": 7876,
+        "sha256": "7b744619f7d40f543dc1e42348963883b12061050ecb44219ded29ad647a7fa7"
+      },
+      "baseline_pipeline_commit": "cd3e07ebc25505648d10166a806a05afade37703",
+      "baseline_result": {
+        "bytes": 26482,
+        "sha256": "75d48edbd790f17c55c887b4fb4af9980bdeea3f3925530183822eac89f63737"
+      },
+      "baseline_run_api": {
+        "bytes": 12716,
+        "sha256": "d6e0535813c683932a2707da2aa52ec22ded470fce35f75b4b2364868ba3ae82"
+      },
+      "candidate": {
+        "research/english_mel_specialization/fixed_frontend_mel.c": {
+          "bytes": 23507,
+          "sha256": "5a476954887b59032ea5d419e97d6fb913695e3ad99f5d09164513a4cbd87a89"
+        }
+      },
+      "closed_baseline_manifest_files": 49,
+      "execution_pipeline_commit": "6ed95e5ffcb680d2b9c68778c14289025eeefebd",
+      "frozen_sources": {
+        "research/english_backbone_parity/backbone_parity_once.py": {
+          "bytes": 36710,
+          "sha256": "5f077922dbebf018a026a96340e417464bcc71e248c36d9990a7de6e0933a376"
+        },
+        "research/english_backbone_parity/backbone_parity_pins.json": {
+          "bytes": 2635,
+          "sha256": "6c12d8d8bb49e9ec991dfff8272d70891c844939dd2bc0ef431aca48133f47b0"
+        },
+        "research/english_final_embedding_frontend/fixed_frontend.c": {
+          "bytes": 21590,
+          "sha256": "c45821d94887d82a6b9f22375875210aacd9a80f6653a520f6761062bf2aee40"
+        },
+        "research/english_final_embedding_frontend/fixed_frontend.h": {
+          "bytes": 4379,
+          "sha256": "55ffd7edffd06744f9146088c4431635cd57498195cb05019df4e0d476e6cef9"
+        },
+        "research/english_final_embedding_frontend/frontend_replay.c": {
+          "bytes": 7158,
+          "sha256": "a359e666f34fbe863dfa0ec3ca39be2b3adc8ce5bea62ce75c4ec596fb9f9535"
+        }
+      },
+      "generated": {
+        "export_manifest.json": {
+          "bytes": 144095,
+          "sha256": "b94549aec824a8eddb014e19f01629d8733c35f809d763927b712df845b5677b"
+        },
+        "fixed_models.c": {
+          "bytes": 13464364,
+          "sha256": "9bf740a692370dfed02f034f87f6f0dfcaac42f3f83152c79fd27088ccc71941"
+        },
+        "fixed_models.h": {
+          "bytes": 165,
+          "sha256": "0fb2bae330f87ea685e0ce713879872c3d4372c1544e62e9c58a539b00c2eeb1"
+        }
+      },
+      "head_compiled_or_linked": false,
+      "new_model_asset_downloads": 0,
+      "new_onnx_session_runs": 0,
+      "pins_file_identity": {
+        "bytes": 2060,
+        "sha256": "b541c7360bbcd54116ec2848c6fb10a09c91a5a2f30473b17fcef783fca00074"
+      },
+      "saved_reference_only": true,
+      "worker": {
+        "research/english_mel_specialization/mel_specialization_once.py": {
+          "bytes": 35007,
+          "sha256": "fbce05b6364402f3eaa16be54cea4a97a445188062b1518da855266c4890b9ba"
+        }
+      }
+    },
+    "source_binding_identity": {
+      "bytes": 2777,
+      "member": "mel-specialization-result/SOURCE_BINDING.json",
+      "sha256": "baad5108665b53a0469e0c75bf14352d62205f654ad001b8b0d870289ddf6d65"
+    },
+    "source_merge_commit_url": "https://github.com/jiying2007/kws-pipeline/commit/6ed95e5ffcb680d2b9c68778c14289025eeefebd",
+    "ssc305": "NOT_RUN",
+    "started_identity": {
+      "bytes": 3015,
+      "member": "mel-specialization-result/STARTED.json",
+      "sha256": "812d6033f1aa00665619f412dd3b301e6eccc2fc15eb57a1c901503c3e5978b4"
+    },
+    "status": "COMPLETED_SUCCESS",
+    "timing_summary": {
+      "actual_job_elapsed_seconds": 376.0,
+      "actual_worker_step": {
+        "completed_at": "2026-11-16T09:11:47Z",
+        "conclusion": "success",
+        "elapsed_seconds": 317.0,
+        "name": "Run only the new C implementation against saved references and baseline trace bytes",
+        "number": 5,
+        "started_at": "2026-11-16T09:06:30Z",
+        "status": "completed"
+      },
+      "by_backend": {
+        "arm": {
+          "baseline_host_child_cpu_seconds_sum": 350.983751,
+          "baseline_wall_seconds_sum": 351.01212082899997,
+          "candidate_host_child_cpu_seconds_max": 99.99377700000001,
+          "candidate_host_child_cpu_seconds_min": 98.522435,
+          "candidate_host_child_cpu_seconds_sum": 297.13932300000005,
+          "candidate_wall_seconds_max": 100.00421536,
+          "candidate_wall_seconds_min": 98.531336296,
+          "candidate_wall_seconds_sum": 297.16891959699996,
+          "completed_processes": 3,
+          "historical_cpu_ratio_baseline_over_candidate": 1.1812093648742679,
+          "historical_cpu_reduction_percent": 15.341003065409698,
+          "historical_wall_ratio_baseline_over_candidate": 1.1811871891078598,
+          "historical_wall_reduction_percent": 15.339413666068358,
+          "input_seconds_per_process": 3.0,
+          "matched_benchmark": false,
+          "speed_acceptance_gate": false,
+          "total_input_seconds": 9.0
+        },
+        "native": {
+          "baseline_host_child_cpu_seconds_sum": 17.894442000000023,
+          "baseline_wall_seconds_sum": 17.896552690000036,
+          "candidate_host_child_cpu_seconds_max": 4.686222999999999,
+          "candidate_host_child_cpu_seconds_min": 4.626491999999997,
+          "candidate_host_child_cpu_seconds_sum": 13.980834000000016,
+          "candidate_wall_seconds_max": 4.687643570999995,
+          "candidate_wall_seconds_min": 4.627475068999985,
+          "candidate_wall_seconds_sum": 13.984275521999962,
+          "completed_processes": 3,
+          "historical_cpu_ratio_baseline_over_candidate": 1.2799266481527498,
+          "historical_cpu_reduction_percent": 21.870522701965236,
+          "historical_wall_ratio_baseline_over_candidate": 1.2797625920517162,
+          "historical_wall_reduction_percent": 21.86050708070788,
+          "input_seconds_per_process": 3.0,
+          "matched_benchmark": false,
+          "speed_acceptance_gate": false,
+          "total_input_seconds": 9.0
+        }
+      },
+      "scope": "整进程 wall 与 host child CPU，含启动及输入/trace I/O；ARM 还含 QEMU。两次来自不同 job 的历史记录，不是 matched benchmark。",
+      "speed_is_not_an_acceptance_gate": true,
+      "speed_threshold": null,
+      "step_and_job_time_are_not_model_latency": true
+    },
+    "worker_exit_code": 0,
+    "worker_passed": true,
+    "worker_result_plan_sha256": "cc5cd38e2aa96b37672c10d61b8db2ac2364f3d794a0d9eb5f0afe961a2622aa",
+    "worker_result_status": "EXECUTED_NEW_MEL_IMPLEMENTATION_WITHIN_FIXED_LIMITS",
+    "zip_bytes": 55470166,
+    "zip_sha256": "6d27ec26868a545fa5e2c930eb03fbd20173961c605656cfe033f653988a553f"
+  },
+  "baseline": {
+    "artifact_id": 14208696183,
+    "artifact_name": "english-backbone-parity-43829765872",
+    "github_sha": "cd3e07ebc25505648d10166a806a05afade37703",
+    "manifest_files": 49,
+    "result_member": "backbone-parity-result/RESULT.json",
+    "result_sha256": "75d48edbd790f17c55c887b4fb4af9980bdeea3f3925530183822eac89f63737",
+    "run_attempt": 1,
+    "run_id": "43829765872",
+    "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/43829765872",
+    "zip_bytes": 27306350,
+    "zip_members": 61,
+    "zip_sha256": "dfe28da9c5a35fef3768f7958ff7945e587645554d838dcbb4aa1d0508a9db1f"
+  },
+  "baseline_record": {
+    "json_raw_identity": {
+      "bytes": 69828,
+      "sha256": "fe076efe2c747ba709c35a0c11df4fe71d07764307fe6ef2462c052bd4518937"
+    },
+    "json_relative_path": "en-backbone-execution-20261116.json",
+    "markdown_relative_path": "../ENGLISH_BACKBONE_EXECUTION_20261116.md",
+    "relationship": "引用已保留的完整baseline，不重复其69,828-byte报告。"
+  },
+  "declared_protocol": {
+    "acceptance_gates": {
+      "same_backend_full_trace_bytes": "新native对旧native，新ARM对旧ARM；完整原bytes相等，含stage headers、时钟、signed zero和float32值。不能以数值容差通过替代。",
+      "saved_ort_comparison": {
+        "limits": {
+          "embedding": {
+            "atol": 0.001,
+            "rtol": 0.0002
+          },
+          "normalized_mel": {
+            "atol": 0.001,
+            "rtol": 2e-05
+          },
+          "raw_mel": {
+            "atol": 0.01,
+            "rtol": 2e-05
+          }
+        },
+        "reference_inference_reexecuted": false,
+        "rule": "abs(candidate-saved_ORT) <= atol + rtol*abs(saved_ORT)，每个有限元素。"
+      },
+      "unchanged_process_summary": {
+        "embeddings": 26,
+        "events": 0,
+        "frontend_state_bytes": {
+          "arm": 32056,
+          "native": 32080
+        },
+        "head_enabled": false,
+        "head_ready": 0,
+        "samples": 48000,
+        "ssc305_qualification": false,
+        "workspace_bytes": 528384
+      }
+    },
+    "backends": [
+      "native",
+      "arm"
+    ],
+    "budgets_are_not_actual_counts": true,
+    "cases": [
+      "zero",
+      "sine400",
+      "lcg14"
+    ],
+    "chunk_pattern_samples": [
+      1,
+      1279,
+      257,
+      4096
+    ],
+    "compile_timeout_seconds": 180,
+    "embedding_hop_samples": 1280,
+    "eof_padding_samples": 0,
+    "expected_windows_per_backend": 78,
+    "expected_windows_per_process": 26,
+    "first_embedding_sample": 16000,
+    "head_evaluations": 0,
+    "maximum_build_processes_per_backend": 1,
+    "maximum_new_c_processes_per_backend": 3,
+    "maximum_new_c_processes_total": 6,
+    "new_model_asset_downloads": 0,
+    "new_reference_onnx_session_runs": 0,
+    "no_retry": true,
+    "old_implementation_processes": 0,
+    "optimizer_updates": 0,
+    "pcm16_samples_per_case": 48000,
+    "profiling": "whole-process wall和host child CPU，含startup/trace I/O；ARM含QEMU；旧/新历史结果不是matched benchmark。",
+    "real_audio_cases": 0,
+    "replay_timeout_seconds": 300,
+    "reset_between_cases": true,
+    "sample_rate_hz": 16000,
+    "scope": "PCM→mel→normalized mel→96 维 embedding，无 head；新 C 读取同一 baseline 保存的三段人工 PCM 和 generated C。",
+    "speed_is_not_an_acceptance_gate": true,
+    "speed_threshold": null,
+    "threshold_search": false,
+    "total_worker_timeout_seconds": 1800,
+    "trace_contract": {
+      "complete_bytes_per_trace": 586984,
+      "magic_hex": "4546465452303100",
+      "payload": "little-endian float32[count]",
+      "record_header": "little-endian <IIQ>: stage,count,absolute_available_sample",
+      "stage4_permitted": false,
+      "stage_counts": {
+        "1": 3104,
+        "2": 2432,
+        "3": 96
+      }
+    },
+    "tts_asr_phone_calls": 0
+  },
+  "document_state": "ACTUAL_EXECUTION_AND_INDEPENDENT_READBACK_RECORDED",
+  "english_completion_boundary": {
+    "L2_independent_acoustic_confirmation": "NOT_RUN",
+    "L3_physical_ssc305_confirmation": "NOT_RUN",
+    "MINIMUM_AFTER_DEDUPLICATION": {
+      "minimum_count": 8,
+      "status": "FAILED",
+      "train_vosen_count": 5
+    },
+    "MINIMUM_AFTER_FEATURE_GEOMETRY": {
+      "mandatory_under_frozen_code": true,
+      "status": "NOT_RUN"
+    },
+    "baseline_scope_reference": "../ENGLISH_BACKBONE_EXECUTION_20261116.md",
+    "count_gap_is_not_training_guarantee": true,
+    "current_target_L1": "NOT_COMPLETE_CURRENT_TARGET",
+    "interpretation": "此专用 C 实验不改变关键词训练 selection、角色、144 分母或两道最低量门；5<8 仍阻止训练。实际特征提取及特征几何后的样本/家族最低量复核尚未运行，不能保证补三条即可开始训练。",
+    "keyword_feature_extraction": "NOT_RUN",
+    "keyword_optimizer_updates": 0,
+    "new_keyword_weights": "NOT_PRODUCED"
+  },
+  "frozen_implementation": {
+    "candidate_path": "research/english_mel_specialization/fixed_frontend_mel.c",
+    "candidate_source_sha256": "5a476954887b59032ea5d419e97d6fb913695e3ad99f5d09164513a4cbd87a89",
+    "compile_flags": [
+      "-std=c11",
+      "-O2",
+      "-fno-fast-math",
+      "-ffp-contract=off",
+      "-Wall",
+      "-Wextra",
+      "-Werror"
+    ],
+    "execution_guard_scope": "明确 enabled、固定 source hashes、public main 第一后继 push、attempt 1；本次实际合并 head 已由原始 run/job API、source binding 和独立读回一致确认。",
+    "frozen_sources_sha256": {
+      "research/english_backbone_parity/backbone_parity_once.py": "5f077922dbebf018a026a96340e417464bcc71e248c36d9990a7de6e0933a376",
+      "research/english_backbone_parity/backbone_parity_pins.json": "6c12d8d8bb49e9ec991dfff8272d70891c844939dd2bc0ef431aca48133f47b0",
+      "research/english_final_embedding_frontend/fixed_frontend.c": "c45821d94887d82a6b9f22375875210aacd9a80f6653a520f6761062bf2aee40",
+      "research/english_final_embedding_frontend/fixed_frontend.h": "55ffd7edffd06744f9146088c4431635cd57498195cb05019df4e0d476e6cef9",
+      "research/english_final_embedding_frontend/frontend_replay.c": "a359e666f34fbe863dfa0ec3ca39be2b3adc8ce5bea62ce75c4ec596fb9f9535"
+    },
+    "main_before": "cd3e07ebc25505648d10166a806a05afade37703",
+    "only_specialized_shape": {
+      "bias": false,
+      "dilation": 1,
+      "groups": 1,
+      "input": [
+        1,
+        1,
+        16000
+      ],
+      "kernel": 512,
+      "output": [
+        1,
+        257,
+        97
+      ],
+      "padding": 0,
+      "rank": 3,
+      "stride": 160,
+      "weight": [
+        257,
+        1,
+        512
+      ]
+    },
+    "operation_order": "channel→frame→tap；float sum=+0.0f，tap0…511按原乘加顺序；无FMA/reassociation/unroll/restrict/FFT。其余情况保留原通用路径。",
+    "plan_sha256": "cc5cd38e2aa96b37672c10d61b8db2ac2364f3d794a0d9eb5f0afe961a2622aa",
+    "profile": "EXACT_MEL512_C_SPECIALIZATION_SAVED_REFERENCE",
+    "source_files": {
+      "research/english_mel_specialization/README.md": {
+        "bytes": 9764,
+        "sha256": "e30c2f4f68918e506d5ea6a551a87cc9510e1e35a778071de46391fe0f7faee0"
+      },
+      "research/english_mel_specialization/fixed_frontend_mel.c": {
+        "bytes": 23507,
+        "sha256": "5a476954887b59032ea5d419e97d6fb913695e3ad99f5d09164513a4cbd87a89"
+      },
+      "research/english_mel_specialization/mel_specialization_once.py": {
+        "bytes": 35007,
+        "sha256": "fbce05b6364402f3eaa16be54cea4a97a445188062b1518da855266c4890b9ba"
+      },
+      "research/english_mel_specialization/mel_specialization_pins.json": {
+        "bytes": 2060,
+        "sha256": "b541c7360bbcd54116ec2848c6fb10a09c91a5a2f30473b17fcef783fca00074"
+      },
+      "research/english_mel_specialization/test_mel_specialization.py": {
+        "bytes": 16643,
+        "sha256": "8b2c85f724f945fc549ee21eb6fbd59d33aca771788af4cc1c6e505759c14439"
+      },
+      "research/english_mel_specialization/test_mel_specialization_once.py": {
+        "bytes": 20423,
+        "sha256": "0921c0856e38ad0b6c6aaf9abea612bc4a3ff9a379cdbd669f701f730391f886"
+      }
+    },
+    "worker_code_sha256": "fbce05b6364402f3eaa16be54cea4a97a445188062b1518da855266c4890b9ba",
+    "worker_path": "research/english_mel_specialization/mel_specialization_once.py",
+    "workflow_path": ".github/workflows/english-mel-specialization-once.yml",
+    "workflow_source_identity": {
+      "bytes": 11531,
+      "sha256": "60df84c116932dac7f181e4a1a0757cda45a826b9b2fa03e1d8f4c6dc6d884c6"
+    }
+  },
+  "independent_readback": {
+    "accounting_verified": true,
+    "aggregates": {
+      "arm": {
+        "embedding": {
+          "atol": 0.001,
+          "elements": 7488,
+          "max_abs_at": {
+            "candidate": -15.468522071838379,
+            "case": "sine400",
+            "component": 58,
+            "embedding_index": 0,
+            "reference": -15.468940734863281,
+            "sample": 16000
+          },
+          "max_abs_error": 0.00041866302490234375,
+          "max_ratio_at": {
+            "candidate": 6.193711280822754,
+            "case": "sine400",
+            "component": 80,
+            "embedding_index": 0,
+            "reference": 6.193355560302734,
+            "sample": 16000
+          },
+          "max_tolerance_ratio": 0.1588980704236248,
+          "rtol": 0.0002,
+          "violations": 0
+        },
+        "normalized_mel": {
+          "atol": 0.001,
+          "elements": 189696,
+          "max_abs_at": {
+            "candidate": 4.439314365386963,
+            "case": "sine400",
+            "component": 12,
+            "embedding_index": 0,
+            "reference": 4.4393720626831055,
+            "sample": 16000
+          },
+          "max_abs_error": 5.7697296142578125e-05,
+          "max_ratio_at": {
+            "candidate": 4.439314365386963,
+            "case": "sine400",
+            "component": 12,
+            "embedding_index": 0,
+            "reference": 4.4393720626831055,
+            "sample": 16000
+          },
+          "max_tolerance_ratio": 0.052992249870317885,
+          "rtol": 2e-05,
+          "violations": 0
+        },
+        "raw_mel": {
+          "atol": 0.01,
+          "elements": 242112,
+          "max_abs_at": {
+            "candidate": 24.393144607543945,
+            "case": "sine400",
+            "component": 12,
+            "embedding_index": 0,
+            "reference": 24.393718719482422,
+            "sample": 16000
+          },
+          "max_abs_error": 0.0005741119384765625,
+          "max_ratio_at": {
+            "candidate": 24.393144607543945,
+            "case": "sine400",
+            "component": 12,
+            "embedding_index": 0,
+            "reference": 24.393718719482422,
+            "sample": 16000
+          },
+          "max_tolerance_ratio": 0.05474054302924213,
+          "rtol": 2e-05,
+          "violations": 0
+        }
+      },
+      "native": {
+        "embedding": {
+          "atol": 0.001,
+          "elements": 7488,
+          "max_abs_at": {
+            "candidate": -15.468522071838379,
+            "case": "sine400",
+            "component": 58,
+            "embedding_index": 0,
+            "reference": -15.468940734863281,
+            "sample": 16000
+          },
+          "max_abs_error": 0.00041866302490234375,
+          "max_ratio_at": {
+            "candidate": 6.193711280822754,
+            "case": "sine400",
+            "component": 80,
+            "embedding_index": 0,
+            "reference": 6.193355560302734,
+            "sample": 16000
+          },
+          "max_tolerance_ratio": 0.1588980704236248,
+          "rtol": 0.0002,
+          "violations": 0
+        },
+        "normalized_mel": {
+          "atol": 0.001,
+          "elements": 189696,
+          "max_abs_at": {
+            "candidate": 4.439314365386963,
+            "case": "sine400",
+            "component": 12,
+            "embedding_index": 0,
+            "reference": 4.4393720626831055,
+            "sample": 16000
+          },
+          "max_abs_error": 5.7697296142578125e-05,
+          "max_ratio_at": {
+            "candidate": 4.439314365386963,
+            "case": "sine400",
+            "component": 12,
+            "embedding_index": 0,
+            "reference": 4.4393720626831055,
+            "sample": 16000
+          },
+          "max_tolerance_ratio": 0.052992249870317885,
+          "rtol": 2e-05,
+          "violations": 0
+        },
+        "raw_mel": {
+          "atol": 0.01,
+          "elements": 242112,
+          "max_abs_at": {
+            "candidate": 24.393144607543945,
+            "case": "sine400",
+            "component": 12,
+            "embedding_index": 0,
+            "reference": 24.393718719482422,
+            "sample": 16000
+          },
+          "max_abs_error": 0.0005741119384765625,
+          "max_ratio_at": {
+            "candidate": 24.393144607543945,
+            "case": "sine400",
+            "component": 12,
+            "embedding_index": 0,
+            "reference": 24.393718719482422,
+            "sample": 16000
+          },
+          "max_tolerance_ratio": 0.05474054302924213,
+          "rtol": 2e-05,
+          "violations": 0
+        }
+      }
+    },
+    "audit_utc": "2026-11-16T09:13:57.306555+00:00",
+    "closed_result_manifest_files": 50,
+    "conclusion": "独立 stdlib 读回确认真实身份、固定 baseline/generated/PCM/保存 reference、六份同 backend 完整字节一致、全部保存 ORT 误差指标及实际计数。未导入生产 worker、未运行 C 或模型；这些零调用仅指读回过程，不改变实际任务已完成六次新 C 推理的事实。",
+    "input_artifact_sha256": "6d27ec26868a545fa5e2c930eb03fbd20173961c605656cfe033f653988a553f",
+    "issues": [],
+    "new_reference_candidate_element_comparisons_recomputed": 878592,
+    "production_worker_imported": false,
+    "readback_external_processes": 0,
+    "readback_model_calls": 0,
+    "report_identity": {
+      "bytes": 131765,
+      "evidence_relative_path": "readback/independent-readback.json",
+      "sha256": "4d4be2b22e642310f25c2534bae2b4c3c214e58b8739def7ff3d33e03bc1ec26"
+    },
+    "same_backend_full_trace_byte_checks": 6,
+    "same_backend_full_trace_bytes_verified": true,
+    "saved_ort_metrics_recomputed": true,
+    "source_and_manifest_identity_verified": true,
+    "status": "VERIFIED_NEW_MEL_BITEXACT_AND_WITHIN_LIMITS",
+    "validator_source_identity": {
+      "bytes": 52211,
+      "evidence_relative_path": "readback/independent_mel_readback.py",
+      "sha256": "c0e5550d20465152486d5de541673c34d7091a2bdb2ddc48f45469503010ad8c"
+    },
+    "verified_completed_new_c_processes": 6,
+    "verified_outer_zip_members": 62,
+    "workspace_and_state_verified": true
+  },
+  "language": "zh-CN",
+  "purpose": "紧凑保留单一 mel512 专用 C 路径的真实执行、同 backend 原字节门、保存 ORT 数值比较和独立读回；完整 baseline 继续按相对链接引用。",
+  "record_date": "2026-11-16",
+  "reporting_rules": {
+    "call_scope": "本次实际 new ORT attempts/completions 均为 0；native/ARM 各完成 3 个新 C 固定图进程与 78 个窗口，合计 6 次真实新 C 推理进程。不能把整个任务写成 model_calls=0。",
+    "failure": "本次终态完整且无 FAILURE；协议保留任何不一致或异常的 RESULT/FAILURE 与 partial evidence。缺终态意味着未知，不等于 0 C 推理，不自动重试。",
+    "gates": "本次同时通过同 backend 全 trace 原字节、保存 ORT 容差及不变 process summary 三道门；速度不参与通过判定。",
+    "historical_timing": "逐例保留原/新 CPU、wall 和历史比值，合计由原记录求和；不同 job 的历史比值不是 matched benchmark，不确认部署加速、实时性或 SSC305 预算。",
+    "identity": "实际 run/head/artifact 来自终态原始 API 和固定产物，并由独立读回确认；head 为已合并 main 的 6ed95e5ffcb680d2b9c68778c14289025eeefebd。",
+    "memory": "本次真实 summary 的 workspace 528384 bytes、state native 32080 / ARM 32056 bytes 与 baseline 相同；不等于峰值 RSS 或完整 RAM。"
+  },
+  "schema": "english-mel512-execution-readback-v1",
+  "scope_flags": {
+    "formal_training_admitted": false,
+    "head_parity_established": false,
+    "human_gold": false,
+    "kws_model_delivered": false,
+    "model_promotion_allowed": false,
+    "pronunciation_verified": false,
+    "qualification_allowed": false,
+    "ssc305_qualification": false,
+    "training_admitted": false,
+    "trusted_negative": false
+  },
+  "source_pr": 827,
+  "source_pr_url": "https://github.com/jiying2007/kws-pipeline/pull/827"
+}
