@@ -1,15 +1,15 @@
 # English wake-word pronunciation profile — 2026-11-15
 
-Status: owner-confirmed target readings; research metadata only. This file does not establish acoustic gold, training admission, a trained model, model selection, FAR/FRR, or deployment qualification.
+Status: owner-confirmed final target readings transcribed from the user's 2026-11-16 pronunciation-standard image; research metadata only. This file does not establish acoustic gold, training admission, a trained model, model selection, FAR/FRR, or deployment qualification.
 
 ## Frozen target readings
 
 | Phrase | Owner-confirmed IPA | Scope |
 |---|---|---|
-| Hey Mero | /heɪ ˈmɪəroʊ/ | One intended reading; stress on the name's first syllable |
-| Hey Vosen | /heɪ ˈvoʊsən/ | One intended reading; stress on the name's first syllable |
+| Hey Mero | /heɪ ˈmiːroʊ/ | American target; MEE-roh, long /iː/, stress on first syllable |
+| Hey Vosen | /heɪ ˈvoʊzən/ | American target; VOH-zən, voiced medial /z/, stress on first syllable |
 
-These are the selected target readings for the English research line. Do not silently replace them with spelling-based G2P output, a different regional reading, or a TTS engine's default pronunciation. The owner-confirmed IPA is a target specification, not proof that any existing WAV contains that pronunciation.
+The user-provided image is the controlling source. American targets are Hey Mero /heɪ ˈmiːroʊ/ and Hey Vosen /heɪ ˈvoʊzən/. The same image lists British forms /heɪ ˈmiːrəʊ/ and /heɪ ˈvəʊzən/. Preserve accent variants as explicit metadata; do not merge them into one ambiguous phoneme target. Do not silently replace these readings with spelling-based G2P output or a TTS engine's default pronunciation. This target specification does not prove that any existing WAV contains that pronunciation.
 
 ## Data and annotation rules
 
@@ -24,8 +24,8 @@ These are the selected target readings for the English research line. Do not sil
 
 A sample can be used as a positive only after its actual pronunciation is reviewed against the selected reading and its permitted-variant policy. The review must distinguish:
 - phrase onset and the pronunciation of "Hey";
-- the stressed vowel and rhotic/diphthong sequence in Mero;
-- the initial voiced labiodental fricative, vowel, and medial/final consonants in Vosen;
+- the long stressed /iː/ vowel and following rhotic /r/ sequence in Mero (MEE-roh);
+- the initial voiced labiodental fricative /v/, stressed /oʊ/, and voiced medial /z/ in Vosen (VOH-zən);
 - omissions, insertions, truncation, disfluency, and competing nearphones.
 
 Until an owner-approved review protocol defines acceptable acoustic variation, borderline accents remain uncertain rather than automatically rejected. The present IPA choices do not by themselves define every accent's allophonic tolerance.
@@ -65,3 +65,13 @@ A research candidate is not a landed English model until all of the following ex
 7. a reproducible release package and model card with all rights and limitations.
 
 V4 numeric targets remain unchanged: combined FAR <= 0.1/h, per-word FRR <= 5%, and word-end-to-consumable-callback P95 <= 500 ms, with one-sided 95% upper bounds reported. These are target gates, not claims already achieved.
+
+## Superseded pronunciation records (immutable, not relabelled)
+
+The earlier research profile used Hey Mero /heɪ ˈmɪəroʊ/ and Hey Vosen /heɪ ˈvoʊsən/. Those readings are superseded by the user's 2026-11-16 image. All audio and experiment artifacts generated against the earlier readings remain immutable historical research evidence, but are not positive samples for the current target. In particular:
+- the original 63 seven-voice Qwen 0.6B WAVs remain exposed and are not relabelled;
+- the four Qwen 1.7B instruction-controlled WAVs remain unqualified for the new target;
+- the four Piper raw-phoneme WAVs generated against the superseded IPA remain unqualified for the new target;
+- no prior ASR agreement, raw eSpeak string, or requested text establishes acoustic gold.
+
+Current target-specific generation must use raw phoneme inputs equivalent to eSpeak hˈeɪ mˈiːɹoʊ and hˈeɪ vˈoʊzən, after confirming the pinned phonemizer maps the symbols exactly. The user's American IPA is the primary target; British variants are tracked separately, not silently mixed into the primary training label.
