@@ -161,6 +161,47 @@ class TensorTests(unittest.TestCase):
                 self.assertEqual(status, 0)
                 self.assertValues(values, expected)
 
+    def test_infinite_clip_limits_lower_only_to_absent_bounds(self):
+        maximum = struct.unpack('<f', bytes.fromhex('ffff7f7f'))[0]
+        # Both Constant-node and initializer forms, shared by two Clip uses.
+        spec = fixture((5,), [node('Constant', [], 'low', value_float=-math.inf),
+            node('Clip', ['x', 'low', 'high'], 'a'), node('Clip', ['a', 'low', 'high'])],
+            {'high': tensor((), [math.inf])})
+        status, values, graph = graph_run(spec, [-maximum, -2, -0.0, 3, maximum])
+        self.assertEqual(status, 0)
+        self.assertEqual(values, [-maximum, -2, -0.0, 3, maximum])
+        self.assertEqual(struct.pack('<f', values[2]), struct.pack('<f', -0.0))
+        self.assertEqual(graph['constants'], [])
+        self.assertEqual(len(graph['unbounded_clip_limits']), 2)
+        self.assertTrue(all(len(x['uses']) == 2 for x in graph['unbounded_clip_limits']))
+        self.assertTrue(all(n['inputs'][1:] == ['', ''] for n in graph['nodes']))
+        json.dumps(_exporter.json_floats(graph['original_nodes']), allow_nan=False)
+        # One missing/unbounded side must still enforce the finite other side.
+        spec = fixture((3,), [node('Constant', [], 'high', value=tensor((), [math.inf])),
+            node('Clip', ['x', 'low', 'high'])], {'low': tensor((), [.25])})
+        self.assertEqual(graph_run(spec, [-9, .5, 9])[1], [.25, .5, 9])
+        self.assertEqual(graph_run(spec, [math.inf, .5, 9])[0], -3)
+        spec = fixture((3,), [node('Clip', ['x', 'low', 'high'])],
+            {'low': tensor((), [-math.inf]), 'high': tensor((), [.25])})
+        self.assertEqual(graph_run(spec, [-9, .5, 9])[1], [-9, .25, .25])
+
+    def test_nonfinite_constants_other_than_exclusive_clip_limits_reject(self):
+        cases = [fixture((1,), [node('Clip', ['x', 'bad'])], {'bad': tensor((), [math.inf])}),
+                 fixture((1,), [node('Clip', ['x', '', 'bad'])], {'bad': tensor((), [-math.inf])}),
+                 fixture((1,), [node('Clip', ['x', '', 'bad'])], {'bad': tensor((), [math.nan])}),
+                 fixture((1,), [node('Clip', ['x', '', 'bad'])], {'bad': tensor((1,), [math.inf])}),
+                 fixture((1,), [node('Add', ['x', 'bad'])], {'bad': tensor((), [math.inf])}),
+                 fixture((1,), [node('Clip', ['x', '', 'bad'], 'a'), node('Add', ['a', 'bad'])],
+                         {'bad': tensor((), [math.inf])}),
+                 fixture((1,), [node('Clip', ['x', '', 'bad'], 'a')],
+                         {'bad': tensor((), [math.inf])}, output='bad'),
+                 fixture((1,), [node('Log', ['x'])], {'unused': tensor((), [math.inf])}),
+                 fixture((1, 1, 2), [node('Conv', ['x', 'bad'])],
+                         {'bad': tensor((1, 1, 1), [math.inf])})]
+        for spec in cases:
+            with self.subTest(spec=spec), self.assertRaisesRegex(ValueError, 'NONFINITE_CONSTANT'):
+                lower_graph(spec)
+
     def test_static_shape_views_constant_cast_and_transpose(self):
         spec = fixture((2, 3), [node('Constant', [], 's32', value=tensor((2,), [3, 2], 'int32')),
             node('Cast', ['s32'], 's', to=7), node('Reshape', ['x', 's'], 'a'),

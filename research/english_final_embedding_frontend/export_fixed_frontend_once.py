@@ -18,8 +18,13 @@ import sys
 
 HERE = Path(__file__).resolve().parent
 REPOSITORY = 'jiying2007/kws-pipeline'
-BEFORE = '31238cafe3d6668874d446eae5dfa7c55028fb13'
-SCHEMA = 'english-fixed-frontend-static-export-once-v1'
+BEFORE = '6bf94d542572c5302dcccc449cd999cc3ddafa8f'
+SCHEMA = 'english-fixed-frontend-static-export-clip-bound-fix-v2'
+PREVIOUS_FAILURE = {'run_id': 43820454034, 'artifact_id': 14204202178,
+    'source_head': '6bf94d542572c5302dcccc449cd999cc3ddafa8f',
+    'artifact_zip_bytes': 3693,
+    'artifact_zip_sha256': '0198b8d1ac2b988616368b4276287a3346bebe1ef14c7c9f9df0ed83f6249f1b',
+    'status': 'FAILED_NO_RETRY', 'reason': 'NONFINITE_CONSTANT', 'model_calls': 0}
 FILES = ('README.md', 'export_fixed_frontend.py', 'export_fixed_frontend_once.py',
          'fixed_frontend.c', 'fixed_frontend.h', 'frontend_replay.c',
          'test_fixed_frontend.py', 'test_fixed_frontend_independent.py')
@@ -91,6 +96,7 @@ def context(args):
     code = {str((HERE / name).relative_to(repo)): identity(HERE / name) for name in FILES}
     code[WORKFLOW] = identity(repo / WORKFLOW)
     return {'schema': SCHEMA, **result, 'code_files': code, 'expected_assets': EXPECTED_ASSETS,
+            'preceding_failed_export': PREVIOUS_FAILURE,
             'model_calls': 0, 'onnx_inference_calls': 0, 'c_inference_calls': 0,
             'optimizer_updates': 0, 'tts_asr_phone_calls': 0,
             'numerical_parity_established': False, 'ssc305_qualification': False}
@@ -145,6 +151,8 @@ def execute_stage(args):
                 for name, graph in report['graphs'].items()}})
         return 0
     except Exception as error:
+        if getattr(error, 'graph_diagnostic', None) is not None:
+            write_once(output / 'GRAPH_FAILURE.json', error.graph_diagnostic)
         write_once(output / 'FAILURE.json', {**receipt, 'status': 'FAILED_NO_RETRY', 'stage': stage,
             'export_attempted': True, 'assets_verified_before_failure': assets,
             'error_type': type(error).__name__, 'reason': str(error)[:2000]})
