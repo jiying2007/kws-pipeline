@@ -34,6 +34,10 @@ ENGLISH_FINAL_EMBEDDING_FRONTEND_PATHS = tuple('research/english_final_embedding
 ENGLISH_BACKBONE_PARITY_PATHS = tuple('research/english_backbone_parity/' + name for name in (
     'README.md', 'backbone_parity_once.py', 'backbone_parity_pins.json', 'test_backbone_parity_once.py'))
 ENGLISH_BACKBONE_PARITY_WORKFLOW = '.github/workflows/english-backbone-parity-once.yml'
+ENGLISH_MEL_SPECIALIZATION_PATHS = tuple('research/english_mel_specialization/' + name for name in (
+    'README.md', 'fixed_frontend_mel.c', 'mel_specialization_once.py', 'mel_specialization_pins.json',
+    'test_mel_specialization.py', 'test_mel_specialization_once.py'))
+ENGLISH_MEL_SPECIALIZATION_WORKFLOW = '.github/workflows/english-mel-specialization-once.yml'
 
 SENSE_REVISION_ID = 'sense-runtime-binding-20261017'
 SENSE_REVISION_SUPERSEDES = '62c970794f74d7303f3daff246e7062ffb1c85d5'
@@ -261,6 +265,30 @@ def validate_english_backbone_parity_sources(root, manifest):
     return rows
 
 
+def validate_english_mel_specialization_sources(root, manifest):
+    """One exact implementation successor; retain the measured original sources."""
+    key = 'current_english_mel_specialization_sources'
+    directory = root / 'research/english_mel_specialization'
+    if key not in manifest:
+        if directory.exists() or (root / ENGLISH_MEL_SPECIALIZATION_WORKFLOW).exists():
+            raise ValueError('English mel specialization source registration required')
+        return []
+    rows = manifest[key]
+    if (type(rows) is not list or len(rows) != len(ENGLISH_MEL_SPECIALIZATION_PATHS) or
+            any(type(row) is not dict or set(row) != IDENTITY_FIELDS for row in rows) or
+            [row['path'] for row in rows] != list(ENGLISH_MEL_SPECIALIZATION_PATHS)):
+        raise ValueError('English mel specialization fixed source paths and identities required')
+    actual = {p.relative_to(root).as_posix() for p in directory.rglob('*')
+              if p.is_file() or p.is_symlink()}
+    if actual != set(ENGLISH_MEL_SPECIALIZATION_PATHS):
+        raise ValueError('English mel specialization source directory changed')
+    for row in rows:
+        if row.get('mode') != '100644':
+            raise ValueError('English mel specialization source mode changed')
+        check_file(root, row)
+    return rows
+
+
 def verify(root, manifest):
     if manifest.get('schema') != 'research-source-retention-v1':
         raise ValueError('unsupported source retention schema')
@@ -276,6 +304,7 @@ def verify(root, manifest):
     validate_english_final_embedding_sources(root, manifest)
     validate_english_final_embedding_frontend_sources(root, manifest)
     validate_english_backbone_parity_sources(root, manifest)
+    validate_english_mel_specialization_sources(root, manifest)
     by_path = {}
     for row in files:
         if row['path'] in by_path:
@@ -351,8 +380,10 @@ def verify(root, manifest):
     approved_with_embedding_assets = approved_with_public_zh64 + [
         '.github/workflows/english-embedding-backbone-assets-once.yml']
     approved_with_backbone_parity = approved_with_embedding_assets + [ENGLISH_BACKBONE_PARITY_WORKFLOW]
+    approved_with_mel_specialization = approved_with_backbone_parity + [ENGLISH_MEL_SPECIALIZATION_WORKFLOW]
     if additions not in (approved, approved_with_clone, approved_with_public_zh64,
-                         approved_with_embedding_assets, approved_with_backbone_parity):
+                         approved_with_embedding_assets, approved_with_backbone_parity,
+                         approved_with_mel_specialization):
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed additions
     # both bind CURRENT bytes. Historical maintenance receipts are evidence,

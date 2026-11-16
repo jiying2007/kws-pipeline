@@ -15597,7 +15597,8 @@
     ".github/workflows/authorized-voice-clone-contracts.yml",
     ".github/workflows/public-zh64-asr-once.yml",
     ".github/workflows/english-embedding-backbone-assets-once.yml",
-    ".github/workflows/english-backbone-parity-once.yml"
+    ".github/workflows/english-backbone-parity-once.yml",
+    ".github/workflows/english-mel-specialization-once.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -53075,6 +53076,174 @@
           }
         }
       ]
+    },
+    {
+      "id": "english-backbone-readback-and-mel512-specialization-20261116",
+      "date": "2026-11-16",
+      "base_commit": "cd3e07ebc25505648d10166a806a05afade37703",
+      "previous_manifest_sha256": "17f5deeb4669927cf33be8e6949b8716133c04a9506235fa0899c4f9e2208a73",
+      "workflow_source_changed": true,
+      "scope": "Retain the independently verified baseline execution and add one exact-shape C implementation successor using saved references.",
+      "rationale": "The original public baseline completed 156 ORT sessions and native/ARM parity; its 878592 comparisons were independently recomputed, while native whole-process timing still requires engineering work. Preserve all original frontend/head/backbone sources, 718 retained files, 834 provenance rows and 213 history entries. Specialize only the two exact unpadded mel Conv1D nodes without reordering float accumulation; do not change weights or defaults. One separately declared first-public-main execution compiles only the new candidate and performs three new C replays per backend. Reuse the exact original PCM/ORT traces and demand bit-identical same-backend traces in addition to unchanged numerical limits/state. No new ORT, TTS, ASR, phones, optimizer updates or old implementation replay. Keep the terminal144 train-Vosen 5<8 failure and full-head training disabled. Register exactly six new sources and one workflow; existing guards and source identities remain enforced.",
+      "actual_baseline": {
+        "run_id": "43829765872",
+        "artifact_id": 14208696183,
+        "zip_sha256": "dfe28da9c5a35fef3768f7958ff7945e587645554d838dcbb4aa1d0508a9db1f",
+        "independent_readback_sha256": "861b7487e897583b9f299d963d8ff3d2cd94f374c3cb92e50fd9aa8399c3f531"
+      },
+      "new_plan_sha256": "cc5cd38e2aa96b37672c10d61b8db2ac2364f3d794a0d9eb5f0afe961a2622aa",
+      "files": [
+        {
+          "path": "research/english_mel_specialization/README.md",
+          "before": null,
+          "after": {
+            "path": "research/english_mel_specialization/README.md",
+            "mode": "100644",
+            "bytes": 9764,
+            "sha256": "e30c2f4f68918e506d5ea6a551a87cc9510e1e35a778071de46391fe0f7faee0",
+            "git_blob_sha1": "8a021308efa82409bfece5edbcd3c6fca8225995"
+          }
+        },
+        {
+          "path": "research/english_mel_specialization/fixed_frontend_mel.c",
+          "before": null,
+          "after": {
+            "path": "research/english_mel_specialization/fixed_frontend_mel.c",
+            "mode": "100644",
+            "bytes": 23507,
+            "sha256": "5a476954887b59032ea5d419e97d6fb913695e3ad99f5d09164513a4cbd87a89",
+            "git_blob_sha1": "a534a7160f00d007d8a39c06798ef1c29814ac46"
+          }
+        },
+        {
+          "path": "research/english_mel_specialization/mel_specialization_once.py",
+          "before": null,
+          "after": {
+            "path": "research/english_mel_specialization/mel_specialization_once.py",
+            "mode": "100644",
+            "bytes": 35007,
+            "sha256": "fbce05b6364402f3eaa16be54cea4a97a445188062b1518da855266c4890b9ba",
+            "git_blob_sha1": "66a619ca305263c6c60b6e25e253ceda38c0bd57"
+          }
+        },
+        {
+          "path": "research/english_mel_specialization/mel_specialization_pins.json",
+          "before": null,
+          "after": {
+            "path": "research/english_mel_specialization/mel_specialization_pins.json",
+            "mode": "100644",
+            "bytes": 2060,
+            "sha256": "b541c7360bbcd54116ec2848c6fb10a09c91a5a2f30473b17fcef783fca00074",
+            "git_blob_sha1": "0ed531240b3c186a16370c80a818d3da1e2bfcaa"
+          }
+        },
+        {
+          "path": "research/english_mel_specialization/test_mel_specialization.py",
+          "before": null,
+          "after": {
+            "path": "research/english_mel_specialization/test_mel_specialization.py",
+            "mode": "100644",
+            "bytes": 16643,
+            "sha256": "8b2c85f724f945fc549ee21eb6fbd59d33aca771788af4cc1c6e505759c14439",
+            "git_blob_sha1": "da5b6614725af74ebf3d77296bc3dfdaa6f8c4e5"
+          }
+        },
+        {
+          "path": "research/english_mel_specialization/test_mel_specialization_once.py",
+          "before": null,
+          "after": {
+            "path": "research/english_mel_specialization/test_mel_specialization_once.py",
+            "mode": "100644",
+            "bytes": 20423,
+            "sha256": "0921c0856e38ad0b6c6aaf9abea612bc4a3ff9a379cdbd669f701f730391f886",
+            "git_blob_sha1": "a5b5c0f17a975d02a4197951fb83235492fff6de"
+          }
+        },
+        {
+          "path": ".github/workflows/english-mel-specialization-once.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/english-mel-specialization-once.yml",
+            "mode": "100644",
+            "bytes": 11531,
+            "sha256": "60df84c116932dac7f181e4a1a0757cda45a826b9b2fa03e1d8f4c6dc6d884c6",
+            "git_blob_sha1": "191a454f248dd6546022f4731ec18bf33aa8a8e9"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 24965,
+            "sha256": "2e40fdb7b01d253fe4bb295e037fc35dd7813004644c7a9d6f04d8d30e067a9f",
+            "git_blob_sha1": "49f615eea1cc56534e9fd644c9ba9f17e8a7a4b2"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 26885,
+            "sha256": "6a1547846a3255ba1909a9240fccb7186192e2dffd3de0101e5d9dfc269a2d08",
+            "git_blob_sha1": "6824049db57cd3dd9044d9784f261595a6897460"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 76661,
+            "sha256": "f9ade584e973f673fe5bc23385bf4c8c28547b19f5d394caac6163f884f3f9e5",
+            "git_blob_sha1": "41c9fb0f09c7baa18cd25e6997814091a52260a8"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 82450,
+            "sha256": "d787d620c2a1065c9d2b5cad0ebea115af04305c4e20a78739e58d317d5c3f5a",
+            "git_blob_sha1": "3b44677a3995af740433b8d6b0e341e680a28ef5"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_research_consolidation.py",
+          "before": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 14726,
+            "sha256": "17b9fd967312175162fe1dfb7e3bbb6bfdc4a90056a5bd63e298831bebd79b67",
+            "git_blob_sha1": "6f272e547d44e6c703812260881e3b5b118ce23c"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 14830,
+            "sha256": "f7035960931212a516a2ec3b60b7bdb90253f4f8b5cd06251b36da0cd4b6be99",
+            "git_blob_sha1": "0b736b3e3c85bfdf7f6ae26b3f96145204c32f24"
+          }
+        },
+        {
+          "path": "docs/ENGLISH_BACKBONE_EXECUTION_20261116.md",
+          "before": null,
+          "after": {
+            "path": "docs/ENGLISH_BACKBONE_EXECUTION_20261116.md",
+            "mode": "100644",
+            "bytes": 12296,
+            "sha256": "b338065b7f12bc5a508a5e396a8e611bbf653c454ae3a9ae6a6fa1eec43a75b3",
+            "git_blob_sha1": "2a98ee6b18d403206503ff5273fdab1872b0c481"
+          }
+        },
+        {
+          "path": "docs/research-v4/en-backbone-execution-20261116.json",
+          "before": null,
+          "after": {
+            "path": "docs/research-v4/en-backbone-execution-20261116.json",
+            "mode": "100644",
+            "bytes": 69828,
+            "sha256": "fe076efe2c747ba709c35a0c11df4fe71d07764307fe6ef2462c052bd4518937",
+            "git_blob_sha1": "9127b8e3cd7def5945b823a351c2a64fb6937760"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -53196,6 +53365,13 @@
       "bytes": 12158,
       "sha256": "8bc672a1183a570b90e9826f877c81f17abc58e0a74f08700bd2dfb844f694e2",
       "git_blob_sha1": "2281041685ebd024ab6b0ca29909320d18983517"
+    },
+    {
+      "path": ".github/workflows/english-mel-specialization-once.yml",
+      "mode": "100644",
+      "bytes": 11531,
+      "sha256": "60df84c116932dac7f181e4a1a0757cda45a826b9b2fa03e1d8f4c6dc6d884c6",
+      "git_blob_sha1": "191a454f248dd6546022f4731ec18bf33aa8a8e9"
     }
   ],
   "current_source_revision": {
@@ -53627,6 +53803,50 @@
       "bytes": 18924,
       "sha256": "9d47d966dd91efaf8ce1997b16f9e48b88d653507e05b0411e8a8a2daba628e9",
       "git_blob_sha1": "4e5d58ece9ba216cd9d5d5397870718c77a83fe1"
+    }
+  ],
+  "current_english_mel_specialization_sources": [
+    {
+      "path": "research/english_mel_specialization/README.md",
+      "mode": "100644",
+      "bytes": 9764,
+      "sha256": "e30c2f4f68918e506d5ea6a551a87cc9510e1e35a778071de46391fe0f7faee0",
+      "git_blob_sha1": "8a021308efa82409bfece5edbcd3c6fca8225995"
+    },
+    {
+      "path": "research/english_mel_specialization/fixed_frontend_mel.c",
+      "mode": "100644",
+      "bytes": 23507,
+      "sha256": "5a476954887b59032ea5d419e97d6fb913695e3ad99f5d09164513a4cbd87a89",
+      "git_blob_sha1": "a534a7160f00d007d8a39c06798ef1c29814ac46"
+    },
+    {
+      "path": "research/english_mel_specialization/mel_specialization_once.py",
+      "mode": "100644",
+      "bytes": 35007,
+      "sha256": "fbce05b6364402f3eaa16be54cea4a97a445188062b1518da855266c4890b9ba",
+      "git_blob_sha1": "66a619ca305263c6c60b6e25e253ceda38c0bd57"
+    },
+    {
+      "path": "research/english_mel_specialization/mel_specialization_pins.json",
+      "mode": "100644",
+      "bytes": 2060,
+      "sha256": "b541c7360bbcd54116ec2848c6fb10a09c91a5a2f30473b17fcef783fca00074",
+      "git_blob_sha1": "0ed531240b3c186a16370c80a818d3da1e2bfcaa"
+    },
+    {
+      "path": "research/english_mel_specialization/test_mel_specialization.py",
+      "mode": "100644",
+      "bytes": 16643,
+      "sha256": "8b2c85f724f945fc549ee21eb6fbd59d33aca771788af4cc1c6e505759c14439",
+      "git_blob_sha1": "da5b6614725af74ebf3d77296bc3dfdaa6f8c4e5"
+    },
+    {
+      "path": "research/english_mel_specialization/test_mel_specialization_once.py",
+      "mode": "100644",
+      "bytes": 20423,
+      "sha256": "0921c0856e38ad0b6c6aaf9abea612bc4a3ff9a379cdbd669f701f730391f886",
+      "git_blob_sha1": "a5b5c0f17a975d02a4197951fb83235492fff6de"
     }
   ]
 }

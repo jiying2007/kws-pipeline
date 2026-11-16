@@ -58,11 +58,14 @@ class RetentionTests(unittest.TestCase):
         added = current["current_added_active_workflows"]
         for row in added:
             (self.root / row["path"]).write_bytes((ROOT / row["path"]).read_bytes())
-        backbone = current["current_english_backbone_parity_sources"]
-        for row in backbone:
-            path = self.root / row["path"]
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes((ROOT / row["path"]).read_bytes())
+        profiles = {key: current[key] for key in (
+            "current_english_backbone_parity_sources", "current_english_mel_specialization_sources")
+            if key in current}
+        for rows in profiles.values():
+            for row in rows:
+                path = self.root / row["path"]
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes((ROOT / row["path"]).read_bytes())
         arm = self.root / SOURCE_RETENTION.ARM
         arm.parent.mkdir(parents=True)
         arm.write_text(json.dumps(SOURCE_RETENTION.DISABLED_ARM))
@@ -73,8 +76,7 @@ class RetentionTests(unittest.TestCase):
                           source_url="https://github.com/jiying2007/kws-pipeline/blob/" + archive["source_commit"] + "/" + archive["source_path"])],
                       source_projections=[], baseline_active_workflows=[active],
                       current_added_active_workflows=added, pointer_only=[],
-                      current_english_backbone_parity_sources=backbone,
-                      allowed_new_active_workflows=current["allowed_new_active_workflows"])
+                      allowed_new_active_workflows=current["allowed_new_active_workflows"], **profiles)
         self.assertEqual(RETENTION.verify(self.root, core), 1)
         self.assertEqual(SOURCE_RETENTION.verify(self.root, source), 1)
         old = self.root / archive["path"]
