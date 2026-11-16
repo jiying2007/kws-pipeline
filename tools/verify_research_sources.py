@@ -24,6 +24,10 @@ ORIGINAL_SOURCE = {'path': 'research/qwen6_asr/core/vendor/qwen_loading_gate_v2.
 ORIGINAL_FILES_SHA256 = '4aaccd87a86900a6cbc7301b078841713621544ed483e16213411574b986cd7a'
 ORIGINAL_PROVENANCE_SHA256 = 'e494ec723ff1570b36698eccb424ffb767e533d6c4acd7e4ba6078c2f9da3e7a'
 IDENTITY_FIELDS = frozenset(('path', 'mode', 'bytes', 'sha256', 'git_blob_sha1'))
+ENGLISH_FINAL_EMBEDDING_PATHS = tuple('research/english_final_embedding/' + name for name in (
+    'README.md', 'causal_embedding.py', 'causal_head.py', 'english_causal_head.c',
+    'english_causal_head.h', 'head_replay.c', 'portable_head.py', 'test_portable_head.py',
+    'test_prepared_embedding.py', 'weak_audio_cases.py', 'weak_embedding_contract.py'))
 
 SENSE_REVISION_ID = 'sense-runtime-binding-20261017'
 SENSE_REVISION_SUPERSEDES = '62c970794f74d7303f3daff246e7062ffb1c85d5'
@@ -178,6 +182,30 @@ def check_file(root, row):
     if blob != row['git_blob_sha1'] or hashlib.sha256(b).hexdigest() != row['sha256']:
         raise ValueError('retained source identity changed: ' + name)
 
+
+def validate_english_final_embedding_sources(root, manifest):
+    """One exact current source addition, separate from the original 718 files."""
+    key = 'current_english_final_embedding_sources'
+    directory = root / 'research/english_final_embedding'
+    if key not in manifest:
+        if directory.exists():
+            raise ValueError('English final embedding source registration required')
+        return []
+    rows = manifest[key]
+    if (type(rows) is not list or len(rows) != len(ENGLISH_FINAL_EMBEDDING_PATHS) or
+            any(type(row) is not dict or set(row) != IDENTITY_FIELDS for row in rows) or
+            [row['path'] for row in rows] != list(ENGLISH_FINAL_EMBEDDING_PATHS)):
+        raise ValueError('English final embedding fixed source paths and identities required')
+    actual = {p.relative_to(root).as_posix() for p in directory.rglob('*')
+              if p.is_file() or p.is_symlink()}
+    if actual != set(ENGLISH_FINAL_EMBEDDING_PATHS):
+        raise ValueError('English final embedding source directory changed')
+    for row in rows:
+        if row.get('mode') != '100644':
+            raise ValueError('English final embedding source mode changed')
+        check_file(root, row)
+    return rows
+
 def verify(root, manifest):
     if manifest.get('schema') != 'research-source-retention-v1':
         raise ValueError('unsupported source retention schema')
@@ -190,6 +218,7 @@ def verify(root, manifest):
         raise ValueError('retained files must be nonempty')
     validate_current_source_revision(root, manifest)
     validate_sense_runtime_revision(root, manifest)
+    validate_english_final_embedding_sources(root, manifest)
     by_path = {}
     for row in files:
         if row['path'] in by_path:

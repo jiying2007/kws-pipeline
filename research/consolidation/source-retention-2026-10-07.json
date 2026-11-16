@@ -52624,6 +52624,189 @@
           }
         }
       ]
+    },
+    {
+      "id": "english-final-requested-intent-embedding-source-20261116",
+      "date": "2026-11-16",
+      "base_commit": "511ccee46dc2fc01483b0d598cfd7fefb286bf31",
+      "previous_manifest_sha256": "2b29bbb5367d794f4a0be4ebd8778f1d47dbd047fbf61508c416b316c5bcf144",
+      "workflow_source_changed": true,
+      "scope": "One fixed 96-update requested-intent research head library, portable C replay and source-only CI.",
+      "rationale": "Bind explicit PCM-observed weak research selection, six train/development intent groups, speaker-disjoint exposed read speech, real prefix/context and inspected mel support. Keep pronunciation-specific positive admission and all formal/gold/promotion gates false. Preserve the original 718 files and provenance. Restrict consumed feature-asset execution to exact audit head 511ccee46dc2fc01483b0d598cfd7fefb286bf31; new source changes run invented source/C tests only. The separately bounded data-owned worker supplies authenticated finite source, observer and selection identities before actual fitting.",
+      "files": [
+        {
+          "path": ".github/workflows/english-embedding-backbone-assets-once.yml",
+          "before": {
+            "path": ".github/workflows/english-embedding-backbone-assets-once.yml",
+            "mode": "100644",
+            "bytes": 3361,
+            "sha256": "c44890f9caa3bc7d433e59c1138a22e93faef360c394edd98cae68b29c14f949",
+            "git_blob_sha1": "3821027144c587fbfe56c63232b2cdc727487453"
+          },
+          "after": {
+            "path": ".github/workflows/english-embedding-backbone-assets-once.yml",
+            "mode": "100644",
+            "bytes": 4244,
+            "sha256": "50533c01d891359a9ff8e8dfaa48c62ec64a1f62444c2d82a66e6d1be8417242",
+            "git_blob_sha1": "b8f682ec570fc6274aa2d5a3d34f95c2f36c3181"
+          }
+        },
+        {
+          "path": "research/english_final_embedding/README.md",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding/README.md",
+            "mode": "100644",
+            "bytes": 7757,
+            "sha256": "0311bb61f49d9f3464d7a1f5a1e3c1ad6f01609f35cb73bc954b6373bcc01285",
+            "git_blob_sha1": "7c0582f7ccc185ae112ee9e3ce20192c2528e86b"
+          }
+        },
+        {
+          "path": "research/english_final_embedding/causal_embedding.py",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding/causal_embedding.py",
+            "mode": "100644",
+            "bytes": 6883,
+            "sha256": "bb623ca627c0394f900638c90eee3a1ec71ff6901fa59713319fd3132de84f37",
+            "git_blob_sha1": "c0e161148462d1e3c9c798aa748ec875042a2b1d"
+          }
+        },
+        {
+          "path": "research/english_final_embedding/causal_head.py",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding/causal_head.py",
+            "mode": "100644",
+            "bytes": 7178,
+            "sha256": "37a93e253ee29b819ced11ae86d648dd319f7e2ede96ef3f624699656c109b98",
+            "git_blob_sha1": "92070a0f692c2bf560d038ecfb46d842da7858f8"
+          }
+        },
+        {
+          "path": "research/english_final_embedding/english_causal_head.c",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding/english_causal_head.c",
+            "mode": "100644",
+            "bytes": 4413,
+            "sha256": "e1e4a4cffd1758677ef820bd2183ec2ab3ab65d450af4d7eea35f565ebefa551",
+            "git_blob_sha1": "1319c2a53a28a6ae78fa445de45a27ca134d5fd9"
+          }
+        },
+        {
+          "path": "research/english_final_embedding/english_causal_head.h",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding/english_causal_head.h",
+            "mode": "100644",
+            "bytes": 1913,
+            "sha256": "557c528c7f2511810816a29768f6003b6a4a723b2fe7d60a2c1fdd353ba51de9",
+            "git_blob_sha1": "542656323c705444150ae781c2b51ff0c18fa2df"
+          }
+        },
+        {
+          "path": "research/english_final_embedding/head_replay.c",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding/head_replay.c",
+            "mode": "100644",
+            "bytes": 2273,
+            "sha256": "36fb7cb1732247bc118a9f5707bae2d642fb6d23192201d535f311faa47a8798",
+            "git_blob_sha1": "b7551fde03bcfbc7580a3b65593e8492f0a48aed"
+          }
+        },
+        {
+          "path": "research/english_final_embedding/portable_head.py",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding/portable_head.py",
+            "mode": "100644",
+            "bytes": 8227,
+            "sha256": "f6117a27a67d8b0b5b263c2db316b5825af62d10609f18bfe8488b52f79bef44",
+            "git_blob_sha1": "082a8e1fa76eb1ac4d16b99be3bcfbe423f1f6b1"
+          }
+        },
+        {
+          "path": "research/english_final_embedding/test_portable_head.py",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding/test_portable_head.py",
+            "mode": "100644",
+            "bytes": 9114,
+            "sha256": "b59369e4d72fcbc536daa22b46ca7a825d5d1bc077dd0c21c8578fdd4ba1081f",
+            "git_blob_sha1": "2ec9155ccea14920322e071e14b1fd5cb76d8fc2"
+          }
+        },
+        {
+          "path": "research/english_final_embedding/test_prepared_embedding.py",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding/test_prepared_embedding.py",
+            "mode": "100644",
+            "bytes": 12728,
+            "sha256": "b4a69cb9a039ad1b4b10a054229022c01c6c05fdc73501bdf70270a77ca24f2f",
+            "git_blob_sha1": "8e889d20b76f81a92635725c8dc1194d9dec29f0"
+          }
+        },
+        {
+          "path": "research/english_final_embedding/weak_audio_cases.py",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding/weak_audio_cases.py",
+            "mode": "100644",
+            "bytes": 10405,
+            "sha256": "345a3361d4aa4f1dd1c0aa6b29454e4e7924f515666daaf0059f6a54dca011d7",
+            "git_blob_sha1": "5222b51e0757d1f4f92916c24715538b077bbc38"
+          }
+        },
+        {
+          "path": "research/english_final_embedding/weak_embedding_contract.py",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding/weak_embedding_contract.py",
+            "mode": "100644",
+            "bytes": 10513,
+            "sha256": "ba9567b0303b1883f4d4834fec2b499abb8697b8fe5773519f07105f5d55388c",
+            "git_blob_sha1": "22a56a48fba4e6aa40b3d4a0222f88eeeca8b44d"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 19866,
+            "sha256": "9a6e83b6908b06cee81f22eb97c08ec5d838cf0976d3f4322cdfd6d40bc0de25",
+            "git_blob_sha1": "cc96307476de901d7592812372897155d14ac26e"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 21516,
+            "sha256": "b4ed972a73af1d073ab97720adedbbf3fa6939ef8cbf4d22aa3650e7f0d4bfc2",
+            "git_blob_sha1": "262b1d21fed9b81ae83c8aae2def050b58703eb4"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 65557,
+            "sha256": "a4272a01c17279bc5d26ce4c55a3c163e723ac518ecb9d507a00e8dee700cd94",
+            "git_blob_sha1": "bdcb5cddc8f227bba74231d4d419e3a5a73f876d"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 68239,
+            "sha256": "58d0fddcd866c2132b8d5a82dad615a87f9d7179fd2e0f74a4bd663ac9053777",
+            "git_blob_sha1": "8495f21b0a63a4ac0e9866ae6029d5f36432816d"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -52735,9 +52918,9 @@
     {
       "path": ".github/workflows/english-embedding-backbone-assets-once.yml",
       "mode": "100644",
-      "bytes": 3361,
-      "sha256": "c44890f9caa3bc7d433e59c1138a22e93faef360c394edd98cae68b29c14f949",
-      "git_blob_sha1": "3821027144c587fbfe56c63232b2cdc727487453"
+      "bytes": 4244,
+      "sha256": "50533c01d891359a9ff8e8dfaa48c62ec64a1f62444c2d82a66e6d1be8417242",
+      "git_blob_sha1": "b8f682ec570fc6274aa2d5a3d34f95c2f36c3181"
     }
   ],
   "current_source_revision": {
@@ -53003,5 +53186,84 @@
         }
       }
     ]
-  }
+  },
+  "current_english_final_embedding_sources": [
+    {
+      "path": "research/english_final_embedding/README.md",
+      "mode": "100644",
+      "bytes": 7757,
+      "sha256": "0311bb61f49d9f3464d7a1f5a1e3c1ad6f01609f35cb73bc954b6373bcc01285",
+      "git_blob_sha1": "7c0582f7ccc185ae112ee9e3ce20192c2528e86b"
+    },
+    {
+      "path": "research/english_final_embedding/causal_embedding.py",
+      "mode": "100644",
+      "bytes": 6883,
+      "sha256": "bb623ca627c0394f900638c90eee3a1ec71ff6901fa59713319fd3132de84f37",
+      "git_blob_sha1": "c0e161148462d1e3c9c798aa748ec875042a2b1d"
+    },
+    {
+      "path": "research/english_final_embedding/causal_head.py",
+      "mode": "100644",
+      "bytes": 7178,
+      "sha256": "37a93e253ee29b819ced11ae86d648dd319f7e2ede96ef3f624699656c109b98",
+      "git_blob_sha1": "92070a0f692c2bf560d038ecfb46d842da7858f8"
+    },
+    {
+      "path": "research/english_final_embedding/english_causal_head.c",
+      "mode": "100644",
+      "bytes": 4413,
+      "sha256": "e1e4a4cffd1758677ef820bd2183ec2ab3ab65d450af4d7eea35f565ebefa551",
+      "git_blob_sha1": "1319c2a53a28a6ae78fa445de45a27ca134d5fd9"
+    },
+    {
+      "path": "research/english_final_embedding/english_causal_head.h",
+      "mode": "100644",
+      "bytes": 1913,
+      "sha256": "557c528c7f2511810816a29768f6003b6a4a723b2fe7d60a2c1fdd353ba51de9",
+      "git_blob_sha1": "542656323c705444150ae781c2b51ff0c18fa2df"
+    },
+    {
+      "path": "research/english_final_embedding/head_replay.c",
+      "mode": "100644",
+      "bytes": 2273,
+      "sha256": "36fb7cb1732247bc118a9f5707bae2d642fb6d23192201d535f311faa47a8798",
+      "git_blob_sha1": "b7551fde03bcfbc7580a3b65593e8492f0a48aed"
+    },
+    {
+      "path": "research/english_final_embedding/portable_head.py",
+      "mode": "100644",
+      "bytes": 8227,
+      "sha256": "f6117a27a67d8b0b5b263c2db316b5825af62d10609f18bfe8488b52f79bef44",
+      "git_blob_sha1": "082a8e1fa76eb1ac4d16b99be3bcfbe423f1f6b1"
+    },
+    {
+      "path": "research/english_final_embedding/test_portable_head.py",
+      "mode": "100644",
+      "bytes": 9114,
+      "sha256": "b59369e4d72fcbc536daa22b46ca7a825d5d1bc077dd0c21c8578fdd4ba1081f",
+      "git_blob_sha1": "2ec9155ccea14920322e071e14b1fd5cb76d8fc2"
+    },
+    {
+      "path": "research/english_final_embedding/test_prepared_embedding.py",
+      "mode": "100644",
+      "bytes": 12728,
+      "sha256": "b4a69cb9a039ad1b4b10a054229022c01c6c05fdc73501bdf70270a77ca24f2f",
+      "git_blob_sha1": "8e889d20b76f81a92635725c8dc1194d9dec29f0"
+    },
+    {
+      "path": "research/english_final_embedding/weak_audio_cases.py",
+      "mode": "100644",
+      "bytes": 10405,
+      "sha256": "345a3361d4aa4f1dd1c0aa6b29454e4e7924f515666daaf0059f6a54dca011d7",
+      "git_blob_sha1": "5222b51e0757d1f4f92916c24715538b077bbc38"
+    },
+    {
+      "path": "research/english_final_embedding/weak_embedding_contract.py",
+      "mode": "100644",
+      "bytes": 10513,
+      "sha256": "ba9567b0303b1883f4d4834fec2b499abb8697b8fe5773519f07105f5d55388c",
+      "git_blob_sha1": "22a56a48fba4e6aa40b3d4a0222f88eeeca8b44d"
+    }
+  ]
 }

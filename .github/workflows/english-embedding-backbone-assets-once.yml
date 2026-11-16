@@ -5,11 +5,14 @@ on:
       - configs/research/english-embedding-backbone-assets-20261116.json
       - research/english_embedding_backbone/audit_openwakeword_assets.py
       - research/english_embedding_backbone/test_asset_contract.py
+      - research/english_final_embedding/**
       - .github/workflows/english-embedding-backbone-assets-once.yml
   push:
     branches: [main]
     paths:
       - configs/research/english-embedding-backbone-assets-20261116.json
+      - research/english_final_embedding/**
+      - .github/workflows/english-embedding-backbone-assets-once.yml
 permissions:
   contents: read
 concurrency:
@@ -26,9 +29,19 @@ jobs:
           persist-credentials: false
       - name: Source-only contract tests
         run: python3 -I -S -B research/english_embedding_backbone/test_asset_contract.py -v
+      - name: Requested-intent head and portable C source tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -I -S -B research/english_final_embedding/test_prepared_embedding.py -v
+          python3 -I -S -B -O research/english_final_embedding/test_prepared_embedding.py -v
+          python3 -I -S -B -OO research/english_final_embedding/test_prepared_embedding.py -v
+          python3 -I -S -B research/english_final_embedding/test_portable_head.py -v
+          python3 -I -S -B -O research/english_final_embedding/test_portable_head.py -v
+          python3 -I -S -B -OO research/english_final_embedding/test_portable_head.py -v
   inspect-assets:
     needs: source-contract
-    if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && github.sha == '511ccee46dc2fc01483b0d598cfd7fefb286bf31'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
