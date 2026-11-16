@@ -28,6 +28,9 @@ ENGLISH_FINAL_EMBEDDING_PATHS = tuple('research/english_final_embedding/' + name
     'README.md', 'causal_embedding.py', 'causal_head.py', 'english_causal_head.c',
     'english_causal_head.h', 'head_replay.c', 'portable_head.py', 'test_portable_head.py',
     'test_prepared_embedding.py', 'weak_audio_cases.py', 'weak_embedding_contract.py'))
+ENGLISH_FINAL_EMBEDDING_FRONTEND_PATHS = tuple('research/english_final_embedding_frontend/' + name for name in (
+    'README.md', 'export_fixed_frontend.py', 'export_fixed_frontend_once.py', 'fixed_frontend.c', 'fixed_frontend.h',
+    'frontend_replay.c', 'test_fixed_frontend.py', 'test_fixed_frontend_independent.py'))
 
 SENSE_REVISION_ID = 'sense-runtime-binding-20261017'
 SENSE_REVISION_SUPERSEDES = '62c970794f74d7303f3daff246e7062ffb1c85d5'
@@ -206,6 +209,30 @@ def validate_english_final_embedding_sources(root, manifest):
         check_file(root, row)
     return rows
 
+
+def validate_english_final_embedding_frontend_sources(root, manifest):
+    """Eight fixed frontend sources; preserve the old 718 files and head pins."""
+    key = 'current_english_final_embedding_frontend_sources'
+    directory = root / 'research/english_final_embedding_frontend'
+    if key not in manifest:
+        if directory.exists():
+            raise ValueError('English fixed frontend source registration required')
+        return []
+    rows = manifest[key]
+    if (type(rows) is not list or len(rows) != len(ENGLISH_FINAL_EMBEDDING_FRONTEND_PATHS) or
+            any(type(row) is not dict or set(row) != IDENTITY_FIELDS for row in rows) or
+            [row['path'] for row in rows] != list(ENGLISH_FINAL_EMBEDDING_FRONTEND_PATHS)):
+        raise ValueError('English fixed frontend fixed source paths and identities required')
+    actual = {p.relative_to(root).as_posix() for p in directory.rglob('*')
+              if p.is_file() or p.is_symlink()}
+    if actual != set(ENGLISH_FINAL_EMBEDDING_FRONTEND_PATHS):
+        raise ValueError('English fixed frontend source directory changed')
+    for row in rows:
+        if row.get('mode') != '100644':
+            raise ValueError('English fixed frontend source mode changed')
+        check_file(root, row)
+    return rows
+
 def verify(root, manifest):
     if manifest.get('schema') != 'research-source-retention-v1':
         raise ValueError('unsupported source retention schema')
@@ -219,6 +246,7 @@ def verify(root, manifest):
     validate_current_source_revision(root, manifest)
     validate_sense_runtime_revision(root, manifest)
     validate_english_final_embedding_sources(root, manifest)
+    validate_english_final_embedding_frontend_sources(root, manifest)
     by_path = {}
     for row in files:
         if row['path'] in by_path:

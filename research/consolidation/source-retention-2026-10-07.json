@@ -52807,6 +52807,156 @@
           }
         }
       ]
+    },
+    {
+      "id": "english-fixed-frontend-static-source-export-20261116",
+      "date": "2026-11-16",
+      "base_commit": "31238cafe3d6668874d446eae5dfa7c55028fb13",
+      "previous_manifest_sha256": "7ba2fcfd68ebf09fb9100e4050f9781d8d72c923e5fc2d04c58295960e5554dd",
+      "workflow_source_changed": true,
+      "scope": "Fixed feature C float subset, pure export, invented tensor/C tests and one public static export with zero model inference.",
+      "rationale": "Keep both audited ONNX asset identities, the eleven frozen head source identities, original 718 retained sources and 834 provenance rows unchanged. Register exactly eight frontend source files and source-only tests. The new pure export is restricted to public main push before 31238cafe3d6668874d446eae5dfa7c55028fb13, attempt1, with repeated actual Actions and clean source checks; download only the two pinned ONNX files, parse/export static C and metadata, preserve STARTED/RESULT/FAILURE with code and asset identities, and execute no ONNX/C inference or training/TTS/ASR. Keep the historical inspect-assets guard at its consumed 511ccee46dc2fc01483b0d598cfd7fefb286bf31. Real C/ORT numerical verification remains a separate bounded data-owned task after saved training weights exist.",
+      "files": [
+        {
+          "path": ".github/workflows/english-embedding-backbone-assets-once.yml",
+          "before": {
+            "path": ".github/workflows/english-embedding-backbone-assets-once.yml",
+            "mode": "100644",
+            "bytes": 4244,
+            "sha256": "50533c01d891359a9ff8e8dfaa48c62ec64a1f62444c2d82a66e6d1be8417242",
+            "git_blob_sha1": "b8f682ec570fc6274aa2d5a3d34f95c2f36c3181"
+          },
+          "after": {
+            "path": ".github/workflows/english-embedding-backbone-assets-once.yml",
+            "mode": "100644",
+            "bytes": 7985,
+            "sha256": "58e8b954483080cb3dc8bbcc3a72fd994079457f491d600a6108b820677c5585",
+            "git_blob_sha1": "c2a79356b848b712a7069e20c517d3c219f245d2"
+          }
+        },
+        {
+          "path": "research/english_final_embedding_frontend/README.md",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding_frontend/README.md",
+            "mode": "100644",
+            "bytes": 12730,
+            "sha256": "22aca3811b760ce228d9a11bb18dbfac8afc2aa28526e2a60c5873696c0e8167",
+            "git_blob_sha1": "c3f5205214e813f1c3085bdee08fcbf91ff26e04"
+          }
+        },
+        {
+          "path": "research/english_final_embedding_frontend/export_fixed_frontend.py",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding_frontend/export_fixed_frontend.py",
+            "mode": "100644",
+            "bytes": 25813,
+            "sha256": "ff93bfd579da36eba0a20e946e157c1d3e2fc5f2389ee8bf34f10327cc767062",
+            "git_blob_sha1": "92a61f4cd8ab8f28dfcf7875ef734f806450b86a"
+          }
+        },
+        {
+          "path": "research/english_final_embedding_frontend/export_fixed_frontend_once.py",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding_frontend/export_fixed_frontend_once.py",
+            "mode": "100644",
+            "bytes": 8406,
+            "sha256": "ffe42e0990dafc50074d3303d3e71311d29f9eae71136e7a65e008a07f299470",
+            "git_blob_sha1": "35c5f2530000788b1881e9254fbe1358d28c3845"
+          }
+        },
+        {
+          "path": "research/english_final_embedding_frontend/fixed_frontend.c",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding_frontend/fixed_frontend.c",
+            "mode": "100644",
+            "bytes": 21590,
+            "sha256": "c45821d94887d82a6b9f22375875210aacd9a80f6653a520f6761062bf2aee40",
+            "git_blob_sha1": "efe887d48cf200a09ce5c0a7fb589e22731e3c57"
+          }
+        },
+        {
+          "path": "research/english_final_embedding_frontend/fixed_frontend.h",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding_frontend/fixed_frontend.h",
+            "mode": "100644",
+            "bytes": 4379,
+            "sha256": "55ffd7edffd06744f9146088c4431635cd57498195cb05019df4e0d476e6cef9",
+            "git_blob_sha1": "71e6310ae9066e7a5dd540705f91e5498bdf4f98"
+          }
+        },
+        {
+          "path": "research/english_final_embedding_frontend/frontend_replay.c",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding_frontend/frontend_replay.c",
+            "mode": "100644",
+            "bytes": 7158,
+            "sha256": "a359e666f34fbe863dfa0ec3ca39be2b3adc8ce5bea62ce75c4ec596fb9f9535",
+            "git_blob_sha1": "0065eb5d1150b29b715a8e1f325ee45822f23cae"
+          }
+        },
+        {
+          "path": "research/english_final_embedding_frontend/test_fixed_frontend.py",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding_frontend/test_fixed_frontend.py",
+            "mode": "100644",
+            "bytes": 22412,
+            "sha256": "8f71c94978b7c63ab22f475f00cc17ee8494d0eac2f7bc02c5933fb19f222180",
+            "git_blob_sha1": "d0dc2c86a1e6c30924f24879f570611d35c0aa48"
+          }
+        },
+        {
+          "path": "research/english_final_embedding_frontend/test_fixed_frontend_independent.py",
+          "before": null,
+          "after": {
+            "path": "research/english_final_embedding_frontend/test_fixed_frontend_independent.py",
+            "mode": "100644",
+            "bytes": 14277,
+            "sha256": "aac89301da49cf9bd74b6f85794fc5cd8d48d0541606a5ea208ebb24849d7eb1",
+            "git_blob_sha1": "da1b9fda6568c27b9f9902b65dd314509f85d24b"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 21516,
+            "sha256": "b4ed972a73af1d073ab97720adedbbf3fa6939ef8cbf4d22aa3650e7f0d4bfc2",
+            "git_blob_sha1": "262b1d21fed9b81ae83c8aae2def050b58703eb4"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 23188,
+            "sha256": "19b0f9ba1b1b7ac188115ca9f2714118d8a65815a8daac54d41a70a3a2a928d2",
+            "git_blob_sha1": "3a795026cfd94e9b85b30b2f58f060bbdfb1e569"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 68239,
+            "sha256": "58d0fddcd866c2132b8d5a82dad615a87f9d7179fd2e0f74a4bd663ac9053777",
+            "git_blob_sha1": "8495f21b0a63a4ac0e9866ae6029d5f36432816d"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 71391,
+            "sha256": "f89ed18a3442b634094371ccde084fe8c5ea7d1f6cd0b39b5ff379ad2ef9f509",
+            "git_blob_sha1": "1a2dbb031d0b2b3181915c131368cc113dc847c6"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -52918,9 +53068,9 @@
     {
       "path": ".github/workflows/english-embedding-backbone-assets-once.yml",
       "mode": "100644",
-      "bytes": 4244,
-      "sha256": "50533c01d891359a9ff8e8dfaa48c62ec64a1f62444c2d82a66e6d1be8417242",
-      "git_blob_sha1": "b8f682ec570fc6274aa2d5a3d34f95c2f36c3181"
+      "bytes": 7985,
+      "sha256": "58e8b954483080cb3dc8bbcc3a72fd994079457f491d600a6108b820677c5585",
+      "git_blob_sha1": "c2a79356b848b712a7069e20c517d3c219f245d2"
     }
   ],
   "current_source_revision": {
@@ -53264,6 +53414,64 @@
       "bytes": 10513,
       "sha256": "ba9567b0303b1883f4d4834fec2b499abb8697b8fe5773519f07105f5d55388c",
       "git_blob_sha1": "22a56a48fba4e6aa40b3d4a0222f88eeeca8b44d"
+    }
+  ],
+  "current_english_final_embedding_frontend_sources": [
+    {
+      "path": "research/english_final_embedding_frontend/README.md",
+      "mode": "100644",
+      "bytes": 12730,
+      "sha256": "22aca3811b760ce228d9a11bb18dbfac8afc2aa28526e2a60c5873696c0e8167",
+      "git_blob_sha1": "c3f5205214e813f1c3085bdee08fcbf91ff26e04"
+    },
+    {
+      "path": "research/english_final_embedding_frontend/export_fixed_frontend.py",
+      "mode": "100644",
+      "bytes": 25813,
+      "sha256": "ff93bfd579da36eba0a20e946e157c1d3e2fc5f2389ee8bf34f10327cc767062",
+      "git_blob_sha1": "92a61f4cd8ab8f28dfcf7875ef734f806450b86a"
+    },
+    {
+      "path": "research/english_final_embedding_frontend/export_fixed_frontend_once.py",
+      "mode": "100644",
+      "bytes": 8406,
+      "sha256": "ffe42e0990dafc50074d3303d3e71311d29f9eae71136e7a65e008a07f299470",
+      "git_blob_sha1": "35c5f2530000788b1881e9254fbe1358d28c3845"
+    },
+    {
+      "path": "research/english_final_embedding_frontend/fixed_frontend.c",
+      "mode": "100644",
+      "bytes": 21590,
+      "sha256": "c45821d94887d82a6b9f22375875210aacd9a80f6653a520f6761062bf2aee40",
+      "git_blob_sha1": "efe887d48cf200a09ce5c0a7fb589e22731e3c57"
+    },
+    {
+      "path": "research/english_final_embedding_frontend/fixed_frontend.h",
+      "mode": "100644",
+      "bytes": 4379,
+      "sha256": "55ffd7edffd06744f9146088c4431635cd57498195cb05019df4e0d476e6cef9",
+      "git_blob_sha1": "71e6310ae9066e7a5dd540705f91e5498bdf4f98"
+    },
+    {
+      "path": "research/english_final_embedding_frontend/frontend_replay.c",
+      "mode": "100644",
+      "bytes": 7158,
+      "sha256": "a359e666f34fbe863dfa0ec3ca39be2b3adc8ce5bea62ce75c4ec596fb9f9535",
+      "git_blob_sha1": "0065eb5d1150b29b715a8e1f325ee45822f23cae"
+    },
+    {
+      "path": "research/english_final_embedding_frontend/test_fixed_frontend.py",
+      "mode": "100644",
+      "bytes": 22412,
+      "sha256": "8f71c94978b7c63ab22f475f00cc17ee8494d0eac2f7bc02c5933fb19f222180",
+      "git_blob_sha1": "d0dc2c86a1e6c30924f24879f570611d35c0aa48"
+    },
+    {
+      "path": "research/english_final_embedding_frontend/test_fixed_frontend_independent.py",
+      "mode": "100644",
+      "bytes": 14277,
+      "sha256": "aac89301da49cf9bd74b6f85794fc5cd8d48d0541606a5ea208ebb24849d7eb1",
+      "git_blob_sha1": "da1b9fda6568c27b9f9902b65dd314509f85d24b"
     }
   ]
 }
