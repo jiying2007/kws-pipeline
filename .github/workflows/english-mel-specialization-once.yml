@@ -1,0 +1,198 @@
+name: English exact mel512 implementation verification once
+on:
+  pull_request:
+    paths:
+      - research/english_mel_specialization/**
+      - .github/workflows/english-mel-specialization-once.yml
+  push:
+    branches: [main]
+    paths:
+      - research/english_mel_specialization/mel_specialization_pins.json
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: english-mel512-specialization-20261116-${{ github.event_name }}
+  cancel-in-progress: false
+jobs:
+  source-contract:
+    if: github.repository == 'jiying2007/kws-pipeline' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      execution_enabled: ${{ steps.contract.outputs.execution_enabled }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          persist-credentials: false
+      - name: Check invented tensor parity and the separate saved-reference protocol without real models
+        id: contract
+        shell: bash
+        timeout-minutes: 7
+        run: |
+          set -euo pipefail
+          for mode in normal optimized stripped; do
+            args=()
+            case "$mode" in optimized) args=(-O);; stripped) args=(-OO);; esac
+            python3 -I -S -B "${args[@]}" research/english_mel_specialization/test_mel_specialization.py -v
+            python3 -I -S -B "${args[@]}" research/english_mel_specialization/test_mel_specialization_once.py -v
+            python3 -I -S -B "${args[@]}" research/english_mel_specialization/mel_specialization_once.py
+          done
+          python3 -I -S -B tools/verify_research_sources.py
+          python3 -I -S -B - <<'PYCODE'
+          import os, pathlib, sys
+          sys.path.insert(0, str(pathlib.Path('research/english_mel_specialization').absolute()))
+          import mel_specialization_once as worker
+          pins = worker.read_json('research/english_mel_specialization/mel_specialization_pins.json')
+          worker.need(type(pins.get('enabled')) is bool, 'EXPLICIT_SPECIALIZATION_ENABLE_BOOLEAN')
+          if pins['enabled']:
+              worker.validate_pins(pins)
+              worker.need(worker.sha(worker.regular(worker.__file__)) == pins['worker_code_sha256'] and
+                  worker.sha(worker.regular(worker.CANDIDATE)) == pins['candidate_source_sha256'],
+                  'REVIEWED_WORKER_AND_CANDIDATE_BYTES')
+              worker.need(all(worker.sha(worker.regular(path)) == digest
+                  for path, digest in worker.FROZEN_SOURCES.items()), 'ORIGINAL_SOURCES_UNCHANGED')
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write('execution_enabled=' + str(pins['enabled']).lower() + '\n')
+          PYCODE
+          test -z "$(git status --porcelain)"
+  verify-new-mel-implementation:
+    needs: source-contract
+    if: >-
+      needs.source-contract.outputs.execution_enabled == 'true' &&
+      github.repository == 'jiying2007/kws-pipeline' && github.event.repository.private == false &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main' && github.run_attempt == 1 &&
+      github.event.before == 'cd3e07ebc25505648d10166a806a05afade37703'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          persist-credentials: false
+      - name: Guard the first public-main attempt and acquire only the completed baseline artifact
+        shell: bash
+        timeout-minutes: 7
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 -I -S -B - <<'PYCODE'
+          import os, pathlib, subprocess, sys, time
+          sys.path.insert(0, str(pathlib.Path('research/english_mel_specialization').absolute()))
+          import mel_specialization_once as worker
+          pins_path = pathlib.Path('research/english_mel_specialization/mel_specialization_pins.json')
+          pins = worker.read_json(pins_path)
+          evidence = pathlib.Path(os.environ['RUNNER_TEMP']) / 'mel-specialization-evidence'
+          evidence.mkdir(mode=0o700)
+          worker.once(evidence / 'WORKFLOW_STARTED.json', {'schema': worker.SCHEMA,
+              'profile': worker.PROFILE, 'run_id': os.environ['GITHUB_RUN_ID'],
+              'github_sha': os.environ['GITHUB_SHA'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'plan_sha256': worker.FIXED_PLAN_SHA, 'pins_sha256': worker.sha(worker.canonical(pins)),
+              'worker_code_sha256': worker.sha(worker.regular(worker.__file__)),
+              'phase': 'ACQUISITION_BEFORE_ANY_C_BUILD_OR_REPLAY', 'c_process_attempts_at_start': 0,
+              'new_onnx_session_runs_at_start': 0, 'no_retry': True})
+          try:
+              worker.execution_guard(pins, os.environ, worker.read_json(os.environ['GITHUB_EVENT_PATH']),
+                  worker.sha(worker.regular(worker.__file__)))
+              sources = worker.source_preflight(pathlib.Path(os.environ['GITHUB_WORKSPACE']), pins,
+                  os.environ['GITHUB_SHA'], pins_path)
+              worker.once(evidence / 'ACQUISITION_SOURCE_BINDING.json', sources)
+              with (evidence / 'DOWNLOAD_ATTEMPTS.jsonl').open('x', encoding='utf-8') as journal:
+                  def fetch(endpoint, destination, maximum, expected=None, timeout=100):
+                      item = {'endpoint': endpoint, 'file': destination.name, 'maximum_bytes': maximum,
+                          'expected_sha256': expected, 'retry_count': 0}
+                      def record(status, **extra):
+                          journal.write(worker.canonical({**item, 'status': status, **extra}).decode() + '\n')
+                          journal.flush()
+                          os.fsync(journal.fileno())
+                      record('STARTED')
+                      clock = time.monotonic()
+                      try:
+                          with destination.open('xb') as output:
+                              subprocess.run(['gh', 'api', endpoint], stdout=output, stderr=subprocess.PIPE,
+                                  check=True, timeout=timeout)
+                          raw = worker.regular(destination, maximum)
+                          worker.need(expected is None or len(raw) == maximum and worker.sha(raw) == expected,
+                              'EXACT_DOWNLOADED_BASELINE_BYTES')
+                      except BaseException as error:
+                          record('FAILED_OR_INTERRUPTED_NO_RETRY', error_type=type(error).__name__,
+                              elapsed_seconds=time.monotonic() - clock)
+                          raise
+                      record('COMPLETE', bytes=len(raw), sha256=worker.sha(raw),
+                          elapsed_seconds=time.monotonic() - clock)
+                      return raw
+                  fetch('repos/jiying2007/kws-pipeline/actions/runs/43829765872',
+                      evidence / 'baseline-run.json', 4 * 1024**2)
+                  fetch('repos/jiying2007/kws-pipeline/actions/artifacts/14208696183',
+                      evidence / 'baseline-artifact.json', 4 * 1024**2)
+                  worker.baseline_api_evidence(worker.read_json(evidence / 'baseline-run.json'),
+                      worker.read_json(evidence / 'baseline-artifact.json'))
+                  fetch('repos/jiying2007/kws-pipeline/actions/artifacts/14208696183/zip',
+                      evidence / 'baseline.zip', 27306350,
+                      'dfe28da9c5a35fef3768f7958ff7945e587645554d838dcbb4aa1d0508a9db1f', timeout=125)
+              worker.once(evidence / 'ACQUIRED_INPUTS.json', {'baseline': worker.BASELINE,
+                  'phase': 'ACQUISITION_COMPLETE_BEFORE_ANY_C_BUILD_OR_REPLAY',
+                  'new_model_asset_downloads': 0, 'new_onnx_session_runs': 0,
+                  'c_process_attempts_at_acquisition_end': 0, 'optimizer_updates': 0,
+                  'new_tts_asr_phone_calls': 0})
+          except BaseException as error:
+              worker.once(evidence / 'ACQUISITION_FAILURE.json', {'status': 'FAILED_NO_RETRY',
+                  'phase': 'ACQUISITION_BEFORE_ANY_C_BUILD_OR_REPLAY', 'error_type': type(error).__name__,
+                  'reason': str(error)[:1000], 'c_process_attempts_at_acquisition_end': 0,
+                  'new_onnx_session_runs': 0, 'retry_count': 0})
+              raise
+          PYCODE
+      - name: Install only ARM C tools and record compiler identities
+        shell: bash
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gcc-arm-linux-gnueabihf libc6-dev-armhf-cross qemu-user
+          gcc --version > "$RUNNER_TEMP/mel-specialization-evidence/host-compiler.txt"
+          arm-linux-gnueabihf-gcc --version > "$RUNNER_TEMP/mel-specialization-evidence/arm-compiler.txt"
+          qemu-arm --version > "$RUNNER_TEMP/mel-specialization-evidence/qemu-version.txt"
+      - name: Run only the new C implementation against saved references and baseline trace bytes
+        shell: bash
+        timeout-minutes: 32
+        run: |
+          set -euo pipefail
+          set +e
+          timeout --signal=TERM --kill-after=30s 31m python3 -I -S -B \
+            research/english_mel_specialization/mel_specialization_once.py --execute \
+            --pins "$GITHUB_WORKSPACE/research/english_mel_specialization/mel_specialization_pins.json" \
+            --pipeline-source "$GITHUB_WORKSPACE" \
+            --baseline-zip "$RUNNER_TEMP/mel-specialization-evidence/baseline.zip" \
+            --baseline-run-json "$RUNNER_TEMP/mel-specialization-evidence/baseline-run.json" \
+            --baseline-artifact-json "$RUNNER_TEMP/mel-specialization-evidence/baseline-artifact.json" \
+            --output "$RUNNER_TEMP/mel-specialization-result"
+          specialization_exit=$?
+          set -e
+          SPECIALIZATION_COMMAND_EXIT="$specialization_exit" python3 -I -S -B - <<'PYCODE'
+          import os, pathlib, sys
+          sys.path.insert(0, str(pathlib.Path('research/english_mel_specialization').absolute()))
+          import mel_specialization_once as worker
+          root = pathlib.Path(os.environ['RUNNER_TEMP'])
+          result = root / 'mel-specialization-result'
+          worker.once(root / 'mel-specialization-evidence/COMMAND_EXIT.json', {
+              'returncode': int(os.environ['SPECIALIZATION_COMMAND_EXIT']), 'retry_count': 0,
+              'result_receipt_present': (result / 'RESULT.json').is_file(),
+              'failure_receipt_present': (result / 'FAILURE.json').is_file(),
+              'missing_terminal_receipt_means': 'UNKNOWN_INTERRUPTED_C_ATTEMPTS_REQUIRE_STARTED_LEDGER',
+              'new_onnx_session_runs': 0, 'optimizer_updates': 0, 'new_tts_asr_phone_calls': 0})
+          PYCODE
+          exit "$specialization_exit"
+      - name: Preserve new implementation traces, original evidence and partial failures
+        if: always()
+        timeout-minutes: 5
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: english-mel-specialization-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/mel-specialization-result/
+            ${{ runner.temp }}/mel-specialization-evidence/
+          compression-level: 0
+          retention-days: 30
+          if-no-files-found: warn
