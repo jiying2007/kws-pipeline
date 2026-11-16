@@ -1,17 +1,23 @@
 {
   "schema": "english-kws-pronunciation-profile-v1",
-  "status": "owner_confirmed_target_readings_research_metadata_only",
+  "status": "owner_confirmed_final_target_readings_from_2026-11-16-image_research_metadata_only",
   "phrases": [
     {
       "id": "hey_mero",
       "text": "Hey Mero",
-      "ipa": "/heɪ ˈmɪəroʊ/",
+      "ipa": "/heɪ ˈmiːroʊ/",
+      "accent": "American",
+      "british_ipa": "/heɪ ˈmiːrəʊ/",
+      "pronunciation_hint": "MEE-roh; long stressed /iː/; first-syllable stress",
       "stress": "name_first_syllable"
     },
     {
       "id": "hey_vosen",
       "text": "Hey Vosen",
-      "ipa": "/heɪ ˈvoʊsən/",
+      "ipa": "/heɪ ˈvoʊzən/",
+      "accent": "American",
+      "british_ipa": "/heɪ ˈvəʊzən/",
+      "pronunciation_hint": "VOH-zən; voiced medial /z/; first-syllable stress",
       "stress": "name_first_syllable"
     }
   ],
@@ -22,7 +28,11 @@
     "prompt_text_is_acoustic_gold": false,
     "nearphone_rows": "quarantined_until_independent_review",
     "uncertain_pronunciation": "unknown_not_negative",
-    "owner_confirmed_ipa_is_target_spec_not_sample_validation": true
+    "owner_confirmed_ipa_is_target_spec_not_sample_validation": true,
+    "historical_old_ipa_audio": "immutable_historical_research_not_positive_for_current_targets",
+    "current_target_positive_requires": "independent_acoustic_pronunciation_review",
+    "american_target_primary": true,
+    "british_variants": "separately_annotated_not_mixed_without_explicit_accent_policy"
   },
   "candidate_architecture": {
     "primary": "causal_lightweight_event_head_over_license_qualified_speech_embedding",
@@ -39,5 +49,18 @@
     "one_sided_95_percent_upper_bounds_required": true,
     "independent_human_acoustic_confirmation_required": true,
     "physical_ssc305_measurement_required": true
-  }
+  },
+  "source_of_truth": "user_uploaded_image_2026-11-16",
+  "superseded_readings": [
+    {
+      "phrase": "Hey Mero",
+      "ipa": "/heɪ ˈmɪəroʊ/",
+      "status": "superseded_not_relabelled"
+    },
+    {
+      "phrase": "Hey Vosen",
+      "ipa": "/heɪ ˈvoʊsən/",
+      "status": "superseded_not_relabelled"
+    }
+  ]
 }
