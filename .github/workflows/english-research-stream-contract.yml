@@ -1,0 +1,64 @@
+name: English research stream source contract
+on:
+  pull_request:
+    paths:
+      - research/english_stream_integration/**
+      - research/english_mel_specialization/fixed_frontend_mel.c
+      - research/english_final_embedding_frontend/fixed_frontend.h
+      - research/english_final_embedding/**
+      - CMakeLists.txt
+      - .github/workflows/english-research-stream-contract.yml
+permissions:
+  contents: read
+jobs:
+  source-contract:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event.repository.private == false && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          persist-credentials: false
+      - name: Check source identities, invented traces and the default-off opt-in
+        shell: bash
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          for mode in normal optimized stripped; do
+            args=()
+            case "$mode" in optimized) args=(-O);; stripped) args=(-OO);; esac
+            python3 -I -S -B "${args[@]}" research/english_stream_integration/test_stream_source.py -v
+          done
+          python3 -I -S -B - <<'PYCODE'
+          import pathlib
+          text = pathlib.Path('CMakeLists.txt').read_text()
+          option = 'option(KWS_ENABLE_ENGLISH_RESEARCH_STREAM "Build the separate unqualified English research stream" OFF)'
+          guard = 'if(KWS_ENABLE_ENGLISH_RESEARCH_STREAM)\n  add_subdirectory(research/english_stream_integration)\nendif()'
+          if text.count(option) != 1 or text.count(guard) != 1:
+              raise ValueError('EXACT_DEFAULT_OFF_RESEARCH_OPT_IN_REQUIRED')
+          PYCODE
+      - name: Parse the wrapper and runner as C11 without compiling any executable graph
+        shell: bash
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          fixture_dir="$RUNNER_TEMP/ekws-source-only-headers"
+          mkdir "$fixture_dir"
+          cat > "$fixture_dir/fixed_models.h" <<'HEADER'
+          #ifndef EKWS_SOURCE_ONLY_FIXED_MODELS_H
+          #define EKWS_SOURCE_ONLY_FIXED_MODELS_H
+          #include "fixed_frontend.h"
+          extern const ef_graph ef_fixed_mel;
+          extern const ef_graph ef_fixed_embedding;
+          #endif
+          HEADER
+          gcc --version
+          gcc -std=c11 -Wall -Wextra -Werror -fsyntax-only \
+            -I research/english_stream_integration \
+            -I research/english_final_embedding_frontend \
+            -I research/english_final_embedding \
+            -I "$fixture_dir" \
+            research/english_stream_integration/ekws_research_stream.c \
+            research/english_stream_integration/ekws_pcm_stream.c
+          test -z "$(git status --porcelain)"

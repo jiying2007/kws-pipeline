@@ -15598,7 +15598,8 @@
     ".github/workflows/public-zh64-asr-once.yml",
     ".github/workflows/english-embedding-backbone-assets-once.yml",
     ".github/workflows/english-backbone-parity-once.yml",
-    ".github/workflows/english-mel-specialization-once.yml"
+    ".github/workflows/english-mel-specialization-once.yml",
+    ".github/workflows/english-research-stream-contract.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -53292,6 +53293,207 @@
           }
         }
       ]
+    },
+    {
+      "id": "english-research-stream-sdk-source-integration-20261116",
+      "date": "2026-11-16",
+      "base_commit": "2ba1adaf3b9c1c7a501ab64c316d5aa1f4425d8e",
+      "previous_manifest_sha256": "ece185a70073cb739f63e9919f133710ab30ba7d4afac614ef2bc716c3609219",
+      "workflow_source_changed": true,
+      "scope": "Register the default-off English research streaming SDK and its public PR source-only contract; no model execution is enabled.",
+      "rationale": "Preserve all 718 retained files, 834 provenance rows, 215 maintenance entries, 102 core identities and 29 existing English source identities. Add exactly ten SDK sources and one source-contract workflow. Compose the original byte-pinned mel, generated graph and head kernels with caller-owned state/workspace, continuous PCM16, callbacks, and explicit reset/discontinuity; do not change numerical kernels, weights, thresholds or the legacy KWSP/KWKP ABI. The main CMake opt-in remains OFF by default. Public PR checks use only stdlib invented fixtures and C11 syntax parsing with an extern-only generated header; they do not link or execute a graph. Future build/install and the two bounded installed-runner processes belong to a separately pinned first-public-main kws-data execution with a fixed pipeline component commit. Integration pins remain disabled with unknown fullchain artifact identities. No qualification or model-promotion claim is made.",
+      "new_plan_sha256": "4082b7f0c432ac4f0818eefb36d78a4eb7f8e3ae0036302e2a50033b2aec5882",
+      "files": [
+        {
+          "path": "research/english_stream_integration/CMakeLists.txt",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_integration/CMakeLists.txt",
+            "mode": "100644",
+            "bytes": 6591,
+            "sha256": "91a6fe2c79d38dbe53ac94bee0617ec3757cef416854fe96e2d163361c775c6f",
+            "git_blob_sha1": "1c46e502113171343bc3aecacb51213cdd85287c"
+          }
+        },
+        {
+          "path": "research/english_stream_integration/KwsEnglishResearchConfig.cmake.in",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_integration/KwsEnglishResearchConfig.cmake.in",
+            "mode": "100644",
+            "bytes": 130,
+            "sha256": "cfbdccc30d3b1e7e662cea2eecff20ac8a58e895045c98da7dbd8799fefbb690",
+            "git_blob_sha1": "b58023269c4caecbcf5a7978f003116f97953035"
+          }
+        },
+        {
+          "path": "research/english_stream_integration/README.md",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_integration/README.md",
+            "mode": "100644",
+            "bytes": 11133,
+            "sha256": "89b39a8c6038e5c499a29e5b75aed7920261b006a5cca41fdf6dfa0bc17e2d36",
+            "git_blob_sha1": "3fb547b0d139d90f9b3b0a1563c62c709eabcfe6"
+          }
+        },
+        {
+          "path": "research/english_stream_integration/ekws_pcm_stream.c",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_integration/ekws_pcm_stream.c",
+            "mode": "100644",
+            "bytes": 15247,
+            "sha256": "c012832f52ffa4c41703d2a9ae7b3d3cee2a4298d682acf4a9134ec9c1a82455",
+            "git_blob_sha1": "befdc68e855b6bf1be8617b2236e084daa35a189"
+          }
+        },
+        {
+          "path": "research/english_stream_integration/ekws_research_stream.c",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_integration/ekws_research_stream.c",
+            "mode": "100644",
+            "bytes": 6495,
+            "sha256": "a9f8339f483c1e635b25f710fcb0f982ec06cf1d95598da29e973c1771da3b25",
+            "git_blob_sha1": "fc3b81e58307a6a153c4a623173c6d706392678f"
+          }
+        },
+        {
+          "path": "research/english_stream_integration/ekws_research_stream.h",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_integration/ekws_research_stream.h",
+            "mode": "100644",
+            "bytes": 4273,
+            "sha256": "b804e564fea7afb6dc53966de0225eb770f2f73d124768f6abac4d3e22268343",
+            "git_blob_sha1": "90ca29be0ac1657eebbaf8a34d4a35f2b2302d79"
+          }
+        },
+        {
+          "path": "research/english_stream_integration/integration_pins.json",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_integration/integration_pins.json",
+            "mode": "100644",
+            "bytes": 896,
+            "sha256": "045397d4cd206b49ddb669b74391f62bb577b7c35c8b9ef0e4d75b5a198fa194",
+            "git_blob_sha1": "4eae291f762102a9c5deeb84e4e1896651059eda"
+          }
+        },
+        {
+          "path": "research/english_stream_integration/integration_plan.json",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_integration/integration_plan.json",
+            "mode": "100644",
+            "bytes": 3094,
+            "sha256": "ee49c0ddda9718544ee38ae59bee285bfe183d2a233de3b264cf6622317fd816",
+            "git_blob_sha1": "a5a1a31afdccf2247bdbf69b6c38af97844977c4"
+          }
+        },
+        {
+          "path": "research/english_stream_integration/main-cmake-opt-in.patch",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_integration/main-cmake-opt-in.patch",
+            "mode": "100644",
+            "bytes": 707,
+            "sha256": "e2ae2ad9ef4b13fb98ee47bfd54f9eb45cf65a99b2ef842c5f12b79df0e59ef5",
+            "git_blob_sha1": "2d917685d5361cc134baadf9cf1f09b67c664699"
+          }
+        },
+        {
+          "path": "research/english_stream_integration/test_stream_source.py",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_integration/test_stream_source.py",
+            "mode": "100644",
+            "bytes": 16240,
+            "sha256": "4dff45498f1fc7d3b48949f8554e11d154e70842284b30cf8d03ae5c40fd19a5",
+            "git_blob_sha1": "aee053dbf2ccc1266008a0c15b20ddc2780b70a3"
+          }
+        },
+        {
+          "path": ".github/workflows/english-research-stream-contract.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/english-research-stream-contract.yml",
+            "mode": "100644",
+            "bytes": 2857,
+            "sha256": "17c1235f1e6d7835e4e0ec10bedab44263791299a59ac3f98874a2955c26f457",
+            "git_blob_sha1": "d9a53ee7678b2e63856640b16bfce47ec5f667aa"
+          }
+        },
+        {
+          "path": "CMakeLists.txt",
+          "before": {
+            "path": "CMakeLists.txt",
+            "mode": "100644",
+            "bytes": 13774,
+            "sha256": "9ce6d2734f33dc3a702988ca6461c8056cbc69e208913aa1bd25aeafa3c8e9ec",
+            "git_blob_sha1": "454870a56f565d937b8a9b7ad8fbb9a427c5a647"
+          },
+          "after": {
+            "path": "CMakeLists.txt",
+            "mode": "100644",
+            "bytes": 13982,
+            "sha256": "5096766df164ca6071c10d71399dc15fae6bd2edbca89c881fa929b3f70bc636",
+            "git_blob_sha1": "b1bfa092776cf89936f77dd31f33bddc99e0a132"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 26885,
+            "sha256": "6a1547846a3255ba1909a9240fccb7186192e2dffd3de0101e5d9dfc269a2d08",
+            "git_blob_sha1": "6824049db57cd3dd9044d9784f261595a6897460"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 28865,
+            "sha256": "c306f44d30802d72c31321ce4e384761457341ab6ec5318a19d970faae85e4d0",
+            "git_blob_sha1": "9499ba4dfef642a6843f2816fc90499bc5ebcc67"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 82450,
+            "sha256": "d787d620c2a1065c9d2b5cad0ebea115af04305c4e20a78739e58d317d5c3f5a",
+            "git_blob_sha1": "3b44677a3995af740433b8d6b0e341e680a28ef5"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 88798,
+            "sha256": "de6556b9723be693f41c5af384a22a103fc5e28e684a2b1437d56023228c9705",
+            "git_blob_sha1": "aa29a5511add94803caa0280985e36023d1bb96d"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_research_consolidation.py",
+          "before": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 14830,
+            "sha256": "f7035960931212a516a2ec3b60b7bdb90253f4f8b5cd06251b36da0cd4b6be99",
+            "git_blob_sha1": "0b736b3e3c85bfdf7f6ae26b3f96145204c32f24"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 14888,
+            "sha256": "e0f67c514aa1dd6db6e3448b21f6992a066f8e518045a3bbe3c246d17532ac67",
+            "git_blob_sha1": "aaff5eac25f28aa3146f99895206d13c79862cdb"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -53420,6 +53622,13 @@
       "bytes": 11531,
       "sha256": "60df84c116932dac7f181e4a1a0757cda45a826b9b2fa03e1d8f4c6dc6d884c6",
       "git_blob_sha1": "191a454f248dd6546022f4731ec18bf33aa8a8e9"
+    },
+    {
+      "path": ".github/workflows/english-research-stream-contract.yml",
+      "mode": "100644",
+      "bytes": 2857,
+      "sha256": "17c1235f1e6d7835e4e0ec10bedab44263791299a59ac3f98874a2955c26f457",
+      "git_blob_sha1": "d9a53ee7678b2e63856640b16bfce47ec5f667aa"
     }
   ],
   "current_source_revision": {
@@ -53895,6 +54104,78 @@
       "bytes": 20423,
       "sha256": "0921c0856e38ad0b6c6aaf9abea612bc4a3ff9a379cdbd669f701f730391f886",
       "git_blob_sha1": "a5b5c0f17a975d02a4197951fb83235492fff6de"
+    }
+  ],
+  "current_english_stream_integration_sources": [
+    {
+      "path": "research/english_stream_integration/CMakeLists.txt",
+      "mode": "100644",
+      "bytes": 6591,
+      "sha256": "91a6fe2c79d38dbe53ac94bee0617ec3757cef416854fe96e2d163361c775c6f",
+      "git_blob_sha1": "1c46e502113171343bc3aecacb51213cdd85287c"
+    },
+    {
+      "path": "research/english_stream_integration/KwsEnglishResearchConfig.cmake.in",
+      "mode": "100644",
+      "bytes": 130,
+      "sha256": "cfbdccc30d3b1e7e662cea2eecff20ac8a58e895045c98da7dbd8799fefbb690",
+      "git_blob_sha1": "b58023269c4caecbcf5a7978f003116f97953035"
+    },
+    {
+      "path": "research/english_stream_integration/README.md",
+      "mode": "100644",
+      "bytes": 11133,
+      "sha256": "89b39a8c6038e5c499a29e5b75aed7920261b006a5cca41fdf6dfa0bc17e2d36",
+      "git_blob_sha1": "3fb547b0d139d90f9b3b0a1563c62c709eabcfe6"
+    },
+    {
+      "path": "research/english_stream_integration/ekws_pcm_stream.c",
+      "mode": "100644",
+      "bytes": 15247,
+      "sha256": "c012832f52ffa4c41703d2a9ae7b3d3cee2a4298d682acf4a9134ec9c1a82455",
+      "git_blob_sha1": "befdc68e855b6bf1be8617b2236e084daa35a189"
+    },
+    {
+      "path": "research/english_stream_integration/ekws_research_stream.c",
+      "mode": "100644",
+      "bytes": 6495,
+      "sha256": "a9f8339f483c1e635b25f710fcb0f982ec06cf1d95598da29e973c1771da3b25",
+      "git_blob_sha1": "fc3b81e58307a6a153c4a623173c6d706392678f"
+    },
+    {
+      "path": "research/english_stream_integration/ekws_research_stream.h",
+      "mode": "100644",
+      "bytes": 4273,
+      "sha256": "b804e564fea7afb6dc53966de0225eb770f2f73d124768f6abac4d3e22268343",
+      "git_blob_sha1": "90ca29be0ac1657eebbaf8a34d4a35f2b2302d79"
+    },
+    {
+      "path": "research/english_stream_integration/integration_pins.json",
+      "mode": "100644",
+      "bytes": 896,
+      "sha256": "045397d4cd206b49ddb669b74391f62bb577b7c35c8b9ef0e4d75b5a198fa194",
+      "git_blob_sha1": "4eae291f762102a9c5deeb84e4e1896651059eda"
+    },
+    {
+      "path": "research/english_stream_integration/integration_plan.json",
+      "mode": "100644",
+      "bytes": 3094,
+      "sha256": "ee49c0ddda9718544ee38ae59bee285bfe183d2a233de3b264cf6622317fd816",
+      "git_blob_sha1": "a5a1a31afdccf2247bdbf69b6c38af97844977c4"
+    },
+    {
+      "path": "research/english_stream_integration/main-cmake-opt-in.patch",
+      "mode": "100644",
+      "bytes": 707,
+      "sha256": "e2ae2ad9ef4b13fb98ee47bfd54f9eb45cf65a99b2ef842c5f12b79df0e59ef5",
+      "git_blob_sha1": "2d917685d5361cc134baadf9cf1f09b67c664699"
+    },
+    {
+      "path": "research/english_stream_integration/test_stream_source.py",
+      "mode": "100644",
+      "bytes": 16240,
+      "sha256": "4dff45498f1fc7d3b48949f8554e11d154e70842284b30cf8d03ae5c40fd19a5",
+      "git_blob_sha1": "aee053dbf2ccc1266008a0c15b20ddc2780b70a3"
     }
   ]
 }

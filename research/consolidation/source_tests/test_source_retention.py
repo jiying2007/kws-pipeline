@@ -12,7 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'tools'))
 from verify_research_sources import (ARM, DISABLED_ARM, ENGLISH_FINAL_EMBEDDING_PATHS,
                                     ENGLISH_FINAL_EMBEDDING_FRONTEND_PATHS, ENGLISH_BACKBONE_PARITY_PATHS,
                                     ENGLISH_BACKBONE_PARITY_WORKFLOW, ENGLISH_MEL_SPECIALIZATION_PATHS,
-                                    ENGLISH_MEL_SPECIALIZATION_WORKFLOW, check_file, relative, verify)
+                                    ENGLISH_MEL_SPECIALIZATION_WORKFLOW, ENGLISH_STREAM_INTEGRATION_PATHS,
+                                    ENGLISH_STREAM_INTEGRATION_WORKFLOW, check_file, relative, verify)
 from run_research_source_checks import selected_checks
 
 class RetentionTests(unittest.TestCase):
@@ -360,6 +361,101 @@ class RetentionTests(unittest.TestCase):
                 with self.assertRaises(ValueError): verify(self.root, self.manifest)
         self.manifest['current_added_active_workflows'][-1] = row
         (self.root / ENGLISH_MEL_SPECIALIZATION_WORKFLOW).write_bytes(b'name: Invented mel-specialized fixture\n')
+        with self.assertRaisesRegex(ValueError, 'identity changed'):
+            verify(self.root, self.manifest)
+    def add_mel_specialization_workflow(self):
+        self.add_backbone_parity_workflow()
+        self.add_mel_specialization_sources()
+        row = self.file(ENGLISH_MEL_SPECIALIZATION_WORKFLOW, b'name: invented mel-specialized fixture\n')
+        self.manifest['allowed_new_active_workflows'].append(ENGLISH_MEL_SPECIALIZATION_WORKFLOW)
+        self.manifest['current_added_active_workflows'].append(row)
+        return row
+    def add_stream_integration_sources(self):
+        self.manifest['current_english_stream_integration_sources'] = [
+            self.file(name, b'INVENTED OPT-IN STREAM SOURCE FIXTURE ONLY\n')
+            for name in ENGLISH_STREAM_INTEGRATION_PATHS]
+    def test_stream_integration_preserves_all_prior_sources_and_requires_registration(self):
+        self.add_final_embedding_sources()
+        self.add_final_embedding_frontend_sources()
+        self.add_backbone_parity_sources()
+        self.add_mel_specialization_sources()
+        original = copy.deepcopy(self.manifest)
+        self.add_stream_integration_sources()
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        for key, value in original.items():
+            self.assertEqual(self.manifest[key], value)
+        del self.manifest['current_english_stream_integration_sources']
+        with self.assertRaisesRegex(ValueError, 'source registration required'):
+            verify(self.root, self.manifest)
+    def test_stream_integration_has_exact_ordered_roster_and_no_extra_files(self):
+        self.add_stream_integration_sources()
+        key = 'current_english_stream_integration_sources'
+        current = copy.deepcopy(self.manifest[key])
+        for rows in (None, [], current[:-1], current + current[:1], list(reversed(current)),
+                     [dict(current[0], path='research/english_stream_integration/lookalike.c')] + current[1:],
+                     [dict(current[0], unreviewed=True)] + current[1:]):
+            with self.subTest(rows=rows):
+                self.manifest[key] = rows
+                with self.assertRaisesRegex(ValueError, 'fixed source paths'):
+                    verify(self.root, self.manifest)
+        self.manifest[key] = current
+        self.file('research/english_stream_integration/unregistered.c', b'INVENTED\n')
+        with self.assertRaisesRegex(ValueError, 'source directory changed'):
+            verify(self.root, self.manifest)
+    def test_stream_integration_binds_each_identity_and_rejects_missing_or_symlinked_source(self):
+        self.add_stream_integration_sources()
+        rows = self.manifest['current_english_stream_integration_sources']
+        for index, current in enumerate(copy.deepcopy(rows)):
+            for key, value in (('bytes', True), ('bytes', current['bytes'] + 1),
+                               ('sha256', '0' * 64), ('git_blob_sha1', '0' * 40), ('mode', '100755')):
+                with self.subTest(path=current['path'], key=key):
+                    rows[index] = dict(current, **{key: value})
+                    with self.assertRaises(ValueError): verify(self.root, self.manifest)
+            rows[index] = current
+            path = self.root / current['path']
+            raw = path.read_bytes()
+            path.write_bytes(raw.lower())
+            with self.assertRaisesRegex(ValueError, 'identity changed'):
+                verify(self.root, self.manifest)
+            path.unlink()
+            with self.assertRaisesRegex(ValueError, 'source directory changed'):
+                verify(self.root, self.manifest)
+            path.symlink_to(self.root / rows[(index + 1) % len(rows)]['path'])
+            with self.assertRaisesRegex(ValueError, 'symlink'):
+                verify(self.root, self.manifest)
+            path.unlink()
+            path.write_bytes(raw)
+    def test_stream_workflow_is_one_exact_registered_addition(self):
+        self.add_mel_specialization_workflow()
+        self.add_stream_integration_sources()
+        row = self.file(ENGLISH_STREAM_INTEGRATION_WORKFLOW, b'name: invented syntax-only stream fixture\n')
+        self.manifest['allowed_new_active_workflows'].append(ENGLISH_STREAM_INTEGRATION_WORKFLOW)
+        self.manifest['current_added_active_workflows'].append(row)
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        self.manifest['allowed_new_active_workflows'].pop()
+        self.manifest['current_added_active_workflows'].pop()
+        with self.assertRaisesRegex(ValueError, 'inventory changed'):
+            verify(self.root, self.manifest)
+        (self.root / ENGLISH_STREAM_INTEGRATION_WORKFLOW).unlink()
+        lookalike = '.github/workflows/english-research-stream-contract-extra.yml'
+        self.manifest['allowed_new_active_workflows'].append(lookalike)
+        self.manifest['current_added_active_workflows'].append(self.file(lookalike, b'INVENTED\n'))
+        with self.assertRaisesRegex(ValueError, 'unexpected active workflow addition'):
+            verify(self.root, self.manifest)
+    def test_stream_workflow_requires_registered_sources_and_exact_current_bytes(self):
+        self.add_mel_specialization_workflow()
+        row = self.file(ENGLISH_STREAM_INTEGRATION_WORKFLOW, b'name: invented syntax-only stream fixture\n')
+        self.manifest['allowed_new_active_workflows'].append(ENGLISH_STREAM_INTEGRATION_WORKFLOW)
+        self.manifest['current_added_active_workflows'].append(row)
+        with self.assertRaisesRegex(ValueError, 'source registration required'):
+            verify(self.root, self.manifest)
+        self.add_stream_integration_sources()
+        for key, value in (('bytes', True), ('sha256', '0' * 64), ('git_blob_sha1', '0' * 40), ('mode', '100755')):
+            with self.subTest(key=key):
+                self.manifest['current_added_active_workflows'][-1] = dict(row, **{key: value})
+                with self.assertRaises(ValueError): verify(self.root, self.manifest)
+        self.manifest['current_added_active_workflows'][-1] = row
+        (self.root / ENGLISH_STREAM_INTEGRATION_WORKFLOW).write_bytes(b'name: Invented syntax-only stream fixture\n')
         with self.assertRaisesRegex(ValueError, 'identity changed'):
             verify(self.root, self.manifest)
     def test_changed_bytes(self):
@@ -875,7 +971,8 @@ class SourceRevisionTests(unittest.TestCase):
     def populate_complete_fixture(self):
         for group in ('files', 'baseline_active_workflows', 'current_added_active_workflows',
                       'current_english_final_embedding_sources', 'current_english_final_embedding_frontend_sources',
-                      'current_english_backbone_parity_sources', 'current_english_mel_specialization_sources'):
+                      'current_english_backbone_parity_sources', 'current_english_mel_specialization_sources',
+                      'current_english_stream_integration_sources'):
             for row in self.manifest.get(group, []):
                 if row['path'] == HOTPATH_RETENTION.CURRENT_REVISION_PATH:
                     continue

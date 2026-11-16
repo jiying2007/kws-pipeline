@@ -1,0 +1,32 @@
+{
+  "enabled": false,
+  "formal_training_admitted": false,
+  "fullchain": {
+    "arm_saved_traces_sha256": null,
+    "artifact_id": null,
+    "artifact_name": null,
+    "github_sha": null,
+    "head_binary_sha256": null,
+    "manifest_sha256": null,
+    "native_saved_traces_sha256": null,
+    "pcm_sha256": null,
+    "result_sha256": null,
+    "run_attempt": 1,
+    "run_id": null,
+    "zip_bytes": null,
+    "zip_sha256": null
+  },
+  "human_gold": false,
+  "model_promotion_allowed": false,
+  "next_main_before": null,
+  "no_retry": true,
+  "plan_sha256": "4082b7f0c432ac4f0818eefb36d78a4eb7f8e3ae0036302e2a50033b2aec5882",
+  "profile_source_sha256": null,
+  "pronunciation_verified": false,
+  "qualification_allowed": false,
+  "schema": "english-stream-integration-pins-v1",
+  "source_commit": null,
+  "ssc305_qualification": false,
+  "training_admitted": false,
+  "trusted_negative": false
+}

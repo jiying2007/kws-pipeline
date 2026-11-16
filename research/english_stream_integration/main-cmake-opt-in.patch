@@ -1,0 +1,15 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -9,6 +9,11 @@ option(KWS_BUILD_BENCH "Build hosted benchmark" ON)
+ option(KWS_BUILD_TOOLS "Build hosted evaluation tools" ON)
+ option(KWS_BUILD_FUZZ "Build Clang/libFuzzer parser targets" OFF)
+ option(KWS_STRICT "Enable strict warnings" ON)
++option(KWS_ENABLE_ENGLISH_RESEARCH_STREAM "Build the separate unqualified English research stream" OFF)
++
++if(KWS_ENABLE_ENGLISH_RESEARCH_STREAM)
++  add_subdirectory(research/english_stream_integration)
++endif()
+ 
+ # -Wcast-qual keeps the "model tensors are read-only zero-copy views into the
+ # caller's blob" contract compiler-enforced rather than conventional. The tensor

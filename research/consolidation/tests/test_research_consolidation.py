@@ -59,7 +59,8 @@ class RetentionTests(unittest.TestCase):
         for row in added:
             (self.root / row["path"]).write_bytes((ROOT / row["path"]).read_bytes())
         profiles = {key: current[key] for key in (
-            "current_english_backbone_parity_sources", "current_english_mel_specialization_sources")
+            "current_english_backbone_parity_sources", "current_english_mel_specialization_sources",
+            "current_english_stream_integration_sources")
             if key in current}
         for rows in profiles.values():
             for row in rows:
