@@ -1,0 +1,61 @@
+{
+  "enabled": true,
+  "formal_training_admitted": false,
+  "frontend_sources_sha256": {
+    "README.md": "ceb6849a72ef152f247b0824ddb16e0ef0f00e283e0dfd15d4ade0a8140c52ef",
+    "export_fixed_frontend.py": "f2ad4192114e0acb158ad2597f79a03e0e77e1a58716aff1971a4a87c9856c76",
+    "fixed_frontend.c": "c45821d94887d82a6b9f22375875210aacd9a80f6653a520f6761062bf2aee40",
+    "fixed_frontend.h": "55ffd7edffd06744f9146088c4431635cd57498195cb05019df4e0d476e6cef9",
+    "frontend_replay.c": "a359e666f34fbe863dfa0ec3ca39be2b3adc8ce5bea62ce75c4ec596fb9f9535",
+    "test_fixed_frontend.py": "fb028a0bc101be71604c7ebc8e8170fa6693afc2d4e29a6da5170634b63173ea"
+  },
+  "head_evaluations": 0,
+  "head_parity_established": false,
+  "human_gold": false,
+  "kws_model_delivered": false,
+  "main_before": "cfc69dcd7535ea909403f10a91bcfe26ccc1b331",
+  "model_promotion_allowed": false,
+  "new_tts_asr_phone_calls": 0,
+  "no_retry": true,
+  "optimizer_updates": 0,
+  "plan_sha256": "5657e4387909bf7b47ba4ed7adec723005a8428357bd75d3515c3ddfe26e550b",
+  "profile": "FIXED_SHARED_BACKBONE_ONLY",
+  "pronunciation_verified": false,
+  "qualification_allowed": false,
+  "reference_sources_sha256": {
+    "causal_embedding.py": "bb623ca627c0394f900638c90eee3a1ec71ff6901fa59713319fd3132de84f37",
+    "weak_embedding_contract.py": "ba9567b0303b1883f4d4834fec2b499abb8697b8fe5773519f07105f5d55388c"
+  },
+  "schema": "english-fixed-shared-backbone-parity-pins-v1",
+  "ssc305_qualification": false,
+  "static_export": {
+    "artifact_id": 14205188962,
+    "generated": {
+      "export_manifest.json": {
+        "bytes": 144095,
+        "member": "generated/export_manifest.json",
+        "sha256": "b94549aec824a8eddb014e19f01629d8733c35f809d763927b712df845b5677b"
+      },
+      "fixed_models.c": {
+        "bytes": 13464364,
+        "member": "generated/fixed_models.c",
+        "sha256": "9bf740a692370dfed02f034f87f6f0dfcaac42f3f83152c79fd27088ccc71941"
+      },
+      "fixed_models.h": {
+        "bytes": 165,
+        "member": "generated/fixed_models.h",
+        "sha256": "0fb2bae330f87ea685e0ce713879872c3d4372c1544e62e9c58a539b00c2eeb1"
+      }
+    },
+    "github_sha": "cfc69dcd7535ea909403f10a91bcfe26ccc1b331",
+    "result_member": "RESULT.json",
+    "result_sha256": "4b2dcca15d047333aab39fc4c345592213c86d6d0dec4849175a84918471bb08",
+    "run_attempt": 1,
+    "run_id": "43823297841",
+    "zip_bytes": 2722450,
+    "zip_sha256": "1ffc968da201e07186929f05d9d8c651e18390a92f5436b6cdfec3a3cb1e9ac0"
+  },
+  "training_admitted": false,
+  "trusted_negative": false,
+  "worker_code_sha256": "5f077922dbebf018a026a96340e417464bcc71e248c36d9990a7de6e0933a376"
+}

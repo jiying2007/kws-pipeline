@@ -10,7 +10,8 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'tools'))
 # source_tests -> consolidation -> research -> repository
 from verify_research_sources import (ARM, DISABLED_ARM, ENGLISH_FINAL_EMBEDDING_PATHS,
-                                    ENGLISH_FINAL_EMBEDDING_FRONTEND_PATHS, check_file, relative, verify)
+                                    ENGLISH_FINAL_EMBEDDING_FRONTEND_PATHS, ENGLISH_BACKBONE_PARITY_PATHS,
+                                    ENGLISH_BACKBONE_PARITY_WORKFLOW, check_file, relative, verify)
 from run_research_source_checks import selected_checks
 
 class RetentionTests(unittest.TestCase):
@@ -191,6 +192,86 @@ class RetentionTests(unittest.TestCase):
         path.unlink()
         path.symlink_to(self.root / rows[1]['path'])
         with self.assertRaisesRegex(ValueError, 'symlink'):
+            verify(self.root, self.manifest)
+    def add_backbone_parity_sources(self):
+        self.manifest['current_english_backbone_parity_sources'] = [
+            self.file(name, b'INVENTED FEATURE-ONLY PARITY FIXTURE\n')
+            for name in ENGLISH_BACKBONE_PARITY_PATHS]
+    def test_backbone_parity_requires_registration_and_preserves_prior_sources(self):
+        self.add_final_embedding_sources()
+        self.add_final_embedding_frontend_sources()
+        original = copy.deepcopy(self.manifest)
+        self.add_backbone_parity_sources()
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        for key, value in original.items():
+            self.assertEqual(self.manifest[key], value)
+        del self.manifest['current_english_backbone_parity_sources']
+        with self.assertRaisesRegex(ValueError, 'source registration required'):
+            verify(self.root, self.manifest)
+    def test_backbone_parity_closes_paths_and_rejects_extra_file(self):
+        self.add_backbone_parity_sources()
+        key = 'current_english_backbone_parity_sources'
+        current = copy.deepcopy(self.manifest[key])
+        for rows in (None, [], current + current[:1], list(reversed(current)),
+                     [dict(current[0], path='research/english_backbone_parity/lookalike.py')] + current[1:]):
+            with self.subTest(rows=rows):
+                self.manifest[key] = rows
+                with self.assertRaisesRegex(ValueError, 'fixed source paths'):
+                    verify(self.root, self.manifest)
+        self.manifest[key] = current
+        self.file('research/english_backbone_parity/unregistered.py', b'INVENTED\n')
+        with self.assertRaisesRegex(ValueError, 'source directory changed'):
+            verify(self.root, self.manifest)
+    def test_backbone_parity_binds_bytes_modes_and_symlinks(self):
+        self.add_backbone_parity_sources()
+        rows = self.manifest['current_english_backbone_parity_sources']
+        current = copy.deepcopy(rows[0])
+        for key, value in (('bytes', True), ('bytes', current['bytes'] + 1),
+                           ('sha256', '0' * 64), ('git_blob_sha1', '0' * 40), ('mode', '100755')):
+            with self.subTest(key=key):
+                rows[0] = dict(current, **{key: value})
+                with self.assertRaises(ValueError): verify(self.root, self.manifest)
+        rows[0] = current
+        path = self.root / current['path']
+        path.write_bytes(path.read_bytes().lower())
+        with self.assertRaisesRegex(ValueError, 'identity changed'):
+            verify(self.root, self.manifest)
+        path.unlink()
+        path.symlink_to(self.root / rows[1]['path'])
+        with self.assertRaisesRegex(ValueError, 'symlink'):
+            verify(self.root, self.manifest)
+    def test_backbone_parity_workflow_is_one_exact_registered_addition(self):
+        self.add_embedding_asset_workflow()
+        self.add_backbone_parity_sources()
+        row = self.file(ENGLISH_BACKBONE_PARITY_WORKFLOW, b'name: invented feature-only fixture\n')
+        self.manifest['allowed_new_active_workflows'].append(ENGLISH_BACKBONE_PARITY_WORKFLOW)
+        self.manifest['current_added_active_workflows'].append(row)
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        self.manifest['allowed_new_active_workflows'].pop()
+        self.manifest['current_added_active_workflows'].pop()
+        with self.assertRaisesRegex(ValueError, 'inventory changed'):
+            verify(self.root, self.manifest)
+        (self.root / ENGLISH_BACKBONE_PARITY_WORKFLOW).unlink()
+        lookalike = '.github/workflows/english-backbone-parity-extra.yml'
+        self.manifest['allowed_new_active_workflows'].append(lookalike)
+        self.manifest['current_added_active_workflows'].append(self.file(lookalike, b'INVENTED\n'))
+        with self.assertRaisesRegex(ValueError, 'unexpected active workflow addition'):
+            verify(self.root, self.manifest)
+    def test_backbone_parity_workflow_requires_source_registration_and_exact_bytes(self):
+        self.add_embedding_asset_workflow()
+        row = self.file(ENGLISH_BACKBONE_PARITY_WORKFLOW, b'name: invented feature-only fixture\n')
+        self.manifest['allowed_new_active_workflows'].append(ENGLISH_BACKBONE_PARITY_WORKFLOW)
+        self.manifest['current_added_active_workflows'].append(row)
+        with self.assertRaisesRegex(ValueError, 'source registration required'):
+            verify(self.root, self.manifest)
+        self.add_backbone_parity_sources()
+        for key, value in (('bytes', True), ('sha256', '0' * 64), ('git_blob_sha1', '0' * 40), ('mode', '100755')):
+            with self.subTest(key=key):
+                self.manifest['current_added_active_workflows'][-1] = dict(row, **{key: value})
+                with self.assertRaises(ValueError): verify(self.root, self.manifest)
+        self.manifest['current_added_active_workflows'][-1] = row
+        (self.root / ENGLISH_BACKBONE_PARITY_WORKFLOW).write_bytes(b'name: Invented feature-only fixture\n')
+        with self.assertRaisesRegex(ValueError, 'identity changed'):
             verify(self.root, self.manifest)
     def test_changed_bytes(self):
         (self.root/self.manifest['files'][0]['path']).write_text('changed')
@@ -704,8 +785,9 @@ class SourceRevisionTests(unittest.TestCase):
 
     def populate_complete_fixture(self):
         for group in ('files', 'baseline_active_workflows', 'current_added_active_workflows',
-                      'current_english_final_embedding_sources', 'current_english_final_embedding_frontend_sources'):
-            for row in self.manifest[group]:
+                      'current_english_final_embedding_sources', 'current_english_final_embedding_frontend_sources',
+                      'current_english_backbone_parity_sources'):
+            for row in self.manifest.get(group, []):
                 if row['path'] == HOTPATH_RETENTION.CURRENT_REVISION_PATH:
                     continue
                 source = HOTPATH_RETENTION.retained_source_path(self.source_manifest, row['path'])

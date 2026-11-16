@@ -1,0 +1,206 @@
+name: English shared backbone numerical parity once
+on:
+  pull_request:
+    paths:
+      - research/english_backbone_parity/**
+      - .github/workflows/english-backbone-parity-once.yml
+  push:
+    branches: [main]
+    paths:
+      - research/english_backbone_parity/backbone_parity_pins.json
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: english-backbone-parity-20261116-${{ github.event_name }}
+  cancel-in-progress: false
+env:
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+  OPENBLAS_NUM_THREADS: '1'
+jobs:
+  source-contract:
+    if: github.repository == 'jiying2007/kws-pipeline' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      execution_enabled: ${{ steps.contract.outputs.execution_enabled }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          persist-credentials: false
+      - name: Check the separate backbone profile, finite traces and unchanged numerical limits without models
+        id: contract
+        shell: bash
+        timeout-minutes: 7
+        run: |
+          set -euo pipefail
+          for mode in normal optimized stripped; do
+            args=()
+            case "$mode" in optimized) args=(-O);; stripped) args=(-OO);; esac
+            python3 -I -S -B "${args[@]}" research/english_backbone_parity/test_backbone_parity_once.py -v
+            python3 -I -S -B "${args[@]}" research/english_backbone_parity/backbone_parity_once.py
+          done
+          python3 -I -S -B tools/verify_research_sources.py
+          python3 -I -S -B - <<'PYCODE'
+          import os, pathlib, sys
+          sys.path.insert(0, str(pathlib.Path('research/english_backbone_parity').absolute()))
+          import backbone_parity_once as worker
+          pins = worker.read_json('research/english_backbone_parity/backbone_parity_pins.json')
+          worker.need(type(pins.get('enabled')) is bool, 'EXPLICIT_BACKBONE_ENABLE_BOOLEAN')
+          if pins['enabled']:
+              worker.validate_pins(pins)
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write('execution_enabled=' + str(pins['enabled']).lower() + '\n')
+          PYCODE
+          test -z "$(git status --porcelain)"
+  verify-backbone:
+    needs: source-contract
+    if: >-
+      needs.source-contract.outputs.execution_enabled == 'true' &&
+      github.repository == 'jiying2007/kws-pipeline' && github.event.repository.private == false &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main' && github.run_attempt == 1 &&
+      github.event.before == 'cfc69dcd7535ea909403f10a91bcfe26ccc1b331'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          persist-credentials: false
+      - name: Guard the first public-main attempt and acquire exact static export and feature assets
+        shell: bash
+        timeout-minutes: 6
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 -I -S -B - <<'PYCODE'
+          import os, pathlib, subprocess, sys, time
+          sys.path.insert(0, str(pathlib.Path('research/english_backbone_parity').absolute()))
+          import backbone_parity_once as worker
+          pins = worker.read_json('research/english_backbone_parity/backbone_parity_pins.json')
+          worker.execution_guard(pins, os.environ, worker.read_json(os.environ['GITHUB_EVENT_PATH']),
+              worker.sha(worker.regular(pathlib.Path(worker.__file__), 1024**2)))
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'backbone-parity-evidence'
+          root.mkdir(mode=0o700)
+          assets = pathlib.Path(os.environ['RUNNER_TEMP']) / 'backbone-assets'
+          assets.mkdir(mode=0o700)
+          worker.once(root / 'WORKFLOW_STARTED.json', {'schema': 'english-backbone-parity-workflow-receipt-v1',
+              'run_id': os.environ['GITHUB_RUN_ID'], 'github_sha': os.environ['GITHUB_SHA'], 'run_attempt': '1',
+              'profile': worker.PROFILE, 'plan_sha256': worker.sha(worker.canonical(worker.PLAN)),
+              'worker_code_sha256': worker.sha(worker.regular(pathlib.Path(worker.__file__), 1024**2)),
+              'pins_sha256': worker.sha(worker.canonical(pins)), 'model_calls_at_start': 0,
+              'head_evaluations': 0, 'optimizer_updates': 0, 'tts_asr_phone_calls': 0, 'no_retry': True})
+          with (root / 'DOWNLOAD_ATTEMPTS.jsonl').open('x', encoding='utf-8') as journal:
+              def fetch(command, destination, maximum, expected=None):
+                  item = {'file': destination.name, 'maximum_bytes': maximum,
+                          'expected_sha256': expected, 'retry_count': 0}
+                  journal.write(worker.canonical({**item, 'status': 'STARTED'}).decode() + '\n')
+                  journal.flush()
+                  os.fsync(journal.fileno())
+                  clock = time.monotonic()
+                  try:
+                      with destination.open('xb') as output:
+                          subprocess.run(command, stdout=output, check=True, timeout=125)
+                      raw = worker.regular(destination, maximum)
+                      worker.need(expected is None or len(raw) == maximum and worker.sha(raw) == expected,
+                                  'EXACT_DOWNLOADED_BYTES')
+                  except BaseException as exc:
+                      journal.write(worker.canonical({**item, 'status': 'FAILED_OR_INTERRUPTED_NO_RETRY',
+                          'error_type': type(exc).__name__, 'elapsed_seconds': time.monotonic() - clock}).decode() + '\n')
+                      journal.flush()
+                      os.fsync(journal.fileno())
+                      raise
+                  journal.write(worker.canonical({**item, 'status': 'COMPLETE', 'bytes': len(raw),
+                      'sha256': worker.sha(raw), 'elapsed_seconds': time.monotonic() - clock}).decode() + '\n')
+                  journal.flush()
+                  os.fsync(journal.fileno())
+                  return raw
+              fetch(['gh', 'api', 'repos/jiying2007/kws-pipeline/actions/runs/43823297841'],
+                    root / 'static-run.json', 4 * 1024**2)
+              fetch(['gh', 'api', 'repos/jiying2007/kws-pipeline/actions/artifacts/14205188962'],
+                    root / 'static-artifact.json', 4 * 1024**2)
+              run, artifact = worker.read_json(root / 'static-run.json'), worker.read_json(root / 'static-artifact.json')
+              worker.need(run.get('id') == 43823297841 and run.get('head_sha') == worker.STATIC_SOURCE_HEAD and
+                  run.get('run_attempt') == 1 and run.get('event') == 'push' and run.get('head_branch') == 'main' and
+                  run.get('status') == 'completed' and run.get('conclusion') == 'success' and
+                  run.get('repository', {}).get('full_name') == worker.REPOSITORY and
+                  run.get('repository', {}).get('private') is False, 'COMPLETED_ORIGINAL_STATIC_EXPORT_RUN')
+              worker.need(artifact.get('id') == 14205188962 and
+                  artifact.get('name') == 'english-fixed-frontend-static-export-43823297841' and
+                  artifact.get('size_in_bytes') == 2722450 and artifact.get('expired') is False and
+                  artifact.get('digest') == 'sha256:1ffc968da201e07186929f05d9d8c651e18390a92f5436b6cdfec3a3cb1e9ac0' and
+                  artifact.get('workflow_run', {}).get('id') == 43823297841 and
+                  artifact['workflow_run'].get('head_sha') == worker.STATIC_SOURCE_HEAD and
+                  artifact['workflow_run'].get('head_branch') == 'main', 'EXACT_ORIGINAL_STATIC_ARTIFACT_METADATA')
+              fetch(['gh', 'api', 'repos/jiying2007/kws-pipeline/actions/artifacts/14205188962/zip'],
+                    root / 'static-export.zip', 2722450,
+                    '1ffc968da201e07186929f05d9d8c651e18390a92f5436b6cdfec3a3cb1e9ac0')
+              for name, (size, digest) in worker.ASSETS.items():
+                  fetch(['curl', '--proto', '=https', '--tlsv1.2', '--fail', '--location', '--silent', '--show-error',
+                         '--retry', '0', '--connect-timeout', '20', '--max-time', '120',
+                         'https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/' + name],
+                        assets / name, size, digest)
+          worker.once(root / 'ACQUIRED_INPUTS.json', {'static_export_zip_sha256':
+              '1ffc968da201e07186929f05d9d8c651e18390a92f5436b6cdfec3a3cb1e9ac0',
+              'assets': {name: {'bytes': value[0], 'sha256': value[1]} for name, value in worker.ASSETS.items()},
+              'model_calls': 0, 'head_evaluations': 0, 'optimizer_updates': 0, 'tts_asr_phone_calls': 0})
+          PYCODE
+      - name: Install the fixed CPU reference runtime and ARM C tools
+        shell: bash
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gcc-arm-linux-gnueabihf libc6-dev-armhf-cross qemu-user
+          python3 -m venv "$RUNNER_TEMP/backbone-venv"
+          pip="$RUNNER_TEMP/backbone-venv/bin/pip"
+          trap '"$pip" freeze > "$RUNNER_TEMP/backbone-parity-evidence/pip-freeze.txt"' EXIT
+          "$pip" install --disable-pip-version-check "numpy==1.26.4" "onnx==1.17.0" "onnxruntime==1.20.1"
+          gcc --version > "$RUNNER_TEMP/backbone-parity-evidence/host-compiler.txt"
+          arm-linux-gnueabihf-gcc --version > "$RUNNER_TEMP/backbone-parity-evidence/arm-compiler.txt"
+          qemu-arm --version > "$RUNNER_TEMP/backbone-parity-evidence/qemu-version.txt"
+      - name: Compare the three fixed artificial PCM cases through ONNX, native C and ARM C once
+        shell: bash
+        timeout-minutes: 32
+        run: |
+          set -euo pipefail
+          set +e
+          timeout --signal=TERM --kill-after=30s 31m "$RUNNER_TEMP/backbone-venv/bin/python" -I -B \
+            research/english_backbone_parity/backbone_parity_once.py --execute \
+            --pins "$GITHUB_WORKSPACE/research/english_backbone_parity/backbone_parity_pins.json" \
+            --pipeline-source "$GITHUB_WORKSPACE" \
+            --frontend-source "$GITHUB_WORKSPACE/research/english_final_embedding_frontend" \
+            --assets "$RUNNER_TEMP/backbone-assets" \
+            --static-export-zip "$RUNNER_TEMP/backbone-parity-evidence/static-export.zip" \
+            --output "$RUNNER_TEMP/backbone-parity-result"
+          backbone_exit=$?
+          set -e
+          BACKBONE_COMMAND_EXIT="$backbone_exit" python3 -I -S -B - <<'PYCODE'
+          import os, pathlib, sys
+          sys.path.insert(0, str(pathlib.Path('research/english_backbone_parity').absolute()))
+          import backbone_parity_once as worker
+          root = pathlib.Path(os.environ['RUNNER_TEMP'])
+          result = root / 'backbone-parity-result'
+          worker.once(root / 'backbone-parity-evidence/COMMAND_EXIT.json', {
+              'returncode': int(os.environ['BACKBONE_COMMAND_EXIT']), 'retry_count': 0,
+              'result_receipt_present': (result / 'RESULT.json').is_file(),
+              'failure_receipt_present': (result / 'FAILURE.json').is_file(),
+              'missing_terminal_receipt_means': 'UNKNOWN_INTERRUPTED_NOT_ZERO_MODEL_CALLS',
+              'head_evaluations': 0, 'optimizer_updates': 0, 'tts_asr_phone_calls': 0})
+          PYCODE
+          exit "$backbone_exit"
+      - name: Preserve real traces, stage errors, source identities and partial failure receipts
+        if: always()
+        timeout-minutes: 5
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: english-backbone-parity-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/backbone-parity-result/
+            ${{ runner.temp }}/backbone-parity-evidence/
+          compression-level: 0
+          retention-days: 30
+          if-no-files-found: warn

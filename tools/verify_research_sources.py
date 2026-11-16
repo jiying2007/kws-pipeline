@@ -31,6 +31,9 @@ ENGLISH_FINAL_EMBEDDING_PATHS = tuple('research/english_final_embedding/' + name
 ENGLISH_FINAL_EMBEDDING_FRONTEND_PATHS = tuple('research/english_final_embedding_frontend/' + name for name in (
     'README.md', 'export_fixed_frontend.py', 'export_fixed_frontend_once.py', 'fixed_frontend.c', 'fixed_frontend.h',
     'frontend_replay.c', 'test_fixed_frontend.py', 'test_fixed_frontend_independent.py'))
+ENGLISH_BACKBONE_PARITY_PATHS = tuple('research/english_backbone_parity/' + name for name in (
+    'README.md', 'backbone_parity_once.py', 'backbone_parity_pins.json', 'test_backbone_parity_once.py'))
+ENGLISH_BACKBONE_PARITY_WORKFLOW = '.github/workflows/english-backbone-parity-once.yml'
 
 SENSE_REVISION_ID = 'sense-runtime-binding-20261017'
 SENSE_REVISION_SUPERSEDES = '62c970794f74d7303f3daff246e7062ffb1c85d5'
@@ -233,6 +236,31 @@ def validate_english_final_embedding_frontend_sources(root, manifest):
         check_file(root, row)
     return rows
 
+
+def validate_english_backbone_parity_sources(root, manifest):
+    """One separate feature-only profile; no change to retained frontend/head bytes."""
+    key = 'current_english_backbone_parity_sources'
+    directory = root / 'research/english_backbone_parity'
+    if key not in manifest:
+        if directory.exists() or (root / ENGLISH_BACKBONE_PARITY_WORKFLOW).exists():
+            raise ValueError('English backbone parity source registration required')
+        return []
+    rows = manifest[key]
+    if (type(rows) is not list or len(rows) != len(ENGLISH_BACKBONE_PARITY_PATHS) or
+            any(type(row) is not dict or set(row) != IDENTITY_FIELDS for row in rows) or
+            [row['path'] for row in rows] != list(ENGLISH_BACKBONE_PARITY_PATHS)):
+        raise ValueError('English backbone parity fixed source paths and identities required')
+    actual = {p.relative_to(root).as_posix() for p in directory.rglob('*')
+              if p.is_file() or p.is_symlink()}
+    if actual != set(ENGLISH_BACKBONE_PARITY_PATHS):
+        raise ValueError('English backbone parity source directory changed')
+    for row in rows:
+        if row.get('mode') != '100644':
+            raise ValueError('English backbone parity source mode changed')
+        check_file(root, row)
+    return rows
+
+
 def verify(root, manifest):
     if manifest.get('schema') != 'research-source-retention-v1':
         raise ValueError('unsupported source retention schema')
@@ -247,6 +275,7 @@ def verify(root, manifest):
     validate_sense_runtime_revision(root, manifest)
     validate_english_final_embedding_sources(root, manifest)
     validate_english_final_embedding_frontend_sources(root, manifest)
+    validate_english_backbone_parity_sources(root, manifest)
     by_path = {}
     for row in files:
         if row['path'] in by_path:
@@ -321,8 +350,9 @@ def verify(root, manifest):
     approved_with_public_zh64 = approved_with_clone + ['.github/workflows/public-zh64-asr-once.yml']
     approved_with_embedding_assets = approved_with_public_zh64 + [
         '.github/workflows/english-embedding-backbone-assets-once.yml']
+    approved_with_backbone_parity = approved_with_embedding_assets + [ENGLISH_BACKBONE_PARITY_WORKFLOW]
     if additions not in (approved, approved_with_clone, approved_with_public_zh64,
-                         approved_with_embedding_assets):
+                         approved_with_embedding_assets, approved_with_backbone_parity):
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed additions
     # both bind CURRENT bytes. Historical maintenance receipts are evidence,
