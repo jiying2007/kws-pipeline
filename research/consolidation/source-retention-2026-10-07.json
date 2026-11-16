@@ -52966,7 +52966,7 @@
       "previous_manifest_sha256": "cb8ebc3fd52ee03550a74090ce4a989c147c1402912c0c6003fcb3a68e5d55bc",
       "workflow_source_changed": true,
       "scope": "One explicitly bounded PCM-to-feature numerical profile on three fixed artificial signals; no keyword head, training, TTS, ASR or real audio.",
-      "rationale": "Continue independent C deployment verification while the separate terminal144 classifier remains blocked by its unchanged train-Vosen minimum (5<8). Consume exact successful static-export C bytes without re-export, keep feature assets/signals/three numerical tolerances unchanged, and allow exactly 156 ONNX session runs and three native plus three ARM replay processes. Restrict execution to one first public-main successor of cfc69dcd7535ea909403f10a91bcfe26ccc1b331 with a pinned worker and clean source. Register exactly four new profile source paths and one explicit workflow; preserve every historical retained/source/frontend/head identity and consumed guard. No head/KWS/SSC305 qualification is produced.",
+      "rationale": "Continue independent C deployment verification while the separate terminal144 classifier remains blocked by its unchanged train-Vosen minimum (5<8). Consume exact successful static-export C bytes without re-export, keep feature assets/signals/three numerical tolerances unchanged, and allow exactly 156 ONNX session runs and three native plus three ARM replay processes. Restrict execution to one first public-main successor of cfc69dcd7535ea909403f10a91bcfe26ccc1b331 with a pinned worker and clean source. Register exactly four new profile source paths and one explicit workflow; preserve every historical retained/source/frontend/head identity and consumed guard. No head/KWS/SSC305 qualification is produced. The existing integrated archive-versus-active fixture now copies the same exact four registered profile sources when it copies the new workflow; production source registration remains mandatory.",
       "files": [
         {
           "path": "research/english_backbone_parity/README.md",
@@ -53055,6 +53055,23 @@
             "bytes": 76661,
             "sha256": "f9ade584e973f673fe5bc23385bf4c8c28547b19f5d394caac6163f884f3f9e5",
             "git_blob_sha1": "41c9fb0f09c7baa18cd25e6997814091a52260a8"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_research_consolidation.py",
+          "before": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 14389,
+            "sha256": "8c957e34a9607c5c46ea9fc61a7d84861dbf82210cea60088f236190b6a0ba2e",
+            "git_blob_sha1": "16e7e61762a9f8f88ed6bb1d1a2c6c00f996d1c6"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 14726,
+            "sha256": "17b9fd967312175162fe1dfb7e3bbb6bfdc4a90056a5bd63e298831bebd79b67",
+            "git_blob_sha1": "6f272e547d44e6c703812260881e3b5b118ce23c"
           }
         }
       ]
