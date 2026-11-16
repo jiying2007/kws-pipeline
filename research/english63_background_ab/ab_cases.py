@@ -298,8 +298,14 @@ def not_running(pid):
     path = Path('/proc') / str(pid) / 'stat'
     try:
         return path.read_text().rsplit(')', 1)[1].split()[0] == 'Z'
-    except FileNotFoundError:
+    except (FileNotFoundError, ProcessLookupError):
+        # A /proc entry may disappear between enumeration and read.
         return True
+
+
+def procfs_race_cases():
+    with mock.patch.object(Path, 'read_text', side_effect=ProcessLookupError):
+        require(not_running(12345), 'PROCFS_DISAPPEARING_PID')
 
 
 def live_children(parent):
@@ -334,6 +340,7 @@ def await_dead(pids):
 
 
 def process_cases(temp, binary):
+    procfs_race_cases()
     cpu = min(os.sched_getaffinity(0))
     result = execute.bounded_child(lambda: time.sleep(30), .1, cpu)
     require(result['timed_out'] and result['child_exit_code'] == -signal.SIGKILL and result['child_wall_seconds'] < 2,
