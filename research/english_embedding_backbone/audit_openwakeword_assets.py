@@ -6,7 +6,6 @@ classifier, private corpus, audio, training, or target promotion is involved.
 from __future__ import annotations
 import argparse,hashlib,json,math
 from pathlib import Path
-import numpy as np
 
 POLICY="english-embedding-backbone-asset-audit-v1"
 UPSTREAM="dscripka/openWakeWord"
@@ -58,6 +57,7 @@ def asset_report(root,release):
              "role":role,"url":actual[name][2]}
  return out
 def onnx_report(path):
+ import numpy as np
  import onnx
  import onnxruntime as ort
  model=onnx.load(str(path),load_external_data=True)
