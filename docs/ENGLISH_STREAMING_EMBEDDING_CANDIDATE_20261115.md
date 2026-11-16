@@ -75,9 +75,12 @@ The two TFLite files total 2,422,828 bytes before any model head or runtime over
 
 ## Data and pronunciation boundary
 
-Owner-confirmed target readings:
-- Hey Mero: /heɪ ˈmɪəroʊ/
-- Hey Vosen: /heɪ ˈvoʊsən/
+Current user-confirmed American target readings (2026-11-16 image):
+- Hey Mero: /heɪ ˈmiːroʊ/ (MEE-roh; long /iː/)
+- Hey Vosen: /heɪ ˈvoʊzən/ (VOH-zən; voiced medial /z/)
+- British variants shown in the same image: /heɪ ˈmiːrəʊ/ and /heɪ ˈvəʊzən/.
+
+All prior old-IPA audio and experiments remain immutable historical research only; they are not positive examples for these current target readings.
 
 The previous 63 seven-voice TTS WAVs were generated with Qwen3-TTS 0.6B CustomVoice. The official 0.6B CustomVoice implementation clears per-utterance `instruct`; therefore those clips were not conditioned by these newly confirmed IPA instructions. They remain immutable and exposed, not relabelled.
 
