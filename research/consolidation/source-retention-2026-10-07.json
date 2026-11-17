@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 86369,
-      "git_blob_sha1": "da084e4a0349e75e427f15e60b8ba1db31fa2f2f",
-      "sha256": "c06d3d6d5f27f177acc93546caf1d61c36b6f2d1469913c6653cbea8c0566bc8"
+      "bytes": 86860,
+      "git_blob_sha1": "ea43ed1aac1a52356e384bbe077b152a573b9f00",
+      "sha256": "5080e68d2461ff4347f52d84ab70bc34fd15e9a04c351ad97f899681518769bc"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -53951,6 +53951,35 @@
             "bytes": 6156,
             "sha256": "030d8d606d55daf8aa4cd205cd869a8258a8bfb9a6cb8a837063d3088b931cbe",
             "git_blob_sha1": "a54d9549599c388e71c806943666421f1e98b04b"
+          }
+        }
+      ]
+    },
+    {
+      "id": "english-synthetic-silver-ci-retention-20261117",
+      "date": "2026-11-17",
+      "base_commit": "fb1998d09f3aca657e4042b2cfb585c39b070111",
+      "source_commit": "e03fd0b5d1f29b3ad7206241cbe2a0aa2cdaf3bd",
+      "previous_manifest_sha256": "c8e99fa2303ad01d06bc0558879aa30e82c1a5b63057f016506d7892a7335482",
+      "workflow_source_changed": true,
+      "scope": "Register the current CI bytes that run the English synthetic silver intake contract in normal, -O and -OO modes.",
+      "rationale": "The active CI update is already present in PR 835 at the exact source commit above. Bind its actual byte count, SHA256 and Git blob identity through the existing current-workflow registry. Preserve all 718 retained files, 834 provenance rows, 221 previous maintenance entries, original PR 485 CI archive, other active workflows and registered research source groups. The unchanged archive and active-CI tamper checks remain enforced. No verifier, test expectation, execution gate, model, audio, training input or historical source identity is changed by this registration.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 86369,
+            "git_blob_sha1": "da084e4a0349e75e427f15e60b8ba1db31fa2f2f",
+            "sha256": "c06d3d6d5f27f177acc93546caf1d61c36b6f2d1469913c6653cbea8c0566bc8"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 86860,
+            "git_blob_sha1": "ea43ed1aac1a52356e384bbe077b152a573b9f00",
+            "sha256": "5080e68d2461ff4347f52d84ab70bc34fd15e9a04c351ad97f899681518769bc"
           }
         }
       ]
