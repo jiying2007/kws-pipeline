@@ -144,6 +144,12 @@ jobs:
           python3 -I -S -B -O research/r1_stream_c/cpu_opt/test_contracts.py --cc gcc --cc clang
           python3 -I -S -B -OO research/r1_stream_c/cpu_opt/test_contracts.py --cc gcc --cc clang
           python3 -B tools/test_inventory.py --root research/r1_stream_c/cpu_opt --workflow .github/workflows/ci.yml
+          python3 -B research/r1_stream_c/proposal_gap_v1/test_proposal.py
+          python3 -O -B research/r1_stream_c/proposal_gap_v1/test_proposal.py
+          python3 -OO -B research/r1_stream_c/proposal_gap_v1/test_proposal.py
+          python3 -B research/r1_stream_c/proposal_gap_v1/test_saved_numeric.py
+          python3 -B research/r1_stream_c/proposal_gap_v1/run_contracts.py --cc gcc --sanitize
+          python3 -B research/r1_stream_c/proposal_gap_v1/run_contracts.py --cc clang
       - name: Verify tracked worktree after Strong R1 ARM mock contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Strong R1 ARM mock contracts"'
       - name: Local research queue and shared slot contracts with dummy commands

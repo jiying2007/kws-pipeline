@@ -1,0 +1,23 @@
+{
+  "schema": "r1-proposal-consecutive-blank-gap-candidate-v1",
+  "declared_before_saved_r1_gap_statistics": true,
+  "candidate": "gap20",
+  "blank_id": 0,
+  "max_consecutive_blank_frames": 20,
+  "expiry_semantics": "Clear retained keyword prefix when the twentieth consecutive blank output row is consumed; a repeated nonblank token ends a blank run and never counts as blank.",
+  "model_output_hop_samples": 480,
+  "sample_rate_hz": 16000,
+  "blank_run_nominal_seconds": 0.6,
+  "max_keyword_span_frames": 150,
+  "same_keyword_cooldown_frames": 50,
+  "keywords": [[1027, 1401, 1462, 2093], [1462, 2093, 1462, 2093]],
+  "baseline": "unchanged r1_proposal_step from pipeline aeca18614ce31804cf47854cea6c4900eb08d142",
+  "single_candidate_no_gap_sweep": true,
+  "default_runtime_changed": false,
+  "acoustic_model_calls": 0,
+  "training_runs": 0,
+  "source_audio_replayed": false,
+  "saved_output_use": "owner-held read-only argmax postprocessing; per-record restart preserved; constructed token streams reported separately",
+  "independent_far_frr_or_word_end_latency_claim": false,
+  "production_promotion": false
+}
