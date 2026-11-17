@@ -1,0 +1,128 @@
+{
+  "actual_execution": {
+    "local_C_fixture_execution": false,
+    "new_acoustic_model_calls": 0,
+    "new_asr_calls": 0,
+    "new_audio_calls": 0,
+    "new_tts_calls": 0,
+    "optimizer_updates": 0,
+    "public_C_fixture_execution": "CHECK_CURRENT_CI_RESULT",
+    "saved_argmax_postprocessing": true
+  },
+  "analysis_source_sha256": {
+    "analyze_saved.py": "c3e65a98b0577b2d43501c48e9c46a0ea9dbfbf5e980bd55e14e91dd7ef55fea",
+    "proposal.py": "b91d0277f60113dc033c27205b5c9534fc714dfe64852bc98e843544835cd510",
+    "saved_numeric.py": "1aeecaf7d4e8aedd405ac3ac58d62fd5716f0e9737451e062b1e67678d22b989"
+  },
+  "baseline_event_max_consecutive_blank_frames": 30,
+  "boundaries": {
+    "human_gold_created": false,
+    "independent_frr_established": false,
+    "independent_test": false,
+    "natural_far_established": false,
+    "private_source_ids_labels_or_logits_included": false,
+    "production_promoted": false,
+    "ssc305_measured": false,
+    "word_end_latency_measured": false
+  },
+  "candidate": "gap20",
+  "cohorts": {
+    "development": {
+      "baseline_events": 22,
+      "candidate_events": 21,
+      "changed_event_lists": 1,
+      "records": 34
+    },
+    "train": {
+      "baseline_events": 64,
+      "candidate_events": 59,
+      "changed_event_lists": 5,
+      "records": 96
+    },
+    "unknown": {
+      "baseline_events": 2,
+      "candidate_events": 2,
+      "changed_event_lists": 0,
+      "records": 4,
+      "scored_for_quality": false
+    }
+  },
+  "comparison": {
+    "baseline_events": 88,
+    "candidate_events": 82,
+    "identical_event_lists": 128,
+    "per_record_resets_preserved": true,
+    "records": 134,
+    "saved_model_frames": 12534
+  },
+  "decision_reason": "Reject gap20 because one known weak-positive development K2 row loses its proposal; four train K2 positive rows also lose all proposals. Keep baseline; no gap sweep.",
+  "default_sdk_changed": false,
+  "frozen_candidate_sha256": "493625580bc5bcb4f3c320aff9fe95898d8f8a23422e84f135df182d55b72504",
+  "input_pins": {
+    "KWS_V3_Research_20261107.zip": "c1876f4046c18045ff01f53bd27e88ce4195b2eb82e6f4977f9b2e9db3754454",
+    "numeric/RECOVERY_INDEX.json": "ec88e02ccb80c1092b41a3a2a9a7153f97f2a3348ac21e3a7690ed5dcbe4efc7"
+  },
+  "known_record_event_denominator": {
+    "baseline_events": 86,
+    "candidate_events": 80,
+    "records": 130,
+    "relationship_to_all_134": "Four unknown records add two baseline and two candidate events."
+  },
+  "numeric_archive_pins": [
+    {
+      "bytes": 83098682,
+      "name": "fsmn-tail-numeric-01-20261107.zip",
+      "numeric_conditions": 83,
+      "sha256": "74cc5f24178c16d30a3c6075c3206f5ea6e7a4732c43bc08a6f27e22b40725d2"
+    },
+    {
+      "bytes": 41851752,
+      "name": "fsmn-tail-numeric-02-20261107.zip",
+      "numeric_conditions": 51,
+      "sha256": "4ffde86aa4401478e2051ae02b0e11b98bda8cd1d27a8d5e3e86da587cd71651"
+    }
+  ],
+  "policy": {
+    "blank_is_acoustic_silence": false,
+    "candidate_values_tested": [
+      20
+    ],
+    "cooldown_frames": 50,
+    "expire_on_twentieth_blank": true,
+    "max_consecutive_blank_frames": 20,
+    "span_frames": 150
+  },
+  "prefix_expirations": 65,
+  "private_result_sha256": {
+    "aggregate.json": "5db1c54f754ffdbfc09fba0a0916d8189340200d457411792e8d093a76834841",
+    "private-records.json": "74167683ad77ceae60645de2468b5d5bf8f678acb9b23a4eaed7a7cbfa4f71bc"
+  },
+  "schema": "r1-gap20-rejected-saved-output-result-v1",
+  "status": "REJECTED_POSITIVE_LOSS",
+  "weak_keyword_rows": {
+    "development/k1/positive/baseline_hit_rows": 10,
+    "development/k1/positive/candidate_hit_rows": 10,
+    "development/k1/positive/rows": 10,
+    "development/k1/weak_negative/baseline_hit_rows": 0,
+    "development/k1/weak_negative/candidate_hit_rows": 0,
+    "development/k1/weak_negative/rows": 24,
+    "development/k2/positive/baseline_hit_rows": 10,
+    "development/k2/positive/candidate_hit_rows": 9,
+    "development/k2/positive/rows": 10,
+    "development/k2/weak_negative/baseline_hit_rows": 0,
+    "development/k2/weak_negative/candidate_hit_rows": 0,
+    "development/k2/weak_negative/rows": 24,
+    "train/k1/positive/baseline_hit_rows": 27,
+    "train/k1/positive/candidate_hit_rows": 27,
+    "train/k1/positive/rows": 27,
+    "train/k1/weak_negative/baseline_hit_rows": 0,
+    "train/k1/weak_negative/candidate_hit_rows": 0,
+    "train/k1/weak_negative/rows": 69,
+    "train/k2/positive/baseline_hit_rows": 28,
+    "train/k2/positive/candidate_hit_rows": 24,
+    "train/k2/positive/rows": 28,
+    "train/k2/weak_negative/baseline_hit_rows": 0,
+    "train/k2/weak_negative/candidate_hit_rows": 0,
+    "train/k2/weak_negative/rows": 68
+  }
+}

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 85876,
-      "git_blob_sha1": "9d9857b2e99d5bff7c4b44e06506c475a49c474e",
-      "sha256": "5c4c539eca663a55bd3fa967d4aef544f2cf3d6287b3be12592c6da30bd66609"
+      "bytes": 86369,
+      "git_blob_sha1": "da084e4a0349e75e427f15e60b8ba1db31fa2f2f",
+      "sha256": "c06d3d6d5f27f177acc93546caf1d61c36b6f2d1469913c6653cbea8c0566bc8"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -53753,6 +53753,204 @@
             "bytes": 3244,
             "sha256": "162ac47bab7d4898c4fad92de3fe44ccb1ff214069991a368890f0538936cbb3",
             "git_blob_sha1": "1036a84c91249cbc16c3ecf6e77a6954f08f5331"
+          }
+        }
+      ]
+    },
+    {
+      "id": "r1-consecutive-blank-gap20-quality-candidate-20261117",
+      "date": "2026-11-17",
+      "base_commit": "aeca18614ce31804cf47854cea6c4900eb08d142",
+      "previous_manifest_sha256": "03420286e62e7d8c8ba8764acc5ded1d7b185af694280717753c08545c6a929a",
+      "workflow_source_changed": true,
+      "scope": "Add finite source and invented-token checks for an opt-in R1 proposal history expiry candidate.",
+      "rationale": "Keep the original decoder API, default behavior, all frozen source groups and previous maintenance receipts. Add checks to the existing CI workflow; no new workflow, private audio upload, acoustic model inference, training or data-admission change is part of this CI maintenance.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 85876,
+            "git_blob_sha1": "9d9857b2e99d5bff7c4b44e06506c475a49c474e",
+            "sha256": "5c4c539eca663a55bd3fa967d4aef544f2cf3d6287b3be12592c6da30bd66609"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 86369,
+            "git_blob_sha1": "da084e4a0349e75e427f15e60b8ba1db31fa2f2f",
+            "sha256": "c06d3d6d5f27f177acc93546caf1d61c36b6f2d1469913c6653cbea8c0566bc8"
+          }
+        }
+      ],
+      "reviewed_source_files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "mode": "100644",
+          "bytes": 86369,
+          "git_blob_sha1": "da084e4a0349e75e427f15e60b8ba1db31fa2f2f",
+          "sha256": "c06d3d6d5f27f177acc93546caf1d61c36b6f2d1469913c6653cbea8c0566bc8"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/README.md",
+          "mode": "100644",
+          "bytes": 6399,
+          "git_blob_sha1": "51a500a365c974e36bfdc279f4284f1e65aa7013",
+          "sha256": "34a5407e8c8f66f977cb879b242d9581d0a9d988a4d0d59654099886bc64516b"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/RESULTS.json",
+          "mode": "100644",
+          "bytes": 4649,
+          "git_blob_sha1": "9247b58616da46b7bd56b845de0d97732798cbc2",
+          "sha256": "c920f61ab7fbb3c87345cabe5062a3fc925aa17b140dc07583d2ed991a96dbdb"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/analyze_saved.py",
+          "mode": "100644",
+          "bytes": 8586,
+          "git_blob_sha1": "52765524ee81518666120028b3d4448d1c09f23f",
+          "sha256": "c3e65a98b0577b2d43501c48e9c46a0ea9dbfbf5e980bd55e14e91dd7ef55fea"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/candidate_sdk/r1_sdk.c",
+          "mode": "100644",
+          "bytes": 5657,
+          "git_blob_sha1": "dfb639f3d44d160082a7d47abf073772ab24fab7",
+          "sha256": "0bffa7bc8c2729bcabb826ee6f1d78228e31d77a241b7a66e00b508dec6991e7"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/candidate_sdk/r1_sdk.h",
+          "mode": "100644",
+          "bytes": 3630,
+          "git_blob_sha1": "8a72db1a61685a9ef051c96935f7fef22f007f60",
+          "sha256": "9caacba8f69272139a10323dc32364211623afedeee402904decb4444c6cc5da"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/candidate_sdk/run_contracts.py",
+          "mode": "100644",
+          "bytes": 1980,
+          "git_blob_sha1": "8bc9ba9e7dc548502a10555ff2091a25f5d62e7b",
+          "sha256": "356f80b79a40455787876c86975039f9748a08e0e474effbe70e9887f545b898"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/candidate_sdk/test_sdk.c",
+          "mode": "100644",
+          "bytes": 6915,
+          "git_blob_sha1": "1a6a7792125fa72c45c6fe03b01f4fe044cb2746",
+          "sha256": "af132f840051a1d418f8aae10bd21229649e926f4ddc14a2a8d68836f6e4ef6b"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/frozen_candidate.json",
+          "mode": "100644",
+          "bytes": 1116,
+          "git_blob_sha1": "f460c9e6fe2a924b077a7ad2b9dd763cb7b84ef1",
+          "sha256": "493625580bc5bcb4f3c320aff9fe95898d8f8a23422e84f135df182d55b72504"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/proposal.py",
+          "mode": "100644",
+          "bytes": 2769,
+          "git_blob_sha1": "05a57106e9b6e7f4803ca11c93209267e374c502",
+          "sha256": "b91d0277f60113dc033c27205b5c9534fc714dfe64852bc98e843544835cd510"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/run_contracts.py",
+          "mode": "100644",
+          "bytes": 2564,
+          "git_blob_sha1": "1c71a07326de305fc0a1d7ae9a958ae5deb69cb5",
+          "sha256": "e958ab63ca6a7c214bd683904181cf757f34129f735588464765e5dcc3be2145"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/saved_numeric.py",
+          "mode": "100644",
+          "bytes": 8039,
+          "git_blob_sha1": "e2680c1c2da8d5ab87b0ebf228430d6ac16a66ed",
+          "sha256": "1aeecaf7d4e8aedd405ac3ac58d62fd5716f0e9737451e062b1e67678d22b989"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/source_binding.json",
+          "mode": "100644",
+          "bytes": 1331,
+          "git_blob_sha1": "6d3670ae62b9bb600ad16df1ab2a6e931422e039",
+          "sha256": "f8f577182fb9e87844e49209cc1e668c7373c799c29e7f20cafbbdf15b282aaf"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/test_gap.c",
+          "mode": "100644",
+          "bytes": 6111,
+          "git_blob_sha1": "a03e6dbe1032fb70ecf1a89661233baa332f46d1",
+          "sha256": "df3f2cb206808e73c07dea86489046c42bba8f81775728bff312e3fd9d0064f3"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/test_proposal.py",
+          "mode": "100644",
+          "bytes": 3709,
+          "git_blob_sha1": "3119fc748aba0ad51546044fd30a266ed8f053fd",
+          "sha256": "79ffb926b773ca619470767330211871f95b6ae162424770e4b85f0cd5bb76e3"
+        },
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/test_saved_numeric.py",
+          "mode": "100644",
+          "bytes": 4254,
+          "git_blob_sha1": "576103cbfcef32c267c535b481e89a8f61167d0e",
+          "sha256": "f3825112d317aace3d9714eaf3822018d216b194036c2111e740d3d2472aceeb"
+        }
+      ]
+    },
+    {
+      "id": "r1-gap20-retain-actual-clang-diagnostics-20261117",
+      "date": "2026-11-17",
+      "base_commit": "aad363e27adfc89ce72c27815361a8ce3a41abc2",
+      "previous_manifest_sha256": "447b0c511031c767b5b60ab58d01db078ff407209afa4cd125e4508061543eb4",
+      "workflow_source_changed": false,
+      "scope": "Retain compiler and mock-fixture stderr before propagating failure.",
+      "rationale": "Public CI run 44019032285 passed GCC sanitizer and all 36 fictional-token groups, then Clang compilation failed without captured diagnostics. Preserve both compilers, -Werror, failed execution and all previous identities. This source-only diagnostic repair performs no acoustic-model work and changes no frozen gap20 decision or canonical SDK.",
+      "files": [
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/run_contracts.py",
+          "before": {
+            "path": "research/r1_stream_c/proposal_gap_v1/run_contracts.py",
+            "mode": "100644",
+            "bytes": 2564,
+            "git_blob_sha1": "1c71a07326de305fc0a1d7ae9a958ae5deb69cb5",
+            "sha256": "e958ab63ca6a7c214bd683904181cf757f34129f735588464765e5dcc3be2145"
+          },
+          "after": {
+            "path": "research/r1_stream_c/proposal_gap_v1/run_contracts.py",
+            "mode": "100644",
+            "bytes": 3581,
+            "sha256": "cab73e66bd553c98129cb7c13b84bfacdcb636d5cb354506a7ba0749844b79ea",
+            "git_blob_sha1": "b12580b8ecd4113b2f9b106f0482a395e83c585a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "r1-gap20-explicit-nested-fixture-scope-20261117",
+      "date": "2026-11-17",
+      "base_commit": "03f7b7256c78c5545f3e5e7b60e50660058d6d8f",
+      "previous_manifest_sha256": "85387977c634768fe97babdee270c6dec726ef577840a07cec55bc50fb653ac1",
+      "workflow_source_changed": false,
+      "scope": "Make the nested fixture loops explicit after the actual Clang misleading-indentation diagnostic.",
+      "rationale": "Public CI run 44019857198 retained the precise Clang -Werror diagnostic at test_gap.c:38. Add braces around the outer loop and keep the group counter outside both loops. All conditions, assertions, 15 new groups, 21 legacy groups, GCC sanitizer and strict Clang checks remain unchanged. No model, strategy, measured result, or canonical SDK change.",
+      "files": [
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/test_gap.c",
+          "before": {
+            "path": "research/r1_stream_c/proposal_gap_v1/test_gap.c",
+            "mode": "100644",
+            "bytes": 6111,
+            "git_blob_sha1": "a03e6dbe1032fb70ecf1a89661233baa332f46d1",
+            "sha256": "df3f2cb206808e73c07dea86489046c42bba8f81775728bff312e3fd9d0064f3"
+          },
+          "after": {
+            "path": "research/r1_stream_c/proposal_gap_v1/test_gap.c",
+            "mode": "100644",
+            "bytes": 6156,
+            "sha256": "030d8d606d55daf8aa4cd205cd869a8258a8bfb9a6cb8a837063d3088b931cbe",
+            "git_blob_sha1": "a54d9549599c388e71c806943666421f1e98b04b"
           }
         }
       ]

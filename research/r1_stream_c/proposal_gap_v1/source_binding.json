@@ -1,0 +1,31 @@
+{
+  "baseline_commit": "aeca18614ce31804cf47854cea6c4900eb08d142",
+  "baseline_git_blobs": {
+    "research/r1_stream_c/deploy/r1_sdk.c": "eb0b2020c5d81dd2169a33bb1727e5f7e7dbdc91",
+    "research/r1_stream_c/deploy/r1_sdk.h": "c01ce6e4191c12cfd0c97182741a08ab4c49004d",
+    "research/r1_stream_c/deploy/run_contracts.py": "8bc9ba9e7dc548502a10555ff2091a25f5d62e7b",
+    "research/r1_stream_c/deploy/test_sdk.c": "1a6a7792125fa72c45c6fe03b01f4fe044cb2746"
+  },
+  "baseline_repository": "jiying2007/kws-pipeline",
+  "candidate_files": {
+    "candidate_sdk/r1_sdk.c": {
+      "bytes": 5657,
+      "sha256": "0bffa7bc8c2729bcabb826ee6f1d78228e31d77a241b7a66e00b508dec6991e7"
+    },
+    "candidate_sdk/r1_sdk.h": {
+      "bytes": 3630,
+      "sha256": "9caacba8f69272139a10323dc32364211623afedeee402904decb4444c6cc5da"
+    },
+    "candidate_sdk/run_contracts.py": {
+      "bytes": 1980,
+      "sha256": "356f80b79a40455787876c86975039f9748a08e0e474effbe70e9887f545b898"
+    },
+    "candidate_sdk/test_sdk.c": {
+      "bytes": 6915,
+      "sha256": "af132f840051a1d418f8aae10bd21229649e926f4ddc14a2a8d68836f6e4ef6b"
+    }
+  },
+  "canonical_sdk_changed": false,
+  "schema": "r1-gap20-candidate-source-binding-v1",
+  "source_scope": "Archived rejected candidate only; canonical deploy source untouched; no actual R1 model/PCM execution."
+}
