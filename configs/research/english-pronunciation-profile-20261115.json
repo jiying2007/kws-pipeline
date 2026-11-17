@@ -1,6 +1,6 @@
 {
-  "schema": "english-kws-pronunciation-profile-v2",
-  "status": "pending_native_us_english_evidence_current_policy_2026-11-17",
+  "schema": "english-kws-pronunciation-profile-v3",
+  "status": "synthetic_research_enabled_final_native_us_pronunciation_unresolved",
   "phrases": [
     {
       "id": "hey_mero",
@@ -13,13 +13,22 @@
       "raw_espeak_ipa": null,
       "hey_stress": null,
       "name_stress": null,
-      "target_status": "unresolved_native_us_evidence_required",
+      "target_status": "final_native_us_pronunciation_unresolved_synthetic_hypotheses_allowed",
       "final_pronunciation_frozen": false,
       "acoustic_gold_available": false,
       "permitted_variants": [],
-      "variant_policy_status": "pending_evidence_not_an_empty_acceptance_set",
-      "new_target_positive_generation_allowed": false,
-      "new_target_positive_admission_allowed": false
+      "variant_policy_status": "final_native_variant_set_unknown_research_variants_in_versioned_plan",
+      "new_target_positive_generation_allowed": true,
+      "new_target_positive_admission_allowed": true,
+      "new_target_positive_admission_scope": "versioned_synthetic_silver_research_only",
+      "synthetic_research_hypotheses": {
+        "enabled": true,
+        "definition": "exact_versioned_generation_and_machine_admission_plan",
+        "accent": "American",
+        "final_native_pronunciation_authority": false,
+        "requires_human_recording": false,
+        "requires_user_ipa_confirmation": false
+      }
     },
     {
       "id": "hey_vosen",
@@ -35,7 +44,17 @@
       "target_status": "existing_research_request_not_independently_confirmed",
       "final_pronunciation_frozen": false,
       "acoustic_gold_available": false,
-      "new_target_positive_admission_allowed": false
+      "new_target_positive_admission_allowed": true,
+      "new_target_positive_generation_allowed": true,
+      "new_target_positive_admission_scope": "versioned_synthetic_silver_research_only",
+      "synthetic_research_hypotheses": {
+        "enabled": true,
+        "definition": "exact_versioned_generation_and_machine_admission_plan",
+        "accent": "American",
+        "final_native_pronunciation_authority": false,
+        "requires_human_recording": false,
+        "requires_user_ipa_confirmation": false
+      }
     }
   ],
   "data_policy": {
@@ -44,26 +63,48 @@
     "asr_consensus_is_acoustic_gold": false,
     "prompt_text_is_acoustic_gold": false,
     "historical_owner_image_is_current_mero_target_authority": false,
-    "nearphone_rows": "quarantined_until_independent_review",
+    "nearphone_rows": "historical_quarantine_unchanged_new_rows_use_versioned_machine_variant_rules_not_automatic_negatives",
     "uncertain_pronunciation": "unknown_not_negative",
     "historical_old_ipa_audio": "retain_original_identity_target_and_label_status_no_automatic_relabeling",
     "existing_saved_weak_research": "may_continue_under_frozen_existing_contracts_no_new_positive_gold",
-    "new_mero_current_target_positive_requires": "frozen_evidence_based_target_and_permitted_variants_then_pcm_bound_acoustic_review",
-    "pronunciation_discovery_recordings": "explicit_unadmitted_variant_comparisons_allowed_no_gold_or_positive_admission",
+    "new_mero_current_target_positive_requires": "versioned_synthetic_us_hypothesis_and_pcm_bound_machine_silver_admission_for_research_only",
+    "pronunciation_discovery_recordings": "synthetic_us_candidate_generation_and_machine_silver_research_admission_allowed",
     "blind_reading": "present_Hey_Mero_without_ipa_respelling_or_example_audio_before_recording",
     "american_target_primary": true,
     "british_variants": "separately_annotated_not_mixed_without_explicit_accent_policy",
-    "word_absence_review_does_not_confirm_positive_pronunciation": true
+    "word_absence_review_does_not_confirm_positive_pronunciation": true,
+    "new_synthetic_research": {
+      "allowed": true,
+      "label_tier": "silver",
+      "human_anchor_precondition": false,
+      "independent_real_quality_claims_allowed": false,
+      "old_flags_mutated": false,
+      "three_asr_native_outputs_required": true,
+      "independent_phone_observation_required": true,
+      "request_text_alone_sufficient": false,
+      "exact_asr_spelling_unanimity_required": false,
+      "uncertain_samples": "retain_unknown_exclude_supervised_loss_not_background",
+      "negative_rule": "explicit_negative_intent_plus_machine_absence_and_quality_rules_never_asr_nonrecognition_alone",
+      "near_variant_policy": "allow_predeclared_reasonable_pronunciation_and_spelling_variants_with_machine_evidence_never_all_nearphones",
+      "split_unit": "shared_source_speaker_clone_parent_reference_and_derivation_ancestry",
+      "exposed_development_reuse_for_training": false,
+      "existing_frozen_regression_gates": "unchanged"
+    }
   },
   "candidate_architecture": {
-    "primary": "strong_pretrained_causal_fsmn_ctc",
-    "challenger": "causal_lightweight_event_head_over_license_qualified_speech_embedding",
+    "primary": "frozen_speech_embedding_plus_causal_english_head",
+    "challenger": "one_lightweight_causal_student_only_after_explicit_data_event_and_resource_comparison",
     "retained_gru_ds_tcn": "negative_research_comparators_not_promoted",
     "openwakeword_pretrained_wakeword_weights": "excluded_cc_by_nc_sa_4_0",
     "openwakeword_source_and_google_speech_embedding": "reference_candidate_apache_2_0_requires_exact_revision_and_dependency_review",
-    "model_or_dataset_admission": "not_granted",
+    "model_or_dataset_admission": "each_exact_source_and_snapshot_must_pass_its_versioned_research_contract",
     "current_saved_english_model": "frozen_speech_embedding_plus_1536_to_32_to_3_research_head_not_fsmn_ctc",
-    "primary_completed": false
+    "primary_completed": false,
+    "first_version": "reuse_installed_native_and_arm_sdk_with_new_synthetic_silver_snapshot",
+    "conditional_next": "english_fsmn_or_distillation_when_english_initialization_target_space_and_benefit_are_explicit",
+    "english_fsmn_precondition_for_first_delivery": false,
+    "chinese_weight_transfer_precondition_for_first_delivery": false,
+    "max_active_training_routes": 2
   },
   "completion_gates": {
     "combined_far_per_hour_max": 0.1,
@@ -71,9 +112,10 @@
     "word_end_callback_p95_ms_max": 500,
     "one_sided_95_percent_upper_bounds_required": true,
     "independent_human_acoustic_confirmation_required": true,
-    "physical_ssc305_measurement_required": true
+    "physical_ssc305_measurement_required": true,
+    "scope": "independent_real_world_and_physical_ssc305_claims_only_not_research_training_or_software_delivery"
   },
-  "source_of_truth": "latest_owner_instruction_actual_us_english_recordings_pronunciation_distribution_and_kws_evaluation",
+  "source_of_truth": "latest_owner_instruction_synthetic_only_research_and_software_delivery_like_chinese_with_v4_1_embedding_first_and_unresolved_final_native_us_pronunciation",
   "superseded_readings": [
     {
       "phrase": "Hey Mero",
@@ -86,12 +128,35 @@
       "status": "historical_requested_reading_not_relabelled_or_automatically_rejected"
     }
   ],
-  "prosody_policy": "Historical TTS prosody remains reproducibility metadata. For unbiased American blind reading, give no IPA, respelling, stress cue or sample audio; retain observed realizations before choosing the future target.",
+  "prosody_policy": "Historical TTS prosody remains reproducibility metadata. New synthetic US candidate hypotheses may declare exact phones and prosody in a versioned research plan; they are not final native-US pronunciation authority. Human blind readings are not a generation, silver training or software delivery prerequisite.",
   "policy_updated_at": "2026-11-17",
   "historical_profile": {
     "path": "configs/research/history/english-pronunciation-profile-image-request-20261116.json",
     "sha256": "2ec0a36605644e5009ae7d18e76099df675d97f471adb67fe9a023508bd9ff12",
     "bytes": 2949,
     "scope": "immutable_requested_targets_not_current_pronunciation_authority"
+  },
+  "research_and_software_delivery": {
+    "allowed": true,
+    "human_recording_precondition": false,
+    "final_native_pronunciation_gold_precondition": false,
+    "physical_ssc305_precondition": false,
+    "requirements": [
+      "versioned_machine_silver_snapshot_and_source_family_split",
+      "frozen_code_data_weights_seed_and_actual_training_record",
+      "new_source_heldout_synthetic_event_evaluation_with_declared_use",
+      "unchanged_legacy_frozen_regression_gates",
+      "pcm_frontend_model_decoder_native_and_arm_parity_reset_and_stream_contract",
+      "reproducible_installable_sdk_with_correct_synthetic_research_scope"
+    ],
+    "claim_scope": "synthetic_research_trained_model_and_verified_software_delivery",
+    "real_world_far_frr_latency_status": "unmeasured_or_report_only_actual_separate_evidence",
+    "physical_ssc305_status": "not_run_until_actual_board_evidence"
+  },
+  "superseded_active_profile": {
+    "path": "configs/research/history/english-pronunciation-profile-native-evidence-policy-20261117.json",
+    "scope": "immutable_superseded_policy_that_erroneously_blocked_new_synthetic_research",
+    "sha256": "0350fe616068435f286d9e4b8cae0b26b6810ecde12db82f56a6cf3246db0ba8",
+    "bytes": 4612
   }
 }
