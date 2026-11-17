@@ -1,0 +1,44 @@
+name: English stream performance source contract
+on:
+  pull_request:
+    paths:
+      - research/english_stream_performance/**
+      - research/english_stream_integration/SSC305_ENTRYPOINT.zh-CN.md
+      - .github/workflows/english-stream-performance-contract.yml
+permissions:
+  contents: read
+jobs:
+  source-contract:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Validate input binding and failure evidence without model execution
+        run: |
+          set -euo pipefail
+          python3 research/english_stream_performance/test_run_benchmark.py -v
+          gcc -std=c11 -O2 -Wall -Wextra -Werror -fsyntax-only \
+            -I research/english_stream_integration \
+            research/english_stream_performance/ekws_stream_benchmark.c
+      - name: Parse the isolated diagnostic copy without model execution
+        run: |
+          set -euo pipefail
+          profile_headers="$RUNNER_TEMP/ekws-profile-source-check"
+          mkdir "$profile_headers"
+          cat > "$profile_headers/fixed_models.h" <<'HEADER'
+          #include "fixed_frontend.h"
+          extern const ef_graph ef_fixed_mel;
+          extern const ef_graph ef_fixed_embedding;
+          HEADER
+          python3 research/english_stream_performance/instrument_graph.py \
+            research/english_mel_specialization/fixed_frontend_mel.c \
+            "$profile_headers/diagnostic_frontend.c"
+          gcc -std=c11 -O2 -Wall -Wextra -Werror -fsyntax-only \
+            -I research/english_stream_performance \
+            -I research/english_final_embedding_frontend -I "$profile_headers" \
+            "$profile_headers/diagnostic_frontend.c" \
+            research/english_stream_performance/ekws_graph_profile.c
+          git diff --exit-code
