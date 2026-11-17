@@ -53898,6 +53898,34 @@
           "sha256": "f3825112d317aace3d9714eaf3822018d216b194036c2111e740d3d2472aceeb"
         }
       ]
+    },
+    {
+      "id": "r1-gap20-retain-actual-clang-diagnostics-20261117",
+      "date": "2026-11-17",
+      "base_commit": "aad363e27adfc89ce72c27815361a8ce3a41abc2",
+      "previous_manifest_sha256": "447b0c511031c767b5b60ab58d01db078ff407209afa4cd125e4508061543eb4",
+      "workflow_source_changed": false,
+      "scope": "Retain compiler and mock-fixture stderr before propagating failure.",
+      "rationale": "Public CI run 44019032285 passed GCC sanitizer and all 36 fictional-token groups, then Clang compilation failed without captured diagnostics. Preserve both compilers, -Werror, failed execution and all previous identities. This source-only diagnostic repair performs no acoustic-model work and changes no frozen gap20 decision or canonical SDK.",
+      "files": [
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/run_contracts.py",
+          "before": {
+            "path": "research/r1_stream_c/proposal_gap_v1/run_contracts.py",
+            "mode": "100644",
+            "bytes": 2564,
+            "git_blob_sha1": "1c71a07326de305fc0a1d7ae9a958ae5deb69cb5",
+            "sha256": "e958ab63ca6a7c214bd683904181cf757f34129f735588464765e5dcc3be2145"
+          },
+          "after": {
+            "path": "research/r1_stream_c/proposal_gap_v1/run_contracts.py",
+            "mode": "100644",
+            "bytes": 3581,
+            "sha256": "cab73e66bd553c98129cb7c13b84bfacdcb636d5cb354506a7ba0749844b79ea",
+            "git_blob_sha1": "b12580b8ecd4113b2f9b106f0482a395e83c585a"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

@@ -6,10 +6,31 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 
 HERE = Path(__file__).resolve().parent
 DEPLOY = HERE / "candidate_sdk"
+
+
+def checked_process(command, *, env, timeout, phase):
+    """Retain the actual bounded compiler/fixture diagnostics on failure."""
+    try:
+        result = subprocess.run(command, env=env, capture_output=True, text=True,
+                                check=False, timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        def decoded(value):
+            return value.decode("utf-8", "replace") if isinstance(value, bytes) else value
+        print(json.dumps({"status": "TIMED_OUT", "phase": phase,
+                          "timeout_seconds": timeout, "stdout": decoded(exc.stdout),
+                          "stderr": decoded(exc.stderr)}, sort_keys=True), file=sys.stderr, flush=True)
+        raise
+    if result.returncode:
+        print(json.dumps({"status": "FAILED", "phase": phase,
+                          "returncode": result.returncode, "stdout": result.stdout,
+                          "stderr": result.stderr}, sort_keys=True), file=sys.stderr, flush=True)
+        result.check_returncode()
+    return result
 
 
 def run(cc="gcc", sanitize=False, compile_only=False):
@@ -27,12 +48,12 @@ def run(cc="gcc", sanitize=False, compile_only=False):
                    "-Wl,--wrap=malloc,--wrap=calloc,--wrap=free", "-lm", "-o", str(root / "test")]
         if sanitize:
             command[2:2] = ["-fsanitize=address,undefined", "-fno-omit-frame-pointer"]
-        subprocess.run(command, env=env, capture_output=True, text=True, check=True, timeout=45)
+        checked_process(command, env=env, timeout=45, phase="compile:" + cc)
         if compile_only:
             return {"status": "COMPILED_NOT_EXECUTED", "compiler": cc, "model_forwards": 0,
                     "program_invocations": 0}
-        result = subprocess.run([str(root / "test")], env=env, capture_output=True,
-                                text=True, check=True, timeout=30)
+        result = checked_process([str(root / "test")], env=env, timeout=30,
+                                 phase="mock-fixture:" + cc)
         lines = [json.loads(line) for line in result.stdout.splitlines()]
         if (len(lines) != 2 or lines[0].get("groups") != 21 or
                 lines[1].get("new_groups") != 15 or lines[1].get("legacy_groups") != 21 or
