@@ -53926,6 +53926,34 @@
           }
         }
       ]
+    },
+    {
+      "id": "r1-gap20-explicit-nested-fixture-scope-20261117",
+      "date": "2026-11-17",
+      "base_commit": "03f7b7256c78c5545f3e5e7b60e50660058d6d8f",
+      "previous_manifest_sha256": "85387977c634768fe97babdee270c6dec726ef577840a07cec55bc50fb653ac1",
+      "workflow_source_changed": false,
+      "scope": "Make the nested fixture loops explicit after the actual Clang misleading-indentation diagnostic.",
+      "rationale": "Public CI run 44019857198 retained the precise Clang -Werror diagnostic at test_gap.c:38. Add braces around the outer loop and keep the group counter outside both loops. All conditions, assertions, 15 new groups, 21 legacy groups, GCC sanitizer and strict Clang checks remain unchanged. No model, strategy, measured result, or canonical SDK change.",
+      "files": [
+        {
+          "path": "research/r1_stream_c/proposal_gap_v1/test_gap.c",
+          "before": {
+            "path": "research/r1_stream_c/proposal_gap_v1/test_gap.c",
+            "mode": "100644",
+            "bytes": 6111,
+            "git_blob_sha1": "a03e6dbe1032fb70ecf1a89661233baa332f46d1",
+            "sha256": "df3f2cb206808e73c07dea86489046c42bba8f81775728bff312e3fd9d0064f3"
+          },
+          "after": {
+            "path": "research/r1_stream_c/proposal_gap_v1/test_gap.c",
+            "mode": "100644",
+            "bytes": 6156,
+            "sha256": "030d8d606d55daf8aa4cd205cd869a8258a8bfb9a6cb8a837063d3088b931cbe",
+            "git_blob_sha1": "a54d9549599c388e71c806943666421f1e98b04b"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [

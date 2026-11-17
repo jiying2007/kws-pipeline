@@ -29,13 +29,16 @@ int main(void){
     unsigned new_groups=0,k=99;
     r1_proposal_decoder_v2 d,before;
     const unsigned *words[]={k1,k2};
-    for(unsigned w=0;w<2;w++)for(unsigned n=19;n<=21;n++){
-        CHECK(!r1_proposal_init_v2(&d,20));
-        token(&d,words[w][0],&k);token(&d,words[w][1],&k);
-        zeros(&d,n,&k);token(&d,words[w][2],&k);token(&d,words[w][3],&k);
-        CHECK(d.original.events==(n==19?1u:0u));
-        CHECK(d.prefix_expirations==(n==19?0u:1u));
-    }new_groups++;
+    for(unsigned w=0;w<2;w++){
+        for(unsigned n=19;n<=21;n++){
+            CHECK(!r1_proposal_init_v2(&d,20));
+            token(&d,words[w][0],&k);token(&d,words[w][1],&k);
+            zeros(&d,n,&k);token(&d,words[w][2],&k);token(&d,words[w][3],&k);
+            CHECK(d.original.events==(n==19?1u:0u));
+            CHECK(d.prefix_expirations==(n==19?0u:1u));
+        }
+    }
+    new_groups++;
     CHECK(!r1_proposal_init_v2(&d,20));
     for(unsigned i=0;i<101;i++)token(&d,1027,&k);
     for(unsigned i=1;i<4;i++)token(&d,k1[i],&k);
