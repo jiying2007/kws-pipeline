@@ -43,6 +43,11 @@ ENGLISH_STREAM_INTEGRATION_PATHS = tuple('research/english_stream_integration/' 
     'ekws_research_stream.c', 'ekws_research_stream.h', 'integration_pins.json',
     'integration_plan.json', 'main-cmake-opt-in.patch', 'test_stream_source.py'))
 ENGLISH_STREAM_INTEGRATION_WORKFLOW = '.github/workflows/english-research-stream-contract.yml'
+ENGLISH_STREAM_PERFORMANCE_PATHS = tuple('research/english_stream_performance/' + name for name in (
+    'README.md', 'ekws_graph_profile.c', 'ekws_graph_profile.h',
+    'ekws_stream_benchmark.c', 'instrument_graph.py', 'run_benchmark.py',
+    'test_run_benchmark.py'))
+ENGLISH_STREAM_PERFORMANCE_WORKFLOW = '.github/workflows/english-stream-performance-contract.yml'
 
 SENSE_REVISION_ID = 'sense-runtime-binding-20261017'
 SENSE_REVISION_SUPERSEDES = '62c970794f74d7303f3daff246e7062ffb1c85d5'
@@ -318,6 +323,30 @@ def validate_english_stream_integration_sources(root, manifest):
     return rows
 
 
+def validate_english_stream_performance_sources(root, manifest):
+    """Seven fixed performance tools; preserve the registered SDK and kernels."""
+    key = 'current_english_stream_performance_sources'
+    directory = root / 'research/english_stream_performance'
+    if key not in manifest:
+        if directory.exists() or (root / ENGLISH_STREAM_PERFORMANCE_WORKFLOW).exists():
+            raise ValueError('English stream performance source registration required')
+        return []
+    rows = manifest[key]
+    if (type(rows) is not list or len(rows) != len(ENGLISH_STREAM_PERFORMANCE_PATHS) or
+            any(type(row) is not dict or set(row) != IDENTITY_FIELDS for row in rows) or
+            [row['path'] for row in rows] != list(ENGLISH_STREAM_PERFORMANCE_PATHS)):
+        raise ValueError('English stream performance fixed source paths and identities required')
+    actual = {p.relative_to(root).as_posix() for p in directory.rglob('*')
+              if p.is_file() or p.is_symlink()}
+    if actual != set(ENGLISH_STREAM_PERFORMANCE_PATHS):
+        raise ValueError('English stream performance source directory changed')
+    for row in rows:
+        if row.get('mode') != '100644':
+            raise ValueError('English stream performance source mode changed')
+        check_file(root, row)
+    return rows
+
+
 def verify(root, manifest):
     if manifest.get('schema') != 'research-source-retention-v1':
         raise ValueError('unsupported source retention schema')
@@ -335,6 +364,7 @@ def verify(root, manifest):
     validate_english_backbone_parity_sources(root, manifest)
     validate_english_mel_specialization_sources(root, manifest)
     validate_english_stream_integration_sources(root, manifest)
+    validate_english_stream_performance_sources(root, manifest)
     by_path = {}
     for row in files:
         if row['path'] in by_path:
@@ -412,9 +442,11 @@ def verify(root, manifest):
     approved_with_backbone_parity = approved_with_embedding_assets + [ENGLISH_BACKBONE_PARITY_WORKFLOW]
     approved_with_mel_specialization = approved_with_backbone_parity + [ENGLISH_MEL_SPECIALIZATION_WORKFLOW]
     approved_with_stream_integration = approved_with_mel_specialization + [ENGLISH_STREAM_INTEGRATION_WORKFLOW]
+    approved_with_stream_performance = approved_with_stream_integration + [ENGLISH_STREAM_PERFORMANCE_WORKFLOW]
     if additions not in (approved, approved_with_clone, approved_with_public_zh64,
                          approved_with_embedding_assets, approved_with_backbone_parity,
-                         approved_with_mel_specialization, approved_with_stream_integration):
+                         approved_with_mel_specialization, approved_with_stream_integration,
+                         approved_with_stream_performance):
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed additions
     # both bind CURRENT bytes. Historical maintenance receipts are evidence,
