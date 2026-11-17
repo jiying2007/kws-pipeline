@@ -1,18 +1,25 @@
 {
-  "schema": "english-kws-pronunciation-profile-v1",
-  "status": "owner_confirmed_final_target_readings_from_2026-11-16-image_research_metadata_only",
+  "schema": "english-kws-pronunciation-profile-v2",
+  "status": "pending_native_us_english_evidence_current_policy_2026-11-17",
   "phrases": [
     {
       "id": "hey_mero",
       "text": "Hey Mero",
-      "ipa": "/heɪ ˈmiːroʊ/",
+      "ipa": null,
       "accent": "American",
-      "british_ipa": "/heɪ ˈmiːrəʊ/",
-      "pronunciation_hint": "MEE-roh; long stressed /iː/; first-syllable stress",
-      "stress": "name_first_syllable",
-      "raw_espeak_ipa": "heɪ mˈiːɹoʊ",
-      "hey_stress": "unstressed_light",
-      "name_stress": "first_syllable_primary"
+      "british_ipa": null,
+      "pronunciation_hint": null,
+      "stress": null,
+      "raw_espeak_ipa": null,
+      "hey_stress": null,
+      "name_stress": null,
+      "target_status": "unresolved_native_us_evidence_required",
+      "final_pronunciation_frozen": false,
+      "acoustic_gold_available": false,
+      "permitted_variants": [],
+      "variant_policy_status": "pending_evidence_not_an_empty_acceptance_set",
+      "new_target_positive_generation_allowed": false,
+      "new_target_positive_admission_allowed": false
     },
     {
       "id": "hey_vosen",
@@ -24,7 +31,11 @@
       "stress": "name_first_syllable",
       "raw_espeak_ipa": "heɪ vˈoʊzən",
       "hey_stress": "unstressed_light",
-      "name_stress": "first_syllable_primary"
+      "name_stress": "first_syllable_primary",
+      "target_status": "existing_research_request_not_independently_confirmed",
+      "final_pronunciation_frozen": false,
+      "acoustic_gold_available": false,
+      "new_target_positive_admission_allowed": false
     }
   ],
   "data_policy": {
@@ -32,21 +43,27 @@
     "regenerate_existing_audio": false,
     "asr_consensus_is_acoustic_gold": false,
     "prompt_text_is_acoustic_gold": false,
+    "historical_owner_image_is_current_mero_target_authority": false,
     "nearphone_rows": "quarantined_until_independent_review",
     "uncertain_pronunciation": "unknown_not_negative",
-    "owner_confirmed_ipa_is_target_spec_not_sample_validation": true,
-    "historical_old_ipa_audio": "immutable_historical_research_not_positive_for_current_targets",
-    "current_target_positive_requires": "independent_acoustic_pronunciation_review",
+    "historical_old_ipa_audio": "retain_original_identity_target_and_label_status_no_automatic_relabeling",
+    "existing_saved_weak_research": "may_continue_under_frozen_existing_contracts_no_new_positive_gold",
+    "new_mero_current_target_positive_requires": "frozen_evidence_based_target_and_permitted_variants_then_pcm_bound_acoustic_review",
+    "pronunciation_discovery_recordings": "explicit_unadmitted_variant_comparisons_allowed_no_gold_or_positive_admission",
+    "blind_reading": "present_Hey_Mero_without_ipa_respelling_or_example_audio_before_recording",
     "american_target_primary": true,
-    "british_variants": "separately_annotated_not_mixed_without_explicit_accent_policy"
+    "british_variants": "separately_annotated_not_mixed_without_explicit_accent_policy",
+    "word_absence_review_does_not_confirm_positive_pronunciation": true
   },
   "candidate_architecture": {
-    "primary": "causal_lightweight_event_head_over_license_qualified_speech_embedding",
-    "challenger": "causal_fsmn_ctc",
+    "primary": "strong_pretrained_causal_fsmn_ctc",
+    "challenger": "causal_lightweight_event_head_over_license_qualified_speech_embedding",
     "retained_gru_ds_tcn": "negative_research_comparators_not_promoted",
     "openwakeword_pretrained_wakeword_weights": "excluded_cc_by_nc_sa_4_0",
     "openwakeword_source_and_google_speech_embedding": "reference_candidate_apache_2_0_requires_exact_revision_and_dependency_review",
-    "model_or_dataset_admission": "not_granted"
+    "model_or_dataset_admission": "not_granted",
+    "current_saved_english_model": "frozen_speech_embedding_plus_1536_to_32_to_3_research_head_not_fsmn_ctc",
+    "primary_completed": false
   },
   "completion_gates": {
     "combined_far_per_hour_max": 0.1,
@@ -56,18 +73,25 @@
     "independent_human_acoustic_confirmation_required": true,
     "physical_ssc305_measurement_required": true
   },
-  "source_of_truth": "user_uploaded_image_2026-11-16",
+  "source_of_truth": "latest_owner_instruction_actual_us_english_recordings_pronunciation_distribution_and_kws_evaluation",
   "superseded_readings": [
     {
       "phrase": "Hey Mero",
       "ipa": "/heɪ ˈmɪəroʊ/",
-      "status": "superseded_not_relabelled"
+      "status": "historical_requested_reading_not_relabelled_or_automatically_rejected"
     },
     {
       "phrase": "Hey Vosen",
       "ipa": "/heɪ ˈvoʊsən/",
-      "status": "superseded_not_relabelled"
+      "status": "historical_requested_reading_not_relabelled_or_automatically_rejected"
     }
   ],
-  "prosody_policy": "Hey remains light/unstressed; primary stress belongs to the first syllable of the name."
+  "prosody_policy": "Historical TTS prosody remains reproducibility metadata. For unbiased American blind reading, give no IPA, respelling, stress cue or sample audio; retain observed realizations before choosing the future target.",
+  "policy_updated_at": "2026-11-17",
+  "historical_profile": {
+    "path": "configs/research/history/english-pronunciation-profile-image-request-20261116.json",
+    "sha256": "2ec0a36605644e5009ae7d18e76099df675d97f471adb67fe9a023508bd9ff12",
+    "bytes": 2949,
+    "scope": "immutable_requested_targets_not_current_pronunciation_authority"
+  }
 }

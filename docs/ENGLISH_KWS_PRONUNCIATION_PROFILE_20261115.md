@@ -1,15 +1,17 @@
-# English wake-word pronunciation profile — 2026-11-15
+# English wake-word pronunciation policy — updated 2026-11-17
 
-Status: owner-confirmed final target readings transcribed from the user's 2026-11-16 pronunciation-standard image; research metadata only. This file does not establish acoustic gold, training admission, a trained model, model selection, FAR/FRR, or deployment qualification.
+Status: active future-target policy. The latest owner instruction requires Hey Mero to be calibrated from actual American English evidence; the 2026-11-16 image and earlier requested IPA no longer establish its final target. Native-US blind-reading evidence, pronunciation distribution and independent KWS evaluation have not yet established that target.
 
-## Frozen target readings
+## Current target status
 
-| Phrase | Owner-confirmed IPA | Scope |
+| Phrase | Current reading field | Interpretation |
 |---|---|---|
-| Hey Mero | /heɪ ˈmiːroʊ/ | American target; MEE-roh, long /iː/, stress on first syllable |
-| Hey Vosen | /heɪ ˈvoʊzən/ | American target; VOH-zən, voiced medial /z/, stress on first syllable |
+| Hey Mero | `ipa: null`, `raw_espeak_ipa: null` | Unresolved. Do not choose a spelling-based, historical or synthetic reading as final. |
+| Hey Vosen | /heɪ ˈvoʊzən/ | Preserved existing research request, not independently confirmed acoustic gold. This update makes no /z/ to /s/ substitution. |
 
-The user-provided image is the controlling source. American targets are Hey Mero /heɪ ˈmiːroʊ/ and Hey Vosen /heɪ ˈvoʊzən/. The same image lists British forms /heɪ ˈmiːrəʊ/ and /heɪ ˈvəʊzən/. Preserve accent variants as explicit metadata; do not merge them into one ambiguous phoneme target. Do not silently replace these readings with spelling-based G2P output or a TTS engine's default pronunciation. This target specification does not prove that any existing WAV contains that pronunciation.
+The active machine-readable policy is `configs/research/english-pronunciation-profile-20261115.json`, now schema v2. The original image-based profile is preserved byte for byte at `configs/research/history/english-pronunciation-profile-image-request-20261116.json`. Its American/British IPA, raw eSpeak strings and stress hints remain historical generation metadata.
+
+For future target-positive generation or admission, an absent active IPA or `new_target_positive_admission_allowed: false` means stop that positive path; do not fall back to the historical profile. Explicit pronunciation-discovery comparisons may continue as unadmitted research. This does not stop already frozen weak-intent experiments or reuse of existing audio.
 
 ## Data and annotation rules
 
@@ -24,15 +26,15 @@ The user-provided image is the controlling source. American targets are Hey Mero
 
 A sample can be used as a positive only after its actual pronunciation is reviewed against the selected reading and its permitted-variant policy. The review must distinguish:
 - phrase onset and the pronunciation of "Hey";
-- the long stressed /iː/ vowel and following rhotic /r/ sequence in Mero (MEE-roh);
-- the initial voiced labiodental fricative /v/, stressed /oʊ/, and voiced medial /z/ in Vosen (VOH-zən);
+- the actual vowel, rhotic sequence and stress realized in Mero, without forcing the historical /iː/ request;
+- the observed realization of Vosen, retaining its existing /voʊzən/ research request as a comparison label rather than acoustic truth;
 - omissions, insertions, truncation, disfluency, and competing nearphones.
 
-Until an owner-approved review protocol defines acceptable acoustic variation, borderline accents remain uncertain rather than automatically rejected. The present IPA choices do not by themselves define every accent's allophonic tolerance.
+Obtain blind readings from actual American English speakers by presenting the phrase without IPA, respelling, stress cues or example audio. Record the observed pronunciation distribution before choosing a main reading and reasonable variants. Keep calibration, development and confirmation speakers separate. Borderline accents remain uncertain rather than automatically rejected; a synthetic demonstration or ASR consensus does not establish a speaker's pronunciation.
 
 ## Candidate architecture research
 
-The next English model comparison should evaluate a lightweight causal event head over an independently license-qualified speech embedding backbone, against a causal FSMN-CTC research candidate. The retained GRU and DS-TCN remain negative research comparators; their clip-level mean/max models and subsequent event-head experiments did not pass the joint positive/background gate.
+The primary model track remains strong pretrained causal FSMN-CTC with training, quantization and target-resource optimization. The saved English embedding plus `1536→32→3` head is a research challenger and useful software-delivery baseline; its progress does not complete the FSMN-CTC track. The retained GRU and DS-TCN remain negative research comparators; their clip-level mean/max models and subsequent event-head experiments did not pass the joint positive/background gate.
 
 The openWakeWord project is a useful implementation reference for:
 - a shared pretrained speech-embedding backbone;
@@ -66,12 +68,10 @@ A research candidate is not a landed English model until all of the following ex
 
 V4 numeric targets remain unchanged: combined FAR <= 0.1/h, per-word FRR <= 5%, and word-end-to-consumable-callback P95 <= 500 ms, with one-sided 95% upper bounds reported. These are target gates, not claims already achieved.
 
-## Superseded pronunciation records (immutable, not relabelled)
+## Historical pronunciation records and model identities
 
-The earlier research profile used Hey Mero /heɪ ˈmɪəroʊ/ and Hey Vosen /heɪ ˈvoʊsən/. Those readings are superseded by the user's 2026-11-16 image. All audio and experiment artifacts generated against the earlier readings remain immutable historical research evidence, but are not positive samples for the current target. In particular:
-- the original 63 seven-voice Qwen 0.6B WAVs remain exposed and are not relabelled;
-- the four Qwen 1.7B instruction-controlled WAVs remain unqualified for the new target;
-- the four Piper raw-phoneme WAVs generated against the superseded IPA remain unqualified for the new target;
-- no prior ASR agreement, raw eSpeak string, or requested text establishes acoustic gold.
+Historical requested readings include Hey Mero /heɪ ˈmɪəroʊ/ and /heɪ ˈmiːroʊ/, and Hey Vosen /heɪ ˈvoʊsən/ and /heɪ ˈvoʊzən/. Keep those original request labels and every associated audio, source, weight, trace and experiment identity unchanged. This policy update neither verifies nor rejects a recording based only on which historical request produced it.
 
-Current target-specific generation must preserve the image's prosody: **Hey is light/unstressed**, while the first syllable of Mero or Vosen carries primary stress. With the pinned eSpeak phonemizer, the exact raw sequences are `heɪ mˈiːɹoʊ` and `heɪ vˈoʊzən` (no primary-stress mark on Hey). Confirm the phonemizer's actual output against the pinned voice config before generation. The user's American IPA is the primary target; British variants are tracked separately, not silently mixed into the primary training label.
+The original 63 seven-voice Qwen WAVs, the Qwen/Piper pronunciation probes, the final144/snapshot160 weak-intent data and already saved heads remain historical research evidence under their existing exact contracts. A new target or variant decision must be an additive acoustic annotation; it must not rewrite their hashes or silently promote them into a new independent test set.
+
+The old raw sequences `heɪ mˈiːɹoʊ` and `heɪ vˈoʊzən` belong to the image-based generation request, not an instruction to future Mero target generation. Do not feed them to blind-reading participants. The owner's nine-window “没有唤醒词” review supplies negative evidence only and does not freeze a positive pronunciation.

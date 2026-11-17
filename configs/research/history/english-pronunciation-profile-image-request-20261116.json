@@ -1,0 +1,73 @@
+{
+  "schema": "english-kws-pronunciation-profile-v1",
+  "status": "owner_confirmed_final_target_readings_from_2026-11-16-image_research_metadata_only",
+  "phrases": [
+    {
+      "id": "hey_mero",
+      "text": "Hey Mero",
+      "ipa": "/heɪ ˈmiːroʊ/",
+      "accent": "American",
+      "british_ipa": "/heɪ ˈmiːrəʊ/",
+      "pronunciation_hint": "MEE-roh; long stressed /iː/; first-syllable stress",
+      "stress": "name_first_syllable",
+      "raw_espeak_ipa": "heɪ mˈiːɹoʊ",
+      "hey_stress": "unstressed_light",
+      "name_stress": "first_syllable_primary"
+    },
+    {
+      "id": "hey_vosen",
+      "text": "Hey Vosen",
+      "ipa": "/heɪ ˈvoʊzən/",
+      "accent": "American",
+      "british_ipa": "/heɪ ˈvəʊzən/",
+      "pronunciation_hint": "VOH-zən; voiced medial /z/; first-syllable stress",
+      "stress": "name_first_syllable",
+      "raw_espeak_ipa": "heɪ vˈoʊzən",
+      "hey_stress": "unstressed_light",
+      "name_stress": "first_syllable_primary"
+    }
+  ],
+  "data_policy": {
+    "existing_english63_audio": "immutable_reuse_only",
+    "regenerate_existing_audio": false,
+    "asr_consensus_is_acoustic_gold": false,
+    "prompt_text_is_acoustic_gold": false,
+    "nearphone_rows": "quarantined_until_independent_review",
+    "uncertain_pronunciation": "unknown_not_negative",
+    "owner_confirmed_ipa_is_target_spec_not_sample_validation": true,
+    "historical_old_ipa_audio": "immutable_historical_research_not_positive_for_current_targets",
+    "current_target_positive_requires": "independent_acoustic_pronunciation_review",
+    "american_target_primary": true,
+    "british_variants": "separately_annotated_not_mixed_without_explicit_accent_policy"
+  },
+  "candidate_architecture": {
+    "primary": "causal_lightweight_event_head_over_license_qualified_speech_embedding",
+    "challenger": "causal_fsmn_ctc",
+    "retained_gru_ds_tcn": "negative_research_comparators_not_promoted",
+    "openwakeword_pretrained_wakeword_weights": "excluded_cc_by_nc_sa_4_0",
+    "openwakeword_source_and_google_speech_embedding": "reference_candidate_apache_2_0_requires_exact_revision_and_dependency_review",
+    "model_or_dataset_admission": "not_granted"
+  },
+  "completion_gates": {
+    "combined_far_per_hour_max": 0.1,
+    "per_word_frr_max": 0.05,
+    "word_end_callback_p95_ms_max": 500,
+    "one_sided_95_percent_upper_bounds_required": true,
+    "independent_human_acoustic_confirmation_required": true,
+    "physical_ssc305_measurement_required": true
+  },
+  "source_of_truth": "user_uploaded_image_2026-11-16",
+  "superseded_readings": [
+    {
+      "phrase": "Hey Mero",
+      "ipa": "/heɪ ˈmɪəroʊ/",
+      "status": "superseded_not_relabelled"
+    },
+    {
+      "phrase": "Hey Vosen",
+      "ipa": "/heɪ ˈvoʊsən/",
+      "status": "superseded_not_relabelled"
+    }
+  ],
+  "prosody_policy": "Hey remains light/unstressed; primary stress belongs to the first syllable of the name."
+}
