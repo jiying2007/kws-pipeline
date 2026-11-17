@@ -53645,6 +53645,117 @@
           }
         }
       ]
+    },
+    {
+      "id": "english-stream-ordered3x1-and-numeric-trace-sources-20261117",
+      "date": "2026-11-17",
+      "base_commit": "d4360310444d42ceba6bbaec8cf868e0df7a225f",
+      "previous_manifest_sha256": "52824d556fde623e7551fe63ff0918ff90e4aae9033497e11625e40c444aa013",
+      "workflow_source_changed": true,
+      "scope": "Extend the existing closed performance group from seven to thirteen exact files and extend only its existing PR source contract.",
+      "rationale": "Preserve all original inventory, provenance, frozen source groups, the seven existing performance identities and every historical maintenance receipt. Add exactly ordered_3x1.h, specialize_3x1.py, kernel_equivalence.c, ekws_stream_trace.c, ekws_stream_trace.h and TRACE_FORMAT.md. Keep the active workflow path inventory unchanged. The existing PR workflow retains all prior checks and adds only Python AST/CLI help and C syntax checks with the existing frozen headers/frontend; it does not link or execute a kernel or model. Synthetic 54-case arithmetic checking, baseline/candidate numeric traces and timing remain in the separately authorized bounded kws-data public push experiment. No SDK, numerical baseline, model weight or training admission is changed.",
+      "files": [
+        {
+          "path": "research/english_stream_performance/ordered_3x1.h",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_performance/ordered_3x1.h",
+            "mode": "100644",
+            "bytes": 5978,
+            "sha256": "be234f036cd78ee11631bf93b807639a82210ae0398b44c5fe6e3427a996b5f4",
+            "git_blob_sha1": "dd046dfe91c79d0732e05faf6b08e1ae2f6a1642"
+          }
+        },
+        {
+          "path": "research/english_stream_performance/specialize_3x1.py",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_performance/specialize_3x1.py",
+            "mode": "100644",
+            "bytes": 5222,
+            "sha256": "6f1a357f91074d7255711fb3b067d502f2ead8b83af99a634973f0ac2d7b7e7b",
+            "git_blob_sha1": "0e1d1b26d2dcfdd98de960a72599e4b11ae9fb9b"
+          }
+        },
+        {
+          "path": "research/english_stream_performance/kernel_equivalence.c",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_performance/kernel_equivalence.c",
+            "mode": "100644",
+            "bytes": 9826,
+            "sha256": "516db0970e20dcbbef29709605fcaf5ebf7319ddb1a7fbf7d35947c141d312ce",
+            "git_blob_sha1": "691cfd79e2c566e472c65198e7c1f3b6ec0f9b11"
+          }
+        },
+        {
+          "path": "research/english_stream_performance/ekws_stream_trace.c",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_performance/ekws_stream_trace.c",
+            "mode": "100644",
+            "bytes": 17194,
+            "sha256": "30e2b78629fa4a22a3c029ffd3322608a77e9d1399cadc6c9ad6976ea78413fc",
+            "git_blob_sha1": "ab82d23d6d4d21e07e0740c7ad31ee07375a8150"
+          }
+        },
+        {
+          "path": "research/english_stream_performance/ekws_stream_trace.h",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_performance/ekws_stream_trace.h",
+            "mode": "100644",
+            "bytes": 2290,
+            "sha256": "2baee6272f0d17102a3ed035a76102da87614e997dc41f6b33a2c92177971639",
+            "git_blob_sha1": "8ee8e75678ea3e14c2d3b34bcdc4f3f7537a34bc"
+          }
+        },
+        {
+          "path": "research/english_stream_performance/TRACE_FORMAT.md",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_performance/TRACE_FORMAT.md",
+            "mode": "100644",
+            "bytes": 6994,
+            "sha256": "4ba130121df4a3697974b4adecd72c8a22b0fcd289dc081254e8c8040c73bfbd",
+            "git_blob_sha1": "20a6ab1049a1eda7d264f43507bd9abe82bba652"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 30786,
+            "sha256": "ad83628837323c62e84f220a4a99f35f987fa216734489132a7aeef5e0d7738d",
+            "git_blob_sha1": "f97c7b65d267afac522208d0d551c70a4ed73766"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 30924,
+            "sha256": "5d263fd41df2b42ed0254e7986233fb22144804fcacedd85d936a4c1ebc3de20",
+            "git_blob_sha1": "73fa5b54fff5d992ef6d04c4f0a26a7004ffc15e"
+          }
+        },
+        {
+          "path": ".github/workflows/english-stream-performance-contract.yml",
+          "before": {
+            "path": ".github/workflows/english-stream-performance-contract.yml",
+            "mode": "100644",
+            "bytes": 1990,
+            "sha256": "d6de82580ad08eacd65f42c0919cd5066a907da0a5c3472b97d769ffde8aea57",
+            "git_blob_sha1": "f434de7aff635f386455f2f227c57a5a3625341a"
+          },
+          "after": {
+            "path": ".github/workflows/english-stream-performance-contract.yml",
+            "mode": "100644",
+            "bytes": 3244,
+            "sha256": "162ac47bab7d4898c4fad92de3fe44ccb1ff214069991a368890f0538936cbb3",
+            "git_blob_sha1": "1036a84c91249cbc16c3ecf6e77a6954f08f5331"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -53784,9 +53895,9 @@
     {
       "path": ".github/workflows/english-stream-performance-contract.yml",
       "mode": "100644",
-      "bytes": 1990,
-      "sha256": "d6de82580ad08eacd65f42c0919cd5066a907da0a5c3472b97d769ffde8aea57",
-      "git_blob_sha1": "f434de7aff635f386455f2f227c57a5a3625341a"
+      "bytes": 3244,
+      "sha256": "162ac47bab7d4898c4fad92de3fe44ccb1ff214069991a368890f0538936cbb3",
+      "git_blob_sha1": "1036a84c91249cbc16c3ecf6e77a6954f08f5331"
     }
   ],
   "current_source_revision": {
@@ -54385,6 +54496,48 @@
       "bytes": 3127,
       "sha256": "26f19ea8b46f33a6a92ab9d5ec8f53bc50f784c07336da115e24dfb289bb1c7e",
       "git_blob_sha1": "f75bae1ee8b5fc129f3d24ec4c67e9b0fc769076"
+    },
+    {
+      "path": "research/english_stream_performance/ordered_3x1.h",
+      "mode": "100644",
+      "bytes": 5978,
+      "sha256": "be234f036cd78ee11631bf93b807639a82210ae0398b44c5fe6e3427a996b5f4",
+      "git_blob_sha1": "dd046dfe91c79d0732e05faf6b08e1ae2f6a1642"
+    },
+    {
+      "path": "research/english_stream_performance/specialize_3x1.py",
+      "mode": "100644",
+      "bytes": 5222,
+      "sha256": "6f1a357f91074d7255711fb3b067d502f2ead8b83af99a634973f0ac2d7b7e7b",
+      "git_blob_sha1": "0e1d1b26d2dcfdd98de960a72599e4b11ae9fb9b"
+    },
+    {
+      "path": "research/english_stream_performance/kernel_equivalence.c",
+      "mode": "100644",
+      "bytes": 9826,
+      "sha256": "516db0970e20dcbbef29709605fcaf5ebf7319ddb1a7fbf7d35947c141d312ce",
+      "git_blob_sha1": "691cfd79e2c566e472c65198e7c1f3b6ec0f9b11"
+    },
+    {
+      "path": "research/english_stream_performance/ekws_stream_trace.c",
+      "mode": "100644",
+      "bytes": 17194,
+      "sha256": "30e2b78629fa4a22a3c029ffd3322608a77e9d1399cadc6c9ad6976ea78413fc",
+      "git_blob_sha1": "ab82d23d6d4d21e07e0740c7ad31ee07375a8150"
+    },
+    {
+      "path": "research/english_stream_performance/ekws_stream_trace.h",
+      "mode": "100644",
+      "bytes": 2290,
+      "sha256": "2baee6272f0d17102a3ed035a76102da87614e997dc41f6b33a2c92177971639",
+      "git_blob_sha1": "8ee8e75678ea3e14c2d3b34bcdc4f3f7537a34bc"
+    },
+    {
+      "path": "research/english_stream_performance/TRACE_FORMAT.md",
+      "mode": "100644",
+      "bytes": 6994,
+      "sha256": "4ba130121df4a3697974b4adecd72c8a22b0fcd289dc081254e8c8040c73bfbd",
+      "git_blob_sha1": "20a6ab1049a1eda7d264f43507bd9abe82bba652"
     }
   ]
 }

@@ -42,3 +42,22 @@ jobs:
             "$profile_headers/diagnostic_frontend.c" \
             research/english_stream_performance/ekws_graph_profile.c
           git diff --exit-code
+      - name: Parse the fixed optimization helper without running kernels
+        run: |
+          set -euo pipefail
+          python3 -B -c 'import ast; from pathlib import Path; p = Path("research/english_stream_performance/specialize_3x1.py"); ast.parse(p.read_text(encoding="utf-8"), filename=str(p))'
+          python3 -B research/english_stream_performance/specialize_3x1.py --help
+          gcc -std=c11 -O2 -fno-fast-math -ffp-contract=off -Wall -Wextra -Werror -fsyntax-only \
+            -I research/english_final_embedding_frontend \
+            -I research/english_stream_performance \
+            "-DEKWS_BASELINE_FRONTEND=\"$GITHUB_WORKSPACE/research/english_mel_specialization/fixed_frontend_mel.c\"" \
+            research/english_stream_performance/kernel_equivalence.c
+      - name: Parse the installed-SDK trace consumer without execution
+        run: |
+          set -euo pipefail
+          gcc -std=c11 -O2 -fno-fast-math -ffp-contract=off -Wall -Wextra -Werror -fsyntax-only \
+            -I research/english_stream_integration \
+            -I research/english_final_embedding \
+            -I research/english_stream_performance \
+            research/english_stream_performance/ekws_stream_trace.c
+          git diff --exit-code

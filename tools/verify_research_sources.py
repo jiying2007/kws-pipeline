@@ -46,7 +46,9 @@ ENGLISH_STREAM_INTEGRATION_WORKFLOW = '.github/workflows/english-research-stream
 ENGLISH_STREAM_PERFORMANCE_PATHS = tuple('research/english_stream_performance/' + name for name in (
     'README.md', 'ekws_graph_profile.c', 'ekws_graph_profile.h',
     'ekws_stream_benchmark.c', 'instrument_graph.py', 'run_benchmark.py',
-    'test_run_benchmark.py'))
+    'test_run_benchmark.py', 'ordered_3x1.h', 'specialize_3x1.py',
+    'kernel_equivalence.c', 'ekws_stream_trace.c', 'ekws_stream_trace.h',
+    'TRACE_FORMAT.md'))
 ENGLISH_STREAM_PERFORMANCE_WORKFLOW = '.github/workflows/english-stream-performance-contract.yml'
 
 SENSE_REVISION_ID = 'sense-runtime-binding-20261017'
@@ -324,7 +326,7 @@ def validate_english_stream_integration_sources(root, manifest):
 
 
 def validate_english_stream_performance_sources(root, manifest):
-    """Seven fixed performance tools; preserve the registered SDK and kernels."""
+    """Thirteen fixed performance/comparison tools; preserve the SDK and kernels."""
     key = 'current_english_stream_performance_sources'
     directory = root / 'research/english_stream_performance'
     if key not in manifest:
