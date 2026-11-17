@@ -313,7 +313,8 @@ class PhoneticSourceContractTests(SilverContractTests):
                 source_speaker_id=f"p{speaker}", source_speaker_index=index,
                 voice_family=f"piper-libritts-{speaker}",
                 role=module.ROLES[0 if offset < 12 else 1 + (offset - 12) // 4]))
-        cls.plan["silver_admission"].update(source_design_id=phonetic.SOURCE_DESIGN_ID,
+        cls.plan["silver_admission"].update(rule_id=phonetic.RULE_ID, rules_sha256=phonetic.RULES_SHA256,
+            source_design_id=phonetic.SOURCE_DESIGN_ID,
             source_groups=groups, excluded_source_speaker_ids=[f"p{x}" for x in phonetic.EXPOSED_SOURCE_IDS])
         for number, row in enumerate(cls.corpus["rows"]):
             row.update(groups[number // 8])
@@ -322,10 +323,42 @@ class PhoneticSourceContractTests(SilverContractTests):
         return phonetic.build_admission(kwargs.get("corpus", self.c), kwargs.get("evidence", self.e), self.root,
             profile=kwargs.get("profile", self.profile), plan=kwargs.get("plan", self.p))
 
-    def test_original_label_rules_are_byte_equivalent(self):
-        self.assertEqual(phonetic.canonical(phonetic.RULES), module.canonical(module.RULES))
-        self.assertEqual(phonetic.RULES_SHA256, module.RULES_SHA256)
+    def test_v2_changes_only_declared_transcript_compatibility(self):
+        expected = copy.deepcopy(module.RULES)
+        expected["rule_id"] = "english-synthetic-machine-admission-v2"
+        expected["aliases"]["1"] += ["hey vosin", "hey vozin"]
+        for label in ("1", "2"):
+            expected["aliases"][label] += ["hay " + x[4:] for x in list(expected["aliases"][label])]
+            expected["contradictory_core_phrases"][label] += ["hay " + x[4:]
+                for x in list(expected["contradictory_core_phrases"][label])]
+        self.assertEqual(phonetic.canonical(phonetic.RULES), module.canonical(expected))
+        self.assertNotEqual(phonetic.RULES_SHA256, module.RULES_SHA256)
         self.assertEqual(phonetic.MODEL_PINS, module.MODEL_PINS)
+
+    def test_new_spellings_need_same_complete_acoustic_support(self):
+        row = self.e["rows"][2]
+        for observation, text in zip(row["observations"], ["Hey Vosin.", "Hey Vozin.", "Hay Vosen."]):
+            self.change_capture(observation, raw_text=text)
+        self.assertEqual(self.run_contract()["rows"][2]["tier"], "silver")
+        for phones in (["h", "eɪ", "v", "oʊ", "z", "ɪ", "n"],
+                       ["h", "eɪ", "b", "oʊ", "z", "ə", "n"]):
+            self.change_capture(row["phone_observation"], phone_tokens=phones)
+            self.assertEqual(self.run_contract()["rows"][2]["tier"], "unknown")
+
+    def test_hay_mero_is_spelling_only_not_a_missing_hey_allowance(self):
+        for observation in self.e["rows"][0]["observations"]:
+            self.change_capture(observation, raw_text="Hay Mero.")
+        self.assertEqual(self.run_contract()["rows"][0]["tier"], "silver")
+        self.change_capture(self.e["rows"][0]["phone_observation"], phone_tokens=["h", "iː", "m", "ɛ", "r", "oʊ"])
+        self.assertEqual(self.run_contract()["rows"][0]["tier"], "unknown")
+
+    def test_two_new_spelling_votes_do_not_override_a_contradictory_core(self):
+        for observation, text in zip(self.e["rows"][2]["observations"], ["Hey Vosin.", "Hay Vozen.", "Hey Rosen."]):
+            self.change_capture(observation, raw_text=text)
+        self.assertEqual(self.run_contract()["rows"][2]["tier"], "unknown")
+        for text in ("Hay Rosen.", "Hay Mero.", "Hay Chosen."):
+            self.change_capture(self.e["rows"][2]["observations"][2], raw_text=text)
+            self.assertEqual(self.run_contract()["rows"][2]["tier"], "unknown")
 
     def test_new_source_design_cannot_be_omitted(self):
         self.p["silver_admission"].pop("source_design_id")
@@ -355,8 +388,12 @@ class PhoneticSourceContractTests(SilverContractTests):
             self.run_contract()
 
     def test_old_module_rejects_the_independent_new_campaign(self):
-        with self.assertRaisesRegex(ValueError, "NEW_SOURCE_INDICES"):
+        with self.assertRaisesRegex(ValueError, "MACHINE_RULE_NOT_PINNED"):
             module.build_admission(self.c, self.e, self.root, profile=self.profile, plan=self.p)
+        old_rule_plan = copy.deepcopy(self.p)
+        old_rule_plan["silver_admission"].update(rule_id=module.RULE_ID, rules_sha256=module.RULES_SHA256)
+        with self.assertRaisesRegex(ValueError, "NEW_SOURCE_INDICES"):
+            module.build_admission(self.c, self.e, self.root, profile=self.profile, plan=old_rule_plan)
 
 
 if __name__ == "__main__":

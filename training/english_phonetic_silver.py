@@ -19,7 +19,7 @@ import struct
 import unicodedata
 import wave
 
-RULE_ID = "english-synthetic-machine-admission-v1"
+RULE_ID = "english-synthetic-machine-admission-v2"
 ROLES = ("train", "development", "calibration", "locked-test")
 SOURCE_DESIGN_ID = "piper-libritts-direct-34-57-v1"
 SOURCE_VOICES = ((34, 3370), (35, 7704), (36, 8506), (37, 8410), (38, 6904), (39, 5655),
@@ -52,12 +52,20 @@ MODEL_PINS = {
     "phoneme": ("wav2vec2-xlsr", "04366b6c8d24099ef313cf02f0e58d26f5dddfda16edbfc8eb2c713d94a9f551",
                 "2b37c89e02afc6b44b8109a9ae38303eca75411564f53b3d61d86985de5af441"),
 }
+# Version 2 is preregistered for the unexecuted independent source campaign only.
+# Vosin/Vozin are transcript spellings, not extra admitted acoustic variants.
+# Hay/Hey are transcription homophones; the complete retained phone sequence,
+# three/two vote tiers and contradictory-core veto are still mandatory.
+# The consumed first campaign remains under its original v1 module and labels.
 RULES = {
     "rule_id": RULE_ID,
     "normalization": "unicode-nfkc-casefold-punctuation-to-space-v1",
     "aliases": {
-        "1": ["hey vosen", "hey vozen", "hey vozan", "hey vohsen", "hey vohzen"],
-        "2": ["hey mero", "hey meero", "hey miro", "hey merrow", "hey marrow"],
+        "1": ["hey vosen", "hey vozen", "hey vozan", "hey vohsen", "hey vohzen",
+              "hey vosin", "hey vozin", "hay vosen", "hay vozen", "hay vozan",
+              "hay vohsen", "hay vohzen", "hay vosin", "hay vozin"],
+        "2": ["hey mero", "hey meero", "hey miro", "hey merrow", "hey marrow",
+              "hay mero", "hay meero", "hay miro", "hay merrow", "hay marrow"],
     },
     "phone_patterns": {
         "mero-us-eh-v1": [2, r"h?eɪmɛr(?:oʊ|ou|o)"],
@@ -72,8 +80,10 @@ RULES = {
     "weak_votes": 2,
     "third_recognizer_other_wake_class_veto": True,
     "contradictory_core_phrases": {
-        "1": ["hey frozen", "hey chosen", "hey rosen", "hey wosen"],
-        "2": ["hey hero", "hey nero", "hey zero", "hey memo"],
+        "1": ["hey frozen", "hey chosen", "hey rosen", "hey wosen",
+              "hay frozen", "hay chosen", "hay rosen", "hay wosen"],
+        "2": ["hey hero", "hey nero", "hey zero", "hey memo",
+              "hay hero", "hay nero", "hay zero", "hay memo"],
     },
     "missing_hey_h_allowed_only_when_all_three_texts_support_target": True,
     "ordinary_sentences": list(ORDINARY),
