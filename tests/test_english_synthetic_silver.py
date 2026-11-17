@@ -297,5 +297,67 @@ class SilverContractTests(unittest.TestCase):
             self.run_contract()
 
 
+# Reuse the unchanged label/PCM boundary suite for the independent source campaign.
+phone_spec = importlib.util.spec_from_file_location("english_phonetic_silver", ROOT / "training/english_phonetic_silver.py")
+phonetic = importlib.util.module_from_spec(phone_spec)
+phone_spec.loader.exec_module(phonetic)
+
+
+class PhoneticSourceContractTests(SilverContractTests):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        groups = []
+        for offset, (index, speaker) in enumerate(phonetic.SOURCE_VOICES):
+            groups.append(dict(source_group_id=f"libritts-speaker-{speaker}",
+                source_speaker_id=f"p{speaker}", source_speaker_index=index,
+                voice_family=f"piper-libritts-{speaker}",
+                role=module.ROLES[0 if offset < 12 else 1 + (offset - 12) // 4]))
+        cls.plan["silver_admission"].update(source_design_id=phonetic.SOURCE_DESIGN_ID,
+            source_groups=groups, excluded_source_speaker_ids=[f"p{x}" for x in phonetic.EXPOSED_SOURCE_IDS])
+        for number, row in enumerate(cls.corpus["rows"]):
+            row.update(groups[number // 8])
+
+    def run_contract(self, **kwargs):
+        return phonetic.build_admission(kwargs.get("corpus", self.c), kwargs.get("evidence", self.e), self.root,
+            profile=kwargs.get("profile", self.profile), plan=kwargs.get("plan", self.p))
+
+    def test_original_label_rules_are_byte_equivalent(self):
+        self.assertEqual(phonetic.canonical(phonetic.RULES), module.canonical(module.RULES))
+        self.assertEqual(phonetic.RULES_SHA256, module.RULES_SHA256)
+        self.assertEqual(phonetic.MODEL_PINS, module.MODEL_PINS)
+
+    def test_new_source_design_cannot_be_omitted(self):
+        self.p["silver_admission"].pop("source_design_id")
+        with self.assertRaisesRegex(ValueError, "EXACT_NEW_SOURCE_DESIGN"):
+            self.run_contract()
+
+    def test_consumed_source_indices_cannot_be_reused(self):
+        for g in self.p["silver_admission"]["source_groups"]:
+            g["source_speaker_index"] -= 24
+        with self.assertRaisesRegex(ValueError, "NEW_SOURCE_INDICES"):
+            self.run_contract()
+
+    def test_previous_batch_speaker_cannot_be_disguised(self):
+        self.p["silver_admission"]["source_groups"][0]["source_speaker_id"] = "p3615"
+        with self.assertRaisesRegex(ValueError, "EXACT_NEW_SPEAKER_AND_ROLE_MAP"):
+            self.run_contract()
+
+    def test_speakers_cannot_move_between_frozen_roles(self):
+        groups = self.p["silver_admission"]["source_groups"]
+        groups[0]["role"], groups[-1]["role"] = groups[-1]["role"], groups[0]["role"]
+        with self.assertRaisesRegex(ValueError, "EXACT_NEW_SPEAKER_AND_ROLE_MAP"):
+            self.run_contract()
+
+    def test_every_previous_source_must_remain_excluded(self):
+        self.p["silver_admission"]["excluded_source_speaker_ids"].remove("p3615")
+        with self.assertRaisesRegex(ValueError, "ALL_HISTORICAL_SOURCE_EXCLUSIONS"):
+            self.run_contract()
+
+    def test_old_module_rejects_the_independent_new_campaign(self):
+        with self.assertRaisesRegex(ValueError, "NEW_SOURCE_INDICES"):
+            module.build_admission(self.c, self.e, self.root, profile=self.profile, plan=self.p)
+
+
 if __name__ == "__main__":
     unittest.main()
