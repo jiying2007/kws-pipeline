@@ -2,6 +2,8 @@
 
 本页复用现有 SDK 和只读 BSP 探针。它不提供设备地址、凭据或替代工具链，不代表已经在 SSC305 上运行。当前英文模型仍是弱研究候选；目标板接入与声学准入分别记录。
 
+本文发布于 `docs/ENGLISH_SSC305_ENTRYPOINT.zh-CN.md`。文中 `research/...` 路径均相对于 kws-pipeline 仓库根目录，不相对于本文所在的 `docs` 目录。主机命令使用绝对路径变量 `KWS_PIPELINE_SOURCE`；板端命令在明确提供的可写目录中读取已复制的文件并保存结果。
+
 ## 已有入口与当前缺口
 
 - `research/arm_runtime/scripts/probe_sdk_readonly.sh`：在 SDK 主机上查询显式指定的真实编译器，并静态检查复制回来的目标 ELF。
@@ -10,6 +12,18 @@
 - 安装后的 `bin/ekws_pcm_stream`：消费 mono 16 kHz PCM16，输出事件 JSONL，没有 EOF 补零。
 
 当前核验源为 kws-pipeline `2e2151aaae54211f6ea1faf1287c002a5ebee0ad`、audio-pipeline `379d6f88bcfc467b88ad31c2a924221d8349a806`。仓库中可见的 audio-pipeline `lab/examples/board.ssc305.example.json` 含有待替换项；它不是可用设备配置。现有 generic ARMhf/QEMU 产物不能证明实际 SSC305 BSP 兼容。尚缺实际 BSP 编译器/sysroot、板端 ELF/loader 证据和可访问设备入口。
+
+## 现场接续所需的最小信息
+
+| 输入 | 需要提供的实际信息 | 当前状态 |
+| --- | --- | --- |
+| 真实编译器 | 可访问的 SDK 主机／执行入口、BSP 版本及 C 编译器绝对路径 `KWS_BSP_CC`；使用原有 probe 记录版本与 target triple | UNKNOWN |
+| 真实 sysroot | `KWS_BSP_SYSROOT` 的绝对路径、所属 BSP 版本及可核对的来源；不能用 generic ARM sysroot 替代 | UNKNOWN |
+| 目标 ABI | 从实际板端 ELF 与 BSP 核对 ELF32／ARM、字节序、浮点调用约定、动态解释器、libc 及编译 flags；可提供复制出的目标 `/bin/busybox` 供现有 probe 静态检查 | UNKNOWN |
+| 板端执行与传输通道 | 已可用的 SSH、串口或已配置 runner 的具体执行入口；对应文件传输方式；已确认存在且可写的绝对目录 `KWS_TARGET_WORKDIR` | UNKNOWN |
+| 实际音频接口 | 使用 ALSA、SigmaStar `MI_AI` 或已有 AFE PCM 回调中的哪一条路径；真实设备／端口／通道标识、采样率、通道数、位深、字节序和交错方式，以及输入处于 AFE 前还是后 | UNKNOWN |
+
+`UNKNOWN` 仅表示尚未获得该信息，不是可填入命令的参数值。使用现场已核实的值替换相应变量；缺少本阶段必需输入时保留该阶段未执行，并继续不依赖实板的工作。同一 PCM 文件配对需要前四项，实时麦克风接入还需要第五项。KWS 当前 API 要求 mono 16 kHz PCM16；实际采集格式不同，应明确转换所在位置及其样本时钟，不能把 API 要求当作已经核实的硬件采集格式。
 
 ## 1. 从真实 BSP 获取身份
 
@@ -23,10 +37,13 @@ sh "$KWS_PIPELINE_SOURCE/research/arm_runtime/scripts/probe_sdk_readonly.sh" \
   "$KWS_BSP_CC" "$KWS_TARGET_ELF_COPY" > sdk-inventory.txt
 ```
 
-在真实目标板上运行原有 `probe_board_readonly.sh`，另保存必要的内存与调频上下文：
+通过已提供的传输通道，把原有 `probe_board_readonly.sh` 原样复制到真实板的 `KWS_TARGET_WORKDIR`，再只读获取身份与必要的内存／调频上下文：
 
 ```sh
-sh probe_board_readonly.sh > board-inventory.txt
+: "${KWS_TARGET_WORKDIR:?Set an existing writable absolute directory on the actual target}"
+case "$KWS_TARGET_WORKDIR" in /*) ;; *) exit 2;; esac
+test -d "$KWS_TARGET_WORKDIR" && test -w "$KWS_TARGET_WORKDIR" || exit 2
+sh "$KWS_TARGET_WORKDIR/probe_board_readonly.sh" > "$KWS_TARGET_WORKDIR/board-inventory.txt"
 {
   if [ -r /proc/meminfo ]; then
     grep -E '^(MemTotal|MemFree|MemAvailable|Buffers|Cached):' /proc/meminfo || :
@@ -40,7 +57,7 @@ sh probe_board_readonly.sh > board-inventory.txt
       fi
     done
   done
-} > board-memory-frequency.txt
+} > "$KWS_TARGET_WORKDIR/board-memory-frequency.txt"
 ```
 
 这里只读取系统上下文，不调整 governor、不锁频、不安装依赖、不加载模型。记录板型、BSP 版本、实际 sysroot 来源，并检查 ELF32/ARM、浮点调用约定、动态解释器和 libc。原始输出可能包含本机路径或设备名称，作为现场记录保留；发布前只提取必要技术字段。
@@ -86,7 +103,8 @@ sh "$KWS_PIPELINE_SOURCE/research/arm_runtime/scripts/probe_sdk_readonly.sh" \
 : "${KWS_TARGET_RUNNER:?Set the BSP-built runner on the actual board}"
 : "${KWS_TARGET_HEAD:?Set the authenticated causal-head.bin path}"
 : "${KWS_TARGET_PCM:?Set the known PCM16 input path}"
-"$KWS_TARGET_RUNNER" "$KWS_TARGET_HEAD" ssc305_pcm_pair < "$KWS_TARGET_PCM" > ssc305-events.jsonl
+: "${KWS_TARGET_WORKDIR:?Set the previously verified writable target directory}"
+"$KWS_TARGET_RUNNER" "$KWS_TARGET_HEAD" ssc305_pcm_pair < "$KWS_TARGET_PCM" > "$KWS_TARGET_WORKDIR/ssc305-events.jsonl"
 ```
 
 主机与板端消费同一输入、相同阈值和状态规程，记录原始事件、样本时钟、输出差异、退出状态及二进制/模型/输入哈希。录音 ID 的 `ssc305` 字样不是设备证明，仍需上述真实板端身份记录。此步骤不构成实时麦克风、FAR/FRR 或词尾回调验收。

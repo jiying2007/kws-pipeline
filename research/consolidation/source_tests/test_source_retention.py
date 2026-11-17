@@ -13,7 +13,8 @@ from verify_research_sources import (ARM, DISABLED_ARM, ENGLISH_FINAL_EMBEDDING_
                                     ENGLISH_FINAL_EMBEDDING_FRONTEND_PATHS, ENGLISH_BACKBONE_PARITY_PATHS,
                                     ENGLISH_BACKBONE_PARITY_WORKFLOW, ENGLISH_MEL_SPECIALIZATION_PATHS,
                                     ENGLISH_MEL_SPECIALIZATION_WORKFLOW, ENGLISH_STREAM_INTEGRATION_PATHS,
-                                    ENGLISH_STREAM_INTEGRATION_WORKFLOW, check_file, relative, verify)
+                                    ENGLISH_STREAM_INTEGRATION_WORKFLOW, ENGLISH_STREAM_PERFORMANCE_PATHS,
+                                    ENGLISH_STREAM_PERFORMANCE_WORKFLOW, check_file, relative, verify)
 from run_research_source_checks import selected_checks
 
 class RetentionTests(unittest.TestCase):
@@ -457,6 +458,90 @@ class RetentionTests(unittest.TestCase):
         self.manifest['current_added_active_workflows'][-1] = row
         (self.root / ENGLISH_STREAM_INTEGRATION_WORKFLOW).write_bytes(b'name: Invented syntax-only stream fixture\n')
         with self.assertRaisesRegex(ValueError, 'identity changed'):
+            verify(self.root, self.manifest)
+    def add_stream_performance_sources(self):
+        self.manifest['current_english_stream_performance_sources'] = [
+            self.file(name, b'INVENTED PERFORMANCE SOURCE FIXTURE ONLY\n')
+            for name in ENGLISH_STREAM_PERFORMANCE_PATHS]
+    def test_performance_sources_require_registration_and_close_the_exact_roster(self):
+        original = copy.deepcopy(self.manifest)
+        self.add_stream_performance_sources()
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        for key, value in original.items():
+            self.assertEqual(self.manifest[key], value)
+        key = 'current_english_stream_performance_sources'
+        current = self.manifest.pop(key)
+        with self.assertRaisesRegex(ValueError, 'source registration required'):
+            verify(self.root, self.manifest)
+        for rows in (None, [], current[:-1], current + current[:1], list(reversed(current)),
+                     [dict(current[0], path='research/english_stream_performance/lookalike.c')] + current[1:],
+                     [dict(current[0], unreviewed=True)] + current[1:]):
+            with self.subTest(rows=rows):
+                self.manifest[key] = rows
+                with self.assertRaisesRegex(ValueError, 'fixed source paths'):
+                    verify(self.root, self.manifest)
+        self.manifest[key] = current
+        self.file('research/english_stream_performance/unregistered.c', b'INVENTED\n')
+        with self.assertRaisesRegex(ValueError, 'source directory changed'):
+            verify(self.root, self.manifest)
+    def test_performance_sources_bind_all_bytes_modes_and_reject_missing_or_symlink(self):
+        self.add_stream_performance_sources()
+        rows = self.manifest['current_english_stream_performance_sources']
+        for index, current in enumerate(copy.deepcopy(rows)):
+            for key, value in (('bytes', True), ('bytes', current['bytes'] + 1),
+                               ('sha256', '0' * 64), ('git_blob_sha1', '0' * 40), ('mode', '100755')):
+                with self.subTest(path=current['path'], key=key):
+                    rows[index] = dict(current, **{key: value})
+                    with self.assertRaises(ValueError): verify(self.root, self.manifest)
+            rows[index] = current
+            path = self.root / current['path']
+            raw = path.read_bytes()
+            path.write_bytes(raw.lower())
+            with self.assertRaisesRegex(ValueError, 'identity changed'):
+                verify(self.root, self.manifest)
+            path.unlink()
+            with self.assertRaisesRegex(ValueError, 'source directory changed'):
+                verify(self.root, self.manifest)
+            path.symlink_to(self.root / rows[(index + 1) % len(rows)]['path'])
+            with self.assertRaisesRegex(ValueError, 'symlink'):
+                verify(self.root, self.manifest)
+            path.unlink()
+            path.write_bytes(raw)
+    def test_performance_workflow_requires_exact_name_sources_and_current_identity(self):
+        self.add_mel_specialization_workflow()
+        self.add_stream_integration_sources()
+        stream = self.file(ENGLISH_STREAM_INTEGRATION_WORKFLOW, b'name: invented stream fixture\n')
+        self.manifest['allowed_new_active_workflows'].append(ENGLISH_STREAM_INTEGRATION_WORKFLOW)
+        self.manifest['current_added_active_workflows'].append(stream)
+        row = self.file(ENGLISH_STREAM_PERFORMANCE_WORKFLOW, b'name: invented performance fixture\n')
+        self.manifest['allowed_new_active_workflows'].append(ENGLISH_STREAM_PERFORMANCE_WORKFLOW)
+        self.manifest['current_added_active_workflows'].append(row)
+        with self.assertRaisesRegex(ValueError, 'source registration required'):
+            verify(self.root, self.manifest)
+        self.add_stream_performance_sources()
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        for key, value in (('bytes', True), ('sha256', '0' * 64), ('git_blob_sha1', '0' * 40), ('mode', '100755')):
+            with self.subTest(key=key):
+                self.manifest['current_added_active_workflows'][-1] = dict(row, **{key: value})
+                with self.assertRaises(ValueError): verify(self.root, self.manifest)
+        self.manifest['current_added_active_workflows'][-1] = row
+        path = self.root / row['path']
+        raw = path.read_bytes()
+        path.write_bytes(raw.replace(b'invented', b'Invented'))
+        with self.assertRaisesRegex(ValueError, 'identity changed'):
+            verify(self.root, self.manifest)
+        path.write_bytes(raw)
+        self.manifest['current_added_active_workflows'].pop()
+        with self.assertRaisesRegex(ValueError, 'workflow identity'):
+            verify(self.root, self.manifest)
+        self.manifest['allowed_new_active_workflows'].pop()
+        with self.assertRaisesRegex(ValueError, 'inventory changed'):
+            verify(self.root, self.manifest)
+        path.unlink()
+        lookalike = '.github/workflows/english-stream-performance-contract-extra.yml'
+        self.manifest['allowed_new_active_workflows'].append(lookalike)
+        self.manifest['current_added_active_workflows'].append(self.file(lookalike, raw))
+        with self.assertRaisesRegex(ValueError, 'unexpected active workflow addition'):
             verify(self.root, self.manifest)
     def test_changed_bytes(self):
         (self.root/self.manifest['files'][0]['path']).write_text('changed')
@@ -972,7 +1057,8 @@ class SourceRevisionTests(unittest.TestCase):
         for group in ('files', 'baseline_active_workflows', 'current_added_active_workflows',
                       'current_english_final_embedding_sources', 'current_english_final_embedding_frontend_sources',
                       'current_english_backbone_parity_sources', 'current_english_mel_specialization_sources',
-                      'current_english_stream_integration_sources'):
+                      'current_english_stream_integration_sources',
+                      'current_english_stream_performance_sources'):
             for row in self.manifest.get(group, []):
                 if row['path'] == HOTPATH_RETENTION.CURRENT_REVISION_PATH:
                     continue

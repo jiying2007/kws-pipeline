@@ -15599,7 +15599,8 @@
     ".github/workflows/english-embedding-backbone-assets-once.yml",
     ".github/workflows/english-backbone-parity-once.yml",
     ".github/workflows/english-mel-specialization-once.yml",
-    ".github/workflows/english-research-stream-contract.yml"
+    ".github/workflows/english-research-stream-contract.yml",
+    ".github/workflows/english-stream-performance-contract.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -53494,6 +53495,156 @@
           }
         }
       ]
+    },
+    {
+      "id": "english-stream-performance-source-contract-20261117",
+      "date": "2026-11-17",
+      "base_commit": "a559f09e1e624e711f2c65c3952ee5787ff15b12",
+      "previous_manifest_sha256": "6a894cb17ee2b08ad2f381d6cb0545284b84ba5e5938c2daa2ba5ef112188b14",
+      "workflow_source_changed": true,
+      "scope": "Register exactly seven English stream performance sources and one source-only PR workflow.",
+      "rationale": "Preserve all original retained files, provenance, baseline workflow identities, earlier source groups and maintenance history. Bind the performance source directory as a closed seven-file roster with bytes, modes, SHA-256 and Git blob identities. Add only the exact english-stream-performance-contract.yml workflow; update its SSC305 documentation path to docs and disable bytecode files in the closed source directory. Extend both existing fixture projections with the registered group and test rejection of missing, extra, mutated and symlinked sources plus non-exact workflow names. The SSC305 entrypoint document is moved outside the frozen SDK source directory. These source checks do not execute models, train, acquire audio or establish device qualification.",
+      "files": [
+        {
+          "path": "research/english_stream_performance/README.md",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_performance/README.md",
+            "mode": "100644",
+            "bytes": 5510,
+            "sha256": "7bbaa42406ec2ec4596c02c9ddf5c0356fbb85dc878915f8c81f16f3aa4c1e58",
+            "git_blob_sha1": "3eba1113fb0122aff211d656aec90d37f70103ff"
+          }
+        },
+        {
+          "path": "research/english_stream_performance/ekws_graph_profile.c",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_performance/ekws_graph_profile.c",
+            "mode": "100644",
+            "bytes": 2703,
+            "sha256": "ec3cec626554f8719ee69ef76f91d015d005615d772e1f2b887aa05d404dd94a",
+            "git_blob_sha1": "c17d6d18f4b9a5a867e7942712e1c095b09b7235"
+          }
+        },
+        {
+          "path": "research/english_stream_performance/ekws_graph_profile.h",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_performance/ekws_graph_profile.h",
+            "mode": "100644",
+            "bytes": 286,
+            "sha256": "98685643322cc80ce00032ad1d152f49d84818218b1032afebb566b36b54fa40",
+            "git_blob_sha1": "078d71e9f9f319b40bccec911112dff56e4bf1cd"
+          }
+        },
+        {
+          "path": "research/english_stream_performance/ekws_stream_benchmark.c",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_performance/ekws_stream_benchmark.c",
+            "mode": "100644",
+            "bytes": 12661,
+            "sha256": "63a7dcfd4124d80f720edae72772666ceb151f217c2bc9a7c7ebd258aa5a6808",
+            "git_blob_sha1": "82bb464790c52b46521602e2429353f8fb7414fb"
+          }
+        },
+        {
+          "path": "research/english_stream_performance/instrument_graph.py",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_performance/instrument_graph.py",
+            "mode": "100644",
+            "bytes": 1927,
+            "sha256": "4418766c0df55f7376fcdd1af18ce9e3966550ce35655e4b8891cbbffcbca504",
+            "git_blob_sha1": "f928fced4d505db538afcf5a411ee1dbb6ba6034"
+          }
+        },
+        {
+          "path": "research/english_stream_performance/run_benchmark.py",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_performance/run_benchmark.py",
+            "mode": "100644",
+            "bytes": 10633,
+            "sha256": "f58a7be9f577e5b3c7eaa14fb18aeab4fa7aecdab59773d15896fa5cb4185557",
+            "git_blob_sha1": "2370e09fad19141c73b38cfb27067fbe052ba71f"
+          }
+        },
+        {
+          "path": "research/english_stream_performance/test_run_benchmark.py",
+          "before": null,
+          "after": {
+            "path": "research/english_stream_performance/test_run_benchmark.py",
+            "mode": "100644",
+            "bytes": 3127,
+            "sha256": "26f19ea8b46f33a6a92ab9d5ec8f53bc50f784c07336da115e24dfb289bb1c7e",
+            "git_blob_sha1": "f75bae1ee8b5fc129f3d24ec4c67e9b0fc769076"
+          }
+        },
+        {
+          "path": ".github/workflows/english-stream-performance-contract.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/english-stream-performance-contract.yml",
+            "mode": "100644",
+            "bytes": 1990,
+            "sha256": "d6de82580ad08eacd65f42c0919cd5066a907da0a5c3472b97d769ffde8aea57",
+            "git_blob_sha1": "f434de7aff635f386455f2f227c57a5a3625341a"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 28865,
+            "sha256": "c306f44d30802d72c31321ce4e384761457341ab6ec5318a19d970faae85e4d0",
+            "git_blob_sha1": "9499ba4dfef642a6843f2816fc90499bc5ebcc67"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 30786,
+            "sha256": "ad83628837323c62e84f220a4a99f35f987fa216734489132a7aeef5e0d7738d",
+            "git_blob_sha1": "f97c7b65d267afac522208d0d551c70a4ed73766"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 88798,
+            "sha256": "de6556b9723be693f41c5af384a22a103fc5e28e684a2b1437d56023228c9705",
+            "git_blob_sha1": "aa29a5511add94803caa0280985e36023d1bb96d"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 94290,
+            "sha256": "539edf80e50bbb4b12d18076a06034719de15a55a4d37e15b886d1da08f41dfd",
+            "git_blob_sha1": "a5e97aebfac89ccf3a20d4f3d8cfe454ce93dbf4"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_research_consolidation.py",
+          "before": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 14888,
+            "sha256": "e0f67c514aa1dd6db6e3448b21f6992a066f8e518045a3bbe3c246d17532ac67",
+            "git_blob_sha1": "aaff5eac25f28aa3146f99895206d13c79862cdb"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_research_consolidation.py",
+            "mode": "100644",
+            "bytes": 14934,
+            "sha256": "bb091f1c76a7e97b904dab9575110b7c3c5e8d33f270c2ca32f50e7eb36622f9",
+            "git_blob_sha1": "f5faaf2bd7d37da6e8b77d457f4b2071b324820e"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -53629,6 +53780,13 @@
       "bytes": 2857,
       "sha256": "17c1235f1e6d7835e4e0ec10bedab44263791299a59ac3f98874a2955c26f457",
       "git_blob_sha1": "d9a53ee7678b2e63856640b16bfce47ec5f667aa"
+    },
+    {
+      "path": ".github/workflows/english-stream-performance-contract.yml",
+      "mode": "100644",
+      "bytes": 1990,
+      "sha256": "d6de82580ad08eacd65f42c0919cd5066a907da0a5c3472b97d769ffde8aea57",
+      "git_blob_sha1": "f434de7aff635f386455f2f227c57a5a3625341a"
     }
   ],
   "current_source_revision": {
@@ -54176,6 +54334,57 @@
       "bytes": 16240,
       "sha256": "4dff45498f1fc7d3b48949f8554e11d154e70842284b30cf8d03ae5c40fd19a5",
       "git_blob_sha1": "aee053dbf2ccc1266008a0c15b20ddc2780b70a3"
+    }
+  ],
+  "current_english_stream_performance_sources": [
+    {
+      "path": "research/english_stream_performance/README.md",
+      "mode": "100644",
+      "bytes": 5510,
+      "sha256": "7bbaa42406ec2ec4596c02c9ddf5c0356fbb85dc878915f8c81f16f3aa4c1e58",
+      "git_blob_sha1": "3eba1113fb0122aff211d656aec90d37f70103ff"
+    },
+    {
+      "path": "research/english_stream_performance/ekws_graph_profile.c",
+      "mode": "100644",
+      "bytes": 2703,
+      "sha256": "ec3cec626554f8719ee69ef76f91d015d005615d772e1f2b887aa05d404dd94a",
+      "git_blob_sha1": "c17d6d18f4b9a5a867e7942712e1c095b09b7235"
+    },
+    {
+      "path": "research/english_stream_performance/ekws_graph_profile.h",
+      "mode": "100644",
+      "bytes": 286,
+      "sha256": "98685643322cc80ce00032ad1d152f49d84818218b1032afebb566b36b54fa40",
+      "git_blob_sha1": "078d71e9f9f319b40bccec911112dff56e4bf1cd"
+    },
+    {
+      "path": "research/english_stream_performance/ekws_stream_benchmark.c",
+      "mode": "100644",
+      "bytes": 12661,
+      "sha256": "63a7dcfd4124d80f720edae72772666ceb151f217c2bc9a7c7ebd258aa5a6808",
+      "git_blob_sha1": "82bb464790c52b46521602e2429353f8fb7414fb"
+    },
+    {
+      "path": "research/english_stream_performance/instrument_graph.py",
+      "mode": "100644",
+      "bytes": 1927,
+      "sha256": "4418766c0df55f7376fcdd1af18ce9e3966550ce35655e4b8891cbbffcbca504",
+      "git_blob_sha1": "f928fced4d505db538afcf5a411ee1dbb6ba6034"
+    },
+    {
+      "path": "research/english_stream_performance/run_benchmark.py",
+      "mode": "100644",
+      "bytes": 10633,
+      "sha256": "f58a7be9f577e5b3c7eaa14fb18aeab4fa7aecdab59773d15896fa5cb4185557",
+      "git_blob_sha1": "2370e09fad19141c73b38cfb27067fbe052ba71f"
+    },
+    {
+      "path": "research/english_stream_performance/test_run_benchmark.py",
+      "mode": "100644",
+      "bytes": 3127,
+      "sha256": "26f19ea8b46f33a6a92ab9d5ec8f53bc50f784c07336da115e24dfb289bb1c7e",
+      "git_blob_sha1": "f75bae1ee8b5fc129f3d24ec4c67e9b0fc769076"
     }
   ]
 }

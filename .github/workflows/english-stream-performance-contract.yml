@@ -3,7 +3,7 @@ on:
   pull_request:
     paths:
       - research/english_stream_performance/**
-      - research/english_stream_integration/SSC305_ENTRYPOINT.zh-CN.md
+      - docs/ENGLISH_SSC305_ENTRYPOINT.zh-CN.md
       - .github/workflows/english-stream-performance-contract.yml
 permissions:
   contents: read
@@ -19,7 +19,7 @@ jobs:
       - name: Validate input binding and failure evidence without model execution
         run: |
           set -euo pipefail
-          python3 research/english_stream_performance/test_run_benchmark.py -v
+          python3 -B research/english_stream_performance/test_run_benchmark.py -v
           gcc -std=c11 -O2 -Wall -Wextra -Werror -fsyntax-only \
             -I research/english_stream_integration \
             research/english_stream_performance/ekws_stream_benchmark.c
@@ -33,7 +33,7 @@ jobs:
           extern const ef_graph ef_fixed_mel;
           extern const ef_graph ef_fixed_embedding;
           HEADER
-          python3 research/english_stream_performance/instrument_graph.py \
+          python3 -B research/english_stream_performance/instrument_graph.py \
             research/english_mel_specialization/fixed_frontend_mel.c \
             "$profile_headers/diagnostic_frontend.c"
           gcc -std=c11 -O2 -Wall -Wextra -Werror -fsyntax-only \
