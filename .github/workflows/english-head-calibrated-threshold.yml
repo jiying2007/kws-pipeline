@@ -2,13 +2,13 @@ name: English frozen canonical threshold source and native C regression
 on:
   pull_request:
     paths:
-      - research/english_final_embedding/english_causal_head.c
+      - research/english_calibrated_head/english_causal_head_090.c
       - research/english_final_embedding/test_calibrated_head_threshold.py
       - .github/workflows/english-head-calibrated-threshold.yml
   push:
     branches: [main]
     paths:
-      - research/english_final_embedding/english_causal_head.c
+      - research/english_calibrated_head/english_causal_head_090.c
       - research/english_final_embedding/test_calibrated_head_threshold.py
       - .github/workflows/english-head-calibrated-threshold.yml
 permissions:
@@ -31,8 +31,8 @@ jobs:
             python3 -I -S -B $mode research/english_final_embedding/test_portable_head.py -v
           done
           cc -std=c99 -O2 -ffp-contract=off -fno-fast-math -Wall -Wextra -Werror \
-            -fsyntax-only research/english_final_embedding/english_causal_head.c
+            -fsyntax-only research/english_calibrated_head/english_causal_head_090.c
           cc -std=c99 -O2 -ffp-contract=off -fno-fast-math -Wall -Wextra -Werror \
-            -DEHEAD_DECISION_THRESHOLD=0.90f \
-            -fsyntax-only research/english_final_embedding/english_causal_head.c
+            -I research/english_final_embedding \
+            -fsyntax-only research/english_calibrated_head/english_causal_head_090.c
           test -z "$(git status --porcelain)"
