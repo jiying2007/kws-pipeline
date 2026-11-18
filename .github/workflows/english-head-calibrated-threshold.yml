@@ -31,7 +31,7 @@ jobs:
             python3 -I -S -B $mode research/english_final_embedding/test_portable_head.py -v
           done
           cc -std=c99 -O2 -ffp-contract=off -fno-fast-math -Wall -Wextra -Werror \
-            -fsyntax-only research/english_calibrated_head/english_causal_head_090.c
+            -fsyntax-only research/english_final_embedding/english_causal_head.c
           cc -std=c99 -O2 -ffp-contract=off -fno-fast-math -Wall -Wextra -Werror \
             -I research/english_final_embedding \
             -fsyntax-only research/english_calibrated_head/english_causal_head_090.c
