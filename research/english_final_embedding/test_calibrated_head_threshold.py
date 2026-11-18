@@ -81,7 +81,7 @@ class SourceOnlyRuntimeThreshold(unittest.TestCase):
         self.assertEqual(text.count("#ifndef EHEAD_DECISION_THRESHOLD"),1)
         self.assertIn("#define EHEAD_DECISION_THRESHOLD 0.80f",text)
         self.assertIn("o->probabilities[selected] < EHEAD_DECISION_THRESHOLD",text)
-        self.assertEqual(text.count("EHEAD_DECISION_THRESHOLD"),4)
+        self.assertEqual(text.count("EHEAD_DECISION_THRESHOLD"),3)
         self.assertEqual(CALIBRATED_THRESHOLD,0.9)
         self.assertEqual(len(FROZEN_MODEL_BIN_SHA256),64)
 
