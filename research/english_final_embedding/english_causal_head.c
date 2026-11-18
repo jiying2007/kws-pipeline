@@ -3,13 +3,6 @@
 #include <math.h>
 #include <string.h>
 
-/* Default behavior and old binaries remain 0.80.  A new canonical research
- * checkpoint may supply its separately frozen calibration threshold at build
- * time.  Never silently select a threshold using locked-test results. */
-#ifndef EHEAD_DECISION_THRESHOLD
-#define EHEAD_DECISION_THRESHOLD 0.80f
-#endif
-
 static int load_array(float *values, size_t count, const unsigned char **bytes) {
   size_t i;
   for (i = 0; i < count; ++i) {
@@ -113,7 +106,7 @@ int ehead_step(const ehead_model *m, ehead_state *s, const float embedding[EHEAD
   o->ready = 1;
   for (d = 1; d < EHEAD_CLASSES; ++d)
     if (o->probabilities[d] > o->probabilities[selected]) selected = d;
-  if (!selected || o->probabilities[selected] < EHEAD_DECISION_THRESHOLD || sample < s->blocked_until) {
+  if (!selected || o->probabilities[selected] < 0.80f || sample < s->blocked_until) {
     s->candidate = 0; s->confirmations = 0;
     return 0;
   }
