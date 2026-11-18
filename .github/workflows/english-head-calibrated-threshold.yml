@@ -3,13 +3,13 @@ on:
   pull_request:
     paths:
       - research/english_calibrated_head/english_causal_head_090.c
-      - research/english_final_embedding/test_calibrated_head_threshold.py
+      - research/english_calibrated_head/test_calibrated_head_threshold.py
       - .github/workflows/english-head-calibrated-threshold.yml
   push:
     branches: [main]
     paths:
       - research/english_calibrated_head/english_causal_head_090.c
-      - research/english_final_embedding/test_calibrated_head_threshold.py
+      - research/english_calibrated_head/test_calibrated_head_threshold.py
       - .github/workflows/english-head-calibrated-threshold.yml
 permissions:
   contents: read
@@ -27,7 +27,7 @@ jobs:
         run: |
           set -euo pipefail
           for mode in '' '-O' '-OO'; do
-            python3 -I -S -B $mode research/english_final_embedding/test_calibrated_head_threshold.py -v
+            python3 -I -S -B $mode research/english_calibrated_head/test_calibrated_head_threshold.py -v
             python3 -I -S -B $mode research/english_final_embedding/test_portable_head.py -v
           done
           cc -std=c99 -O2 -ffp-contract=off -fno-fast-math -Wall -Wextra -Werror \

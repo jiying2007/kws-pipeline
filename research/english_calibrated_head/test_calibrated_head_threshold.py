@@ -13,7 +13,7 @@ import sys
 import tempfile
 import unittest
 
-HERE=Path(__file__).resolve().parent
+HERE=Path(__file__).resolve().parent.parent/"english_final_embedding"
 sys.path.insert(0,str(HERE))
 from test_portable_head import Model,State,Output,Row,invented_model
 
