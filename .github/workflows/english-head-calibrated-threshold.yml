@@ -1,0 +1,38 @@
+name: English frozen canonical threshold source and native C regression
+on:
+  pull_request:
+    paths:
+      - research/english_final_embedding/english_causal_head.c
+      - research/english_final_embedding/test_calibrated_head_threshold.py
+      - .github/workflows/english-head-calibrated-threshold.yml
+  push:
+    branches: [main]
+    paths:
+      - research/english_final_embedding/english_causal_head.c
+      - research/english_final_embedding/test_calibrated_head_threshold.py
+      - .github/workflows/english-head-calibrated-threshold.yml
+permissions:
+  contents: read
+jobs:
+  contract:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 11
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Preserve exact original 0.80 C behavior, prove optional 0.90 and no difference in math
+        shell: bash
+        run: |
+          set -euo pipefail
+          for mode in '' '-O' '-OO'; do
+            python3 -I -S -B $mode research/english_final_embedding/test_calibrated_head_threshold.py -v
+            python3 -I -S -B $mode research/english_final_embedding/test_portable_head.py -v
+          done
+          cc -std=c99 -O2 -ffp-contract=off -fno-fast-math -Wall -Wextra -Werror \
+            -fsyntax-only research/english_final_embedding/english_causal_head.c
+          cc -std=c99 -O2 -ffp-contract=off -fno-fast-math -Wall -Wextra -Werror \
+            -DEHEAD_DECISION_THRESHOLD=0.90f \
+            -fsyntax-only research/english_final_embedding/english_causal_head.c
+          test -z "$(git status --porcelain)"
