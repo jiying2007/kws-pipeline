@@ -17,7 +17,8 @@ HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE))
 from test_portable_head import Model,State,Output,Row,invented_model
 
-SOURCE=HERE/"english_causal_head.c"
+BASELINE=HERE/"english_causal_head.c"
+CANONICAL=HERE.parent/"english_calibrated_head/english_causal_head_090.c"
 FROZEN_MODEL_BIN_SHA256="49a73ad2c9856b8c8d44fe07846de74a83ace80d15f8fe22ed58aff4d404b040"
 CALIBRATED_THRESHOLD=0.90
 
@@ -32,7 +33,8 @@ class SourceOnlyRuntimeThreshold(unittest.TestCase):
             dest=cls.base/(flavor+".so")
             subprocess.run(["cc","-std=c99","-O2","-ffp-contract=off",
                 "-fno-fast-math","-Wall","-Wextra","-Werror","-fPIC",
-                "-shared",*flags,str(SOURCE),"-lm","-o",str(dest)],check=True)
+                "-shared",*flags,str(BASELINE if flavor=="default" else CANONICAL),
+                "-I",str(HERE),"-lm","-o",str(dest)],check=True)
             lib=C.CDLL(str(dest))
             lib.ehead_step.argtypes=[C.POINTER(Model),C.POINTER(State),
                 C.POINTER(C.c_float),C.c_uint64,C.POINTER(Output)]
@@ -76,12 +78,16 @@ class SourceOnlyRuntimeThreshold(unittest.TestCase):
         self.assertEqual(canonical[17][2],1)
         self.assertEqual(canonical[31][0],16000+31*1280)
 
-    def test_only_explicit_opt_in_changes_original_source(self):
-        text=SOURCE.read_text()
-        self.assertEqual(text.count("#ifndef EHEAD_DECISION_THRESHOLD"),1)
-        self.assertIn("#define EHEAD_DECISION_THRESHOLD 0.80f",text)
-        self.assertIn("o->probabilities[selected] < EHEAD_DECISION_THRESHOLD",text)
-        self.assertEqual(text.count("EHEAD_DECISION_THRESHOLD"),3)
+    def test_canonical_research_copy_is_exactly_one_literal_from_frozen_source(self):
+        import hashlib
+        original=BASELINE.read_bytes()
+        native=CANONICAL.read_bytes()
+        self.assertEqual(hashlib.sha256(original).hexdigest(),
+                         "e1e4a4cffd1758677ef820bd2183ec2ab3ab65d450af4d7eea35f565ebefa551")
+        old=b"o->probabilities[selected] < 0.80f"
+        self.assertEqual(original.count(old),1)
+        self.assertEqual(native,original.replace(old,
+                          b"o->probabilities[selected] < 0.90f"))
         self.assertEqual(CALIBRATED_THRESHOLD,0.9)
         self.assertEqual(len(FROZEN_MODEL_BIN_SHA256),64)
 
