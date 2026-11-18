@@ -19,7 +19,7 @@ import struct
 import unicodedata
 import wave
 
-RULE_ID = "english-synthetic-machine-admission-v2"
+RULE_ID = "english-brand-canonical-machine-source2-v4"
 ROLES = ("train", "development", "calibration", "locked-test")
 SOURCE_DESIGN_ID = "piper-libritts-direct-34-57-v1"
 SOURCE_VOICES = ((34, 3370), (35, 7704), (36, 8506), (37, 8410), (38, 6904), (39, 5655),
@@ -52,27 +52,25 @@ MODEL_PINS = {
     "phoneme": ("wav2vec2-xlsr", "04366b6c8d24099ef313cf02f0e58d26f5dddfda16edbfc8eb2c713d94a9f551",
                 "2b37c89e02afc6b44b8109a9ae38303eca75411564f53b3d61d86985de5af441"),
 }
-# Version 2 is preregistered for the unexecuted independent source campaign only.
-# Vosin/Vozin are transcript spellings, not extra admitted acoustic variants.
+# Canonical-only source 2: old MEER and voiced Vosen variants are excluded.
+# Vosin is an /s/ transcript spelling, not an additional acoustic target.
 # Hay/Hey are transcription homophones; the complete retained phone sequence,
 # three/two vote tiers and contradictory-core veto are still mandatory.
-# The consumed first campaign remains under its original v1 module and labels.
+# Historical recordings remain audit evidence only; this intake has no old-reading fallback.
 RULES = {
     "rule_id": RULE_ID,
     "normalization": "unicode-nfkc-casefold-punctuation-to-space-v1",
     "aliases": {
-        "1": ["hey vosen", "hey vozen", "hey vozan", "hey vohsen", "hey vohzen",
-              "hey vosin", "hey vozin", "hay vosen", "hay vozen", "hay vozan",
-              "hay vohsen", "hay vohzen", "hay vosin", "hay vozin"],
-        "2": ["hey mero", "hey meero", "hey miro", "hey merrow", "hey marrow",
-              "hay mero", "hay meero", "hay miro", "hay merrow", "hay marrow"],
+        "1": ["hey vosen", "hey vohsen", "hey vosin",
+              "hay vosen", "hay vohsen", "hay vosin"],
+        "2": ["hey mero", "hey merrow", "hey marrow",
+              "hay mero", "hay merrow", "hay marrow"],
     },
     "phone_patterns": {
         "mero-us-eh-v1": [2, r"h?eɪmɛr(?:oʊ|ou|o)"],
-        "mero-us-i-v1": [2, r"h?eɪmir(?:oʊ|ou|o)"],
         "vosen-us-s-v1": [1, r"h?eɪv(?:oʊ|ou|o)s[əɐʌ]n"],
-        "vosen-us-z-v1": [1, r"h?eɪv(?:oʊ|ou|o)z[əɐʌ]n"],
     },
+    "excluded_transcript_spellings": ["hey meero","hay meero","hey miro","hay miro","hey vozen","hay vozen","hey vohzen","hay vohzen","hey vozan","hay vozan","hey vozin","hay vozin"],
     "phone_normalization": "join-tokens-strip-stress-length-and-ties-map-rhotics-v1",
     "phone_scope": "whole-phrase-family-not-stress-vowel-length-or-final-native-truth",
     "model_pins": MODEL_PINS,
@@ -199,6 +197,8 @@ def decide_label(row, texts, phones):
     """Return evidence tier, class and observed hypothesis without target KWS use."""
     if any(t is None or not t for t in texts) or phones is None or not phones:
         return "unknown", None, None, "MISSING_OR_INCOMPLETE_MACHINE_OBSERVATION"
+    if any(text in RULES["excluded_transcript_spellings"] for text in texts):
+        return "unknown", None, None, "SUPERSEDED_BRAND_PRONUNCIATION_TRANSCRIPT"
     expected = row["requested_class"]
     if expected in (1, 2):
         votes = sum(text in RULES["aliases"][str(expected)] for text in texts)
@@ -225,7 +225,10 @@ def decide_label(row, texts, phones):
 
 
 def validate_plan(plan, profile):
-    require(profile.get("schema") == "english-kws-pronunciation-profile-v3"
+    require(profile.get("schema") == "english-kws-pronunciation-profile-v4"
+            and {p.get("id"): p.get("ipa") for p in profile.get("phrases", [])}
+            == {"hey_mero": "/heɪ ˈmɛroʊ/", "hey_vosen": "/heɪ ˈvoʊsən/"}
+            and all(p.get("final_pronunciation_frozen") is True for p in profile["phrases"])
             and profile.get("research_and_software_delivery", {}).get("allowed") is True
             and profile["research_and_software_delivery"].get("human_recording_precondition") is False
             and profile["research_and_software_delivery"].get("physical_ssc305_precondition") is False,
@@ -278,6 +281,12 @@ def validate_plan(plan, profile):
         require(hypothesis == "ordinary-negative-v1" if cell["requested_class"] == 0 else
                 hypothesis in RULES["phone_patterns"] and
                 RULES["phone_patterns"][hypothesis][0] == cell["requested_class"], "HYPOTHESIS_CLASS")
+        if cell["requested_class"] == 2:
+            require(normalized_text(cell.get("requested_text", "")) == "hey mero"
+                    and hypothesis == "mero-us-eh-v1", "CANONICAL_MERO_ONLY")
+        if cell["requested_class"] == 1:
+            require(normalized_text(cell.get("requested_text", "")) == "hey vosen"
+                    and hypothesis == "vosen-us-s-v1", "CANONICAL_VOSEN_ONLY")
     tiers = policy.get("supervised_tiers")
     weights = policy.get("training_tier_weights")
     require(isinstance(tiers, list) and "silver" in tiers and set(tiers) <= {"silver", "weak"}

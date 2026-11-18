@@ -35,12 +35,12 @@ class SilverContractTests(unittest.TestCase):
                                role=module.ROLES[0 if index < 12 else 1 + (index - 12) // 4]))
         cells = [dict(cell_id="mero-natural", requested_text="Hey Mero.", requested_class=2,
                       pronunciation_hypothesis="mero-us-eh-v1"),
-                 dict(cell_id="mero-i", requested_text="Hey Meero.", requested_class=2,
-                      pronunciation_hypothesis="mero-us-i-v1"),
+                 dict(cell_id="mero-alt", requested_text="Hey Mero.", requested_class=2,
+                      pronunciation_hypothesis="mero-us-eh-v1"),
                  dict(cell_id="vosen-natural", requested_text="Hey Vosen.", requested_class=1,
                       pronunciation_hypothesis="vosen-us-s-v1"),
-                 dict(cell_id="vosen-z", requested_text="[[ heɪ vˈoʊzən ]]", requested_class=1,
-                      pronunciation_hypothesis="vosen-us-z-v1")]
+                 dict(cell_id="vosen-alt", requested_text="Hey Vosen.", requested_class=1,
+                      pronunciation_hypothesis="vosen-us-s-v1")]
         cells.extend(dict(cell_id="ordinary-" + str(i), requested_text=text, requested_class=0,
                           pronunciation_hypothesis="ordinary-negative-v1")
                      for i, text in enumerate(module.ORDINARY))
@@ -49,8 +49,8 @@ class SilverContractTests(unittest.TestCase):
                     cells=cells, excluded_source_speaker_ids=["p0", "p1"],
                     supervised_tiers=["silver", "weak"], training_tier_weights={"silver": 1.0, "weak": 0.5},
                     minimum_balanced_groups=dict(train=6, development=2, calibration=2, **{"locked-test": 2}))}
-        phone_text = {"mero-natural": "h eɪ m ɛ ɹ oʊ", "mero-i": "h eɪ m iː ɹ oʊ",
-                      "vosen-natural": "h eɪ v oʊ s ə n", "vosen-z": "h eɪ v oʊ z ə n"}
+        phone_text = {"mero-natural": "h eɪ m ɛ ɹ oʊ", "mero-alt": "h eɪ m ɛ ɹ oʊ",
+                      "vosen-natural": "h eɪ v oʊ s ə n", "vosen-alt": "h eɪ v oʊ s ə n"}
         rows, evidence = [], []
         for group in groups:
             for cell in cells:
@@ -126,9 +126,34 @@ class SilverContractTests(unittest.TestCase):
                 self.assertEqual(row["training_weight"], 0)
 
     def test_three_aliases_are_silver_without_raw_spelling_equality(self):
-        for observation, text in zip(self.e["rows"][0]["observations"], ["Hey Mero.", "Hey Meero!", "hey miro"]):
+        for observation, text in zip(self.e["rows"][0]["observations"], ["Hey Mero.", "Hey Merrow!", "hey marrow"]):
             self.change_capture(observation, raw_text=text)
         self.assertEqual(self.run_contract()["rows"][0]["tier"], "silver")
+
+    def test_superseded_meero_miro_and_voiced_vosen_not_accepted(self):
+        for spelling in ("Hey Meero.", "Hey Miro.", "Hay Meero.", "Hey Vozen."):
+            with self.subTest(spelling=spelling):
+                self.e = copy.deepcopy(self.evidence)
+                self.change_capture(self.e["rows"][0]["observations"][2], raw_text=spelling)
+                self.assertEqual(self.run_contract()["rows"][0]["tier"], "unknown")
+
+    def test_superseded_requested_ipa_rejected_before_training(self):
+        for idx, text, hypothesis in ((1, "Hey Meero.", "mero-us-i-v1"),
+                                      (3, "Hey Vosen.", "vosen-us-z-v1")):
+            with self.subTest(hypothesis=hypothesis):
+                self.p = copy.deepcopy(self.plan)
+                self.p["silver_admission"]["cells"][idx].update(
+                    requested_text=text, pronunciation_hypothesis=hypothesis)
+                with self.assertRaisesRegex(ValueError, "HYPOTHESIS_CLASS"):
+                    self.run_contract()
+
+    def test_voiced_vosen_and_meer_phones_never_admitted(self):
+        for idx, phones in ((0, ["h", "eɪ", "m", "iː", "r", "oʊ"]),
+                            (2, ["h", "eɪ", "v", "oʊ", "z", "ə", "n"])):
+            with self.subTest(idx=idx):
+                self.e = copy.deepcopy(self.evidence)
+                self.change_capture(self.e["rows"][idx]["phone_observation"], phone_tokens=phones)
+                self.assertEqual(self.run_contract()["rows"][idx]["tier"], "unknown")
 
     def test_two_votes_remain_weak_and_are_weighted_only_in_train(self):
         self.change_capture(self.e["rows"][0]["observations"][2], raw_text="Hey Merro.")
@@ -325,8 +350,8 @@ class PhoneticSourceContractTests(SilverContractTests):
 
     def test_v2_changes_only_declared_transcript_compatibility(self):
         expected = copy.deepcopy(module.RULES)
-        expected["rule_id"] = "english-synthetic-machine-admission-v2"
-        expected["aliases"]["1"] += ["hey vosin", "hey vozin"]
+        expected["rule_id"] = phonetic.RULE_ID
+        expected["aliases"]["1"] += ["hey vosin"]
         for label in ("1", "2"):
             expected["aliases"][label] += ["hay " + x[4:] for x in list(expected["aliases"][label])]
             expected["contradictory_core_phrases"][label] += ["hay " + x[4:]
@@ -337,7 +362,7 @@ class PhoneticSourceContractTests(SilverContractTests):
 
     def test_new_spellings_need_same_complete_acoustic_support(self):
         row = self.e["rows"][2]
-        for observation, text in zip(row["observations"], ["Hey Vosin.", "Hey Vozin.", "Hay Vosen."]):
+        for observation, text in zip(row["observations"], ["Hey Vosin.", "Hay Vosen.", "Hay Vohsen."]):
             self.change_capture(observation, raw_text=text)
         self.assertEqual(self.run_contract()["rows"][2]["tier"], "silver")
         for phones in (["h", "eɪ", "v", "oʊ", "z", "ɪ", "n"],
@@ -353,7 +378,7 @@ class PhoneticSourceContractTests(SilverContractTests):
         self.assertEqual(self.run_contract()["rows"][0]["tier"], "unknown")
 
     def test_two_new_spelling_votes_do_not_override_a_contradictory_core(self):
-        for observation, text in zip(self.e["rows"][2]["observations"], ["Hey Vosin.", "Hay Vozen.", "Hey Rosen."]):
+        for observation, text in zip(self.e["rows"][2]["observations"], ["Hey Vosin.", "Hay Vosen.", "Hey Rosen."]):
             self.change_capture(observation, raw_text=text)
         self.assertEqual(self.run_contract()["rows"][2]["tier"], "unknown")
         for text in ("Hay Rosen.", "Hay Mero.", "Hay Chosen."):

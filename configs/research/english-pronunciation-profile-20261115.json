@@ -1,23 +1,23 @@
 {
-  "schema": "english-kws-pronunciation-profile-v3",
-  "status": "synthetic_research_enabled_final_native_us_pronunciation_unresolved",
+  "schema": "english-kws-pronunciation-profile-v4",
+  "status": "brand_canonical_pronunciation_selected_research_quality_not_yet_proven",
   "phrases": [
     {
       "id": "hey_mero",
       "text": "Hey Mero",
-      "ipa": null,
+      "ipa": "/heɪ ˈmɛroʊ/",
       "accent": "American",
       "british_ipa": null,
-      "pronunciation_hint": null,
-      "stress": null,
+      "pronunciation_hint": "MEH-roh; initial vowel as in met; stress Mero syllable one",
+      "stress": "name_first_syllable",
       "raw_espeak_ipa": null,
-      "hey_stress": null,
-      "name_stress": null,
-      "target_status": "final_native_us_pronunciation_unresolved_synthetic_hypotheses_allowed",
-      "final_pronunciation_frozen": false,
+      "hey_stress": "unstressed_light",
+      "name_stress": "first_syllable_primary",
+      "target_status": "selected_brand_canonical_not_human_acoustic_gold",
+      "final_pronunciation_frozen": true,
       "acoustic_gold_available": false,
       "permitted_variants": [],
-      "variant_policy_status": "final_native_variant_set_unknown_research_variants_in_versioned_plan",
+      "variant_policy_status": "only_canonical_meh_in_primary_training",
       "new_target_positive_generation_allowed": true,
       "new_target_positive_admission_allowed": true,
       "new_target_positive_admission_scope": "versioned_synthetic_silver_research_only",
@@ -33,16 +33,16 @@
     {
       "id": "hey_vosen",
       "text": "Hey Vosen",
-      "ipa": "/heɪ ˈvoʊzən/",
+      "ipa": "/heɪ ˈvoʊsən/",
       "accent": "American",
-      "british_ipa": "/heɪ ˈvəʊzən/",
-      "pronunciation_hint": "VOH-zən; voiced medial /z/; first-syllable stress",
+      "british_ipa": null,
+      "pronunciation_hint": "VOH-sən; voiceless s; stress Vosen syllable one",
       "stress": "name_first_syllable",
-      "raw_espeak_ipa": "heɪ vˈoʊzən",
+      "raw_espeak_ipa": "heɪ vˈoʊsən",
       "hey_stress": "unstressed_light",
       "name_stress": "first_syllable_primary",
-      "target_status": "existing_research_request_not_independently_confirmed",
-      "final_pronunciation_frozen": false,
+      "target_status": "selected_brand_canonical_not_human_acoustic_gold",
+      "final_pronunciation_frozen": true,
       "acoustic_gold_available": false,
       "new_target_positive_admission_allowed": true,
       "new_target_positive_generation_allowed": true,
@@ -54,20 +54,21 @@
         "final_native_pronunciation_authority": false,
         "requires_human_recording": false,
         "requires_user_ipa_confirmation": false
-      }
+      },
+      "variant_policy_status": "only_voiceless_s_in_primary_training"
     }
   ],
   "data_policy": {
-    "existing_english63_audio": "immutable_reuse_only",
+    "existing_english63_audio": "exclude_from_canonical_training_calibration_and_model_selection",
     "regenerate_existing_audio": false,
     "asr_consensus_is_acoustic_gold": false,
     "prompt_text_is_acoustic_gold": false,
     "historical_owner_image_is_current_mero_target_authority": false,
-    "nearphone_rows": "historical_quarantine_unchanged_new_rows_use_versioned_machine_variant_rules_not_automatic_negatives",
+    "nearphone_rows": "unknown_not_negative_no_old_meero_or_voiced_vosen_positive_fallback",
     "uncertain_pronunciation": "unknown_not_negative",
-    "historical_old_ipa_audio": "retain_original_identity_target_and_label_status_no_automatic_relabeling",
-    "existing_saved_weak_research": "may_continue_under_frozen_existing_contracts_no_new_positive_gold",
-    "new_mero_current_target_positive_requires": "versioned_synthetic_us_hypothesis_and_pcm_bound_machine_silver_admission_for_research_only",
+    "historical_old_ipa_audio": "historical_audit_only_never_positive_training_or_threshold_tuning",
+    "existing_saved_weak_research": "excluded_from_canonical_model_training_and_promotion",
+    "new_mero_current_target_positive_requires": "exact_mero_meh_canonical_ipa_plus_complete_pcm_native_machine_admission",
     "pronunciation_discovery_recordings": "synthetic_us_candidate_generation_and_machine_silver_research_admission_allowed",
     "blind_reading": "present_Hey_Mero_without_ipa_respelling_or_example_audio_before_recording",
     "american_target_primary": true,
@@ -85,10 +86,10 @@
       "exact_asr_spelling_unanimity_required": false,
       "uncertain_samples": "retain_unknown_exclude_supervised_loss_not_background",
       "negative_rule": "explicit_negative_intent_plus_machine_absence_and_quality_rules_never_asr_nonrecognition_alone",
-      "near_variant_policy": "allow_predeclared_reasonable_pronunciation_and_spelling_variants_with_machine_evidence_never_all_nearphones",
+      "near_variant_policy": "canonical_mɛroʊ_and_voʊsən_only_others_unknown",
       "split_unit": "shared_source_speaker_clone_parent_reference_and_derivation_ancestry",
       "exposed_development_reuse_for_training": false,
-      "existing_frozen_regression_gates": "unchanged"
+      "existing_frozen_regression_gates": "canonical_only_synthetic_and_independent_acoustic_validation"
     }
   },
   "candidate_architecture": {
@@ -115,27 +116,9 @@
     "physical_ssc305_measurement_required": true,
     "scope": "independent_real_world_and_physical_ssc305_claims_only_not_research_training_or_software_delivery"
   },
-  "source_of_truth": "latest_owner_instruction_synthetic_only_research_and_software_delivery_like_chinese_with_v4_1_embedding_first_and_unresolved_final_native_us_pronunciation",
-  "superseded_readings": [
-    {
-      "phrase": "Hey Mero",
-      "ipa": "/heɪ ˈmɪəroʊ/",
-      "status": "historical_requested_reading_not_relabelled_or_automatically_rejected"
-    },
-    {
-      "phrase": "Hey Vosen",
-      "ipa": "/heɪ ˈvoʊsən/",
-      "status": "historical_requested_reading_not_relabelled_or_automatically_rejected"
-    }
-  ],
-  "prosody_policy": "Historical TTS prosody remains reproducibility metadata. New synthetic US candidate hypotheses may declare exact phones and prosody in a versioned research plan; they are not final native-US pronunciation authority. Human blind readings are not a generation, silver training or software delivery prerequisite.",
-  "policy_updated_at": "2026-11-17",
-  "historical_profile": {
-    "path": "configs/research/history/english-pronunciation-profile-image-request-20261116.json",
-    "sha256": "2ec0a36605644e5009ae7d18e76099df675d97f471adb67fe9a023508bd9ff12",
-    "bytes": 2949,
-    "scope": "immutable_requested_targets_not_current_pronunciation_authority"
-  },
+  "source_of_truth": "owner_selection_2026-11-18_hey_mero_meh_roh_only_no_legacy_meero",
+  "prosody_policy": "Only canonical MEH-roh and voiceless Vosen requests may enter new training; historical data remain non-training evidence.",
+  "policy_updated_at": "2026-11-18",
   "research_and_software_delivery": {
     "allowed": true,
     "human_recording_precondition": false,
@@ -145,18 +128,12 @@
       "versioned_machine_silver_snapshot_and_source_family_split",
       "frozen_code_data_weights_seed_and_actual_training_record",
       "new_source_heldout_synthetic_event_evaluation_with_declared_use",
-      "unchanged_legacy_frozen_regression_gates",
+      "canonical_only_nonregression_and_explicit_negative_controls",
       "pcm_frontend_model_decoder_native_and_arm_parity_reset_and_stream_contract",
       "reproducible_installable_sdk_with_correct_synthetic_research_scope"
     ],
     "claim_scope": "synthetic_research_trained_model_and_verified_software_delivery",
     "real_world_far_frr_latency_status": "unmeasured_or_report_only_actual_separate_evidence",
     "physical_ssc305_status": "not_run_until_actual_board_evidence"
-  },
-  "superseded_active_profile": {
-    "path": "configs/research/history/english-pronunciation-profile-native-evidence-policy-20261117.json",
-    "scope": "immutable_superseded_policy_that_erroneously_blocked_new_synthetic_research",
-    "sha256": "0350fe616068435f286d9e4b8cae0b26b6810ecde12db82f56a6cf3246db0ba8",
-    "bytes": 4612
   }
 }

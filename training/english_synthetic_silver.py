@@ -19,7 +19,7 @@ import struct
 import unicodedata
 import wave
 
-RULE_ID = "english-synthetic-machine-admission-v1"
+RULE_ID = "english-brand-canonical-machine-source1-v4"
 ROLES = ("train", "development", "calibration", "locked-test")
 IDENTITY = ("recognizer_id", "model_family", "model_sha256", "decode_config_sha256")
 SOURCE = ("source_group_id", "source_speaker_id", "source_speaker_index", "voice_family", "role")
@@ -42,15 +42,14 @@ RULES = {
     "rule_id": RULE_ID,
     "normalization": "unicode-nfkc-casefold-punctuation-to-space-v1",
     "aliases": {
-        "1": ["hey vosen", "hey vozen", "hey vozan", "hey vohsen", "hey vohzen"],
-        "2": ["hey mero", "hey meero", "hey miro", "hey merrow", "hey marrow"],
+        "1": ["hey vosen", "hey vohsen"],
+        "2": ["hey mero", "hey merrow", "hey marrow"],
     },
     "phone_patterns": {
         "mero-us-eh-v1": [2, r"h?eɪmɛr(?:oʊ|ou|o)"],
-        "mero-us-i-v1": [2, r"h?eɪmir(?:oʊ|ou|o)"],
         "vosen-us-s-v1": [1, r"h?eɪv(?:oʊ|ou|o)s[əɐʌ]n"],
-        "vosen-us-z-v1": [1, r"h?eɪv(?:oʊ|ou|o)z[əɐʌ]n"],
     },
+    "excluded_transcript_spellings": ["hey meero","hay meero","hey miro","hay miro","hey vozen","hay vozen","hey vohzen","hay vohzen","hey vozan","hay vozan","hey vozin","hay vozin"],
     "phone_normalization": "join-tokens-strip-stress-length-and-ties-map-rhotics-v1",
     "phone_scope": "whole-phrase-family-not-stress-vowel-length-or-final-native-truth",
     "model_pins": MODEL_PINS,
@@ -175,6 +174,8 @@ def decide_label(row, texts, phones):
     """Return evidence tier, class and observed hypothesis without target KWS use."""
     if any(t is None or not t for t in texts) or phones is None or not phones:
         return "unknown", None, None, "MISSING_OR_INCOMPLETE_MACHINE_OBSERVATION"
+    if any(text in RULES["excluded_transcript_spellings"] for text in texts):
+        return "unknown", None, None, "SUPERSEDED_BRAND_PRONUNCIATION_TRANSCRIPT"
     expected = row["requested_class"]
     if expected in (1, 2):
         votes = sum(text in RULES["aliases"][str(expected)] for text in texts)
@@ -201,7 +202,10 @@ def decide_label(row, texts, phones):
 
 
 def validate_plan(plan, profile):
-    require(profile.get("schema") == "english-kws-pronunciation-profile-v3"
+    require(profile.get("schema") == "english-kws-pronunciation-profile-v4"
+            and {p.get("id"): p.get("ipa") for p in profile.get("phrases", [])}
+            == {"hey_mero": "/heɪ ˈmɛroʊ/", "hey_vosen": "/heɪ ˈvoʊsən/"}
+            and all(p.get("final_pronunciation_frozen") is True for p in profile["phrases"])
             and profile.get("research_and_software_delivery", {}).get("allowed") is True
             and profile["research_and_software_delivery"].get("human_recording_precondition") is False
             and profile["research_and_software_delivery"].get("physical_ssc305_precondition") is False,
@@ -244,6 +248,12 @@ def validate_plan(plan, profile):
         require(hypothesis == "ordinary-negative-v1" if cell["requested_class"] == 0 else
                 hypothesis in RULES["phone_patterns"] and
                 RULES["phone_patterns"][hypothesis][0] == cell["requested_class"], "HYPOTHESIS_CLASS")
+        if cell["requested_class"] == 2:
+            require(normalized_text(cell.get("requested_text", "")) == "hey mero"
+                    and hypothesis == "mero-us-eh-v1", "CANONICAL_MERO_ONLY")
+        if cell["requested_class"] == 1:
+            require(normalized_text(cell.get("requested_text", "")) == "hey vosen"
+                    and hypothesis == "vosen-us-s-v1", "CANONICAL_VOSEN_ONLY")
     tiers = policy.get("supervised_tiers")
     weights = policy.get("training_tier_weights")
     require(isinstance(tiers, list) and "silver" in tiers and set(tiers) <= {"silver", "weak"}
