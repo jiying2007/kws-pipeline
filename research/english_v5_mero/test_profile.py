@@ -160,14 +160,32 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertEqual(q["new_prospective_source"]["artifact_id"],14543254675)
         self.assertEqual(q["new_prospective_source"]["original_full_pcm16_wav_count"],32)
         self.assertEqual(q["new_prospective_source"]["independent_piper_speaker_indices"],list(range(488,496)))
-        self.assertEqual(q["new_prospective_source"]["quality_admission"],"PENDING_INDEPENDENT_QA")
-        self.assertIsNone(q["new_prospective_source"]["admitted_positive_count"])
-        self.assertIsNone(q["new_prospective_source"]["admitted_ordinary_count"])
+        self.assertEqual(q["new_prospective_source"]["quality_admission"],"PASS_SYNTHETIC_MACHINE_QA_ONLY")
+        self.assertEqual(q["new_prospective_source"]["admitted_positive_count"],6)
+        self.assertEqual(q["new_prospective_source"]["admitted_ordinary_count"],8)
         self.assertTrue(q["new_prospective_source"]["nearphone_unknown"])
         self.assertEqual(q["old_development"]["status"],"EXPOSED_NOT_INDEPENDENT")
         self.assertEqual(q["software"]["sdk_pr"],842)
         self.assertEqual(q["software"]["physical_ssc305"],"NOT_RUN")
-        self.assertEqual(q["promotion"]["independent_b0_b1_comparison"],"NOT_RUN")
+        self.assertEqual(q["promotion"]["independent_b0_b1_comparison"],
+                         "OBSERVED_RESEARCH_DIAGNOSTIC_INCONCLUSIVE")
+        paired=q["paired_development_comparison"]
+        self.assertEqual(paired["workflow_run_id"],44640947580)
+        self.assertEqual(paired["artifact_id"],14585918123)
+        self.assertEqual(paired["machine_qualified_original_positive"],6)
+        self.assertEqual(paired["machine_qualified_original_ordinary"],8)
+        self.assertEqual(paired["unqualified_unknown_excluded"],18)
+        self.assertEqual((paired["original"]["B0_positive_hits"],
+                          paired["original"]["B1_positive_hits"]),(5,6))
+        self.assertEqual((paired["half_gain"]["B0_positive_hits"],
+                          paired["half_gain"]["B1_positive_hits"]),(1,1))
+        self.assertEqual((paired["snr10"]["B0_positive_hits"],
+                          paired["snr10"]["B1_positive_hits"]),(5,5))
+        self.assertEqual(sum(paired["original"][k] for k in
+                   ("B0_ordinary_false_or_extra","B1_ordinary_false_or_extra")),0)
+        self.assertTrue(paired["derived_conditions_are_not_independent_denominators"])
+        self.assertFalse(paired["model_selection_allowed"])
+        self.assertFalse(paired["product_promotion_allowed"])
         self.assertFalse(q["promotion"]["product_promotion_allowed"])
         self.assertTrue(q["restrictions"]["no_work_codex"])
 
