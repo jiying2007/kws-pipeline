@@ -1,0 +1,82 @@
+{
+  "schema": "english-v5-mero-only-pipeline-v1",
+  "status": "research_selected_single_target_not_device_qualified",
+  "selected_english_target": {
+    "id": "hey_mero",
+    "text": "Hey Mero",
+    "accent": "en-US",
+    "ipa": "/heɪ ˈmɛroʊ/",
+    "hint": "Hey MEH-roh",
+    "keyword_event_id": 1
+  },
+  "active_keyword_count": 1,
+  "ctc": {
+    "0": "<blank>",
+    "1": "HEY",
+    "2": "MEH",
+    "3": "ROH"
+  },
+  "target_ctc_sequence": [
+    1,
+    2,
+    3
+  ],
+  "decoder": {
+    "kind": "causal_greedy_ctc_full_sequence",
+    "sample_clock": "sample_count_16khz",
+    "blockwise_update": true,
+    "explicit_reset_or_discontinuity": true,
+    "threshold": "not_calibrated_no_production_gate"
+  },
+  "architecture": {
+    "primary": "causal_fsmn_ctc",
+    "input_pcm": "mono_s16le_16000",
+    "features": {
+      "kind": "causal_logmel",
+      "mel_bins": 40,
+      "fft_size": 512,
+      "win_samples": 400,
+      "hop_samples": 160,
+      "center": false
+    },
+    "hidden": 96,
+    "blocks": 4,
+    "left_memory": 4,
+    "ctc_classes": 4
+  },
+  "data_source": {
+    "repo": "jiying2007/kws-data",
+    "single_target_recipe": "automation/english_v5_mero_only.json",
+    "worker": "automation/english_v5_mero_fsmn_ctc_once.py",
+    "new_weights_sha256": null,
+    "training_run_id": null
+  },
+  "historical": {
+    "prior_v4_profile": "configs/research/english-pronunciation-profile-20261115.json",
+    "prior_two_word_assets": "research_only_no_new_training_or_promotion",
+    "never_remap_other_word_to_background": true,
+    "old_calibration_and_exposed_locked": "cannot_select_new_model"
+  },
+  "restrictions": {
+    "new_english_positive_keywords": [
+      "hey_mero"
+    ],
+    "unverified_close_pronunciations": "unknown",
+    "no_generated_positive_as_human_gold": true,
+    "source_splits_by_parent": true,
+    "no_old_wav_regeneration": true,
+    "do_not_use_work_codex": true
+  },
+  "gates": {
+    "l1": "actual_mono_fsmn_ctc_weights_and_dev_only_receipt",
+    "l2": "target_same_weights_c_arm32_stream_logmel_fsmn_ctc_decoder_numeric_parity_and_software_resource",
+    "l3": "fresh_calibration_and_lock_independent_real_speech_and_ssc305_bsp_device"
+  },
+  "quality_targets": {
+    "mero_frr_max": 0.05,
+    "far_per_hour_max": 0.1,
+    "p95_word_end_to_callback_ms_max": 500
+  },
+  "owner_decision_date": "2026-11-19",
+  "original_two_word_campaigns_immutable": true
+}
