@@ -1,6 +1,7 @@
 """V5 single English word; standard-library checks, no inference or network."""
 from __future__ import annotations
 import json
+import hashlib
 from pathlib import Path
 import re
 import unittest
@@ -51,6 +52,23 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertIn("available_after_sample",c)
         self.assertNotIn("Vosen",h+c)
         self.assertNotIn("Vozen",h+c)
+
+    def test_english_v5_workflow_is_exactly_registered(self):
+        manifest=json.loads((ROOT/"research/consolidation/source-retention-2026-10-07.json").read_bytes())
+        workflow=".github/workflows/english-v5-mero-contract.yml"
+        self.assertEqual(manifest["allowed_new_active_workflows"].count(workflow),1)
+        identities=[row for row in manifest["current_added_active_workflows"]
+                    if row["path"]==workflow]
+        self.assertEqual(len(identities),1)
+        record=identities[0]
+        raw=(ROOT/workflow).read_bytes()
+        self.assertEqual(record["mode"],"100644")
+        self.assertEqual(record["bytes"],len(raw))
+        self.assertEqual(record["sha256"],hashlib.sha256(raw).hexdigest())
+        self.assertEqual(record["git_blob_sha1"],
+            hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\\0"+raw).hexdigest())
+        self.assertIn("english-v5-mero-contract.yml",
+            (ROOT/"tools/verify_research_sources.py").read_text())
 
     def test_old_research_safely_isolated_and_new_doc_authority(self):
         old=(ROOT/"research/english_stream_integration/ekws_research_stream.h").read_text()
