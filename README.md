@@ -1,5 +1,8 @@
 # kws-pipeline
 
+> **2026-11-19 English V5.0 active target:** only [Hey Mero](docs/ENGLISH_V5_MERO_ONLY.md), American /heɪ ˈmɛroʊ/. The earlier bilingual English research lines below are historical evidence, not the current English keyword/SDK. Existing two-word streaming binaries are NOT the V5 model.
+
+
 > **Current work: KWS technical research only.** Use
 > [Research execution boundary](docs/RESEARCH_ONLY_EXECUTION.md) and
 > [independent dataset iteration](.github/workflows/dataset-driven-iteration.yml).
