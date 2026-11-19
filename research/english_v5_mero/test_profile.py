@@ -5,6 +5,10 @@ import hashlib
 from pathlib import Path
 import re
 import unittest
+import subprocess
+import tempfile
+import shutil
+import importlib.util
 
 ROOT=Path(__file__).resolve().parents[2]
 PROFILE=ROOT/"configs/research/english-v5-mero-only.json"
@@ -52,6 +56,40 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertIn("available_after_sample",c)
         self.assertNotIn("Vosen",h+c)
         self.assertNotIn("Vozen",h+c)
+
+    def test_frozen_43k_original_weight_pack_contract(self):
+        spec=importlib.util.spec_from_file_location(
+            "mero43_packer_contract",HERE/"pack_mero43.py")
+        model=importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(model)
+        proof=model.source_check()
+        self.assertEqual(proof["status"],"SOURCE_ONLY_NO_NEW_MODEL")
+        self.assertEqual(proof["model_parameters"],43876)
+        self.assertEqual(proof["pack_bytes"],216960)
+        self.assertEqual(proof["artifact_id"],14514228406)
+        self.assertEqual(proof["optimizer_updates"],0)
+        self.assertFalse(proof["calibration_or_locked_pcm_opened"])
+
+    def test_43k_end_to_end_c11_synthetic_streaming_contract(self):
+        # Historical V5 CTC is reused; the new code supplies actual FFT512 /
+        # logMel40 and four-block trained-model geometry without any C heap.
+        sources=[HERE/"mero43_stream.c",HERE/"mero_ctc.c",
+                 HERE/"test_mero43_stream.c"]
+        with tempfile.TemporaryDirectory(prefix="mero-v5-43k-") as td:
+            for compiler in ("gcc","clang"):
+                self.assertIsNotNone(shutil.which(compiler))
+                executable=Path(td)/("mero43-"+compiler)
+                command=[compiler,"-std=c11","-Wall","-Wextra","-Werror",
+                    "-pedantic","-O2","-ffp-contract=off",
+                    "-I",str(HERE),*(str(p) for p in sources),
+                    "-lm","-o",str(executable)]
+                subprocess.run(command,check=True,capture_output=True,
+                               text=True,timeout=45)
+                tested=subprocess.run([str(executable)],check=True,
+                               capture_output=True,text=True,timeout=30)
+                self.assertIn(
+                    "ENGLISH_V5_MERO43_PCM_MEL_FSMN_CTC_STREAM_CONTRACT_PASS",
+                    tested.stdout)
 
     def test_english_v5_workflow_is_exactly_registered(self):
         manifest=json.loads((ROOT/"research/consolidation/source-retention-2026-10-07.json").read_bytes())
