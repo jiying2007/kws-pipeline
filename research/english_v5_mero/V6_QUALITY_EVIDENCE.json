@@ -1,0 +1,128 @@
+{
+  "schema": "english-v6-mero-frozen-quality-evidence-v1",
+  "status": "RESEARCH_SOURCE_PROVENANCE_NOT_ACOUSTICALLY_QUALIFIED",
+  "active_keyword": {
+    "id": "hey_mero",
+    "text": "Hey Mero",
+    "ipa": "/heɪ ˈmɛroʊ/",
+    "language": "en-US",
+    "count": 1,
+    "ctc_target": [
+      1,
+      2,
+      3
+    ]
+  },
+  "models": {
+    "B0": {
+      "name": "frozen-256",
+      "parameter_count": 43876,
+      "optimizer_updates": 256,
+      "source_run": 44495594627,
+      "artifact_id": 14514228406,
+      "zip_sha256": "91b203f05041d92e7ffb1b748f94959ce19af6673b91dbc2144920815058d702",
+      "c11_proven": true,
+      "arm32_qemu_proven": true
+    },
+    "B1": {
+      "name": "robust-train-only-288",
+      "parameter_count": 43876,
+      "new_optimizer_updates": 288,
+      "source_run": 44546464853,
+      "artifact_id": 14539983171,
+      "zip_sha256": "bab018a63aaf4cc760ee835b8554ebacf73e6ee77c37adc7c9d5008b1a03d7ce",
+      "pt_sha256": "20d0c4632224cf332460493695c0dd21927a80ed13034a9531f5d5230d2f7e05",
+      "c11_proven": false,
+      "arm32_qemu_proven": false
+    }
+  },
+  "old_development": {
+    "source_groups": 8,
+    "known_positive": 2,
+    "ordinary": 8,
+    "status": "EXPOSED_NOT_INDEPENDENT",
+    "B0_hits": 2,
+    "B1_hits": 2,
+    "B0_ordinary_false": 0,
+    "B1_ordinary_false": 0
+  },
+  "new_prospective_source": {
+    "repo": "jiying2007/kws-data",
+    "generation_commit": "3af2027d2ca9d195e18b1cf8da8e07663d841bc6",
+    "run_id": 44554345276,
+    "artifact_id": 14543254675,
+    "artifact_zip_digest": "sha256:530fccdd25abca9e76331dd8dad1f2440181158e140f2279ee952833a8d220f6",
+    "original_full_pcm16_wav_count": 32,
+    "independent_piper_speaker_indices": [
+      488,
+      489,
+      490,
+      491,
+      492,
+      493,
+      494,
+      495
+    ],
+    "declared_role": "development",
+    "source_status": "SOURCE_PCM_READBACK_PASS",
+    "admitted_positive_count": null,
+    "admitted_ordinary_count": null,
+    "quality_admission": "PENDING_INDEPENDENT_QA",
+    "inference_allowed_only_after_review": true,
+    "asr_requests_are_not_gold": true,
+    "nearphone_unknown": true,
+    "not_independent_tts_engines": true
+  },
+  "software": {
+    "sdk_pipeline_commit": "1f1d5338364a575e335e360371e3b5b10e9db955",
+    "sdk_pr": 842,
+    "c11_model_pack_bytes": 216960,
+    "host_parity_run": 44541193521,
+    "max_abs_pt_c11_logit": 0.0001220703125,
+    "arm32_qemu_parity_run": 44542782505,
+    "max_abs_cortexa32_qemu_x86_logit": 0,
+    "physical_ssc305": "NOT_RUN"
+  },
+  "data_roles": {
+    "minimum_source_groups": {
+      "train": 6,
+      "development": 2,
+      "calibration": 2,
+      "locked-test": 2
+    },
+    "new_dev_never_train": true,
+    "cal_locked_untouched": true,
+    "model_comparison_requires_new_saved_review": true,
+    "old_exposed_dev_never_fresh": true
+  },
+  "quality_goals": {
+    "frr_max": 0.05,
+    "continuous_far_per_hour_max": 0.1,
+    "word_end_to_event_p95_ms_max": 500,
+    "real_distance_m": [
+      3,
+      5
+    ],
+    "required_confidence": 0.95,
+    "synthetic_cannot_prove_product": true
+  },
+  "promotion": {
+    "independent_b0_b1_comparison": "NOT_RUN",
+    "fresh_calibration": "NOT_RUN",
+    "fresh_locked_test": "NOT_RUN",
+    "real_human_3_5m_frr": "NOT_MEASURED",
+    "natural_continuous_far": "NOT_MEASURED",
+    "physical_ssc305": "NOT_RUN",
+    "product_promotion_allowed": false
+  },
+  "restrictions": {
+    "no_old_audio_regeneration": true,
+    "no_old_dev_cal_locked_model_selection": true,
+    "no_unreviewed_source_as_label": true,
+    "no_private_repos": true,
+    "no_paid_models": true,
+    "no_work_codex": true,
+    "no_recurring_patrol": true,
+    "no_deprecated_other_word_relabel": true
+  }
+}
