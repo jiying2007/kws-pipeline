@@ -91,6 +91,56 @@ class SingleEnglishTarget(unittest.TestCase):
                     "ENGLISH_V5_MERO43_PCM_MEL_FSMN_CTC_STREAM_CONTRACT_PASS",
                     tested.stdout)
 
+
+    def test_standalone_43k_sdk_build_install_and_consumption(self):
+        """Real host GCC/Clang installed target, not a mock or SSC305 board."""
+        import os
+        import sys
+        if sys.flags.optimize:
+            self.skipTest("single actual GCC/Clang package build in normal mode")
+        self.assertIsNotNone(shutil.which("cmake"))
+        self.assertIsNotNone(shutil.which("ctest"))
+        for compiler in ("gcc","clang"):
+            with tempfile.TemporaryDirectory(prefix="heym43-install-"+compiler) as temp:
+                root=Path(temp)
+                build=root/"build"
+                prefix=root/"install"
+                consumer=root/"consumer"
+                consumer.mkdir()
+                env=os.environ.copy()
+                env["CC"]=compiler
+                for command in (
+                    ["cmake","-S",str(HERE),"-B",str(build),
+                     "-DCMAKE_BUILD_TYPE=Release",
+                     "-DHEY_MERO43_BUILD_TESTS=ON",
+                     "-DHEY_MERO43_BUILD_HOST_TOOL=ON",
+                     "-DCMAKE_INSTALL_PREFIX="+str(prefix)],
+                    ["cmake","--build",str(build),"--parallel","2"],
+                    ["ctest","--test-dir",str(build),"--output-on-failure"],
+                    ["cmake","--install",str(build)]):
+                    subprocess.run(command,check=True,env=env,
+                                   capture_output=True,text=True,timeout=100)
+                self.assertTrue((prefix/"lib/libheym43_stream.a").is_file())
+                self.assertTrue((prefix/"include/heym43/mero43_stream.h").is_file())
+                self.assertTrue((prefix/"include/heym43/mero_ctc.h").is_file())
+                self.assertTrue((prefix/"lib/cmake/HeyMero43/HeyMero43Targets.cmake").is_file())
+                consumer.joinpath("CMakeLists.txt").write_text(
+                    "cmake_minimum_required(VERSION 3.18)\n"
+                    "project(mero43_consumer C)\n"
+                    "find_package(HeyMero43 0.1 CONFIG REQUIRED)\n"
+                    "add_executable(consumer main.c)\n"
+                    "target_link_libraries(consumer PRIVATE HeyMero43::stream)\n")
+                consumer.joinpath("main.c").write_text(
+                    '#include "mero43_stream.h"\n'
+                    "int main(void) {return en_v5_m43_model_bytes()==0; }\n")
+                for command in (
+                    ["cmake","-S",str(consumer),"-B",str(root/"consumer-build"),
+                     "-DCMAKE_PREFIX_PATH="+str(prefix)],
+                    ["cmake","--build",str(root/"consumer-build"),"--parallel","2"],
+                    [str(root/"consumer-build"/"consumer")]):
+                    subprocess.run(command,check=True,env=env,
+                                   capture_output=True,text=True,timeout=100)
+
     def test_english_v5_workflow_is_exactly_registered(self):
         manifest=json.loads((ROOT/"research/consolidation/source-retention-2026-10-07.json").read_bytes())
         workflow=".github/workflows/english-v5-mero-contract.yml"
