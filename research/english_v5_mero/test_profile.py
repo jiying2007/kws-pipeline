@@ -66,7 +66,7 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertEqual(record["bytes"],len(raw))
         self.assertEqual(record["sha256"],hashlib.sha256(raw).hexdigest())
         self.assertEqual(record["git_blob_sha1"],
-            hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\\0"+raw).hexdigest())
+            hashlib.sha1(b"blob "+str(len(raw)).encode()+bytes([0])+raw).hexdigest())
         self.assertIn("english-v5-mero-contract.yml",
             (ROOT/"tools/verify_research_sources.py").read_text())
 
