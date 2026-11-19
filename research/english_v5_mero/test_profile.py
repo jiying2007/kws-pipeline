@@ -141,6 +141,36 @@ class SingleEnglishTarget(unittest.TestCase):
                     subprocess.run(command,check=True,env=env,
                                    capture_output=True,text=True,timeout=100)
 
+    def test_v6_frozen_model_provenance_and_fresh_qa_not_promotion(self):
+        """V6 source-only model identity and independent-quality boundary."""
+        q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
+        self.assertEqual(q["schema"],"english-v6-mero-frozen-quality-evidence-v1")
+        self.assertEqual(q["active_keyword"]["text"],"Hey Mero")
+        self.assertEqual(q["active_keyword"]["ipa"],"/heɪ ˈmɛroʊ/")
+        self.assertEqual(q["active_keyword"]["count"],1)
+        self.assertEqual(set(q["models"]),{"B0","B1"})
+        self.assertEqual(q["models"]["B0"]["parameter_count"],43876)
+        self.assertEqual(q["models"]["B1"]["parameter_count"],43876)
+        self.assertEqual(q["models"]["B0"]["artifact_id"],14514228406)
+        self.assertEqual(q["models"]["B1"]["artifact_id"],14539983171)
+        self.assertEqual(q["models"]["B1"]["pt_sha256"],"20d0c4632224cf332460493695c0dd21927a80ed13034a9531f5d5230d2f7e05")
+        self.assertTrue(q["models"]["B0"]["c11_proven"])
+        self.assertFalse(q["models"]["B1"]["c11_proven"])
+        self.assertEqual(q["new_prospective_source"]["run_id"],44554345276)
+        self.assertEqual(q["new_prospective_source"]["artifact_id"],14543254675)
+        self.assertEqual(q["new_prospective_source"]["original_full_pcm16_wav_count"],32)
+        self.assertEqual(q["new_prospective_source"]["independent_piper_speaker_indices"],list(range(488,496)))
+        self.assertEqual(q["new_prospective_source"]["quality_admission"],"PENDING_INDEPENDENT_QA")
+        self.assertIsNone(q["new_prospective_source"]["admitted_positive_count"])
+        self.assertIsNone(q["new_prospective_source"]["admitted_ordinary_count"])
+        self.assertTrue(q["new_prospective_source"]["nearphone_unknown"])
+        self.assertEqual(q["old_development"]["status"],"EXPOSED_NOT_INDEPENDENT")
+        self.assertEqual(q["software"]["sdk_pr"],842)
+        self.assertEqual(q["software"]["physical_ssc305"],"NOT_RUN")
+        self.assertEqual(q["promotion"]["independent_b0_b1_comparison"],"NOT_RUN")
+        self.assertFalse(q["promotion"]["product_promotion_allowed"])
+        self.assertTrue(q["restrictions"]["no_work_codex"])
+
     def test_english_v5_workflow_is_exactly_registered(self):
         manifest=json.loads((ROOT/"research/consolidation/source-retention-2026-10-07.json").read_bytes())
         workflow=".github/workflows/english-v5-mero-contract.yml"
