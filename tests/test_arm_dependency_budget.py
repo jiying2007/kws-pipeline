@@ -161,6 +161,32 @@ class InstallEvidenceTests(unittest.TestCase):
         self.assertTrue(result.stderr)
 
 
+class MirrorPriorityTests(unittest.TestCase):
+    def test_official_signed_archive_fallback_selected_without_apt_or_network(self):
+        helper=load_helper()
+        with tempfile.TemporaryDirectory(prefix='apt-mirror-test-') as folder:
+            mirror=Path(folder)/'apt-mirrors.txt'
+            slow='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/ priority:1\\n'
+            official='https://archive.ubuntu.com/ubuntu/ priority:2\\n'
+            security='https://security.ubuntu.com/ubuntu/ priority:3\\n'
+            mirror.write_text(slow+official+security)
+            self.assertTrue(helper.prefer_official_archive_mirror(mirror))
+            self.assertEqual(mirror.read_text(),official+security)
+            self.assertFalse(helper.prefer_official_archive_mirror(mirror))
+            self.assertFalse((Path(folder)/'apt-mirrors.txt.kws-official').exists())
+    def test_missing_fallback_is_not_silently_replaced_or_trusted(self):
+        helper=load_helper()
+        with tempfile.TemporaryDirectory(prefix='apt-mirror-test-') as folder:
+            mirror=Path(folder)/'apt-mirrors.txt'
+            old='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/ priority:1\\n'
+            mirror.write_text(old)
+            self.assertFalse(helper.prefer_official_archive_mirror(mirror))
+            self.assertEqual(mirror.read_text(),old)
+            link=Path(folder)/'link'
+            link.symlink_to(mirror)
+            with self.assertRaises(ValueError):
+                helper.prefer_official_archive_mirror(link)
+
 class FakeAPTTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
