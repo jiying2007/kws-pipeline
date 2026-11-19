@@ -1312,7 +1312,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-research-python
       - name: Install cross compiler and ARM user-mode emulator
-        timeout-minutes: 8
+        timeout-minutes: 20
         # Root supervisor can clean up root APT children; install is never retried.
         shell: bash
         run: |

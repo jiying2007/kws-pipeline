@@ -29,10 +29,10 @@ APT_OPTIONS = (
 class Budget:
     # All durations are wall-clock seconds, INCLUDING TERM/KILL cleanup time.
     index: float = 60
-    download: float = 240
-    attempt: float = 120
+    download: float = 900
+    attempt: float = 850
     install: float = 120
-    total: float = 440
+    total: float = 1120
     term: float = 2
     kill: float = 2
 
@@ -215,10 +215,57 @@ def install(*, apt=('/usr/bin/apt-get',), budget=None, output=None):
     return 125 if log_failed[0] else code
 
 
+def prefer_official_archive_mirror(path=Path('/etc/apt/apt-mirrors.txt')):
+    """Only reorder the ephemeral runner's signed Ubuntu mirror list.
+
+    Github-hosted runners can inherit very slow provider-specific EC2/Azure
+    mirrors. APT's no-progress timeout cannot detect a slow continuous trickle.
+    Remove only those two known hosts when the official archive fallback is
+    already advertised; never add an untrusted mirror or change signing keys.
+    """
+    if not path.exists():
+        return False
+    if path.is_symlink() or not path.is_file():
+        raise ValueError('not a regular Ubuntu mirror list')
+    raw = path.read_bytes()
+    if not raw or len(raw) > 4096:
+        raise ValueError('unexpected Ubuntu mirror list size')
+    lines = raw.decode('ascii').splitlines(keepends=True)
+    def uri(line):
+        parts = line.split()
+        return parts[0].rstrip('/') if parts else ''
+    official = {'http://archive.ubuntu.com/ubuntu',
+                'https://archive.ubuntu.com/ubuntu'}
+    blocked = ('http://azure.archive.ubuntu.com/ubuntu',
+               'http://us-east-2.ec2.archive.ubuntu.com/ubuntu',
+               'http://us-west-2.ec2.archive.ubuntu.com/ubuntu')
+    if not any(uri(line) in official for line in lines):
+        return False
+    retained = [line for line in lines if uri(line) not in blocked]
+    if len(retained) == len(lines):
+        return False
+    if not retained or any(not line.strip() for line in retained):
+        raise ValueError('invalid retained Ubuntu mirror list')
+    updated = ''.join(retained).encode('ascii')
+    replacement = path.with_name(path.name + '.kws-official')
+    if replacement.exists() or replacement.is_symlink():
+        raise ValueError('existing mirror replacement path')
+    try:
+        with replacement.open('xb') as out:
+            out.write(updated)
+        os.replace(replacement, path)
+    finally:
+        if replacement.exists() and not replacement.is_symlink():
+            replacement.unlink()
+    return True
+
+
 def main():
     if len(sys.argv) != 1 or not sys.platform.startswith('linux') or os.geteuid() != 0:
         print('Run without arguments under sudo on the ephemeral Linux CI runner.', file=sys.stderr)
         return 126
+    if prefer_official_archive_mirror():
+        print('ARM_APT event=mirror_select result=official_signed_ubuntu_archive', flush=True)
     return install()
 
 

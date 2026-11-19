@@ -71,7 +71,7 @@ class WorkflowContractTests(unittest.TestCase):
         self.assertIn('runs-on: ubuntu-24.04', header)
         self.assertNotIn('runs-on: ubuntu-latest', header)
         self.assertIn('timeout-minutes: 30', header)
-        self.assertIn('timeout-minutes: 8', dependency_step)
+        self.assertIn('timeout-minutes: 20', dependency_step)
         self.assertIn('sudo python3 -I -S -B tools/install_arm_dependencies.py', dependency_step)
         self.assertNotIn('apt-get', dependency_step)
         self.assertNotIn('continue-on-error', dependency_step)
@@ -161,6 +161,32 @@ class InstallEvidenceTests(unittest.TestCase):
         self.assertTrue(result.stderr)
 
 
+class MirrorPriorityTests(unittest.TestCase):
+    def test_official_signed_archive_fallback_selected_without_apt_or_network(self):
+        helper=load_helper()
+        with tempfile.TemporaryDirectory(prefix='apt-mirror-test-') as folder:
+            mirror=Path(folder)/'apt-mirrors.txt'
+            slow='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/ priority:1\n'
+            official='https://archive.ubuntu.com/ubuntu/ priority:2\n'
+            security='https://security.ubuntu.com/ubuntu/ priority:3\n'
+            mirror.write_text(slow+official+security)
+            self.assertTrue(helper.prefer_official_archive_mirror(mirror))
+            self.assertEqual(mirror.read_text(),official+security)
+            self.assertFalse(helper.prefer_official_archive_mirror(mirror))
+            self.assertFalse((Path(folder)/'apt-mirrors.txt.kws-official').exists())
+    def test_missing_fallback_is_not_silently_replaced_or_trusted(self):
+        helper=load_helper()
+        with tempfile.TemporaryDirectory(prefix='apt-mirror-test-') as folder:
+            mirror=Path(folder)/'apt-mirrors.txt'
+            old='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/ priority:1\n'
+            mirror.write_text(old)
+            self.assertFalse(helper.prefer_official_archive_mirror(mirror))
+            self.assertEqual(mirror.read_text(),old)
+            link=Path(folder)/'link'
+            link.symlink_to(mirror)
+            with self.assertRaises(ValueError):
+                helper.prefer_official_archive_mirror(link)
+
 class FakeAPTTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -203,7 +229,7 @@ class FakeAPTTests(unittest.TestCase):
     def test_production_limits_and_no_extra_apt_retry_or_download_on_install(self):
         defaults = self.arm.Budget()
         self.assertEqual((defaults.index, defaults.download, defaults.attempt,
-                          defaults.install, defaults.total), (60, 240, 120, 120, 440))
+                          defaults.install, defaults.total), (60, 900, 850, 120, 1120))
         code, _ = self.run_plan({})
         self.assertEqual(code, 0)
         self.assertEqual(self.kinds(), ['index', 'download', 'install'])
