@@ -29,10 +29,10 @@ APT_OPTIONS = (
 class Budget:
     # All durations are wall-clock seconds, INCLUDING TERM/KILL cleanup time.
     index: float = 60
-    download: float = 240
-    attempt: float = 120
+    download: float = 900
+    attempt: float = 850
     install: float = 120
-    total: float = 440
+    total: float = 1120
     term: float = 2
     kill: float = 2
 

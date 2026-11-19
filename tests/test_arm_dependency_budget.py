@@ -71,7 +71,7 @@ class WorkflowContractTests(unittest.TestCase):
         self.assertIn('runs-on: ubuntu-24.04', header)
         self.assertNotIn('runs-on: ubuntu-latest', header)
         self.assertIn('timeout-minutes: 30', header)
-        self.assertIn('timeout-minutes: 8', dependency_step)
+        self.assertIn('timeout-minutes: 20', dependency_step)
         self.assertIn('sudo python3 -I -S -B tools/install_arm_dependencies.py', dependency_step)
         self.assertNotIn('apt-get', dependency_step)
         self.assertNotIn('continue-on-error', dependency_step)
@@ -203,7 +203,7 @@ class FakeAPTTests(unittest.TestCase):
     def test_production_limits_and_no_extra_apt_retry_or_download_on_install(self):
         defaults = self.arm.Budget()
         self.assertEqual((defaults.index, defaults.download, defaults.attempt,
-                          defaults.install, defaults.total), (60, 240, 120, 120, 440))
+                          defaults.install, defaults.total), (60, 900, 850, 120, 1120))
         code, _ = self.run_plan({})
         self.assertEqual(code, 0)
         self.assertEqual(self.kinds(), ['index', 'download', 'install'])
