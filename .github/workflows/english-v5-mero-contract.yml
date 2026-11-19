@@ -1,0 +1,53 @@
+name: English V5 single Mero source and CTC event contract
+on:
+  pull_request:
+    paths:
+      - configs/research/english-v5-mero-only.json
+      - research/english_v5_mero/**
+      - docs/ENGLISH_V5_MERO_ONLY.md
+      - docs/ENGLISH_KWS_PRONUNCIATION_PROFILE_20261115.md
+      - docs/ENGLISH_SSC305_ENTRYPOINT.zh-CN.md
+      - README.md
+      - README.zh-CN.md
+      - .github/workflows/english-v5-mero-contract.yml
+  push:
+    branches: [main]
+    paths:
+      - configs/research/english-v5-mero-only.json
+      - research/english_v5_mero/**
+      - .github/workflows/english-v5-mero-contract.yml
+permissions:
+  contents: read
+jobs:
+  mono-contract:
+    if: >-
+      github.repository == 'jiying2007/kws-pipeline' &&
+      github.event.repository.private == false &&
+      (github.event_name == 'push' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Source-only contract, explicit single target and no fake board claims
+        shell: bash
+        run: |
+          set -euo pipefail
+          for opt in '' '-O' '-OO'; do
+            python3 -I -S -B $opt research/english_v5_mero/test_profile.py -v
+          done
+      - name: Compile and exercise actual one-word CTC decoder with GCC and Clang
+        shell: bash
+        run: |
+          set -euo pipefail
+          for cc in gcc clang; do
+            "$cc" -std=c11 -Wall -Wextra -Werror -pedantic -O2 \
+              -I research/english_v5_mero \
+              research/english_v5_mero/mero_ctc.c \
+              research/english_v5_mero/test_mero_ctc.c \
+              -lm -o "$RUNNER_TEMP/mero-ctc-$cc"
+            "$RUNNER_TEMP/mero-ctc-$cc"
+          done
+          test -z "$(git status --porcelain)"
