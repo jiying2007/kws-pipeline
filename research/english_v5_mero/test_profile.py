@@ -169,7 +169,7 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertEqual(q["software"]["physical_ssc305"],"NOT_RUN")
         self.assertEqual(q["promotion"]["independent_b0_b1_comparison"],"NOT_RUN")
         self.assertFalse(q["promotion"]["product_promotion_allowed"])
-        self.assertFalse(q["restrictions"]["no_work_codex"] is False)
+        self.assertTrue(q["restrictions"]["no_work_codex"])
 
     def test_english_v5_workflow_is_exactly_registered(self):
         manifest=json.loads((ROOT/"research/consolidation/source-retention-2026-10-07.json").read_bytes())
