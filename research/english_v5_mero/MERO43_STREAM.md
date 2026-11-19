@@ -1,0 +1,15 @@
+# Hey Mero V5 — frozen 43,876-param C11 streaming research path
+
+**Scope:** exact causal FSMN-CTC model from public `kws-data` run [44495594627](https://github.com/jiying2007/kws-data/actions/runs/44495594627), artifact `14514228406`. No new training or data generation. This is not a released SSC305 model.
+
+The `mero43_stream.h/.c` path implements 16 kHz mono PCM16, a center-free 512-point STFT with a 400-sample periodic Hann window and 160-sample hop, the source-trained 257×40 HTK filterbank, `log1p`, frozen train-only normalization, four 96-wide causal depthwise-memory blocks (4 previous projected frames), and four raw blank/HEY/MEH/ROH logits. It calls the **existing** `mero_ctc.h/.c` full-phrase greedy event decoder; there is no second English keyword or separate decoder.
+
+The externally pinned packer `pack_mero43.py` accepts only the original model ZIP SHA256 `91b203f05041d92e7ffb1b748f94959ce19af6673b91dbc2144920815058d702` (actual 256-update research weights). The original ONNX SHA256 is `10bf30da57291f78f56db196db1137309f2c3b91dfe67bf0aa45ebb8cec05b1c`, original NPZ SHA256 is `02b7febf9f736fd70f4f9ae04042ffc6d609b15011d03d235b960f69b1d71696`. An unrecognized file shape, size, source hash, nonfinite tensor, nonpositive normalization scale, or invalid package is rejected.
+
+Pack format: 8 bytes `MERO43V1`, little-endian uint32 version 1, uint32 float count 54236, then **exactly** 54,236 little-endian float32 values in original ordered `state_dict` tensors, Mel matrix, train mean and scale (216,960 total bytes). The generated model package is not committed, and its SHA256 must be pinned in device packaging. The runtime accepts only caller-supplied storage for the immutable model (~217 KB) and per-stream scratch (~15 KB); it does **not** allocate memory or touch files at inference time.
+
+API: load once, initialize a distinct state per stream, then feed monotonically contiguous sample-numbered PCM blocks (≤16,000 samples). The callback gets raw four frame logits, the frame's evidence-availability sample count (not word-end timestamp), and any full-phrase CTC event. Dropouts must call explicit `en_v5_m43_discontinuity` to reset both frontend FSMN and decoder state, or `en_v5_m43_stream_reset` for a new stream.
+
+Host CLI `mero43_host_cli.c` is strictly for regression evidence. First test with deterministic synthetic bundle through GCC/Clang, then verify **real** original prospective development WAVs and frozen Python vs C logits/event traces. The measured PyTorch→ONNX original-PCM host result is in [run 44519849543](https://github.com/jiying2007/kws-data/actions/runs/44519849543); it does not establish C parity by itself.
+
+**Not yet qualified:** stagewise C-vs-PyTorch parity on real WAV, ARM32 cross-compile / numerical parity, latency/CPU/RAM on physical SSC305, natural continuous FAR/h, real-human 3–5 m FRR, locked test, threshold calibration. CTC decoder gap/cooldown remain research parameters, not calibration-derived thresholds. Fail closed on mismatches; do not use old exposed DEV to fit thresholds.
