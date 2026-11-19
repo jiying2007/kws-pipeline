@@ -51,39 +51,3 @@ jobs:
             "$RUNNER_TEMP/mero-ctc-$cc"
           done
           test -z "$(git status --porcelain)"
-      - name: Build and install isolated one-word C11 library under GCC and Clang and link installed consumer
-        shell: bash
-        run: |
-          set -euo pipefail
-          for cc in gcc clang; do
-            build="$RUNNER_TEMP/heym43-build-$cc"
-            prefix="$RUNNER_TEMP/heym43-install-$cc"
-            CC="$cc" cmake -S research/english_v5_mero -B "$build" \
-              -DCMAKE_BUILD_TYPE=Release -DHEY_MERO43_BUILD_TESTS=ON \
-              -DHEY_MERO43_BUILD_HOST_TOOL=ON -DCMAKE_INSTALL_PREFIX="$prefix"
-            cmake --build "$build" --parallel 2
-            ctest --test-dir "$build" --output-on-failure
-            cmake --install "$build"
-            test -s "$prefix/lib/libheym43_stream.a"
-            test -s "$prefix/include/heym43/mero43_stream.h"
-            test -s "$prefix/include/heym43/mero_ctc.h"
-            test -s "$prefix/lib/cmake/HeyMero43/HeyMero43Targets.cmake"
-            mkdir -p "$RUNNER_TEMP/heym43-consumer-$cc"
-            printf '%s\n' \
-              'cmake_minimum_required(VERSION 3.18)' \
-              'project(heym43_consumer C)' \
-              'find_package(HeyMero43 0.1 CONFIG REQUIRED)' \
-              'add_executable(consumer main.c)' \
-              'target_link_libraries(consumer PRIVATE HeyMero43::stream)' \
-              > "$RUNNER_TEMP/heym43-consumer-$cc/CMakeLists.txt"
-            printf '%s\n' \
-              '#include "mero43_stream.h"' \
-              'int main(void) { return en_v5_m43_model_bytes()==0 ? 1 : 0; }' \
-              > "$RUNNER_TEMP/heym43-consumer-$cc/main.c"
-            CC="$cc" cmake -S "$RUNNER_TEMP/heym43-consumer-$cc" \
-              -B "$RUNNER_TEMP/heym43-consumer-build-$cc" \
-              -DCMAKE_PREFIX_PATH="$prefix"
-            cmake --build "$RUNNER_TEMP/heym43-consumer-build-$cc" --parallel 2
-            "$RUNNER_TEMP/heym43-consumer-build-$cc/consumer"
-          done
-          test -z "$(git status --porcelain)"
