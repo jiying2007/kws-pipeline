@@ -1,5 +1,8 @@
 # kws-pipeline
 
+> **2026-11-19 英文 V5.0 唯一唤醒词：**[Hey Mero](docs/ENGLISH_V5_MERO_ONLY.md)，美式 /heɪ ˈmɛroʊ/。以下旧英文双词实验仅为历史证据；旧二词推理库并非 V5.0 新模型。
+
+
 > **当前只有 KWS 技术研究任务。** 真实效果由两条完整中文唤醒词、
 > 独立连续负例 FAR/FRR 置信界、词尾触发时延及 SSC305 资源实测决定。
 > 研究入口：[技术研究执行规范](docs/RESEARCH_ONLY_EXECUTION.md)、

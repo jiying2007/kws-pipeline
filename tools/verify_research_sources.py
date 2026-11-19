@@ -51,6 +51,7 @@ ENGLISH_STREAM_PERFORMANCE_PATHS = tuple('research/english_stream_performance/' 
     'TRACE_FORMAT.md'))
 ENGLISH_STREAM_PERFORMANCE_WORKFLOW = '.github/workflows/english-stream-performance-contract.yml'
 ENGLISH_CALIBRATED_THRESHOLD_WORKFLOW = '.github/workflows/english-head-calibrated-threshold.yml'
+ENGLISH_V5_MERO_CONTRACT_WORKFLOW = '.github/workflows/english-v5-mero-contract.yml'
 
 SENSE_REVISION_ID = 'sense-runtime-binding-20261017'
 SENSE_REVISION_SUPERSEDES = '62c970794f74d7303f3daff246e7062ffb1c85d5'
@@ -447,10 +448,12 @@ def verify(root, manifest):
     approved_with_stream_integration = approved_with_mel_specialization + [ENGLISH_STREAM_INTEGRATION_WORKFLOW]
     approved_with_stream_performance = approved_with_stream_integration + [ENGLISH_STREAM_PERFORMANCE_WORKFLOW]
     approved_with_calibrated_threshold = approved_with_stream_performance + [ENGLISH_CALIBRATED_THRESHOLD_WORKFLOW]
+    approved_with_v5_mono = approved_with_calibrated_threshold + [ENGLISH_V5_MERO_CONTRACT_WORKFLOW]
     if additions not in (approved, approved_with_clone, approved_with_public_zh64,
                          approved_with_embedding_assets, approved_with_backbone_parity,
                          approved_with_mel_specialization, approved_with_stream_integration,
-                         approved_with_stream_performance, approved_with_calibrated_threshold):
+                         approved_with_stream_performance, approved_with_calibrated_threshold,
+                         approved_with_v5_mono):
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed additions
     # both bind CURRENT bytes. Historical maintenance receipts are evidence,

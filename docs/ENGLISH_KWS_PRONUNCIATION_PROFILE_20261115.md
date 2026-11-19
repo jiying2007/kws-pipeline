@@ -1,5 +1,8 @@
 # English wake-word research pronunciation and software delivery — 2026-11-17
 
+> **历史文件，非当前研发规范。** 英文已于 2026-11-19 切换到仅 Hey Mero 的 [V5.0 规范](ENGLISH_V5_MERO_ONLY.md) 与 [机器配置](../configs/research/english-v5-mero-only.json)。本页描述的是旧 v3/v4 实验，不能再用于新增英文训练或唤醒词选择。
+
+
 Status: active synthetic research policy, schema v3. The owner requested English delivery using the Chinese synthetic-data approach, without making new human recordings a prerequisite. V4.1 places the frozen speech embedding plus causal English head first. English FSMN and Chinese-weight transfer are conditional later research options.
 
 ## Two explicit evidence scopes
