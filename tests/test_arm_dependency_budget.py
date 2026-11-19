@@ -166,9 +166,9 @@ class MirrorPriorityTests(unittest.TestCase):
         helper=load_helper()
         with tempfile.TemporaryDirectory(prefix='apt-mirror-test-') as folder:
             mirror=Path(folder)/'apt-mirrors.txt'
-            slow='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/ priority:1\\n'
-            official='https://archive.ubuntu.com/ubuntu/ priority:2\\n'
-            security='https://security.ubuntu.com/ubuntu/ priority:3\\n'
+            slow='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/ priority:1\n'
+            official='https://archive.ubuntu.com/ubuntu/ priority:2\n'
+            security='https://security.ubuntu.com/ubuntu/ priority:3\n'
             mirror.write_text(slow+official+security)
             self.assertTrue(helper.prefer_official_archive_mirror(mirror))
             self.assertEqual(mirror.read_text(),official+security)
@@ -178,7 +178,7 @@ class MirrorPriorityTests(unittest.TestCase):
         helper=load_helper()
         with tempfile.TemporaryDirectory(prefix='apt-mirror-test-') as folder:
             mirror=Path(folder)/'apt-mirrors.txt'
-            old='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/ priority:1\\n'
+            old='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/ priority:1\n'
             mirror.write_text(old)
             self.assertFalse(helper.prefer_official_archive_mirror(mirror))
             self.assertEqual(mirror.read_text(),old)
