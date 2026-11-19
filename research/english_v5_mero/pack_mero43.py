@@ -58,7 +58,7 @@ def source_check():
     require(weight_count==PARAMETERS
             and all_count==PACK_FLOAT_COUNT
             and PACK_BYTES==216960
-            and len(specs)==6+4*4+3
+            and len(specs)==2+4*4+2+3
             and len(set(name for name,_ in specs))==len(specs)
             and ORIGINAL_RUN==44495594627 and ARTIFACT_ID==14514228406,
             "FROZEN_43K_FSMN_GEOMETRY_AND_BINARY_LAYOUT")
