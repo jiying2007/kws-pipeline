@@ -397,6 +397,52 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertIn("Real B4/B5 post-training DEV504 frozen-model comparison",documentation)
         self.assertIn("reject B5-EarlyHEY for promotion",documentation)
 
+    def test_v6_b6_real_posttrain_dev512_mixed_gain_and_ordinary_false_wake(self):
+        q=json.loads((ROOT/"research/english_v5_mero/V6_QUALITY_EVIDENCE.json").read_text())
+        r=q["experimental_followup"]["B4_B6_DEV512_frozen_research"]
+        self.assertEqual(r["status"],
+            "REAL_126_POST_B6_DEV512_PAIRED_DIAGNOSTIC_B6_UNSAFE_FOR_PROMOTION")
+        self.assertEqual(r["data_pr_chain"],[293,294,295,296,297])
+        t=r["trained_B6"]
+        self.assertEqual(t["run"],44704535156)
+        self.assertEqual(t["actual_train_updates"],384)
+        self.assertEqual(t["control_replay"],"PASS_EXACT_B4_HALF_TENSOR_REPLAY")
+        self.assertTrue(t["optimization_is_train_only"])
+        self.assertEqual(t["development_gradients"],0)
+        s=r["source"]
+        self.assertEqual(s["new_speaker_indices"],[512,519])
+        self.assertEqual(s["original_pcm_count"],32)
+        self.assertEqual(s["native_blind_completed_observations"],160)
+        self.assertEqual((s["machine_positive_originals"],s["machine_ordinary_originals"],
+                          s["unknown_excluded_originals"],
+                          s["qualified_development_source_groups"]),(6,8,18,5))
+        self.assertFalse(s["human_gold"])
+        a=r["frozen_quality"]
+        self.assertEqual(a["run"],44710802470)
+        self.assertEqual(a["original_result_artifact_id"],14616493798)
+        self.assertEqual(a["original_result_zip_bytes"],41502)
+        self.assertEqual(a["original_result_zip_sha256"],
+            "b900473e57a5b53793a42020838371c1c12f4ee70d73480f2f68c03aab37801f")
+        self.assertEqual(a["actual_model_forward_conditions"],126)
+        self.assertTrue(a["B4_half_B6_control_bit_identical_weights"])
+        self.assertTrue(a["gains_are_derived_and_do_not_increase_denominator"])
+        self.assertEqual([x["B4_half_hits"] for x in a["gains"]],[3,4,1])
+        self.assertEqual([x["B6_control_hits"] for x in a["gains"]],[3,4,1])
+        self.assertEqual([x["B6_consistency_hits"] for x in a["gains"]],[5,3,1])
+        self.assertEqual([x["B6_consistency_ordinary_events"] for x in a["gains"]],[1,0,0])
+        self.assertEqual([x["B6_positive_missing_MEH_winner"] for x in a["gains"]],[0,0,1])
+        self.assertEqual(a["B6_normal_gain_ordinary_false_event_on_synthetic_negative"],1)
+        self.assertTrue(a["B6_half_gain_not_better_than_B4"])
+        self.assertTrue(a["B6_075_gain_regressed_vs_B4"])
+        self.assertFalse(r["decision"]["product_promotion_allowed"])
+        self.assertTrue(r["decision"]["B0_only_authenticated_installed_SSC305_C11_SDK"])
+        self.assertEqual(r["next_evidence"]["physical_SSC305"],"NOT_RUN")
+        self.assertEqual(r["next_evidence"]["continuous_natural_far_per_hour"],"NOT_MEASURED")
+        self.assertEqual(r["next_evidence"]["independent_LOCKED"],"NOT_RUN")
+        doc=(ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text()
+        self.assertIn("Real B6 gain-consistency training and genuinely new DEV512 test",doc)
+        self.assertIn("Reject automatic B6 model promotion",doc)
+
     def test_english_v5_workflow_is_exactly_registered(self):
         manifest=json.loads((ROOT/"research/consolidation/source-retention-2026-10-07.json").read_bytes())
         workflow=".github/workflows/english-v5-mero-contract.yml"
