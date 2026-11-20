@@ -659,6 +659,133 @@
         "new_locked_test": "NOT_RUN",
         "new_calibration": "NOT_RUN"
       }
+    },
+    "B4_B6_DEV512_frozen_research": {
+      "status": "REAL_126_POST_B6_DEV512_PAIRED_DIAGNOSTIC_B6_UNSAFE_FOR_PROMOTION",
+      "data_pr_chain": [
+        293,
+        294,
+        295,
+        296,
+        297
+      ],
+      "trained_B6": {
+        "run": 44704535156,
+        "main_sha": "e46dfa72e7f824a888ae6510a9951f1fe518b222",
+        "artifact_id": 14615025178,
+        "original_zip_sha256": "1c310b0d4945f7aa40f2576f231c94eb48b33316a6c4f79c20215b1ac80bab8d",
+        "control_replay": "PASS_EXACT_B4_HALF_TENSOR_REPLAY",
+        "actual_train_updates": 384,
+        "optimization_is_train_only": true,
+        "changed_factor": "STOPGRAD_CLEAN_TO_HALF_SUFFIX_CTC_POSTERIOR_KL",
+        "loss_weight": 0.03,
+        "same_43876_model_parameters": true,
+        "development_gradients": 0
+      },
+      "source": {
+        "tts_engine": "piper-libritts-904",
+        "new_speaker_indices": [
+          512,
+          519
+        ],
+        "original_run": 44706870732,
+        "original_artifact_id": 14616065335,
+        "original_zip_sha256": "42c7289222001e4e8a2d6660033610e3ba247e3d1c59a073ed2d5eee3833036d",
+        "original_pcm_count": 32,
+        "new_development_speaker_source_groups": 8,
+        "native_blind_run": 44708054481,
+        "native_blind_completed_observations": 160,
+        "machine_screen_run": 44709245389,
+        "machine_screen_artifact_id": 14616173070,
+        "machine_screen_zip_sha256": "0880fed6d551b995c4cdc5b2ee0ae7b1c033e0a8298981a5feb244d8501fa681",
+        "machine_positive_originals": 6,
+        "machine_ordinary_originals": 8,
+        "unknown_excluded_originals": 18,
+        "qualified_development_source_groups": 5,
+        "human_gold": false,
+        "machine_positive_and_ordinary_not_frozen_calibration": true,
+        "nearphone_challenge_not_ordinary": true
+      },
+      "frozen_quality": {
+        "main_sha": "d9bbb5d0ea29ea2774067734ba24d55eccef97fc",
+        "run": 44710802470,
+        "original_result_artifact_id": 14616493798,
+        "original_result_zip_bytes": 41502,
+        "original_result_zip_sha256": "b900473e57a5b53793a42020838371c1c12f4ee70d73480f2f68c03aab37801f",
+        "actual_model_forward_conditions": 126,
+        "source_originals_forwarded": 14,
+        "distinct_machine_qualified_positive_originals": 6,
+        "distinct_machine_qualified_ordinary_originals": 8,
+        "gains_are_derived_and_do_not_increase_denominator": true,
+        "frozen_pt_sha256": {
+          "B4_half": "c795f8b5f6bf8e9c37d195126fc25006dbde92fb71591473c05854e3d3698f15",
+          "B6_control": "c9cac4c16a9d574b6bc9baef14ac239517a2ed9bfbe2e3ff2fb69972587c9430",
+          "B6_consistency": "0461ce14ff5ed6490e88801b23c9036ca63b2c302aee7e8d96cea26c3eaa9f04"
+        },
+        "B4_half_B6_control_bit_identical_weights": true,
+        "gains": [
+          {
+            "factor": 1,
+            "B4_half_hits": 3,
+            "B6_control_hits": 3,
+            "B6_consistency_hits": 5,
+            "positive_n": 6,
+            "B4_half_ordinary_events": 0,
+            "B6_control_ordinary_events": 0,
+            "B6_consistency_ordinary_events": 1,
+            "ordinary_n": 8,
+            "B6_positive_missing_MEH_winner": 0
+          },
+          {
+            "factor": 0.75,
+            "B4_half_hits": 4,
+            "B6_control_hits": 4,
+            "B6_consistency_hits": 3,
+            "positive_n": 6,
+            "B4_half_ordinary_events": 0,
+            "B6_control_ordinary_events": 0,
+            "B6_consistency_ordinary_events": 0,
+            "ordinary_n": 8,
+            "B6_positive_missing_MEH_winner": 0
+          },
+          {
+            "factor": 0.5,
+            "B4_half_hits": 1,
+            "B6_control_hits": 1,
+            "B6_consistency_hits": 1,
+            "positive_n": 6,
+            "B4_half_ordinary_events": 0,
+            "B6_control_ordinary_events": 0,
+            "B6_consistency_ordinary_events": 0,
+            "ordinary_n": 8,
+            "B6_positive_missing_MEH_winner": 1
+          }
+        ],
+        "B6_normal_gain_ordinary_false_event_on_synthetic_negative": 1,
+        "B6_half_gain_not_better_than_B4": true,
+        "B6_075_gain_regressed_vs_B4": true,
+        "B6_model_selection_allowed": false
+      },
+      "decision": {
+        "B6_consistency_promotion": "REJECTED_NO_INDEPENDENT_SAFE_QUALITY_ADVANTAGE",
+        "B4_half_stays_research_only": true,
+        "B0_only_authenticated_installed_SSC305_C11_SDK": true,
+        "model_selection_allowed": false,
+        "decoder_threshold_selection_allowed": false,
+        "product_promotion_allowed": false
+      },
+      "next_evidence": {
+        "active_data_pr_for_saved_ctc_source_origin": 298,
+        "forensics_phase": "PR_SOURCE_CHECK_PENDING_NO_NEW_MODEL_FORWARD",
+        "no_unseen_acoustic_quality_without_human_gold": true,
+        "independent_CAL": "NOT_RUN",
+        "independent_LOCKED": "NOT_RUN",
+        "continuous_natural_far_per_hour": "NOT_MEASURED",
+        "real_human_3_5m_FRR": "NOT_MEASURED",
+        "physical_SSC305": "NOT_RUN",
+        "B6_C11_ARM32_parity": "NOT_RUN",
+        "commercial_audio_rights": "UNVERIFIED"
+      }
     }
   }
 }
