@@ -309,6 +309,34 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertEqual(continuous["physical_ssc305"],"NOT_RUN")
         self.assertFalse(continuous["model_selection_allowed"])
         self.assertFalse(continuous["product_promotion_allowed"])
+        gain=r["B3_gain_context_exposed_dev"]
+        self.assertEqual(gain["run_id"],44662162126)
+        self.assertEqual(gain["main_sha"],"db0c4b699b16fcd765b430702a8f786715529eb5")
+        self.assertEqual(gain["artifact_id"],14595464491)
+        self.assertEqual(gain["artifact_zip_sha256"],
+                         "0ba7cd287afcedbbd7625b6987cc89dbeb2c8717c1506b905e8a01671e9ea3cb")
+        self.assertEqual(gain["original_source_count"],14)
+        self.assertEqual(gain["excluded_unknown"],18)
+        self.assertEqual(gain["derived_gain_conditions"],[1,0.75,0.5])
+        self.assertEqual([x["positive_hits"] for x in gain["gain_results"]],[5,4,1])
+        self.assertEqual([x["positive_without_meh_argmax"] for x in gain["gain_results"]],[0,2,5])
+        self.assertEqual([x["ordinary_any_events"] for x in gain["gain_results"]],[0,0,0])
+        self.assertEqual(gain["source_490_gain_1_frame_argmax_hey"],0)
+        self.assertEqual(gain["source_490_gain_075_event_count"],1)
+        self.assertEqual(len(gain["controlled_predecessor_cases"]),4)
+        self.assertTrue(all(x["target_events"]==0
+                            and x["hey_argmax_frames"]==0
+                            for x in gain["controlled_predecessor_cases"]))
+        self.assertEqual(gain["max_gap_host_cli_seconds"],62.5)
+        self.assertTrue(gain["unsafe_to_infer_6_of_6_reverse_are_single_phrase"])
+        self.assertFalse(gain["model_selection_allowed"])
+        self.assertFalse(gain["decoder_policy_selection_allowed"])
+        self.assertFalse(gain["product_promotion_allowed"])
+        self.assertEqual(gain["natural_far_per_hour"],"NOT_MEASURED")
+        self.assertEqual(gain["physical_ssc305"],"NOT_RUN")
+        self.assertIn("Real B3 C11 gain and predecessor diagnostics",
+                      (ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text())
+
         self.assertIn("Real B3 C11 continuous-state diagnostic",
                       (ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text())
 
