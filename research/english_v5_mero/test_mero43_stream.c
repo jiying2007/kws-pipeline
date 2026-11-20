@@ -1,9 +1,20 @@
 #include "mero43_stream.h"
-#include <assert.h>
+#include <stdlib.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+/* Unlike assert(), this check must execute in Release/-DNDEBUG builds.
+ * Decoder and stream tests call the functions being checked as expressions;
+ * disabling those expressions would produce a false PASS without testing. */
+#define KWS_CHECK(expr) do {                                                \
+    if (!(expr)) {                                                          \
+        fprintf(stderr, "%s:%d: check failed: %s\\n",                     \
+                __FILE__, __LINE__, #expr);                                 \
+        abort();                                                             \
+    }                                                                       \
+} while (0)
 
 /* Compact independent synthetic MODEL-PACK/STREAM ABI tests.
  * Real SHA-pinned 43K coefficients and raw PCM vs Torch are validated by
@@ -26,7 +37,7 @@ static void put32(uint8_t *p, uint32_t n) {
 }
 static void value_at(unsigned index, float value) {
     uint32_t bits;
-    assert(index<EN_V5_M43_FLOATS);
+    KWS_CHECK(index<EN_V5_M43_FLOATS);
     memcpy(&bits,&value,4);
     put32(packed+16+4u*index,bits);
 }
@@ -47,8 +58,8 @@ static void callback(void *user,const float logits[4],
                      uint64_t index,uint64_t end,
                      const en_v5_mero_event *event) {
     capture *out=(capture*)user;
-    assert(out!=NULL && logits!=NULL && event!=NULL);
-    assert(out->count<10u);
+    KWS_CHECK(out!=NULL && logits!=NULL && event!=NULL);
+    KWS_CHECK(out->count<10u);
     out->indices[out->count]=index;
     out->ends[out->count]=end;
     memcpy(out->logits[out->count],logits,4*sizeof(float));
@@ -60,77 +71,77 @@ static void fill_pcm(void) {
         speech[i]=(int16_t)(((int)(i%71u)-35)*278);
 }
 static void model_source_validation(void) {
-    assert(EN_V5_M43_PACK_BYTES==216960u);
-    assert(en_v5_m43_model_bytes()==sizeof(model));
-    assert(en_v5_m43_stream_bytes()==sizeof(stream));
-    assert(en_v5_m43_model_bytes()<250000u);
-    assert(en_v5_m43_stream_bytes()<24000u);
-    assert(en_v5_m43_model_load(NULL,packed,sizeof(packed))==EN_V5_M43_BAD_ARGUMENT);
-    assert(en_v5_m43_model_load(&model,NULL,sizeof(packed))==EN_V5_M43_BAD_ARGUMENT);
-    assert(en_v5_m43_model_load(&model,packed,sizeof(packed)-1u)==EN_V5_M43_BAD_MODEL);
+    KWS_CHECK(EN_V5_M43_PACK_BYTES==216960u);
+    KWS_CHECK(en_v5_m43_model_bytes()==sizeof(model));
+    KWS_CHECK(en_v5_m43_stream_bytes()==sizeof(stream));
+    KWS_CHECK(en_v5_m43_model_bytes()<250000u);
+    KWS_CHECK(en_v5_m43_stream_bytes()<24000u);
+    KWS_CHECK(en_v5_m43_model_load(NULL,packed,sizeof(packed))==EN_V5_M43_BAD_ARGUMENT);
+    KWS_CHECK(en_v5_m43_model_load(&model,NULL,sizeof(packed))==EN_V5_M43_BAD_ARGUMENT);
+    KWS_CHECK(en_v5_m43_model_load(&model,packed,sizeof(packed)-1u)==EN_V5_M43_BAD_MODEL);
     packed[0]=0;
-    assert(en_v5_m43_model_load(&model,packed,sizeof(packed))==EN_V5_M43_BAD_MODEL);
+    KWS_CHECK(en_v5_m43_model_load(&model,packed,sizeof(packed))==EN_V5_M43_BAD_MODEL);
     packed[0]='M';
     /* Frozen scale must never silently become zero or NaN. */
     value_at(EN_V5_M43_FLOATS-1u,0.0f);
-    assert(en_v5_m43_model_load(&model,packed,sizeof(packed))==EN_V5_M43_BAD_MODEL);
+    KWS_CHECK(en_v5_m43_model_load(&model,packed,sizeof(packed))==EN_V5_M43_BAD_MODEL);
     value_at(EN_V5_M43_FLOATS-1u,1.0f);
     value_at(0u,NAN);
-    assert(en_v5_m43_model_load(&model,packed,sizeof(packed))==EN_V5_M43_BAD_MODEL);
+    KWS_CHECK(en_v5_m43_model_load(&model,packed,sizeof(packed))==EN_V5_M43_BAD_MODEL);
     value_at(0u,1.0f);
-    assert(en_v5_m43_model_load(&model,packed,sizeof(packed))==EN_V5_M43_OK);
+    KWS_CHECK(en_v5_m43_model_load(&model,packed,sizeof(packed))==EN_V5_M43_OK);
 }
 static void stream_contiguous_and_chunk_independent(void) {
     capture all={0},split={0};
-    assert(en_v5_m43_stream_init(&stream,&model,1000000u,0u)==EN_V5_M43_OK);
-    assert(en_v5_m43_feed(&stream,speech,511u,0u,callback,&all)==EN_V5_M43_OK);
-    assert(all.count==0u);
-    assert(en_v5_m43_feed(&stream,speech+511u,321u,511u,callback,&all)==EN_V5_M43_OK);
-    assert(all.count==3u);
+    KWS_CHECK(en_v5_m43_stream_init(&stream,&model,1000000u,0u)==EN_V5_M43_OK);
+    KWS_CHECK(en_v5_m43_feed(&stream,speech,511u,0u,callback,&all)==EN_V5_M43_OK);
+    KWS_CHECK(all.count==0u);
+    KWS_CHECK(en_v5_m43_feed(&stream,speech+511u,321u,511u,callback,&all)==EN_V5_M43_OK);
+    KWS_CHECK(all.count==3u);
     for (unsigned j=0;j<3u;++j) {
-        assert(all.indices[j]==j);
-        assert(all.ends[j]==512u+160u*j);
+        KWS_CHECK(all.indices[j]==j);
+        KWS_CHECK(all.ends[j]==512u+160u*j);
         for (unsigned k=0;k<4u;++k)
-            assert(isfinite(all.logits[j][k]));
+            KWS_CHECK(isfinite(all.logits[j][k]));
     }
-    assert(all.detections==0u);
-    assert(en_v5_m43_stream_reset(&stream)==EN_V5_M43_OK);
+    KWS_CHECK(all.detections==0u);
+    KWS_CHECK(en_v5_m43_stream_reset(&stream)==EN_V5_M43_OK);
     const unsigned chunks[]={1u,509u,2u,80u,160u,80u};
     unsigned start=0u;
     for (unsigned j=0u;j<sizeof(chunks)/sizeof(chunks[0]);++j) {
         unsigned n=chunks[j];
-        assert(en_v5_m43_feed(&stream,speech+start,n,start,
+        KWS_CHECK(en_v5_m43_feed(&stream,speech+start,n,start,
                               callback,&split)==EN_V5_M43_OK);
         start+=n;
     }
-    assert(start==832u && split.count==3u);
+    KWS_CHECK(start==832u && split.count==3u);
     for (unsigned j=0u;j<3u;++j) {
-        assert(all.ends[j]==split.ends[j]);
-        assert(all.indices[j]==split.indices[j]);
-        assert(memcmp(all.logits[j],split.logits[j],
+        KWS_CHECK(all.ends[j]==split.ends[j]);
+        KWS_CHECK(all.indices[j]==split.indices[j]);
+        KWS_CHECK(memcmp(all.logits[j],split.logits[j],
                       sizeof(all.logits[j]))==0);
     }
 }
 static void strict_reset_clock_and_discontinuity(void) {
     capture results={0};
-    assert(en_v5_m43_feed(&stream,speech,1u,831u,callback,&results)
+    KWS_CHECK(en_v5_m43_feed(&stream,speech,1u,831u,callback,&results)
            ==EN_V5_M43_BAD_CLOCK);
-    assert(en_v5_m43_feed(&stream,speech,0u,832u,callback,&results)
+    KWS_CHECK(en_v5_m43_feed(&stream,speech,0u,832u,callback,&results)
            ==EN_V5_M43_BAD_ARGUMENT);
-    assert(en_v5_m43_feed(&stream,speech,16001u,832u,callback,&results)
+    KWS_CHECK(en_v5_m43_feed(&stream,speech,16001u,832u,callback,&results)
            ==EN_V5_M43_BAD_ARGUMENT);
-    assert(en_v5_m43_discontinuity(&stream,832u)==EN_V5_M43_BAD_CLOCK);
-    assert(en_v5_m43_discontinuity(&stream,1000u)==EN_V5_M43_OK);
-    assert(en_v5_m43_feed(&stream,speech,512u,1000u,callback,&results)
+    KWS_CHECK(en_v5_m43_discontinuity(&stream,832u)==EN_V5_M43_BAD_CLOCK);
+    KWS_CHECK(en_v5_m43_discontinuity(&stream,1000u)==EN_V5_M43_OK);
+    KWS_CHECK(en_v5_m43_feed(&stream,speech,512u,1000u,callback,&results)
            ==EN_V5_M43_OK);
-    assert(results.count==1u && results.ends[0]==1512u);
-    assert(results.indices[0]==0u);
-    assert(en_v5_m43_stream_reset(&stream)==EN_V5_M43_OK);
+    KWS_CHECK(results.count==1u && results.ends[0]==1512u);
+    KWS_CHECK(results.indices[0]==0u);
+    KWS_CHECK(en_v5_m43_stream_reset(&stream)==EN_V5_M43_OK);
     memset(&results,0,sizeof(results));
-    assert(en_v5_m43_feed(&stream,speech,512u,0u,callback,&results)
+    KWS_CHECK(en_v5_m43_feed(&stream,speech,512u,0u,callback,&results)
            ==EN_V5_M43_OK);
-    assert(results.count==1u && results.ends[0]==512u);
-    assert(en_v5_m43_feed(&stream,speech,1u,0u,callback,&results)
+    KWS_CHECK(results.count==1u && results.ends[0]==512u);
+    KWS_CHECK(en_v5_m43_feed(&stream,speech,1u,0u,callback,&results)
            ==EN_V5_M43_BAD_CLOCK);
 }
 int main(void) {
