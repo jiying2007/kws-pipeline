@@ -282,7 +282,7 @@
       "recovery_data_pr": 276,
       "actual_run": 44651053897,
       "status": "SUFFIX_CTC_RESEARCH_TRAINED_AND_MECHANISTIC_IMPROVEMENT_EXPOSED_DEV_ONLY",
-      "next_quality_gate": "FRESH_SOURCE_INDEPENDENT_CONTINUOUS_STREAM_SPEECH_AND_NEGATIVE_EVAL",
+      "next_quality_gate": "FRESH_SOURCE_DISJOINT_DEV_REQUIRED; EXPOSED_CONTINUOUS_5_6_VS_6_6_MECHANISM_ONLY",
       "next_software_gate": "COMPLETED_B3_28CASE_PT_GCC_CLANG_CORTEX_A32_QEMU_SOFTWARE_PARITY_ONLY",
       "model_promotion_allowed": false
     },
@@ -397,6 +397,66 @@
       },
       "derived_prefix_does_not_increase_independent_denominator": true,
       "causal_word_end_latency": "NOT_MEASURED",
+      "model_selection_allowed": false,
+      "product_promotion_allowed": false
+    },
+    "B3_continuous_exposed_dev": {
+      "status": "PASS_EXPOSED_SYNTHETIC_DEV_CONTINUOUS_C11_MECHANISM_NOT_PROMOTABLE",
+      "data_pr": 278,
+      "main_sha": "4995bfe0813f4bd6b65fa75a9c6764b14d64bd4e",
+      "actions_run": 44658362723,
+      "artifact_id": 14594762757,
+      "artifact_zip_sha256": "045c022a0d57a8750d289da10d307ceb50ad5e512120f7f31209bd0df62151c1",
+      "originals_reused": 14,
+      "source_groups": 8,
+      "positive_originals": 6,
+      "ordinary_originals": 8,
+      "unknown_excluded": 18,
+      "runtimes": [
+        "gcc",
+        "clang",
+        "cortex-a32-qemu"
+      ],
+      "pcm_sample_rate_hz": 16000,
+      "between_originals_silence_samples": 16000,
+      "clip_state_reset": false,
+      "model_sha256": "682e2689e82aa91d850516c06b2be61efc64731cb1dee3b70a7d2a8e01925a46",
+      "observed": {
+        "mixed": {
+          "positive_segments_with_event": 5,
+          "ordinary_segments_with_event": 0,
+          "unattributed_events": 0,
+          "total_events": 5
+        },
+        "reverse": {
+          "positive_segments_with_event": 6,
+          "ordinary_segments_with_event": 0,
+          "unattributed_events": 0,
+          "total_events": 6
+        },
+        "ordinary_only": {
+          "positive_segments_with_event": 0,
+          "ordinary_segments_with_event": 0,
+          "unattributed_events": 0,
+          "total_events": 0
+        },
+        "silence_5s": {
+          "positive_segments_with_event": 0,
+          "ordinary_segments_with_event": 0,
+          "unattributed_events": 0,
+          "total_events": 0
+        }
+      },
+      "only_order_sensitive_known_positive": "merov6dev8-490-mero-slow",
+      "same_positive_detected_when_reversed": true,
+      "same_positive_missed_in_mixed": true,
+      "cross_compiler_event_clock_equal": true,
+      "independent_development_quality": false,
+      "synthetic_concatenation_cannot_estimate_far_per_hour": true,
+      "future_independent_dev": "NOT_RUN",
+      "physical_ssc305": "NOT_RUN",
+      "human_frr": "NOT_MEASURED",
+      "natural_far_per_hour": "NOT_MEASURED",
       "model_selection_allowed": false,
       "product_promotion_allowed": false
     }
