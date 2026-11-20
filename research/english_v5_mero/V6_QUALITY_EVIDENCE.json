@@ -802,5 +802,33 @@
         "source_level_ctc_path_causal_explanation_proven": false
       }
     }
+  },
+  "b7_exact_replay_forensics": {
+    "status": "PASS_SAVED_TENSOR_DIFFERENCE_ONLY_NO_B7_CHALLENGER",
+    "data_pull_request": 300,
+    "data_main_commit": "73b7003c58fd8ec1f01a25c8a30c1d46efc93bea",
+    "original_b6_run_id": 44704535156,
+    "original_b6_artifact_id": 14615025178,
+    "failed_b7_run_id": 44721025043,
+    "failed_b7_control_artifact_id": 14622635105,
+    "saved_drift_run_id": 44738689144,
+    "saved_drift_artifact_id": 14629527557,
+    "saved_drift_zip_sha256": "f72785e3013b4d159dd3e134b29e5c261615b074ec603173112a652712fb702a",
+    "source_identity_byte_equal": true,
+    "model_parameter_names_equal": true,
+    "total_tensor_values": 43876,
+    "different_tensor_values": 21946,
+    "global_max_absolute_difference": 0.00001594051718711853,
+    "rms_difference": 7.846707500354542e-8,
+    "top_drift_tensor": "layers.1.linear.weight",
+    "top_drift_tensor_max_absolute_difference": 0.00001594051718711853,
+    "original_b6_exact_tensor_replay_passed": false,
+    "b7_challenger_weight_exists": false,
+    "new_optimizer_updates_during_forensics": 0,
+    "cal_locked_access": false,
+    "numerical_drift_causal_explanation": "NOT_PROVEN",
+    "training_recovery_permitted": false,
+    "product_promotion_allowed": false,
+    "B0_only_installed_software_baseline": true
   }
 }
