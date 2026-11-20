@@ -463,6 +463,47 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertIn("Real B6 gain-consistency training and genuinely new DEV512 test",doc)
         self.assertIn("Reject automatic B6 model promotion",doc)
 
+    def test_v6_b8_actual_trainonly_two_arms_not_a_product(self):
+        q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
+        r=q["b8_frozen_b6_trainonly"]
+        self.assertEqual(r["status"],
+            "RESEARCH_B8_TRAINED_PAIRED_FROZEN_B6_PARENT_NO_PROMOTION")
+        self.assertEqual((r["data_pr"],r["run_id"],r["original_artifact_id"]),
+                         (301,44746571932,14634066012))
+        self.assertEqual(r["run_conclusion"],"success")
+        self.assertEqual(r["data_main_commit"],
+            "453b26bdd4ab2bdc96b27fe0dfb9ac10bdd38711")
+        self.assertEqual(r["original_artifact_zip_bytes"],1001683)
+        self.assertEqual(r["original_artifact_zip_sha256"],
+            "6015c6269f87654193d7350afd0c5b44f799f5f71b5303e41f2734c17006d15b")
+        self.assertEqual(r["immutable_frozen_B6_parent_pt_sha256"],
+            "0461ce14ff5ed6490e88801b23c9036ca63b2c302aee7e8d96cea26c3eaa9f04")
+        self.assertEqual(r["total_real_optimizer_updates"],384)
+        self.assertEqual(r["per_arm_optimizer_updates"],192)
+        self.assertEqual(r["train_source_groups"],35)
+        self.assertEqual(r["model_parameters"],43876)
+        self.assertTrue(r["two_arms_same_job"])
+        self.assertEqual((r["control_ordinary_ctc_weight"],
+                          r["challenger_ordinary_ctc_weight"]),(0.60,0.85))
+        self.assertEqual(r["control_pt_sha256"],
+            "a5cc0935c51afa1f82faed48cd50286c5bb5a9d136b0b4f752c176beb76df1e1")
+        self.assertEqual(r["challenger_pt_sha256"],
+            "cc16b81f84e4f21c5347ca153f405ac41ed116e3eedfaeed5677d1a4bc86e22f")
+        self.assertEqual(r["different_trained_float_values"],43755)
+        self.assertEqual(r["B7_historical_replay"],"FAILED_UNCHANGED")
+        self.assertEqual(r["new_tts_asr_phone_calls"],0)
+        self.assertEqual(r["dev_model_forwards"],0)
+        self.assertFalse(r["dev_pcm_in_gradients"])
+        self.assertFalse(r["cal_locked_opened"])
+        self.assertFalse(r["model_selection_allowed"])
+        self.assertFalse(r["product_promotion_allowed"])
+        self.assertEqual(r["independent_posttrain_DEV"],"NOT_RUN")
+        self.assertEqual(r["ssc305_physical"],"NOT_RUN")
+        doc=(ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text()
+        self.assertIn("## Real B8 frozen-parent paired TRAIN execution",doc)
+        self.assertIn("43,755",doc)
+        self.assertIn("not a bypass or recovery of B7",doc)
+
     def test_v6_b7_authentic_saved_control_replay_drift_never_promotes(self):
         q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
         r=q["b7_exact_replay_forensics"]
