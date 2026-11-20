@@ -553,6 +553,112 @@
       "model_selection_allowed": false,
       "decoder_policy_selection_allowed": false,
       "product_promotion_allowed": false
+    },
+    "B4_B5_DEV504_frozen_research": {
+      "status": "ACTUAL_FROZEN_DEV504_PAIRED_B5_EARLY_HEY_REJECTED_HALFGAIN_NO_PRODUCT_PROMOTION",
+      "data_pr_chain": [
+        286,
+        287,
+        288,
+        289,
+        290,
+        291
+      ],
+      "trained_b5": {
+        "run": 44689985361,
+        "artifact_id": 14608546071,
+        "artifact_zip_sha256": "e945b156d52199569aa36963b786424df7940f0b9285a26af9509284024e081a",
+        "actual_optimizer_updates": 384,
+        "control_tensor_matches_B4_half": true,
+        "independent_dev_used_in_gradients": false
+      },
+      "source": {
+        "original_run": 44691501603,
+        "original_audio_artifact_id": 14607979756,
+        "original_count": 32,
+        "distinct_development_source_groups": 8,
+        "blind_five_native_run": 44694776784,
+        "actual_observations": 160,
+        "qa_run": 44696685618,
+        "qa_artifact_id": 14611385826,
+        "qa_artifact_zip_sha256": "d5309d04ddc0c5eaac11befcefe85ce465925139340b0d9ec9cce35d78b71e75",
+        "qualified_positive": 5,
+        "qualified_ordinary": 8,
+        "unknown_excluded": 19,
+        "qualified_development_source_groups": 3,
+        "human_gold": false,
+        "training_allowed": false
+      },
+      "frozen_quality": {
+        "run": 44700786677,
+        "main_sha": "1668301a2116cabb0e78ca247ae1102b1ab25d98",
+        "artifact_id": 14611963808,
+        "artifact_zip_size_bytes": 39379,
+        "artifact_zip_sha256": "67267fcdf78535a75854645de60e7ad662aaa5016788b62e9901c1f073e9b016",
+        "actual_model_forward_conditions": 117,
+        "model_pt_sha256": {
+          "B4_half": "c795f8b5f6bf8e9c37d195126fc25006dbde92fb71591473c05854e3d3698f15",
+          "B5_control": "0b0f09f4db86e9b10a05c194bba56071be46d5031e573a22183b785a3b65659a",
+          "B5_early_hey": "784f82b552c411f04631d5adc0664b4f07f305ca45d551a1de8352e844ee440d"
+        },
+        "gains": [
+          {
+            "factor": 1,
+            "B4_half_hits": 5,
+            "B5_control_hits": 5,
+            "B5_early_hey_hits": 5,
+            "positive_n": 5,
+            "ordinary_any_events_each_model": 0,
+            "ordinary_n": 8
+          },
+          {
+            "factor": 0.75,
+            "B4_half_hits": 5,
+            "B5_control_hits": 5,
+            "B5_early_hey_hits": 5,
+            "positive_n": 5,
+            "ordinary_any_events_each_model": 0,
+            "ordinary_n": 8
+          },
+          {
+            "factor": 0.5,
+            "B4_half_hits": 3,
+            "B5_control_hits": 3,
+            "B5_early_hey_hits": 2,
+            "positive_n": 5,
+            "ordinary_any_events_each_model": 0,
+            "ordinary_n": 8
+          }
+        ],
+        "gain_variants_are_derived_not_independent": true,
+        "B5_early_hey_worse_than_B4_half_at_half_gain": true,
+        "B5_half_gain_positive_without_meh_argmax": 1,
+        "B4_half_gain_positive_without_meh_argmax": 0
+      },
+      "previous_recovery": {
+        "failed_run": 44698504736,
+        "failure_phase": "MODEL_ZIP_SHA_CHECK_BEFORE_ANY_INFERENCE",
+        "reason": "52_HEX_WORKFLOW_B5_SHA_TYPO",
+        "fixed_by_data_pr": 291,
+        "no_prior_model_result": true
+      },
+      "decision": {
+        "B0_c11_sdk_remains_frozen": true,
+        "B4_half_research_reference_only": true,
+        "B5_early_hey_not_promoted": true,
+        "model_selection_allowed": false,
+        "decoder_threshold_selection_allowed": false,
+        "product_promotion_allowed": false
+      },
+      "qualification": {
+        "one_tts_engine_only": true,
+        "independent_human_3_5m_frr": "NOT_MEASURED",
+        "natural_far_per_hour": "NOT_MEASURED",
+        "physical_ssc305": "NOT_RUN",
+        "new_b5_c11_arm32_parity": "NOT_RUN",
+        "new_locked_test": "NOT_RUN",
+        "new_calibration": "NOT_RUN"
+      }
     }
   }
 }
