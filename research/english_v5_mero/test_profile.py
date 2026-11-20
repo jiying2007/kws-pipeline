@@ -267,7 +267,24 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertEqual(b3["in_sample_first_frame_blank"],12)
         self.assertEqual(b3["in_sample_first_frame_hey"],0)
         self.assertEqual(b3["fresh_independent_eval"],"NOT_RUN")
-        self.assertEqual(b3["c11_parity"],"NOT_RUN")
+        self.assertEqual(b3["c11_parity"],"PASS_REAL_ORIGINAL_PCM_28_CASES_PT_GCC_CLANG")
+        self.assertEqual(b3["arm32_qemu_parity"],"PASS_REAL_CORTEX_A32_QEMU_28_CASES")
+        parity=b3["b3_software_parity"]
+        self.assertEqual(parity["actions_run"],44653612830)
+        self.assertEqual(parity["run_main_sha"],"acbd6b2bab42374d2125e93537e040bc32b9c1f7")
+        self.assertEqual(parity["artifact_id"],14593110591)
+        self.assertEqual(parity["artifact_sha256"],
+                         "f288798c50a85cce0a2fef22b7006d71237f53afec7dadbdbbe0e610fd424036")
+        self.assertEqual(parity["original_audio_count"],14)
+        self.assertEqual(parity["total_case_count"],28)
+        self.assertEqual(parity["observed_max_abs_logit"],0.000091552734375)
+        self.assertTrue(parity["full_ctc_token_and_event_clock_parity"])
+        self.assertTrue(parity["reused_previously_exposed_synthetic_dev_only"])
+        self.assertFalse(parity["product_promotion_allowed"])
+        self.assertEqual(parity["physical_ssc305"],"NOT_RUN")
+        self.assertEqual(parity["real_far_per_hour"],"NOT_MEASURED")
+        self.assertIn("B3 PyTorch", (ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text())
+        self.assertIn("software numerical parity", (ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text())
         self.assertFalse(b3["product_promotion_allowed"])
         report=r["B3_exposed_mechanism_diagnostic"]
         self.assertEqual(report["full_clip_positive_hits_original"],
