@@ -1,123 +1,112 @@
-# 英文 KWS 的 SSC305 接入入口
+# Hey Mero V6.0 — SSC305 单关键词 43K 接入入口
 
-> **V5.0 当前单唤醒词为 Hey Mero。** 详见 [V5.0 规范](ENGLISH_V5_MERO_ONLY.md)。此页既有 `ekws_stream` 和双词研究权重仅适用于原版本的历史软件验证；不能将旧二词模型改名为 V5.0 部署模型。真实 BSP/PCM/板端探针可复用，但 V5 新 FSMN-CTC 声学模型的 C/ARM 数值验证尚未完成。
+> **唯一活动英文词：Hey Mero /heɪ ˈmɛroʊ/**。当前唯一可复核的软件部署基线为 B0（43,876 参数，256 步 FSMN-CTC）；B1/B2/B3/B4 是**独立研究候选**，任何新的 PT、ONNX 或 NPZ 均不可直接替换 B0 板端模型。此文是现场接入指南，**不构成已在 SSC305 运行或已通过产品 FRR/FAR 的证明**。
 
+## 0. 单一可信入口与边界
 
-> 当前研究入口：英文沿用合成数据、版本化机器准入和 C/ARM 软件交付路线。真实录音、最终真人发音 gold 与 SSC305 实板接入均不是该路线的前置条件；本页仅用于获得硬件后继续板端验证。活动政策见 [英文研究发音与软件交付政策](ENGLISH_KWS_PRONUNCIATION_PROFILE_20261115.md)。
+| 项目 | 当前有效入口/证据 |
+|---|---|
+| Hey Mero 独立 C11 SDK | `research/english_v5_mero/{mero43_stream.[ch],mero_ctc.[ch],CMakeLists.txt}` |
+| 实际软件模型 | `kws-data` run [44495594627](https://github.com/jiying2007/kws-data/actions/runs/44495594627)，artifact `14514228406`；ZIP SHA256 `91b203f05041d92e7ffb1b748f94959ce19af6673b91dbc2144920815058d702` |
+| 原始权重重打包 | `research/english_v5_mero/pack_mero43.py`；只接受上述冻结 ZIP，输出 216,960 字节 `MERO43V1` 包和 SHA 回执 |
+| SDK 构建/安装/消费 | [SSC305_SDK_HANDOFF.md](../research/english_v5_mero/SSC305_SDK_HANDOFF.md) |
+| C11/ARM 软件一致性 | B0：[原始 PCM 10/10 x86](https://github.com/jiying2007/kws-data/actions/runs/44541193521)及[10/10 ARM32 QEMU](https://github.com/jiying2007/kws-data/actions/runs/44542782505)；B3 另有[28 例 C11/ARM32 数值证据](https://github.com/jiying2007/kws-data/actions/runs/44653612830)，但仍非晋级模型 |
+| V6 质量/模型状态 | [ENGLISH_V6_MERO_EXECUTION.md](ENGLISH_V6_MERO_EXECUTION.md)、[V6_QUALITY_EVIDENCE.json](../research/english_v5_mero/V6_QUALITY_EVIDENCE.json) |
 
-本页复用现有 SDK 和只读 BSP 探针。它不提供设备地址、凭据或替代工具链，不代表已经在 SSC305 上运行。当前英文模型仍是弱研究候选；目标板接入与声学准入分别记录。
+**禁止串线：**仓库历史 `research/english_stream_integration`、`ekws_pcm_stream` 和 `models/causal-head.bin` 属于旧英文 full-chain 研究路径，不是当前 Hey Mero 单词 43K B0 模型的集成入口。不能因为旧 SDK、旧 ARM 工程或旧历史测试通过，就把它们当作 V6 43K 产品验收。当前单词 SDK 的目录中保留 `english_v5_mero` 名称是源码路径事实，不表示该模型已通过 V6 质量晋级。
 
-本文发布于 `docs/ENGLISH_SSC305_ENTRYPOINT.zh-CN.md`。文中 `research/...` 路径均相对于 kws-pipeline 仓库根目录，不相对于本文所在的 `docs` 目录。主机命令使用绝对路径变量 `KWS_PIPELINE_SOURCE`；板端命令在明确提供的可写目录中读取已复制的文件并保存结果。
+## 1. 收集真实 BSP/板端身份（没有硬件时保持 NOT_RUN）
 
-## 已有入口与当前缺口
+本仓库可复用只读探针：
 
-- `research/arm_runtime/scripts/probe_sdk_readonly.sh`：在 SDK 主机上查询显式指定的真实编译器，并静态检查复制回来的目标 ELF。
-- `research/arm_runtime/scripts/probe_board_readonly.sh`：在真实板上读取 kernel、CPU features、libc、loader 和已有 ELF 信息。
-- `research/english_stream_integration/CMakeLists.txt`：可使用显式 BSP 编译器与 sysroot 构建现有英文 SDK；已校验冻结的 frontend/head/generated 源字节。
-- 安装后的 `bin/ekws_pcm_stream`：消费 mono 16 kHz PCM16，输出事件 JSONL，没有 EOF 补零。
+- `research/arm_runtime/scripts/probe_sdk_readonly.sh`：以现场真实 BSP C 编译器及目标板复制出的 ELF 为输入，核对架构/ABI；不修改目标机。
+- `research/arm_runtime/scripts/probe_board_readonly.sh`：在真实板上记录内核、CPU、libc/loader 等。现场指令仅在具有合法设备访问、正确可写工作目录时执行。
 
-当前核验源为 kws-pipeline `2e2151aaae54211f6ea1faf1287c002a5ebee0ad`、audio-pipeline `379d6f88bcfc467b88ad31c2a924221d8349a806`。仓库中可见的 audio-pipeline `lab/examples/board.ssc305.example.json` 含有待替换项；它不是可用设备配置。现有 generic ARMhf/QEMU 产物不能证明实际 SSC305 BSP 兼容。尚缺实际 BSP 编译器/sysroot、板端 ELF/loader 证据和可访问设备入口。
+实际接入时记录：SSC305 具体板型与 BSP 版本、真实交叉编译器路径、sysroot 来源、ELF 浮点 ABI、板端执行/文件传输入口、ALSA/MI_AI/AFE 的实际采样路径，以及设备供电和 CPU 调频条件。当前仓库**未提供这些现场事实**；不能用 Ubuntu ARM 工具链、QEMU 或示例配置填充它们。
 
-## 现场接续所需的最小信息
-
-| 输入 | 需要提供的实际信息 | 当前状态 |
-| --- | --- | --- |
-| 真实编译器 | 可访问的 SDK 主机／执行入口、BSP 版本及 C 编译器绝对路径 `KWS_BSP_CC`；使用原有 probe 记录版本与 target triple | UNKNOWN |
-| 真实 sysroot | `KWS_BSP_SYSROOT` 的绝对路径、所属 BSP 版本及可核对的来源；不能用 generic ARM sysroot 替代 | UNKNOWN |
-| 目标 ABI | 从实际板端 ELF 与 BSP 核对 ELF32／ARM、字节序、浮点调用约定、动态解释器、libc 及编译 flags；可提供复制出的目标 `/bin/busybox` 供现有 probe 静态检查 | UNKNOWN |
-| 板端执行与传输通道 | 已可用的 SSH、串口或已配置 runner 的具体执行入口；对应文件传输方式；已确认存在且可写的绝对目录 `KWS_TARGET_WORKDIR` | UNKNOWN |
-| 实际音频接口 | 使用 ALSA、SigmaStar `MI_AI` 或已有 AFE PCM 回调中的哪一条路径；真实设备／端口／通道标识、采样率、通道数、位深、字节序和交错方式，以及输入处于 AFE 前还是后 | UNKNOWN |
-
-`UNKNOWN` 仅表示尚未获得该信息，不是可填入命令的参数值。使用现场已核实的值替换相应变量；缺少本阶段必需输入时保留该阶段未执行，并继续不依赖实板的工作。同一 PCM 文件配对需要前四项，实时麦克风接入还需要第五项。KWS 当前 API 要求 mono 16 kHz PCM16；实际采集格式不同，应明确转换所在位置及其样本时钟，不能把 API 要求当作已经核实的硬件采集格式。
-
-## 1. 从真实 BSP 获取身份
-
-在已具备真实 BSP 的主机上提供以下变量。不得从 generic Ubuntu ARM 工具链推断这些值。
+在 BSP 主机先取得只读身份：
 
 ```sh
-: "${KWS_PIPELINE_SOURCE:?Set the absolute checked-out kws-pipeline path}"
-: "${KWS_BSP_CC:?Set the actual absolute BSP C compiler path}"
-: "${KWS_TARGET_ELF_COPY:?Set a copied executable from the actual target}"
+: "${KWS_PIPELINE_SOURCE:?仓库绝对路径}"
+: "${KWS_BSP_CC:?真实 BSP C 编译器绝对路径}"
+: "${KWS_TARGET_ELF_COPY:?从实际目标板复制的 ELF}"
 sh "$KWS_PIPELINE_SOURCE/research/arm_runtime/scripts/probe_sdk_readonly.sh" \
-  "$KWS_BSP_CC" "$KWS_TARGET_ELF_COPY" > sdk-inventory.txt
+   "$KWS_BSP_CC" "$KWS_TARGET_ELF_COPY" > sdk-inventory.txt
 ```
 
-通过已提供的传输通道，把原有 `probe_board_readonly.sh` 原样复制到真实板的 `KWS_TARGET_WORKDIR`，再只读获取身份与必要的内存／调频上下文：
+## 2. 仅打包已认证 B0 模型（在构建主机执行）
 
-```sh
-: "${KWS_TARGET_WORKDIR:?Set an existing writable absolute directory on the actual target}"
-case "$KWS_TARGET_WORKDIR" in /*) ;; *) exit 2;; esac
-test -d "$KWS_TARGET_WORKDIR" && test -w "$KWS_TARGET_WORKDIR" || exit 2
-sh "$KWS_TARGET_WORKDIR/probe_board_readonly.sh" > "$KWS_TARGET_WORKDIR/board-inventory.txt"
-{
-  if [ -r /proc/meminfo ]; then
-    grep -E '^(MemTotal|MemFree|MemAvailable|Buffers|Cached):' /proc/meminfo || :
-  fi
-  for KWS_CPU_PATH in /sys/devices/system/cpu/cpu[0-9]*; do
-    for KWS_CPU_FIELD in scaling_governor scaling_cur_freq cpuinfo_max_freq; do
-      KWS_CPU_FILE="$KWS_CPU_PATH/cpufreq/$KWS_CPU_FIELD"
-      if [ -r "$KWS_CPU_FILE" ]; then
-        printf '%s=' "$KWS_CPU_FILE"
-        cat "$KWS_CPU_FILE"
-      fi
-    done
-  done
-} > "$KWS_TARGET_WORKDIR/board-memory-frequency.txt"
-```
-
-这里只读取系统上下文，不调整 governor、不锁频、不安装依赖、不加载模型。记录板型、BSP 版本、实际 sysroot 来源，并检查 ELF32/ARM、浮点调用约定、动态解释器和 libc。原始输出可能包含本机路径或设备名称，作为现场记录保留；发布前只提取必要技术字段。
-
-## 2. 用真实 BSP 构建现有 SDK
-
-先按已有 artifact manifest 验证原始 fullchain generated 源与模型。为新编译选择独立空构建目录，保留旧 native/ARM 产物。
+原始公开 Actions 模型 ZIP 必须按仓库文档的 artifact ID 和 SHA 获取，先以 `sha256sum` 检查完整 ZIP，再调用源码内置的强制校验器。以下均由现场提供实际路径，不自动下载、更换训练权重或重用已过期文件：
 
 ```sh
 : "${KWS_PIPELINE_SOURCE:?}"
-: "${KWS_BSP_CC:?}"
-: "${KWS_BSP_SYSROOT:?Set the actual BSP sysroot}"
-: "${KWS_BSP_CFLAGS:?Set the flags verified against the target ABI}"
-: "${KWS_FULLCHAIN_GENERATED:?Set authenticated fullchain generated directory}"
-: "${KWS_BSP_BUILD:?Set a new build directory}"
-: "${KWS_BSP_INSTALL:?Set the SDK install directory}"
-cmake -S "$KWS_PIPELINE_SOURCE/research/english_stream_integration" \
-  -B "$KWS_BSP_BUILD" \
-  -DCMAKE_SYSTEM_NAME=Linux \
-  -DCMAKE_SYSTEM_PROCESSOR=arm \
-  -DCMAKE_C_COMPILER="$KWS_BSP_CC" \
-  -DCMAKE_SYSROOT="$KWS_BSP_SYSROOT" \
+: "${KWS_B0_ORIGINAL_ZIP:?已下载且确认 SHA 的原始 artifact ZIP}"
+: "${KWS_B0_PACK_OUTPUT:?新的、尚不存在的模型输出路径}"
+python3 -I -B "$KWS_PIPELINE_SOURCE/research/english_v5_mero/pack_mero43.py" \
+  --source-zip "$KWS_B0_ORIGINAL_ZIP" \
+  --output "$KWS_B0_PACK_OUTPUT"
+sha256sum "$KWS_B0_PACK_OUTPUT"
+```
+
+保留生成的 `*.json` 回执，记录原始 ZIP 和最终 pack 的 SHA、字节数、版本及来源。**Python 仅在构建/审核主机上使用**；SSC305 运行时不需要 Python。C11 加载器负责格式、参数数值校验，不负责认证文件 SHA；设备软件的模型装载链须另行执行与回执匹配的 SHA 验证。
+
+## 3. 构建/安装单关键词 C11 SDK
+
+先在 Linux 构建主机做无需模型权重的 C11 合成源测试和 CMake 安装冒烟：
+
+```sh
+cmake -S "$KWS_PIPELINE_SOURCE/research/english_v5_mero" \
+  -B /tmp/heym43-native -DCMAKE_BUILD_TYPE=Release \
+  -DHEY_MERO43_BUILD_TESTS=ON -DHEY_MERO43_BUILD_HOST_TOOL=OFF
+cmake --build /tmp/heym43-native --parallel 2
+ctest --test-dir /tmp/heym43-native --output-on-failure
+```
+
+随后使用**已查证为实际板型对应的** BSP 工具链和 sysroot 交叉编译。以下 CFLAGS 来自现场 ABI 审核，不预设 hard-float、NEON 或动态装载器：
+
+```sh
+: "${KWS_BSP_CC:?真实 BSP C 编译器}"
+: "${KWS_BSP_SYSROOT:?真实 BSP sysroot}"
+: "${KWS_BSP_CFLAGS:?已核实的目标 CFLAGS}"
+: "${KWS_BSP_BUILD:?新的构建目录}"
+: "${KWS_BSP_INSTALL:?SDK 安装目录}"
+cmake -S "$KWS_PIPELINE_SOURCE/research/english_v5_mero" -B "$KWS_BSP_BUILD" \
+  -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=arm \
+  -DCMAKE_C_COMPILER="$KWS_BSP_CC" -DCMAKE_SYSROOT="$KWS_BSP_SYSROOT" \
   -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
   -DCMAKE_C_FLAGS="$KWS_BSP_CFLAGS" \
-  -DKWS_ENABLE_ENGLISH_RESEARCH_STREAM=ON \
-  -DEKWS_PIPELINE_SOURCE="$KWS_PIPELINE_SOURCE" \
-  -DEKWS_GENERATED_SOURCE_DIR="$KWS_FULLCHAIN_GENERATED" \
-  -DEKWS_STATIC_RUNNER=OFF \
+  -DHEY_MERO43_BUILD_TESTS=OFF -DHEY_MERO43_BUILD_HOST_TOOL=OFF \
   -DCMAKE_INSTALL_PREFIX="$KWS_BSP_INSTALL"
 cmake --build "$KWS_BSP_BUILD" --parallel 2
 cmake --install "$KWS_BSP_BUILD"
-sh "$KWS_PIPELINE_SOURCE/research/arm_runtime/scripts/probe_sdk_readonly.sh" \
-  "$KWS_BSP_CC" "$KWS_BSP_INSTALL/bin/ekws_pcm_stream" > candidate-elf-inventory.txt
 ```
 
-不硬编码 hard-float、NEON 或 CPU 扩展；这些参数来自实际 BSP。若真实 BSP 只支持另一种 libc/浮点 ABI，需要重新构建，不将主机库复制进板端以掩盖不匹配。上述构建不自动执行模型。
+安装得到 `heym43/mero43_stream.h`、`heym43/mero_ctc.h`、`HeyMero43::stream` 静态库。实际应用需在同一 BSP/ABI 下链接 `libm`（库已声明链接依赖），并可由 CMake `find_package(HeyMero43 0.1 CONFIG REQUIRED)` 找到。**交叉编译成功只证明构建，不证明目标板已执行。**
 
-## 3. 先做同一 PCM 的目标板配对
+## 4. 产品应用接线与运行边界
 
-模型文件使用已经验证的 SDK artifact 中 `models/causal-head.bin`，保持其哈希。现场通过已有授权传输方式放置 BSP 构建产物、模型及已保存的 mono 16 kHz PCM16 输入；不要把 generic QEMU runner 当作 BSP 构建结果。
+应用负责认证 `MERO43V1` 模型 pack（216,960 字节）、分配静态模型/单流内存、初始化并持续提供 **16 kHz 单声道有符号 PCM16**：
 
-```sh
-: "${KWS_TARGET_RUNNER:?Set the BSP-built runner on the actual board}"
-: "${KWS_TARGET_HEAD:?Set the authenticated causal-head.bin path}"
-: "${KWS_TARGET_PCM:?Set the known PCM16 input path}"
-: "${KWS_TARGET_WORKDIR:?Set the previously verified writable target directory}"
-"$KWS_TARGET_RUNNER" "$KWS_TARGET_HEAD" ssc305_pcm_pair < "$KWS_TARGET_PCM" > "$KWS_TARGET_WORKDIR/ssc305-events.jsonl"
-```
+1. 在非实时线程完成模型来源、包 SHA 验证和 `en_v5_m43_model_load()`；模型常驻只读。
+2. 用 `en_v5_m43_model_bytes()` 和 `en_v5_m43_stream_bytes()` 确认 arena，初始化 `en_v5_m43_stream_init()`，使用**单独、可审计、独立 CAL 得到的** `max_gap_samples` 和 `cooldown_samples`。这两个值尚未校准时，禁止将 SDK 事件作为产品唤醒决策。
+3. 单 owner 线程每次调用 `en_v5_m43_feed()` 输入 **1–16000** 个连续样本及对应 `first_sample`；回调取得 4 个 Logit、样本可用时钟和完整词事件。回调时钟不是物理词尾时间。
+4. PCM 丢包、重新打开录音、切换采集路径等真实断流必须调用 `en_v5_m43_discontinuity()`；新独立会话调用 `en_v5_m43_stream_reset()`。不能靠填充假音频来掩盖中断，也不能在并发线程复用同一个状态。
+5. 严禁把现有研究回放工具 `mero43_host_cli.c` 中的 `max_gap_samples=1000000`、`cooldown_samples=0` 搬进产品：其 **62.5 秒**长窗口只用于离线数值回放，允许跨音段拼接 HEY/MEH/ROH，已经被 V6 声学审计识别为明显风险；真正的时间窗应依据未暴露 CAL 与连续自然负例选择并在 LOCKED 上验证。
 
-主机与板端消费同一输入、相同阈值和状态规程，记录原始事件、样本时钟、输出差异、退出状态及二进制/模型/输入哈希。录音 ID 的 `ssc305` 字样不是设备证明，仍需上述真实板端身份记录。此步骤不构成实时麦克风、FAR/FRR 或词尾回调验收。
+模型权重/模型选用、解码政策、设备硬件身份必须作为三个**独立的版本化证据维度**。B3/B4 的研究结果无论改善多少，若未经过独立声学质量证据、对应权重的 C11↔ARM32 数值回放，以及物理 SSC305 实测，都不能自动覆盖本页 B0 装载路径。
 
-## 4. 与完整性能基准及实时音频接续
+## 5. 真实设备证据闭环
 
-后续使用独立的完整链 benchmark，报告 init、steady wall/process CPU、输入秒数、RTF、RSS/PSS 和服务时间。不要用 shell 外围 wall time 代替 accept 内部计时，也不要将 QEMU 时长当成 SSC305 性能。
+在真正板端具有可运行的集成应用、音频采集通道和经认证的 B0 pack 后，分别存档：
 
-实时麦克风接入复用 `ekws_stream_accept_pcm16()`：传入真实单调样本序号，在 owner 线程维护连续状态，以有界事件队列转交应用。只有真实断流才调用 discontinuity/reset。reset 后首个 ready head 需要 35,200 个真实样本（2.2 秒）；开机即说、恢复和换音路单独记录。
+| 证据 | 必须包含 |
+|---|---|
+| 身份 | 板号/BSP/toolchain/sysroot、ELF/ABI、模型 pack SHA、应用 commit、PCM SHA |
+| 配对一致性 | **同一原始 PCM** 在 host 与板端的逐帧 Token、事件计数和可用样本时钟；不能以 generic QEMU 替代 |
+| 资源与实时性 | 真实设备 CPU、P95 端到端回调、峰值 RSS/PSS、栈、持续运行、耗电/温度以及采集链缓冲时延 |
+| 声学质量 | 独立真人 3–5m 远场 FRR、长时间自然录音 FAR/h、近似词/其他背景挑战、不可用于调参的 LOCKED 数据 |
+| 隔离 | 实际音频来源许可、声源组及会话隔离；合成开发样本及增益派生样本不能冒充独立真人或增加统计分母 |
 
-直到板端实际运行与记录完成，状态保持 `ssc305=NOT_RUN`。工具链库存检查、交叉编译通过和软件事件配对各自报告，不自动升级为独立声学或实板稳定性通过。
+现场观测可复用现有 `tools/collect_target_evidence.py` 和 `tools/collect_runtime_soak.py`，但必须提供实际采集值/原始记录，不可凭主机测试编造实板 PASS。当前状态：**单词 B0 SDK 软件层 PASS；B3 软件数值层 PASS；SSC305 实板、真实远场与自然 FAR/h = NOT_RUN**。
+
+`research/english_v5_mero/SSC305_SDK_HANDOFF.md` 仍是具体 SDK API/构建交付参考；任何历史双词/旧 causal-head 说明都不得覆盖本文模型来源和研究边界。
