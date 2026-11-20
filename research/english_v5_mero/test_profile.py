@@ -463,6 +463,42 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertIn("Real B6 gain-consistency training and genuinely new DEV512 test",doc)
         self.assertIn("Reject automatic B6 model promotion",doc)
 
+    def test_v6_b7_authentic_saved_control_replay_drift_never_promotes(self):
+        q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
+        r=q["b7_exact_replay_forensics"]
+        self.assertEqual(r["status"],
+            "PASS_SAVED_TENSOR_DIFFERENCE_ONLY_NO_B7_CHALLENGER")
+        self.assertEqual(r["data_pull_request"],300)
+        self.assertEqual(r["data_main_commit"],
+            "73b7003c58fd8ec1f01a25c8a30c1d46efc93bea")
+        self.assertEqual((r["original_b6_run_id"],r["failed_b7_run_id"],
+                          r["saved_drift_run_id"]),(44704535156,44721025043,44738689144))
+        self.assertEqual((r["original_b6_artifact_id"],
+                          r["failed_b7_control_artifact_id"],
+                          r["saved_drift_artifact_id"]),(14615025178,14622635105,14629527557))
+        self.assertEqual(r["saved_drift_zip_sha256"],
+            "f72785e3013b4d159dd3e134b29e5c261615b074ec603173112a652712fb702a")
+        self.assertTrue(r["source_identity_byte_equal"])
+        self.assertTrue(r["model_parameter_names_equal"])
+        self.assertEqual(r["total_tensor_values"],43876)
+        self.assertEqual(r["different_tensor_values"],21946)
+        self.assertAlmostEqual(r["global_max_absolute_difference"],1.594051718711853e-5)
+        self.assertAlmostEqual(r["rms_difference"],7.846707500354542e-8)
+        self.assertEqual(r["top_drift_tensor"],"layers.1.linear.weight")
+        self.assertFalse(r["original_b6_exact_tensor_replay_passed"])
+        self.assertFalse(r["b7_challenger_weight_exists"])
+        self.assertEqual(r["new_optimizer_updates_during_forensics"],0)
+        self.assertFalse(r["cal_locked_access"])
+        self.assertEqual(r["numerical_drift_causal_explanation"],"NOT_PROVEN")
+        self.assertFalse(r["training_recovery_permitted"])
+        self.assertFalse(r["product_promotion_allowed"])
+        self.assertTrue(r["B0_only_installed_software_baseline"])
+        doc=(ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text()
+        self.assertIn("B6_GAIN_KL_CONTROL_TENSOR_REPLAY_DRIFT_STOP",doc)
+        self.assertIn("21,946",doc)
+        self.assertIn("14629527557",doc)
+        self.assertIn("Do **not** weaken exact tensor equality",doc)
+
     def test_english_v5_workflow_is_exactly_registered(self):
         manifest=json.loads((ROOT/"research/consolidation/source-retention-2026-10-07.json").read_bytes())
         workflow=".github/workflows/english-v5-mero-contract.yml"
