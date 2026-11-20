@@ -233,6 +233,33 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertIn("5/6",doc)
         self.assertIn("without performing any additional model forward",doc)
 
+    def test_v6_r2_trained_b2_research_nonpromotion_and_suffix_followup(self):
+        q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
+        r=q["experimental_followup"]
+        b=r["B2"]
+        self.assertEqual(b["status"],"ACTUAL_TRAINED_RESEARCH_NO_PROMOTION")
+        self.assertEqual(b["run_id"],44648437304)
+        self.assertEqual(b["artifact_id"],14589303986)
+        self.assertEqual(b["actual_new_optimizer_updates"],256)
+        self.assertEqual(b["train_source_groups"],35)
+        self.assertEqual(b["train_only_probe_count"],12)
+        self.assertEqual(b["train_only_initial_argmax_hey"],12)
+        self.assertEqual(b["train_only_prefix_blank_argmax_fraction"],0.991071)
+        self.assertEqual(b["c11_numeric_parity"],"NOT_RUN")
+        self.assertFalse(b["product_promotion_allowed"])
+        e=r["reproduced_exposed_dev_diagnostic"]
+        self.assertEqual(e["positive_originals"],6)
+        self.assertEqual(e["ordinary_originals"],8)
+        self.assertEqual(e["original_positive_hits"],{"B0":5,"B1":6,"B2":6})
+        self.assertEqual(e["half_gain_positive_hits"],{"B0":1,"B1":1,"B2":3})
+        self.assertEqual(e["half_gain_ordinary_false_events"],{"B0":0,"B1":0,"B2":1})
+        self.assertEqual(e["one_second_prefix_new_hey_after_first_0p8s_positive"],
+                         {"B0":0,"B1":0,"B2":0})
+        self.assertTrue(e["derived_conditions_not_independent"])
+        self.assertFalse(e["model_selection_allowed"])
+        self.assertEqual(r["next_experiment"]["data_pr"],275)
+        self.assertFalse(q["promotion"]["product_promotion_allowed"])
+
     def test_english_v5_workflow_is_exactly_registered(self):
         manifest=json.loads((ROOT/"research/consolidation/source-retention-2026-10-07.json").read_bytes())
         workflow=".github/workflows/english-v5-mero-contract.yml"
