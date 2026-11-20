@@ -10,7 +10,7 @@
  * disabling those expressions would produce a false PASS without testing. */
 #define KWS_CHECK(expr) do {                                                \
     if (!(expr)) {                                                          \
-        fprintf(stderr, "%s:%d: check failed: %s\\n",                     \
+        fprintf(stderr, "%s:%d: check failed: %s\n",                     \
                 __FILE__, __LINE__, #expr);                                 \
         abort();                                                             \
     }                                                                       \
