@@ -776,7 +776,7 @@
       },
       "next_evidence": {
         "active_data_pr_for_saved_ctc_source_origin": 298,
-        "forensics_phase": "PR_SOURCE_CHECK_PENDING_NO_NEW_MODEL_FORWARD",
+        "forensics_phase": "PROTECTED_MAIN_SAVED_CTC_FORENSICS_PASS_NO_NEW_MODEL_FORWARD",
         "no_unseen_acoustic_quality_without_human_gold": true,
         "independent_CAL": "NOT_RUN",
         "independent_LOCKED": "NOT_RUN",
@@ -784,7 +784,22 @@
         "real_human_3_5m_FRR": "NOT_MEASURED",
         "physical_SSC305": "NOT_RUN",
         "B6_C11_ARM32_parity": "NOT_RUN",
-        "commercial_audio_rights": "UNVERIFIED"
+        "commercial_audio_rights": "UNVERIFIED",
+        "forensics_data_pr": 298,
+        "forensics_run_id": 44718953294,
+        "forensics_main_sha": "04001cd9c293ddcea0ffe10652cfa464885b3b17",
+        "forensics_artifact_id": 14619669982,
+        "forensics_zip_sha256": "25351b75c0bfe4248ce4d62774dfa1ab207afeeceb5422e935116e013bfc791e",
+        "forensics_status": "PASS_IMMUTABLE_B6_126_CASE_CTC_FORENSICS_RESEARCH_ONLY",
+        "synthetic_ordinary_false_wake_source": "merov6b6dev8-517-ordinary-time",
+        "original_ordinary_false_wake_sources": 1,
+        "positive_discordant_originals_by_gain": {
+          "1.0": 2,
+          "0.75": 1,
+          "0.5": 0
+        },
+        "actual_new_model_forwards": 0,
+        "source_level_ctc_path_causal_explanation_proven": false
       }
     }
   }
