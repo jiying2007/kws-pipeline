@@ -120,6 +120,12 @@ class SingleEnglishTarget(unittest.TestCase):
                     ["cmake","--install",str(build)]):
                     subprocess.run(command,check=True,env=env,
                                    capture_output=True,text=True,timeout=100)
+                # CTest must execute both real tests in Release/-DNDEBUG;
+                # merely seeing an executable with exit status 0 is not enough.
+                inventory=subprocess.run(
+                    ["ctest","--test-dir",str(build),"-N"],
+                    check=True,env=env,capture_output=True,text=True,timeout=30)
+                self.assertIn("Total Tests: 2",inventory.stdout)
                 self.assertTrue((prefix/"lib/libheym43_stream.a").is_file())
                 self.assertTrue((prefix/"include/heym43/mero43_stream.h").is_file())
                 self.assertTrue((prefix/"include/heym43/mero_ctc.h").is_file())
