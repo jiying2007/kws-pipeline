@@ -286,6 +286,32 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertIn("B3 PyTorch", (ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text())
         self.assertIn("software numerical parity", (ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text())
         self.assertFalse(b3["product_promotion_allowed"])
+        continuous=r["B3_continuous_exposed_dev"]
+        self.assertEqual(continuous["actions_run"],44658362723)
+        self.assertEqual(continuous["artifact_id"],14594762757)
+        self.assertEqual(continuous["artifact_zip_sha256"],
+                         "045c022a0d57a8750d289da10d307ceb50ad5e512120f7f31209bd0df62151c1")
+        self.assertEqual(continuous["main_sha"],"4995bfe0813f4bd6b65fa75a9c6764b14d64bd4e")
+        self.assertEqual(continuous["originals_reused"],14)
+        self.assertEqual(continuous["unknown_excluded"],18)
+        self.assertFalse(continuous["clip_state_reset"])
+        self.assertEqual(continuous["observed"]["mixed"]["positive_segments_with_event"],5)
+        self.assertEqual(continuous["observed"]["reverse"]["positive_segments_with_event"],6)
+        self.assertEqual(continuous["observed"]["ordinary_only"]["total_events"],0)
+        self.assertEqual(continuous["observed"]["silence_5s"]["total_events"],0)
+        self.assertEqual(continuous["only_order_sensitive_known_positive"],
+                         "merov6dev8-490-mero-slow")
+        self.assertTrue(continuous["same_positive_detected_when_reversed"])
+        self.assertTrue(continuous["same_positive_missed_in_mixed"])
+        self.assertTrue(continuous["cross_compiler_event_clock_equal"])
+        self.assertFalse(continuous["independent_development_quality"])
+        self.assertTrue(continuous["synthetic_concatenation_cannot_estimate_far_per_hour"])
+        self.assertEqual(continuous["physical_ssc305"],"NOT_RUN")
+        self.assertFalse(continuous["model_selection_allowed"])
+        self.assertFalse(continuous["product_promotion_allowed"])
+        self.assertIn("Real B3 C11 continuous-state diagnostic",
+                      (ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text())
+
         report=r["B3_exposed_mechanism_diagnostic"]
         self.assertEqual(report["full_clip_positive_hits_original"],
                          {"B0":5,"B1":6,"B2":6,"B3":5})
