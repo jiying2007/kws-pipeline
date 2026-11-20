@@ -65,13 +65,17 @@
     ],
     "declared_role": "development",
     "source_status": "SOURCE_PCM_READBACK_PASS",
-    "admitted_positive_count": null,
-    "admitted_ordinary_count": null,
-    "quality_admission": "PENDING_INDEPENDENT_QA",
+    "admitted_positive_count": 6,
+    "admitted_ordinary_count": 8,
+    "quality_admission": "PASS_SYNTHETIC_MACHINE_QA_ONLY",
     "inference_allowed_only_after_review": true,
     "asr_requests_are_not_gold": true,
     "nearphone_unknown": true,
-    "not_independent_tts_engines": true
+    "not_independent_tts_engines": true,
+    "qualified_source_groups": 4,
+    "unknown_excluded_count": 18,
+    "qa_run_id": 44558582911,
+    "five_native_observer_run_id": 44556480241
   },
   "software": {
     "sdk_pipeline_commit": "1f1d5338364a575e335e360371e3b5b10e9db955",
@@ -107,13 +111,15 @@
     "synthetic_cannot_prove_product": true
   },
   "promotion": {
-    "independent_b0_b1_comparison": "NOT_RUN",
+    "independent_b0_b1_comparison": "OBSERVED_RESEARCH_DIAGNOSTIC_INCONCLUSIVE",
     "fresh_calibration": "NOT_RUN",
     "fresh_locked_test": "NOT_RUN",
     "real_human_3_5m_frr": "NOT_MEASURED",
     "natural_continuous_far": "NOT_MEASURED",
     "physical_ssc305": "NOT_RUN",
-    "product_promotion_allowed": false
+    "product_promotion_allowed": false,
+    "model_choice": "B0_FROZEN_SOFTWARE_BASELINE_B1_RESEARCH_ONLY",
+    "no_independent_frr_or_far": true
   },
   "restrictions": {
     "no_old_audio_regeneration": true,
@@ -124,5 +130,41 @@
     "no_work_codex": true,
     "no_recurring_patrol": true,
     "no_deprecated_other_word_relabel": true
+  },
+  "paired_development_comparison": {
+    "status": "FRESH_SYNTHETIC_PAIRED_DEV_DIAGNOSTIC_NO_PROMOTION",
+    "merged_data_pr": 272,
+    "data_main_commit": "0e3957370215ddf3d502441b6b859a684d92bf21",
+    "workflow_run_id": 44640947580,
+    "workflow_conclusion": "success",
+    "artifact_id": 14585918123,
+    "artifact_name": "english-v6-B0-B1-new-DEV-44640947580",
+    "artifact_zip_digest": "sha256:7a771ce8947f26b3a14c97213c3aa279056dd89968990e49330da48955c347a0",
+    "machine_qualified_original_positive": 6,
+    "machine_qualified_original_ordinary": 8,
+    "unqualified_unknown_excluded": 18,
+    "original": {
+      "B0_positive_hits": 5,
+      "B1_positive_hits": 6,
+      "B0_ordinary_false_or_extra": 0,
+      "B1_ordinary_false_or_extra": 0
+    },
+    "half_gain": {
+      "B0_positive_hits": 1,
+      "B1_positive_hits": 1,
+      "B0_ordinary_false_or_extra": 0,
+      "B1_ordinary_false_or_extra": 0
+    },
+    "snr10": {
+      "B0_positive_hits": 5,
+      "B1_positive_hits": 5,
+      "B0_ordinary_false_or_extra": 0,
+      "B1_ordinary_false_or_extra": 0
+    },
+    "derived_conditions_are_not_independent_denominators": true,
+    "piper_indices_do_not_equal_independent_humans": true,
+    "model_selection_allowed": false,
+    "product_promotion_allowed": false,
+    "next_diagnostic": "EXAMINE_SHARED_HALF_GAIN_MISSES_FROM_SAVED_ORIGINAL_FRAME_LOGITS_NO_RETRAIN"
   }
 }
