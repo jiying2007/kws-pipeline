@@ -283,7 +283,7 @@
       "actual_run": 44651053897,
       "status": "SUFFIX_CTC_RESEARCH_TRAINED_AND_MECHANISTIC_IMPROVEMENT_EXPOSED_DEV_ONLY",
       "next_quality_gate": "FRESH_SOURCE_INDEPENDENT_CONTINUOUS_STREAM_SPEECH_AND_NEGATIVE_EVAL",
-      "next_software_gate": "B3_PT_NPZ_ONNX_C11_ARM32_NUMERICAL_PARITY_BEFORE_ANY_B3_SDK_SWAP",
+      "next_software_gate": "COMPLETED_B3_28CASE_PT_GCC_CLANG_CORTEX_A32_QEMU_SOFTWARE_PARITY_ONLY",
       "model_promotion_allowed": false
     },
     "B3": {
@@ -311,11 +311,40 @@
       "in_sample_first_frame_blank": 12,
       "in_sample_first_frame_hey": 0,
       "in_sample_prefix_blank_fraction": 1,
-      "c11_parity": "NOT_RUN",
-      "arm32_qemu_parity": "NOT_RUN",
+      "c11_parity": "PASS_REAL_ORIGINAL_PCM_28_CASES_PT_GCC_CLANG",
+      "arm32_qemu_parity": "PASS_REAL_CORTEX_A32_QEMU_28_CASES",
       "physical_ssc305": "NOT_RUN",
       "fresh_independent_eval": "NOT_RUN",
-      "product_promotion_allowed": false
+      "product_promotion_allowed": false,
+      "b3_software_parity": {
+        "status": "PASS_B3_PYTORCH_C11_ARM32_QEMU_ORIGINAL_PCM_PARITY",
+        "actual_data_pr": 277,
+        "actions_run": 44653612830,
+        "run_main_sha": "acbd6b2bab42374d2125e93537e040bc32b9c1f7",
+        "artifact_id": 14593110591,
+        "artifact_sha256": "f288798c50a85cce0a2fef22b7006d71237f53afec7dadbdbbe0e610fd424036",
+        "original_audio_count": 14,
+        "actual_conditions": [
+          "original",
+          "one_second_zero_prefix"
+        ],
+        "total_case_count": 28,
+        "native_runtimes": [
+          "pytorch",
+          "gcc",
+          "clang",
+          "cortex_a32_qemu"
+        ],
+        "observed_max_abs_logit": 0.000091552734375,
+        "full_ctc_token_and_event_clock_parity": true,
+        "b3_trained_zip_artifact_id": 14590093798,
+        "b3_trained_pt_sha256": "682e2689e82aa91d850516c06b2be61efc64731cb1dee3b70a7d2a8e01925a46",
+        "reused_previously_exposed_synthetic_dev_only": true,
+        "future_independent_acoustic_eval": "NOT_RUN",
+        "real_far_per_hour": "NOT_MEASURED",
+        "physical_ssc305": "NOT_RUN",
+        "product_promotion_allowed": false
+      }
     },
     "B3_exposed_mechanism_diagnostic": {
       "status": "LOCAL_CPU_PYTORCH_2_10_EXPOSED_DEV_ONLY_NOT_INDEPENDENT_QUALIFICATION",
