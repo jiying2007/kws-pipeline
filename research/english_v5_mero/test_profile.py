@@ -439,6 +439,20 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertEqual(r["next_evidence"]["physical_SSC305"],"NOT_RUN")
         self.assertEqual(r["next_evidence"]["continuous_natural_far_per_hour"],"NOT_MEASURED")
         self.assertEqual(r["next_evidence"]["independent_LOCKED"],"NOT_RUN")
+        forensic=r["next_evidence"]
+        self.assertEqual(forensic["forensics_data_pr"],298)
+        self.assertEqual(forensic["forensics_run_id"],44718953294)
+        self.assertEqual(forensic["forensics_artifact_id"],14619669982)
+        self.assertEqual(forensic["forensics_zip_sha256"],
+            "25351b75c0bfe4248ce4d62774dfa1ab207afeeceb5422e935116e013bfc791e")
+        self.assertEqual(forensic["forensics_status"],
+            "PASS_IMMUTABLE_B6_126_CASE_CTC_FORENSICS_RESEARCH_ONLY")
+        self.assertEqual(forensic["synthetic_ordinary_false_wake_source"],
+            "merov6b6dev8-517-ordinary-time")
+        self.assertEqual(forensic["positive_discordant_originals_by_gain"],
+            {"1.0":2,"0.75":1,"0.5":0})
+        self.assertEqual(forensic["actual_new_model_forwards"],0)
+        self.assertFalse(forensic["source_level_ctc_path_causal_explanation_proven"])
         doc=(ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text()
         self.assertIn("Real B6 gain-consistency training and genuinely new DEV512 test",doc)
         self.assertIn("Reject automatic B6 model promotion",doc)
