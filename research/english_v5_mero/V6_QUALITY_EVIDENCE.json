@@ -282,7 +282,7 @@
       "recovery_data_pr": 276,
       "actual_run": 44651053897,
       "status": "SUFFIX_CTC_RESEARCH_TRAINED_AND_MECHANISTIC_IMPROVEMENT_EXPOSED_DEV_ONLY",
-      "next_quality_gate": "FRESH_SOURCE_DISJOINT_DEV_REQUIRED; EXPOSED_CONTINUOUS_5_6_VS_6_6_MECHANISM_ONLY",
+      "next_quality_gate": "CTC_TOKEN_ORIGIN_GAP_PROOF_AND_FRESH_SOURCE_DISJOINT_QUALITY_REQUIRED; EXPOSED_GAIN_DATA_NEVER_SELECTS_MODEL",
       "next_software_gate": "COMPLETED_B3_28CASE_PT_GCC_CLANG_CORTEX_A32_QEMU_SOFTWARE_PARITY_ONLY",
       "model_promotion_allowed": false
     },
@@ -458,6 +458,100 @@
       "human_frr": "NOT_MEASURED",
       "natural_far_per_hour": "NOT_MEASURED",
       "model_selection_allowed": false,
+      "product_promotion_allowed": false
+    },
+    "B3_gain_context_exposed_dev": {
+      "status": "PASS_EXPOSED_DEV_C11_GAIN_CAUSAL_DIAGNOSTIC_NO_PROMOTION",
+      "data_pr": 279,
+      "run_id": 44662162126,
+      "main_sha": "db0c4b699b16fcd765b430702a8f786715529eb5",
+      "artifact_id": 14595464491,
+      "artifact_zip_sha256": "0ba7cd287afcedbbd7625b6987cc89dbeb2c8717c1506b905e8a01671e9ea3cb",
+      "actual_frozen_model_pt_sha256": "682e2689e82aa91d850516c06b2be61efc64731cb1dee3b70a7d2a8e01925a46",
+      "actual_runtimes": [
+        "gcc",
+        "clang"
+      ],
+      "original_source_count": 14,
+      "positive_source_count": 6,
+      "ordinary_source_count": 8,
+      "excluded_unknown": 18,
+      "derived_gain_conditions": [
+        1,
+        0.75,
+        0.5
+      ],
+      "gain_results": [
+        {
+          "gain": 1,
+          "positive_hits": 5,
+          "positive_denominator": 6,
+          "ordinary_any_events": 0,
+          "ordinary_denominator": 8,
+          "positive_without_meh_argmax": 0
+        },
+        {
+          "gain": 0.75,
+          "positive_hits": 4,
+          "positive_denominator": 6,
+          "ordinary_any_events": 0,
+          "ordinary_denominator": 8,
+          "positive_without_meh_argmax": 2
+        },
+        {
+          "gain": 0.5,
+          "positive_hits": 1,
+          "positive_denominator": 6,
+          "ordinary_any_events": 0,
+          "ordinary_denominator": 8,
+          "positive_without_meh_argmax": 5
+        }
+      ],
+      "model_did_not_train_or_change": true,
+      "nonmonotonic_gain_specific_source": "merov6dev8-490-mero-slow",
+      "source_490_gain_1_event_count": 0,
+      "source_490_gain_075_event_count": 1,
+      "source_490_gain_05_event_count": 0,
+      "source_490_gain_1_frame_argmax_hey": 0,
+      "source_490_gain_1_frame_argmax_meh": 2,
+      "source_490_gain_1_frame_argmax_roh": 16,
+      "controlled_predecessor_cases": [
+        {
+          "case": "exact_prev488",
+          "target_events": 0,
+          "hey_argmax_frames": 0
+        },
+        {
+          "case": "aligned_silence",
+          "target_events": 0,
+          "hey_argmax_frames": 0
+        },
+        {
+          "case": "aligned_prev488",
+          "target_events": 0,
+          "hey_argmax_frames": 0
+        },
+        {
+          "case": "aligned_prev489",
+          "target_events": 0,
+          "hey_argmax_frames": 0
+        }
+      ],
+      "research_hypotheses": [
+        "HALF_GAIN_MEH_ABSENCE_IN_5_OF_6_POSITIVE_EXPOSED_DEV",
+        "490_SLOW_NONMONOTONIC_GAIN_WITHOUT_HEY_ON_ORIGINAL",
+        "CTC_LONG_GAP_ORIGIN_RISK_REQUIRES_DIRECT_SOURCE_PROOF"
+      ],
+      "max_gap_of_original_host_cli_samples": 1000000,
+      "host_cli_rate_hz": 16000,
+      "max_gap_host_cli_seconds": 62.5,
+      "unsafe_to_infer_6_of_6_reverse_are_single_phrase": true,
+      "fresh_independent_source_quality": "NOT_RUN",
+      "physical_ssc305": "NOT_RUN",
+      "natural_far_per_hour": "NOT_MEASURED",
+      "real_human_3_5m_frr": "NOT_MEASURED",
+      "model_selection_allowed": false,
+      "decoder_policy_selection_allowed": false,
       "product_promotion_allowed": false
     }
   }
