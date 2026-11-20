@@ -19,6 +19,26 @@ B0 source ZIP SHA256 `91b203f05041d92e7ffb1b748f94959ce19af6673b91dbc21449208150
 
 This is an *independent prospective synthetic development cohort relative to the frozen models*, not human-gold or independent TTS-engine validation. The half-gain and SNR variants are **derived from the same six originals** and do not increase independent sample counts. B1's one extra original hit is insufficient to prove superiority; no new model is selected or automatically loaded in the B0 SDK. Shared **1/6 at half gain** is the next highest-priority error-analysis target. Preserve saved original per-frame logits, decode full CTC traces, and inspect gain/feature/blank-path behavior **before any new data generation, student training or threshold tuning**. This experiment does not establish physical SSC305, 3–5 m human FRR, natural FAR/h, word-end latency or release approval.
 
+## Saved-original CTC forensics (2026-11-20; research blocker)
+
+Read-only, byte-authenticated analysis of the actual paired artifact `14585918123` (run `44640947580`) and the original immutable 32-WAV archive `14543254675` identified an important risk **without performing any additional model forward, retraining, audio generation, ASR, threshold selection or CAL/LOCKED read**. The [forensic verifier](../research/english_v5_mero/audit_saved_v6_ctc.py) checks both artifact ZIP SHA256 values, all selected original PCM SHA, the original saved float32 logit NPZ SHA, CTC greedy-collapse equality and the saved half-gain token paths; a [machine-readable evidence record](../research/english_v5_mero/V6_QUALITY_EVIDENCE.json) pins the findings.
+
+- Both frozen B0 and B1 output **HEY on frame 0 for all 14/14 original 16 kHz short clips**, including **8/8 ordinary negatives**. The first 400 samples (25 ms) have RMS at most **0.038442 times** the full-clip RMS over those 14 clips. Thus HEY on isolated-input start is not evidence that the actual 'Hey' phoneme was heard. Potential startup-frame or training-alignment shortcut remains a **hypothesis, not an established cause or a continuous-FAR measurement**.
+- On half-gain derived conditions, **5/6 positive clips fail for B0 and B1**, and **every one of those five has no MEH in its saved collapsed token path**. The successful positive is unchanged. Half-gain frame logits were **not saved** in the original experiment, so its loss/blank-margin root cause cannot be claimed from the saved trace.
+- Six machine-accepted positives are drawn from **four** Piper source groups; the selected eight ordinary negatives cover **eight** Piper groups total. They are not independent human speakers or distinct TTS engines. All 18 machine UNKNOWN rows remain excluded.
+- The evidence creates a **quality blocker**, not a new model result: do not promote B1, add a decoder-only suppression of startup HEY as a quick fix, tune on these already exposed DEV rows, or interpret 0/8 ordinary events as reassuring natural FAR/h.
+
+Reproduce from previously downloaded original GitHub Actions ZIPs, with no Python ML runtime:
+
+```sh
+python3 -I -S -B research/english_v5_mero/audit_saved_v6_ctc.py \
+  --source-zip /path/to/english-v6-mero-prospective-dev8-original-44554345276.zip \
+  --paired-zip /path/to/english-v6-B0-B1-new-DEV-44640947580.zip \
+  --output /path/to/new/forensics.json
+```
+
+**Next actual research, in order:** (1) verify isolated-clip versus continuous-stream reset and startup sensitivity on separate, clearly declared data; (2) test *one* train-only randomized-prefix/silence augmentation hypothesis against the fixed 43K baseline, with no old DEV gradients; (3) use a new independent and properly qualified DEV cohort before any model selection; (4) only then revalidate chosen weights under C11/ARM32 and physical SSC305. The present B0 C11/QEMU software proof remains valid for B0, but not acoustic/product qualification.
+
 ## Remaining bounded acoustic sequence
 1. **Source (completed):** [data PR #269](https://github.com/jiying2007/kws-data/pull/269) produced 32/32 new original 16 kHz PCM WAVs on 8 new Piper indices 488–495; run [44554345276](https://github.com/jiying2007/kws-data/actions/runs/44554345276), ZIP artifact 14543254675, digest `sha256:530fccdd25abca9e76331dd8dad1f2440181158e140f2279ee952833a8d220f6`. Exactly two intended canonical, one ordinary, one nearphone request per group; **all requests are unverified labels** and nearphone stays UNKNOWN.
 2. **Source QA (completed):** [data PR #270](https://github.com/jiying2007/kws-data/pull/270) implements five unprompted observers (Qwen3-ASR / Whisper / Parakeet / XLSR / LV60). [Data #271](https://github.com/jiying2007/kws-data/pull/271) completed saved-evidence screening: 6 positive, 8 ordinary, 18 UNKNOWN across four qualified source groups. Future source screenings must still authenticate original PCM, five model identities, saved native outputs and group lineage. Do not infer truth from TTS text, ASR absence, forced alignment or a speaker index. A Piper index is not an independent real-human microphone recording or distinct TTS engine.
