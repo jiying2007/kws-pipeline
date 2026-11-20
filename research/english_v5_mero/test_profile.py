@@ -358,6 +358,45 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertFalse(r["next_experiment"]["model_promotion_allowed"])
         self.assertFalse(q["promotion"]["product_promotion_allowed"])
 
+    def test_v6_real_b5_dev504_frozen_negative_quality_evidence(self):
+        q=json.loads((ROOT/"research/english_v5_mero/V6_QUALITY_EVIDENCE.json").read_text())
+        e=q["experimental_followup"]["B4_B5_DEV504_frozen_research"]
+        self.assertEqual(e["status"],
+            "ACTUAL_FROZEN_DEV504_PAIRED_B5_EARLY_HEY_REJECTED_HALFGAIN_NO_PRODUCT_PROMOTION")
+        self.assertEqual(e["data_pr_chain"],[286,287,288,289,290,291])
+        self.assertEqual(e["trained_b5"]["actual_optimizer_updates"],384)
+        self.assertTrue(e["trained_b5"]["control_tensor_matches_B4_half"])
+        self.assertEqual(e["source"]["actual_observations"],160)
+        self.assertEqual((e["source"]["qualified_positive"],
+                          e["source"]["qualified_ordinary"],
+                          e["source"]["unknown_excluded"],
+                          e["source"]["qualified_development_source_groups"]), (5,8,19,3))
+        self.assertFalse(e["source"]["human_gold"])
+        receipt=e["frozen_quality"]
+        self.assertEqual(receipt["run"],44700786677)
+        self.assertEqual(receipt["artifact_id"],14611963808)
+        self.assertEqual(receipt["artifact_zip_size_bytes"],39379)
+        self.assertEqual(receipt["artifact_zip_sha256"],
+          "67267fcdf78535a75854645de60e7ad662aaa5016788b62e9901c1f073e9b016")
+        self.assertEqual(receipt["actual_model_forward_conditions"],117)
+        self.assertEqual([row["B4_half_hits"] for row in receipt["gains"]],[5,5,3])
+        self.assertEqual([row["B5_control_hits"] for row in receipt["gains"]],[5,5,3])
+        self.assertEqual([row["B5_early_hey_hits"] for row in receipt["gains"]],[5,5,2])
+        self.assertTrue(all(row["ordinary_any_events_each_model"]==0
+                            and row["ordinary_n"]==8 for row in receipt["gains"]))
+        self.assertTrue(receipt["gain_variants_are_derived_not_independent"])
+        self.assertTrue(receipt["B5_early_hey_worse_than_B4_half_at_half_gain"])
+        self.assertEqual(receipt["B5_half_gain_positive_without_meh_argmax"],1)
+        self.assertEqual(e["previous_recovery"]["failed_run"],44698504736)
+        self.assertFalse(e["decision"]["model_selection_allowed"])
+        self.assertFalse(e["decision"]["product_promotion_allowed"])
+        self.assertTrue(e["decision"]["B0_c11_sdk_remains_frozen"])
+        self.assertEqual(e["qualification"]["physical_ssc305"],"NOT_RUN")
+        self.assertEqual(e["qualification"]["natural_far_per_hour"],"NOT_MEASURED")
+        documentation=(ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text()
+        self.assertIn("Real B4/B5 post-training DEV504 frozen-model comparison",documentation)
+        self.assertIn("reject B5-EarlyHEY for promotion",documentation)
+
     def test_english_v5_workflow_is_exactly_registered(self):
         manifest=json.loads((ROOT/"research/consolidation/source-retention-2026-10-07.json").read_bytes())
         workflow=".github/workflows/english-v5-mero-contract.yml"
