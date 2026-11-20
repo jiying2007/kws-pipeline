@@ -189,6 +189,50 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertFalse(q["promotion"]["product_promotion_allowed"])
         self.assertTrue(q["restrictions"]["no_work_codex"])
 
+    def test_v6_saved_original_ctc_forensics_pins_and_no_promotion(self):
+        """Saved true 14-clip PCM/logit finding; no model is executed in CI."""
+        evidence=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
+        result=evidence["acoustic_forensics"]
+        self.assertEqual(result["status"],"SAVED_EVIDENCE_ONLY_NO_NEW_FORWARDS")
+        self.assertEqual(result["paired_run_id"],44640947580)
+        self.assertEqual(result["paired_result_artifact_id"],14585918123)
+        self.assertEqual(result["positive_original_count"],6)
+        self.assertEqual(result["ordinary_original_count"],8)
+        self.assertEqual(result["positive_source_groups"],4)
+        self.assertEqual(result["total_source_groups_in_comparison"],8)
+        self.assertEqual(result["unqualified_excluded_count"],18)
+        self.assertEqual(result["initial_25ms_model_frame_argmax_hey"],
+                         {"B0":{"positive":6,"ordinary":8},
+                          "B1":{"positive":6,"ordinary":8}})
+        self.assertEqual(result["half_gain_positive_misses_without_meh"],
+                         {"B0":5,"B1":5})
+        self.assertLess(result["max_first_25ms_to_whole_rms_ratio"],0.05)
+        self.assertFalse(result["half_gain_frame_logits_preserved"])
+        self.assertFalse(result["new_model_promotion_allowed"])
+        self.assertFalse(evidence["promotion"]["product_promotion_allowed"])
+        module=importlib.util.spec_from_file_location(
+            "en_v6_saved_forensics",HERE/"audit_saved_v6_ctc.py")
+        audit=importlib.util.module_from_spec(module)
+        module.loader.exec_module(audit)
+        self.assertEqual(audit.SOURCE_SHA,
+                         result["original_source_zip_sha256"])
+        self.assertEqual(audit.PAIR_SHA,
+                         result["paired_result_zip_sha256"])
+        # Pure invented frame values: independent greedy CTC collapse sanity.
+        labels,collapsed=audit.greedy([[0.,1.,0.,0.],
+                                       [0.,1.,0.,0.],
+                                       [2.,0.,0.,0.],
+                                       [0.,0.,3.,0.],
+                                       [0.,0.,0.,4.]])
+        self.assertEqual(labels,[1,1,0,2,3])
+        self.assertEqual(collapsed,[1,2,3])
+        with self.assertRaises(ValueError):
+            audit.npy(b"invalid")
+        doc=(ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text()
+        self.assertIn("14/14",doc)
+        self.assertIn("5/6",doc)
+        self.assertIn("without performing any additional model forward",doc)
+
     def test_english_v5_workflow_is_exactly_registered(self):
         manifest=json.loads((ROOT/"research/consolidation/source-retention-2026-10-07.json").read_bytes())
         workflow=".github/workflows/english-v5-mero-contract.yml"
