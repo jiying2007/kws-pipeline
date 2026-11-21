@@ -601,7 +601,8 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertEqual(e["dev_model_forwards"],0)
         self.assertFalse(e["cal_locked_access"])
         self.assertEqual(e["B7_historical_replay"],"FAILED_UNCHANGED")
-        self.assertEqual(e["b9_new_independent_dev"],"NOT_RUN")
+        self.assertEqual(e["b9_new_independent_dev"],
+                         "DONE_DEV528_MACHINE_QA_SYNTHETIC_DIAGNOSTIC_ONLY")
         self.assertEqual(e["b9_c11_arm32_parity"],"NOT_RUN")
         self.assertEqual(e["ssc305_physical"],"NOT_RUN")
         self.assertEqual(e["natural_far_per_hour"],"NOT_MEASURED")
@@ -611,7 +612,65 @@ class SingleEnglishTarget(unittest.TestCase):
         doc=(ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text()
         self.assertIn("## B9 actually trained half-gain HEY-presence challenger",doc)
         self.assertIn("43,754 differing trained float32 values",doc)
-        self.assertIn("there is no b9 accuracy",doc.lower())
+        self.assertIn("it **blocks b9 promotion**",doc.lower())
+
+    def test_v6_b9_new_dev528_192_real_forwards_false_wake_no_promotion(self):
+        q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
+        e=q["b9_dev528_frozen_four_way"]
+        self.assertEqual(e["status"],
+                         "B9_NEW_SOURCE_FOUR_WAY_FROZEN_DEV_RESEARCH_DIAGNOSTIC_ONLY")
+        self.assertEqual((e["data_pr_scoring"],e["data_pr_recovery"]),(311,312))
+        self.assertEqual((e["first_failed_main_run_id"],e["first_failed_main_neural_job"],
+                          e["first_failed_main_artifact_count"]),(44872555787,"skipped",0))
+        self.assertEqual(e["recovery_main_commit"],
+                         "d61c6f23bdc8c99fd6306cb2e3311e8910196442")
+        self.assertEqual((e["scored_main_run_id"],e["scored_run_conclusion"],
+                          e["scored_result_artifact_id"]),(44881040200,"success",14697439433))
+        self.assertEqual((e["scored_result_zip_bytes"],e["scored_result_zip_sha256"]),
+                         (94305,"87b378c67a4aaf161c948cf7a257304ea519ab9e8ea0151e6f0ca7075386f120"))
+        self.assertEqual((e["original_source_count"],e["machine_positive_originals"],
+                          e["machine_ordinary_originals"],e["unknown_originals_excluded"]),
+                         (60,4,12,44))
+        self.assertEqual(e["successful_native_observations"],299)
+        self.assertEqual(e["intended_hey_mary_hard_negative_admitted"],0)
+        self.assertEqual(e["gains"],[1,0.75,0.5])
+        self.assertEqual(e["frozen_model_forward_conditions"],192)
+        self.assertTrue(e["gain_variants_are_derived_not_independent"])
+        models=set(e["frozen_model_pt_sha256"])
+        self.assertEqual(models,{"B6_consistency","B8_challenger","B9_control","B9_challenger"})
+        for gain,count in (("1.0",2),("0.75",2),("0.5",1)):
+            self.assertEqual(set(e["model_positive_hits"][gain]),models)
+            self.assertEqual(e["model_ordinary_false_or_extra_events"][gain],
+                             dict.fromkeys(models,count))
+            self.assertEqual(e["model_positive_hits"][gain]["B9_control"],
+                             e["model_positive_hits"][gain]["B9_challenger"])
+        self.assertEqual((e["model_positive_hits"]["0.5"]["B6_consistency"],
+                          e["model_positive_hits"]["0.5"]["B9_control"]),(3,4))
+        false=e["ordinary_false_originals"]
+        self.assertEqual(len(false),2)
+        self.assertEqual({v["requested_text"] for v in false.values()},
+                         {"What time is it?"})
+        self.assertEqual({v["qa_reason"] for v in false.values()},
+                         {"BLIND_ORDINARY_NO_WAKE"})
+        self.assertEqual({tuple(v["full_ctc_event_gains"]) for v in false.values()},
+                         {(1,0.75,0.5),(1,0.75)})
+        self.assertEqual(e["low_gain_hey_missing_original"]["at_0p5_B6_B8_ctc_collapsed"],
+                         [2,3])
+        self.assertEqual(e["low_gain_hey_missing_original"]["at_0p5_B9_control_and_challenger_ctc_collapsed"],
+                         [1,2,3])
+        self.assertFalse(e["B9_challenger_better_than_same_job_control"])
+        self.assertFalse(e["human_gold"])
+        self.assertFalse(e["model_selection_allowed"])
+        self.assertFalse(e["product_promotion_allowed"])
+        self.assertTrue(e["B0_only_installed_software_baseline"])
+        self.assertEqual(e["natural_far_per_hour"],"NOT_MEASURED")
+        self.assertEqual(e["b9_specific_c11_arm32_parity"],"NOT_RUN")
+        self.assertEqual(e["physical_ssc305"],"NOT_RUN")
+        doc=(ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text()
+        self.assertIn("## B9 fresh DEV528 four-frozen result",doc)
+        self.assertIn("What time is it?",doc)
+        self.assertIn("B9 challenger is **not superior",doc)
+        self.assertIn("B0 remains the only installed",doc)
 
     def test_v6_b7_authentic_saved_control_replay_drift_never_promotes(self):
         q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())

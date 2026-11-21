@@ -999,11 +999,188 @@
     "dev_gradients": 0,
     "dev_model_forwards": 0,
     "cal_locked_access": false,
-    "b9_new_independent_dev": "NOT_RUN",
+    "b9_new_independent_dev": "DONE_DEV528_MACHINE_QA_SYNTHETIC_DIAGNOSTIC_ONLY",
     "b9_c11_arm32_parity": "NOT_RUN",
     "ssc305_physical": "NOT_RUN",
     "human_3_5m_frr": "NOT_MEASURED",
     "natural_far_per_hour": "NOT_MEASURED",
+    "model_selection_allowed": false,
+    "product_promotion_allowed": false,
+    "B0_only_installed_software_baseline": true
+  },
+  "b9_dev528_frozen_four_way": {
+    "status": "B9_NEW_SOURCE_FOUR_WAY_FROZEN_DEV_RESEARCH_DIAGNOSTIC_ONLY",
+    "data_pr_source": 308,
+    "data_pr_observers": 309,
+    "data_pr_screen": 310,
+    "data_pr_scoring": 311,
+    "data_pr_recovery": 312,
+    "source_run_id": 44870282676,
+    "source_artifact_id": 14693632800,
+    "source_original_zip_sha256": "d606ee883a1abd38cc95a278f6b7b7064476c8b00add1163e27c247c41ab7032",
+    "native_observer_run_id": 44870958716,
+    "successful_native_observations": 299,
+    "original_native_observation_attempts": 300,
+    "saved_screen_run_id": 44871646677,
+    "saved_screen_artifact_id": 14694540474,
+    "saved_screen_zip_sha256": "ae3062102541dbfc6f18a3d8db6a170fad529b0e97095b31bbc0ee6b8b6d026b",
+    "first_failed_main_run_id": 44872555787,
+    "first_failed_main_commit": "820e3db36806991faf368b5197dfa6c5f97c4157",
+    "first_failed_main_source_contract": "failure",
+    "first_failed_main_source_audit": "skipped",
+    "first_failed_main_neural_job": "skipped",
+    "first_failed_main_artifact_count": 0,
+    "recovery_main_commit": "d61c6f23bdc8c99fd6306cb2e3311e8910196442",
+    "scored_main_run_id": 44881040200,
+    "scored_run_attempt": 1,
+    "scored_run_conclusion": "success",
+    "scored_result_artifact_id": 14697439433,
+    "scored_result_zip_bytes": 94305,
+    "scored_result_zip_sha256": "87b378c67a4aaf161c948cf7a257304ea519ab9e8ea0151e6f0ca7075386f120",
+    "archived_result_crc": "PASS",
+    "original_source_count": 60,
+    "machine_positive_originals": 4,
+    "machine_ordinary_originals": 12,
+    "unknown_originals_excluded": 44,
+    "machine_qualified_development_source_groups": 4,
+    "intended_hey_mary_hard_negative_admitted": 0,
+    "nearphone_challenge_admitted": 0,
+    "frozen_model_parameters": 43876,
+    "frozen_model_pt_sha256": {
+      "B6_consistency": "0461ce14ff5ed6490e88801b23c9036ca63b2c302aee7e8d96cea26c3eaa9f04",
+      "B8_challenger": "cc16b81f84e4f21c5347ca153f405ac41ed116e3eedfaeed5677d1a4bc86e22f",
+      "B9_control": "7dba86a3fcda6e5f05cb80b414dc372c70a5a03b3aee783f168441a4871e7655",
+      "B9_challenger": "d672dcc87ca9e5d2c6dcf5952251a3c40fe8e7956d3b7c8753667c3093761cea"
+    },
+    "gains": [
+      1,
+      0.75,
+      0.5
+    ],
+    "frozen_model_forward_conditions": 192,
+    "gain_variants_are_derived_not_independent": true,
+    "model_positive_hits": {
+      "1.0": {
+        "B6_consistency": 4,
+        "B8_challenger": 4,
+        "B9_control": 4,
+        "B9_challenger": 4
+      },
+      "0.75": {
+        "B6_consistency": 3,
+        "B8_challenger": 3,
+        "B9_control": 3,
+        "B9_challenger": 3
+      },
+      "0.5": {
+        "B6_consistency": 3,
+        "B8_challenger": 3,
+        "B9_control": 4,
+        "B9_challenger": 4
+      }
+    },
+    "model_ordinary_false_or_extra_events": {
+      "1.0": {
+        "B6_consistency": 2,
+        "B8_challenger": 2,
+        "B9_control": 2,
+        "B9_challenger": 2
+      },
+      "0.75": {
+        "B6_consistency": 2,
+        "B8_challenger": 2,
+        "B9_control": 2,
+        "B9_challenger": 2
+      },
+      "0.5": {
+        "B6_consistency": 1,
+        "B8_challenger": 1,
+        "B9_control": 1,
+        "B9_challenger": 1
+      }
+    },
+    "ordinary_false_originals": {
+      "merov6b9dev12-535-ordinary-time": {
+        "source_group_id": "piper-libritts-p6288",
+        "source_pcm_sha256": "3279e9e3f94caec33e7ccc99b1ebf5503a48c509f3041d321ad538c42cbab62e",
+        "requested_text": "What time is it?",
+        "machine_tier": "silver",
+        "qa_reason": "BLIND_ORDINARY_NO_WAKE",
+        "observed_class": 0,
+        "full_ctc_event_gains": [
+          1,
+          0.75,
+          0.5
+        ],
+        "original_gain_B9_challenger_argmax_token_starts": [
+          [
+            39,
+            1
+          ],
+          [
+            41,
+            2
+          ],
+          [
+            42,
+            3
+          ]
+        ]
+      },
+      "merov6b9dev12-537-ordinary-time": {
+        "source_group_id": "piper-libritts-p4731",
+        "source_pcm_sha256": "f3638f9dbe771a0b11d68451fa4f034a9ed225ee8b2e593635d3f46d189a0e9d",
+        "requested_text": "What time is it?",
+        "machine_tier": "silver",
+        "qa_reason": "BLIND_ORDINARY_NO_WAKE",
+        "observed_class": 0,
+        "full_ctc_event_gains": [
+          1,
+          0.75
+        ],
+        "original_gain_B9_challenger_argmax_token_starts": [
+          [
+            72,
+            1
+          ],
+          [
+            75,
+            2
+          ],
+          [
+            76,
+            3
+          ]
+        ]
+      }
+    },
+    "low_gain_hey_missing_original": {
+      "id": "merov6b9dev12-534-mero-slow",
+      "source_group_id": "piper-libritts-p5154",
+      "source_pcm_sha256": "6f503fa412529852c8ded8cea0ce732e671c108977c3f0f6a5f9f197e4ad380e",
+      "at_0p75_all_four_ctc_collapsed": [
+        2,
+        3
+      ],
+      "at_0p5_B6_B8_ctc_collapsed": [
+        2,
+        3
+      ],
+      "at_0p5_B9_control_and_challenger_ctc_collapsed": [
+        1,
+        2,
+        3
+      ]
+    },
+    "B9_challenger_better_than_same_job_control": false,
+    "natural_far_per_hour": "NOT_MEASURED",
+    "human_real_3_to_5_m_frr": "NOT_MEASURED",
+    "independent_locked_test": "NOT_RUN",
+    "b9_specific_c11_arm32_parity": "NOT_RUN",
+    "physical_ssc305": "NOT_RUN",
+    "human_gold": false,
+    "synthetic_ordinary_cannot_establish_continuous_far": true,
+    "threshold_selection_allowed": false,
     "model_selection_allowed": false,
     "product_promotion_allowed": false,
     "B0_only_installed_software_baseline": true
