@@ -497,12 +497,72 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertFalse(r["cal_locked_opened"])
         self.assertFalse(r["model_selection_allowed"])
         self.assertFalse(r["product_promotion_allowed"])
-        self.assertEqual(r["independent_posttrain_DEV"],"NOT_RUN")
+        self.assertEqual(r["independent_posttrain_DEV"],
+                         "DONE_DEV520_SYNTHETIC_DIAGNOSTIC_ONLY")
         self.assertEqual(r["ssc305_physical"],"NOT_RUN")
         doc=(ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text()
         self.assertIn("## Real B8 frozen-parent paired TRAIN execution",doc)
         self.assertIn("43,755",doc)
         self.assertIn("not a bypass or recovery of B7",doc)
+
+    def test_v6_b8_new_source_99_real_forwards_but_no_quality_promotion(self):
+        q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
+        training=q["b8_frozen_b6_trainonly"]
+        e=q["b8_dev520_frozen_three_way"]
+        self.assertEqual(training["independent_posttrain_DEV"],
+                         "DONE_DEV520_SYNTHETIC_DIAGNOSTIC_ONLY")
+        self.assertEqual(e["status"],
+                         "B8_NEW_SOURCE_FROZEN_THREE_WAY_DEV_DIAGNOSTIC_ONLY")
+        self.assertEqual((e["data_pr_fix"],e["run_id"],e["original_result_artifact_id"]),
+                         (306,44766393361,14645830993))
+        self.assertEqual(e["data_main_commit"],
+                         "0ac4c653a7ae6b3cf90812ce6bd0402b4ba0d04f")
+        self.assertEqual(e["run_conclusion"],"success")
+        self.assertEqual(e["original_result_zip_bytes"],49216)
+        self.assertEqual(e["original_result_zip_sha256"],
+                         "3f39922e0ec0aad5baa4ffc161c46ebe95d3507defe158442bb4a761e0f0eee1")
+        self.assertEqual((e["prior_failed_first_run_id"],e["prior_failed_artifact_id"]),
+                         (44764450043,14644170620))
+        self.assertFalse(e["failed_run_replay_or_erasure"])
+        self.assertEqual((e["source_original_count"],e["machine_positive_originals"],
+                          e["machine_ordinary_originals"],e["unknown_excluded_originals"],
+                          e["machine_qualified_source_groups"]),(32,3,8,21,3))
+        self.assertFalse(e["independent_real_human_gold"])
+        self.assertEqual(e["frozen_model_pt_sha256"]["B8_control"],
+                         training["control_pt_sha256"])
+        self.assertEqual(e["frozen_model_pt_sha256"]["B8_challenger"],
+                         training["challenger_pt_sha256"])
+        self.assertEqual(e["frozen_model_pt_sha256"]["B6_consistency"],
+                         training["immutable_frozen_B6_parent_pt_sha256"])
+        self.assertEqual(e["frozen_gain_factors"],[1.0,0.75,0.5])
+        self.assertTrue(e["gains_are_derived_not_independent_samples"])
+        self.assertEqual(e["real_frozen_model_forward_conditions"],
+                         e["original_pcm_per_model_per_gain"] * len(e["frozen_gain_factors"]) * 3)
+        self.assertEqual(e["real_frozen_model_forward_conditions"],99)
+        for gain in ("1.0","0.75","0.5"):
+            hits=e["positive_hits_by_gain"][gain]
+            ordinary=e["ordinary_complete_false_event_clips_by_gain"][gain]
+            self.assertEqual(set(hits),{"B6_consistency","B8_control","B8_challenger"})
+            self.assertEqual(set(ordinary),set(hits))
+            self.assertEqual(hits["B6_consistency"],3)
+            self.assertEqual(hits["B8_challenger"],3)
+            self.assertEqual(hits["B8_control"],2 if gain=="0.5" else 3)
+            self.assertTrue(all(v==0 for v in ordinary.values()))
+        self.assertFalse(e["B8_challenger_improvement_over_B6_proven"])
+        self.assertEqual(e["new_optimizer_updates_during_evaluation"],0)
+        self.assertFalse(e["model_selection_allowed"])
+        self.assertFalse(e["product_promotion_allowed"])
+        self.assertTrue(e["B0_only_installed_software_baseline"])
+        self.assertEqual(e["independent_locked_test"],"NOT_RUN")
+        self.assertEqual(e["b8_specific_c11_arm32_parity"],"NOT_RUN")
+        self.assertEqual(e["ssc305_physical"],"NOT_RUN")
+        self.assertEqual(e["human_far_field_frr"],"NOT_MEASURED")
+        self.assertEqual(e["natural_far_per_hour"],"NOT_MEASURED")
+        documentation=(ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text()
+        self.assertIn("## B8 genuine frozen DEV520 three-way acoustic comparison",documentation)
+        self.assertIn("FAILED BEFORE ANY QUALITY FORWARD",documentation)
+        self.assertIn("99 model forward conditions",documentation)
+        self.assertIn("does not outperform the frozen original B6",documentation)
 
     def test_v6_b7_authentic_saved_control_replay_drift_never_promotes(self):
         q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
