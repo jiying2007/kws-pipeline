@@ -612,7 +612,7 @@ class SingleEnglishTarget(unittest.TestCase):
         doc=(ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text()
         self.assertIn("## B9 actually trained half-gain HEY-presence challenger",doc)
         self.assertIn("43,754 differing trained float32 values",doc)
-        self.assertIn("there is no b9 accuracy",doc.lower())
+        self.assertIn("it **blocks b9 promotion**",doc.lower())
 
     def test_v6_b9_new_dev528_192_real_forwards_false_wake_no_promotion(self):
         q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
