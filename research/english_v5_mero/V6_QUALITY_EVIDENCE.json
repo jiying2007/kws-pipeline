@@ -949,5 +949,63 @@
     "model_selection_allowed": false,
     "product_promotion_allowed": false,
     "B0_only_installed_software_baseline": true
+  },
+  "b9_half_gain_hey_presence_trainonly": {
+    "status": "RESEARCH_B9_REAL_HALF_GAIN_HEY_TRAIN_NO_PROMOTION",
+    "data_pr": 307,
+    "data_main_commit": "846c745ebcee58a1beb27300ddcd7ec8e2178916",
+    "run_id": 44860855857,
+    "run_conclusion": "success",
+    "original_artifact_id": 14689218171,
+    "original_artifact_zip_bytes": 1001753,
+    "original_artifact_zip_sha256": "1a8b270200e0c72ab1025f139d16abde43c209f142d72e71a7201b847e06a612",
+    "parent_B6_pt_sha256": "0461ce14ff5ed6490e88801b23c9036ca63b2c302aee7e8d96cea26c3eaa9f04",
+    "control_pt_sha256": "7dba86a3fcda6e5f05cb80b414dc372c70a5a03b3aee783f168441a4871e7655",
+    "challenger_pt_sha256": "d672dcc87ca9e5d2c6dcf5952251a3c40fe8e7956d3b7c8753667c3093761cea",
+    "frozen_model_geometry_parameters": 43876,
+    "train_original_rows": 79,
+    "train_source_groups": 35,
+    "train_only_dev_metadata_rows": 10,
+    "same_job_same_parent": true,
+    "matched_seed": 20261120,
+    "matched_gain_factors": [
+      1,
+      0.5
+    ],
+    "matched_prefix_samples": [
+      6400,
+      12800,
+      19200
+    ],
+    "original_ordinary_ctc_weight": 0.6,
+    "original_gain_posterior_kl_weight": 0.03,
+    "single_changed_loss": "POSITIVE_TRAIN_HALF_GAIN_CLIP_HEY_PRESENCE",
+    "control_new_loss_weight": 0,
+    "challenger_new_loss_weight": 0.03,
+    "optimizer_updates_per_arm": 192,
+    "actual_optimizer_updates_total": 384,
+    "different_trained_float_values": 43754,
+    "model_artifacts_exist": [
+      "control.pt",
+      "control.npz",
+      "control.onnx",
+      "challenger.pt",
+      "challenger.npz",
+      "challenger.onnx"
+    ],
+    "B7_historical_replay": "FAILED_UNCHANGED",
+    "B8_DEV520_status": "EXPOSED_SYNTHETIC_RESEARCH_ONLY",
+    "new_training_tts_asr_phone_calls": 0,
+    "dev_gradients": 0,
+    "dev_model_forwards": 0,
+    "cal_locked_access": false,
+    "b9_new_independent_dev": "NOT_RUN",
+    "b9_c11_arm32_parity": "NOT_RUN",
+    "ssc305_physical": "NOT_RUN",
+    "human_3_5m_frr": "NOT_MEASURED",
+    "natural_far_per_hour": "NOT_MEASURED",
+    "model_selection_allowed": false,
+    "product_promotion_allowed": false,
+    "B0_only_installed_software_baseline": true
   }
 }
