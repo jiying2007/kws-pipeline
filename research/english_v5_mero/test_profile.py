@@ -564,6 +564,55 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertIn("99 model forward conditions",documentation)
         self.assertIn("does not outperform the frozen original B6",documentation)
 
+    def test_v6_b9_actual_384_optimizer_updates_no_quality_promotion(self):
+        q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
+        e=q["b9_half_gain_hey_presence_trainonly"]
+        self.assertEqual(e["status"],
+                         "RESEARCH_B9_REAL_HALF_GAIN_HEY_TRAIN_NO_PROMOTION")
+        self.assertEqual((e["data_pr"],e["run_id"],e["original_artifact_id"]),
+                         (307,44860855857,14689218171))
+        self.assertEqual(e["data_main_commit"],
+                         "846c745ebcee58a1beb27300ddcd7ec8e2178916")
+        self.assertEqual(e["run_conclusion"],"success")
+        self.assertEqual(e["original_artifact_zip_bytes"],1001753)
+        self.assertEqual(e["original_artifact_zip_sha256"],
+                         "1a8b270200e0c72ab1025f139d16abde43c209f142d72e71a7201b847e06a612")
+        self.assertEqual(e["parent_B6_pt_sha256"],
+                         q["b8_frozen_b6_trainonly"]["immutable_frozen_B6_parent_pt_sha256"])
+        self.assertEqual(e["control_pt_sha256"],
+                         "7dba86a3fcda6e5f05cb80b414dc372c70a5a03b3aee783f168441a4871e7655")
+        self.assertEqual(e["challenger_pt_sha256"],
+                         "d672dcc87ca9e5d2c6dcf5952251a3c40fe8e7956d3b7c8753667c3093761cea")
+        self.assertEqual((e["frozen_model_geometry_parameters"],
+                          e["train_original_rows"],e["train_source_groups"]),
+                         (43876,79,35))
+        self.assertTrue(e["same_job_same_parent"])
+        self.assertEqual(e["matched_gain_factors"],[1,0.5])
+        self.assertEqual(e["matched_prefix_samples"],[6400,12800,19200])
+        self.assertEqual(e["single_changed_loss"],
+                         "POSITIVE_TRAIN_HALF_GAIN_CLIP_HEY_PRESENCE")
+        self.assertEqual((e["control_new_loss_weight"],
+                          e["challenger_new_loss_weight"]),(0.0,0.03))
+        self.assertEqual(e["optimizer_updates_per_arm"],192)
+        self.assertEqual(e["actual_optimizer_updates_total"],384)
+        self.assertEqual(e["different_trained_float_values"],43754)
+        self.assertEqual(len(e["model_artifacts_exist"]),6)
+        self.assertEqual(e["dev_gradients"],0)
+        self.assertEqual(e["dev_model_forwards"],0)
+        self.assertFalse(e["cal_locked_access"])
+        self.assertEqual(e["B7_historical_replay"],"FAILED_UNCHANGED")
+        self.assertEqual(e["b9_new_independent_dev"],"NOT_RUN")
+        self.assertEqual(e["b9_c11_arm32_parity"],"NOT_RUN")
+        self.assertEqual(e["ssc305_physical"],"NOT_RUN")
+        self.assertEqual(e["natural_far_per_hour"],"NOT_MEASURED")
+        self.assertFalse(e["model_selection_allowed"])
+        self.assertFalse(e["product_promotion_allowed"])
+        self.assertTrue(e["B0_only_installed_software_baseline"])
+        doc=(ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text()
+        self.assertIn("## B9 actually trained half-gain HEY-presence challenger",doc)
+        self.assertIn("43,754 differing trained float32 values",doc)
+        self.assertIn("there is no b9 accuracy",doc.lower())
+
     def test_v6_b7_authentic_saved_control_replay_drift_never_promotes(self):
         q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
         r=q["b7_exact_replay_forensics"]
