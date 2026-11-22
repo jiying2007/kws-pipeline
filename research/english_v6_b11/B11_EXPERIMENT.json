@@ -1,0 +1,82 @@
+{
+  "schema": "english-v6-b11-hardnegative-generalization-prereg-v1",
+  "status": "PREREGISTERED_NOT_TRAINED",
+  "target": "Hey Mero",
+  "baseline": "B0_FROZEN_INSTALLED_C11",
+  "research_parent": "B9_FROZEN",
+  "non_promoted_pair": "B10_CONTROL_AND_HARDNEGATIVE",
+  "evidence": {
+    "pipeline_pr": 859,
+    "pipeline_head": "f56c0f1cf41aefa1a7bde842fec57ad3229cce09",
+    "pipeline_ci_run": 44988145811,
+    "pipeline_ci_checks": 14,
+    "pipeline_review_count": 0,
+    "data_train_run": 44987190871,
+    "data_dev_run": 44987753668,
+    "data_dev_artifact": 14740860535,
+    "data_dev_originals": 8,
+    "data_dev_forward_count": 72,
+    "b10_optimizer_updates_per_arm": 192,
+    "b10_positive_hits": {"1.0": "2/2", "0.75": "2/2", "0.5": "1/2"},
+    "b10_ordinary_false_events": {"1.0": "0/6", "0.75": "0/6", "0.5": "0/6"},
+    "b10_models_same_dev_scores": true,
+    "promotion_allowed": false
+  },
+  "p1_exposed_transfer_diagnostic": {
+    "status": "NOT_RUN",
+    "optimizer_updates": 0,
+    "source_cohort": "B9_DEV528_EXPOSED_READ_ONLY",
+    "known_ordinary_source_groups": ["piper-libritts-p6288", "piper-libritts-p4731"],
+    "fixed_gains": [1.0, 0.75, 0.5],
+    "required_models": ["B9_PARENT", "B10_MATCHED_CONTROL", "B10_HARDNEGATIVE"],
+    "save_full_frame_logits": true,
+    "model_selection_allowed": false,
+    "fresh_denominator_allowed": false
+  },
+  "p2_source_gate": {
+    "status": "NOT_READY",
+    "minimum_train_source_groups": 6,
+    "minimum_new_dev_source_groups": 4,
+    "calibration_source_groups_minimum": 2,
+    "locked_source_groups_minimum": 2,
+    "ordinary_requires_independent_silver_or_weak_class_zero": true,
+    "unknown_as_negative": false,
+    "nearphone_as_ordinary": false,
+    "source_group_is_statistical_unit": true
+  },
+  "p3_training": {
+    "status": "NOT_RUN",
+    "arms": ["matched_control", "diverse_hardnegative"],
+    "optimizer": "AdamW",
+    "updates_per_arm_max": 192,
+    "same_parent_seed_schedule_and_positive_loss": true,
+    "only_changed_factor": "source_balanced_diverse_hardnegative_objective",
+    "dev_cal_locked_gradients": false,
+    "gain_copies_independent": false
+  },
+  "p4_promotion_gate": {
+    "status": "NOT_RUN",
+    "must_reduce_false_events_on_at_least_two_new_dev_source_groups": true,
+    "must_not_introduce_ordinary_false_events": true,
+    "positive_recall_must_not_regress_vs_b0_at_all_fixed_gains": true,
+    "second_independent_dev_confirmation_required": true,
+    "exposed_dev_selection_allowed": false
+  },
+  "p5_product_gate": {
+    "c11_gcc_clang_parity": "NOT_RUN",
+    "armv7_cortex_a32_parity": "NOT_RUN",
+    "physical_ssc305": "NOT_RUN",
+    "human_3_5m_frr": "NOT_MEASURED",
+    "natural_continuous_far": "NOT_MEASURED",
+    "word_end_callback_p95": "NOT_MEASURED",
+    "promotion_allowed": false
+  },
+  "constraints": {
+    "no_private_repositories": true,
+    "no_work_codex_quota": true,
+    "no_paid_model_calls": true,
+    "no_scheduled_patrols": true,
+    "no_duplicate_audio_generation": true,
+    "no_cal_locked_leakage": true
+  }
+}
