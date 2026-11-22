@@ -1184,5 +1184,125 @@
     "model_selection_allowed": false,
     "product_promotion_allowed": false,
     "B0_only_installed_software_baseline": true
+  },
+  "b10_hardnegative_train_and_dev540": {
+    "status": "B10_TRAIN_REAL_DEV540_SYNTHETIC_DIAGNOSTIC_EQUAL_TO_B9_NO_PROMOTION",
+    "source_pr": 313,
+    "observer_pr": 314,
+    "saved_admission_pr": 315,
+    "paired_train_pr": 316,
+    "frozen_dev_pr": 317,
+    "source_run_id": 44906200481,
+    "source_artifact_id": 14708400220,
+    "source_artifact_sha256": "dbc57d762922e60ff23253af2463d5d64e1c8021c74fad6e2f0a9ecb9fd87465",
+    "native_observer_run_id": 44908125673,
+    "native_observer_actual_successes": 90,
+    "screen_run_id": 44986730086,
+    "screen_artifact_id": 14740257228,
+    "screen_artifact_zip_sha256": "ff4d647a224f430e50a76c1f7b42854ad9b41324db0f6b2f2823aaa4c63adb12",
+    "screen_main_sha": "cf3d995d830e69f875c7921ff0ac95498666ecf9",
+    "screen_tiers": {
+      "silver": 12,
+      "weak": 2,
+      "unknown": 4
+    },
+    "training_admitted_new_originals": 6,
+    "new_training_source_groups": 6,
+    "development_machine_ordinary": 6,
+    "development_machine_positive": 2,
+    "development_unknown_excluded": 4,
+    "development_positive_speaker_indices": [
+      542,
+      544
+    ],
+    "source_group_gate_6_train_2_development_pass": true,
+    "train_run_id": 44987190871,
+    "train_main_sha": "cf908773f996ac3395b3841c7f219ef728abcc64",
+    "train_run_conclusion": "success",
+    "trained_archive_artifact_id": 14740303244,
+    "trained_archive_bytes": 1000738,
+    "trained_archive_zip_sha256": "3c7247e301aa57ef442b116ad28dc3356e80b88942cea687fcebb8af8270b33d",
+    "frozen_b9_parent_pt_sha256": "7dba86a3fcda6e5f05cb80b414dc372c70a5a03b3aee783f168441a4871e7655",
+    "b10_same_job_control_pt_sha256": "43e8dc8e1e4150421e55d44b4ad6c5813201947f1560408c0a47d83439608352",
+    "b10_six_train_hardneg_challenger_pt_sha256": "9dc4d8696c16adde295f32b287653165e17fd3e0b650865679474d67616c4ae5",
+    "model_parameter_count": 43876,
+    "actual_optimizer_updates_total": 384,
+    "per_arm_optimizer_updates": 192,
+    "old_train_originals": 79,
+    "old_train_groups": 35,
+    "new_hardnegative_ctc_loss_weights": {
+      "control": 0,
+      "challenger": 0.08
+    },
+    "learned_float_differences": 43751,
+    "dev_gradients": 0,
+    "dev_model_forwards_in_training": 0,
+    "frozen_dev_run_id": 44987753668,
+    "frozen_dev_main_sha": "a180e7e6fc20a30618a76b1a1f4492e639cd0f9b",
+    "frozen_dev_run_conclusion": "success",
+    "frozen_dev_result_artifact_id": 14740860535,
+    "frozen_dev_result_zip_bytes": 33402,
+    "frozen_dev_result_zip_sha256": "94bb62520c2b426abcb6e661717e83699227051f848da840bc0b20f790eb6a11",
+    "frozen_dev_result_json_sha256": "79d7da408f726e4061783cf26a4bdd64e6b8a3341de9a949a98a48fcd59c2c65",
+    "frozen_dev_original_frame_logit_npz_sha256": "920d1074181ddeea925288794fe1d3ddd038ddbb3ac942756907da8dd19f9d69",
+    "score_originals": 8,
+    "score_positive_originals": 2,
+    "score_ordinary_originals": 6,
+    "score_gain_factors": [
+      1,
+      0.75,
+      0.5
+    ],
+    "score_real_frozen_model_forward_conditions": 72,
+    "gain_versions_not_independent_originals": true,
+    "positive_hits": {
+      "1.0": {
+        "B9_parent": 2,
+        "B10_control": 2,
+        "B10_hard_negative": 2
+      },
+      "0.75": {
+        "B9_parent": 2,
+        "B10_control": 2,
+        "B10_hard_negative": 2
+      },
+      "0.5": {
+        "B9_parent": 1,
+        "B10_control": 1,
+        "B10_hard_negative": 1
+      }
+    },
+    "ordinary_false_or_extra_events": {
+      "1.0": {
+        "B9_parent": 0,
+        "B10_control": 0,
+        "B10_hard_negative": 0
+      },
+      "0.75": {
+        "B9_parent": 0,
+        "B10_control": 0,
+        "B10_hard_negative": 0
+      },
+      "0.5": {
+        "B9_parent": 0,
+        "B10_control": 0,
+        "B10_hard_negative": 0
+      }
+    },
+    "low_gain_common_miss_id": "b10-dev-542-mero-fast",
+    "B10_challenger_better_than_same_job_control": false,
+    "new_DEV_ordinary_positives_too_few_for_robustness": false,
+    "hardnegative_mechanism_quality_gain_proven": false,
+    "no_exposed_DEV520_528_retraining": true,
+    "new_optimizer_updates_during_DEV_score": 0,
+    "human_gold": false,
+    "natural_continuous_far_per_hour": "NOT_MEASURED",
+    "human_3_5m_frr": "NOT_MEASURED",
+    "new_model_c11_arm32_parity": "NOT_RUN",
+    "physical_ssc305": "NOT_RUN",
+    "new_calibration_and_locked_test": "NOT_RUN",
+    "model_selection_allowed": false,
+    "product_promotion_allowed": false,
+    "B0_remains_only_installed_C11_software_baseline": true
   }
 }
