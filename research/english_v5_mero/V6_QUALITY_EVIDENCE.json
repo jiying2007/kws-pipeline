@@ -1291,7 +1291,6 @@
     },
     "low_gain_common_miss_id": "b10-dev-542-mero-fast",
     "B10_challenger_better_than_same_job_control": false,
-    "new_DEV_ordinary_positives_too_few_for_robustness": false,
     "hardnegative_mechanism_quality_gain_proven": false,
     "no_exposed_DEV520_528_retraining": true,
     "new_optimizer_updates_during_DEV_score": 0,
@@ -1303,6 +1302,7 @@
     "new_calibration_and_locked_test": "NOT_RUN",
     "model_selection_allowed": false,
     "product_promotion_allowed": false,
-    "B0_remains_only_installed_C11_software_baseline": true
+    "B0_remains_only_installed_C11_software_baseline": true,
+    "new_dev_too_small_to_prove_robustness": true
   }
 }
