@@ -95,6 +95,21 @@ cmake --install "$KWS_BSP_BUILD"
 
 模型权重/模型选用、解码政策、设备硬件身份必须作为三个**独立的版本化证据维度**。B3/B4 的研究结果无论改善多少，若未经过独立声学质量证据、对应权重的 C11↔ARM32 数值回放，以及物理 SSC305 实测，都不能自动覆盖本页 B0 装载路径。
 
+### 通过 POSIX 管道接入已有 AFE
+
+在上面的 SDK 配置命令中增加 `-DHEY_MERO43_BUILD_LIVE_TOOL=ON`，安装后可运行 `bin/heym43-live`。现场采集应用负责把一路连续的 16 kHz、单声道、有符号小端 PCM16 写入 FIFO。确认 B0 模型文件 SHA-256 为 `ff5d0868c035bf5b1c696115eb62f42c36ddbd3a62781207b1340f5e7d1f9d9b` 后，将该文件路径和已核实的解码参数传给程序。
+
+```sh
+: "${KWS_B0_PACK:?已验证的 B0 包路径}"
+: "${KWS_MAX_GAP_SAMPLES:?token 最大间隔样本数}"
+: "${KWS_COOLDOWN_SAMPLES:?重复事件抑制样本数}"
+: "${KWS_POST_AFE_FIFO:?现场采集应用写入的 PCM FIFO}"
+"$KWS_BSP_INSTALL/bin/heym43-live" "$KWS_B0_PACK" \
+  "$KWS_MAX_GAP_SAMPLES" "$KWS_COOLDOWN_SAMPLES" < "$KWS_POST_AFE_FIFO"
+```
+
+标准输出在检测到完整词时即时给出一行 JSON，包含帧序号、该帧可用时的样本计数和回调单调时钟纳秒值。标准错误在正常输入结束时报告样本、帧和事件总数。事件消费者应持续读取，避免输出阻塞采集。原始 PCM 管道没有断流标记，采集丢样、重开设备或切换音源时应结束本次进程并另启会话。需要保留绝对样本时钟的应用可直接调用 SDK 的断流 API。实板词尾到回调延迟还需要与回调时钟对齐的真实词尾标记。
+
 ## 5. 真实设备证据闭环
 
 在真正板端具有可运行的集成应用、音频采集通道和经认证的 B0 pack 后，分别存档：

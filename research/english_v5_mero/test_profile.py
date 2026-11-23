@@ -114,6 +114,7 @@ class SingleEnglishTarget(unittest.TestCase):
                      "-DCMAKE_BUILD_TYPE=Release",
                      "-DHEY_MERO43_BUILD_TESTS=ON",
                      "-DHEY_MERO43_BUILD_HOST_TOOL=ON",
+                     "-DHEY_MERO43_BUILD_LIVE_TOOL=ON",
                      "-DCMAKE_INSTALL_PREFIX="+str(prefix)],
                     ["cmake","--build",str(build),"--parallel","2"],
                     ["ctest","--test-dir",str(build),"--output-on-failure"],
@@ -130,6 +131,8 @@ class SingleEnglishTarget(unittest.TestCase):
                 self.assertTrue((prefix/"include/heym43/mero43_stream.h").is_file())
                 self.assertTrue((prefix/"include/heym43/mero_ctc.h").is_file())
                 self.assertTrue((prefix/"lib/cmake/HeyMero43/HeyMero43Targets.cmake").is_file())
+                subprocess.run([sys.executable, "-I", "-B", str(HERE/"test_live_input.py"),
+                                str(prefix/"bin/heym43-live")], check=True, timeout=30)
                 consumer.joinpath("CMakeLists.txt").write_text(
                     "cmake_minimum_required(VERSION 3.18)\n"
                     "project(mero43_consumer C)\n"
