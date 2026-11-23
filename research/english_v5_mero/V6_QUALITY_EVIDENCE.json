@@ -1304,5 +1304,424 @@
     "product_promotion_allowed": false,
     "B0_remains_only_installed_C11_software_baseline": true,
     "new_dev_too_small_to_prove_robustness": true
+  },
+  "b11_measured_hardnegative_independent_dev": {
+    "status": "NO_PROMOTION_PRIMARY",
+    "exposed_b10_transfer": {
+      "evidence": {
+        "run": 45093377356,
+        "artifact_id": 14782870302,
+        "zip_bytes": 83775,
+        "zip_sha256": "141d775aa11f9f84f31ca93b37eea86e9bb06de99bd299ddca4e027ea4e8bdee"
+      },
+      "originals": 6,
+      "model_forwards": 54,
+      "fresh_originals": 0,
+      "b9_ordinary_false_clips_by_gain": [
+        2,
+        2,
+        1
+      ],
+      "b10_both_arms_ordinary_false_clips_by_gain": [
+        1,
+        2,
+        1
+      ],
+      "b10_gains": [
+        1.0,
+        0.75,
+        0.5
+      ],
+      "model_selection_allowed": false
+    },
+    "initial_train_hardness": {
+      "evidence": {
+        "run": 45093462770,
+        "artifact_id": 14782043774,
+        "zip_bytes": 201339,
+        "zip_sha256": "e0e029b80fd5ec57d38f9ff588450217432a1132e2bfccd431c87b06689753dd"
+      },
+      "admitted_ordinary_originals": 41,
+      "source_groups": 35,
+      "original_gain_hard_families": 0
+    },
+    "supplemental_train": {
+      "evidence": {
+        "run": 45094102574,
+        "artifact_id": 14783505472,
+        "zip_bytes": 126419,
+        "zip_sha256": "5b8f2dfab1285eb9f544e538dd3508c2c1c9405df12c06f99ba03b61ca29ee8c"
+      },
+      "source_artifact": 14782806405,
+      "source_zip_sha256": "47d3076b74ea5c6392e00b2bf110afcb91791e91a4a4b9e1fe78b0d2e2cf9bec",
+      "five_observer_completed": 120,
+      "tier_counts": {
+        "silver": 17,
+        "weak": 6,
+        "unknown": 1
+      },
+      "admitted_ordinary_originals": 23,
+      "original_gain_hard_originals": 13,
+      "original_gain_hard_groups": [
+        "piper-libritts-p2992",
+        "piper-libritts-p30",
+        "piper-libritts-p3905",
+        "piper-libritts-p7384",
+        "piper-libritts-p7498"
+      ],
+      "distinct_sentence_forms": 4
+    },
+    "matched_training": {
+      "evidence": {
+        "run": 45096170903,
+        "artifact_id": 14782904388,
+        "zip_bytes": 1010398,
+        "zip_sha256": "89ba0db434db0e52c39988fa1038ae69d9a35bf0c1ede603bd2c5196461b9058"
+      },
+      "data_pr": 323,
+      "data_merge": "8d211c87e007804023c8b93c9e99b48fefc1d0da",
+      "base_train_originals": 79,
+      "base_train_groups": 35,
+      "parent_pt_sha256": "7dba86a3fcda6e5f05cb80b414dc372c70a5a03b3aee783f168441a4871e7655",
+      "steps_per_arm": 192,
+      "parameters": 43876,
+      "common_draw_sha256": "5e7cf725189a7ff3117c0028aef817343371c9c3e47006f8e0dbe660c7b7261a",
+      "draws_by_hard_family": {
+        "piper-libritts-p2992": 39,
+        "piper-libritts-p30": 39,
+        "piper-libritts-p3905": 38,
+        "piper-libritts-p7384": 38,
+        "piper-libritts-p7498": 38
+      },
+      "auxiliary_loss_weight": {
+        "control": 0,
+        "challenger": 0.08
+      },
+      "differing_float_values": 43849,
+      "control_pt_sha256": "43e8dc8e1e4150421e55d44b4ad6c5813201947f1560408c0a47d83439608352",
+      "challenger_pt_sha256": "b4535be7e3ba59d647dab94d103872cc921ecb452405c8b32bb033cc76d4aaa3",
+      "control_pt_identical_to_b10_control": true,
+      "dev_cal_locked_forwards": 0
+    },
+    "primary_dev": {
+      "evidence": {
+        "run": 45096526424,
+        "artifact_id": 14783767153,
+        "zip_bytes": 399145,
+        "zip_sha256": "00fbad5f68b2a4db707e5be2d1d6577781a8a2217db40fca20ec66b0318d74b4"
+      },
+      "data_pr": 324,
+      "decision_commit": "cd40b1299de4394125c13264348fe6909c6f5d0a",
+      "source_artifact": 14782913094,
+      "blind_screen_artifact": 14782844738,
+      "screen_sha256": "c3f9297c331bbd276ecd7b5f3d0d8132600cae055b0b140830f02b7c15c3961e",
+      "observer_results": 240,
+      "originals_generated": 48,
+      "admitted": 23,
+      "unknown_excluded": 25,
+      "positive_originals": 6,
+      "ordinary_originals": 17,
+      "source_groups": 12,
+      "groups_with_both_classes": 5,
+      "fixed_gains": [
+        1.0,
+        0.75,
+        0.5
+      ],
+      "actual_model_forwards": 276,
+      "frame_logits_zip_member_sha256": "4204a9f6deb5b9cb001bd1b5b1420bad166d312d9d737815f2efd896343f99d5",
+      "models_by_gain": {
+        "B0": {
+          "positive_hits": [
+            6,
+            5,
+            5
+          ],
+          "ordinary_false_clips": [
+            2,
+            3,
+            0
+          ],
+          "ordinary_events": [
+            2,
+            3,
+            0
+          ]
+        },
+        "B9": {
+          "positive_hits": [
+            6,
+            6,
+            5
+          ],
+          "ordinary_false_clips": [
+            1,
+            5,
+            5
+          ],
+          "ordinary_events": [
+            1,
+            5,
+            6
+          ]
+        },
+        "control": {
+          "positive_hits": [
+            6,
+            6,
+            5
+          ],
+          "ordinary_false_clips": [
+            2,
+            5,
+            5
+          ],
+          "ordinary_events": [
+            2,
+            5,
+            6
+          ]
+        },
+        "challenger": {
+          "positive_hits": [
+            6,
+            6,
+            5
+          ],
+          "ordinary_false_clips": [
+            0,
+            0,
+            2
+          ],
+          "ordinary_events": [
+            0,
+            0,
+            2
+          ]
+        }
+      },
+      "minimum_improved_ordinary_families_against_both_original_gain": 2,
+      "improved_families": [
+        "piper-libritts-p6317"
+      ],
+      "positive_group_gate_passed": true,
+      "new_ordinary_conditions": 0,
+      "panel_gate": "NO_PROMOTION",
+      "paired_replication_for_b11": "NOT_OPENED_PRIMARY_GATE_FAILED"
+    },
+    "installed_software_baseline": "B0",
+    "research_advancement": false,
+    "product_promotion": false
+  },
+  "b0_armhf_userspace_verification_20261123": {
+    "scope": "Local cross-build and offline QEMU engineering replay",
+    "sdk_source_commit": "11123fa890fe50bc4f4468266842e2fe880fd064",
+    "architecture": "ARMv7-A EABI5 hard-float NEON/VFPv4",
+    "compiler_tuning": "Cortex-A32",
+    "qemu_cpu": "cortex-a7",
+    "gcc_version": "14.2.0",
+    "qemu_version": "10.0.13",
+    "B0_pack_sha256": "ff5d0868c035bf5b1c696115eb62f42c36ddbd3a62781207b1340f5e7d1f9d9b",
+    "original_pcm_count": 10,
+    "total_frames_per_executable": 844,
+    "full_word_events_per_executable": 2,
+    "all_frame_tokens_event_clocks_equal": true,
+    "static_musl": {
+      "elf_sha256": "dd9a2388792bc5d212680bb67b69cb0a68dd7afcb3d8549e6e1c92197c085873",
+      "max_abs_logit_against_x86": 6.103515625e-05
+    },
+    "dynamic_glibc": {
+      "elf_sha256": "7b5575773c405bc2c363a68744208d62ff9629f67fb46c37bd7feb1ee5d79266",
+      "max_abs_logit_against_x86": 0
+    },
+    "armhf_static_sdk_sha256": "c263904db866cb71aeff22af3bd29689ee4a822d39dd0b89d09d8d7cbe2b4307",
+    "physical_ssc305": "NOT_RUN",
+    "product_promotion": false
+  },
+  "b12_tempo_independent_dev": {
+    "registered_hypothesis": "Fixed 1.08x pitch-preserving tempo augmentation for clean-to-half-gain misses in verified faster positive TRAIN families",
+    "train_diagnostic": {
+      "run": 45094053219,
+      "artifact_id": 14782234724,
+      "zip_bytes": 176598,
+      "zip_sha256": "59e4f39122debbcb3151977a5f6481ba59cb5766a826840a5abaa8653e215bc3",
+      "positive_originals": 44,
+      "source_groups": 35,
+      "actual_forwards": 132,
+      "verified_faster_clips": 14,
+      "clean_hit_half_miss_verified_families": [
+        "kokoro-v1_0-preset:am_santa",
+        "piper-libritts-p3905"
+      ]
+    },
+    "paired_training": {
+      "run": 45096863328,
+      "head": "17c375ade8f169bedfc9700348ab36d6252d3dd6",
+      "artifact_id": 14783642956,
+      "zip_bytes": 11728691,
+      "zip_sha256": "577f18df2568a20d2fe54b038a0f3ccf371ca8c99ea7b342f8cbfd801a3b8e7c",
+      "parent_pt_sha256": "7dba86a3fcda6e5f05cb80b414dc372c70a5a03b3aee783f168441a4871e7655",
+      "base_train_originals": 79,
+      "base_train_groups": 35,
+      "optimizer_updates_per_arm": 192,
+      "actual_optimizer_updates": 384,
+      "parameters": 43876,
+      "tempo_steps_in_challenger": 87,
+      "tempo_flags": [
+        "-R",
+        "-D",
+        "tempo",
+        "-s",
+        "1.08"
+      ],
+      "different_trained_float_values": 43757,
+      "historical_b10_control_different_float_values": 21287,
+      "historical_b10_control_max_abs_weight_difference": 7.934868335723877e-07,
+      "control_pt_sha256": "d7eae89551f5b940ce31d4126d2d1b72a3383bd0ceff06e433da5e4571cb18ba",
+      "challenger_pt_sha256": "c103441862e23c5f8f0b671d6e6e044ddff33ef4fdbf99d34117951cb51e2bf5",
+      "dev_cal_locked_forwards": 0
+    },
+    "primary_dev": {
+      "source_run": 45097201431,
+      "source_artifact_id": 14784071420,
+      "source_zip_sha256": "e42505142442a735aa3aa4096fda22a9d2ac83bfbba678abfad7011cf3a3ce83",
+      "screen_artifact_id": 14784332918,
+      "screen_zip_sha256": "baacbbf6f40ed7ba8c51428604920601c0a9f8500eafba3059a5d0a263f4e12f",
+      "source_originals": 48,
+      "native_source_observations": 240,
+      "distinct_scored_source_groups": 12,
+      "source_groups_with_both_classes": 6,
+      "admitted": 23,
+      "positive_originals": 6,
+      "ordinary_originals": 17,
+      "unknown_excluded": 25,
+      "fixed_gains": [
+        1.0,
+        0.75,
+        0.5
+      ],
+      "actual_model_forwards": 276,
+      "run": 45098806390,
+      "head": "82b19dd1d91dca18125caabbbdaaf666a5039dbe",
+      "artifact_id": 14783729142,
+      "zip_bytes": 434757,
+      "zip_sha256": "4c31df61ac98e9ae3fcf031906fb88284ef1bbdb722737ddea0c87a862f5f44d",
+      "all_frame_logits_sha256": "3e5e6188a3661123146406e805310043c048a4f9fa1c17b0133b01078feb6141",
+      "models_by_gain": {
+        "B0": {
+          "positive_hits": [
+            3,
+            4,
+            2
+          ],
+          "ordinary_false_clips": [
+            5,
+            1,
+            0
+          ],
+          "ordinary_events": [
+            5,
+            1,
+            0
+          ]
+        },
+        "B9": {
+          "positive_hits": [
+            4,
+            4,
+            4
+          ],
+          "ordinary_false_clips": [
+            3,
+            4,
+            5
+          ],
+          "ordinary_events": [
+            3,
+            6,
+            5
+          ]
+        },
+        "control": {
+          "positive_hits": [
+            5,
+            4,
+            4
+          ],
+          "ordinary_false_clips": [
+            3,
+            4,
+            4
+          ],
+          "ordinary_events": [
+            3,
+            4,
+            4
+          ]
+        },
+        "challenger": {
+          "positive_hits": [
+            5,
+            4,
+            4
+          ],
+          "ordinary_false_clips": [
+            3,
+            4,
+            4
+          ],
+          "ordinary_events": [
+            3,
+            6,
+            4
+          ]
+        }
+      },
+      "verified_faster_positive_half_gain_events": {
+        "piper-libritts-p166": {
+          "B0": 0,
+          "B9": 1,
+          "control": 1,
+          "challenger": 1
+        },
+        "piper-libritts-p2741": {
+          "B0": 0,
+          "B9": 0,
+          "control": 0,
+          "challenger": 0
+        }
+      },
+      "minimum_recovered_faster_families_against_both_at_half_gain": 2,
+      "improved_families": [],
+      "positive_group_gate_passed": true,
+      "lost_positive_group_conditions": [],
+      "new_ordinary_false_or_extra": [
+        {
+          "id": "b12-primary-577-statement",
+          "gain": 0.75,
+          "events": {
+            "B0": 0,
+            "B9": 2,
+            "control": 1,
+            "challenger": 2
+          }
+        },
+        {
+          "id": "b12-primary-581-statement",
+          "gain": 0.75,
+          "events": {
+            "B0": 0,
+            "B9": 2,
+            "control": 1,
+            "challenger": 2
+          }
+        }
+      ],
+      "panel_gate": "NO_PROMOTION",
+      "paired_replication_for_b12": "NOT_OPENED_PRIMARY_GATE_FAILED"
+    },
+    "installed_software_baseline": "B0",
+    "research_advancement": false,
+    "product_promotion": false
   }
 }

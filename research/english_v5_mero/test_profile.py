@@ -725,6 +725,61 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertIn("does not demonstrate an acoustic advantage",documentation)
         self.assertIn("do not select b10",documentation.lower())
 
+    def test_b11_primary_gate_counts_distinct_informative_families(self):
+        q = json.loads((HERE / "V6_QUALITY_EVIDENCE.json").read_bytes())
+        b11 = q["b11_measured_hardnegative_independent_dev"]
+        primary = b11["primary_dev"]
+        self.assertEqual((primary["admitted"], primary["unknown_excluded"], primary["actual_model_forwards"]),
+                         (23, 25, 276))
+        self.assertEqual(primary["actual_model_forwards"],
+                         primary["admitted"] * len(primary["fixed_gains"]) * len(primary["models_by_gain"]))
+        self.assertEqual(primary["improved_families"], ["piper-libritts-p6317"])
+        self.assertLess(len(primary["improved_families"]),
+                        primary["minimum_improved_ordinary_families_against_both_original_gain"])
+        self.assertEqual(primary["panel_gate"], "NO_PROMOTION")
+        self.assertTrue(primary["positive_group_gate_passed"])
+        self.assertEqual(primary["new_ordinary_conditions"], 0)
+        scores = primary["models_by_gain"]
+        self.assertEqual(scores["challenger"]["ordinary_false_clips"], [0, 0, 2])
+        self.assertEqual(scores["B9"]["ordinary_false_clips"], [1, 5, 5])
+        self.assertEqual(scores["B9"]["ordinary_events"], [1, 5, 6])
+        trained = b11["matched_training"]
+        self.assertEqual(sum(trained["draws_by_hard_family"].values()), trained["steps_per_arm"])
+        self.assertEqual(trained["dev_cal_locked_forwards"], 0)
+        self.assertEqual(trained["control_pt_sha256"],
+                         q["b10_hardnegative_train_and_dev540"]["b10_same_job_control_pt_sha256"])
+        self.assertFalse(b11["research_advancement"])
+        self.assertFalse(b11["product_promotion"])
+        self.assertEqual(q["b0_armhf_userspace_verification_20261123"]["physical_ssc305"], "NOT_RUN")
+
+    def test_b12_primary_separates_half_gain_recovery_and_extra_events(self):
+        quality = json.loads((HERE / "V6_QUALITY_EVIDENCE.json").read_bytes())
+        b12 = quality["b12_tempo_independent_dev"]
+        primary = b12["primary_dev"]
+        self.assertEqual((primary["admitted"], primary["unknown_excluded"]), (23, 25))
+        self.assertEqual(primary["actual_model_forwards"],
+                         primary["admitted"] * len(primary["fixed_gains"]) * len(primary["models_by_gain"]))
+        self.assertEqual(primary["minimum_recovered_faster_families_against_both_at_half_gain"], 2)
+        self.assertEqual(primary["improved_families"], [])
+        self.assertEqual(primary["lost_positive_group_conditions"], [])
+        fast = primary["verified_faster_positive_half_gain_events"]
+        self.assertEqual(set(fast), {"piper-libritts-p166", "piper-libritts-p2741"})
+        for group, expected in (("piper-libritts-p166", 1), ("piper-libritts-p2741", 0)):
+            self.assertEqual([fast[group][k] for k in ("B9", "control", "challenger")], [expected] * 3)
+        scores = primary["models_by_gain"]
+        self.assertEqual(scores["challenger"]["ordinary_false_clips"], scores["control"]["ordinary_false_clips"])
+        self.assertEqual(scores["challenger"]["ordinary_events"], [3, 6, 4])
+        self.assertEqual(scores["control"]["ordinary_events"], [3, 4, 4])
+        self.assertEqual([(v["gain"], v["events"]["control"], v["events"]["challenger"])
+                          for v in primary["new_ordinary_false_or_extra"]], [(0.75, 1, 2)] * 2)
+        self.assertEqual(primary["panel_gate"], "NO_PROMOTION")
+        self.assertEqual(b12["paired_training"]["historical_b10_control_different_float_values"], 21287)
+        self.assertEqual(b12["paired_training"]["dev_cal_locked_forwards"], 0)
+        self.assertEqual(primary["paired_replication_for_b12"], "NOT_OPENED_PRIMARY_GATE_FAILED")
+        self.assertEqual(b12["installed_software_baseline"], "B0")
+        self.assertFalse(b12["research_advancement"])
+        self.assertFalse(b12["product_promotion"])
+
     def test_v6_b7_authentic_saved_control_replay_drift_never_promotes(self):
         q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
         r=q["b7_exact_replay_forensics"]
