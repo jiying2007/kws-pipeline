@@ -866,6 +866,64 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertIsNone(score["natural_field_far_per_hour"])
         self.assertEqual(score["software_baseline"], "B0")
 
+    def test_b14_positive_path_retention_trial_matches_frozen_sources(self):
+        research = json.loads((HERE / "V6_QUALITY_EVIDENCE.json").read_bytes())
+        trial = research["b14_positive_retention"]
+        prior = trial["b13_train_positive_diagnostic"]
+        trained = trial["paired_training"]
+        primary = trial["primary_dev"]
+        synth = trial["synthetic_source"]
+        natural = trial["natural_source"]
+        self.assertEqual(prior["actual_forwards"], 44 * 3 * 3)
+        self.assertEqual(prior["groups_lost_vs_both_by_gain"], {"1.0": 4, "0.75": 3, "0.5": 1})
+        self.assertEqual(prior["dev_cal_locked_forwards"], 0)
+        self.assertTrue(trained["b13_control_all_tensors_bit_equal"])
+        self.assertEqual(trained["actual_optimizer_updates"], 2 * 192)
+        self.assertEqual(trained["train_steps_with_nonzero_aux"], 192)
+        self.assertEqual(trained["job_total_optimizer_updates"],
+                         trained["actual_optimizer_updates"] + trained["historical_replay_additional_updates"])
+        self.assertEqual(trained["dev_cal_locked_forwards"], 0)
+        self.assertFalse(trial["prior_control_attempt"]["challenger_started"])
+        self.assertEqual(synth["source"]["run_id"], synth["screen"]["run_id"])
+        self.assertEqual(synth["source"]["run_id"], 45111867692)
+        self.assertEqual(synth["source"]["head_sha"], "b279c5c41bd5ac58e783c61f6d9a1de6e320b66e")
+        self.assertEqual(synth["source"]["sha256"], "940d9bd7b4798094840d9d7fd1c7909c404428087f5ca8d8d5f8d181cc283a86")
+        self.assertEqual(synth["screen"]["sha256"], "6eae37ab2498d9e51bd841298a35f498c8b7e8e4dc5e1d16e25e5be9aeac38e5")
+        self.assertEqual(sum(synth["coverage"].values()), 5 * synth["originals"])
+        self.assertEqual(sum(synth["source_tiers"].values()), synth["originals"])
+        self.assertEqual(synth["originals"], 48)
+        self.assertEqual(natural["source"]["head_sha"], natural["screen"]["head_sha"])
+        self.assertEqual(natural["originals"], 2 * natural["source_groups"])
+        self.assertEqual(primary["gains"], ["1.0", "0.75", "0.5"])
+        self.assertEqual(primary["arrays"], 4 * 3 * (natural["eligible"] + 8 + 23))
+        for arm in ("control", "challenger"):
+            self.assertEqual(trained["parameters"][arm]["member_sha256"]["pt"], primary["model_pt_sha256"][arm])
+        summary = primary["observed_by_gain"]
+        for cohort, arms in summary.items():
+            total = {"synthetic_ordinary": 23, "synthetic_positive": 8, "natural_ordinary": natural["eligible"]}[cohort]
+            for values in arms.values():
+                for hits, events in zip(values["with_event"], values["events"]):
+                    self.assertLessEqual(hits, total)
+                    self.assertLessEqual(hits, events)
+        comparisons = zip(summary["natural_ordinary"]["challenger"]["events"],
+                          summary["natural_ordinary"]["B0"]["events"])
+        self.assertEqual(primary["natural_above_B0_gains"], [
+            gain for gain, (challenger, baseline) in zip(primary["gains"], comparisons)
+            if challenger > baseline])
+        assessment = trial["assessment"]
+        recovered = {item[1] for item in primary["restored_positives"]}
+        blockers = ["lost_positives", "extra_positive_events", "added_ordinary_events", "natural_above_B0_gains"]
+        passed = (len(recovered) >= assessment["positive_recovery_family_min"] and
+                  len(primary["natural_readers_improved_vs_B9"]) >= assessment["improved_reader_min"] and
+                  not any(primary[name] for name in blockers))
+        self.assertEqual(primary["panel_gate"], "PASS" if passed else "NO_PROMOTION")
+        self.assertFalse(primary["released"])
+        self.assertFalse(primary["physical_ssc305_measured"])
+        self.assertIsNone(primary["continuous_field_far_per_hour"])
+        self.assertIsNone(primary["field_3_5m_frr"])
+        self.assertIsNone(primary["physical_word_end_to_callback_P95_ms"])
+        self.assertEqual(primary["installed_software_baseline"], "B0")
+
     def test_english_v5_workflow_is_exactly_registered(self):
         manifest=json.loads((ROOT/"research/consolidation/source-retention-2026-10-07.json").read_bytes())
         workflow=".github/workflows/english-v5-mero-contract.yml"
