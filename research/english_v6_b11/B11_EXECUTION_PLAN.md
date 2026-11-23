@@ -9,7 +9,7 @@ Status: PREREGISTERED / NOT TRAINED. No model promotion is authorized. B0 remain
 - Thus B10 did not establish an acoustic advantage. Its new DEV negatives were easy for every arm and do not demonstrate transfer to the earlier false-wake examples.
 
 ## P0 — evidence handoff
-1. Keep pipeline PR #859 open until independent review requirements are met. Its 14 CI checks pass, but it has zero submitted reviews. Do not self-merge.
+1. B10 evidence is on protected main at `76e5c1e0a068db503603b386bc897cdec68fee35` (#859). The live `kws-main-terminal` ruleset requires a squash PR, resolved threads and six current passing checks, with zero required approving reviews.
 2. Preserve B10 weights/results exactly. Do not rerun B10 training or regenerate its 18 WAVs.
 3. B0 remains the shipping comparator.
 
@@ -25,13 +25,14 @@ Run frozen B9 parent, B10 matched control and B10 hard-negative weights on the a
 Do not train until source groups and roles are independently reviewed.
 - TRAIN: only original source-qualified TRAIN rows still authorized for B11, plus newly generated originals if required. Build diverse ordinary speech, not repetitions of one sentence. Vary sentence form, duration, rate, stress and phonetic context. Exclude nearphone/keyword-like requests as ordinary negatives.
 - Admit only independently reviewed Silver/Weak class-0 rows with complete qualified source groups. UNKNOWN remains excluded.
+- Before adding an optimizer, score previously admitted ordinary TRAIN originals with the frozen B9 parent at fixed gains. Count a hard family only for an actual full-word false event at 1.0×. If fewer than two independent families qualify, allow one supplemental batch of at most 24 new diverse TRAIN originals in the six prequalified TRAIN groups. Freeze texts, rate, roles and the admission rule before synthesis. If the combined pool still has fewer than two hard families, stop this B11 training hypothesis. Never use DEV to mine training examples.
 - DEV: new speaker identities and original PCM, with multiple ordinary sentence families and canonical Hey Mero positives at fast/slow delivery and low amplitude. Speaker group is the statistical unit.
 - Require at least 6 independent TRAIN groups and 4 independent DEV groups. CAL and LOCKED remain untouched; minimum 2 groups each. If gates fail, STOP rather than weaken them.
 
 ## P3 — paired single-factor training
 - Parent: byte-authenticated frozen B9 research checkpoint; B0 is a frozen inference comparator.
 - Arm A: matched continuation control.
-- Arm B: same initialization, optimizer, seed, steps, old TRAIN, batch schedule and losses, adding only a preregistered source-balanced diverse hard-negative objective.
+- Arm B: same initialization, optimizer, seed, steps, old TRAIN, batch schedule and losses, adding only a source-balanced diverse hard-negative loss (control coefficient 0, challenger 0.08). Freeze the eligible group list and the shared draw trace before either optimizer starts.
 - Same optimizer update count, initially bounded to 192 per arm. No DEV/CAL/LOCKED gradients, no gain-copy independence, no threshold tuning.
 - Save PT/NPZ/ONNX, optimizer trace, exact input manifest, PCM/WAV hashes, parent SHA, source-group draw trace and STOP receipts.
 

@@ -672,6 +672,59 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertIn("B9 challenger is **not superior",doc)
         self.assertIn("B0 remains the only installed",doc)
 
+    def test_v6_b10_384_train_and_72_real_new_dev_no_acoustic_promotion(self):
+        e=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
+        b=e["b10_hardnegative_train_and_dev540"]
+        self.assertEqual(b["status"],
+            "B10_TRAIN_REAL_DEV540_SYNTHETIC_DIAGNOSTIC_EQUAL_TO_B9_NO_PROMOTION")
+        self.assertEqual((b["source_pr"],b["observer_pr"],b["saved_admission_pr"],
+                          b["paired_train_pr"],b["frozen_dev_pr"]),(313,314,315,316,317))
+        self.assertEqual((b["native_observer_actual_successes"],
+                          b["training_admitted_new_originals"],
+                          b["development_machine_positive"],
+                          b["development_machine_ordinary"],
+                          b["development_unknown_excluded"]),(90,6,2,6,4))
+        self.assertEqual(b["development_positive_speaker_indices"],[542,544])
+        self.assertTrue(b["source_group_gate_6_train_2_development_pass"])
+        self.assertEqual((b["train_run_id"],b["train_run_conclusion"],
+                          b["trained_archive_artifact_id"]),(44987190871,"success",14740303244))
+        self.assertEqual((b["trained_archive_bytes"],b["trained_archive_zip_sha256"]),
+                         (1000738,"3c7247e301aa57ef442b116ad28dc3356e80b88942cea687fcebb8af8270b33d"))
+        self.assertEqual((b["actual_optimizer_updates_total"],
+                          b["per_arm_optimizer_updates"],
+                          b["learned_float_differences"]),(384,192,43751))
+        self.assertEqual((b["new_hardnegative_ctc_loss_weights"]["control"],
+                          b["new_hardnegative_ctc_loss_weights"]["challenger"]),(0,0.08))
+        self.assertEqual(b["dev_gradients"],0)
+        self.assertEqual(b["dev_model_forwards_in_training"],0)
+        self.assertEqual((b["frozen_dev_run_id"],b["frozen_dev_run_conclusion"],
+                          b["frozen_dev_result_artifact_id"]),(44987753668,"success",14740860535))
+        self.assertEqual((b["frozen_dev_result_zip_bytes"],b["frozen_dev_result_zip_sha256"]),
+                         (33402,"94bb62520c2b426abcb6e661717e83699227051f848da840bc0b20f790eb6a11"))
+        self.assertEqual((b["score_originals"],b["score_positive_originals"],
+                          b["score_ordinary_originals"],b["score_real_frozen_model_forward_conditions"]),
+                         (8,2,6,72))
+        self.assertTrue(b["gain_versions_not_independent_originals"])
+        self.assertEqual(b["score_gain_factors"],[1,0.75,0.5])
+        for gain,positive in (("1.0",2),("0.75",2),("0.5",1)):
+            self.assertEqual(b["positive_hits"][gain],dict.fromkeys(
+                ("B9_parent","B10_control","B10_hard_negative"),positive))
+            self.assertEqual(b["ordinary_false_or_extra_events"][gain],dict.fromkeys(
+                ("B9_parent","B10_control","B10_hard_negative"),0))
+        self.assertFalse(b["B10_challenger_better_than_same_job_control"])
+        self.assertFalse(b["hardnegative_mechanism_quality_gain_proven"])
+        self.assertFalse(b["human_gold"])
+        self.assertFalse(b["model_selection_allowed"])
+        self.assertFalse(b["product_promotion_allowed"])
+        self.assertTrue(b["B0_remains_only_installed_C11_software_baseline"])
+        self.assertEqual(b["physical_ssc305"],"NOT_RUN")
+        self.assertEqual(b["natural_continuous_far_per_hour"],"NOT_MEASURED")
+        documentation=(ROOT/"docs/ENGLISH_V6_MERO_EXECUTION.md").read_text()
+        self.assertIn("## B10 genuine two-arm hard-negative TRAIN",documentation)
+        self.assertIn("43,751 float values",documentation)
+        self.assertIn("does not demonstrate an acoustic advantage",documentation)
+        self.assertIn("do not select b10",documentation.lower())
+
     def test_v6_b7_authentic_saved_control_replay_drift_never_promotes(self):
         q=json.loads((HERE/"V6_QUALITY_EVIDENCE.json").read_bytes())
         r=q["b7_exact_replay_forensics"]
