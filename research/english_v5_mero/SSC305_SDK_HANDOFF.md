@@ -24,6 +24,22 @@ target_link_libraries(my_16khz_pcm_application PRIVATE HeyMero43::stream)
 
 The installed public headers are `heym43/mero43_stream.h` and `heym43/mero_ctc.h`. No Python runtime or model training is required on SSC305. Cross-compile with the project-specific Cortex-A32 ARM hard-float sysroot/toolchain; do not claim actual-board execution from a cross-compile. The core requires a caller-owned model arena and stream state; query `en_v5_m43_model_bytes()` and `en_v5_m43_stream_bytes()` rather than hardcoding structure sizes. Inference uses no heap allocations, file I/O or threads in the core. The caller supplies **16 kHz mono little-endian signed PCM16** with monotonic sample indices, consumes events by callback, and calls reset or discontinuity explicitly on audio gaps.
 
+## Live post-AFE input on POSIX systems
+
+Set `-DHEY_MERO43_BUILD_LIVE_TOOL=ON` in the SDK build to install `bin/heym43-live`. Feed one continuous session of 16 kHz mono signed little-endian PCM16 from the board's post-AFE output. The adapter reads raw bytes from stdin and writes one JSON line per complete wake event to stdout. The capture application owns the microphone, channel selection, sample rate and AFE.
+
+```sh
+: "${B0_PACK:?path to the authenticated B0 pack}"
+: "${MAX_GAP_SAMPLES:?maximum inter-token gap in samples}"
+: "${COOLDOWN_SAMPLES:?refractory period in samples}"
+: "${POST_AFE_FIFO:?raw PCM FIFO from the capture application}"
+heym43-live "$B0_PACK" "$MAX_GAP_SAMPLES" "$COOLDOWN_SAMPLES" < "$POST_AFE_FIFO"
+```
+
+Verify the B0 pack against SHA-256 `ff5d0868c035bf5b1c696115eb62f42c36ddbd3a62781207b1340f5e7d1f9d9b` before starting the adapter. The two decoder settings are mandatory. Product settings require separate calibration. A short read can split a sample. The adapter retains its first byte until the second arrives, rejects a trailing half-sample at EOF and reports sample, frame and event totals to stderr at a clean EOF.
+
+The output fields are `event`, `keyword_id`, `frame_index`, `available_after_sample` and `callback_monotonic_ns`. Frame indices begin at zero. The sample clock counts consumed input samples, and the monotonic timestamp comes from the callback's own clock. Physical latency also requires a time-aligned, independently observed word ending. Keep stdout drained because a blocked consumer stalls audio ingestion. A raw pipe cannot signal a dropped interval. End the process on capture loss and start a new process/session when capture resumes, or use the C API's explicit discontinuity operation in the capture application.
+
 ## Model provenance (not in the SDK)
 
 - Frozen real **43,876-param / 256-update FSMN-CTC**: kws-data run [44495594627](https://github.com/jiying2007/kws-data/actions/runs/44495594627), artifact `14514228406`, original ZIP SHA256 `91b203f05041d92e7ffb1b748f94959ce19af6673b91dbc2144920815058d702`.
