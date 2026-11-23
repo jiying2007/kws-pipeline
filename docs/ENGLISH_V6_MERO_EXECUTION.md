@@ -4,7 +4,7 @@
 
 ## Current model decision
 
-B0 remains the installed C11/ARM32 software baseline. B11 reduced false wakes on one of the two independent families required for advancement. B12 recovered zero of the two required faster positive families at half gain and added two ordinary false events at 0.75 gain. Both experiments stopped at their frozen primary gates. [B11 primary evidence](#b11-measured-hard-negatives-and-independent-primary-dev-2026-11-23) · [B12 primary evidence](#b12-pitch-preserving-tempo-training-and-independent-primary-dev-2026-11-23)
+B0 remains the installed C11/ARM32 software baseline. The B14 positive-path challenger received **NO_PROMOTION** on the independent primary DEV comparison. The comparison covered 15 natural recordings, 23 ordinary synthetic utterances and 8 synthetic wake examples at three gains. [B14 primary evidence](#b14-positive-path-retention-on-independent-english-speech) · [B13 comparison](#b13-owner-reviewed-natural-negative-training-and-new-english-dev)
 
 ## Initial B0 and B1 decision
 The 43,876-param B0 FSMN-CTC / 256 steps remains the **frozen C11/ARM32 software baseline**. B1 is the same-size 288-step gain/noise/echo/teacher-regularized model, actually trained in [data #268](https://github.com/jiying2007/kws-data/pull/268). Its exposed synthetic DEV diagnostic matched B0: two machine-positive hits and zero ordinary false events among eight clips in clean, half amplitude and SNR10. **No independent quality gain is proved.**
@@ -302,6 +302,30 @@ The prospective LibriSpeech primary contained two recordings from each of twelve
 | B13 challenger | 3 / 2 / 6 | 5 / 4 / 8 | 2 / 0 / 1 | 5 / 6 / 5 |
 
 **B13 primary decision — NO_PROMOTION.** Original-gain natural speech improved on 11 of 12 readers against both B9 and the matched control, and total natural events fell below B0. Two separate safeguards failed. On synthetic request `b13-primary-600-request` at original gain, B13 added a complete wake absent from both comparators. Slow positive family p6446 lost its original-gain event against B0 and the control; p7258 lost its half-gain event against the control. The challenger lost the final ROH on p6446 and produced an all-blank path on p7258 at half gain. The registered replication remained sealed. B0 is still the installed software baseline. Continuous natural FAR/h and physical SSC305 metrics remain unmeasured.
+
+## B14 positive-path retention on independent English speech
+
+B13 lost complete wakes on five of 35 TRAIN source families across three gains. The read-only comparison scored 44 positive originals on B9, the B13 control and the B13 challenger (396 forwards). Both references completed a wake that B13 missed on 4, 3 and 1 families at gains 1.0, 0.75 and 0.5. [TRAIN diagnostic](https://github.com/jiying2007/kws-data/actions/runs/45111029245/artifacts/14790175198)
+
+B14 retained the B13 natural-negative objective and added a fixed 0.08 positive-path margin loss to the challenger. The loss used 120 eligible original/gain pairs from 43 TRAIN positives across 34 source families. The first control differed from the archived B13 challenger in 28,571 parameter values. That job stopped before challenger training. A subsequent job repeated the historical initialization and reproduced every B13 challenger parameter in its matched control. The two B14 arms produced 384 paired updates, 192 per arm. The historical preparation used 192 additional updates. [45111873376 control comparison](https://github.com/jiying2007/kws-data/actions/runs/45111873376/artifacts/14789492833) · [Authenticated paired weights](https://github.com/jiying2007/kws-data/actions/runs/45112365719/artifacts/14790595097)
+
+The independent DEV screen admitted 8 Hey Mero positives and 23 ordinary synthetic utterances from 48 original Piper renders. Five unprompted observers completed all 240 observations. LibriSpeech dev-other contributed 24 ordinary recordings from 12 new readers. The same five observers admitted 15 recordings from 9 readers (48.225 seconds). The primary comparison produced 552 complete arrays and 87,072 frames. Each table cell gives gains 1.0 / 0.75 / 0.5 in that order. [Synthetic screen](https://github.com/jiying2007/kws-data/actions/runs/45111867692/artifacts/14789912220) · [Natural screen](https://github.com/jiying2007/kws-data/actions/runs/45112369565/artifacts/14789384424)
+
+| Frozen model | Natural originals with false wakes | Natural false events | Synthetic ordinary false events | Synthetic positives hit out of 8 |
+| --- | --- | --- | --- | --- |
+| B0 | 1 / 0 / 1 | 1 / 0 / 1 | 3 / 2 / 3 | 8 / 7 / 4 |
+| B9 | 8 / 5 / 4 | 11 / 7 / 7 | 4 / 4 / 6 | 8 / 8 / 7 |
+| Matched B14 control | 1 / 1 / 0 | 1 / 1 / 0 | 2 / 1 / 2 | 8 / 7 / 6 |
+| B14 challenger | 3 / 2 / 2 | 3 / 3 / 2 | 2 / 1 / 0 | 8 / 8 / 6 |
+
+**The primary decision was NO_PROMOTION.**
+
+- The challenger recovered one fast positive from piper-libritts-p3171 at gain 0.75, meeting the one-family minimum.
+- The challenger lost hits on 0 positive original/gain pairs against B0 or the control. It added repeats on 0 positive pairs against B9 or the control.
+- Compared with its matched control, the challenger added false events on 6 original/gain pairs across 5 natural recordings. By gain, 2, 2 and 2 recordings had additional events.
+- At original gain, 6 of 9 readers had fewer false events than B9 (minimum two). Natural false-event totals exceeded B0 at gains 1.0, 0.75, 0.5.
+
+The registered replication stayed sealed. B0 remains the installed C11/ARM32 software baseline. This experiment measured isolated read speech and synthetic positive examples. Field FRR at 3–5 m, continuous-background FAR/h and SSC305 word-end-to-callback P95 remain unmeasured. [Full primary logits and per-original decisions](https://github.com/jiying2007/kws-data/actions/runs/45113045521/artifacts/14789539248)
 
 ## B0 ARM software handoff
 
