@@ -2,7 +2,11 @@
 
 > Active target: **Hey Mero** /heɪ ˈmɛroʊ/ only. This is an executable research plan with immutable evidence identities, not an approval or a claim of product FRR/FAR. Machine facts: [V6 frozen evidence profile](../research/english_v5_mero/V6_QUALITY_EVIDENCE.json).
 
-## Decision
+## Current model decision
+
+B0 remains the installed C11/ARM32 software baseline. B11 reduced false wakes on one of the two independent families required for advancement. B12 recovered zero of the two required faster positive families at half gain and added two ordinary false events at 0.75 gain. Both experiments stopped at their frozen primary gates. [B11 primary evidence](#b11-measured-hard-negatives-and-independent-primary-dev-2026-11-23) · [B12 primary evidence](#b12-pitch-preserving-tempo-training-and-independent-primary-dev-2026-11-23)
+
+## Initial B0 and B1 decision
 The 43,876-param B0 FSMN-CTC / 256 steps remains the **frozen C11/ARM32 software baseline**. B1 is the same-size 288-step gain/noise/echo/teacher-regularized model, actually trained in [data #268](https://github.com/jiying2007/kws-data/pull/268). Its exposed synthetic DEV diagnostic matched B0: two machine-positive hits and zero ordinary false events among eight clips in clean, half amplitude and SNR10. **No independent quality gain is proved.**
 
 B0 source ZIP SHA256 `91b203f05041d92e7ffb1b748f94959ce19af6673b91dbc2144920815058d702` and B1 output PT SHA256 `20d0c4632224cf332460493695c0dd21927a80ed13034a9531f5d5230d2f7e05` are immutable. A new-model C11/ARM parity gate is mandatory before any model replacement; earlier B0 numerical PASS never transfers to B1.
@@ -228,6 +232,44 @@ The subsequent **genuine independent-source B10 frozen-model DEV comparison** [d
 | B10 6-Silver-TRAIN-hardnegative challenger | 2 | 2 | 1 | 0 / 0 / 0 |
 
 **Scientific decision: B10's new hard-negative loss was genuinely trained, but it does not demonstrate an acoustic advantage** over its same-job control or frozen B9 parent on any measured condition. The six new ordinary development originals are **easy for all three models**, so zero false events here are not evidence that B9's **two different source-specific false wakes on exposed DEV528** have been eliminated. At half gain all three miss the same new positive `b10-dev-542-mero-fast`; the previously observed low-gain HEY weakness persists. This experiment is source-disjoint from B10 TRAIN but remains synthetic, very small and development-only; derived gain versions are not independent originals. **Do not select B10, train on exposed DEV540/DEV528, relabel UNKNOWN, sweep thresholds, extrapolate to natural FAR/h, or replace B0.** Next research must obtain genuinely representative independently qualified difficult negatives and address model confidence/timing with saved evidence, rather than generating another challenger without new information. B10-specific C11/Cortex-A32 parity, physical SSC305, human 3–5m FRR, natural continuous FAR/h and untouched CAL/LOCKED **remain NOT_RUN/NOT_MEASURED**. B0 remains the installed SDK software baseline.
+
+## B11 measured hard negatives and independent primary DEV (2026-11-23)
+
+The B9 parent retained two ordinary false-wake sources on the exposed DEV528 diagnostic. At original gain both B10 arms removed the event on source 535 and retained the event on 537. The six previously scored originals were used for diagnosis only. The initial B11 TRAIN audit then found zero original-gain complete events on 41 admitted ordinary originals across 35 families. [Exposed diagnostic](https://github.com/jiying2007/kws-data/actions/runs/45093377356) · [TRAIN audit](https://github.com/jiying2007/kws-data/actions/runs/45093462770)
+
+The one preregistered supplement crossed four sentence forms with six prequalified TRAIN voices. All 120 native source observations completed. Of 24 new originals, 17 were Silver, 6 Weak and 1 UNKNOWN. Frozen B9 produced a complete event at original gain on 13 of the 23 admitted ordinary originals, spanning five source families. Both B11 arms resumed from the same B9 checkpoint with the same 79 original TRAIN inputs, draw schedule and 192 AdamW updates. The challenger added a 0.08-weight ordinary CTC loss on the 13 hard originals. Control used weight zero. Its PT file matched the historical B10 control byte for byte. The two new arms differed in 43,849 learned values. [Supplement](https://github.com/jiying2007/kws-data/actions/runs/45094102574) · [Paired training](https://github.com/jiying2007/kws-data/actions/runs/45096170903/artifacts/14782904388)
+
+Independent five-observer review admitted 6 positive and 17 ordinary originals across 12 new synthetic source groups, including five groups with both classes. All 25 UNKNOWN originals remained outside scoring. Each of the four frozen models ran on the same 23 originals at three fixed gains, giving 276 forward passes. Entries below follow gain order **1.0 / 0.75 / 0.5**. [Primary source review](https://github.com/jiying2007/kws-data/actions/runs/45095073669/artifacts/14782844738) · [Frozen comparison](https://github.com/jiying2007/kws-data/actions/runs/45096526424/artifacts/14783767153)
+
+| Frozen model | Positive clips detected out of 6 | Ordinary clips with a false wake out of 17 | Total ordinary false events |
+| --- | --- | --- | --- |
+| B0 software baseline | 6 / 5 / 5 | 2 / 3 / 0 | 2 / 3 / 0 |
+| B9 parent | 6 / 6 / 5 | 1 / 5 / 5 | 1 / 5 / 6 |
+| B11 matched control | 6 / 6 / 5 | 2 / 5 / 5 | 2 / 5 / 6 |
+| B11 hard-negative challenger | 6 / 6 / 5 | 0 / 0 / 2 | 0 / 0 / 2 |
+
+**B11 primary decision: NO_PROMOTION.** Only `piper-libritts-p6317` improved against both the matched control and B9 at original gain, on original `b11-primary-546-request`. The research gate required at least two distinct improved families. The separate positive-family recall and ordinary non-regression conditions passed. Gains derived from one clip count as one original. The registered confirmation stage was not opened for B11.
+
+## B12 pitch-preserving tempo training and independent primary DEV (2026-11-23)
+
+After the B11 primary stopped, the frozen B9 TRAIN diagnostic tested 44 admitted positives at three gains. Two distinct families had a verified faster original that hit at full gain and missed at half gain. B12 used the same 79 TRAIN originals from 35 groups and the same 192-step class/source schedule for both arms. The challenger applied SoX 14.4.2 pitch-preserving tempo 1.08 at 87 scheduled steps, before deriving the gain siblings. Both arms exported PT, NPZ and ONNX. No DEV, CAL or LOCKED model forward occurred during training. [Positive TRAIN diagnostic](https://github.com/jiying2007/kws-data/actions/runs/45094053219/artifacts/14782234724) · [Paired models and schedule](https://github.com/jiying2007/kws-data/actions/runs/45096863328/artifacts/14783642956)
+
+The paired models diverged on 43,757 learned values. Compared separately with historical B10, the B12 matched control differed on 21,287 learned values with a maximum absolute parameter difference of 0.0000007934868335723877. The acoustic decision compares the challenger with its same-run control and the frozen B9 parent.
+
+B12 used a fresh primary panel of 48 synthetic originals from 12 source families. Five independent source observers produced 240 observations. Six positives and 17 ordinary clips qualified, with six families represented in both classes. The 25 UNKNOWN originals were excluded. The four frozen models each scored all 23 admitted originals at three fixed gains, yielding 276 forward passes. Columns below follow gain order **1.0 / 0.75 / 0.5**. [Five-observer source review](https://github.com/jiying2007/kws-data/actions/runs/45097201431/artifacts/14784332918) · [Frozen comparison and logits](https://github.com/jiying2007/kws-data/actions/runs/45098806390/artifacts/14783729142)
+
+| Frozen model | Positive clips detected out of 6 | Ordinary clips with a false wake out of 17 | Total ordinary false events |
+| --- | --- | --- | --- |
+| B0 software baseline | 3 / 4 / 2 | 5 / 1 / 0 | 5 / 1 / 0 |
+| B9 parent | 4 / 4 / 4 | 3 / 4 / 5 | 3 / 6 / 5 |
+| B12 matched control | 5 / 4 / 4 | 3 / 4 / 4 | 3 / 4 / 4 |
+| B12 tempo challenger | 5 / 4 / 4 | 3 / 4 / 4 | 3 / 6 / 4 |
+
+**B12 primary decision — NO_PROMOTION.** Two admitted positives met the measured faster-speech criterion. At half gain, B9, the matched control and the challenger all detected `piper-libritts-p166` and all missed `piper-libritts-p2741`. The challenger therefore recovered zero of the two required families. It preserved previously correct positive group/gain conditions. At 0.75 gain, each of the two corresponding ordinary statements triggered twice on the challenger and once on the matched control. Both arms triggered on four of 17 ordinary clips. The reserve remained unopened.
+
+## B0 ARM software handoff
+
+The 216,960-byte `MERO43V1` B0 pack was rebuilt from its authenticated source artifact. Two Linux ARMv7-A hard-float file-replay executables, tuned for Cortex-A32, ran under QEMU's Cortex-A7 CPU mode. Each processed the same 10 original PCM, 844 frames and two events. Frame argmax, event frames and sample clocks matched x86 throughout. Maximum absolute logit differences were 0.00006103515625 for the static musl executable and zero for the glibc executable. The independent one-second engineering fixture produced 97 frames and zero events. These are userspace software checks. Physical SSC305/BSP/AFE measurements, real-human far-field FRR, continuous natural FAR/h and physical word-end-to-callback P95 remain pending. [C11/ARM integration entry](ENGLISH_SSC305_ENTRYPOINT.zh-CN.md) · [Original B0 source artifact](https://github.com/jiying2007/kws-data/actions/runs/44495594627/artifacts/14514228406)
 
 ## Remaining bounded acoustic sequence
 1. **Source (completed):** [data PR #269](https://github.com/jiying2007/kws-data/pull/269) produced 32/32 new original 16 kHz PCM WAVs on 8 new Piper indices 488–495; run [44554345276](https://github.com/jiying2007/kws-data/actions/runs/44554345276), ZIP artifact 14543254675, digest `sha256:530fccdd25abca9e76331dd8dad1f2440181158e140f2279ee952833a8d220f6`. Exactly two intended canonical, one ordinary, one nearphone request per group; **all requests are unverified labels** and nearphone stays UNKNOWN.
