@@ -819,6 +819,53 @@ class SingleEnglishTarget(unittest.TestCase):
         self.assertIn("14629527557",doc)
         self.assertIn("Do **not** weaken exact tensor equality",doc)
 
+    def test_real_train_intervals_and_weak_teacher_coverage(self):
+        evidence = json.loads((HERE / "V6_QUALITY_EVIDENCE.json").read_bytes())
+        followup = evidence["post_b12_source_and_teacher_diagnostics"]
+        pair = evidence["paired_question_intervention"]
+        self.assertEqual(pair["renderings"], 2 * pair["independent_fresh_piper_source_families"])
+        self.assertEqual(sum(pair["coverage"].values()), 40)
+        self.assertEqual(pair["admitted_originals"], {"text": 0, "ipa": 4})
+        self.assertEqual(pair["exact_asr_votes"], {"text": 0, "ipa": 12})
+        natural = followup["reviewed_real_train_windows"]
+        self.assertEqual(natural["actual_forwards"], natural["owner_reviewed_intervals"] * len(natural["models"]))
+        self.assertEqual(natural["samples_16khz"], 488880)
+        self.assertEqual(natural["unique_originals"], 8)
+        self.assertEqual(natural["full_utterance_forwards"], 0)
+        self.assertEqual(natural["dev_cal_locked_forwards"], 0)
+        self.assertIsNone(natural["field_far_per_hour"])
+        self.assertEqual(natural["models"]["B9"]["events"], 11)
+        self.assertTrue(set(natural["models"]["B0"]["speakers"]).isdisjoint(
+            natural["models"]["B11_challenger"]["speakers"]))
+        phone = followup["english_phone_teacher_train_readback"]
+        self.assertEqual(phone["native_frame_arrays"], phone["originals"] * len(phone["observers"]))
+        self.assertEqual(phone["populations"]["positive"]["both_full"], 3)
+        self.assertEqual(phone["populations"]["fast"]["both_full"], 0)
+        self.assertEqual(phone["populations"]["known_fast_half_miss"]["both_full"], 0)
+        question = followup["source_question_diagnostic"]
+        self.assertEqual(question["out_of_vocabulary_symbols"], [])
+        self.assertEqual(question["text_symbols"].replace("ˌ", "ˈ").removesuffix("?"), question["direct_ipa_symbols"])
+
+    def test_b13_natural_gain_and_protected_regressions(self):
+        evidence = json.loads((HERE / "V6_QUALITY_EVIDENCE.json").read_bytes())
+        trial = evidence["b13_reviewed_real_negatives"]
+        train = trial["trained_arms"]
+        score = trial["primary_score"]
+        self.assertEqual(train["actual_optimizer_updates"], 384)
+        self.assertEqual(train["dev_cal_locked_forwards"], 0)
+        self.assertEqual(score["actual_forwards"], 4 * len(score["gains"]) * sum(score["denominators"].values()))
+        self.assertEqual(sum(trial["synthetic_primary"]["observer_coverage"].values()), 239)
+        self.assertEqual(sum(trial["natural_primary"]["observer_coverage"].values()), 120)
+        self.assertEqual(len(score["human_readers_improved_against_both"]), 11)
+        natural = score["summary"]["natural_ordinary"]
+        self.assertEqual([natural[a]["events"][0] for a in ("B0", "B9", "control", "challenger")], [8, 34, 34, 5])
+        self.assertEqual({r[0] for r in score["added_ordinary_events"]}, {"b13-primary-600-request"})
+        self.assertEqual({r[0] for r in score["lost_positive_group_gains"]}, {"piper-libritts-p6446", "piper-libritts-p7258"})
+        self.assertEqual(score["panel_gate"], "NO_PROMOTION")
+        self.assertEqual(score["replication"], "NOT_OPENED_PRIMARY_GATE_FAILED")
+        self.assertIsNone(score["natural_field_far_per_hour"])
+        self.assertEqual(score["software_baseline"], "B0")
+
     def test_english_v5_workflow_is_exactly_registered(self):
         manifest=json.loads((ROOT/"research/consolidation/source-retention-2026-10-07.json").read_bytes())
         workflow=".github/workflows/english-v5-mero-contract.yml"

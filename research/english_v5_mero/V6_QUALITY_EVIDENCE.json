@@ -1723,5 +1723,651 @@
     "installed_software_baseline": "B0",
     "research_advancement": false,
     "product_promotion": false
+  },
+  "post_b12_source_and_teacher_diagnostics": {
+    "source_question_diagnostic": {
+      "piper_wheel_version": "1.8.0",
+      "wheel_sha256": "25b4d3f31ff70c8fa7151908e00aaa5650cbdf16bca8fcf21299f3941b89a7d3",
+      "config_sha256": "2efdc6d7f954588b8180132cbd9b8001933fdd00932c92bc92fd0d2028a9eb3d",
+      "prior_blind_qa_run_ids": [
+        44986730086,
+        45095073669,
+        45097201431
+      ],
+      "whole_wave_receipt_sha256": "d1b4ec34c326157ba27af673618c95d15d81afd95d18350c37140c4c2605b036",
+      "phonemizer": "en-us",
+      "text_symbols": "wˌʌt tˈaɪm ɪz ɪt?",
+      "direct_ipa_symbols": "wˈʌt tˈaɪm ɪz ɪt",
+      "text_ids_with_blank": 37,
+      "direct_ids_with_blank": 35,
+      "out_of_vocabulary_symbols": [],
+      "historical_cohorts": {
+        "B10_DEVELOPMENT": {
+          "questions": 6,
+          "qualified": 6,
+          "median_seconds": 0.859156,
+          "median_active_seconds_above_minus45_dbfs": 0.575
+        },
+        "B10_TRAIN": {
+          "questions": 6,
+          "qualified": 6,
+          "median_seconds": 0.824344,
+          "median_active_seconds_above_minus45_dbfs": 0.545
+        },
+        "B11_DEVELOPMENT": {
+          "questions": 6,
+          "qualified": 0,
+          "median_seconds": 0.452813,
+          "median_active_seconds_above_minus45_dbfs": 0.365
+        },
+        "B12_DEVELOPMENT": {
+          "questions": 6,
+          "qualified": 0,
+          "median_seconds": 0.447,
+          "median_active_seconds_above_minus45_dbfs": 0.35
+        }
+      },
+      "comparison": "Different historic source families and speed settings. Native English phonemization differs at first syllable stress and final punctuation. All original chunks were preserved."
+    },
+    "english_phone_teacher_train_readback": {
+      "source_data_main": "8709eca5be5256034a09541b5ccad8e137b4c7a9",
+      "design_sha256": "7962d4d439da8885b79ac2458de48b602e7f61ddaba0409389943c5c625a02ce",
+      "result_sha256": "cc879708fd88e5dd75d6f084b318843a3c6db1f6aeb6d13540cd61747c95876b",
+      "observers": {
+        "lv60": {
+          "model": "facebook/wav2vec2-lv-60-espeak-cv-ft",
+          "revision": "ae45363bf3413b374fecd9dc8bc1df0e24c3b7f4",
+          "weights_sha256": "3173bde9e9ce490fa0f989e413c42f25bc1820c020adc1e6b9b87025b3cfcc5e"
+        },
+        "xlsr": {
+          "model": "facebook/wav2vec2-xlsr-53-espeak-cv-ft",
+          "revision": "2c733782da5604684829819a5eb744c193fe9398",
+          "weights_sha256": "04366b6c8d24099ef313cf02f0e58d26f5dddfda16edbfc8eb2c713d94a9f551"
+        }
+      },
+      "originals": 57,
+      "native_frame_arrays": 114,
+      "vocabulary_size": 392,
+      "input_gain": 1,
+      "grid": {
+        "sample_rate_hz": 16000,
+        "hop_samples": 320,
+        "receptive_field_samples": 400
+      },
+      "populations": {
+        "fast": {
+          "aligned_distinct_groups": 0,
+          "any_contiguous_wake": 3,
+          "any_full": 3,
+          "both_anchors_within_40ms": 0,
+          "both_full": 0,
+          "groups": 14,
+          "originals": 14
+        },
+        "hard_ordinary": {
+          "aligned_distinct_groups": 0,
+          "any_contiguous_wake": 0,
+          "any_full": 0,
+          "both_anchors_within_40ms": 0,
+          "both_full": 0,
+          "groups": 5,
+          "originals": 13
+        },
+        "known_fast_half_miss": {
+          "aligned_distinct_groups": 0,
+          "any_contiguous_wake": 1,
+          "any_full": 1,
+          "both_anchors_within_40ms": 0,
+          "both_full": 0,
+          "groups": 2,
+          "originals": 2
+        },
+        "positive": {
+          "aligned_distinct_groups": 3,
+          "any_contiguous_wake": 15,
+          "any_full": 15,
+          "both_anchors_within_40ms": 3,
+          "both_full": 3,
+          "groups": 35,
+          "originals": 44
+        }
+      },
+      "supervision_scope": "Both phone observers helped qualify these research rows. Original-gain native greedy paths only. No timed human labels or independently measured half-gain phone targets.",
+      "train_target_decision": "NO_FAST_GROUP_WITH_DUAL_CANONICAL_PATH",
+      "new_observer_calls": 0,
+      "optimizer_steps": 0
+    },
+    "reviewed_real_train_windows": {
+      "owner_review_sha256": "0bec70e613449d04a744b7f07e2b0257bde7ed749bc82fe3a7800c9ffba7aaba",
+      "review_zip_sha256": "23ff12e76b2a3c0cf2919f48c16712a374d186c8f5c2ac01af7add7e64005682",
+      "owner_evidence_source_commit": "8709eca5be5256034a09541b5ccad8e137b4c7a9",
+      "identity_coverage": {
+        "source_archives": 17,
+        "original_pcm_count": 1148,
+        "groups_by_role": {
+          "calibration": 8,
+          "development": 114,
+          "locked-test": 26,
+          "train": 64
+        },
+        "historical_train_speakers": [
+          "1272",
+          "2035",
+          "2902",
+          "3000",
+          "3170",
+          "5536",
+          "7976",
+          "8297"
+        ],
+        "full_piper_map_speakers": 904,
+        "matched_piper_ids": [],
+        "other_preset_physical_donor_identity": "UNKNOWN"
+      },
+      "owner_reviewed_intervals": 9,
+      "unique_originals": 8,
+      "samples_16khz": 488880,
+      "run_id": 45109057561,
+      "artifact_id": 14787969097,
+      "zip_bytes": 283897,
+      "zip_sha256": "855f0ab5cc24c03833e507eafbd08c7cc93866622458d8a217a3827c829cd93c",
+      "all_logits_sha256": "558e8d2f208fe5e73790b524525332e6b2027b8c6ac9d691af179a35a3699b38",
+      "input_gain": 1.0,
+      "actual_forwards": 54,
+      "models": {
+        "B0": {
+          "windows": 2,
+          "sources": 2,
+          "speakers": [
+            "7976",
+            "8297"
+          ],
+          "events": 2
+        },
+        "B9": {
+          "windows": 6,
+          "sources": 5,
+          "speakers": [
+            "2035",
+            "2902",
+            "5536",
+            "7976",
+            "8297"
+          ],
+          "events": 11
+        },
+        "B11_control": {
+          "windows": 5,
+          "sources": 4,
+          "speakers": [
+            "2035",
+            "2902",
+            "5536",
+            "8297"
+          ],
+          "events": 10
+        },
+        "B11_challenger": {
+          "windows": 2,
+          "sources": 2,
+          "speakers": [
+            "2035",
+            "2902"
+          ],
+          "events": 2
+        },
+        "B12_control": {
+          "windows": 5,
+          "sources": 4,
+          "speakers": [
+            "2035",
+            "2902",
+            "5536",
+            "8297"
+          ],
+          "events": 10
+        },
+        "B12_challenger": {
+          "windows": 5,
+          "sources": 4,
+          "speakers": [
+            "2035",
+            "2902",
+            "5536",
+            "8297"
+          ],
+          "events": 10
+        }
+      },
+      "positive_b9_hardness_diagnostic": true,
+      "full_utterance_forwards": 0,
+      "dev_cal_locked_forwards": 0,
+      "optimizer_steps": 0,
+      "field_far_per_hour": null,
+      "qualification": "Previously exposed owner-reviewed negative TRAIN intervals; their full recordings and physical product performance remain unqualified."
+    }
+  },
+  "paired_question_intervention": {
+    "result": "IPA_ADVANTAGE_ON_MATCHED_SOURCES",
+    "public_run": 45108917466,
+    "source": {
+      "artifact_id": 14788787525,
+      "bytes": 351496,
+      "sha256": "12285464b64f6dbe5c37ab3fb17e9fac887c7c1cc84ce11c40d115226c701b1c"
+    },
+    "blind_review": {
+      "artifact_id": 14789200396,
+      "bytes": 1946,
+      "sha256": "d3aabb070dd1e98ca5b2c785eeac11c486e77cf0eeb0650dfbc109bc961c6e26"
+    },
+    "source_manifest_sha256": "f4dbe195a557e87cbe43e526c1f8dd9f3d16b0223a9d6782e3c9abc3721e8d02",
+    "coverage": {
+      "lv60": 8,
+      "parakeet": 8,
+      "qwen": 8,
+      "whisper": 8,
+      "xlsr": 8
+    },
+    "independent_fresh_piper_source_families": 4,
+    "renderings": 8,
+    "exact_asr_votes": {
+      "text": 0,
+      "ipa": 12
+    },
+    "admitted_originals": {
+      "text": 0,
+      "ipa": 4
+    },
+    "median_duration_ms": {
+      "text": 458.625,
+      "ipa": 934.656
+    },
+    "identical_within_pair": [
+      "source",
+      "length_scale",
+      "noise_scale",
+      "noise_w_scale",
+      "seed"
+    ],
+    "fresh_cpu_session_per_input": true,
+    "speaker_groups": [
+      "piper-libritts-p1343",
+      "piper-libritts-p451",
+      "piper-libritts-p5401",
+      "piper-libritts-p7241"
+    ],
+    "native_16khz_reconstruction_verified": true,
+    "optimizer_steps": 0,
+    "kws_forwards": 0,
+    "scope": "Diagnoses the combined phoneme-input change for this question and these four voices. Original audio is source-only. All eight remain outside TRAIN and the B13 independent panels."
+  },
+  "b13_reviewed_real_negatives": {
+    "registered_train_intervention": {
+      "parent": "B9_control",
+      "control_additional_natural_loss_weight": 0,
+      "challenger_additional_natural_loss_weight": 0.08,
+      "updates_per_arm": 192,
+      "original_base_train_clips": 79,
+      "new_reviewed_windows": 9,
+      "distinct_reviewed_speakers": 8,
+      "source_balanced": true
+    },
+    "independent_natural_source_design": {
+      "corpus": "LibriSpeech test-clean; project role prospective research DEV only",
+      "corpus_sha256": "39fde525e59672dc6d1551919b1478f724438a95aa55f874b576be21967e6c23",
+      "predeclared_natural_registry_sha256": "d3289b344b4abc92c77386dd0d98d4bd384a9176ee1305892332278138aaf77f",
+      "primary_slots": 12,
+      "replication_slots": 12,
+      "full_utterances_per_source": 2,
+      "score_dependent_replacement": false
+    },
+    "gate": {
+      "gains": [
+        1.0,
+        0.75,
+        0.5
+      ],
+      "models": [
+        "B0",
+        "B9",
+        "control",
+        "challenger"
+      ],
+      "required_new_natural_speakers_at_original_gain": 2,
+      "improvement": "Compared with both B9 and the same-run control separately, fewer complete events at native gain in at least two distinct new human readers, fewer total natural false events than both. No added ordinary event per natural or synthetic row/gain versus either B9 or matched control. Preserve B0 and matched control positive-family detections at every gain; report original-level positives, repetitions and small denominators separately. For a research pass require original-gain natural false-event total at most B0. Replication repeats exactly the same gates.",
+      "replication_only_on_primary_pass": true,
+      "product_promotion": false,
+      "field_far_from_read_speech": false
+    },
+    "trained_arms": {
+      "run_id": 45109548793,
+      "artifact_id": 14789216108,
+      "bytes": 1009570,
+      "zip_sha256": "e66de6d2683c93e434e3d426ef88ffa46c9eba63d89d6940454a81d17e7d29af",
+      "actual_optimizer_updates": 384,
+      "parameters": 43876,
+      "different_learned_values": 43757,
+      "full_utterance_natural_forwards": 0,
+      "dev_cal_locked_forwards": 0,
+      "draws_per_natural_speaker": 24,
+      "base_train_originals": 79,
+      "model_files": {
+        "challenger": {
+          "npz_sha256": "40f3124fc5ace51568f9ff4746d9181b09bc1e08b8b52979b17ca825c0c3d2a8",
+          "onnx_max_abs_f32_97frames": 1.52587890625e-05,
+          "onnx_sha256": "5cec1301c5110156ecc90c79aebbb8592f8e0748fcd3d5d86bee29b56a778d6b",
+          "pt_sha256": "643fbbc21f5e2ca7a22c8e320966ddd43c3f2985137e1949ae1e8884565db553"
+        },
+        "control": {
+          "npz_sha256": "5029ece18953e1f782af2dbad130835f86b7281688214cdcaff4410db6e86370",
+          "onnx_max_abs_f32_97frames": 1.1444091796875e-05,
+          "onnx_sha256": "1fd9279589ee4834951811611321e419912a533238f4c36fe8efeac3f0e34df2",
+          "pt_sha256": "40c09e038ad731b8f860087bc5983ff39d993249b749402be140d8439928d555"
+        }
+      },
+      "control_vs_b10_max_abs": 7.934868335723877e-07,
+      "control_vs_b10_different_values": 21287
+    },
+    "synthetic_primary": {
+      "public_source_qa_run": 45109606032,
+      "source": {
+        "artifact_id": 14788464792,
+        "bytes": 2441797,
+        "sha256": "1cc208dd1b83ac6c72b308b1d536bb19b41e5b4d09a4052eefd6d5a7ebdbcfb8"
+      },
+      "review": {
+        "artifact_id": 14788949035,
+        "bytes": 10607,
+        "sha256": "96eee49777cbdc7e6ef2f6b25dcf625cd53490067d1dae8a86e311af7d9ee7ad"
+      },
+      "source_groups": 12,
+      "originals": 48,
+      "admitted": 30,
+      "admitted_groups": 12,
+      "eligible_by_requested_cell": {
+        "mero-slow": 5,
+        "question": 6,
+        "request": 6,
+        "statement": 6,
+        "yes-no": 6,
+        "mero-fast": 1
+      },
+      "observer_coverage": {
+        "lv60": 48,
+        "parakeet": 47,
+        "qwen": 48,
+        "whisper": 48,
+        "xlsr": 48
+      },
+      "unknown": 18,
+      "total_qualified_source_seconds": 27.08694,
+      "kws_forwards_at_source_qa": 0,
+      "eligible_positive": 6,
+      "eligible_ordinary": 24,
+      "both_classes_families": 6,
+      "observer_failures": [
+        {
+          "id": "b13-primary-608-mero-fast",
+          "provider": "parakeet",
+          "status": "failed",
+          "error": "ValueError:RAW_UNPROMPTED_COMPLETE_ASR_TEXT",
+          "tier": "unknown"
+        }
+      ]
+    },
+    "natural_primary": {
+      "public_source_qa_run": 45109632629,
+      "source": {
+        "artifact_id": 14788972705,
+        "bytes": 4153893,
+        "sha256": "cc647c2164218dfdc314e5505c94f1f72389def90787cbce7d6d4f24d0c2a611"
+      },
+      "review": {
+        "artifact_id": 14788874784,
+        "bytes": 5080,
+        "sha256": "0b549d833dd9eaea517dc5e4aef6cc779bd6e9c8b077060213bd0a5bb5beb1fd"
+      },
+      "source_groups": 12,
+      "originals": 24,
+      "admitted": 20,
+      "admitted_groups": 12,
+      "eligible_by_requested_cell": {
+        "read-speech": 20
+      },
+      "observer_coverage": {
+        "qwen": 24,
+        "whisper": 24,
+        "parakeet": 24,
+        "xlsr": 24,
+        "lv60": 24
+      },
+      "unknown": 4,
+      "total_qualified_source_seconds": 81.57,
+      "kws_forwards_at_source_qa": 0,
+      "field_far_qualification": false
+    },
+    "primary_score": {
+      "public_run": 45110518207,
+      "artifact_id": 14789172994,
+      "bytes": 2031197,
+      "zip_sha256": "bfc265f493da53d8fd88723430af7ebdd3196f0da2465919218dd43c840c3dc4",
+      "all_logits_sha256": "9902d2f8d200149f150172715b93783c901fef42660b7a42b168d865087916bf",
+      "preregistration": "6000954f747c9e9e4385e48bec145ebf64ac80ac",
+      "panel": "primary",
+      "gains": [
+        1,
+        0.75,
+        0.5
+      ],
+      "actual_forwards": 600,
+      "distinct_originals": 50,
+      "aggregate_model_frames": 128760,
+      "denominators": {
+        "natural_ordinary": 20,
+        "synthetic_ordinary": 24,
+        "synthetic_positive": 6
+      },
+      "summary": {
+        "natural_ordinary": {
+          "B0": {
+            "with_event": [
+              8,
+              4,
+              4
+            ],
+            "events": [
+              8,
+              4,
+              4
+            ]
+          },
+          "B9": {
+            "with_event": [
+              15,
+              13,
+              12
+            ],
+            "events": [
+              34,
+              23,
+              25
+            ]
+          },
+          "control": {
+            "with_event": [
+              15,
+              13,
+              12
+            ],
+            "events": [
+              34,
+              26,
+              26
+            ]
+          },
+          "challenger": {
+            "with_event": [
+              3,
+              2,
+              6
+            ],
+            "events": [
+              5,
+              4,
+              8
+            ]
+          }
+        },
+        "synthetic_ordinary": {
+          "B0": {
+            "with_event": [
+              2,
+              2,
+              1
+            ],
+            "events": [
+              2,
+              2,
+              1
+            ]
+          },
+          "B9": {
+            "with_event": [
+              4,
+              4,
+              3
+            ],
+            "events": [
+              5,
+              4,
+              4
+            ]
+          },
+          "control": {
+            "with_event": [
+              3,
+              4,
+              3
+            ],
+            "events": [
+              4,
+              4,
+              4
+            ]
+          },
+          "challenger": {
+            "with_event": [
+              2,
+              0,
+              1
+            ],
+            "events": [
+              2,
+              0,
+              1
+            ]
+          }
+        },
+        "synthetic_positive": {
+          "B0": {
+            "with_event": [
+              6,
+              6,
+              4
+            ],
+            "events": [
+              6,
+              6,
+              4
+            ]
+          },
+          "B9": {
+            "with_event": [
+              6,
+              6,
+              6
+            ],
+            "events": [
+              6,
+              6,
+              6
+            ]
+          },
+          "control": {
+            "with_event": [
+              6,
+              6,
+              6
+            ],
+            "events": [
+              6,
+              6,
+              6
+            ]
+          },
+          "challenger": {
+            "with_event": [
+              5,
+              6,
+              5
+            ],
+            "events": [
+              5,
+              6,
+              5
+            ]
+          }
+        }
+      },
+      "human_readers_improved_against_both": [
+        "librispeech-test-clean-1284",
+        "librispeech-test-clean-2830",
+        "librispeech-test-clean-2961",
+        "librispeech-test-clean-3570",
+        "librispeech-test-clean-3729",
+        "librispeech-test-clean-4077",
+        "librispeech-test-clean-4992",
+        "librispeech-test-clean-61",
+        "librispeech-test-clean-7021",
+        "librispeech-test-clean-8455",
+        "librispeech-test-clean-8463"
+      ],
+      "added_ordinary_events": [
+        [
+          "b13-primary-600-request",
+          "1.0",
+          "B9"
+        ],
+        [
+          "b13-primary-600-request",
+          "1.0",
+          "control"
+        ]
+      ],
+      "lost_positive_group_gains": [
+        [
+          "piper-libritts-p6446",
+          "1.0",
+          "B0"
+        ],
+        [
+          "piper-libritts-p6446",
+          "1.0",
+          "control"
+        ],
+        [
+          "piper-libritts-p7258",
+          "0.5",
+          "control"
+        ]
+      ],
+      "panel_gate": "NO_PROMOTION",
+      "replication": "NOT_OPENED_PRIMARY_GATE_FAILED",
+      "candidate_c11_arm_parity": "NOT_RUN_PRIMARY_GATE_FAILED",
+      "software_baseline": "B0",
+      "product_promotion": false,
+      "physical_ssc305": false,
+      "natural_field_far_per_hour": null
+    }
   }
 }
