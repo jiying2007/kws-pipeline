@@ -1,5 +1,5 @@
 {
-  "schema": "english-v6-b15-b16-fresh-primary-model-selection-v1",
+  "schema": "english-v6-b15-b16-primary-model-observation-v2",
   "keyword": "Hey Mero",
   "pronunciation": "/heɪ ˈmɛroʊ/",
   "installed_software_baseline": "B0",
@@ -31,7 +31,12 @@
         "run": 45297962939,
         "originals": 24,
         "admitted": 18,
-        "speakers": 12
+        "speakers": 12,
+        "historical_source_independence": "SOURCE_LEAKAGE",
+        "overlapping_readers": 12,
+        "overlapping_admitted_originals": 18,
+        "same_historical_decoded_pcm_originals": 2,
+        "known_independent_readers": 0
       }
     },
     "independent_primary": {
@@ -49,7 +54,7 @@
         0.75,
         0.5
       ],
-      "source_gate": "SOURCE_GATE_PASS",
+      "source_gate": "SOURCE_LEAKAGE",
       "quality_gate": "NO_PROMOTION",
       "natural_false_events_by_gain": {
         "B0": [
@@ -125,7 +130,11 @@
       "natural_events_above_B0_gain_count": 3,
       "replication_open_allowed": false,
       "threshold_tuning": false,
-      "cal_locked_access": false
+      "cal_locked_access": false,
+      "legacy_field_name_note": "The independent_primary key preserves historical schema compatibility; the independent-source claim is revoked by the linked original-archive lineage audit.",
+      "historical_scorer_source_gate": "SOURCE_GATE_PASS",
+      "independent_primary_usable": false,
+      "new_dev_originals_note": "76 is the original scored denominator and within-run PCM-unique count, not a claim of historical independence."
     }
   },
   "engineering": {
@@ -136,5 +145,33 @@
     "physical_word_end_to_callback_p95_ms": null,
     "product_promotion": false
   },
-  "interpretation": "Research B15 restored one positive family but added four ordinary original/gain false-event conditions, and its natural false events exceeded B0 at all three gains. Prior trained weights and full-frame arrays are real but DO NOT authorize swapping the installed B0 pack. Recorded isolated clips do not supply a representative FAR/h denominator."
+  "interpretation": "The original 912 arrays and their NO_PROMOTION numerical decision are preserved. Historical source-gate PASS did not include complete corpus reader ancestry: all 18 natural originals/12 readers overlap previously exposed project TRAIN/DEV, and two full decoded PCM originals repeat. SOURCE_LEAKAGE means this panel cannot support independent model promotion or open replication. No rows were dropped to obtain a new selectable result. B0 remains installed; isolated clips provide no representative FAR/h denominator.",
+  "source_lineage_audit": {
+    "url": "https://github.com/jiying2007/kws-data/blob/research/en-v6-b16-b15-failed-primary-readback-20261124/research/english_v6_b16_results_20261124/SOURCE_LINEAGE_AUDIT.json",
+    "sha256": "bf7b4a6a4382413824cc26c3d5f9a0ca9922a7bd9a372418e6e9ac509474fdbf",
+    "status": "SOURCE_LEAKAGE",
+    "legacy_run": 43867764366,
+    "legacy_artifact_id": 14225893574,
+    "legacy_artifact_sha256": "2aa398cd11b787342d91c056fed188d8e3607929da9fdaf873451b5cf05b07f1",
+    "legacy_sources_member_sha256": "8a21f832bd847b8a169f41de0fb40c5cc9b683dffc607d9e100ebc5958f4b15d",
+    "overlapping_readers": 12,
+    "overlapping_natural_originals": 18,
+    "same_historical_decoded_pcm_originals": 2,
+    "prior_train_readers": [
+      "1462",
+      "2412",
+      "3081",
+      "6241"
+    ],
+    "prior_development_readers": [
+      "1993",
+      "2078",
+      "2277",
+      "2428",
+      "2803",
+      "5338",
+      "6295",
+      "6319"
+    ]
+  }
 }
