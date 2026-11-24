@@ -4086,5 +4086,803 @@
     "field_3_5m_frr_status": "NOT_RUN",
     "natural_continuous_far_per_hour": null,
     "natural_continuous_far_status": "NOT_RUN"
+  },
+  "b23_prefix_peak_primary": {
+    "schema": "english-v6-b23-prefix-peak-primary-closure-v1",
+    "status": "NO_PROMOTION_COMPLETE_ORIGINAL_SOURCE_PRODUCERS_AND_SAVED_OUTPUTS",
+    "recorded_date_asia_shanghai": "2026-11-25",
+    "experiment_identifier": "20261124",
+    "evidence_repository": "jiying2007/kws-data",
+    "training_run": {
+      "id": 45435538577,
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/45435538577",
+      "head": "426aebda91a91d9d46f5d8f6efe8f31daa1f452f",
+      "prepared_parent": "6ac2778475e6177ffb89cc814325667b3413514f",
+      "attempt": 1,
+      "conclusion": "success",
+      "original_model_artifact": {
+        "bytes": 5514502,
+        "id": 14942500033,
+        "run_head": "426aebda91a91d9d46f5d8f6efe8f31daa1f452f",
+        "run_id": 45435538577,
+        "sha256": "7c0c606c8ef600693562f0c2dfa2847e94bdb2a0f73234c0b3875142a640d86e"
+      },
+      "result_sha256": "b0581adf45202a8e4f1561fd103939c8a02736a1aa7597a22405eb8851bb1f5e",
+      "parameters": 43876,
+      "optimizer_updates_total": 192,
+      "optimization_forwards": 1844,
+      "checkpoint_reload_forwards": 2,
+      "onnx_export_forwards": 1,
+      "actual_new_model_forwards": 1847,
+      "train_originals": 88,
+      "synthetic_train_originals": 79,
+      "natural_train_originals": 9,
+      "natural_readers": 8,
+      "existing_retention_conditions": 120,
+      "union_retention_conditions": 122,
+      "reused_ordinary_teacher_arrays": 264,
+      "historical_control": "immutable original B22 challenger",
+      "historical_control_pt_sha256": "9b1900312430c5c92dee7f47608fc2be866778387d4ed3baedb11f4bcda6a655",
+      "new_control_optimizer_updates": 0,
+      "new_control_forwards": 0,
+      "new_teacher_forwards": 0,
+      "same_job_matched_control": false,
+      "historical_numerical_replay_claimed": false,
+      "dev_cal_locked_forwards": 0,
+      "new_tts_asr_calls": 0,
+      "single_scientific_change": "known-silent prefix blank loss changes time mean to amax; all other B22 settings unchanged"
+    },
+    "source_run": {
+      "id": 45438758355,
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/45438758355",
+      "head": "acf337bbcc50f96b1ad45cfc40201328ce245f8c",
+      "attempt": 1,
+      "conclusion": "success",
+      "original_source_artifact": {
+        "bytes": 58046305,
+        "id": 14941474236,
+        "run_head": "acf337bbcc50f96b1ad45cfc40201328ce245f8c",
+        "run_id": 45438758355,
+        "sha256": "576a6f5d2cb7fd816a92d9fb765685df11854cdee00c9555c26e1e81ac3418d7"
+      },
+      "original_screen_artifact": {
+        "bytes": 32602,
+        "id": 14944595331,
+        "run_head": "acf337bbcc50f96b1ad45cfc40201328ce245f8c",
+        "run_id": 45438758355,
+        "sha256": "9d60c7ad3b76cf522ea7526da71d99e3fae94046e94b3a8e84b25c5f398d1223"
+      },
+      "source_gate": "SOURCE_GATE_PASS",
+      "originals": 120,
+      "synthetic_originals": 96,
+      "natural_originals": 24,
+      "fresh_independent_panel": true,
+      "new_public_TTS_source_calls": 96,
+      "new_natural_original_decodes": 24,
+      "complete_original_native_observations": 600,
+      "valid_native_returns": 600,
+      "observations_by_provider": {
+        "qwen": 120,
+        "whisper": 120,
+        "parakeet": 120,
+        "xlsr": 120,
+        "lv60": 120
+      },
+      "human_gold": false
+    },
+    "primary_run": {
+      "id": 45443640293,
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/45443640293",
+      "head": "992e4d80a0f784d7fa8eaaa9e2eaf49770b38ef2",
+      "prepared_parent": "82ae895564d64dd4ccff9704ab84eea4923f190d",
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "original_artifacts": [
+      {
+        "role": "result",
+        "name": "english-v6-b23-historical-control-primary-logits-45443640293",
+        "bytes": 5350142,
+        "id": 14945382363,
+        "run_head": "992e4d80a0f784d7fa8eaaa9e2eaf49770b38ef2",
+        "run_id": 45443640293,
+        "sha256": "e827a66f7d88693dcf1fb1d9649fcbac2096e79001fcb047dcb112a2b6072e7f"
+      },
+      {
+        "role": "producer",
+        "name": "english-v6-b23-primary-producer-evidence-45443640293",
+        "bytes": 34343844,
+        "id": 14945143023,
+        "run_head": "992e4d80a0f784d7fa8eaaa9e2eaf49770b38ef2",
+        "run_id": 45443640293,
+        "sha256": "6c5d476dc2bd0df3156fe69dfd389c65c6109769bde915ddd3a221a2cc1b2e96"
+      },
+      {
+        "role": "consumed",
+        "name": "english-v6-b23-primary-consumed",
+        "bytes": 382,
+        "id": 14943907797,
+        "run_head": "992e4d80a0f784d7fa8eaaa9e2eaf49770b38ef2",
+        "run_id": 45443640293,
+        "sha256": "e125394f08e1b919f393c630e5557f3a01a47f6ff29d8d69b6e0e324c838fb87"
+      }
+    ],
+    "original_quality_lock": {
+      "consumed": {
+        "bytes": 382,
+        "id": 14943907797,
+        "run_head": "992e4d80a0f784d7fa8eaaa9e2eaf49770b38ef2",
+        "run_id": 45443640293,
+        "sha256": "e125394f08e1b919f393c630e5557f3a01a47f6ff29d8d69b6e0e324c838fb87"
+      },
+      "evaluator_sha256": "6635730ab7a02351a8b60e97f8f8c40ecec8631e95ca538c4bde5b2d994b4406",
+      "inputs_sha256": "d210e745dad07360f8e07d1ea48c0d2bb541a45c0740094cbd1b2aa8c37ef436",
+      "original_result_sha256": "f304ae983f2a2587b4abcf5f4187e5722dcf32da59d4ff14796c807f3b0e5108",
+      "panel": "primary",
+      "producer": {
+        "bytes": 34343844,
+        "id": 14945143023,
+        "run_head": "992e4d80a0f784d7fa8eaaa9e2eaf49770b38ef2",
+        "run_id": 45443640293,
+        "sha256": "6c5d476dc2bd0df3156fe69dfd389c65c6109769bde915ddd3a221a2cc1b2e96"
+      },
+      "producer_manifest_sha256": "859948eccb1cb2b58063e7dc11cc9d708984d0ca74ba08be05732215f3a4f2b2",
+      "result": {
+        "bytes": 5350142,
+        "id": 14945382363,
+        "run_head": "992e4d80a0f784d7fa8eaaa9e2eaf49770b38ef2",
+        "run_id": 45443640293,
+        "sha256": "e827a66f7d88693dcf1fb1d9649fcbac2096e79001fcb047dcb112a2b6072e7f"
+      },
+      "schema": "english-v6-b23-original-quality-lock-v1"
+    },
+    "original_quality_lock_file_sha256": "e7420056fbf0c3042867b7dc2e9dc3791aefdb721fd863fabfa1ef0da05d4497",
+    "original_quality_lock_canonical_sha256": "75f8dca23dea022f9f94dc24c75a49472e6142363a5758ec5e1c6a55b855ce20",
+    "quality_lock_canonicalization": "UTF-8 JSON with sorted keys, compact comma/colon separators, allow_nan=false and no trailing newline",
+    "primary_result_sha256": "f304ae983f2a2587b4abcf5f4187e5722dcf32da59d4ff14796c807f3b0e5108",
+    "original_frame_archive_sha256": "fa36dabf0cb3adc45d3281f04e3bdd219b6066797afc4a9829521019b9b0a139",
+    "independent_failure_readback_sha256": "918b5ef21eae43a4fedcc04fa01fba1e46f7a9ebd4a6ad017a5c9fe042e08cac",
+    "independent_failure_readback_schema": "english-v6-b24-original-b23-no-promotion-v1",
+    "independent_failure_reader": {
+      "path": "automation/english_v6_b24_b23_failure.py",
+      "url": "https://github.com/jiying2007/kws-data/blob/df7c48457412407e3d4189371c983d5532e1a357/automation/english_v6_b24_b23_failure.py",
+      "sha256": "5b6ca0d8ea88eb2f4f8e8b2962ae68e811361cb8fd69cbbe03b657f76fa0444b",
+      "execution": "fresh -I -S -B isolated stdlib subprocess; original B14 decision and every original FP32 array",
+      "scope": "fail-only authentication of original B23 evidence; no replica, engineering or promotion authorization"
+    },
+    "original_pass_only_quality_reader_unchanged_during_closure": true,
+    "original_pass_only_quality_reader_sha256": "a8b4297d868ad4b3b7b7b9adca07e7a8b20873f42b09cbc7dcd1cd4ea1680f45",
+    "assessment_sha256": "a5923fa64969ffa5d550fcdd320fd1c8d8aa68a9430f6de03fe5eab41b24e8ae",
+    "training_design_sha256": "8485e152f0ba93e22c510731dc4acd7823b36df033856b4145aa971aa96ebe56",
+    "source_coverage": {
+      "natural_originals": 18,
+      "natural_speakers": 11,
+      "synthetic_ordinary": 47,
+      "synthetic_paired": 9,
+      "synthetic_positive": 13
+    },
+    "original_source_rows": 120,
+    "admitted_originals": 78,
+    "unknown_excluded_from_model_scoring": 42,
+    "all_originals_retained_in_exposure_and_overlap_denominator": true,
+    "model_comparison": "B23_new_challenger_against_immutable_historical_B22_challenger",
+    "same_job_matched_control": false,
+    "historical_control_retrained": false,
+    "model_pt_sha256": {
+      "B0": "1ae8a2b20c8b6991f925dd4c626af2f36b308adee8733a3a7215818716f565d7",
+      "B9": "7dba86a3fcda6e5f05cb80b414dc372c70a5a03b3aee783f168441a4871e7655",
+      "challenger": "784def9df6c2a8bfbecdb7ba2d7b70630337a1cda72561c05392327aa980297f",
+      "control": "9b1900312430c5c92dee7f47608fc2be866778387d4ed3baedb11f4bcda6a655"
+    },
+    "gains": [
+      "1.0",
+      "0.75",
+      "0.5"
+    ],
+    "actual_forward_calls": 936,
+    "actual_model_forward_calls": {
+      "B0": 234,
+      "B9": 234,
+      "challenger": 234,
+      "control": 234
+    },
+    "saved_array_count": 936,
+    "raw_output_count": 936,
+    "independently_verified_frames": 153216,
+    "consumed_unknown": [],
+    "summary": {
+      "natural_ordinary": {
+        "B0": {
+          "0.5": {
+            "events": 3,
+            "originals": 18,
+            "with_event": 3
+          },
+          "0.75": {
+            "events": 7,
+            "originals": 18,
+            "with_event": 7
+          },
+          "1.0": {
+            "events": 7,
+            "originals": 18,
+            "with_event": 7
+          }
+        },
+        "B9": {
+          "0.5": {
+            "events": 13,
+            "originals": 18,
+            "with_event": 8
+          },
+          "0.75": {
+            "events": 18,
+            "originals": 18,
+            "with_event": 10
+          },
+          "1.0": {
+            "events": 12,
+            "originals": 18,
+            "with_event": 7
+          }
+        },
+        "challenger": {
+          "0.5": {
+            "events": 0,
+            "originals": 18,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 0,
+            "originals": 18,
+            "with_event": 0
+          },
+          "1.0": {
+            "events": 0,
+            "originals": 18,
+            "with_event": 0
+          }
+        },
+        "control": {
+          "0.5": {
+            "events": 2,
+            "originals": 18,
+            "with_event": 2
+          },
+          "0.75": {
+            "events": 4,
+            "originals": 18,
+            "with_event": 4
+          },
+          "1.0": {
+            "events": 3,
+            "originals": 18,
+            "with_event": 3
+          }
+        }
+      },
+      "synthetic_ordinary": {
+        "B0": {
+          "0.5": {
+            "events": 0,
+            "originals": 47,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 1,
+            "originals": 47,
+            "with_event": 1
+          },
+          "1.0": {
+            "events": 2,
+            "originals": 47,
+            "with_event": 2
+          }
+        },
+        "B9": {
+          "0.5": {
+            "events": 1,
+            "originals": 47,
+            "with_event": 1
+          },
+          "0.75": {
+            "events": 1,
+            "originals": 47,
+            "with_event": 1
+          },
+          "1.0": {
+            "events": 10,
+            "originals": 47,
+            "with_event": 10
+          }
+        },
+        "challenger": {
+          "0.5": {
+            "events": 0,
+            "originals": 47,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 0,
+            "originals": 47,
+            "with_event": 0
+          },
+          "1.0": {
+            "events": 0,
+            "originals": 47,
+            "with_event": 0
+          }
+        },
+        "control": {
+          "0.5": {
+            "events": 0,
+            "originals": 47,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 0,
+            "originals": 47,
+            "with_event": 0
+          },
+          "1.0": {
+            "events": 3,
+            "originals": 47,
+            "with_event": 3
+          }
+        }
+      },
+      "synthetic_positive": {
+        "B0": {
+          "0.5": {
+            "events": 9,
+            "originals": 13,
+            "with_event": 9
+          },
+          "0.75": {
+            "events": 12,
+            "originals": 13,
+            "with_event": 12
+          },
+          "1.0": {
+            "events": 12,
+            "originals": 13,
+            "with_event": 12
+          }
+        },
+        "B9": {
+          "0.5": {
+            "events": 9,
+            "originals": 13,
+            "with_event": 9
+          },
+          "0.75": {
+            "events": 11,
+            "originals": 13,
+            "with_event": 11
+          },
+          "1.0": {
+            "events": 13,
+            "originals": 13,
+            "with_event": 13
+          }
+        },
+        "challenger": {
+          "0.5": {
+            "events": 0,
+            "originals": 13,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 0,
+            "originals": 13,
+            "with_event": 0
+          },
+          "1.0": {
+            "events": 0,
+            "originals": 13,
+            "with_event": 0
+          }
+        },
+        "control": {
+          "0.5": {
+            "events": 10,
+            "originals": 13,
+            "with_event": 10
+          },
+          "0.75": {
+            "events": 12,
+            "originals": 13,
+            "with_event": 12
+          },
+          "1.0": {
+            "events": 12,
+            "originals": 13,
+            "with_event": 12
+          }
+        }
+      }
+    },
+    "panel_gate": "NO_PROMOTION",
+    "observed_failure": "zero wake events on all 13 admitted positives at every fixed gain; all admitted ordinary sources also have zero events",
+    "failures": {
+      "restored_positives": [],
+      "lost_positives": [
+        [
+          "b23-primary-270-mero-slow",
+          "1.0",
+          "B0"
+        ],
+        [
+          "b23-primary-270-mero-slow",
+          "1.0",
+          "control"
+        ],
+        [
+          "b23-primary-270-mero-slow",
+          "0.75",
+          "B0"
+        ],
+        [
+          "b23-primary-270-mero-slow",
+          "0.75",
+          "control"
+        ],
+        [
+          "b23-primary-270-mero-slow",
+          "0.5",
+          "B0"
+        ],
+        [
+          "b23-primary-270-mero-slow",
+          "0.5",
+          "control"
+        ],
+        [
+          "b23-primary-159-mero-fast",
+          "1.0",
+          "B0"
+        ],
+        [
+          "b23-primary-159-mero-fast",
+          "1.0",
+          "control"
+        ],
+        [
+          "b23-primary-159-mero-fast",
+          "0.75",
+          "B0"
+        ],
+        [
+          "b23-primary-159-mero-fast",
+          "0.75",
+          "control"
+        ],
+        [
+          "b23-primary-159-mero-fast",
+          "0.5",
+          "B0"
+        ],
+        [
+          "b23-primary-159-mero-fast",
+          "0.5",
+          "control"
+        ],
+        [
+          "b23-primary-159-mero-slow",
+          "1.0",
+          "B0"
+        ],
+        [
+          "b23-primary-159-mero-slow",
+          "1.0",
+          "control"
+        ],
+        [
+          "b23-primary-159-mero-slow",
+          "0.75",
+          "B0"
+        ],
+        [
+          "b23-primary-159-mero-slow",
+          "0.75",
+          "control"
+        ],
+        [
+          "b23-primary-159-mero-slow",
+          "0.5",
+          "B0"
+        ],
+        [
+          "b23-primary-159-mero-slow",
+          "0.5",
+          "control"
+        ],
+        [
+          "b23-primary-267-mero-slow",
+          "1.0",
+          "B0"
+        ],
+        [
+          "b23-primary-267-mero-slow",
+          "1.0",
+          "control"
+        ],
+        [
+          "b23-primary-267-mero-slow",
+          "0.75",
+          "B0"
+        ],
+        [
+          "b23-primary-267-mero-slow",
+          "0.75",
+          "control"
+        ],
+        [
+          "b23-primary-103-mero-fast",
+          "1.0",
+          "B0"
+        ],
+        [
+          "b23-primary-103-mero-fast",
+          "1.0",
+          "control"
+        ],
+        [
+          "b23-primary-103-mero-fast",
+          "0.75",
+          "B0"
+        ],
+        [
+          "b23-primary-103-mero-fast",
+          "0.75",
+          "control"
+        ],
+        [
+          "b23-primary-103-mero-fast",
+          "0.5",
+          "B0"
+        ],
+        [
+          "b23-primary-103-mero-fast",
+          "0.5",
+          "control"
+        ],
+        [
+          "b23-primary-103-mero-slow",
+          "1.0",
+          "B0"
+        ],
+        [
+          "b23-primary-103-mero-slow",
+          "1.0",
+          "control"
+        ],
+        [
+          "b23-primary-103-mero-slow",
+          "0.75",
+          "B0"
+        ],
+        [
+          "b23-primary-103-mero-slow",
+          "0.75",
+          "control"
+        ],
+        [
+          "b23-primary-103-mero-slow",
+          "0.5",
+          "B0"
+        ],
+        [
+          "b23-primary-103-mero-slow",
+          "0.5",
+          "control"
+        ],
+        [
+          "b23-primary-239-mero-fast",
+          "1.0",
+          "B0"
+        ],
+        [
+          "b23-primary-239-mero-fast",
+          "1.0",
+          "control"
+        ],
+        [
+          "b23-primary-239-mero-fast",
+          "0.75",
+          "B0"
+        ],
+        [
+          "b23-primary-239-mero-fast",
+          "0.75",
+          "control"
+        ],
+        [
+          "b23-primary-239-mero-fast",
+          "0.5",
+          "B0"
+        ],
+        [
+          "b23-primary-239-mero-fast",
+          "0.5",
+          "control"
+        ],
+        [
+          "b23-primary-239-mero-slow",
+          "1.0",
+          "B0"
+        ],
+        [
+          "b23-primary-239-mero-slow",
+          "1.0",
+          "control"
+        ],
+        [
+          "b23-primary-239-mero-slow",
+          "0.75",
+          "B0"
+        ],
+        [
+          "b23-primary-239-mero-slow",
+          "0.75",
+          "control"
+        ],
+        [
+          "b23-primary-239-mero-slow",
+          "0.5",
+          "B0"
+        ],
+        [
+          "b23-primary-239-mero-slow",
+          "0.5",
+          "control"
+        ],
+        [
+          "b23-primary-180-mero-fast",
+          "1.0",
+          "B0"
+        ],
+        [
+          "b23-primary-180-mero-fast",
+          "1.0",
+          "control"
+        ],
+        [
+          "b23-primary-180-mero-fast",
+          "0.75",
+          "B0"
+        ],
+        [
+          "b23-primary-180-mero-fast",
+          "0.75",
+          "control"
+        ],
+        [
+          "b23-primary-180-mero-fast",
+          "0.5",
+          "B0"
+        ],
+        [
+          "b23-primary-180-mero-fast",
+          "0.5",
+          "control"
+        ],
+        [
+          "b23-primary-180-mero-slow",
+          "1.0",
+          "B0"
+        ],
+        [
+          "b23-primary-180-mero-slow",
+          "1.0",
+          "control"
+        ],
+        [
+          "b23-primary-180-mero-slow",
+          "0.75",
+          "B0"
+        ],
+        [
+          "b23-primary-180-mero-slow",
+          "0.75",
+          "control"
+        ],
+        [
+          "b23-primary-180-mero-slow",
+          "0.5",
+          "control"
+        ],
+        [
+          "b23-primary-329-mero-fast",
+          "1.0",
+          "B0"
+        ],
+        [
+          "b23-primary-329-mero-fast",
+          "1.0",
+          "control"
+        ],
+        [
+          "b23-primary-329-mero-fast",
+          "0.75",
+          "B0"
+        ],
+        [
+          "b23-primary-329-mero-fast",
+          "0.75",
+          "control"
+        ],
+        [
+          "b23-primary-357-mero-slow",
+          "1.0",
+          "B0"
+        ],
+        [
+          "b23-primary-357-mero-slow",
+          "1.0",
+          "control"
+        ],
+        [
+          "b23-primary-357-mero-slow",
+          "0.75",
+          "B0"
+        ],
+        [
+          "b23-primary-357-mero-slow",
+          "0.75",
+          "control"
+        ],
+        [
+          "b23-primary-357-mero-slow",
+          "0.5",
+          "B0"
+        ],
+        [
+          "b23-primary-357-mero-slow",
+          "0.5",
+          "control"
+        ]
+      ],
+      "extra_positive_events": [],
+      "added_ordinary_events": [],
+      "natural_above_B0_gains": []
+    },
+    "lost_positive_unique_originals": 12,
+    "lost_positive_original_gain_conditions": 34,
+    "lost_positive_reference_rows": 67,
+    "restored_positive_source_families": 0,
+    "added_ordinary_reference_rows": 0,
+    "extra_positive_event_reference_rows": 0,
+    "natural_readers_improved_count_vs_B9": 7,
+    "original_input_archives_authenticated": 12,
+    "original_native_observations_recomputed": 600,
+    "original_producer_archive_complete": true,
+    "original_primary_producer_files": 1331,
+    "original_source_producer_files": 1327,
+    "separate_git_supplement_files": 0,
+    "all_original_arrays_verified": true,
+    "original_source_admission_recomputed": true,
+    "original_producer_git_verified": true,
+    "authorization_granted": false,
+    "new_tts_calls_during_closure": 0,
+    "new_asr_calls_during_closure": 0,
+    "new_model_calls_during_closure": 0,
+    "new_optimizer_updates_during_closure": 0,
+    "threshold_search": false,
+    "cal_locked_access": false,
+    "replay_allowed": false,
+    "replication_open_allowed": false,
+    "replication_opened": false,
+    "replication_permanently_closed": true,
+    "candidate_engineering_validation_allowed": false,
+    "candidate_model_pack_created": false,
+    "released": false,
+    "product_promotion_allowed": false,
+    "installed_software_baseline": "B0",
+    "ssc305_physical": "NOT_RUN",
+    "field_3_5m_frr": null,
+    "field_3_5m_frr_status": "NOT_RUN",
+    "natural_continuous_far_per_hour": null,
+    "natural_continuous_far_status": "NOT_RUN"
   }
 }

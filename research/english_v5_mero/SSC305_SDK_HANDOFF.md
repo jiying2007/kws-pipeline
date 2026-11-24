@@ -73,7 +73,7 @@ Strict isolated readback found that the original PRIMARY producer archive omitte
 
 **B21 replication and candidate engineering remain closed; B0 remains the installed integration baseline.** No B21 pack is released or substituted into this SDK. Closure reads only saved original evidence and makes no new model, TTS, ASR or training calls. This development panel does not measure continuous FAR/h, field 3–5 m FRR, or physical SSC305 performance.
 
-## Latest candidate quality closure — B22 (2026-11-25 Asia/Shanghai)
+## Candidate quality closure — B22 (2026-11-25 Asia/Shanghai)
 
 The experiment identifier remains **20261124**. The [completed B22 TRAIN run 45400279395](https://github.com/jiying2007/kws-data/actions/runs/45400279395) trained one union-retention challenger for **192 updates and 1,847 total forwards**: 1,844 optimization forwards, two checkpoint-reload checks and one ONNX export. It used the unchanged 88 TRAIN originals, 122 positive-retention conditions (the original 120 plus two previously unprotected conditions) and 264 saved ordinary-speech teacher arrays. The 43,876-parameter architecture remained fixed. The original B21 challenger was retained as an immutable historical control, with zero new control updates or forwards; this comparison does not claim a control trained in the same job.
 
@@ -101,3 +101,24 @@ An isolated fail-only readback authenticated all 12 original input archives, all
 The original `RESULT.json` SHA256 is `5196b99be90855a5f8bf83c676df497d0d56d89d19885b7837ff0535452c3d95`. The exact saved quality-lock file SHA256 is `458a8af963dc959dca658b46800efdf1a23e1703cd397aa1b962340bdb6ed56a`; its sorted, compact JSON identity without a trailing newline is `e347323b5f10ed2b17501c511d53a3065adf45ee1446d006356d4097f11c8287`. The complete independent readback SHA256 is `dc94c1495eca5319aac20f90d233e62377d4625fdd9a02bcb7fa2c8aebb69746`. The full small artifact pins, quality lock, code hashes and exact aggregate decision are recorded in [V6_QUALITY_EVIDENCE.json](V6_QUALITY_EVIDENCE.json).
 
 **B22 replication and candidate engineering remain closed; B0 remains the installed integration baseline.** No B22 model pack was created for this SDK or released. This closure uses saved evidence and adds zero training updates, model forwards, TTS or ASR calls. Physical SSC305 execution, field 3–5 m FRR and natural continuous FAR/h remain **NOT_RUN**, with no measured field values or product-promotion claim.
+
+## Latest candidate quality closure — B23 (2026-11-25 Asia/Shanghai)
+
+The [B23 TRAIN run 45435538577](https://github.com/jiying2007/kws-data/actions/runs/45435538577) completed one 192-update, 1,847-forward phase. Its sole scientific change was to use the worst known-silent prefix frame (`amax`) in the blank loss. The original 88 TRAIN sources, 122 retention conditions, 264 saved teacher arrays and all other B22 settings remained fixed. The historical B22 checkpoint was copied as an immutable control. B23 challenger PT SHA256 is `784def9df6c2a8bfbecdb7ba2d7b70630337a1cda72561c05392327aa980297f`.
+
+The [new independent source run 45438758355](https://github.com/jiying2007/kws-data/actions/runs/45438758355) preserved all 120 original audio sources and all 600 native observations. Its unchanged source gate admitted 78 originals: 13 synthetic positives, 47 synthetic ordinary speech and 18 natural speech originals from 11 people, including 9 paired source groups. All 42 unknown originals remain in the exposure and overlap denominator.
+
+The [first B23 PRIMARY run 45443640293](https://github.com/jiying2007/kws-data/actions/runs/45443640293), head `992e4d80a0f784d7fa8eaaa9e2eaf49770b38ef2`, completed all **936 forwards**: 78 originals × three fixed gains × four frozen models. The workflow concluded `success`; the scientific verdict is **NO_PROMOTION**. Counts below use gains **1.0 / 0.75 / 0.5**; these are derived conditions of the same source originals.
+
+| Frozen model | Positive originals with an event (of 13) | Natural ordinary events (18 originals) | Synthetic ordinary events (47 originals) |
+|---|---:|---:|---:|
+| B0 | 12 / 12 / 9 | 7 / 7 / 3 | 2 / 1 / 0 |
+| B9 | 13 / 11 / 9 | 12 / 18 / 13 | 10 / 1 / 1 |
+| Historical B22 control | 12 / 12 / 10 | 3 / 4 / 2 | 3 / 0 / 0 |
+| B23 challenger | **0 / 0 / 0** | 0 / 0 / 0 | 0 / 0 / 0 |
+
+The challenger lost 34 positive original/gain conditions across 12 originals relative to B0 and/or the historical control, represented by 67 reference-specific failure rows. It restored no required positive family. Zero ordinary-speech events accompany zero positive detections, so this checkpoint does not satisfy the promotion gate. These development counts provide no measured continuous FAR/h or field FRR.
+
+An independent isolated fail-only reader reauthenticated all 12 original input ZIPs, all 120 source originals and 600 native observations, both complete Git-bound producer trees, every consumption journal, and all **936 saved/raw arrays and 153,216 frames**. The primary and source producer roots contain 1,331 and 1,327 files respectively; no retrospective supplement is used. The original B14 rule recomputes **NO_PROMOTION**. Readback SHA256 is `918b5ef21eae43a4fedcc04fa01fba1e46f7a9ebd4a6ad017a5c9fe042e08cac`. Exact artifact, reader and lock identities are recorded in `V6_QUALITY_EVIDENCE.json`.
+
+**B23 replication and candidate engineering remain closed; B0 remains the installed integration baseline.** No B23 model pack was created for this SDK or released. This closure adds zero training, model, TTS or ASR calls. Physical SSC305 execution, real-human 3–5 m FRR and natural continuous FAR/h remain **NOT_RUN**.
