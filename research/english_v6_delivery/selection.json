@@ -1,0 +1,20 @@
+{
+  "schema": "heym43-software-selection-v1",
+  "selected": null,
+  "manifest": null,
+  "baseline": {
+    "path": "models/B0.pack",
+    "bytes": 216960,
+    "sha256": "ff5d0868c035bf5b1c696115eb62f42c36ddbd3a62781207b1340f5e7d1f9d9b"
+  },
+  "scope": {
+    "use": "research_software_integration",
+    "physical_ssc305": false,
+    "product_promotion_allowed": false,
+    "cal_locked_access": false,
+    "field_frr": null,
+    "continuous_far_per_hour": null,
+    "word_end_p95_ms": null,
+    "product_decoder_settings": null
+  }
+}
