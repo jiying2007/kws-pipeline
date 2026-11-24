@@ -51,3 +51,13 @@ The output fields are `event`, `keyword_id`, `frame_index`, `available_after_sam
 An SSC305 integrator still needs the **actual final board microphone / audio front-end**, continuity/reset handling, sound-echo treatment and per-stream bounded memory accounting. Retain physical-board CPU and RAM measurements, P95 end-to-end inference/callback delay and long-run stability, independent real-human 3–5 m FRR, natural continuous FAR/h and untouched CAL/LOCKED test proof. The above ten synthetic development originals do **not** estimate real FRR or FAR/h, and QEMU is not an SSC305. This target is a valid *integration research SDK*, **not a released/quality-qualified wake-word model**.
 
 No Work/Codex, private repository, paid external ASR/TTS or recurring monitoring job is needed for this standalone build.
+
+## Latest candidate quality closure — B20 (2026-11-24)
+
+The B17 paired model checkpoints were evaluated once on the new B20 synthetic panel together with the fixed B17 natural speech panel in [kws-data run 45337450827](https://github.com/jiying2007/kws-data/actions/runs/45337450827). The run completed all **1,008 model forwards**: 84 admitted originals × three fixed gains × four frozen model roles. The original logits and attempt journals were independently read back without new inference.
+
+The numerical result is **NO_PROMOTION**. Relative to the paired control, the challenger lost one positive condition and added three natural-speech false-trigger conditions. It recovered none of the four B9-recoverable original/gain cases across three source groups. Natural ordinary-speech events at 0.75 gain were 7 versus B0's 6. The original opening reader rejects this result; B20 replication and candidate engineering validation remain closed.
+
+The original producer ZIP omitted 32 `.github` files. A separately identified supplement binds each missing file to the real producer Git tree, Git blob and SHA256; the original artifact is unchanged and is not described as complete. All 17 original input archives and all 120 original source rows were authenticated, and the 84 admitted rows exactly reproduce the original admission. See [the B20 evidence directory](https://github.com/jiying2007/kws-data/tree/main/research/english_v6_b20_results_20261124) and `V6_QUALITY_EVIDENCE.json`.
+
+The installed integration baseline remains **B0**. No B17/B20 candidate is released or substituted into this SDK. This result is development evidence; it provides no measured continuous FAR/h, field 3–5 m FRR, or physical SSC305 result.

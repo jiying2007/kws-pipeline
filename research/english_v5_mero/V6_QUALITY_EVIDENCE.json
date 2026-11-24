@@ -234,7 +234,7 @@
       "paired_original_result_artifact_id": 14585918123,
       "paired_original_result_zip_sha256": "7a771ce8947f26b3a14c97213c3aa279056dd89968990e49330da48955c347a0",
       "b0_pytorch_replay_max_abs_logit": 0.0001220703125,
-      "b1_pytorch_replay_max_abs_logit": 0.00006103515625,
+      "b1_pytorch_replay_max_abs_logit": 6.103515625e-05,
       "positive_originals": 6,
       "ordinary_originals": 8,
       "derived_conditions_not_independent": true,
@@ -335,7 +335,7 @@
           "clang",
           "cortex_a32_qemu"
         ],
-        "observed_max_abs_logit": 0.000091552734375,
+        "observed_max_abs_logit": 9.1552734375e-05,
         "full_ctc_token_and_event_clock_parity": true,
         "b3_trained_zip_artifact_id": 14590093798,
         "b3_trained_pt_sha256": "682e2689e82aa91d850516c06b2be61efc64731cb1dee3b70a7d2a8e01925a46",
@@ -818,10 +818,10 @@
     "model_parameter_names_equal": true,
     "total_tensor_values": 43876,
     "different_tensor_values": 21946,
-    "global_max_absolute_difference": 0.00001594051718711853,
-    "rms_difference": 7.846707500354542e-8,
+    "global_max_absolute_difference": 1.594051718711853e-05,
+    "rms_difference": 7.846707500354542e-08,
     "top_drift_tensor": "layers.1.linear.weight",
-    "top_drift_tensor_max_absolute_difference": 0.00001594051718711853,
+    "top_drift_tensor_max_absolute_difference": 1.594051718711853e-05,
     "original_b6_exact_tensor_replay_passed": false,
     "b7_challenger_weight_exists": false,
     "new_optimizer_updates_during_forensics": 0,
@@ -2855,5 +2855,365 @@
       "released": false,
       "installed_software_baseline": "B0"
     }
+  },
+  "b20_frozen_b17_primary": {
+    "schema": "english-v6-b20-frozen-b17-primary-closure-v1",
+    "source_run": {
+      "id": 45334413855,
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/45334413855",
+      "head": "249449c8a572c536dfb4e990584b451247d7da17",
+      "source_gate": "SOURCE_GATE_PASS",
+      "originals": 96,
+      "native_observer_calls": 480,
+      "valid_native_returns": 480
+    },
+    "primary_run": {
+      "id": 45337450827,
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/45337450827",
+      "head": "1c03eb9da468c7e267ff32bb4a34f4ee17bd00b9",
+      "prepared_parent": "474f7bf00ccf722cf52b6140847bcef78c5a82a3",
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "prerequisite_PRs": [
+      346,
+      347
+    ],
+    "evidence_repository": "jiying2007/kws-data",
+    "evidence_directory": "research/english_v6_b20_results_20261124",
+    "primary_result_sha256": "86d4cc6a84494f18b67479db9d986f722103566b81ba7c1f6772a5c56d719ff7",
+    "original_frame_archive_sha256": "272e69d0f9bfd72aa8a9da606d67db3677991a214dd950df5cd04aa5bcd315cb",
+    "original_artifacts": [
+      {
+        "role": "consumed",
+        "id": 14894975590,
+        "run_id": 45337450827,
+        "run_head": "1c03eb9da468c7e267ff32bb4a34f4ee17bd00b9",
+        "bytes": 383,
+        "sha256": "4188ecb0c176d2f96ed235081fd5e6fe064eeda5c0ac6f2ff2e4ff2f81a0fd9f",
+        "path": "b20_actual_primary_readback/artifacts/consumed-original.zip",
+        "extract": "b20_actual_primary_readback/consumed"
+      },
+      {
+        "role": "producer",
+        "id": 14894438758,
+        "run_id": 45337450827,
+        "run_head": "1c03eb9da468c7e267ff32bb4a34f4ee17bd00b9",
+        "bytes": 1761033,
+        "sha256": "fb1874de1f883d12445272c987c2446f6d45b900b098855072dd9c6100d19f27",
+        "path": "b20_actual_primary_readback/artifacts/producer-original.zip",
+        "extract": "b20_actual_primary_readback/producer"
+      },
+      {
+        "role": "result",
+        "id": 14894229987,
+        "run_id": 45337450827,
+        "run_head": "1c03eb9da468c7e267ff32bb4a34f4ee17bd00b9",
+        "bytes": 5916607,
+        "sha256": "9972b33b74facbf1e9c055eec3820b981b8d0f9c829791e52c17468bb4891eb5",
+        "path": "b20_actual_primary_readback/artifacts/result-original.zip",
+        "extract": "b20_actual_primary_readback/result"
+      }
+    ],
+    "source_coverage": {
+      "natural_originals": 21,
+      "natural_speakers": 11,
+      "synthetic_ordinary": 48,
+      "synthetic_paired": 12,
+      "synthetic_positive": 15
+    },
+    "original_source_rows": 120,
+    "admitted_originals": 84,
+    "model_pt_sha256": {
+      "B0": "1ae8a2b20c8b6991f925dd4c626af2f36b308adee8733a3a7215818716f565d7",
+      "B9": "7dba86a3fcda6e5f05cb80b414dc372c70a5a03b3aee783f168441a4871e7655",
+      "challenger": "61c79221d2cc2299929b18812cd4bce2ef0383e3505ad017ed90bf625401bc07",
+      "control": "144370e96fcf58da50114280d728867781934e3c6538d2b2d769babb7934c81e"
+    },
+    "gains": [
+      "1.0",
+      "0.75",
+      "0.5"
+    ],
+    "actual_forward_calls": 1008,
+    "actual_model_forward_calls": {
+      "B0": 252,
+      "B9": 252,
+      "challenger": 252,
+      "control": 252
+    },
+    "summary": {
+      "natural_ordinary": {
+        "B0": {
+          "0.5": {
+            "events": 6,
+            "originals": 21,
+            "with_event": 6
+          },
+          "0.75": {
+            "events": 6,
+            "originals": 21,
+            "with_event": 6
+          },
+          "1.0": {
+            "events": 5,
+            "originals": 21,
+            "with_event": 5
+          }
+        },
+        "B9": {
+          "0.5": {
+            "events": 20,
+            "originals": 21,
+            "with_event": 15
+          },
+          "0.75": {
+            "events": 26,
+            "originals": 21,
+            "with_event": 16
+          },
+          "1.0": {
+            "events": 16,
+            "originals": 21,
+            "with_event": 12
+          }
+        },
+        "challenger": {
+          "0.5": {
+            "events": 6,
+            "originals": 21,
+            "with_event": 6
+          },
+          "0.75": {
+            "events": 7,
+            "originals": 21,
+            "with_event": 7
+          },
+          "1.0": {
+            "events": 5,
+            "originals": 21,
+            "with_event": 5
+          }
+        },
+        "control": {
+          "0.5": {
+            "events": 6,
+            "originals": 21,
+            "with_event": 6
+          },
+          "0.75": {
+            "events": 6,
+            "originals": 21,
+            "with_event": 6
+          },
+          "1.0": {
+            "events": 4,
+            "originals": 21,
+            "with_event": 4
+          }
+        }
+      },
+      "synthetic_ordinary": {
+        "B0": {
+          "0.5": {
+            "events": 0,
+            "originals": 48,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 1,
+            "originals": 48,
+            "with_event": 1
+          },
+          "1.0": {
+            "events": 2,
+            "originals": 48,
+            "with_event": 2
+          }
+        },
+        "B9": {
+          "0.5": {
+            "events": 2,
+            "originals": 48,
+            "with_event": 2
+          },
+          "0.75": {
+            "events": 5,
+            "originals": 48,
+            "with_event": 5
+          },
+          "1.0": {
+            "events": 6,
+            "originals": 48,
+            "with_event": 6
+          }
+        },
+        "challenger": {
+          "0.5": {
+            "events": 0,
+            "originals": 48,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 1,
+            "originals": 48,
+            "with_event": 1
+          },
+          "1.0": {
+            "events": 3,
+            "originals": 48,
+            "with_event": 3
+          }
+        },
+        "control": {
+          "0.5": {
+            "events": 0,
+            "originals": 48,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 1,
+            "originals": 48,
+            "with_event": 1
+          },
+          "1.0": {
+            "events": 3,
+            "originals": 48,
+            "with_event": 3
+          }
+        }
+      },
+      "synthetic_positive": {
+        "B0": {
+          "0.5": {
+            "events": 5,
+            "originals": 15,
+            "with_event": 5
+          },
+          "0.75": {
+            "events": 10,
+            "originals": 15,
+            "with_event": 10
+          },
+          "1.0": {
+            "events": 12,
+            "originals": 15,
+            "with_event": 12
+          }
+        },
+        "B9": {
+          "0.5": {
+            "events": 8,
+            "originals": 15,
+            "with_event": 8
+          },
+          "0.75": {
+            "events": 11,
+            "originals": 15,
+            "with_event": 11
+          },
+          "1.0": {
+            "events": 9,
+            "originals": 15,
+            "with_event": 9
+          }
+        },
+        "challenger": {
+          "0.5": {
+            "events": 5,
+            "originals": 15,
+            "with_event": 5
+          },
+          "0.75": {
+            "events": 11,
+            "originals": 15,
+            "with_event": 11
+          },
+          "1.0": {
+            "events": 12,
+            "originals": 15,
+            "with_event": 12
+          }
+        },
+        "control": {
+          "0.5": {
+            "events": 6,
+            "originals": 15,
+            "with_event": 6
+          },
+          "0.75": {
+            "events": 11,
+            "originals": 15,
+            "with_event": 11
+          },
+          "1.0": {
+            "events": 11,
+            "originals": 15,
+            "with_event": 11
+          }
+        }
+      }
+    },
+    "panel_gate": "NO_PROMOTION",
+    "failures": {
+      "restored_positives": [],
+      "lost_positives": [
+        [
+          "b20-primary-798-mero-slow",
+          "0.5",
+          "control"
+        ]
+      ],
+      "extra_positive_events": [],
+      "added_ordinary_events": [
+        [
+          "b17-natural-6829-68769-0007",
+          "0.5",
+          "control"
+        ],
+        [
+          "b17-natural-1221-135766-0013",
+          "0.75",
+          "control"
+        ],
+        [
+          "b17-natural-4507-16021-0036",
+          "1.0",
+          "control"
+        ]
+      ],
+      "natural_above_B0_gains": [
+        "0.75"
+      ],
+      "natural_readers_improved_vs_B9": [
+        "librispeech-test-clean-1188",
+        "librispeech-test-clean-1221",
+        "librispeech-test-clean-4507",
+        "librispeech-test-clean-4970",
+        "librispeech-test-clean-5142",
+        "librispeech-test-clean-6829",
+        "librispeech-test-clean-7176",
+        "librispeech-test-clean-8230"
+      ]
+    },
+    "source_authority_sha256": "8663bbb903b56aaf37ef87e67815d979a3b7146ba1216add33b5cf4d001ba78b",
+    "array_audit_sha256": "5827b543f315ad98793ac68d54574cb57c226e133d505bd0ff5e0dbb32fb64cc",
+    "diagnostic_sha256": "08f43b9c0fabda527734aa2ca96ef55861e66b28d969ef9c2941a3260644ef33",
+    "original_producer_archive_complete": false,
+    "separate_git_supplement_files": 32,
+    "supplemented_static_producer_closure_complete": true,
+    "new_TTS_calls": 0,
+    "new_ASR_calls": 0,
+    "new_training": false,
+    "new_optimizer_updates": 0,
+    "threshold_search": false,
+    "replication_opened": false,
+    "replication_permanently_closed": true,
+    "candidate_engineering_validation_allowed": false,
+    "released": false,
+    "installed_software_baseline": "B0",
+    "ssc305_physical": "NOT_RUN",
+    "field_3_5m_frr": null,
+    "natural_continuous_far_per_hour": null
   }
 }
