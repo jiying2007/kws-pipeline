@@ -343,3 +343,20 @@ The 216,960-byte `MERO43V1` B0 pack was rebuilt from its authenticated source ar
 For each actual experiment, freeze `experiment_id + source_sha + audio_sha + model_sha + model_code_sha + decoder + train/eval role + budget + seed` before model forwards. Persist per-original and aggregate results; the only valid terminal states are `PASS`, `FAIL`, `INCONCLUSIVE`, `STOP`, `NOT_RUN`. Source-only CI proves source contracts only. Reuse saved 63/64/168 batches by exact SHA; no repeated generation. Unknown labels, missing sound/license evidence, mismatched hashes, split/voice-family leakage, replay attempts or calibration/locked reuse all produce STOP. Do not silently relax gates. No private repositories, paid model calls, Work/Codex credits or recurring patrols.
 
 All public synthetic data and source code retain their original rights boundaries. Upstream model licence, generated-wave rights and actual commercial use rights are separate attestations. The current solution is **a working software/research deployment path**, not a released Hey Mero product.
+
+## B15 trained nonblank contrast and B16 independent source-disjoint primary — 2026-11-24
+
+B15 is a **real two-arm 43,876-parameter FSMN-CTC training experiment**, not a placeholder. Public [TRAIN run 45296300913](https://github.com/jiying2007/kws-data/actions/runs/45296300913) completed **384 optimizer updates**, with PT/NPZ/ONNX artifact 14877145654 (ZIP SHA256 `9607876591b155f728b4f525029fee933cca98eb0921f4bd84c7d6288f4e75c4`). The same-run B15 control must be used; its historical B13 re-run was not byte-identical. The initial B15 primary failed the source gate at 6 positives / 4 paired groups; it was **not** used for model selection.
+
+A separately registered B16 cohort generated **96 genuinely new complete original Piper waveforms from 24 new voice families**. Five blind native source observers admitted **12 canonical positive**, **46 ordinary**, **9 paired voice groups** in [source run 45312299981](https://github.com/jiying2007/kws-data/actions/runs/45312299981) (frozen screen artifact 14885180327). An unrelated fresh LibriSpeech dev-clean cohort retained **18 ordinary whole originals from 12 readers** with five-native observations; neither cohort was exposed to B15 gradients or earlier B15 model selection.
+
+The actual frozen [B16 four-model primary run 45314679545](https://github.com/jiying2007/kws-data/actions/runs/45314679545) completed **912 actual full-frame inference arrays** on 76 source-distinct original recordings × four frozen B0/B9/B15-control/B15-challenger models × three registered gains (1.0/0.75/0.5). The 2,425,605-byte ZIP artifact 14884732009 has SHA256 `aa57b2dae6859f12f1e939a1815c58678a1db270e8bb21b66378783be6fe3f2b`. The independent source gate **passed**, but model quality **NO_PROMOTION**:
+
+| Frozen model | Natural ordinary false events (1.0 / 0.75 / 0.5) | New synthetic positives hit out of 12 |
+| --- | --- | --- |
+| B0 | 2 / 1 / 4 | 11 / 11 / 7 |
+| B9 | 8 / 18 / 18 | 11 / 11 / 11 |
+| Matched B15 control | 3 / 4 / 4 | 10 / 11 / 10 |
+| B15 challenger | 4 / 3 / 6 | 11 / 11 / 10 |
+
+B15 restored one positive voice family and lost no positive original/gain hit relative to B0 or the matched control, but **introduced four additional ordinary events** and exceeded the B0 natural false-event total at every gain. The registered criterion therefore rejected it. B14, B15 and B16 research replication stayed unopened; no CAL/LOCKED, threshold search, C11/ARM32 candidate promotion or real SSC305 field verification was performed. The installed software reference remains **B0**; isolated utterances do not provide continuous FAR/h. [Machine-readable frozen evidence](../research/english_v5_mero/B15_B16_QUALITY_EVIDENCE_20261124.json).
