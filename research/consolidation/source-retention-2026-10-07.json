@@ -15602,7 +15602,8 @@
     ".github/workflows/english-research-stream-contract.yml",
     ".github/workflows/english-stream-performance-contract.yml",
     ".github/workflows/english-head-calibrated-threshold.yml",
-    ".github/workflows/english-v5-mero-contract.yml"
+    ".github/workflows/english-v5-mero-contract.yml",
+    ".github/workflows/english-v6-delivery-contract.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -54141,6 +54142,13 @@
       "bytes": 1893,
       "sha256": "58c1c58741f81041ea353bb1a48a5808ee23085e9d94eaae5271d443b48df852",
       "git_blob_sha1": "5efe89288326d83ab6379ff2538120f06f0e65f1"
+    },
+    {
+      "path": ".github/workflows/english-v6-delivery-contract.yml",
+      "mode": "100644",
+      "bytes": 954,
+      "sha256": "88da01fcd18994d4f94b8627317d5d5be906c037cb14516409a3e8242e202f7c",
+      "git_blob_sha1": "34add4427a58a3da8f8ddf977a5922c46352e176"
     }
   ],
   "current_source_revision": {
