@@ -1,0 +1,140 @@
+{
+  "schema": "english-v6-b15-b16-fresh-primary-model-selection-v1",
+  "keyword": "Hey Mero",
+  "pronunciation": "/heɪ ˈmɛroʊ/",
+  "installed_software_baseline": "B0",
+  "research": {
+    "model": "B15",
+    "architecture": "FSMN-CTC 43876 parameters",
+    "trained_pair": {
+      "run": 45296300913,
+      "commit": "b3d2a6580eba1f2249b3df3ab3c9f1cd4c2b5a46",
+      "artifact_id": 14877145654,
+      "artifact_bytes": 1026648,
+      "sha256": "9607876591b155f728b4f525029fee933cca98eb0921f4bd84c7d6288f4e75c4",
+      "optimizer_updates": 384
+    },
+    "source": {
+      "b15_primary": "INSUFFICIENT_SOURCE: 6 synthetic positives / 4 paired groups; no model selection",
+      "b16_new_originals": {
+        "run": 45312299981,
+        "artifact_id": 14883618584,
+        "sha256": "3c4f10258276f7f02f8a8ebdc105254b4e190e675c380280cc0d8e6ac66ed63c",
+        "raw_pcm": 96,
+        "new_synthetic_groups": 24,
+        "blinded_qa_artifact": 14885180327,
+        "positive_admitted": 12,
+        "ordinary_admitted": 46,
+        "paired_groups": 9
+      },
+      "natural": {
+        "run": 45297962939,
+        "originals": 24,
+        "admitted": 18,
+        "speakers": 12
+      }
+    },
+    "independent_primary": {
+      "run": 45314679545,
+      "head": "737fc6ccf129b82e74d595ff7ea985f60f2d136b",
+      "artifact_id": 14884732009,
+      "artifact_bytes": 2425605,
+      "sha256": "aa57b2dae6859f12f1e939a1815c58678a1db270e8bb21b66378783be6fe3f2b",
+      "result_json_sha256": "034a02f77afd53fb0cca50d5ffc54088b6ba745dcd3fc243a957aaaa9fc4b7cf",
+      "logits_npz_sha256": "e7ffc7f33686376a78dba3f0fcb0a019554afdab16e380f478b35b0bad958a3d",
+      "actual_forwards": 912,
+      "new_dev_originals": 76,
+      "gains": [
+        1,
+        0.75,
+        0.5
+      ],
+      "source_gate": "SOURCE_GATE_PASS",
+      "quality_gate": "NO_PROMOTION",
+      "natural_false_events_by_gain": {
+        "B0": [
+          2,
+          1,
+          4
+        ],
+        "B9": [
+          8,
+          18,
+          18
+        ],
+        "B15_control": [
+          3,
+          4,
+          4
+        ],
+        "B15_challenger": [
+          4,
+          3,
+          6
+        ]
+      },
+      "synthetic_ordinary_events_by_gain": {
+        "B0": [
+          4,
+          1,
+          1
+        ],
+        "B9": [
+          7,
+          4,
+          1
+        ],
+        "B15_control": [
+          4,
+          2,
+          0
+        ],
+        "B15_challenger": [
+          3,
+          2,
+          0
+        ]
+      },
+      "synthetic_positive_hits_by_gain": {
+        "B0": [
+          11,
+          11,
+          7
+        ],
+        "B9": [
+          11,
+          11,
+          11
+        ],
+        "B15_control": [
+          10,
+          11,
+          10
+        ],
+        "B15_challenger": [
+          11,
+          11,
+          10
+        ]
+      },
+      "restored_positive_families": 1,
+      "lost_positive_conditions": 0,
+      "extra_positive_events": 0,
+      "added_ordinary_event_conditions": 4,
+      "improved_natural_readers_vs_B9": 3,
+      "natural_events_above_B0_gain_count": 3,
+      "replication_open_allowed": false,
+      "threshold_tuning": false,
+      "cal_locked_access": false
+    }
+  },
+  "engineering": {
+    "b15_candidate_c11_arm32_parity": "NOT_RUN_QUALITY_GATE_FAILED",
+    "physical_ssc305": "NOT_RUN",
+    "field_3_5m_frr": null,
+    "continuous_real_background_far_per_hour": null,
+    "physical_word_end_to_callback_p95_ms": null,
+    "product_promotion": false
+  },
+  "interpretation": "Research B15 restored one positive family but added four ordinary original/gain false-event conditions, and its natural false events exceeded B0 at all three gains. Prior trained weights and full-frame arrays are real but DO NOT authorize swapping the installed B0 pack. Recorded isolated clips do not supply a representative FAR/h denominator."
+}
