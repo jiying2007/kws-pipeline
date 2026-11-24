@@ -3215,5 +3215,399 @@
     "ssc305_physical": "NOT_RUN",
     "field_3_5m_frr": null,
     "natural_continuous_far_per_hour": null
+  },
+  "b21_blank_retention_primary": {
+    "schema": "english-v6-b21-blank-retention-primary-closure-v1",
+    "status": "NO_PROMOTION_COMPLETE_SOURCE_AND_SAVED_OUTPUTS_WITH_SEPARATE_GIT_BOUND_SUPPLEMENT",
+    "training_run": {
+      "id": 45352494611,
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/45352494611",
+      "head": "eb386f2b8e489bbd8e69c6a7972708dd667aa685",
+      "artifact_id": 14900878022,
+      "artifact_bytes": 1801215,
+      "artifact_zip_sha256": "35fa747026589d3db83a9b24508a3d480d88392080b5c07a910c109b5912ba81",
+      "optimizer_updates_per_arm": 192,
+      "optimizer_updates_total": 384,
+      "parameters_per_arm": 43876
+    },
+    "source_run": {
+      "id": 45378709327,
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/45378709327",
+      "head": "a9b059e928021cb77248dd5e50617de3f5a2d60a",
+      "source_gate": "SOURCE_GATE_PASS",
+      "originals": 120,
+      "reused_original_synthetic": 96,
+      "new_synthetic_calls": 0,
+      "new_natural_originals": 24,
+      "natural_speakers": 12,
+      "native_observer_calls": 600,
+      "valid_native_returns": 600,
+      "original_source_artifact_id": 14911649527,
+      "original_source_artifact_sha256": "9dbb738ba9f25af58e367f83a383d234a1fb138816bcdb624195778a9e5ce797"
+    },
+    "primary_run": {
+      "id": 45387856667,
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/45387856667",
+      "head": "6b8cc1b559dab3a9622283b36c737a61380ee4b2",
+      "prepared_parent": "1059a5e70098934ac4261c98d6eed8fa213c8338",
+      "attempt": 1,
+      "conclusion": "success"
+    },
+    "evidence_repository": "jiying2007/kws-data",
+    "primary_result_sha256": "f34493166b2ac21248670a7d58bac408b1a564bfc30891c950666dc7dc5cbd87",
+    "original_frame_archive_sha256": "d2b96d72d4d8795c9bb5139234f67915aefe5285ba2b34c2a6f875d2bfd945f6",
+    "original_artifacts": [
+      {
+        "role": "consumed",
+        "id": 14917757566,
+        "run_id": 45387856667,
+        "run_head": "6b8cc1b559dab3a9622283b36c737a61380ee4b2",
+        "bytes": 384,
+        "sha256": "5c22313474ecc600e629d550e29003e75d50dacc7dfd23d1e0161537b55c0c2b"
+      },
+      {
+        "role": "result",
+        "id": 14917736688,
+        "run_id": 45387856667,
+        "run_head": "6b8cc1b559dab3a9622283b36c737a61380ee4b2",
+        "bytes": 5967862,
+        "sha256": "1be5f7aa27d4b2331c076a98e87e8a50ab51483f71cd08cfdd2b172fea0cefa7"
+      },
+      {
+        "role": "producer",
+        "id": 14917337166,
+        "run_id": 45387856667,
+        "run_head": "6b8cc1b559dab3a9622283b36c737a61380ee4b2",
+        "bytes": 18024132,
+        "sha256": "ff408a5a1874ea4da1d953abd037daee74873a6b59c7a890d67e4b844727d2fa"
+      }
+    ],
+    "assessment_sha256": "65ad9c7204755f1cd0b639added163387af39604818f9bd26b9da9fe8bd098fc",
+    "training_design_sha256": "76a1fd1353de00f712023a2b20256a8e622557551823cacd8b808d3f0549b0a1",
+    "source_coverage": {
+      "natural_originals": 20,
+      "natural_speakers": 12,
+      "synthetic_ordinary": 48,
+      "synthetic_paired": 15,
+      "synthetic_positive": 22
+    },
+    "original_source_rows": 120,
+    "admitted_originals": 90,
+    "unknown_excluded": 30,
+    "model_pt_sha256": {
+      "B0": "1ae8a2b20c8b6991f925dd4c626af2f36b308adee8733a3a7215818716f565d7",
+      "B9": "7dba86a3fcda6e5f05cb80b414dc372c70a5a03b3aee783f168441a4871e7655",
+      "challenger": "4947d017142f3b01f5dd4cf7706cc3c6978cf1a072ca022c26ea847ec0dc2f04",
+      "control": "5f8863d4ef3f10fd35edd8278ac9c01bd48138184e18e08bff9d6f44b4699b05"
+    },
+    "gains": [
+      "1.0",
+      "0.75",
+      "0.5"
+    ],
+    "actual_forward_calls": 1080,
+    "actual_model_forward_calls": {
+      "B0": 270,
+      "B9": 270,
+      "challenger": 270,
+      "control": 270
+    },
+    "saved_array_count": 1080,
+    "raw_output_count": 1080,
+    "consumed_unknown": [],
+    "summary": {
+      "natural_ordinary": {
+        "B0": {
+          "0.5": {
+            "events": 7,
+            "originals": 20,
+            "with_event": 7
+          },
+          "0.75": {
+            "events": 9,
+            "originals": 20,
+            "with_event": 9
+          },
+          "1.0": {
+            "events": 9,
+            "originals": 20,
+            "with_event": 9
+          }
+        },
+        "B9": {
+          "0.5": {
+            "events": 19,
+            "originals": 20,
+            "with_event": 13
+          },
+          "0.75": {
+            "events": 19,
+            "originals": 20,
+            "with_event": 11
+          },
+          "1.0": {
+            "events": 20,
+            "originals": 20,
+            "with_event": 13
+          }
+        },
+        "challenger": {
+          "0.5": {
+            "events": 6,
+            "originals": 20,
+            "with_event": 6
+          },
+          "0.75": {
+            "events": 6,
+            "originals": 20,
+            "with_event": 6
+          },
+          "1.0": {
+            "events": 7,
+            "originals": 20,
+            "with_event": 7
+          }
+        },
+        "control": {
+          "0.5": {
+            "events": 5,
+            "originals": 20,
+            "with_event": 5
+          },
+          "0.75": {
+            "events": 5,
+            "originals": 20,
+            "with_event": 5
+          },
+          "1.0": {
+            "events": 7,
+            "originals": 20,
+            "with_event": 7
+          }
+        }
+      },
+      "synthetic_ordinary": {
+        "B0": {
+          "0.5": {
+            "events": 0,
+            "originals": 48,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 0,
+            "originals": 48,
+            "with_event": 0
+          },
+          "1.0": {
+            "events": 2,
+            "originals": 48,
+            "with_event": 2
+          }
+        },
+        "B9": {
+          "0.5": {
+            "events": 2,
+            "originals": 48,
+            "with_event": 2
+          },
+          "0.75": {
+            "events": 4,
+            "originals": 48,
+            "with_event": 4
+          },
+          "1.0": {
+            "events": 8,
+            "originals": 48,
+            "with_event": 7
+          }
+        },
+        "challenger": {
+          "0.5": {
+            "events": 0,
+            "originals": 48,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 0,
+            "originals": 48,
+            "with_event": 0
+          },
+          "1.0": {
+            "events": 1,
+            "originals": 48,
+            "with_event": 1
+          }
+        },
+        "control": {
+          "0.5": {
+            "events": 0,
+            "originals": 48,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 0,
+            "originals": 48,
+            "with_event": 0
+          },
+          "1.0": {
+            "events": 1,
+            "originals": 48,
+            "with_event": 1
+          }
+        }
+      },
+      "synthetic_positive": {
+        "B0": {
+          "0.5": {
+            "events": 7,
+            "originals": 22,
+            "with_event": 7
+          },
+          "0.75": {
+            "events": 19,
+            "originals": 22,
+            "with_event": 19
+          },
+          "1.0": {
+            "events": 20,
+            "originals": 22,
+            "with_event": 20
+          }
+        },
+        "B9": {
+          "0.5": {
+            "events": 13,
+            "originals": 22,
+            "with_event": 13
+          },
+          "0.75": {
+            "events": 19,
+            "originals": 22,
+            "with_event": 19
+          },
+          "1.0": {
+            "events": 20,
+            "originals": 22,
+            "with_event": 20
+          }
+        },
+        "challenger": {
+          "0.5": {
+            "events": 10,
+            "originals": 22,
+            "with_event": 10
+          },
+          "0.75": {
+            "events": 19,
+            "originals": 22,
+            "with_event": 19
+          },
+          "1.0": {
+            "events": 19,
+            "originals": 22,
+            "with_event": 19
+          }
+        },
+        "control": {
+          "0.5": {
+            "events": 10,
+            "originals": 22,
+            "with_event": 10
+          },
+          "0.75": {
+            "events": 19,
+            "originals": 22,
+            "with_event": 19
+          },
+          "1.0": {
+            "events": 19,
+            "originals": 22,
+            "with_event": 19
+          }
+        }
+      }
+    },
+    "panel_gate": "NO_PROMOTION",
+    "failures": {
+      "restored_positives": [],
+      "lost_positives": [
+        [
+          "b21-primary-854-mero-slow",
+          "1.0",
+          "B0"
+        ]
+      ],
+      "extra_positive_events": [],
+      "added_ordinary_events": [
+        [
+          "b21-primary-natural-8324-286683-0029",
+          "0.75",
+          "control"
+        ],
+        [
+          "b21-primary-natural-8226-274371-0020",
+          "0.5",
+          "B9"
+        ],
+        [
+          "b21-primary-natural-8226-274371-0020",
+          "0.5",
+          "control"
+        ],
+        [
+          "b21-primary-natural-405-130895-0033",
+          "0.75",
+          "B9"
+        ]
+      ],
+      "natural_above_B0_gains": [],
+      "natural_readers_improved_vs_B9": [
+        "librispeech-train-clean-100-3607",
+        "librispeech-train-clean-100-3830",
+        "librispeech-train-clean-100-405",
+        "librispeech-train-clean-100-4267",
+        "librispeech-train-clean-100-6476",
+        "librispeech-train-clean-100-7859",
+        "librispeech-train-clean-100-8324"
+      ]
+    },
+    "added_ordinary_original_gain_conditions": 3,
+    "added_ordinary_reference_rows": 4,
+    "restored_positive_source_families": 0,
+    "natural_readers_improved_count": 7,
+    "original_producer_archive_complete": false,
+    "original_primary_producer_files": 278,
+    "original_source_producer_files": 274,
+    "separate_git_supplement_files": 40,
+    "supplemented_static_producer_closure_complete": true,
+    "producer_omission_note": "The uploaded PRIMARY producer omits 40 historical source-verification Python files and the source execution workflow from its primary root. All 314 original source-producer files were separately authenticated. The 40 unchanged Python files were bound to both the original source and PRIMARY Git trees and copied only into a separately identified retrospective diagnostic root; the source execution workflow was not copied. The strict original PRIMARY archive remains incomplete and unmodified. The separate read-only audit recomputed all 1080 arrays and their 171732 frames to NO_PROMOTION and grants no stage authorization.",
+    "original_source_producer_zip_sha256": "4cc1e427c26d771b8e75194b2d5bbd0b5399423f632b54f6ef6e7e583b1bc957",
+    "independent_source_and_array_audit_status": "COMPLETE_OUTPUTS_WITH_SEPARATE_GIT_BOUND_SOURCE_SUPPLEMENT",
+    "source_authority_sha256": "483be35deb1634bb2d60ffb5c6b539d7b7708cf96e2177b6eec75d5fd275d415",
+    "array_audit_sha256": "483be35deb1634bb2d60ffb5c6b539d7b7708cf96e2177b6eec75d5fd275d415",
+    "supplement_manifest_sha256": "c1b7036ff4e96ce83b33db2b9932bb156ce299bfe13907834e2458b7bae72a50",
+    "original_primary_strict_quality_reader_passed": false,
+    "retrospective_audit_authorizes_replication": false,
+    "new_TTS_calls_during_closure": 0,
+    "new_ASR_calls_during_closure": 0,
+    "new_model_calls_during_closure": 0,
+    "new_training": false,
+    "new_optimizer_updates_during_closure": 0,
+    "threshold_search": false,
+    "replication_opened": false,
+    "replication_permanently_closed": true,
+    "candidate_engineering_validation_allowed": false,
+    "released": false,
+    "installed_software_baseline": "B0",
+    "ssc305_physical": "NOT_RUN",
+    "field_3_5m_frr": null,
+    "natural_continuous_far_per_hour": null,
+    "primary_original_source_dependencies_missing": 41,
+    "source_execution_workflow_not_copied": true,
+    "source_and_array_audit_are_one_combined_report": true,
+    "independently_verified_raw_and_saved_arrays": 1080,
+    "independently_verified_frames": 171732,
+    "all_original_arrays_verified": true,
+    "original_source_admission_recomputed": true
   }
 }
