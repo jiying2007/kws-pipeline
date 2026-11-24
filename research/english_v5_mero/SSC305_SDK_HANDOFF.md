@@ -61,7 +61,7 @@ The numerical result is **NO_PROMOTION**. Relative to the paired control, the ch
 The original producer ZIP omitted 32 `.github` files. A separately identified supplement binds each missing file to the real producer Git tree, Git blob and SHA256; the original artifact is unchanged and is not described as complete. All 17 original input archives and all 120 original source rows were authenticated, and the 84 admitted rows exactly reproduce the original admission. See [the B20 evidence directory](https://github.com/jiying2007/kws-data/tree/main/research/english_v6_b20_results_20261124) and `V6_QUALITY_EVIDENCE.json`.
 
 The installed integration baseline remains **B0**. No B17/B20 candidate is released or substituted into this SDK. This result is development evidence; it provides no measured continuous FAR/h, field 3–5 m FRR, or physical SSC305 result.
-## Latest candidate quality closure — B21 (2026-11-24)
+## Candidate quality closure — B21 (2026-11-24)
 
 The blank-aware positive-retention paired TRAIN experiment completed 192 updates per arm, retaining the 43,876-parameter FSMN-CTC. The existing 96 synthetic originals were reused byte-for-byte. The amended [source run 45378709327](https://github.com/jiying2007/kws-data/actions/runs/45378709327) added 24 fresh natural-speech originals and returned all 600 native observations. Source admission retained 22 synthetic positives, 48 synthetic ordinary utterances and 20 natural utterances from 12 readers.
 
@@ -72,3 +72,32 @@ At gains 1.0 / 0.75 / 0.5, the B21 challenger detected 19 / 19 / 10 of the 22 po
 Strict isolated readback found that the original PRIMARY producer archive omitted historical source-verification dependencies. The PRIMARY root lacks 41 files from the separately saved original 314-file source producer: 40 nonworkflow files and the source execution workflow. Their original bytes are authenticated against that source producer's manifest and Git tree; every existing intersection is unchanged. A separately identified retrospective supplement supplies only the 40 unchanged Python files, each bound to both the source and PRIMARY Git trees; the source execution workflow is not copied. Using this separate diagnostic root, the independent readback reauthenticated all 120 source originals and their 600 native observations, then verified all 1,080 saved arrays and their 171,732 frames and reproduced **NO_PROMOTION**. The combined readback SHA256 is `483be35deb1634bb2d60ffb5c6b539d7b7708cf96e2177b6eec75d5fd275d415`; the supplement manifest SHA256 is `c1b7036ff4e96ce83b33db2b9932bb156ce299bfe13907834e2458b7bae72a50`. The original PRIMARY artifact remains unchanged and incomplete, and the strict production reader is unchanged. This supplemental audit grants no replication, engineering or promotion authorization. Exact artifact and readback identities are recorded in `V6_QUALITY_EVIDENCE.json`.
 
 **B21 replication and candidate engineering remain closed; B0 remains the installed integration baseline.** No B21 pack is released or substituted into this SDK. Closure reads only saved original evidence and makes no new model, TTS, ASR or training calls. This development panel does not measure continuous FAR/h, field 3–5 m FRR, or physical SSC305 performance.
+
+## Latest candidate quality closure — B22 (2026-11-25 Asia/Shanghai)
+
+The experiment identifier remains **20261124**. The [completed B22 TRAIN run 45400279395](https://github.com/jiying2007/kws-data/actions/runs/45400279395) trained one union-retention challenger for **192 updates and 1,847 total forwards**: 1,844 optimization forwards, two checkpoint-reload checks and one ONNX export. It used the unchanged 88 TRAIN originals, 122 positive-retention conditions (the original 120 plus two previously unprotected conditions) and 264 saved ordinary-speech teacher arrays. The 43,876-parameter architecture remained fixed. The original B21 challenger was retained as an immutable historical control, with zero new control updates or forwards; this comparison does not claim a control trained in the same job.
+
+The [source continuation run 45428013301](https://github.com/jiying2007/kws-data/actions/runs/45428013301) preserved all 96 synthetic and 24 natural originals from [source run 45402179335](https://github.com/jiying2007/kws-data/actions/runs/45402179335), and reused its 240 complete phone-observer returns. It made the first 120 calls to each of the three text observers, completing **600 valid native observations** in total without regenerating audio or repeating a consumed observer call. The unchanged source gate admitted **14 synthetic positives, 46 synthetic ordinary utterances and 17 natural originals from 10 readers**, including 10 synthetic paired source groups. The 43 UNKNOWN originals remained in the complete 120-original exposure and overlap denominator and were excluded from model scoring.
+
+The [first B22 PRIMARY run 45431814493](https://github.com/jiying2007/kws-data/actions/runs/45431814493), head `c6ff655ede7631700e8d0c3593273ada2e210983`, completed all **924 forwards**: 77 admitted originals × three fixed gains × four frozen models. The workflow conclusion was `success`; the scientific verdict was **NO_PROMOTION**. The counts below use gains **1.0 / 0.75 / 0.5**, respectively; gains are derived conditions, not independent source samples.
+
+| Frozen model | Positive hits, out of 14 | Natural false events, on 17 originals | Synthetic ordinary false events, on 46 originals |
+| --- | --- | --- | --- |
+| B0 | 13 / 10 / 6 | 8 / 7 / 6 | 1 / 0 / 0 |
+| B9 | 12 / 11 / 8 | 19 / 21 / 20 | 7 / 2 / 0 |
+| Historical B21 control | 13 / 12 / 7 | 6 / 10 / 5 | 1 / 0 / 0 |
+| B22 challenger | 13 / 12 / 6 | 6 / 10 / 5 | 1 / 0 / 0 |
+
+The original B14 gate recovered **zero required positive source families**. It lost one original/gain positive condition, `b22-primary-272-mero-slow` at gain 0.5, against both B0 and the historical control: one lost condition, two reference rows. Natural events at gain 0.75 were **10 versus B0's 7**. Eight natural readers improved against B9, and no added ordinary-event or extra-positive-event reference rows were recorded; those results do not satisfy the remaining frozen gates.
+
+The original PRIMARY artifacts are preserved unchanged:
+
+- Result artifact `14939368185`, 5,089,742 bytes, ZIP SHA256 `b435e484fd8411477be8c3e537172661309a91602490d77d0cca1599c92a49a5`.
+- Producer artifact `14940325352`, 33,094,710 bytes, ZIP SHA256 `47a17903a99958def67191c36f2dfa19b8b8038796d85a3932d21e9011ada226`.
+- Consumed artifact `14938549644`, 384 bytes, ZIP SHA256 `90140702973c61e14dd5ca0dc077ad1136916584b680def79a95ac1ffc1a5536`.
+
+An isolated fail-only readback authenticated all 12 original input archives, all 120 source originals and 600 observations, the complete original Git-bound producers, every consumption journal, and all **924 saved/raw arrays and 145,308 frames**. The PRIMARY producer contains 1,266 files and the source producer 1,262 files; no retrospective source supplement was needed. Two independent reads produced byte-identical reports and recomputed the original B14 verdict as **NO_PROMOTION**. The original PASS-only reader remains unchanged. The separate fail-only reader authenticates this failure and grants no replication, candidate engineering or promotion permission.
+
+The original `RESULT.json` SHA256 is `5196b99be90855a5f8bf83c676df497d0d56d89d19885b7837ff0535452c3d95`. The exact saved quality-lock file SHA256 is `458a8af963dc959dca658b46800efdf1a23e1703cd397aa1b962340bdb6ed56a`; its sorted, compact JSON identity without a trailing newline is `e347323b5f10ed2b17501c511d53a3065adf45ee1446d006356d4097f11c8287`. The complete independent readback SHA256 is `dc94c1495eca5319aac20f90d233e62377d4625fdd9a02bcb7fa2c8aebb69746`. The full small artifact pins, quality lock, code hashes and exact aggregate decision are recorded in [V6_QUALITY_EVIDENCE.json](V6_QUALITY_EVIDENCE.json).
+
+**B22 replication and candidate engineering remain closed; B0 remains the installed integration baseline.** No B22 model pack was created for this SDK or released. This closure uses saved evidence and adds zero training updates, model forwards, TTS or ASR calls. Physical SSC305 execution, field 3–5 m FRR and natural continuous FAR/h remain **NOT_RUN**, with no measured field values or product-promotion claim.
