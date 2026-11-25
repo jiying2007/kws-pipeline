@@ -1,0 +1,8 @@
+{
+  "enabled": false,
+  "manifest_sha256": null,
+  "pipeline_commit": null,
+  "pipeline_files": null,
+  "pipeline_repository": "jiying2007/kws-pipeline",
+  "schema": "english-v6-b28-software-delivery-entry-v1"
+}
