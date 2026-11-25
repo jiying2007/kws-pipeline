@@ -54116,6 +54116,123 @@
         "git_blob_sha1": "1a9d3eaa494922fe2481749741f94b7639ab277a"
       },
       "execution_authority": "none; byte-retention repair only; selection remains null and no delivery, model, source, training or observer execution is authorized"
+    },
+    {
+      "id": "english-v6-b24q1-inert-software-delivery-20261125",
+      "date": "2026-11-25",
+      "base_commit": "1f548040bd1244160a4e004b77ca3d48f40cb1e9",
+      "previous_manifest_sha256": "d842869045c239cdfb89c7f9ca69b5e1793613a8cd48b7664291fb33b312273b",
+      "workflow_source_changed": true,
+      "scope": "Prepare the inert Q1 software delivery adapter and retain all original implementation and workflow identities.",
+      "rationale": "The approved B24Q1 assessment requires a separate candidate identity and complete nested replica proofs. Add a new Q1 wrapper around the exact unchanged once.py byte transport and zero-forward B0/load logic. Increase only the Q1 replication producer quality-lock metadata cap to 1,024,000,000 bytes; legacy schemas and all other roles keep their original caps. Add pure fixture contracts in all three Python optimization modes. Preserve the null selection, exact thirteen frozen SDK files, all 718 retained rows, 834 provenance rows and 223 prior maintenance records. Archive both directly changed originals before registering their new identities. No quality or engineering execution, model selection, field claim, physical-device claim or deployment is authorized by this preparation.",
+      "files": [
+        {
+          "path": ".github/workflows/english-v6-delivery-contract.yml",
+          "before": {
+            "path": ".github/workflows/english-v6-delivery-contract.yml",
+            "mode": "100644",
+            "bytes": 1247,
+            "sha256": "6f3fd4ead07ca4c21a37dc318db8b23bc5027daadef4e59c4d2952ffb7352d96",
+            "git_blob_sha1": "5339f1fee5df61fb04e5cc8ca6919295dcbae73a"
+          },
+          "after": {
+            "path": ".github/workflows/english-v6-delivery-contract.yml",
+            "mode": "100644",
+            "bytes": 1564,
+            "sha256": "2fdb902288c307ba7135145cd2509f891b4c462c6b7a1fa06e430cddb97e2330",
+            "git_blob_sha1": "02c935775c0677d00f9cd8b53a0eda0b97361f96"
+          }
+        },
+        {
+          "path": "research/english_v6_delivery/delivery.py",
+          "before": {
+            "path": "research/english_v6_delivery/delivery.py",
+            "mode": "100644",
+            "bytes": 24506,
+            "sha256": "8bbf23bfe0e0a3d901249a967a25e58d2c3b1a8957c610bdb1018025145fbf52",
+            "git_blob_sha1": "247ebe981452455e54329d1ddee36b2cd7545c27"
+          },
+          "after": {
+            "path": "research/english_v6_delivery/delivery.py",
+            "mode": "100644",
+            "bytes": 24817,
+            "sha256": "bb8a38005aaa226ab0bbe7ef9c248b0c288a49be2444c811d7868aee9cabfa55",
+            "git_blob_sha1": "409fc306d0dafee790d0a1db3386be0000d1feda"
+          }
+        },
+        {
+          "path": "research/english_v6_delivery/once_b24q1.py",
+          "before": null,
+          "after": {
+            "path": "research/english_v6_delivery/once_b24q1.py",
+            "mode": "100644",
+            "bytes": 10103,
+            "sha256": "0b8f120544171a82ce6afe36e8cd13fc7f1b92e510ea0cee178dea9c9c5fe356",
+            "git_blob_sha1": "589df574c2cf337b35b27967a61bb65dbc87dad4"
+          }
+        },
+        {
+          "path": "research/english_v6_delivery/test_once_b24q1.py",
+          "before": null,
+          "after": {
+            "path": "research/english_v6_delivery/test_once_b24q1.py",
+            "mode": "100644",
+            "bytes": 16601,
+            "sha256": "7119c38c0a9c67683b528c1a886e56588c9249847a6a72022da48a939cf5cc01",
+            "git_blob_sha1": "838ec03eefb0b74d04973dfea8548c6a0bd7e203"
+          }
+        },
+        {
+          "path": "research/english_v6_delivery/B24Q1.md",
+          "before": null,
+          "after": {
+            "path": "research/english_v6_delivery/B24Q1.md",
+            "mode": "100644",
+            "bytes": 4664,
+            "sha256": "ca49456e2899eb8749ee3eb41ba804df0447f46bd39d5d03bab8bdea00757d8c",
+            "git_blob_sha1": "5b39f79bef3a3614316586c7b36e70055555ee35"
+          }
+        }
+      ],
+      "preserved_original_files": [
+        {
+          "source_commit": "1f548040bd1244160a4e004b77ca3d48f40cb1e9",
+          "original_path": ".github/workflows/english-v6-delivery-contract.yml",
+          "original": {
+            "path": ".github/workflows/english-v6-delivery-contract.yml",
+            "mode": "100644",
+            "bytes": 1247,
+            "sha256": "6f3fd4ead07ca4c21a37dc318db8b23bc5027daadef4e59c4d2952ffb7352d96",
+            "git_blob_sha1": "5339f1fee5df61fb04e5cc8ca6919295dcbae73a"
+          },
+          "archive": {
+            "path": "research/consolidation/archive/source-revisions/english-v6-b24q1-delivery-20261125/english-v6-delivery-contract.yml.txt",
+            "mode": "100644",
+            "bytes": 1247,
+            "sha256": "6f3fd4ead07ca4c21a37dc318db8b23bc5027daadef4e59c4d2952ffb7352d96",
+            "git_blob_sha1": "5339f1fee5df61fb04e5cc8ca6919295dcbae73a"
+          }
+        },
+        {
+          "source_commit": "1f548040bd1244160a4e004b77ca3d48f40cb1e9",
+          "original_path": "research/english_v6_delivery/delivery.py",
+          "original": {
+            "path": "research/english_v6_delivery/delivery.py",
+            "mode": "100644",
+            "bytes": 24506,
+            "sha256": "8bbf23bfe0e0a3d901249a967a25e58d2c3b1a8957c610bdb1018025145fbf52",
+            "git_blob_sha1": "247ebe981452455e54329d1ddee36b2cd7545c27"
+          },
+          "archive": {
+            "path": "research/consolidation/archive/source-revisions/english-v6-b24q1-delivery-20261125/delivery.py.txt",
+            "mode": "100644",
+            "bytes": 24506,
+            "sha256": "8bbf23bfe0e0a3d901249a967a25e58d2c3b1a8957c610bdb1018025145fbf52",
+            "git_blob_sha1": "247ebe981452455e54329d1ddee36b2cd7545c27"
+          }
+        }
+      ],
+      "execution_authority": "none; inert code preparation only; actual original dual quality and engineering proof plus separately reviewed exact selection required"
     }
   ],
   "current_added_active_workflows": [
@@ -54276,9 +54393,9 @@
     {
       "path": ".github/workflows/english-v6-delivery-contract.yml",
       "mode": "100644",
-      "bytes": 1247,
-      "sha256": "6f3fd4ead07ca4c21a37dc318db8b23bc5027daadef4e59c4d2952ffb7352d96",
-      "git_blob_sha1": "5339f1fee5df61fb04e5cc8ca6919295dcbae73a"
+      "bytes": 1564,
+      "sha256": "2fdb902288c307ba7135145cd2509f891b4c462c6b7a1fa06e430cddb97e2330",
+      "git_blob_sha1": "02c935775c0677d00f9cd8b53a0eda0b97361f96"
     }
   ],
   "current_source_revision": {

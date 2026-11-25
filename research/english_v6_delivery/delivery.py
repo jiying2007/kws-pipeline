@@ -191,7 +191,12 @@ def manifest_contract(value):
              and lock["panel"] == panel and re.fullmatch(r"english-v6-b[0-9]+[a-z0-9]*-original-quality-lock-v1", lock["schema"]),
              "full original panel lock; a PASS summary has no authority")
         for role in ("result", "producer", "consumed"):
-            artifact_pin(lock[role], 512_000_000 if panel == "replication" and role == "producer" else LIMIT)
+            limit = 512_000_000 if panel == "replication" and role == "producer" else LIMIT
+            if lock["schema"] == "english-v6-b24q1-original-quality-lock-v1":
+                need(value["candidate_id"] == "B24Q1", "Q1 lock belongs only to the Q1 candidate")
+                if panel == "replication" and role == "producer":
+                    limit = 1_024_000_000
+            artifact_pin(lock[role], limit)
         need(len({lock[k]["id"] for k in ("result", "producer", "consumed")}) == 3
              and len({(lock[k]["run_id"], lock[k]["run_head"]) for k in ("result", "producer", "consumed")}) == 1,
              "three distinct same-run quality originals")

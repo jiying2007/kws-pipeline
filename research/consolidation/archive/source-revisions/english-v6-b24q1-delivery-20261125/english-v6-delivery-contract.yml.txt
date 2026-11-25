@@ -1,0 +1,30 @@
+name: Hey Mero software delivery source contract
+on:
+  pull_request:
+    paths:
+      - research/english_v6_delivery/**
+      - .github/workflows/english-v6-delivery-contract.yml
+  push:
+    branches: [main]
+    paths:
+      - research/english_v6_delivery/**
+      - .github/workflows/english-v6-delivery-contract.yml
+permissions:
+  contents: read
+jobs:
+  source-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - name: Invented transport fixtures; no compiler, model, audio or publisher
+        run: |
+          python3 -I -S -B research/english_v6_delivery/test_delivery.py -v
+          python3 -I -S -B -O research/english_v6_delivery/test_delivery.py -v
+          python3 -I -S -B -OO research/english_v6_delivery/test_delivery.py -v
+          python3 -I -S -B research/english_v6_delivery/test_once.py -v
+          python3 -I -S -B -O research/english_v6_delivery/test_once.py -v
+          python3 -I -S -B -OO research/english_v6_delivery/test_once.py -v
+          python3 -I -S -B research/english_v6_delivery/delivery.py check
+          python3 -I -S -B research/english_v6_delivery/once.py check
