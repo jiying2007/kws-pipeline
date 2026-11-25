@@ -119,7 +119,9 @@
     "physical_ssc305": "NOT_RUN",
     "product_promotion_allowed": false,
     "model_choice": "B0_FROZEN_SOFTWARE_BASELINE_B1_RESEARCH_ONLY",
-    "no_independent_frr_or_far": true
+    "no_independent_frr_or_far": true,
+    "latest_completed_assessment": "B24Q1",
+    "latest_completed_assessment_gate": "NO_PROMOTION"
   },
   "restrictions": {
     "no_old_audio_regeneration": true,
@@ -5427,5 +5429,499 @@
     "field_3_5m_frr_status": "NOT_RUN",
     "natural_continuous_far_per_hour": null,
     "natural_continuous_far_status": "NOT_RUN"
+  },
+  "b24q1_fixed_weight_primary_no_promotion": {
+    "actual_forwards": 1008,
+    "assessment_sha256": "681ddb42432bd11dfef0157d2f1c95f7e02824c3a2ed7da64ce9a12bdf9c3139",
+    "experiment_id": "B24Q1",
+    "failure_counts": {
+      "added_natural_conditions": 9,
+      "added_natural_originals": 6,
+      "added_ordinary_conditions": 11,
+      "added_ordinary_originals": 8,
+      "added_ordinary_reference_rows": 13,
+      "added_synthetic_conditions": 2,
+      "added_synthetic_originals": 2,
+      "extra_positive_event_reference_rows": 0,
+      "lost_positive_conditions": 6,
+      "lost_positive_groups": 2,
+      "lost_positive_originals": 3,
+      "lost_positive_reference_rows": 6,
+      "natural_above_B0_gains": [],
+      "natural_readers_improved_vs_B9": 6,
+      "restored_positive_groups": 16
+    },
+    "gains": [
+      "1.0",
+      "0.75",
+      "0.5"
+    ],
+    "gains_are_derived_conditions_not_independent_originals": true,
+    "independent_readback": {
+      "all_original_arrays_verified": true,
+      "bytes": 56207,
+      "canonicalization": "ASCII JSON; sorted keys; compact separators; no newline; no NaN",
+      "new_model_calls": 0,
+      "new_observer_calls": 0,
+      "new_source_calls": 0,
+      "original_PASS_reader_sha256": "0192a0ec7b6b12c8a8035cbaae2d362f182345da015313a5abf7427c394f0137",
+      "original_inputs": 12,
+      "original_lock_bytes": 1013,
+      "original_lock_path": "ORIGINAL_LOCK.json",
+      "original_lock_sha256": "fa8da8d60bd7eaed2dc4dd4a179882bb09f55f65dbc70aff73ba9d8669f135ee",
+      "original_output_artifacts": 3,
+      "original_producer_git_verified": true,
+      "original_source_admission_recomputed": true,
+      "path": "READBACK.json",
+      "process_exit": 0,
+      "producer_file_counts": {
+        "primary_producer": 1550,
+        "source_producer": 1546
+      },
+      "reader_path": "automation/english_v6_b24q1_primary_failure.py",
+      "reader_sha256": "23d5d45b9b3630e9a561fc3ce181c9d80898e1afb33a492f917f185fac5bbe5b",
+      "retrospective_producer_supplement_files": 0,
+      "sha256": "9cd5df45c5b9ca22b0eb56f3fdda4788b2420e906a35bb754af9c23eb38be62f",
+      "stderr_bytes": 0,
+      "url": "https://github.com/jiying2007/kws-data/blob/7c93681e8c1adc8483175712a378fe5a43717e01/research/english_v6_b24q1_primary_no_promotion_20261125/READBACK.json",
+      "reader_url": "https://github.com/jiying2007/kws-data/blob/7c93681e8c1adc8483175712a378fe5a43717e01/automation/english_v6_b24q1_primary_failure.py",
+      "quality_lock_url": "https://github.com/jiying2007/kws-data/blob/7c93681e8c1adc8483175712a378fe5a43717e01/research/english_v6_b24q1_primary_no_promotion_20261125/ORIGINAL_LOCK.json"
+    },
+    "logits_sha256": "ca8863539c5d364432f2a780b96008674ba6c47a466f3ae7b725cc225fd95a28",
+    "model_forward_calls": {
+      "B0": 252,
+      "B9": 252,
+      "challenger": 252,
+      "control": 252
+    },
+    "model_pt_sha256": {
+      "B0": "1ae8a2b20c8b6991f925dd4c626af2f36b308adee8733a3a7215818716f565d7",
+      "B9": "7dba86a3fcda6e5f05cb80b414dc372c70a5a03b3aee783f168441a4871e7655",
+      "challenger": "f6fce146324cab9286814bab26a594ef67cca58155fa2d2fb5f7fd9370992bb4",
+      "control": "784def9df6c2a8bfbecdb7ba2d7b70630337a1cda72561c05392327aa980297f"
+    },
+    "model_roles": {
+      "B0": "frozen software baseline",
+      "B9": "original B9_control role",
+      "challenger": "original B24 final checkpoint",
+      "control": "immutable original B23 checkpoint"
+    },
+    "optimizer_updates": 0,
+    "original_B14_decision_recomputed_unchanged": true,
+    "original_quality_lock": {
+      "consumed": {
+        "bytes": 386,
+        "id": 15003610761,
+        "run_head": "d04924467cafc6ce4438ac18c91880975d4d4205",
+        "run_id": 45571993561,
+        "sha256": "1539f58ebc91dd25b9a0d9c724259bdeebdf70b9ba1f80dbaaec18c855b03f83"
+      },
+      "evaluator_sha256": "0ff27034c441b12b69f8b0bf670262116801cd72e0e134fa04a6b09f13029975",
+      "inputs_sha256": "c76fb74be7253b5b570900e5fc82623255d37c0422960e13c680138c2fcd00ac",
+      "original_result_sha256": "dfba209053dc95093f35bada20e93bf10c432ad191290393501a2985bbacee13",
+      "panel": "primary",
+      "producer": {
+        "bytes": 37487275,
+        "id": 15003567331,
+        "run_head": "d04924467cafc6ce4438ac18c91880975d4d4205",
+        "run_id": 45571993561,
+        "sha256": "a0076150e8f2a8f464f987acce80fd6cfd17ffce38fc67d137f95b0f8e58a3aa"
+      },
+      "producer_manifest_sha256": "8471a82d0217f6f3451424bbdf8cf7732ad6fbf2b06984673eea9639563b9469",
+      "result": {
+        "bytes": 4685498,
+        "id": 15003622071,
+        "run_head": "d04924467cafc6ce4438ac18c91880975d4d4205",
+        "run_id": 45571993561,
+        "sha256": "0020561dadd2f0d04e2f469595bc66f0b881abb96b421cf7101ff81fc9f1728e"
+      },
+      "schema": "english-v6-b24q1-original-quality-lock-v1"
+    },
+    "original_result_sha256": "dfba209053dc95093f35bada20e93bf10c432ad191290393501a2985bbacee13",
+    "panel_gate": "NO_PROMOTION",
+    "permanent_scope": {
+      "Q1_automatic_next_assessment_allowed": false,
+      "Q1_candidate_engineering_validation_allowed": false,
+      "Q1_consumed": true,
+      "Q1_replay_allowed": false,
+      "Q1_replication_open_allowed": false,
+      "Q1_replication_opened": false,
+      "Q1_sdk_candidate_pack_created": false,
+      "cal_locked_access": false,
+      "field_3_5m_frr": null,
+      "installed_software_baseline": "B0",
+      "natural_continuous_far_per_hour": null,
+      "old_B24_and_B24R1_SOURCE_STOP_preserved": true,
+      "old_B25_and_B26_openers_unchanged": true,
+      "old_B25_opening_satisfied": false,
+      "old_B26_opening_satisfied": false,
+      "physical_ssc305": "NOT_RUN",
+      "product_released": false,
+      "promotion_allowed": false,
+      "software_selection": null
+    },
+    "primary_run": {
+      "attempt": 1,
+      "branch": "research/en-v6-b24q1-primary-scoring-once-20261125",
+      "conclusion": "success",
+      "head": "d04924467cafc6ce4438ac18c91880975d4d4205",
+      "id": 45571993561,
+      "prepared_parent": "969be023bf8e835429f01a268a7bd19247a4599f",
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/45571993561",
+      "workflow": ".github/workflows/english-v6-b24q1-primary-model-eval-once.yml"
+    },
+    "publication_scope": "Existing public artifact identities, independently recomputed aggregate quality result, and offline fail-only reader; no audio, transcript, model weights, raw provider payloads or credentials are added.",
+    "quality_gates": {
+      "improve_at_least_two_natural_readers_vs_B9": {
+        "actual": 6,
+        "minimum": 2,
+        "passed": true
+      },
+      "natural_total_at_each_gain_not_above_B0": {
+        "passed": true,
+        "violating_gains": []
+      },
+      "no_extra_positive_events_vs_B9_or_control": {
+        "passed": true,
+        "violating_reference_rows": 0
+      },
+      "no_ordinary_additions_vs_B9_or_control": {
+        "passed": false,
+        "violating_conditions": 11,
+        "violating_reference_rows": 13
+      },
+      "preserve_each_B0_or_control_positive": {
+        "lost_conditions": 6,
+        "passed": false
+      },
+      "recover_at_least_one_positive_group": {
+        "actual": 16,
+        "minimum": 1,
+        "passed": true
+      }
+    },
+    "raw_output_count": 1008,
+    "recorded_at_utc": "2026-11-25T08:26:45.492630+00:00",
+    "recorded_date_asia_shanghai": "2026-11-25",
+    "saved_array_count": 1008,
+    "schema": "english-v6-b24q1-original-primary-no-promotion-closure-v1",
+    "source": {
+      "all_original_exposed_people": 36,
+      "all_original_exposure_count": 120,
+      "all_primary_and_reserved_people_remain_excluded": 72,
+      "native_slot_accounting": {
+        "maximum_per_panel": 600,
+        "per_provider": {
+          "lv60": {
+            "attempted": 120,
+            "fatal": 0,
+            "invalid_empty": 0,
+            "planned": 120,
+            "returned": 120,
+            "unknown": 0,
+            "valid": 120
+          },
+          "parakeet": {
+            "attempted": 120,
+            "fatal": 0,
+            "invalid_empty": 0,
+            "planned": 120,
+            "returned": 120,
+            "unknown": 0,
+            "valid": 120
+          },
+          "qwen": {
+            "attempted": 120,
+            "fatal": 0,
+            "invalid_empty": 0,
+            "planned": 120,
+            "returned": 120,
+            "unknown": 0,
+            "valid": 120
+          },
+          "whisper": {
+            "attempted": 120,
+            "fatal": 0,
+            "invalid_empty": 0,
+            "planned": 120,
+            "returned": 120,
+            "unknown": 0,
+            "valid": 120
+          },
+          "xlsr": {
+            "attempted": 120,
+            "fatal": 0,
+            "invalid_empty": 0,
+            "planned": 120,
+            "returned": 120,
+            "unknown": 0,
+            "valid": 120
+          }
+        },
+        "total": {
+          "attempted": 600,
+          "fatal": 0,
+          "invalid_empty": 0,
+          "planned": 600,
+          "returned": 600,
+          "unknown": 0,
+          "valid": 600
+        }
+      },
+      "observer_eligible_rows": 120,
+      "partition": {
+        "five_valid_unqualified": 36,
+        "pre_observer_rejected": 0,
+        "qualified": 84,
+        "quarantined_invalid_empty": 0
+      },
+      "quarantined_kws_forwards": 0,
+      "sealed_replication_people": 36,
+      "source_coverage": {
+        "natural_originals": 12,
+        "natural_speakers": 9,
+        "synthetic_ordinary": 47,
+        "synthetic_paired": 19,
+        "synthetic_positive": 25
+      },
+      "source_gate": "SOURCE_GATE_PASS"
+    },
+    "source_run": {
+      "head": "3f04370dde7c6c0d9521c7d9227d3dec37417929",
+      "id": 45554635013,
+      "source_pin": {
+        "bytes": 367799776,
+        "id": 14996004110,
+        "run_head": "3f04370dde7c6c0d9521c7d9227d3dec37417929",
+        "run_id": 45554635013,
+        "sha256": "a9f24a791583066ecb6fb78d2ac3f2f36bc172301145085de95b6ec14bce96df"
+      },
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/45554635013"
+    },
+    "status": "COMPLETE_ORIGINAL_PRIMARY_NO_PROMOTION_INDEPENDENTLY_VERIFIED",
+    "summary": {
+      "natural_ordinary": {
+        "B0": {
+          "0.5": {
+            "events": 2,
+            "originals": 12,
+            "with_event": 2
+          },
+          "0.75": {
+            "events": 5,
+            "originals": 12,
+            "with_event": 5
+          },
+          "1.0": {
+            "events": 5,
+            "originals": 12,
+            "with_event": 5
+          }
+        },
+        "B9": {
+          "0.5": {
+            "events": 12,
+            "originals": 12,
+            "with_event": 9
+          },
+          "0.75": {
+            "events": 14,
+            "originals": 12,
+            "with_event": 9
+          },
+          "1.0": {
+            "events": 15,
+            "originals": 12,
+            "with_event": 8
+          }
+        },
+        "challenger": {
+          "0.5": {
+            "events": 2,
+            "originals": 12,
+            "with_event": 2
+          },
+          "0.75": {
+            "events": 5,
+            "originals": 12,
+            "with_event": 5
+          },
+          "1.0": {
+            "events": 3,
+            "originals": 12,
+            "with_event": 3
+          }
+        },
+        "control": {
+          "0.5": {
+            "events": 1,
+            "originals": 12,
+            "with_event": 1
+          },
+          "0.75": {
+            "events": 0,
+            "originals": 12,
+            "with_event": 0
+          },
+          "1.0": {
+            "events": 0,
+            "originals": 12,
+            "with_event": 0
+          }
+        }
+      },
+      "synthetic_ordinary": {
+        "B0": {
+          "0.5": {
+            "events": 0,
+            "originals": 47,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 1,
+            "originals": 47,
+            "with_event": 1
+          },
+          "1.0": {
+            "events": 2,
+            "originals": 47,
+            "with_event": 2
+          }
+        },
+        "B9": {
+          "0.5": {
+            "events": 2,
+            "originals": 47,
+            "with_event": 2
+          },
+          "0.75": {
+            "events": 2,
+            "originals": 47,
+            "with_event": 2
+          },
+          "1.0": {
+            "events": 4,
+            "originals": 47,
+            "with_event": 4
+          }
+        },
+        "challenger": {
+          "0.5": {
+            "events": 0,
+            "originals": 47,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 1,
+            "originals": 47,
+            "with_event": 1
+          },
+          "1.0": {
+            "events": 1,
+            "originals": 47,
+            "with_event": 1
+          }
+        },
+        "control": {
+          "0.5": {
+            "events": 0,
+            "originals": 47,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 0,
+            "originals": 47,
+            "with_event": 0
+          },
+          "1.0": {
+            "events": 0,
+            "originals": 47,
+            "with_event": 0
+          }
+        }
+      },
+      "synthetic_positive": {
+        "B0": {
+          "0.5": {
+            "events": 10,
+            "originals": 25,
+            "with_event": 10
+          },
+          "0.75": {
+            "events": 17,
+            "originals": 25,
+            "with_event": 17
+          },
+          "1.0": {
+            "events": 20,
+            "originals": 25,
+            "with_event": 20
+          }
+        },
+        "B9": {
+          "0.5": {
+            "events": 13,
+            "originals": 25,
+            "with_event": 13
+          },
+          "0.75": {
+            "events": 21,
+            "originals": 25,
+            "with_event": 21
+          },
+          "1.0": {
+            "events": 22,
+            "originals": 25,
+            "with_event": 22
+          }
+        },
+        "challenger": {
+          "0.5": {
+            "events": 8,
+            "originals": 25,
+            "with_event": 8
+          },
+          "0.75": {
+            "events": 18,
+            "originals": 25,
+            "with_event": 18
+          },
+          "1.0": {
+            "events": 18,
+            "originals": 25,
+            "with_event": 18
+          }
+        },
+        "control": {
+          "0.5": {
+            "events": 0,
+            "originals": 25,
+            "with_event": 0
+          },
+          "0.75": {
+            "events": 0,
+            "originals": 25,
+            "with_event": 0
+          },
+          "1.0": {
+            "events": 0,
+            "originals": 25,
+            "with_event": 0
+          }
+        }
+      }
+    },
+    "training_assessment_sha256": "3afdb17e822bb0b4a49757ac116a28101ff9f1447b22429305299047410fe2ad",
+    "training_design_sha256": "4fa88cf4050aa276323a7306f21d53163d47c27e3c011c2547d5eeebe6980309",
+    "verified_frame_count": 128340,
+    "evidence_origin": {
+      "repository": "jiying2007/kws-data",
+      "commit": "7c93681e8c1adc8483175712a378fe5a43717e01",
+      "path": "research/english_v6_b24q1_primary_no_promotion_20261125/CLOSURE.json",
+      "bytes": 13530,
+      "sha256": "d98d5ae8ea8383c0500e90fea171568156fe6f3cea1076818d919003a3645fb8",
+      "url": "https://github.com/jiying2007/kws-data/blob/7c93681e8c1adc8483175712a378fe5a43717e01/research/english_v6_b24q1_primary_no_promotion_20261125/CLOSURE.json",
+      "pull_request": 379
+    }
   }
 }

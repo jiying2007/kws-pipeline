@@ -123,7 +123,7 @@ An independent isolated fail-only reader reauthenticated all 12 original input Z
 
 **B23 replication and candidate engineering remain closed; B0 remains the installed integration baseline.** No B23 model pack was created for this SDK or released. This closure adds zero training, model, TTS or ASR calls. Physical SSC305 execution, real-human 3–5 m FRR and natural continuous FAR/h remain **NOT_RUN**.
 
-## Latest candidate source closure — B24 (2026-11-25 Asia/Shanghai)
+## Historical candidate source closure — B24 (2026-11-25 Asia/Shanghai)
 
 **B24's first SOURCE execution is permanently closed at `FAILED_EMPTY_NATIVE_TRANSCRIPT`. No B24 PRIMARY model scoring was performed.** The [original source run 45456888767](https://github.com/jiying2007/kws-data/actions/runs/45456888767), head `273e7bd0ae4b16972236f77aacae0eb5d1a12520`, concluded `failure`. The generated audio, every returned native payload and the original consumption records are retained unchanged.
 
@@ -149,3 +149,22 @@ The [original readback job](https://github.com/jiying2007/kws-data/actions/runs/
 An independent saved-byte readback through [the isolated source-stop reader](https://github.com/jiying2007/kws-data/blob/e3117e897d478a76192f2dac1e0ac3149d12be6f/automation/english_v6_b24r1_b24_source_failure.py) verified all 14 original artifact digests and CRCs, all **1,399 original producer Git blobs**, every whole WAV/PCM and synthetic native chunk for all 120 originals, all five complete observer file inventories, and every provider's 120 journal slots. From the original captured code, it reparsed **528 valid native payloads, 18,258 complete phone frames and the same rejected empty return**, with no checkout fallback or scientific runtime. Its final canonical report is 11,055 bytes, SHA256 **`4063a57f1d20ffe9f534248067e1adcbe9c25ab65cb5bd3682b5db44d3ba39d8`**. The exact 14 artifact pins, original lock and reader identity are recorded in [V6_QUALITY_EVIDENCE.json](V6_QUALITY_EVIDENCE.json); raw API payloads and transcripts are not copied into this SDK handoff.
 
 **B0 remains the installed integration baseline.** The old B24 SOURCE cannot retry or continue; its 120 PCM identities and all 72 original primary/reserve people remain excluded from later independent panels. The original 36-person sealed reserve stays unopened. B24 replication, candidate engineering and SDK model-pack release remain closed. A source failure does not satisfy B25's required complete PRIMARY `NO_PROMOTION` opening, so no B25 training follows from this record. This closure adds zero training updates, model, TTS or ASR calls. Physical SSC305 execution, real-human 3–5 m FRR and natural continuous FAR/h remain **NOT_RUN**.
+
+
+## Latest completed fixed-weight assessment — B24Q1 (2026-11-25 Asia/Shanghai)
+
+**The separately approved B24Q1 PRIMARY is complete and independently verified as NO_PROMOTION.** The [original run 45571993561](https://github.com/jiying2007/kws-data/actions/runs/45571993561), head d04924467cafc6ce4438ac18c91880975d4d4205, completed all **1,008 forwards** on 84 qualified originals: 25 synthetic positives, 47 synthetic ordinary originals and 12 natural originals from nine readers. All 120 source identities and 600 valid native observations remain accounted for; 36 five-valid originals were unqualified, with no quarantine or missing native return.
+
+The table gives gain **1.0 / 0.75 / 0.5**. Positive counts are originals with events; ordinary counts are total events. Gains are derived conditions of the same originals.
+
+| Cohort | B0 | B9 control role | Historical B23 control | B24 challenger |
+| --- | --- | --- | --- | --- |
+| Synthetic positive hits / 25 | 20 / 17 / 10 | 22 / 21 / 13 | 0 / 0 / 0 | 18 / 18 / 8 |
+| Synthetic ordinary events / 47 originals | 2 / 1 / 0 | 4 / 2 / 2 | 0 / 0 / 0 | 1 / 1 / 0 |
+| Natural ordinary events / 12 originals | 5 / 5 / 2 | 15 / 14 / 12 | 0 / 0 / 1 | 3 / 5 / 2 |
+
+B24 recovered 16 B9-recoverable positive groups and improved six natural reader groups. It nevertheless lost six B0-positive original/gain conditions on three originals, and increased ordinary events in 11 conditions on eight originals (13 reference comparisons). No additional positive duplicate event or natural total above B0 occurred. The two failed per-original preservation conditions make the unchanged B14 result NO_PROMOTION.
+
+The isolated fail-only reader reopened all 12 original input ZIPs and the three original output ZIPs, authenticated the complete source/native/TRAIN ancestry and both original Git-bound producer roots, and independently verified **all 1,008 saved/raw arrays and 128,340 frames**. It reproduced the original decision with zero new model, source or observer calls and no retrospective producer supplement. Canonical readback SHA-256 is **9cd5df45c5b9ca22b0eb56f3fdda4788b2420e906a35bb754af9c23eb38be62f**. [The immutable complete evidence record](https://github.com/jiying2007/kws-data/tree/7c93681e8c1adc8483175712a378fe5a43717e01/research/english_v6_b24q1_primary_no_promotion_20261125) includes the original artifact lock, complete readback, aggregate closure and exact file identities.
+
+**B0 remains the installed integration baseline.** Q1 is consumed; its sealed replica and candidate engineering stay unopened, and no Q1 pack is selected or installed. All 72 Q1 primary/reserve people remain excluded from future independent panels. The original B24 and B24R1 SOURCE stops and old B25/B26 opening conditions remain unchanged. Physical SSC305, real-human 3–5 m FRR, natural continuous FAR/hour and product calibration remain unmeasured.
