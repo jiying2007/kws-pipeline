@@ -14,7 +14,8 @@ from verify_research_sources import (ARM, DISABLED_ARM, ENGLISH_FINAL_EMBEDDING_
                                     ENGLISH_BACKBONE_PARITY_WORKFLOW, ENGLISH_MEL_SPECIALIZATION_PATHS,
                                     ENGLISH_MEL_SPECIALIZATION_WORKFLOW, ENGLISH_STREAM_INTEGRATION_PATHS,
                                     ENGLISH_STREAM_INTEGRATION_WORKFLOW, ENGLISH_STREAM_PERFORMANCE_PATHS,
-                                    ENGLISH_STREAM_PERFORMANCE_WORKFLOW, check_file, relative, verify)
+                                    ENGLISH_STREAM_PERFORMANCE_WORKFLOW, ENGLISH_V6_B28_DELIVERY_CONTRACT_WORKFLOW,
+                                    check_file, relative, verify)
 from run_research_source_checks import selected_checks
 
 class RetentionTests(unittest.TestCase):
@@ -543,6 +544,55 @@ class RetentionTests(unittest.TestCase):
         self.manifest['current_added_active_workflows'].append(self.file(lookalike, raw))
         with self.assertRaisesRegex(ValueError, 'unexpected active workflow addition'):
             verify(self.root, self.manifest)
+    def add_b28_delivery_workflow(self):
+        self.add_mel_specialization_workflow()
+        self.add_stream_integration_sources()
+        self.add_stream_performance_sources()
+        for name in (ENGLISH_STREAM_INTEGRATION_WORKFLOW, ENGLISH_STREAM_PERFORMANCE_WORKFLOW,
+                     '.github/workflows/english-head-calibrated-threshold.yml',
+                     '.github/workflows/english-v5-mero-contract.yml',
+                     '.github/workflows/english-v6-delivery-contract.yml',
+                     ENGLISH_V6_B28_DELIVERY_CONTRACT_WORKFLOW):
+            row = self.file(name, b'name: invented metadata-only delivery contract\n')
+            self.manifest['allowed_new_active_workflows'].append(name)
+            self.manifest['current_added_active_workflows'].append(row)
+        return row
+    def test_b28_delivery_workflow_requires_exact_registered_addition(self):
+        current = self.add_b28_delivery_workflow()
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        self.manifest['allowed_new_active_workflows'].pop()
+        self.manifest['current_added_active_workflows'].pop()
+        with self.assertRaisesRegex(ValueError, 'active workflow inventory changed'):
+            verify(self.root, self.manifest)
+        (self.root / current['path']).unlink()
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        lookalike = '.github/workflows/english-v6-b28-delivery-contract-extra.yml'
+        self.manifest['allowed_new_active_workflows'].append(lookalike)
+        self.manifest['current_added_active_workflows'].append(self.file(lookalike, b'name: invented metadata-only contract\n'))
+        with self.assertRaisesRegex(ValueError, 'unexpected active workflow addition'):
+            verify(self.root, self.manifest)
+    def test_b28_delivery_workflow_requires_exact_current_identity_and_inventory(self):
+        current = self.add_b28_delivery_workflow()
+        path = self.root / current['path']
+        raw = path.read_bytes()
+        for key, value in (('bytes', True), ('bytes', current['bytes'] + 1), ('mode', '100755'),
+                           ('sha256', '0' * 64), ('git_blob_sha1', '0' * 40)):
+            with self.subTest(field=key):
+                self.manifest['current_added_active_workflows'][-1] = dict(current, **{key: value})
+                with self.assertRaisesRegex(ValueError, 'byte count|mode|identity changed'):
+                    verify(self.root, self.manifest)
+        self.manifest['current_added_active_workflows'][-1] = current
+        path.write_bytes(raw.replace(b'invented', b'Invented'))
+        with self.assertRaisesRegex(ValueError, 'identity changed'): verify(self.root, self.manifest)
+        path.write_bytes(raw)
+        self.manifest['current_added_active_workflows'].pop()
+        with self.assertRaisesRegex(ValueError, 'current added workflow identity'): verify(self.root, self.manifest)
+        self.manifest['current_added_active_workflows'].append(current)
+        path.unlink()
+        with self.assertRaisesRegex(ValueError, 'missing retained file'): verify(self.root, self.manifest)
+        path.write_bytes(raw)
+        self.file('.github/workflows/unreviewed-extra.yml', b'name: unreviewed\n')
+        with self.assertRaisesRegex(ValueError, 'active workflow inventory changed'): verify(self.root, self.manifest)
     def test_changed_bytes(self):
         (self.root/self.manifest['files'][0]['path']).write_text('changed')
         with self.assertRaises(ValueError):verify(self.root,self.manifest)
