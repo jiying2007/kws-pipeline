@@ -186,12 +186,20 @@ def manifest_contract(value):
     locks = value["quality_locks"]
     need(type(locks) is dict and set(locks) == {"primary", "replication"}, "two original quality locks")
     for panel, lock in locks.items():
-        need(type(lock) is dict and set(lock) == {"schema", "panel", "result", "producer", "consumed",
-             "evaluator_sha256", "inputs_sha256", "producer_manifest_sha256", "original_result_sha256"}
+        b27 = type(lock) is dict and lock.get("schema") == "english-v6-b27-original-quality-lock-v1"
+        fields = {"schema", "panel", "result", "producer", "consumed",
+                  "evaluator_sha256", "inputs_sha256", "producer_manifest_sha256", "original_result_sha256"}
+        if b27:
+            fields.add("external_proof_binding_sha256")
+        need((value["candidate_id"] == "B27") is b27,
+             "B27 locks and complete external proof belong only to the B27 candidate")
+        need(type(lock) is dict and set(lock) == fields
              and lock["panel"] == panel and re.fullmatch(r"english-v6-b[0-9]+[a-z0-9]*-original-quality-lock-v1", lock["schema"]),
              "full original panel lock; a PASS summary has no authority")
         for role in ("result", "producer", "consumed"):
             limit = 512_000_000 if panel == "replication" and role == "producer" else LIMIT
+            if b27:
+                limit = LIMIT  # Historical proof remains external, never nested in this role.
             if lock["schema"] == "english-v6-b24q1-original-quality-lock-v1":
                 need(value["candidate_id"] == "B24Q1", "Q1 lock belongs only to the Q1 candidate")
                 if panel == "replication" and role == "producer":
@@ -202,6 +210,10 @@ def manifest_contract(value):
              "three distinct same-run quality originals")
         for key in ("evaluator_sha256", "inputs_sha256", "producer_manifest_sha256", "original_result_sha256"):
             need(type(lock[key]) is str and re.fullmatch(r"[0-9a-f]{64}", lock[key]), "full original quality digest")
+        if b27:
+            need(type(lock["external_proof_binding_sha256"]) is str
+                 and re.fullmatch(r"[0-9a-f]{64}", lock["external_proof_binding_sha256"]),
+                 "exact complete original B27 external proof binding digest")
     need(locks["primary"]["schema"] == locks["replication"]["schema"]
          and locks["primary"]["result"]["run_id"] != locks["replication"]["result"]["run_id"], "two independent original panel executions")
     need(type(value["readback"]) is dict and set(value["readback"]) == {"report", "verifier"},
