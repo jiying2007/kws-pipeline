@@ -53986,6 +53986,136 @@
           }
         }
       ]
+    },
+    {
+      "id": "english-v6-b24r1-delivery-once-source-retention-20261125",
+      "date": "2026-11-25",
+      "base_commit": "c62e47310dd2bbd54962ba1d942c611ab42ca963",
+      "source_commit": "371474901c8c1ec594eb023634ec0d58aabbc77e",
+      "source_tree": "dd99baee0b9fe4fee591060d916770056b745cad",
+      "previous_manifest_sha256": "b49c3912cf71972cf90947ca42b710ab0125fa842457b1ee53192be7739bfd70",
+      "workflow_source_changed": true,
+      "registration_changes_workflow_source": false,
+      "scope": "Register the five reviewed inert delivery-entry source changes and the exact current offline delivery-contract workflow; retain both superseded originals separately.",
+      "rationale": "PR 871 CI run 45537914347, python-contracts job 138948986870, correctly rejected the stale 954-byte active delivery-contract pin after four offline test/check lines were added. Update only this current workflow identity and append exact before/after provenance for all five already-reviewed source changes. Preserve all 718 original retained files, 834 provenance rows, 222 earlier maintenance records, the separate PR485 original CI archive, current ci.yml, every other active-workflow pin, and every registered research source group. test_delivery.py and the three new delivery files are outside the original retained set and registered current source groups, so their explicit maintenance identities do not replace any historical file pin. Archive the exact pre-change workflow and test bytes. No verifier, test expectation, scientific code, gate, selection, original result or execution authority is changed by this retention repair.",
+      "files": [
+        {
+          "path": ".github/workflows/english-v6-delivery-contract.yml",
+          "before": {
+            "path": ".github/workflows/english-v6-delivery-contract.yml",
+            "mode": "100644",
+            "bytes": 954,
+            "sha256": "88da01fcd18994d4f94b8627317d5d5be906c037cb14516409a3e8242e202f7c",
+            "git_blob_sha1": "34add4427a58a3da8f8ddf977a5922c46352e176"
+          },
+          "after": {
+            "path": ".github/workflows/english-v6-delivery-contract.yml",
+            "mode": "100644",
+            "bytes": 1247,
+            "sha256": "6f3fd4ead07ca4c21a37dc318db8b23bc5027daadef4e59c4d2952ffb7352d96",
+            "git_blob_sha1": "5339f1fee5df61fb04e5cc8ca6919295dcbae73a"
+          }
+        },
+        {
+          "path": "research/english_v6_delivery/ONE_SHOT.md",
+          "before": null,
+          "after": {
+            "path": "research/english_v6_delivery/ONE_SHOT.md",
+            "mode": "100644",
+            "bytes": 7792,
+            "sha256": "9ffc183eefc49c3db7d71b88d128e80d6e9779d461cd8f71ffdd0e49dae5b830",
+            "git_blob_sha1": "248908c43446b624ffc2be622609a6505d1ba0dc"
+          }
+        },
+        {
+          "path": "research/english_v6_delivery/once.py",
+          "before": null,
+          "after": {
+            "path": "research/english_v6_delivery/once.py",
+            "mode": "100644",
+            "bytes": 22800,
+            "sha256": "30cb080cc58b72ed9ed22ce50bb27081a51c85074a851be1e34c55f7257246dc",
+            "git_blob_sha1": "d0f698a308ab2c8435ec3496c426cd7b0a84f4ea"
+          }
+        },
+        {
+          "path": "research/english_v6_delivery/test_delivery.py",
+          "before": {
+            "path": "research/english_v6_delivery/test_delivery.py",
+            "mode": "100644",
+            "bytes": 17035,
+            "sha256": "8b0c75061b8445c20dac979b03c545800825afc8f13f255a834c86cd946de4c0",
+            "git_blob_sha1": "ae88edc9c848b7aa26f78c167bd6060faa8328e3"
+          },
+          "after": {
+            "path": "research/english_v6_delivery/test_delivery.py",
+            "mode": "100644",
+            "bytes": 17464,
+            "sha256": "9babb67ff547e3b0841b5bbd291437f9a5cae78052a44f44e6e1709f9d41a51f",
+            "git_blob_sha1": "c227fd9d9dc55324891ad9dd3b5acfd125444489"
+          }
+        },
+        {
+          "path": "research/english_v6_delivery/test_once.py",
+          "before": null,
+          "after": {
+            "path": "research/english_v6_delivery/test_once.py",
+            "mode": "100644",
+            "bytes": 17145,
+            "sha256": "ecbb604b328a2ce61a539e2756e6a0656a698bc9318051310182c35086586eb8",
+            "git_blob_sha1": "cd5eb261241ecbda7a257831903f50e56376b17b"
+          }
+        }
+      ],
+      "preserved_original_files": [
+        {
+          "source_commit": "c62e47310dd2bbd54962ba1d942c611ab42ca963",
+          "original_path": ".github/workflows/english-v6-delivery-contract.yml",
+          "original": {
+            "path": ".github/workflows/english-v6-delivery-contract.yml",
+            "mode": "100644",
+            "bytes": 954,
+            "sha256": "88da01fcd18994d4f94b8627317d5d5be906c037cb14516409a3e8242e202f7c",
+            "git_blob_sha1": "34add4427a58a3da8f8ddf977a5922c46352e176"
+          },
+          "archive": {
+            "path": "research/consolidation/archive/source-revisions/english-v6-delivery-once-20261125/english-v6-delivery-contract.yml.txt",
+            "mode": "100644",
+            "bytes": 954,
+            "sha256": "88da01fcd18994d4f94b8627317d5d5be906c037cb14516409a3e8242e202f7c",
+            "git_blob_sha1": "34add4427a58a3da8f8ddf977a5922c46352e176"
+          }
+        },
+        {
+          "source_commit": "c62e47310dd2bbd54962ba1d942c611ab42ca963",
+          "original_path": "research/english_v6_delivery/test_delivery.py",
+          "original": {
+            "path": "research/english_v6_delivery/test_delivery.py",
+            "mode": "100644",
+            "bytes": 17035,
+            "sha256": "8b0c75061b8445c20dac979b03c545800825afc8f13f255a834c86cd946de4c0",
+            "git_blob_sha1": "ae88edc9c848b7aa26f78c167bd6060faa8328e3"
+          },
+          "archive": {
+            "path": "research/consolidation/archive/source-revisions/english-v6-delivery-once-20261125/test_delivery.py.txt",
+            "mode": "100644",
+            "bytes": 17035,
+            "sha256": "8b0c75061b8445c20dac979b03c545800825afc8f13f255a834c86cd946de4c0",
+            "git_blob_sha1": "ae88edc9c848b7aa26f78c167bd6060faa8328e3"
+          }
+        }
+      ],
+      "preserved_original_ci_archive": {
+        "path": "research/consolidation/maintained-sources/pr-485/ci.yml",
+        "source_path": ".github/workflows/ci.yml",
+        "source_pr": 485,
+        "source_commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+        "mode": "100644",
+        "bytes": 23870,
+        "sha256": "81fa55fe96fbc5b8008129a5442b95b219a4940dc4925b20eac13295d4f8fa0d",
+        "git_blob_sha1": "1a9d3eaa494922fe2481749741f94b7639ab277a"
+      },
+      "execution_authority": "none; byte-retention repair only; selection remains null and no delivery, model, source, training or observer execution is authorized"
     }
   ],
   "current_added_active_workflows": [
@@ -54146,9 +54276,9 @@
     {
       "path": ".github/workflows/english-v6-delivery-contract.yml",
       "mode": "100644",
-      "bytes": 954,
-      "sha256": "88da01fcd18994d4f94b8627317d5d5be906c037cb14516409a3e8242e202f7c",
-      "git_blob_sha1": "34add4427a58a3da8f8ddf977a5922c46352e176"
+      "bytes": 1247,
+      "sha256": "6f3fd4ead07ca4c21a37dc318db8b23bc5027daadef4e59c4d2952ffb7352d96",
+      "git_blob_sha1": "5339f1fee5df61fb04e5cc8ca6919295dcbae73a"
     }
   ],
   "current_source_revision": {
