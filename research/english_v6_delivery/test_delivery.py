@@ -105,12 +105,19 @@ class DeliveryTests(unittest.TestCase):
             baseline=dict(path=d.B0_PATH, bytes=d.PACK_BYTES, sha256=d.B0_SHA), scope=copy.deepcopy(d.SCOPE))
         (root / "selection.json").write_bytes(d.encoded(selected))
 
-    def test_committed_selection_is_inert_and_preserves_actual_b0(self):
+    def test_committed_selection_is_inert_or_reviewed_and_preserves_actual_b0(self):
         chosen = d.selection()
-        self.assertIsNone(chosen["selected"]); self.assertIsNone(chosen["manifest"])
+        if chosen["selected"] is None:
+            self.assertIsNone(chosen["manifest"])
+        else:
+            value, raw = d.trusted_manifest()
+            self.assertEqual(value["candidate_id"], chosen["selected"])
+            self.assertEqual(d.sha(raw), chosen["manifest"]["sha256"])
         self.assertEqual(d.B0_SHA, "ff5d0868c035bf5b1c696115eb62f42c36ddbd3a62781207b1340f5e7d1f9d9b")
         self.assertEqual(d.PIPELINE_COMMIT, "88a043c6c00bb3a1a62f45098a023c7601042ded")
-        with patch.object(d, "original_archive", side_effect=AssertionError("no originals opened")), \
+        self.assertEqual(chosen["baseline"], dict(path=d.B0_PATH, bytes=d.PACK_BYTES, sha256=d.B0_SHA))
+        with patch.object(d, "selection", return_value={**chosen, "selected": None, "manifest": None}), \
+             patch.object(d, "original_archive", side_effect=AssertionError("no originals opened")), \
              patch.object(d.os, "execv", side_effect=AssertionError("no runtime")), \
              patch.object(d.subprocess, "run", side_effect=AssertionError("no checker")):
             for call in (lambda: d.package("/unused", "/unused", "/unused"),

@@ -23,4 +23,8 @@ jobs:
           python3 -I -S -B research/english_v6_delivery/test_delivery.py -v
           python3 -I -S -B -O research/english_v6_delivery/test_delivery.py -v
           python3 -I -S -B -OO research/english_v6_delivery/test_delivery.py -v
+          python3 -I -S -B research/english_v6_delivery/test_once.py -v
+          python3 -I -S -B -O research/english_v6_delivery/test_once.py -v
+          python3 -I -S -B -OO research/english_v6_delivery/test_once.py -v
           python3 -I -S -B research/english_v6_delivery/delivery.py check
+          python3 -I -S -B research/english_v6_delivery/once.py check
