@@ -172,6 +172,14 @@ class V7AdmissionTests(unittest.TestCase):
         self.evidence = copy.deepcopy(self.evidence)
         self.plan = copy.deepcopy(self.plan)
 
+    def test_whisper_identity_matches_locked_g2_observer_capture(self):
+        self.assertEqual(v7.observer_identity("whisper"), {
+            "recognizer_id": "whisper",
+            "model_family": "whisper",
+            "model_sha256": "9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794",
+            "decode_config_sha256": "439b51d2e7e5f7ce4ade748a87c3d3e6d5b6b66d2acaec893bfc3bf673af04a7",
+        })
+
     def test_exact_candidate_relative_manifests_and_split(self):
         result = v7.build_admission(self.corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan)
         self.assertTrue(result["summary"]["data_admitted"])
