@@ -24,7 +24,6 @@ import sys
 sys.path.insert(0, str(TRAINING))
 sys.path.insert(0, str(ROOT / "automation"))
 import english_kws_dual_track_v7_silver as admission
-import english_kws_dual_track_v7_admit as admission_cli
 
 PLAN_PATH = ROOT / "configs/research/english-kws-dual-track-v7-training-plan.json"
 REPO = "jiying2007/kws-data"
@@ -158,7 +157,7 @@ def guard(plan, env=None, event=None):
             "source_workflow_id": plan["source_workflow_id"]}
 
 
-def read_pcm(row, packet):
+def read_pcm(row, snapshot):
     raw = admission.read_member(packet, row["pcm_path"], row["pcm_sha256"], limit=1024 * 1024)
     wav = admission.read_member(packet, row["wav_path"], row["wav_sha256"], limit=4 * 1024 * 1024)
     with wave.open(io.BytesIO(wav), "rb") as stream:
@@ -170,6 +169,120 @@ def read_pcm(row, packet):
     need(row["pcm_samples"] >= 6400 and row["pcm_samples"] <= 28672,
          "35_FRAME_CTC_MODEL_INPUT_GEOMETRY")
     return raw
+
+
+def verify_training_snapshot(snapshot, candidate, plan):
+    """Verify only candidate-specific TRAIN+DEV bytes; no full G2 packet is available here."""
+    snapshot = Path(snapshot)
+    need(snapshot.is_dir() and not snapshot.is_symlink(), "REGULAR_TRAIN_DEV_SNAPSHOT_DIRECTORY")
+    snapshot_raw = (snapshot / "SNAPSHOT.json").read_bytes()
+    snapshot_meta = read_json(snapshot / "SNAPSHOT.json")
+    manifest_raw = (snapshot / "MANIFEST.json").read_bytes()
+    files_raw = (snapshot / "FILES.json").read_bytes()
+    need(sha(manifest_raw) == snapshot_meta.get("manifest_sha256"),
+         "TRAIN_DEV_MANIFEST_SHA256")
+    need(sha(files_raw) == snapshot_meta.get("files_manifest_sha256"),
+         "TRAIN_DEV_FILES_MANIFEST_SHA256")
+    manifest = read_json(snapshot / "MANIFEST.json")
+    files = read_json(snapshot / "FILES.json")
+    need(snapshot_meta.get("schema") == "english-kws-dual-track-v7-training-snapshot-v1"
+         and snapshot_meta.get("candidate") == candidate
+         and manifest.get("schema") == "english-kws-dual-track-v7-training-snapshot-manifest-v1"
+         and manifest.get("candidate") == candidate
+         and manifest.get("training_snapshot_allowed") is True,
+         "EXACT_CANDIDATE_TRAIN_DEV_SNAPSHOT")
+    need(files.get("schema") == "english-kws-dual-track-v7-training-snapshot-files-v1"
+         and files.get("candidate") == candidate and isinstance(files.get("files"), list),
+         "TRAIN_DEV_FILES_SCHEMA")
+    seen = set()
+    total_bytes = 0
+    for item in files["files"]:
+        need(isinstance(item, dict) and set(item) == {"path", "bytes", "sha256"},
+             "TRAIN_DEV_FILE_ENTRY")
+        name = str(admission.safe_relative(item["path"]))
+        need(name not in seen and type(item["bytes"]) is int and item["bytes"] >= 0
+             and re.fullmatch(r"[0-9a-f]{64}", str(item["sha256"])) is not None,
+             "UNIQUE_SIZED_TRAIN_DEV_FILE")
+        raw = admission.read_member(snapshot, name, item["sha256"], limit=4 * 1024 * 1024)
+        need(len(raw) == item["bytes"], "TRAIN_DEV_FILE_BYTE_COUNT")
+        seen.add(name)
+        total_bytes += len(raw)
+    rows = manifest.get("rows")
+    groups = manifest.get("source_groups")
+    need(isinstance(rows, list) and isinstance(groups, list)
+         and all(row.get("role") in ("train", "development") for row in rows),
+         "NO_CALIBRATION_OR_LOCKED_ROWS_IN_TRAINING_SNAPSHOT")
+    group_roles = {group.get("source_group_id"): group.get("role") for group in groups}
+    role_counts = Counter(group_roles.values())
+    need(role_counts == Counter({"train": 6, "development": 2})
+         and len(group_roles) == 8
+         and len(set(group.get("source_speaker_id") for group in groups)) == 8,
+         "TRAIN_DEV_ONLY_GROUP_PARTITION")
+    row_ids = set()
+    expected_files = {"MANIFEST.json"}
+    for row in rows:
+        row_id = str(admission.safe_relative(row.get("id")))
+        need("/" not in row_id and "\\" not in row_id and row_id not in row_ids,
+             "UNIQUE_SAFE_TRAIN_DEV_ROW_ID")
+        row_ids.add(row_id)
+        role = row["role"]
+        need(group_roles.get(row.get("source_group_id")) == role
+             and row.get("optimizer_allowed") is False
+             and row.get("locked_test_sealed") is False
+             and row.get("tier") in ("silver", "weak")
+             and row.get("research_class") in (0, 1),
+             "TRAIN_DEV_ROW_PROVENANCE_AND_LABEL")
+        pcm_name = str(admission.safe_relative(row.get("pcm_path")))
+        wav_name = str(admission.safe_relative(row.get("wav_path")))
+        need(pcm_name not in expected_files and wav_name not in expected_files,
+             "UNIQUE_TRAIN_DEV_AUDIO_PATHS")
+        expected_files.update((pcm_name, wav_name))
+        if role == "train":
+            need(row.get("training_eligible") is True
+                 and row.get("training_class") == row.get("research_class")
+                 and row.get("training_class") in (0, 1)
+                 and isinstance(row.get("training_weight"), (int, float))
+                 and row["training_weight"] > 0.0,
+                 "TRAIN_ROW_OPTIMIZER_ELIGIBILITY")
+        else:
+            need(row.get("training_eligible") is False
+                 and row.get("training_class") is None
+                 and row.get("training_weight") == 0.0,
+                 "DEVELOPMENT_ROW_NEVER_OPTIMIZER_ELIGIBLE")
+    need(seen == expected_files, "NO_EXTRA_OR_MISSING_TRAIN_DEV_FILES")
+    train_rows = [row for row in rows if row["role"] == "train" and row["training_eligible"]]
+    dev_rows = [row for row in rows if row["role"] == "development"]
+    need(snapshot_meta.get("role_counts") == {"train": 6, "development": 2}
+         and snapshot_meta.get("training_rows") == len(train_rows)
+         and snapshot_meta.get("development_rows") == len(dev_rows)
+         and snapshot_meta.get("file_count") == len(files["files"])
+         and snapshot_meta.get("verified_bytes") == total_bytes,
+         "TRAIN_DEV_SNAPSHOT_COUNTS_AND_BYTES")
+    for key in ("calibration_rows_included", "locked_test_rows_included",
+                "calibration_labels_included", "locked_test_labels_included",
+                "calibration_audio_included", "locked_test_audio_included",
+                "locked_test_access_in_training_job"):
+        need(snapshot_meta.get(key) is False, "SEALED_ROLE_EXCLUDED:" + key)
+    source_run = manifest.get("source_run")
+    need(source_run == snapshot_meta.get("source_run")
+         and source_run.get("repository") == REPO
+         and str(source_run.get("run_id")) == str(plan["source_run_id"])
+         and source_run.get("sha") == plan["source_commit"]
+         and manifest.get("source_plan_sha256") == plan["source_plan_sha256"]
+         and snapshot_meta.get("source_plan_sha256") == plan["source_plan_sha256"],
+         "TRAIN_DEV_SNAPSHOT_SOURCE_IDENTITY")
+    candidate_plan = plan["candidates"][candidate]
+    need(manifest.get("candidate_id") == candidate_plan["candidate_id"]
+         and manifest.get("phrase") == candidate_plan["phrase"]
+         and manifest.get("ipa") == candidate_plan["ipa"]
+         and manifest.get("ctc_token_ids") == candidate_plan["token_ids"],
+         "TRAIN_DEV_CANDIDATE_PRONUNCIATION_BINDING")
+    return manifest, {
+        **snapshot_meta,
+        "snapshot_sha256": sha(snapshot_raw),
+        "manifest_sha256": sha(manifest_raw),
+        "files_manifest_sha256": sha(files_raw),
+    }
 
 
 def make_mel_bank(np):
@@ -305,60 +418,24 @@ def pack_model(state, bank, mean, scale, candidate_id, np):
     return MAGIC + struct.pack("<II", 1, FLOAT_COUNT) + floats.tobytes()
 
 
-def run(packet, candidate, output, *, env=None, event=None):
+def run(snapshot, candidate, output, *, env=None, event=None):
     plan = load_plan()
     need(candidate in ("VOSEN", "MERO"), "EXACT_CANDIDATE")
     identity = guard(plan, env=env, event=event)
-    packet = Path(packet)
+    snapshot = Path(snapshot)
     output = Path(output)
-    need(packet.is_dir() and not packet.is_symlink(), "IMMUTABLE_G2_PACKET")
     need(not output.exists() and output.parent.is_dir(), "NEW_ONE_SHOT_MODEL_OUTPUT")
-    admission_dir = packet / "admission"
-    packet_identity = admission_cli.verify_packet_inventory(packet)
-    readiness = read_json(admission_dir / "G3_READINESS.json")
-    need(readiness.get("packet_files_manifest_sha256") == packet_identity["files_manifest_sha256"],
-         "IMMUTABLE_G2_PACKET_RECHECK")
-    corpus = read_json(packet / "CORPUS_MANIFEST.json")
-    evidence = read_json(packet / "MACHINE_EVIDENCE.json")
-    execution_plan = read_json(packet / "EXECUTION_PLAN.json")
-    profile = read_json(ROOT / "configs/research/english-pronunciation-profile-20261115.json")
-    recomputed = admission.build_admission(corpus, evidence, packet, profile=profile, plan=execution_plan)
-    need(recomputed["summary"]["data_admitted"] is True,
-         "RECOMPUTED_G3_ADMISSION_REQUIRED")
-    manifest_name = "HEY_" + candidate + "_V7_MANIFEST.json"
-    manifest = read_json(admission_dir / manifest_name)
-    need(recomputed["candidate_manifests"][candidate] == manifest,
-         "SAVED_CANDIDATE_MANIFEST_EQUALS_RECOMPUTED_ADMISSION")
-    readiness_candidate = readiness["candidate_manifests"][candidate]
-    manifest_sha = sha(canonical(manifest))
-    source_run = readiness.get("source_run", {})
-    need(readiness.get("data_admitted") is True
-         and readiness.get("status") == "READY_FOR_G3_BUDGET_DECLARATION"
-         and readiness.get("training_authorized") is False
-         and source_run.get("repository") == REPO
-         and source_run.get("event") == "push"
-         and source_run.get("ref") == "refs/heads/main"
-         and str(source_run.get("run_id")) == str(plan["source_run_id"])
-         and source_run.get("sha") == plan["source_commit"]
-         and str(source_run.get("attempt")) == "1"
-         and readiness_candidate["sha256"] == manifest_sha
-         and readiness_candidate["training_snapshot_allowed"] is True
-         and manifest["training_snapshot_allowed"] is True
-         and manifest["source_plan_sha256"] == plan["source_plan_sha256"]
-         and manifest["candidate"] == candidate,
-         "G2_ADMISSION_AND_CURRENT_RUN_BINDING")
+    manifest, snapshot_info = verify_training_snapshot(snapshot, candidate, plan)
+    manifest_sha = snapshot_info["source_candidate_manifest_sha256"]
+    snapshot_sha = snapshot_info["snapshot_sha256"]
     candidate_plan = plan["candidates"][candidate]
-    need(manifest["candidate_id"] == candidate_plan["candidate_id"]
-         and manifest["phrase"] == candidate_plan["phrase"]
-         and manifest["ipa"] == candidate_plan["ipa"]
-         and manifest["ctc_token_ids"] == candidate_plan["token_ids"],
-         "CANDIDATE_PRONUNCIATION_AND_TOKEN_BINDING")
     output.mkdir(mode=0o700)
     started = {
         "schema": "english-kws-dual-track-v7-training-start-v1",
         "run": identity, "candidate": candidate,
         "candidate_id": candidate_plan["candidate_id"],
         "candidate_manifest_sha256": manifest_sha,
+        "training_snapshot_sha256": snapshot_sha,
         "training_plan_sha256": sha(canonical(plan)),
         "seed": candidate_plan["seed"],
         "optimizer_updates_budget": plan["optimizer"]["updates_per_candidate"],
@@ -519,6 +596,8 @@ def run(packet, candidate, output, *, env=None, event=None):
             "schema": "english-kws-dual-track-v7-training-result-v1",
             "status": "SYNTHETIC_RESEARCH_TRAINED_NOT_PRODUCT_QUALIFIED",
             "candidate": candidate, "candidate_id": candidate_plan["candidate_id"],
+            "training_snapshot_sha256": snapshot_sha,
+            "source_candidate_manifest_sha256": manifest_sha,
             "phrase": candidate_plan["phrase"], "ipa": candidate_plan["ipa"],
             "token_labels": candidate_plan["token_labels"], "token_ids": [1, 2, 3],
             "seed": candidate_plan["seed"], "model_parameters": PARAMETERS,
@@ -546,6 +625,7 @@ def run(packet, candidate, output, *, env=None, event=None):
         training = {
             "schema": "english-kws-dual-track-v7-training-ledger-v1",
             "candidate": candidate, "candidate_manifest_sha256": manifest_sha,
+            "training_snapshot_sha256": snapshot_sha,
             "training_plan_sha256": sha(canonical(plan)),
             "seed": candidate_plan["seed"], "actual_optimizer_updates": updates,
             "actual_training_forwards": updates * 2, "training_rows": len(train_rows),
@@ -595,6 +675,8 @@ def source_check():
         "training_forwards_per_candidate": plan["optimizer"]["training_forwards_per_candidate"],
         "model_parameters": plan["model"]["parameters"],
         "pack_bytes": plan["pack"]["total_bytes"],
+        "training_input_schema": plan["training_input"]["schema"],
+        "calibration_and_locked_test_available_to_training": False,
         "shared_parameters": plan["independence"]["model_parameters_shared"],
         "shared_optimizer": plan["independence"]["optimizer_state_shared"],
         "training_runs_per_candidate": plan["independence"]["training_runs_per_candidate"],
@@ -609,7 +691,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--source-check", action="store_true")
     parser.add_argument("--execute", action="store_true")
-    parser.add_argument("--packet", type=Path)
+    parser.add_argument("--snapshot", type=Path)
     parser.add_argument("--candidate", choices=("VOSEN", "MERO"))
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
@@ -617,8 +699,8 @@ def main():
     if args.source_check:
         print(json.dumps(source_check(), sort_keys=True))
     else:
-        need(args.packet and args.candidate and args.output, "TRAIN_PACKET_CANDIDATE_OUTPUT_REQUIRED")
-        run(args.packet, args.candidate, args.output)
+        need(args.snapshot and args.candidate and args.output, "TRAIN_SNAPSHOT_CANDIDATE_OUTPUT_REQUIRED")
+        run(args.snapshot, args.candidate, args.output)
 
 
 if __name__ == "__main__":
