@@ -302,9 +302,9 @@ class V7AdmissionTests(unittest.TestCase):
                 "ref": "refs/heads/main",
                 "attempt": "1",
             }
-            (packet / "CORPUS_MANIFEST.json").write_bytes(v7.canonical(corpus) + b"\\n")
-            (packet / "MACHINE_EVIDENCE.json").write_bytes(v7.canonical(self.evidence) + b"\\n")
-            (packet / "EXECUTION_PLAN.json").write_bytes(v7.canonical(self.plan) + b"\\n")
+            (packet / "CORPUS_MANIFEST.json").write_bytes(v7.canonical(corpus) + b"\n")
+            (packet / "MACHINE_EVIDENCE.json").write_bytes(v7.canonical(self.evidence) + b"\n")
+            (packet / "EXECUTION_PLAN.json").write_bytes(v7.canonical(self.plan) + b"\n")
             files = []
             for path in sorted(item for item in packet.rglob("*") if item.is_file()):
                 raw = path.read_bytes()
@@ -316,7 +316,7 @@ class V7AdmissionTests(unittest.TestCase):
             (packet / "FILES.json").write_bytes(v7.canonical({
                 "schema": "english-kws-dual-track-v7-files-v1",
                 "files": files,
-            }) + b"\\n")
+            }) + b"\n")
             output = packet / "admission"
             gate = v7cli.run(packet, output)
             self.assertTrue(gate["data_admitted"])
