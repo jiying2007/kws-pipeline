@@ -82,7 +82,7 @@ RULES = {
     "cross_trigger_requires_other_phone_match": True,
     "negative_requires_explicit_expected_transcript_and_no_wake_phone": True,
     "unknown_is_background": False,
-    "positive_min_samples": 720,
+    "positive_min_samples": 6400,
     "positive_max_samples": 28672,
     "minimum_positive_rows_per_group": 2,
     "minimum_negative_rows_per_group": 4,
@@ -174,7 +174,7 @@ def verify_pcm(row, root):
     require(decoded == pcm and sha(decoded) == row["pcm_sha256"], "WAV_PCM_BYTE_IDENTITY")
     require(row["sample_rate"] == 16000 and row["channels"] == 1, "PCM_DECLARED_GEOMETRY")
     if row["kind"] == "target":
-        require(720 <= samples <= 28672, "POSITIVE_FRONTEND_SUPPORT_GEOMETRY")
+        require(6400 <= samples <= 28672, "MODEL_INPUT_GEOMETRY")
     return pcm
 
 
@@ -279,7 +279,7 @@ def validate_plan(plan, profile):
             "V7_EXACT_SOURCE_AND_CANDIDATE_ROSTER")
     require(plan.get("source_role_counts") == {"train": 6, "development": 2, "calibration": 2, "locked-test": 2},
             "V7_SOURCE_ROLE_COUNTS")
-    require(plan.get("positive_min_samples") == 720 and plan.get("positive_max_samples") == 28672,
+    require(plan.get("positive_min_samples") == 6400 and plan.get("positive_max_samples") == 28672,
             "V7_POSITIVE_GEOMETRY")
     require(plan.get("source_plan_sha256") and HEX64.fullmatch(plan["source_plan_sha256"]),
             "V7_SOURCE_PLAN_HASH")
@@ -304,7 +304,7 @@ def _validate_corpus(corpus, evidence, plan):
     require(len(rows) == 144 and len(observations) == 144, "COMPLETE_144_ROW_DENOMINATOR")
     statuses = [row.get("generation_status") for row in rows]
     allowed_statuses = {"success", "FAILED_NO_RETRY", "UNKNOWN_AFTER_START_NO_RETRY",
-                        "POSITIVE_GEOMETRY_QUARANTINED", "DUPLICATE_PCM_QUARANTINED",
+                        "POSITIVE_GEOMETRY_QUARANTINED", "MODEL_INPUT_GEOMETRY_QUARANTINED", "DUPLICATE_PCM_QUARANTINED",
                         "NOT_STARTED"}
     require(corpus.get("declared_count") == 144 and all(status in allowed_statuses for status in statuses)
             and corpus.get("valid_count") == statuses.count("success"),
