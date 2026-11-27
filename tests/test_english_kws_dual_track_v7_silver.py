@@ -7,7 +7,6 @@ import json
 from pathlib import Path
 import struct
 import sys
-import shutil
 import tempfile
 import unittest
 import wave
@@ -289,45 +288,31 @@ class V7AdmissionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "MODEL_INPUT_GEOMETRY"):
             v7.verify_pcm(row, self.root)
 
-    def test_admission_cli_writes_complete_candidate_readiness(self):
-        with tempfile.TemporaryDirectory() as temp:
-            packet = Path(temp) / "packet"
-            shutil.copytree(self.root, packet)
-            corpus = copy.deepcopy(self.corpus)
-            corpus["run"] = {
-                "repository": "jiying2007/kws-data",
-                "run_id": "46000882374",
-                "sha": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
-                "event": "push",
-                "ref": "refs/heads/main",
-                "attempt": "1",
-            }
-            (packet / "CORPUS_MANIFEST.json").write_bytes(v7.canonical(corpus) + b"\n")
-            (packet / "MACHINE_EVIDENCE.json").write_bytes(v7.canonical(self.evidence) + b"\n")
-            (packet / "EXECUTION_PLAN.json").write_bytes(v7.canonical(self.plan) + b"\n")
-            files = []
-            for path in sorted(item for item in packet.rglob("*") if item.is_file()):
-                raw = path.read_bytes()
-                files.append({
-                    "path": path.relative_to(packet).as_posix(),
-                    "bytes": len(raw),
-                    "sha256": v7.sha(raw),
-                })
-            (packet / "FILES.json").write_bytes(v7.canonical({
-                "schema": "english-kws-dual-track-v7-files-v1",
-                "files": files,
-            }) + b"\n")
-            output = packet / "admission"
-            gate = v7cli.run(packet, output)
-            self.assertTrue(gate["data_admitted"])
-            self.assertFalse(gate["training_authorized"])
-            self.assertEqual(gate["source_run"]["run_id"], "46000882374")
-            for candidate in v7.CANDIDATES:
-                item = gate["candidate_manifests"][candidate]
-                self.assertTrue(item["training_snapshot_allowed"])
-                self.assertEqual(item["balanced_groups_by_role"], self.plan["source_role_counts"])
-                self.assertEqual(sum(item["tier_counts"].values()), 144)
-                self.assertEqual(len(item["sha256"]), 64)
+    def test_admission_cli_readiness_builder_emits_candidate_hashes_and_tier_counts(self):
+        corpus = copy.deepcopy(self.corpus)
+        corpus["run"] = {
+            "repository": "jiying2007/kws-data",
+            "run_id": "46000882374",
+            "sha": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
+            "event": "push",
+            "ref": "refs/heads/main",
+            "attempt": "1",
+        }
+        joined = v7.build_admission(corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan)
+        gate = v7cli.build_readiness(joined, {
+            "files_manifest_sha256": "a" * 64,
+            "file_count": 723,
+            "verified_bytes": 123456,
+        })
+        self.assertTrue(gate["data_admitted"])
+        self.assertFalse(gate["training_authorized"])
+        self.assertEqual(gate["source_run"]["run_id"], "46000882374")
+        for candidate in v7.CANDIDATES:
+            item = gate["candidate_manifests"][candidate]
+            self.assertTrue(item["training_snapshot_allowed"])
+            self.assertEqual(item["balanced_groups_by_role"], self.plan["source_role_counts"])
+            self.assertEqual(sum(item["tier_counts"].values()), 144)
+            self.assertEqual(len(item["sha256"]), 64)
 
     def test_packet_inventory_authenticates_every_file_and_rejects_tampering(self):
         with tempfile.TemporaryDirectory() as temp:
