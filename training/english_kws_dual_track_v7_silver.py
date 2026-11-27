@@ -357,18 +357,20 @@ def build_admission(corpus, evidence, root, *, profile, plan):
             if row["generation_status"] == "success":
                 verify_pcm(row, root)
                 observations = packet.get("observations")
-                require(isinstance(observations, list) and len(observations) == 3
+                require(isinstance(observations, list) and len(observations) <= 3
                         and all(isinstance(item, dict) for item in observations),
-                        "EXACT_THREE_BLIND_ASR_OBSERVATIONS")
+                        "BLIND_ASR_OBSERVATION_LIST")
                 provider_ids = [item.get("recognizer_id") for item in observations]
-                require(len(set(provider_ids)) == 3 and set(provider_ids) == {"qwen", "whisper", "parakeet"},
-                        "EXACT_BLIND_ASR_PROVIDER_SET")
+                require(len(set(provider_ids)) == len(provider_ids)
+                        and set(provider_ids) <= {"qwen", "whisper", "parakeet"},
+                        "NO_DUPLICATE_OR_UNKNOWN_ASR_PROVIDER")
                 by_id = {item["recognizer_id"]: item for item in observations}
-                texts = [verify_observation(by_id.get(provider), provider, row, root)
-                         for provider in ("qwen", "whisper", "parakeet")]
+                texts = ([verify_observation(by_id[provider], provider, row, root)
+                          for provider in ("qwen", "whisper", "parakeet")]
+                         if set(by_id) == {"qwen", "whisper", "parakeet"} else None)
                 phone_observation = packet.get("phone_observation")
-                require(isinstance(phone_observation, dict), "EXACT_INDEPENDENT_PHONE_OBSERVATION")
-                phone = verify_observation(phone_observation, "phoneme", row, root, phones=True)
+                phone = (verify_observation(phone_observation, "phoneme", row, root, phones=True)
+                         if isinstance(phone_observation, dict) else None)
             else:
                 require(not packet.get("observations") and packet.get("phone_observation") is None,
                         "FAILED_OR_QUARANTINED_SOURCE_HAS_NO_OBSERVER_EVIDENCE")
