@@ -7,6 +7,7 @@ audio, never retries, and never promotes a product model.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import hashlib
 import io
 import json
@@ -82,6 +83,17 @@ def load_plan():
          and plan.get("source_workflow_id") == 432334213
          and plan.get("source_artifact_name") == "v7-machine-evidence-packet-46000882374",
          "EXACT_PREDECLARED_G3_TRAINING_PLAN")
+    need(plan.get("training_input") == {
+        "schema": "english-kws-dual-track-v7-training-snapshot-v1",
+        "allowed_roles": ["train", "development"],
+        "calibration_audio_available": False,
+        "calibration_labels_available": False,
+        "locked_test_audio_available": False,
+        "locked_test_labels_available": False,
+        "full_source_packet_downloaded_by_training_job": False,
+        "full_admission_recomputed_by_training_job": False,
+        "admission_stage_builds_candidate_specific_snapshots": True,
+    }, "TRAIN_DEV_SNAPSHOT_ONLY_INPUT_BOUNDARY")
     model = plan["model"]
     need(model == {
         "family": "causal-fsmn-ctc-v1", "parameters": PARAMETERS,
@@ -158,8 +170,8 @@ def guard(plan, env=None, event=None):
 
 
 def read_pcm(row, snapshot):
-    raw = admission.read_member(packet, row["pcm_path"], row["pcm_sha256"], limit=1024 * 1024)
-    wav = admission.read_member(packet, row["wav_path"], row["wav_sha256"], limit=4 * 1024 * 1024)
+    raw = admission.read_member(snapshot, row["pcm_path"], row["pcm_sha256"], limit=1024 * 1024)
+    wav = admission.read_member(snapshot, row["wav_path"], row["wav_sha256"], limit=4 * 1024 * 1024)
     with wave.open(io.BytesIO(wav), "rb") as stream:
         need((stream.getnchannels(), stream.getsampwidth(), stream.getframerate(),
               stream.getcomptype(), stream.getnframes())
@@ -175,16 +187,16 @@ def verify_training_snapshot(snapshot, candidate, plan):
     """Verify only candidate-specific TRAIN+DEV bytes; no full G2 packet is available here."""
     snapshot = Path(snapshot)
     need(snapshot.is_dir() and not snapshot.is_symlink(), "REGULAR_TRAIN_DEV_SNAPSHOT_DIRECTORY")
-    snapshot_raw = (snapshot / "SNAPSHOT.json").read_bytes()
     snapshot_meta = read_json(snapshot / "SNAPSHOT.json")
+    snapshot_raw = (snapshot / "SNAPSHOT.json").read_bytes()
+    manifest = read_json(snapshot / "MANIFEST.json")
     manifest_raw = (snapshot / "MANIFEST.json").read_bytes()
+    files = read_json(snapshot / "FILES.json")
     files_raw = (snapshot / "FILES.json").read_bytes()
     need(sha(manifest_raw) == snapshot_meta.get("manifest_sha256"),
          "TRAIN_DEV_MANIFEST_SHA256")
     need(sha(files_raw) == snapshot_meta.get("files_manifest_sha256"),
          "TRAIN_DEV_FILES_MANIFEST_SHA256")
-    manifest = read_json(snapshot / "MANIFEST.json")
-    files = read_json(snapshot / "FILES.json")
     need(snapshot_meta.get("schema") == "english-kws-dual-track-v7-training-snapshot-v1"
          and snapshot_meta.get("candidate") == candidate
          and manifest.get("schema") == "english-kws-dual-track-v7-training-snapshot-manifest-v1"
@@ -256,7 +268,9 @@ def verify_training_snapshot(snapshot, candidate, plan):
          and snapshot_meta.get("training_rows") == len(train_rows)
          and snapshot_meta.get("development_rows") == len(dev_rows)
          and snapshot_meta.get("file_count") == len(files["files"])
-         and snapshot_meta.get("verified_bytes") == total_bytes,
+         and snapshot_meta.get("verified_bytes") == total_bytes
+         and re.fullmatch(r"[0-9a-f]{64}", str(snapshot_meta.get("source_candidate_manifest_sha256"))) is not None
+         and re.fullmatch(r"[0-9a-f]{64}", str(snapshot_meta.get("source_packet_files_manifest_sha256"))) is not None,
          "TRAIN_DEV_SNAPSHOT_COUNTS_AND_BYTES")
     for key in ("calibration_rows_included", "locked_test_rows_included",
                 "calibration_labels_included", "locked_test_labels_included",
@@ -264,7 +278,8 @@ def verify_training_snapshot(snapshot, candidate, plan):
                 "locked_test_access_in_training_job"):
         need(snapshot_meta.get(key) is False, "SEALED_ROLE_EXCLUDED:" + key)
     source_run = manifest.get("source_run")
-    need(source_run == snapshot_meta.get("source_run")
+    need(isinstance(source_run, dict)
+         and source_run == snapshot_meta.get("source_run")
          and source_run.get("repository") == REPO
          and str(source_run.get("run_id")) == str(plan["source_run_id"])
          and source_run.get("sha") == plan["source_commit"]
