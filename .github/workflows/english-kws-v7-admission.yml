@@ -9,6 +9,7 @@ name: English KWS V7 candidate-relative admission contracts
       - configs/research/english-kws-dual-track-v7-training-plan.json
       - tests/test_english_kws_dual_track_v7_silver.py
       - tests/test_english_kws_dual_track_v7_train.py
+      - research/english_kws_v7/**
       - .github/workflows/english-kws-v7-admission.yml
 permissions:
   contents: read
