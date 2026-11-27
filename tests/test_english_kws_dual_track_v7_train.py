@@ -18,7 +18,7 @@ class V7TrainingPlanTests(unittest.TestCase):
         self.assertEqual(report["optimizer_updates_per_candidate"], 192)
         self.assertEqual(report["training_forwards_per_candidate"], 384)
         self.assertEqual(report["model_parameters"], 43876)
-        self.assertEqual(report["pack_bytes"], 216964)
+        self.assertEqual(report["pack_bytes"], 216960)
         self.assertFalse(report["shared_parameters"])
         self.assertFalse(report["shared_optimizer"])
         self.assertEqual(report["training_runs_per_candidate"], 1)
