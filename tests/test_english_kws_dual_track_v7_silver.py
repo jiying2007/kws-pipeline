@@ -13,7 +13,9 @@ import wave
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
+sys.path.insert(0, str(ROOT / "automation"))
 import english_kws_dual_track_v7_silver as v7
+import english_kws_dual_track_v7_admit as v7cli
 
 PROFILE = json.loads((ROOT / "configs/research/english-pronunciation-profile-20261115.json").read_text())
 
@@ -277,6 +279,26 @@ class V7AdmissionTests(unittest.TestCase):
                    pcm_samples=400, pcm_sha256=v7.sha(pcm), wav_sha256=v7.sha(wav))
         with self.assertRaisesRegex(ValueError, "POSITIVE_FRONTEND_SUPPORT_GEOMETRY"):
             v7.verify_pcm(row, self.root)
+
+    def test_packet_inventory_authenticates_every_file_and_rejects_tampering(self):
+        with tempfile.TemporaryDirectory() as temp:
+            packet = Path(temp)
+            files = []
+            for name in ("CORPUS_MANIFEST.json", "MACHINE_EVIDENCE.json", "EXECUTION_PLAN.json",
+                         "source/audio/a.wav"):
+                target = packet / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                raw = ("fixture:" + name).encode()
+                target.write_bytes(raw)
+                files.append({"path": name, "bytes": len(raw), "sha256": v7.sha(raw)})
+            (packet / "FILES.json").write_bytes(v7.canonical({
+                "schema": "english-kws-dual-track-v7-files-v1", "files": files
+            }) + b"\\n")
+            result = v7cli.verify_packet_inventory(packet)
+            self.assertEqual(result["file_count"], 4)
+            (packet / "source/audio/a.wav").write_bytes(b"tampered")
+            with self.assertRaisesRegex(ValueError, "MEMBER_SHA256_MISMATCH"):
+                v7cli.verify_packet_inventory(packet)
 
     def test_training_or_promotion_cannot_be_enabled_by_plan(self):
         self.plan["training_allowed"] = True
