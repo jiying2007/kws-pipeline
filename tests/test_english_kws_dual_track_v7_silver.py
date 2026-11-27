@@ -231,7 +231,17 @@ class V7AdmissionTests(unittest.TestCase):
 
     def test_invalid_positive_geometry_is_rejected(self):
         row = copy.deepcopy(self.corpus["rows"][0])
-        row["pcm_samples"] = 400
+        pcm = struct.pack("<400h", *([1000] * 400))
+        wav_buffer = io.BytesIO()
+        with wave.open(wav_buffer, "wb") as stream:
+            stream.setparams((1, 2, 16000, 400, "NONE", "not compressed"))
+            stream.writeframes(pcm)
+        wav = wav_buffer.getvalue()
+        pcm_path = self.root / row["pcm_path"]
+        wav_path = self.root / row["wav_path"]
+        pcm_path.write_bytes(pcm)
+        wav_path.write_bytes(wav)
+        row.update(pcm_samples=400, pcm_sha256=v7.sha(pcm), wav_sha256=v7.sha(wav))
         with self.assertRaisesRegex(ValueError, "POSITIVE_FRONTEND_SUPPORT_GEOMETRY"):
             v7.verify_pcm(row, self.root)
 
