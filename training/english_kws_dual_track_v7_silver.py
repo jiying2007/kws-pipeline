@@ -33,7 +33,7 @@ MODEL_PINS = {
     "qwen": ("qwen3-asr", "79d6cbd4c98c7bbffe9db2edac07f56cd6637d0d5944b27f6c2b8353840323ea",
              "6ef4ab0c3a329ac618980f42a00ebff601c08a768b8f341256b85ffaffb3bca1"),
     "whisper": ("whisper", "9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794",
-                "439b51d2e7e5f7ce4ade748a87c3d3e6d5b6b66d2acaec893bfc3bf673af04a7"),
+                "6bffbddfbfa4651987364c8735f7226eeb0289f1ba4a7520c58ad5ad66cad03a"),
     "parakeet": ("parakeet-tdt", "e3880d0aaaaf2c308ea2c35016b2b895c423eb3fda924c1b463d1c19b7f4d32e",
                  "c83bcf97f4c3f718264df1ecac8f013a276bdf7024f3ed39b255f85ad4bb9b6d"),
     "phoneme": ("wav2vec2-xlsr", "04366b6c8d24099ef313cf02f0e58d26f5dddfda16edbfc8eb2c713d94a9f551",
@@ -346,11 +346,19 @@ def build_admission(corpus, evidence, root, *, profile, plan):
         for row in rows:
             verify_pcm(row, root)
             packet = evidence_by_id[row["id"]]
-            by_id = {item.get("recognizer_id"): item for item in packet.get("observations", [])
-                     if isinstance(item, dict)}
+            observations = packet.get("observations")
+            require(isinstance(observations, list) and len(observations) == 3
+                    and all(isinstance(item, dict) for item in observations),
+                    "EXACT_THREE_BLIND_ASR_OBSERVATIONS")
+            provider_ids = [item.get("recognizer_id") for item in observations]
+            require(len(set(provider_ids)) == 3 and set(provider_ids) == {"qwen", "whisper", "parakeet"},
+                    "EXACT_BLIND_ASR_PROVIDER_SET")
+            by_id = {item["recognizer_id"]: item for item in observations}
             texts = [verify_observation(by_id.get(provider), provider, row, root)
                      for provider in ("qwen", "whisper", "parakeet")]
-            phone = verify_observation(packet.get("phone_observation"), "phoneme", row, root, phones=True)
+            phone_observation = packet.get("phone_observation")
+            require(isinstance(phone_observation, dict), "EXACT_INDEPENDENT_PHONE_OBSERVATION")
+            phone = verify_observation(phone_observation, "phoneme", row, root, phones=True)
             tier, label, reason, observed = decide_candidate(row, candidate, texts, phone)
             refs = []
             for provider in ("qwen", "whisper", "parakeet"):
