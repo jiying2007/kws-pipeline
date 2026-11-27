@@ -32,17 +32,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for mode in normal optimized stripped; do
-            args=()
-            case "$mode" in
-              optimized) args=(-O) ;;
-              stripped) args=(-OO) ;;
-            esac
-            python3 -I -S -B "${args[@]}" tests/test_english_kws_dual_track_v7_silver.py -v
-            python3 -I -S -B "${args[@]}" tests/test_english_kws_dual_track_v7_train.py -v
-            python3 -I -S -B "${args[@]}" automation/english_kws_dual_track_v7_admit.py --help
-            python3 -I -S -B "${args[@]}" training/english_kws_dual_track_v7_train.py --source-check
-            python3 -I -S -B "${args[@]}" training/english_kws_dual_track_v7_train.py --help
+          for mode in "" "-O" "-OO"; do
+            python3 -I -S -B ${mode:+$mode} tests/test_english_kws_dual_track_v7_silver.py -v
+            python3 -I -S -B ${mode:+$mode} tests/test_english_kws_dual_track_v7_train.py -v
+            python3 -I -S -B ${mode:+$mode} automation/english_kws_dual_track_v7_admit.py --help
+            python3 -I -S -B ${mode:+$mode} training/english_kws_dual_track_v7_train.py --source-check
+            python3 -I -S -B ${mode:+$mode} training/english_kws_dual_track_v7_train.py --help
           done
           git diff --check
           test -z "$(git status --porcelain)"
