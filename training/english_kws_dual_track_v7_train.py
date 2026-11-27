@@ -253,8 +253,10 @@ def verify_training_snapshot(snapshot, candidate, plan):
                  and row.get("training_weight") == 0.0,
                  "DEVELOPMENT_ROW_NEVER_OPTIMIZER_ELIGIBLE")
             dev_rows.append(row)
+    eligible_dev_rows = [row for row in dev_rows
+                         if row["tier"] in ("silver", "weak") and row["research_class"] in (0, 1)]
     for group_id in (group_id for group_id, role in group_roles.items() if role == "development"):
-        group_rows = [row for row in dev_rows if row["source_group_id"] == group_id]
+        group_rows = [row for row in eligible_dev_rows if row["source_group_id"] == group_id]
         need(sum(row["research_class"] == 1 for row in group_rows) >= 2
              and sum(row["research_class"] == 0 for row in group_rows) >= 4,
              "BALANCED_DEVELOPMENT_GROUP_ROWS")
@@ -276,7 +278,7 @@ def verify_training_snapshot(snapshot, candidate, plan):
         total_bytes += len(raw)
     need(snapshot_meta.get("role_counts") == {"train": 6, "development": 2}
          and snapshot_meta.get("training_rows") == len(train_rows)
-         and snapshot_meta.get("development_rows") == len(dev_rows)
+         and snapshot_meta.get("development_rows") == len(eligible_dev_rows)
          and snapshot_meta.get("file_count") == len(files["files"])
          and snapshot_meta.get("verified_bytes") == total_bytes
          and re.fullmatch(r"[0-9a-f]{64}", str(snapshot_meta.get("source_candidate_manifest_sha256"))) is not None
