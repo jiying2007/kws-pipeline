@@ -1,0 +1,39 @@
+name: English KWS V7 candidate-relative admission contracts
+'on':
+  pull_request:
+    branches: [main]
+    paths:
+      - training/english_kws_dual_track_v7_silver.py
+      - tests/test_english_kws_dual_track_v7_silver.py
+      - .github/workflows/english-kws-v7-admission.yml
+permissions:
+  contents: read
+concurrency:
+  group: english-kws-v7-admission-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  source-only:
+    if: github.repository == 'jiying2007/kws-pipeline'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Run byte-fixture admission tests under normal, optimized and stripped interpreters
+        shell: bash
+        run: |
+          set -euo pipefail
+          for mode in normal optimized stripped; do
+            args=()
+            case "$mode" in
+              optimized) args=(-O) ;;
+              stripped) args=(-OO) ;;
+            esac
+            python3 -I -S -B "${args[@]}" tests/test_english_kws_dual_track_v7_silver.py -v
+          done
+          git diff --check
+          test -z "$(git status --porcelain)"
