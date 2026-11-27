@@ -134,5 +134,19 @@
   "source_run_id": 46000882374,
   "source_commit": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
   "source_workflow_id": 432334213,
-  "source_artifact_name": "v7-machine-evidence-packet-46000882374"
+  "source_artifact_name": "v7-machine-evidence-packet-46000882374",
+  "training_input": {
+    "schema": "english-kws-dual-track-v7-training-snapshot-v1",
+    "allowed_roles": [
+      "train",
+      "development"
+    ],
+    "calibration_audio_available": false,
+    "calibration_labels_available": false,
+    "locked_test_audio_available": false,
+    "locked_test_labels_available": false,
+    "full_source_packet_downloaded_by_training_job": false,
+    "full_admission_recomputed_by_training_job": false,
+    "admission_stage_builds_candidate_specific_snapshots": true
+  }
 }
