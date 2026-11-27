@@ -92,6 +92,7 @@ class V7AdmissionTests(unittest.TestCase):
                 row = {
                     **group,
                     "id": "item-" + str(index),
+                    "request_sha256": "d" * 64,
                     "cell_id": cell_id,
                     "requested_text": text,
                     "requested_class": requested_class,
