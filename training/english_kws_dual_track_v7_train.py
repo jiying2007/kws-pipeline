@@ -77,7 +77,11 @@ def load_plan():
          and plan.get("enabled") is True
          and plan.get("source_repository") == REPO
          and plan.get("source_plan_sha256") == "baad365440a789db351aa6277214a631feae0383ef5550664bcddf118fd94c31"
-         and plan.get("next_main_before") == "6691d49a42066f6b832f2c4e7c899eb4752f3550",
+         and plan.get("next_main_before") == plan.get("source_commit")
+         and plan.get("source_run_id") == 46000882374
+         and plan.get("source_commit") == "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2"
+         and plan.get("source_workflow_id") == 432334213
+         and plan.get("source_artifact_name") == "v7-machine-evidence-packet-46000882374",
          "EXACT_PREDECLARED_G3_TRAINING_PLAN")
     model = plan["model"]
     need(model == {
@@ -595,6 +599,8 @@ def source_check():
         "shared_optimizer": plan["independence"]["optimizer_state_shared"],
         "training_runs_per_candidate": plan["independence"]["training_runs_per_candidate"],
         "retries": plan["execution"]["retries"],
+        "source_run_id": plan["source_run_id"],
+        "source_commit": plan["source_commit"],
         "promotion_allowed": plan["promotion_allowed"],
     }
 
