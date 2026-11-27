@@ -33,7 +33,7 @@ MODEL_PINS = {
     "qwen": ("qwen3-asr", "79d6cbd4c98c7bbffe9db2edac07f56cd6637d0d5944b27f6c2b8353840323ea",
              "6ef4ab0c3a329ac618980f42a00ebff601c08a768b8f341256b85ffaffb3bca1"),
     "whisper": ("whisper", "9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794",
-                "6bffbddfbfa4651987364c8735f7226eeb0289f1ba4a7520c58ad5ad66cad03a"),
+                "439b51d2e7e5f7ce4ade748a87c3d3e6d5b6b66d2acaec893bfc3bf673af04a7"),
     "parakeet": ("parakeet-tdt", "e3880d0aaaaf2c308ea2c35016b2b895c423eb3fda924c1b463d1c19b7f4d32e",
                  "c83bcf97f4c3f718264df1ecac8f013a276bdf7024f3ed39b255f85ad4bb9b6d"),
     "phoneme": ("wav2vec2-xlsr", "04366b6c8d24099ef313cf02f0e58d26f5dddfda16edbfc8eb2c713d94a9f551",
