@@ -32,17 +32,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for mode in normal optimized stripped; do
-            args=()
-            case "$mode" in
-              optimized) args=(-O) ;;
-              stripped) args=(-OO) ;;
-            esac
-            python3 -I -S -B "${args[@]}" tests/test_english_kws_dual_track_v7_silver.py -v
-            python3 -I -S -B "${args[@]}" tests/test_english_kws_dual_track_v7_train.py -v
-            python3 -I -S -B "${args[@]}" automation/english_kws_dual_track_v7_admit.py --help
-            python3 -I -S -B "${args[@]}" training/english_kws_dual_track_v7_train.py --source-check
-            python3 -I -S -B "${args[@]}" training/english_kws_dual_track_v7_train.py --help
-          done
+          python3 -I -S -B tests/test_english_kws_dual_track_v7_silver.py -v
+          python3 -I -S -B tests/test_english_kws_dual_track_v7_train.py -v
+          python3 -I -S -B automation/english_kws_dual_track_v7_admit.py --help
+          python3 -I -S -B training/english_kws_dual_track_v7_train.py --source-check
+          python3 -I -S -B training/english_kws_dual_track_v7_train.py --help
+          python3 -I -S -B -O tests/test_english_kws_dual_track_v7_silver.py -v
+          python3 -I -S -B -O tests/test_english_kws_dual_track_v7_train.py -v
+          python3 -I -S -B -O automation/english_kws_dual_track_v7_admit.py --help
+          python3 -I -S -B -O training/english_kws_dual_track_v7_train.py --source-check
+          python3 -I -S -B -O training/english_kws_dual_track_v7_train.py --help
+          python3 -I -S -B -OO tests/test_english_kws_dual_track_v7_silver.py -v
+          python3 -I -S -B -OO tests/test_english_kws_dual_track_v7_train.py -v
+          python3 -I -S -B -OO automation/english_kws_dual_track_v7_admit.py --help
+          python3 -I -S -B -OO training/english_kws_dual_track_v7_train.py --source-check
+          python3 -I -S -B -OO training/english_kws_dual_track_v7_train.py --help
           git diff --check
           test -z "$(git status --porcelain)"
