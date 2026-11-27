@@ -78,6 +78,7 @@ def run(packet, output):
     output.mkdir(mode=0o700)
     files = []
     summary = joined["summary"]
+    candidate_results = summary["candidate_results"]
     files.append(write_once(output / "SUMMARY.json", summary))
     for candidate in admission.CANDIDATES:
         manifest = joined["candidate_manifests"][candidate]
@@ -97,10 +98,11 @@ def run(packet, output):
         "requires_independent_candidate_budgets": True,
         "candidate_manifests": {
             candidate: {
-                "sha256": joined["candidate_results"][candidate]["manifest_sha256"],
-                "training_snapshot_allowed": joined["candidate_results"][candidate]["training_snapshot_allowed"],
-                "eligible_train_rows": joined["candidate_results"][candidate]["eligible_train_rows"],
-                "balanced_groups_by_role": joined["candidate_results"][candidate]["balanced_groups_by_role"],
+                "sha256": candidate_results[candidate]["manifest_sha256"],
+                "training_snapshot_allowed": candidate_results[candidate]["training_snapshot_allowed"],
+                "eligible_train_rows": candidate_results[candidate]["eligible_train_rows"],
+                "balanced_groups_by_role": candidate_results[candidate]["balanced_groups_by_role"],
+                "tier_counts": candidate_results[candidate]["tier_counts"],
             }
             for candidate in admission.CANDIDATES
         },
