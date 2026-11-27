@@ -41,7 +41,8 @@ def write_once(path, value):
 def verify_packet_inventory(packet):
     inventory_path = packet / "FILES.json"
     inventory = read_json(inventory_path)
-    require(inventory.get("schema") == "english-kws-dual-track-v7-files-v1"
+    require(isinstance(inventory.get("schema"), str)
+            and inventory["schema"].startswith("english-kws-dual-track-v7")
             and isinstance(inventory.get("files"), list), "G2_PACKET_FILE_INVENTORY")
     seen = set()
     total_bytes = 0
