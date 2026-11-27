@@ -305,8 +305,17 @@ def run(packet, candidate, output, *, env=None, event=None):
     readiness = read_json(admission_dir / "G3_READINESS.json")
     need(readiness.get("packet_files_manifest_sha256") == packet_identity["files_manifest_sha256"],
          "IMMUTABLE_G2_PACKET_RECHECK")
+    corpus = read_json(packet / "CORPUS_MANIFEST.json")
+    evidence = read_json(packet / "MACHINE_EVIDENCE.json")
+    execution_plan = read_json(packet / "EXECUTION_PLAN.json")
+    profile = read_json(ROOT / "configs/research/english-pronunciation-profile-20261115.json")
+    recomputed = admission.build_admission(corpus, evidence, packet, profile=profile, plan=execution_plan)
+    need(recomputed["summary"]["data_admitted"] is True,
+         "RECOMPUTED_G3_ADMISSION_REQUIRED")
     manifest_name = "HEY_" + candidate + "_V7_MANIFEST.json"
     manifest = read_json(admission_dir / manifest_name)
+    need(recomputed["candidate_manifests"][candidate] == manifest,
+         "SAVED_CANDIDATE_MANIFEST_EQUALS_RECOMPUTED_ADMISSION")
     readiness_candidate = readiness["candidate_manifests"][candidate]
     manifest_sha = sha(canonical(manifest))
     need(readiness.get("data_admitted") is True
