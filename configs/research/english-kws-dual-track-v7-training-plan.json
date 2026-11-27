@@ -4,7 +4,7 @@
   "enabled": true,
   "source_repository": "jiying2007/kws-data",
   "source_plan_sha256": "baad365440a789db351aa6277214a631feae0383ef5550664bcddf118fd94c31",
-  "next_main_before": "6691d49a42066f6b832f2c4e7c899eb4752f3550",
+  "next_main_before": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
   "model": {
     "family": "causal-fsmn-ctc-v1",
     "parameters": 43876,
@@ -130,5 +130,9 @@
   },
   "promotion_allowed": false,
   "product_quality_claims_allowed": false,
-  "commercial_derivative_clearance": "NOT_ASSERTED_LEGAL_REVIEW_REQUIRED"
+  "commercial_derivative_clearance": "NOT_ASSERTED_LEGAL_REVIEW_REQUIRED",
+  "source_run_id": 46000882374,
+  "source_commit": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
+  "source_workflow_id": 432334213,
+  "source_artifact_name": "v7-machine-evidence-packet-46000882374"
 }
