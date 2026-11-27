@@ -30,6 +30,31 @@ class V7TrainingPlanTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "PUBLIC_MAIN_FIRST_ATTEMPT_TRAINING_ONLY"):
             trainer.guard(plan, env={}, event={})
 
+    def test_exact_g2_source_run_is_distinct_from_training_run(self):
+        plan = trainer.load_plan()
+        env = {
+            "GITHUB_ACTIONS": "true",
+            "GITHUB_REPOSITORY": trainer.REPO,
+            "GITHUB_EVENT_NAME": "push",
+            "GITHUB_REF": "refs/heads/main",
+            "GITHUB_RUN_ATTEMPT": "1",
+            "GITHUB_SHA": "f" * 40,
+            "GITHUB_RUN_ID": "46010000001",
+        }
+        event = {
+            "before": plan["next_main_before"],
+            "after": env["GITHUB_SHA"],
+            "ref": "refs/heads/main",
+            "forced": False,
+            "deleted": False,
+            "repository": {"full_name": trainer.REPO, "private": False},
+        }
+        identity = trainer.guard(plan, env=env, event=event)
+        self.assertEqual(identity["run_id"], 46010000001)
+        self.assertEqual(identity["source_run_id"], 46000882374)
+        self.assertEqual(identity["source_commit"], "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2")
+        self.assertNotEqual(identity["run_id"], identity["source_run_id"])
+
     def test_exact_brand_pronunciations_and_separate_seeds(self):
         plan = trainer.load_plan()
         self.assertEqual(plan["candidates"]["VOSEN"]["ipa"], "/heɪ ˈvoʊ.sən/")
