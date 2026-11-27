@@ -22,7 +22,9 @@ ROOT = Path(__file__).resolve().parents[1]
 TRAINING = ROOT / "training"
 import sys
 sys.path.insert(0, str(TRAINING))
+sys.path.insert(0, str(ROOT / "automation"))
 import english_kws_dual_track_v7_silver as admission
+import english_kws_dual_track_v7_admit as admission_cli
 
 PLAN_PATH = ROOT / "configs/research/english-kws-dual-track-v7-training-plan.json"
 REPO = "jiying2007/kws-data"
@@ -249,15 +251,16 @@ def greedy_sequence(logits, torch):
     indices = logits.argmax(dim=-1)[0].detach().cpu().tolist()
     collapsed = []
     previous = None
-    for token in indices:
+    for frame_index, token in enumerate(indices):
         if token != previous and token != 0:
-            collapsed.append(int(token))
+            collapsed.append((int(token), frame_index))
         previous = token
+    tokens = [item[0] for item in collapsed]
     events = []
     for index in range(max(0, len(collapsed) - 2)):
-        if collapsed[index:index + 3] == [1, 2, 3]:
-            events.append(index)
-    return collapsed, events
+        if tokens[index:index + 3] == [1, 2, 3]:
+            events.append(collapsed[index + 2][1])
+    return tokens, events
 
 
 def pack_model(state, bank, mean, scale, candidate_id, np):
@@ -298,7 +301,10 @@ def run(packet, candidate, output, *, env=None, event=None):
     need(packet.is_dir() and not packet.is_symlink(), "IMMUTABLE_G2_PACKET")
     need(not output.exists() and output.parent.is_dir(), "NEW_ONE_SHOT_MODEL_OUTPUT")
     admission_dir = packet / "admission"
+    packet_identity = admission_cli.verify_packet_inventory(packet)
     readiness = read_json(admission_dir / "G3_READINESS.json")
+    need(readiness.get("packet_files_manifest_sha256") == packet_identity["files_manifest_sha256"],
+         "IMMUTABLE_G2_PACKET_RECHECK")
     manifest_name = "HEY_" + candidate + "_V7_MANIFEST.json"
     manifest = read_json(admission_dir / manifest_name)
     readiness_candidate = readiness["candidate_manifests"][candidate]
@@ -306,8 +312,9 @@ def run(packet, candidate, output, *, env=None, event=None):
     need(readiness.get("data_admitted") is True
          and readiness.get("status") == "READY_FOR_G3_BUDGET_DECLARATION"
          and readiness.get("training_authorized") is False
-         and readiness.get("source_run", {}).get("run_id") == identity["run_id"]
+         and str(readiness.get("source_run", {}).get("run_id")) == str(identity["run_id"])
          and readiness_candidate["sha256"] == manifest_sha
+         and readiness_candidate["training_snapshot_allowed"] is True
          and manifest["training_snapshot_allowed"] is True
          and manifest["source_plan_sha256"] == plan["source_plan_sha256"]
          and manifest["candidate"] == candidate,
