@@ -85,7 +85,7 @@ class V7AdmissionTests(unittest.TestCase):
                     stream.setparams((1, 2, 16000, 7200, "NONE", "not compressed"))
                     stream.writeframes(pcm)
                 wav = wav_buffer.getvalue()
-                folder = cls.root / "source/audio/item-" + str(index)
+                folder = cls.root / ("source/audio/item-" + str(index))
                 folder.mkdir(parents=True, exist_ok=True)
                 (folder / "audio-16k.pcm").write_bytes(pcm)
                 (folder / "audio-16k.wav").write_bytes(wav)
