@@ -206,19 +206,6 @@ def verify_training_snapshot(snapshot, candidate, plan):
     need(files.get("schema") == "english-kws-dual-track-v7-training-snapshot-files-v1"
          and files.get("candidate") == candidate and isinstance(files.get("files"), list),
          "TRAIN_DEV_FILES_SCHEMA")
-    seen = set()
-    total_bytes = 0
-    for item in files["files"]:
-        need(isinstance(item, dict) and set(item) == {"path", "bytes", "sha256"},
-             "TRAIN_DEV_FILE_ENTRY")
-        name = str(admission.safe_relative(item["path"]))
-        need(name not in seen and type(item["bytes"]) is int and item["bytes"] >= 0
-             and re.fullmatch(r"[0-9a-f]{64}", str(item["sha256"])) is not None,
-             "UNIQUE_SIZED_TRAIN_DEV_FILE")
-        raw = admission.read_member(snapshot, name, item["sha256"], limit=4 * 1024 * 1024)
-        need(len(raw) == item["bytes"], "TRAIN_DEV_FILE_BYTE_COUNT")
-        seen.add(name)
-        total_bytes += len(raw)
     rows = manifest.get("rows")
     groups = manifest.get("source_groups")
     need(isinstance(rows, list) and isinstance(groups, list)
@@ -228,12 +215,15 @@ def verify_training_snapshot(snapshot, candidate, plan):
     role_counts = Counter(group_roles.values())
     need(role_counts == Counter({"train": 6, "development": 2})
          and len(group_roles) == 8
-         and len(set(group.get("source_speaker_id") for group in groups)) == 8,
+         and len(set(group.get("source_speaker_id") for group in groups)) == 8
+         and all(role in ("train", "development") for role in group_roles.values()),
          "TRAIN_DEV_ONLY_GROUP_PARTITION")
     row_ids = set()
     expected_files = {"MANIFEST.json"}
+    train_rows = []
+    dev_rows = []
     for row in rows:
-        row_id = str(admission.safe_relative(row.get("id")))
+        row_id = admission.safe_relative(row.get("id"))
         need("/" not in row_id and "\\" not in row_id and row_id not in row_ids,
              "UNIQUE_SAFE_TRAIN_DEV_ROW_ID")
         row_ids.add(row_id)
@@ -244,8 +234,8 @@ def verify_training_snapshot(snapshot, candidate, plan):
              and row.get("tier") in ("silver", "weak")
              and row.get("research_class") in (0, 1),
              "TRAIN_DEV_ROW_PROVENANCE_AND_LABEL")
-        pcm_name = str(admission.safe_relative(row.get("pcm_path")))
-        wav_name = str(admission.safe_relative(row.get("wav_path")))
+        pcm_name = admission.safe_relative(row.get("pcm_path"))
+        wav_name = admission.safe_relative(row.get("wav_path"))
         need(pcm_name not in expected_files and wav_name not in expected_files,
              "UNIQUE_TRAIN_DEV_AUDIO_PATHS")
         expected_files.update((pcm_name, wav_name))
@@ -256,19 +246,34 @@ def verify_training_snapshot(snapshot, candidate, plan):
                  and isinstance(row.get("training_weight"), (int, float))
                  and row["training_weight"] > 0.0,
                  "TRAIN_ROW_OPTIMIZER_ELIGIBILITY")
+            train_rows.append(row)
         else:
             need(row.get("training_eligible") is False
                  and row.get("training_class") is None
                  and row.get("training_weight") == 0.0,
                  "DEVELOPMENT_ROW_NEVER_OPTIMIZER_ELIGIBLE")
-    need(seen == expected_files, "NO_EXTRA_OR_MISSING_TRAIN_DEV_FILES")
-    train_rows = [row for row in rows if row["role"] == "train" and row["training_eligible"]]
-    dev_rows = [row for row in rows if row["role"] == "development"]
+            dev_rows.append(row)
     for group_id in (group_id for group_id, role in group_roles.items() if role == "development"):
         group_rows = [row for row in dev_rows if row["source_group_id"] == group_id]
         need(sum(row["research_class"] == 1 for row in group_rows) >= 2
              and sum(row["research_class"] == 0 for row in group_rows) >= 4,
              "BALANCED_DEVELOPMENT_GROUP_ROWS")
+    # Reject extra calibration/locked paths before opening any listed file bytes.
+    seen = set()
+    for item in files["files"]:
+        need(isinstance(item, dict) and set(item) == {"path", "bytes", "sha256"},
+             "TRAIN_DEV_FILE_ENTRY")
+        name = admission.safe_relative(item["path"])
+        need(name not in seen and type(item["bytes"]) is int and item["bytes"] >= 0
+             and re.fullmatch(r"[0-9a-f]{64}", str(item["sha256"])) is not None,
+             "UNIQUE_SIZED_TRAIN_DEV_FILE")
+        seen.add(name)
+    need(seen == expected_files, "NO_EXTRA_OR_MISSING_TRAIN_DEV_FILES")
+    total_bytes = 0
+    for item in files["files"]:
+        raw = admission.read_member(snapshot, item["path"], item["sha256"], limit=4 * 1024 * 1024)
+        need(len(raw) == item["bytes"], "TRAIN_DEV_FILE_BYTE_COUNT")
+        total_bytes += len(raw)
     need(snapshot_meta.get("role_counts") == {"train": 6, "development": 2}
          and snapshot_meta.get("training_rows") == len(train_rows)
          and snapshot_meta.get("development_rows") == len(dev_rows)
@@ -283,8 +288,7 @@ def verify_training_snapshot(snapshot, candidate, plan):
                 "locked_test_access_in_training_job"):
         need(snapshot_meta.get(key) is False, "SEALED_ROLE_EXCLUDED:" + key)
     source_run = manifest.get("source_run")
-    need(isinstance(source_run, dict)
-         and source_run == snapshot_meta.get("source_run")
+    need(isinstance(source_run, dict) and source_run == snapshot_meta.get("source_run")
          and source_run.get("repository") == REPO
          and str(source_run.get("run_id")) == str(plan["source_run_id"])
          and source_run.get("sha") == plan["source_commit"]
@@ -293,6 +297,7 @@ def verify_training_snapshot(snapshot, candidate, plan):
          "TRAIN_DEV_SNAPSHOT_SOURCE_IDENTITY")
     candidate_plan = plan["candidates"][candidate]
     need(manifest.get("candidate_id") == candidate_plan["candidate_id"]
+         and snapshot_meta.get("candidate_id") == candidate_plan["candidate_id"]
          and manifest.get("phrase") == candidate_plan["phrase"]
          and manifest.get("ipa") == candidate_plan["ipa"]
          and manifest.get("ctc_tokens") == candidate_plan["token_labels"]
