@@ -112,8 +112,8 @@ def load_plan():
          "TWO_SEPARATE_CANDIDATE_IDENTITIES_AND_SEEDS")
     pack = plan["pack"]
     need(pack == {"magic": "KWSV7C01", "version": 1, "float_count": FLOAT_COUNT,
-                  "header_bytes": 20, "total_bytes": 216964,
-                  "little_endian_float32": True, "candidate_id_in_header": True},
+                  "header_bytes": 16, "total_bytes": 216960,
+                  "little_endian_float32": True, "candidate_id_in_header": False},
          "EXACT_KWSV7C01_PACK_GEOMETRY")
     return plan
 
@@ -289,7 +289,7 @@ def pack_model(state, bank, mean, scale, candidate_id, np):
     need(floats.size == FLOAT_COUNT and np.isfinite(floats).all(),
          "EXACT_54236_FLOAT_PACK")
     need(candidate_id in (1, 2), "CANDIDATE_ID")
-    return MAGIC + struct.pack("<III", 1, FLOAT_COUNT, candidate_id) + floats.tobytes()
+    return MAGIC + struct.pack("<II", 1, FLOAT_COUNT) + floats.tobytes()
 
 
 def run(packet, candidate, output, *, env=None, event=None):
@@ -453,8 +453,8 @@ def run(packet, candidate, output, *, env=None, event=None):
         pack_path = model_dir / "candidate.kwv7"
         with pack_path.open("xb") as handle:
             handle.write(pack)
-        need(len(pack) == 216964 and pack[:8] == MAGIC
-             and struct.unpack("<III", pack[8:20]) == (1, FLOAT_COUNT, candidate_id),
+        need(len(pack) == 216960 and pack[:8] == MAGIC
+             and struct.unpack("<II", pack[8:16]) == (1, FLOAT_COUNT),
              "KWSV7C01_PACK_READBACK")
         # The DEVELOPMENT set is opened only after final weights are frozen.
         dev_results = []
