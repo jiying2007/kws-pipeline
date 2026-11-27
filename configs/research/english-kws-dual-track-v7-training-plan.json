@@ -123,10 +123,10 @@
     "magic": "KWSV7C01",
     "version": 1,
     "float_count": 54236,
-    "header_bytes": 20,
-    "total_bytes": 216964,
+    "header_bytes": 16,
+    "total_bytes": 216960,
     "little_endian_float32": true,
-    "candidate_id_in_header": true
+    "candidate_id_in_header": false
   },
   "promotion_allowed": false,
   "product_quality_claims_allowed": false,
