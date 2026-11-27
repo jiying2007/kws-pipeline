@@ -132,6 +132,13 @@ def guard(plan, env=None, event=None):
     need(re.fullmatch(r"[0-9a-f]{40}", head) is not None
          and re.fullmatch(r"[1-9][0-9]*", run_id) is not None,
          "VALID_GITHUB_MAIN_RUN_ID")
+    source_run_id = plan.get("source_run_id")
+    source_commit = plan.get("source_commit")
+    need(type(source_run_id) is int and source_run_id > 0
+         and re.fullmatch(r"[0-9a-f]{40}", str(source_commit)) is not None
+         and plan.get("source_workflow_id") == 432334213
+         and plan.get("source_artifact_name") == f"v7-machine-evidence-packet-{source_run_id}",
+         "EXACT_G2_SOURCE_RUN_BINDING")
     if event is None:
         event = read_json(env["GITHUB_EVENT_PATH"])
     need(event.get("before") == plan["next_main_before"]
@@ -142,7 +149,9 @@ def guard(plan, env=None, event=None):
          and event.get("repository", {}).get("private") is False,
          "EXACT_FIRST_MAIN_SUCCESSOR_AND_PUBLIC_REPOSITORY")
     return {"repository": REPO, "run_id": int(run_id), "commit": head,
-            "parent": plan["next_main_before"], "attempt": 1}
+            "parent": plan["next_main_before"], "attempt": 1,
+            "source_run_id": source_run_id, "source_commit": source_commit,
+            "source_workflow_id": plan["source_workflow_id"]}
 
 
 def read_pcm(row, packet):
@@ -318,10 +327,16 @@ def run(packet, candidate, output, *, env=None, event=None):
          "SAVED_CANDIDATE_MANIFEST_EQUALS_RECOMPUTED_ADMISSION")
     readiness_candidate = readiness["candidate_manifests"][candidate]
     manifest_sha = sha(canonical(manifest))
+    source_run = readiness.get("source_run", {})
     need(readiness.get("data_admitted") is True
          and readiness.get("status") == "READY_FOR_G3_BUDGET_DECLARATION"
          and readiness.get("training_authorized") is False
-         and str(readiness.get("source_run", {}).get("run_id")) == str(identity["run_id"])
+         and source_run.get("repository") == REPO
+         and source_run.get("event") == "push"
+         and source_run.get("ref") == "refs/heads/main"
+         and str(source_run.get("run_id")) == str(plan["source_run_id"])
+         and source_run.get("sha") == plan["source_commit"]
+         and str(source_run.get("attempt")) == "1"
          and readiness_candidate["sha256"] == manifest_sha
          and readiness_candidate["training_snapshot_allowed"] is True
          and manifest["training_snapshot_allowed"] is True
@@ -546,7 +561,8 @@ def run(packet, candidate, output, *, env=None, event=None):
             "pack_bytes": len(pack), "pack_sha256": sha(pack),
             "candidate_manifest_sha256": manifest_sha,
             "training_plan_sha256": sha(canonical(plan)),
-            "source_run_id": identity["run_id"], "source_commit": identity["commit"],
+            "source_run_id": plan["source_run_id"], "source_commit": plan["source_commit"],
+            "training_run_id": identity["run_id"], "training_commit": identity["commit"],
             "product_promotion_allowed": False,
         }
         write_once(output / "MODEL_MANIFEST.json", manifest_out)
