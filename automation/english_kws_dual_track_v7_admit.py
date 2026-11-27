@@ -63,6 +63,42 @@ def verify_packet_inventory(packet):
             "verified_bytes": total_bytes}
 
 
+def build_readiness(joined, packet_identity):
+    summary = joined["summary"]
+    candidate_results = summary["candidate_results"]
+    return {
+    "schema": "english-kws-dual-track-v7-g3-training-readiness-v1",
+    "source_run": summary.get("source_run"),
+    "packet_files_manifest_sha256": packet_identity["files_manifest_sha256"],
+    "packet_file_count": packet_identity["file_count"],
+    "packet_verified_bytes": packet_identity["verified_bytes"],
+    "status": "READY_FOR_G3_BUDGET_DECLARATION" if summary["data_admitted"] else "STOP_INCOMPLETE_SOURCE_ADMISSION",
+    "data_admitted": summary["data_admitted"],
+    "training_authorized": False,
+    "optimizer_updates": 0,
+    "kws_model_forwards": 0,
+    "requires_independent_candidate_budgets": True,
+    "candidate_manifests": {
+        candidate: {
+            "sha256": candidate_results[candidate]["manifest_sha256"],
+            "training_snapshot_allowed": candidate_results[candidate]["training_snapshot_allowed"],
+            "eligible_train_rows": candidate_results[candidate]["eligible_train_rows"],
+            "balanced_groups_by_role": candidate_results[candidate]["balanced_groups_by_role"],
+            "tier_counts": candidate_results[candidate]["tier_counts"],
+        }
+        for candidate in admission.CANDIDATES
+    },
+    "development_used_for_training": False,
+    "calibration_used_for_training": False,
+    "locked_test_used_for_training_or_mining": False,
+    "locked_kws_audio_opened": False,
+    "human_gold": False,
+    "independent_real_quality_claims_allowed": False,
+    "physical_ssc305_claims_allowed": False,
+    "product_promotion_allowed": False,
+    }
+
+
 def run(packet, output):
     packet_input = Path(packet)
     require(packet_input.is_dir() and not packet_input.is_symlink(), "IMMUTABLE_G2_PACKET_DIRECTORY")
@@ -84,37 +120,7 @@ def run(packet, output):
         manifest = joined["candidate_manifests"][candidate]
         name = "HEY_" + candidate + "_V7_MANIFEST.json"
         files.append(write_once(output / name, manifest))
-    gate = {
-        "schema": "english-kws-dual-track-v7-g3-training-readiness-v1",
-        "source_run": summary.get("source_run"),
-        "packet_files_manifest_sha256": packet_identity["files_manifest_sha256"],
-        "packet_file_count": packet_identity["file_count"],
-        "packet_verified_bytes": packet_identity["verified_bytes"],
-        "status": "READY_FOR_G3_BUDGET_DECLARATION" if summary["data_admitted"] else "STOP_INCOMPLETE_SOURCE_ADMISSION",
-        "data_admitted": summary["data_admitted"],
-        "training_authorized": False,
-        "optimizer_updates": 0,
-        "kws_model_forwards": 0,
-        "requires_independent_candidate_budgets": True,
-        "candidate_manifests": {
-            candidate: {
-                "sha256": candidate_results[candidate]["manifest_sha256"],
-                "training_snapshot_allowed": candidate_results[candidate]["training_snapshot_allowed"],
-                "eligible_train_rows": candidate_results[candidate]["eligible_train_rows"],
-                "balanced_groups_by_role": candidate_results[candidate]["balanced_groups_by_role"],
-                "tier_counts": candidate_results[candidate]["tier_counts"],
-            }
-            for candidate in admission.CANDIDATES
-        },
-        "development_used_for_training": False,
-        "calibration_used_for_training": False,
-        "locked_test_used_for_training_or_mining": False,
-        "locked_kws_audio_opened": False,
-        "human_gold": False,
-        "independent_real_quality_claims_allowed": False,
-        "physical_ssc305_claims_allowed": False,
-        "product_promotion_allowed": False,
-    }
+    gate = build_readiness(joined, packet_identity)
     files.append(write_once(output / "G3_READINESS.json", gate))
     inventory = {
         "schema": "english-kws-dual-track-v7-admission-files-v1",
