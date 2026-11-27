@@ -478,6 +478,7 @@ def build_admission(corpus, evidence, root, *, profile, plan):
         "rule_id": RULES["rule_id"],
         "rules_sha256": RULES_SHA256,
         "source_plan_sha256": plan["source_plan_sha256"],
+        "source_run": corpus.get("run"),
         "corpus_sha256": sha(canonical(corpus)),
         "evidence_sha256": sha(canonical(evidence)),
         "candidate_results": {
