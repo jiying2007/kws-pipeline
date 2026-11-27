@@ -23,7 +23,7 @@ int main(void)
     if (pack == NULL || model == NULL || stream == NULL) return 1;
     memcpy(pack, "KWSV7C01", 8u);
     put_u32(pack + 8u, 1u);
-    put_u32(pack + 12u, EN_V7_KWS_FLOATS);
+    put_u32(pack + 12u, 54236u);
     values = (float *)(void *)(pack + 16u);
     for (index = 43876u; index < 43876u + 257u * 40u; ++index) values[index] = 0.01f;
     for (index = 43876u + 257u * 40u + 40u; index < EN_V7_KWS_FLOATS; ++index) values[index] = 1.0f;
