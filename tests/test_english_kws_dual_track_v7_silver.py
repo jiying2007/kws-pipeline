@@ -293,7 +293,7 @@ class V7AdmissionTests(unittest.TestCase):
                 files.append({"path": name, "bytes": len(raw), "sha256": v7.sha(raw)})
             (packet / "FILES.json").write_bytes(v7.canonical({
                 "schema": "english-kws-dual-track-v7-files-v1", "files": files
-            }) + b"\\n")
+            }) + b"\n")
             result = v7cli.verify_packet_inventory(packet)
             self.assertEqual(result["file_count"], 4)
             (packet / "source/audio/a.wav").write_bytes(b"tampered")
