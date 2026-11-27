@@ -1,0 +1,245 @@
+"""Pure-byte fixtures for V7 candidate-relative admission; no model calls."""
+from __future__ import annotations
+
+import copy
+import io
+import json
+from pathlib import Path
+import struct
+import sys
+import tempfile
+import unittest
+import wave
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "training"))
+import english_kws_dual_track_v7_silver as v7
+
+PROFILE = json.loads((ROOT / "configs/research/english-pronunciation-profile-20261115.json").read_text())
+
+
+def phone_tokens(row):
+    if row["cell_id"].startswith("vosen"):
+        return ["h", "eɪ", "v", "oʊ", "s", "ə", "n"]
+    if row["cell_id"].startswith("mero"):
+        return ["h", "eɪ", "m", "ɛ", "ɹ", "oʊ"]
+    if row["cell_id"] == "bosen-s":
+        return ["h", "eɪ", "b", "oʊ", "s", "ə", "n"]
+    if row["cell_id"] == "bosen-z":
+        return ["h", "eɪ", "b", "oʊ", "z", "ə", "n"]
+    if row["cell_id"] == "memo":
+        return ["h", "eɪ", "m", "ɛ", "m", "oʊ"]
+    if row["cell_id"] == "nero":
+        return ["h", "eɪ", "n", "ɛ", "ɹ", "oʊ"]
+    return ["h", "ə", "l", "oʊ"]
+
+
+class V7AdmissionTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.temp = tempfile.TemporaryDirectory()
+        cls.root = Path(cls.temp.name)
+        cls.groups = []
+        for index in range(12):
+            role = "train" if index < 6 else "development" if index < 8 else "calibration" if index < 10 else "locked-test"
+            cls.groups.append({
+                "source_group_id": "piper-libritts-index-" + str(496 + index),
+                "source_speaker_id": "p" + str(1000 + index),
+                "source_speaker_index": 496 + index,
+                "voice_family": "piper-libritts-p" + str(1000 + index),
+                "role": role,
+            })
+        cls.plan = {
+            "execution_stage": "G2_SOURCE_GENERATION_AND_BLIND_OBSERVATION_ONLY",
+            "source_count": 144,
+            "candidate_ids": ["hey-vosen-v7", "hey-mero-v7"],
+            "observer_providers": ["qwen", "whisper", "parakeet", "phoneme"],
+            "source_role_counts": {"train": 6, "development": 2, "calibration": 2, "locked-test": 2},
+            "positive_min_samples": 720,
+            "positive_max_samples": 28672,
+            "source_plan_sha256": "a" * 64,
+            "training_allowed": False,
+            "promotion_allowed": False,
+            "new_kws_calls": 0,
+            "optimizer_updates": 0,
+        }
+        cls.corpus, cls.evidence = cls.make_packet()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.temp.cleanup()
+
+    @classmethod
+    def make_packet(cls):
+        rows = []
+        evidence_rows = []
+        for group in cls.groups:
+            for cell_id, (text, requested_class, kind, labels) in v7.EXPECTED_CELLS.items():
+                index = len(rows)
+                pcm = struct.pack("<7200h", *([1000 + index] * 7200))
+                pcm_path = "source/audio/item-" + str(index) + "/audio-16k.pcm"
+                wav_path = "source/audio/item-" + str(index) + "/audio-16k.wav"
+                wav_buffer = io.BytesIO()
+                with wave.open(wav_buffer, "wb") as stream:
+                    stream.setparams((1, 2, 16000, 7200, "NONE", "not compressed"))
+                    stream.writeframes(pcm)
+                wav = wav_buffer.getvalue()
+                folder = cls.root / "source/audio/item-" + str(index)
+                folder.mkdir(parents=True, exist_ok=True)
+                (folder / "audio-16k.pcm").write_bytes(pcm)
+                (folder / "audio-16k.wav").write_bytes(wav)
+                row = {
+                    **group,
+                    "id": "item-" + str(index),
+                    "cell_id": cell_id,
+                    "requested_text": text,
+                    "requested_class": requested_class,
+                    "pronunciation_hypothesis": "v7-fixture",
+                    "kind": kind,
+                    "length_scale": 1.0,
+                    "raw_phonemes": "",
+                    "candidate_labels": labels,
+                    "generation_status": "success",
+                    "pcm_path": pcm_path,
+                    "wav_path": wav_path,
+                    "pcm_sha256": v7.sha(pcm),
+                    "wav_sha256": v7.sha(wav),
+                    "pcm_samples": 7200,
+                    "sample_rate": 16000,
+                    "channels": 1,
+                }
+                rows.append(row)
+                packet = {"id": row["id"], "observations": [], "phone_observation": None}
+                for provider in ("qwen", "whisper", "parakeet", "phoneme"):
+                    capture = {
+                        **v7.observer_identity(provider),
+                        "schema": v7.CAPTURE_SCHEMA,
+                        "id": row["id"],
+                        "source_pcm_sha256": row["pcm_sha256"],
+                        "source_wav_sha256": row["wav_sha256"],
+                        "source_samples": row["pcm_samples"],
+                        "status": "success",
+                        "target_conditioned": False,
+                        "input_coverage_complete": True,
+                        "decoder_output_complete": True,
+                    }
+                    if provider == "phoneme":
+                        capture["phone_tokens"] = phone_tokens(row)
+                    else:
+                        capture["raw_text"] = row["requested_text"]
+                    capture_path = "evidence/" + provider + "/" + row["id"] + "/CAPTURE.json"
+                    capture_file = cls.root / capture_path
+                    capture_file.parent.mkdir(parents=True, exist_ok=True)
+                    raw = v7.canonical(capture)
+                    capture_file.write_bytes(raw)
+                    observation = capture | {
+                        "capture_path": capture_path,
+                        "capture_sha256": v7.sha(raw),
+                    }
+                    if provider == "phoneme":
+                        packet["phone_observation"] = observation
+                    else:
+                        packet["observations"].append(observation)
+                evidence_rows.append(packet)
+        corpus = {
+            "schema": v7.CORPUS_SCHEMA,
+            "declared_count": 144,
+            "valid_count": 144,
+            "source_groups": cls.groups,
+            "rows": rows,
+            "human_gold": False,
+        }
+        evidence = {
+            "schema": v7.EVIDENCE_SCHEMA,
+            "rows": evidence_rows,
+            "human_gold": False,
+            "new_model_calls_during_join": 0,
+            "optimizer_updates": 0,
+        }
+        return corpus, evidence
+
+    def setUp(self):
+        self.corpus = copy.deepcopy(self.corpus)
+        self.evidence = copy.deepcopy(self.evidence)
+        self.plan = copy.deepcopy(self.plan)
+
+    def test_exact_candidate_relative_manifests_and_split(self):
+        result = v7.build_admission(self.corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan)
+        self.assertTrue(result["summary"]["data_admitted"])
+        self.assertFalse(result["summary"]["training_authorized"])
+        for candidate in v7.CANDIDATES:
+            manifest = result["candidate_manifests"][candidate]
+            self.assertTrue(manifest["training_snapshot_allowed"])
+            self.assertEqual(manifest["balanced_groups_by_role"], self.plan["source_role_counts"])
+            self.assertEqual(len(manifest["rows"]), 144)
+            self.assertEqual(manifest["ctc_token_ids"], [1, 2, 3])
+            self.assertFalse(manifest["optimizer_allowed"])
+            self.assertTrue(manifest["locked_test_sealed_from_training_and_mining"])
+            self.assertTrue(all(not row["optimizer_allowed"] for row in manifest["rows"]))
+
+    def test_other_brand_phrase_is_candidate_relative_cross_trigger_negative(self):
+        result = v7.build_admission(self.corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan)
+        rows_vosen = {row["cell_id"]: row for row in result["candidate_manifests"]["VOSEN"]["rows"]}
+        rows_mero = {row["cell_id"]: row for row in result["candidate_manifests"]["MERO"]["rows"]}
+        self.assertEqual(rows_vosen["vosen-slow"]["research_class"], 1)
+        self.assertEqual(rows_vosen["mero-slow"]["research_class"], 0)
+        self.assertEqual(rows_mero["mero-slow"]["research_class"], 1)
+        self.assertEqual(rows_mero["vosen-slow"]["research_class"], 0)
+        self.assertEqual(rows_vosen["mero-slow"]["reason"], "OTHER_BRAND_CROSS_TRIGGER_NEGATIVE")
+
+    def test_locked_calibration_and_development_never_enter_optimizer(self):
+        result = v7.build_admission(self.corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan)
+        for candidate in v7.CANDIDATES:
+            for row in result["candidate_manifests"][candidate]["rows"]:
+                if row["role"] == "train":
+                    self.assertTrue(row["training_eligible"])
+                    self.assertFalse(row["optimizer_allowed"])
+                else:
+                    self.assertFalse(row["training_eligible"])
+                    self.assertFalse(row["optimizer_allowed"])
+                    self.assertIsNone(row["training_class"])
+                    self.assertEqual(row["training_weight"], 0.0)
+
+    def test_vosen_voiced_z_and_legacy_mero_are_unknown_not_negative(self):
+        row = self.corpus["rows"][0]
+        self.assertEqual(v7.decide_candidate(
+            row, "VOSEN", ["Hey Vozen.", "Hey Vozen.", "Hey Vozen."],
+            ["h", "eɪ", "v", "oʊ", "z", "ə", "n"])[0], "unknown")
+        row = self.corpus["rows"][3]
+        self.assertEqual(v7.decide_candidate(
+            row, "MERO", ["Hey Meero.", "Hey Meero.", "Hey Meero."],
+            ["h", "eɪ", "m", "iː", "r", "oʊ"])[0], "unknown")
+
+    def test_two_asr_votes_are_weak_only_with_matching_independent_phone(self):
+        row = self.corpus["rows"][0]
+        tier, label, reason, observed = v7.decide_candidate(
+            row, "VOSEN", ["Hey Vosen.", "Hey Vosen.", "something else"],
+            ["h", "eɪ", "v", "oʊ", "s", "ə", "n"])
+        self.assertEqual((tier, label), ("weak", 1))
+        self.assertEqual(reason, "JOINT_ASR_AND_PHONE_TARGET_SUPPORT")
+
+    def test_conflicting_other_keyword_vetoes_two_votes(self):
+        row = self.corpus["rows"][0]
+        tier, label, _, _ = v7.decide_candidate(
+            row, "VOSEN", ["Hey Vosen.", "Hey Vosen.", "Hey Mero."],
+            ["h", "eɪ", "v", "oʊ", "s", "ə", "n"])
+        self.assertEqual((tier, label), ("unknown", None))
+
+    def test_phone_candidate_is_not_confused_by_voicing(self):
+        self.assertEqual(v7.phone_candidate(["h", "eɪ", "v", "oʊ", "s", "ə", "n"]), "VOSEN")
+        self.assertIsNone(v7.phone_candidate(["h", "eɪ", "v", "oʊ", "z", "ə", "n"]))
+
+    def test_invalid_positive_geometry_is_rejected(self):
+        row = copy.deepcopy(self.corpus["rows"][0])
+        row["pcm_samples"] = 400
+        with self.assertRaisesRegex(ValueError, "POSITIVE_FRONTEND_SUPPORT_GEOMETRY"):
+            v7.verify_pcm(row, self.root)
+
+    def test_training_or_promotion_cannot_be_enabled_by_plan(self):
+        self.plan["training_allowed"] = True
+        with self.assertRaisesRegex(ValueError, "G2_CANNOT_AUTHORIZE_TRAINING_OR_PROMOTION"):
+            v7.validate_plan(self.plan, PROFILE)
+
+
+if __name__ == "__main__":
+    unittest.main()
