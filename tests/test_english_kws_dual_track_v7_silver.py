@@ -257,11 +257,15 @@ class V7AdmissionTests(unittest.TestCase):
             stream.setparams((1, 2, 16000, 400, "NONE", "not compressed"))
             stream.writeframes(pcm)
         wav = wav_buffer.getvalue()
-        pcm_path = self.root / row["pcm_path"]
-        wav_path = self.root / row["wav_path"]
+        folder = self.root / "source/audio/short-positive"
+        folder.mkdir(parents=True, exist_ok=True)
+        pcm_path = folder / "audio-16k.pcm"
+        wav_path = folder / "audio-16k.wav"
         pcm_path.write_bytes(pcm)
         wav_path.write_bytes(wav)
-        row.update(pcm_samples=400, pcm_sha256=v7.sha(pcm), wav_sha256=v7.sha(wav))
+        row.update(pcm_path="source/audio/short-positive/audio-16k.pcm",
+                   wav_path="source/audio/short-positive/audio-16k.wav",
+                   pcm_samples=400, pcm_sha256=v7.sha(pcm), wav_sha256=v7.sha(wav))
         with self.assertRaisesRegex(ValueError, "POSITIVE_FRONTEND_SUPPORT_GEOMETRY"):
             v7.verify_pcm(row, self.root)
 
