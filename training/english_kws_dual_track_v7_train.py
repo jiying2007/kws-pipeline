@@ -264,6 +264,11 @@ def verify_training_snapshot(snapshot, candidate, plan):
     need(seen == expected_files, "NO_EXTRA_OR_MISSING_TRAIN_DEV_FILES")
     train_rows = [row for row in rows if row["role"] == "train" and row["training_eligible"]]
     dev_rows = [row for row in rows if row["role"] == "development"]
+    for group_id in (group_id for group_id, role in group_roles.items() if role == "development"):
+        group_rows = [row for row in dev_rows if row["source_group_id"] == group_id]
+        need(sum(row["research_class"] == 1 for row in group_rows) >= 2
+             and sum(row["research_class"] == 0 for row in group_rows) >= 4,
+             "BALANCED_DEVELOPMENT_GROUP_ROWS")
     need(snapshot_meta.get("role_counts") == {"train": 6, "development": 2}
          and snapshot_meta.get("training_rows") == len(train_rows)
          and snapshot_meta.get("development_rows") == len(dev_rows)
@@ -290,6 +295,7 @@ def verify_training_snapshot(snapshot, candidate, plan):
     need(manifest.get("candidate_id") == candidate_plan["candidate_id"]
          and manifest.get("phrase") == candidate_plan["phrase"]
          and manifest.get("ipa") == candidate_plan["ipa"]
+         and manifest.get("ctc_tokens") == candidate_plan["token_labels"]
          and manifest.get("ctc_token_ids") == candidate_plan["token_ids"],
          "TRAIN_DEV_CANDIDATE_PRONUNCIATION_BINDING")
     return manifest, {
@@ -494,7 +500,7 @@ def run(snapshot, candidate, output, *, env=None, event=None):
         bank = make_mel_bank(np)
         train_features = {}
         for row in train_rows:
-            pcm = read_pcm(row, packet)
+            pcm = read_pcm(row, snapshot)
             train_features[row["id"]] = extract_features(pcm, bank, torch, np)
         concatenated = np.concatenate([train_features[row["id"]] for row in train_rows], axis=0)
         mean = concatenated.mean(axis=0).astype(np.float32)
@@ -580,7 +586,7 @@ def run(snapshot, candidate, output, *, env=None, event=None):
         dev_results = []
         with torch.no_grad():
             for row in dev_rows:
-                pcm = read_pcm(row, packet)
+                pcm = read_pcm(row, snapshot)
                 features = extract_features(pcm, bank, torch, np)
                 model_input = torch.from_numpy(((features - mean) / scale).astype(np.float32)).unsqueeze(0)
                 logits = reloaded(model_input)
