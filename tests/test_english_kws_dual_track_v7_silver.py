@@ -314,6 +314,52 @@ class V7AdmissionTests(unittest.TestCase):
             self.assertEqual(sum(item["tier_counts"].values()), 144)
             self.assertEqual(len(item["sha256"]), 64)
 
+    def test_training_snapshots_contain_only_candidate_train_and_development_bytes(self):
+        corpus = copy.deepcopy(self.corpus)
+        corpus["run"] = {
+            "repository": "jiying2007/kws-data",
+            "run_id": "46000882374",
+            "sha": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
+            "event": "push",
+            "ref": "refs/heads/main",
+            "attempt": "1",
+        }
+        joined = v7.build_admission(corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan)
+        identity = {
+            "files_manifest_sha256": "a" * 64,
+            "file_count": 723,
+            "verified_bytes": 123456,
+        }
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "snapshots"
+            snapshots = v7cli.build_training_snapshots(self.root, root, joined, identity)
+            self.assertEqual(set(snapshots), set(v7.CANDIDATES))
+            for candidate in v7.CANDIDATES:
+                directory = root / candidate
+                snapshot = json.loads((directory / "SNAPSHOT.json").read_bytes())
+                manifest = json.loads((directory / "MANIFEST.json").read_bytes())
+                files = json.loads((directory / "FILES.json").read_bytes())
+                self.assertEqual(snapshot["candidate"], candidate)
+                self.assertEqual(snapshot["role_counts"], {"train": 6, "development": 2})
+                self.assertFalse(snapshot["calibration_audio_included"])
+                self.assertFalse(snapshot["locked_test_audio_included"])
+                self.assertFalse(snapshot["calibration_labels_included"])
+                self.assertFalse(snapshot["locked_test_labels_included"])
+                self.assertEqual({row["role"] for row in manifest["rows"]},
+                                 {"train", "development"})
+                self.assertEqual(len(manifest["source_groups"]), 8)
+                self.assertTrue(all("evidence_refs" not in row for row in manifest["rows"]))
+                self.assertTrue(all("locked" not in item["path"].lower()
+                                    and "calibration" not in item["path"].lower()
+                                    for item in files["files"]))
+                self.assertEqual(snapshot["file_count"], len(files["files"]))
+                self.assertEqual(snapshot["files_manifest_sha256"],
+                                 v7.sha((directory / "FILES.json").read_bytes()))
+                self.assertEqual(snapshot["manifest_sha256"],
+                                 v7.sha((directory / "MANIFEST.json").read_bytes()))
+                self.assertFalse((directory / "MACHINE_EVIDENCE.json").exists())
+                self.assertFalse((directory / "CORPUS_MANIFEST.json").exists())
+
     def test_packet_inventory_authenticates_every_file_and_rejects_tampering(self):
         with tempfile.TemporaryDirectory() as temp:
             packet = Path(temp)
