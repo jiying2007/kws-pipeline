@@ -58,6 +58,7 @@ class V7AdmissionTests(unittest.TestCase):
             "positive_min_samples": 720,
             "positive_max_samples": 28672,
             "source_plan_sha256": "a" * 64,
+            "recipe_sha256": "b" * 64,
             "training_allowed": False,
             "promotion_allowed": False,
             "new_kws_calls": 0,
@@ -74,7 +75,7 @@ class V7AdmissionTests(unittest.TestCase):
         rows = []
         evidence_rows = []
         for group in cls.groups:
-            for cell_id, (text, requested_class, kind, labels) in v7.EXPECTED_CELLS.items():
+            for cell_id, (text, requested_class, kind, raw_ipa, length_scale, labels) in v7.EXPECTED_CELLS.items():
                 index = len(rows)
                 pcm = struct.pack("<7200h", *([1000 + index] * 7200))
                 pcm_path = "source/audio/item-" + str(index) + "/audio-16k.pcm"
@@ -94,10 +95,13 @@ class V7AdmissionTests(unittest.TestCase):
                     "cell_id": cell_id,
                     "requested_text": text,
                     "requested_class": requested_class,
-                    "pronunciation_hypothesis": "v7-fixture",
+                    "pronunciation_hypothesis": ("vosen-us-s-v7" if requested_class == 1 else
+                                                 "mero-us-eh-v7" if requested_class == 2 else
+                                                 "contrast-negative-v7" if kind == "contrast-negative" else
+                                                 "ordinary-negative-v7"),
                     "kind": kind,
-                    "length_scale": 1.0,
-                    "raw_phonemes": "",
+                    "length_scale": length_scale,
+                    "raw_phonemes": raw_ipa,
                     "candidate_labels": labels,
                     "generation_status": "success",
                     "pcm_path": pcm_path,
@@ -143,6 +147,8 @@ class V7AdmissionTests(unittest.TestCase):
                 evidence_rows.append(packet)
         corpus = {
             "schema": v7.CORPUS_SCHEMA,
+            "recipe_sha256": "b" * 64,
+            "preflight_sha256": "c" * 64,
             "declared_count": 144,
             "valid_count": 144,
             "source_groups": cls.groups,
@@ -176,6 +182,19 @@ class V7AdmissionTests(unittest.TestCase):
             self.assertFalse(manifest["optimizer_allowed"])
             self.assertTrue(manifest["locked_test_sealed_from_training_and_mining"])
             self.assertTrue(all(not row["optimizer_allowed"] for row in manifest["rows"]))
+
+    def test_one_failed_source_is_unknown_without_retry_and_other_groups_remain_usable(self):
+        self.corpus["rows"][0].update(generation_status="FAILED_NO_RETRY",
+            pcm_path=None, wav_path=None, pcm_sha256=None, wav_sha256=None, pcm_samples=None)
+        self.corpus["valid_count"] -= 1
+        self.evidence["rows"][0]["observations"] = []
+        self.evidence["rows"][0]["phone_observation"] = None
+        result = v7.build_admission(self.corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan)
+        row = next(item for item in result["candidate_manifests"]["VOSEN"]["rows"]
+                   if item["id"] == "item-0")
+        self.assertEqual(row["tier"], "unknown")
+        self.assertEqual(row["reason"], "SOURCE_NOT_VALID_NO_RETRY")
+        self.assertTrue(result["candidate_manifests"]["VOSEN"]["training_snapshot_allowed"])
 
     def test_other_brand_phrase_is_candidate_relative_cross_trigger_negative(self):
         result = v7.build_admission(self.corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan)
