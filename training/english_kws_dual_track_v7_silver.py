@@ -26,8 +26,8 @@ CANDIDATES = ("VOSEN", "MERO")
 IDENTITY_KEYS = ("recognizer_id", "model_family", "model_sha256", "decode_config_sha256")
 SOURCE_KEYS = ("source_group_id", "source_speaker_id", "source_speaker_index", "voice_family", "role")
 CELL_KEYS = ("cell_id", "requested_text", "requested_class", "pronunciation_hypothesis")
-HEX64 = re.compile(r"[0-9a-f]{64}\\Z")
-SAFE_REL = re.compile(r"[A-Za-z0-9_.\\-/]+\\Z")
+HEX64 = re.compile(r"[0-9a-f]{64}\Z")
+SAFE_REL = re.compile(r"[A-Za-z0-9_./-]+\Z")
 
 MODEL_PINS = {
     "qwen": ("qwen3-asr", "79d6cbd4c98c7bbffe9db2edac07f56cd6637d0d5944b27f6c2b8353840323ea",
@@ -65,8 +65,8 @@ EXCLUDED_TRANSCRIPTS = {
     "hey vozan", "hay vozan", "hey vozin", "hay vozin",
 }
 PHONE_PATTERNS = {
-    "VOSEN": re.compile(r"h?eɪv(?:oʊ|ou|o)s[əɐʌ]n\\Z"),
-    "MERO": re.compile(r"h?eɪmɛr(?:oʊ|ou|o)\\Z"),
+    "VOSEN": re.compile(r"h?eɪv(?:oʊ|ou|o)s[əɐʌ]n\Z"),
+    "MERO": re.compile(r"h?eɪmɛr(?:oʊ|ou|o)\Z"),
 }
 ORDINARY_TEXTS = {"hello there", "good morning"}
 RULES = {
@@ -128,7 +128,7 @@ def normalized_phones(tokens):
     require(isinstance(tokens, list) and all(isinstance(token, str) and token for token in tokens),
             "PHONE_TOKENS_REQUIRED")
     value = unicodedata.normalize("NFKC", "".join(tokens))
-    value = re.sub(r"[\\sˈˌːˑ͜͡]", "", value)
+    value = re.sub(r"[\sˈˌːˑ͜͡]", "", value)
     return value.replace("ɹ", "r").replace("ɾ", "r")
 
 
