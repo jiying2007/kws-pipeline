@@ -54,6 +54,7 @@ ENGLISH_CALIBRATED_THRESHOLD_WORKFLOW = '.github/workflows/english-head-calibrat
 ENGLISH_V5_MERO_CONTRACT_WORKFLOW = '.github/workflows/english-v5-mero-contract.yml'
 ENGLISH_V6_DELIVERY_CONTRACT_WORKFLOW = '.github/workflows/english-v6-delivery-contract.yml'
 ENGLISH_V6_B28_DELIVERY_CONTRACT_WORKFLOW = '.github/workflows/english-v6-b28-delivery-contract.yml'
+ENGLISH_V7_ADMISSION_WORKFLOW = '.github/workflows/english-kws-v7-admission.yml'
 
 SENSE_REVISION_ID = 'sense-runtime-binding-20261017'
 SENSE_REVISION_SUPERSEDES = '62c970794f74d7303f3daff246e7062ffb1c85d5'
@@ -453,11 +454,13 @@ def verify(root, manifest):
     approved_with_v5_mono = approved_with_calibrated_threshold + [ENGLISH_V5_MERO_CONTRACT_WORKFLOW]
     approved_with_v6_delivery = approved_with_v5_mono + [ENGLISH_V6_DELIVERY_CONTRACT_WORKFLOW]
     approved_with_v6_b28_delivery = approved_with_v6_delivery + [ENGLISH_V6_B28_DELIVERY_CONTRACT_WORKFLOW]
+    approved_with_v7_admission = approved_with_v6_b28_delivery + [ENGLISH_V7_ADMISSION_WORKFLOW]
     if additions not in (approved, approved_with_clone, approved_with_public_zh64,
                          approved_with_embedding_assets, approved_with_backbone_parity,
                          approved_with_mel_specialization, approved_with_stream_integration,
                          approved_with_stream_performance, approved_with_calibrated_threshold,
-                         approved_with_v5_mono, approved_with_v6_delivery, approved_with_v6_b28_delivery):
+                         approved_with_v5_mono, approved_with_v6_delivery, approved_with_v6_b28_delivery,
+                         approved_with_v7_admission):
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed additions
     # both bind CURRENT bytes. Historical maintenance receipts are evidence,
