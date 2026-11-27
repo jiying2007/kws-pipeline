@@ -41,18 +41,18 @@ MODEL_PINS = {
 }
 
 EXPECTED_CELLS = {
-    "vosen-slow": ("Hey Vosen.", 1, "target", {"VOSEN": 1, "MERO": 0}),
-    "vosen-normal": ("Hey Vosen.", 1, "target", {"VOSEN": 1, "MERO": 0}),
-    "vosen-fast": ("Hey Vosen.", 1, "target", {"VOSEN": 1, "MERO": 0}),
-    "mero-slow": ("Hey Mero.", 2, "target", {"VOSEN": 0, "MERO": 1}),
-    "mero-normal": ("Hey Mero.", 2, "target", {"VOSEN": 0, "MERO": 1}),
-    "mero-fast": ("Hey Mero.", 2, "target", {"VOSEN": 0, "MERO": 1}),
-    "bosen-s": ("Hey Bosen.", 0, "contrast-negative", {"VOSEN": 0, "MERO": 0}),
-    "bosen-z": ("Hey Bosen.", 0, "contrast-negative", {"VOSEN": 0, "MERO": 0}),
-    "memo": ("Hey Memo.", 0, "contrast-negative", {"VOSEN": 0, "MERO": 0}),
-    "nero": ("Hey Nero.", 0, "contrast-negative", {"VOSEN": 0, "MERO": 0}),
-    "hello": ("Hello there.", 0, "ordinary-negative", {"VOSEN": 0, "MERO": 0}),
-    "morning": ("Good morning.", 0, "ordinary-negative", {"VOSEN": 0, "MERO": 0}),
+    "vosen-slow": ("Hey Vosen.", 1, "target", "heɪ vˈoʊsən", 1.08, {"VOSEN": 1, "MERO": 0}),
+    "vosen-normal": ("Hey Vosen.", 1, "target", "heɪ vˈoʊsən", 1.0, {"VOSEN": 1, "MERO": 0}),
+    "vosen-fast": ("Hey Vosen.", 1, "target", "heɪ vˈoʊsən", 0.92, {"VOSEN": 1, "MERO": 0}),
+    "mero-slow": ("Hey Mero.", 2, "target", "heɪ mˈɛɹoʊ", 1.08, {"VOSEN": 0, "MERO": 1}),
+    "mero-normal": ("Hey Mero.", 2, "target", "heɪ mˈɛɹoʊ", 1.0, {"VOSEN": 0, "MERO": 1}),
+    "mero-fast": ("Hey Mero.", 2, "target", "heɪ mˈɛɹoʊ", 0.92, {"VOSEN": 0, "MERO": 1}),
+    "bosen-s": ("Hey Bosen.", 0, "contrast-negative", "heɪ bˈoʊsən", 1.0, {"VOSEN": 0, "MERO": 0}),
+    "bosen-z": ("Hey Bosen.", 0, "contrast-negative", "heɪ bˈoʊzən", 1.0, {"VOSEN": 0, "MERO": 0}),
+    "memo": ("Hey Memo.", 0, "contrast-negative", "heɪ mˈɛmoʊ", 1.0, {"VOSEN": 0, "MERO": 0}),
+    "nero": ("Hey Nero.", 0, "contrast-negative", "heɪ nˈɛɹoʊ", 1.0, {"VOSEN": 0, "MERO": 0}),
+    "hello": ("Hello there.", 0, "ordinary-negative", "həlˈoʊ ðɛɹ", 1.0, {"VOSEN": 0, "MERO": 0}),
+    "morning": ("Good morning.", 0, "ordinary-negative", "ɡʊd ˈmɔɹnɪŋ", 1.0, {"VOSEN": 0, "MERO": 0}),
 }
 
 ALIASES = {
@@ -297,12 +297,18 @@ def validate_plan(plan, profile):
 def _validate_corpus(corpus, evidence, plan):
     require(corpus.get("schema") == CORPUS_SCHEMA and evidence.get("schema") == EVIDENCE_SCHEMA,
             "V7_CORPUS_AND_EVIDENCE_SCHEMA")
+    require(corpus.get("recipe_sha256") == plan.get("recipe_sha256")
+            and corpus.get("preflight_sha256"), "V7_RECIPE_AND_PREFLIGHT_BINDING")
     rows = corpus.get("rows", [])
     observations = evidence.get("rows", [])
     require(len(rows) == 144 and len(observations) == 144, "COMPLETE_144_ROW_DENOMINATOR")
-    require(corpus.get("declared_count") == 144 and corpus.get("valid_count") == 144
-            and all(row.get("generation_status") == "success" for row in rows),
-            "ALL_144_ORIGINAL_PCM_ROWS_VALID")
+    statuses = [row.get("generation_status") for row in rows]
+    allowed_statuses = {"success", "FAILED_NO_RETRY", "UNKNOWN_AFTER_START_NO_RETRY",
+                        "POSITIVE_GEOMETRY_QUARANTINED", "DUPLICATE_PCM_QUARANTINED",
+                        "NOT_STARTED"}
+    require(corpus.get("declared_count") == 144 and all(status in allowed_statuses for status in statuses)
+            and corpus.get("valid_count") == statuses.count("success"),
+            "144_ROW_TERMINAL_STATUS_AND_VALID_COUNT")
     require(len({row.get("id") for row in rows}) == 144
             and {row.get("id") for row in rows} == {row.get("id") for row in observations},
             "SOURCE_OBSERVER_ROSTER_IDENTITY")
@@ -322,12 +328,14 @@ def _validate_corpus(corpus, evidence, plan):
         require(group is not None and cell is not None
                 and all(row.get(key) == group[key] for key in SOURCE_KEYS),
                 "ROW_SOURCE_GROUP_AND_ROLE_BINDING")
-        expected_text, expected_class, expected_kind, labels = cell
+        expected_text, expected_class, expected_kind, expected_ipa, expected_scale, labels = cell
         require(row.get("requested_text") == expected_text
                 and row.get("requested_class") == expected_class
                 and row.get("kind") == expected_kind
+                and row.get("raw_phonemes") == expected_ipa
+                and row.get("length_scale") == expected_scale
                 and row.get("candidate_labels") == labels,
-                "ROW_CELL_AND_CANDIDATE_RELATIVE_LABEL_BINDING")
+                "ROW_CELL_IPA_SCALE_AND_CANDIDATE_RELATIVE_LABEL_BINDING")
         pair = (row["source_group_id"], row["cell_id"])
         require(pair not in cells_seen, "DUPLICATE_SOURCE_CELL")
         cells_seen.add(pair)
@@ -344,22 +352,31 @@ def build_admission(corpus, evidence, root, *, profile, plan):
     for candidate in CANDIDATES:
         decisions = []
         for row in rows:
-            verify_pcm(row, root)
             packet = evidence_by_id[row["id"]]
-            observations = packet.get("observations")
-            require(isinstance(observations, list) and len(observations) == 3
-                    and all(isinstance(item, dict) for item in observations),
-                    "EXACT_THREE_BLIND_ASR_OBSERVATIONS")
-            provider_ids = [item.get("recognizer_id") for item in observations]
-            require(len(set(provider_ids)) == 3 and set(provider_ids) == {"qwen", "whisper", "parakeet"},
-                    "EXACT_BLIND_ASR_PROVIDER_SET")
-            by_id = {item["recognizer_id"]: item for item in observations}
-            texts = [verify_observation(by_id.get(provider), provider, row, root)
-                     for provider in ("qwen", "whisper", "parakeet")]
-            phone_observation = packet.get("phone_observation")
-            require(isinstance(phone_observation, dict), "EXACT_INDEPENDENT_PHONE_OBSERVATION")
-            phone = verify_observation(phone_observation, "phoneme", row, root, phones=True)
+            by_id = {}
+            if row["generation_status"] == "success":
+                verify_pcm(row, root)
+                observations = packet.get("observations")
+                require(isinstance(observations, list) and len(observations) == 3
+                        and all(isinstance(item, dict) for item in observations),
+                        "EXACT_THREE_BLIND_ASR_OBSERVATIONS")
+                provider_ids = [item.get("recognizer_id") for item in observations]
+                require(len(set(provider_ids)) == 3 and set(provider_ids) == {"qwen", "whisper", "parakeet"},
+                        "EXACT_BLIND_ASR_PROVIDER_SET")
+                by_id = {item["recognizer_id"]: item for item in observations}
+                texts = [verify_observation(by_id.get(provider), provider, row, root)
+                         for provider in ("qwen", "whisper", "parakeet")]
+                phone_observation = packet.get("phone_observation")
+                require(isinstance(phone_observation, dict), "EXACT_INDEPENDENT_PHONE_OBSERVATION")
+                phone = verify_observation(phone_observation, "phoneme", row, root, phones=True)
+            else:
+                require(not packet.get("observations") and packet.get("phone_observation") is None,
+                        "FAILED_OR_QUARANTINED_SOURCE_HAS_NO_OBSERVER_EVIDENCE")
+                texts = None
+                phone = None
             tier, label, reason, observed = decide_candidate(row, candidate, texts, phone)
+            if row["generation_status"] != "success":
+                tier, label, reason, observed = "unknown", None, "SOURCE_NOT_VALID_NO_RETRY", None
             refs = []
             for provider in ("qwen", "whisper", "parakeet"):
                 item = by_id.get(provider)
@@ -373,7 +390,13 @@ def build_admission(corpus, evidence, root, *, profile, plan):
             decisions.append({
                 "id": row["id"],
                 **{key: row[key] for key in SOURCE_KEYS},
-                **{key: row[key] for key in ("cell_id", "requested_text", "kind", "length_scale")},
+                **{key: row[key] for key in ("cell_id", "requested_text", "requested_class", "kind",
+                                              "length_scale", "raw_phonemes", "pronunciation_hypothesis")},
+                "request_sha256": row["request_sha256"],
+                "source_receipt_sha256": row.get("source_receipt_sha256"),
+                "actual_phonemes": row.get("actual_phonemes"),
+                "actual_phoneme_ids": row.get("actual_phoneme_ids"),
+                "generation_status": row["generation_status"],
                 "pcm_sha256": row["pcm_sha256"],
                 "wav_sha256": row["wav_sha256"],
                 "pcm_samples": row["pcm_samples"],
