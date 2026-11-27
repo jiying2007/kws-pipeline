@@ -197,6 +197,15 @@ class V7AdmissionTests(unittest.TestCase):
         self.assertEqual(row["reason"], "SOURCE_NOT_VALID_NO_RETRY")
         self.assertTrue(result["candidate_manifests"]["VOSEN"]["training_snapshot_allowed"])
 
+    def test_missing_observer_quarantines_only_that_row(self):
+        self.evidence["rows"][0]["observations"].pop()
+        result = v7.build_admission(self.corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan)
+        row = next(item for item in result["candidate_manifests"]["VOSEN"]["rows"]
+                   if item["id"] == "item-0")
+        self.assertEqual(row["tier"], "unknown")
+        self.assertEqual(row["reason"], "MISSING_OR_INCOMPLETE_ASR")
+        self.assertTrue(result["candidate_manifests"]["VOSEN"]["training_snapshot_allowed"])
+
     def test_other_brand_phrase_is_candidate_relative_cross_trigger_negative(self):
         result = v7.build_admission(self.corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan)
         rows_vosen = {row["cell_id"]: row for row in result["candidate_manifests"]["VOSEN"]["rows"]}
