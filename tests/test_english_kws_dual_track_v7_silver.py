@@ -57,7 +57,7 @@ class V7AdmissionTests(unittest.TestCase):
             "candidate_ids": ["hey-vosen-v7", "hey-mero-v7"],
             "observer_providers": ["qwen", "whisper", "parakeet", "phoneme"],
             "source_role_counts": {"train": 6, "development": 2, "calibration": 2, "locked-test": 2},
-            "positive_min_samples": 720,
+            "positive_min_samples": 6400,
             "positive_max_samples": 28672,
             "source_plan_sha256": "a" * 64,
             "recipe_sha256": "b" * 64,
@@ -277,7 +277,7 @@ class V7AdmissionTests(unittest.TestCase):
         row.update(pcm_path="source/audio/short-positive/audio-16k.pcm",
                    wav_path="source/audio/short-positive/audio-16k.wav",
                    pcm_samples=400, pcm_sha256=v7.sha(pcm), wav_sha256=v7.sha(wav))
-        with self.assertRaisesRegex(ValueError, "POSITIVE_FRONTEND_SUPPORT_GEOMETRY"):
+        with self.assertRaisesRegex(ValueError, "MODEL_INPUT_GEOMETRY"):
             v7.verify_pcm(row, self.root)
 
     def test_packet_inventory_authenticates_every_file_and_rejects_tampering(self):
