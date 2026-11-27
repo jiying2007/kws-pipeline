@@ -4,6 +4,7 @@ name: English KWS V7 candidate-relative admission contracts
     branches: [main]
     paths:
       - training/english_kws_dual_track_v7_silver.py
+      - automation/english_kws_dual_track_v7_admit.py
       - tests/test_english_kws_dual_track_v7_silver.py
       - .github/workflows/english-kws-v7-admission.yml
 permissions:
@@ -34,6 +35,7 @@ jobs:
               stripped) args=(-OO) ;;
             esac
             python3 -I -S -B "${args[@]}" tests/test_english_kws_dual_track_v7_silver.py -v
+            python3 -I -S -B "${args[@]}" automation/english_kws_dual_track_v7_admit.py --help
           done
           git diff --check
           test -z "$(git status --porcelain)"
