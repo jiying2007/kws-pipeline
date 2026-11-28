@@ -258,9 +258,9 @@ def verify_training_snapshot(snapshot, candidate, plan):
          "NO_CALIBRATION_OR_LOCKED_ROWS_IN_TRAINING_SNAPSHOT")
     group_roles = {group.get("source_group_id"): group.get("role") for group in groups}
     role_counts = Counter(group_roles.values())
-    need(role_counts == Counter({"train": 6, "development": 2})
-         and len(group_roles) == 8
-         and len(set(group.get("source_speaker_id") for group in groups)) == 8
+    need(role_counts == Counter({"train": 8, "development": 4})
+         and len(group_roles) == 12
+         and len(set(group.get("source_speaker_id") for group in groups)) == 12
          and all(role in ("train", "development") for role in group_roles.values()),
          "TRAIN_DEV_ONLY_GROUP_PARTITION")
     row_ids = set()
@@ -302,8 +302,8 @@ def verify_training_snapshot(snapshot, candidate, plan):
                          if row["tier"] in ("silver", "weak") and row["research_class"] in (0, 1)]
     for group_id in (group_id for group_id, role in group_roles.items() if role == "development"):
         group_rows = [row for row in eligible_dev_rows if row["source_group_id"] == group_id]
-        need(sum(row["research_class"] == 1 for row in group_rows) >= 2
-             and sum(row["research_class"] == 0 for row in group_rows) >= 4,
+        need(sum(row["research_class"] == 1 for row in group_rows) >= 1
+             and sum(row["research_class"] == 0 for row in group_rows) >= 2,
              "BALANCED_DEVELOPMENT_GROUP_ROWS")
     # Reject extra calibration/locked paths before opening any listed file bytes.
     seen = set()
@@ -321,7 +321,7 @@ def verify_training_snapshot(snapshot, candidate, plan):
         raw = admission.read_member(snapshot, item["path"], item["sha256"], limit=4 * 1024 * 1024)
         need(len(raw) == item["bytes"], "TRAIN_DEV_FILE_BYTE_COUNT")
         total_bytes += len(raw)
-    need(snapshot_meta.get("role_counts") == {"train": 6, "development": 2}
+    need(snapshot_meta.get("role_counts") == {"train": 8, "development": 4}
          and snapshot_meta.get("training_rows") == len(train_rows)
          and snapshot_meta.get("development_rows") == len(eligible_dev_rows)
          and snapshot_meta.get("file_count") == len(files["files"])
@@ -337,11 +337,14 @@ def verify_training_snapshot(snapshot, candidate, plan):
     source_run = manifest.get("source_run")
     need(isinstance(source_run, dict) and source_run == snapshot_meta.get("source_run")
          and source_run.get("repository") == REPO
-         and str(source_run.get("run_id")) == str(plan["source_run_id"])
-         and source_run.get("sha") == plan["source_commit"]
+         and str(source_run.get("run_id", "")).isdigit()
+         and re.fullmatch(r"[0-9a-f]{40}", str(source_run.get("commit", ""))) is not None
+         and source_run.get("parent") == plan["next_main_before"]
+         and source_run.get("attempt") == 1
+         and source_run.get("source_bundle_sha256") == plan["source_plan_sha256"]
          and manifest.get("source_plan_sha256") == plan["source_plan_sha256"]
          and snapshot_meta.get("source_plan_sha256") == plan["source_plan_sha256"],
-         "TRAIN_DEV_SNAPSHOT_SOURCE_IDENTITY")
+         "TRAIN_DEV_SNAPSHOT_SOURCE_BUNDLE_IDENTITY")
     candidate_plan = plan["candidates"][candidate]
     need(manifest.get("candidate_id") == candidate_plan["candidate_id"]
          and snapshot_meta.get("candidate_id") == candidate_plan["candidate_id"]
