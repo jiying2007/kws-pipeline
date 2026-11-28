@@ -201,7 +201,7 @@ class V7TrainingPlanTests(unittest.TestCase):
             "files_manifest_sha256": trainer.sha(inventory_raw),
             "file_count": len(files),
             "verified_bytes": total_bytes,
-            "training_rows": 36,
+            "training_rows": 24,
             "development_rows": 12,
             "role_counts": {"train": 8, "development": 4},
             "calibration_rows_included": False,
