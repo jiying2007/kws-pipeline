@@ -17,7 +17,9 @@ import english_kws_dual_track_v7_train as trainer
 class V7TrainingPlanTests(unittest.TestCase):
     def test_two_candidates_have_independent_one_shot_budgets(self):
         report = trainer.source_check()
-        self.assertEqual(report["status"], "TRAINING_PLAN_VALID_NO_MODEL_EXECUTION")
+        self.assertEqual(report["status"], "BLOCKED_AWAITING_NEW_KOKORO_G2_SOURCE_NO_MODEL_EXECUTION")
+        self.assertFalse(report["training_enabled"])
+        self.assertFalse(report["source_compatible"])
         self.assertEqual(report["candidates"], ["MERO", "VOSEN"])
         self.assertEqual(report["optimizer_updates_per_candidate"], 192)
         self.assertEqual(report["training_forwards_per_candidate"], 384)
@@ -31,11 +33,17 @@ class V7TrainingPlanTests(unittest.TestCase):
 
     def test_pull_request_and_rerun_are_not_training_authority(self):
         plan = trainer.load_plan()
-        with self.assertRaisesRegex(ValueError, "PUBLIC_MAIN_FIRST_ATTEMPT_TRAINING_ONLY"):
+        with self.assertRaisesRegex(ValueError, "G3_SOURCE_CAMPAIGN_NOT_READY"):
             trainer.guard(plan, env={}, event={})
 
-    def test_exact_g2_source_run_is_distinct_from_training_run(self):
+    def test_incompatible_piper_g2_run_cannot_authorize_kokoro_training(self):
         plan = trainer.load_plan()
+        self.assertEqual(plan["source_run_id"], 46000882374)
+        self.assertEqual(plan["source_compatibility"]["pinned_corpus_schema"],
+                         "english-kws-dual-track-v7-corpus-v1")
+        self.assertEqual(plan["source_compatibility"]["expected_corpus_schema"],
+                         "english-kws-dual-track-v7-kokoro-corpus-v1")
+        self.assertFalse(plan["source_compatibility"]["compatible"])
         env = {
             "GITHUB_ACTIONS": "true",
             "GITHUB_REPOSITORY": trainer.REPO,
@@ -53,11 +61,8 @@ class V7TrainingPlanTests(unittest.TestCase):
             "deleted": False,
             "repository": {"full_name": trainer.REPO, "private": False},
         }
-        identity = trainer.guard(plan, env=env, event=event)
-        self.assertEqual(identity["run_id"], 46010000001)
-        self.assertEqual(identity["source_run_id"], 46000882374)
-        self.assertEqual(identity["source_commit"], "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2")
-        self.assertNotEqual(identity["run_id"], identity["source_run_id"])
+        with self.assertRaisesRegex(ValueError, "G3_SOURCE_CAMPAIGN_NOT_READY"):
+            trainer.guard(plan, env=env, event=event)
 
     def test_exact_brand_pronunciations_and_separate_seeds(self):
         plan = trainer.load_plan()
