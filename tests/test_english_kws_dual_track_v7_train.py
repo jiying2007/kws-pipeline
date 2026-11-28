@@ -1,6 +1,7 @@
 """Source-only frozen G3 training-plan contracts; no torch/model/audio execution."""
 from __future__ import annotations
 
+import copy
 import io
 import json
 import sys
@@ -25,7 +26,7 @@ class V7TrainingPlanTests(unittest.TestCase):
         self.assertEqual(plan["status"], "WAITING_FOR_VOXCPM_G3_SOURCE")
         self.assertFalse(plan["enabled"])
         self.assertEqual(plan["source_roles"],
-                         {"train": 6, "development": 2, "calibration": 2, "locked-test": 2})
+                         {"train": 6, "development": 2})
         self.assertEqual(plan["source_bundle"]["status"], "NOT_BOUND")
         self.assertFalse(plan["source_bundle"]["training_allowed"])
         self.assertEqual(plan["source_bundle"]["required_source_rows"], 96)
@@ -34,8 +35,6 @@ class V7TrainingPlanTests(unittest.TestCase):
         self.assertNotIn("artifacts", plan["source_bundle"])
         self.assertEqual(report["source_qualified_groups"]["train"], 6)
         self.assertEqual(report["source_qualified_groups"]["development"], 2)
-        self.assertEqual(report["source_qualified_groups"]["calibration"], 2)
-        self.assertEqual(report["source_qualified_groups"]["locked-test"], 2)
         self.assertIsNone(report["source_bundle_sha256"])
         self.assertEqual(report["candidates"], ["MERO", "VOSEN"])
         self.assertEqual(report["optimizer_updates_per_candidate"], 192)
@@ -78,6 +77,114 @@ class V7TrainingPlanTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "G3_MULTISOURCE_BUNDLE_NOT_READY"):
             trainer.guard(plan, env={}, event={})
 
+    def make_bound_source_bundle(self):
+        plan = trainer.load_plan()
+        bundle = copy.deepcopy(plan["source_bundle"])
+        bundle["status"] = "BOUND"
+        bundle["source_plan_sha256"] = "a" * 64
+        run = {
+            "repository": trainer.REPO,
+            "run_id": "46010000001",
+            "commit": "f" * 40,
+            "parent": plan["next_main_before"],
+            "attempt": 1,
+        }
+        bundle["source_run"] = run
+        groups, rows = [], []
+        index = 0
+        for role, count in (("train", 6), ("development", 2)):
+            for group_index in range(count):
+                group_id = f"{role}-{group_index}"
+                speaker_id = f"synthetic-speaker-{role}-{group_index}"
+                groups.append({
+                    "source_group_id": group_id,
+                    "source_speaker_id": speaker_id,
+                    "role": role,
+                })
+                for cell in bundle["required_source_cells"]:
+                    rows.append({
+                        "id": f"{group_id}-{cell}",
+                        "source_group_id": group_id,
+                        "source_speaker_id": speaker_id,
+                        "role": role,
+                        "cell_id": cell,
+                        "pcm_path": f"audio/{index}.pcm",
+                        "wav_path": f"audio/{index}.wav",
+                        "pcm_sha256": f"{index + 1:064x}",
+                        "wav_sha256": f"{index + 1001:064x}",
+                        "pcm_samples": 16000,
+                        "sample_rate": 16000,
+                        "channels": 1,
+                        "human_gold": False,
+                        "training_allowed": False,
+                    })
+                    index += 1
+        corpus = {
+            "schema": bundle["required_source_schema"],
+            "source_plan_sha256": bundle["source_plan_sha256"],
+            "run": run,
+            "source_groups": groups,
+            "rows": rows,
+            "candidate_ids": ["hey-vosen-v7", "hey-mero-v7"],
+            "observers": bundle["required_observers"],
+            "generator": bundle["generator"],
+            "converter": bundle["converter"],
+            "model": bundle["model"],
+            "donor_reference": bundle["donor_reference"],
+            "human_gold": False,
+            "independent_human_speaker_identity_claimed": False,
+            "calibration_locked_reference_bytes_opened": False,
+            "training_allowed": False,
+        }
+        return plan, bundle, corpus
+
+    def test_bound_voxcpm_source_contract_accepts_exact_96_row_6_2_corpus(self):
+        plan, bundle, corpus = self.make_bound_source_bundle()
+        result = trainer.verify_source_bundle_contract(bundle, corpus, plan)
+        self.assertEqual(result["status"], "PASS_VOXCPM_G3_SOURCE_CONTRACT")
+        self.assertEqual(result["source_rows"], 96)
+        self.assertEqual(result["source_groups"], 8)
+        self.assertEqual(result["role_counts"], {"train": 6, "development": 2})
+        self.assertFalse(result["calibration_or_locked_test_opened"])
+        self.assertFalse(result["training_authorized"])
+
+    def test_bound_voxcpm_source_contract_rejects_wrong_schema_row_count_role_split_and_identity(self):
+        plan, bundle, corpus = self.make_bound_source_bundle()
+        wrong = copy.deepcopy(corpus)
+        wrong["schema"] = "legacy-piper-corpus-v1"
+        with self.assertRaisesRegex(ValueError, "VOXCPM_CORPUS_PROVENANCE_IDENTITY"):
+            trainer.verify_source_bundle_contract(bundle, wrong, plan)
+
+        wrong = copy.deepcopy(corpus)
+        wrong["rows"].pop()
+        with self.assertRaisesRegex(ValueError, "VOXCPM_EXACT_EIGHT_GROUP_96_ROW_DENOMINATOR"):
+            trainer.verify_source_bundle_contract(bundle, wrong, plan)
+
+        wrong = copy.deepcopy(corpus)
+        wrong["source_groups"][0]["role"] = "calibration"
+        with self.assertRaisesRegex(ValueError, "VOXCPM_EXACT_TRAIN_DEV_GROUP_SPLIT"):
+            trainer.verify_source_bundle_contract(bundle, wrong, plan)
+
+        wrong = copy.deepcopy(corpus)
+        wrong["run"]["commit"] = "e" * 40
+        with self.assertRaisesRegex(ValueError, "VOXCPM_SOURCE_RUN_IDENTITY"):
+            trainer.verify_source_bundle_contract(bundle, wrong, plan)
+
+    def test_bound_voxcpm_source_contract_rejects_duplicate_speakers_or_group_cells(self):
+        plan, bundle, corpus = self.make_bound_source_bundle()
+        wrong = copy.deepcopy(corpus)
+        wrong["source_groups"][1]["source_speaker_id"] = wrong["source_groups"][0]["source_speaker_id"]
+        for row in wrong["rows"]:
+            if row["source_group_id"] == wrong["source_groups"][1]["source_group_id"]:
+                row["source_speaker_id"] = wrong["source_groups"][1]["source_speaker_id"]
+        with self.assertRaisesRegex(ValueError, "VOXCPM_UNIQUE_SOURCE_GROUP_AND_SPEAKER_IDENTITIES"):
+            trainer.verify_source_bundle_contract(bundle, wrong, plan)
+
+        wrong = copy.deepcopy(corpus)
+        wrong["rows"][1]["cell_id"] = wrong["rows"][0]["cell_id"]
+        with self.assertRaisesRegex(ValueError, "VOXCPM_DUPLICATE_GROUP_CELL"):
+            trainer.verify_source_bundle_contract(bundle, wrong, plan)
+
     def test_exact_brand_pronunciations_and_separate_seeds(self):
         plan = trainer.load_plan()
         self.assertEqual(plan["candidates"]["VOSEN"]["ipa"], "/heɪ ˈvoʊ.sən/")
@@ -113,7 +220,7 @@ class V7TrainingPlanTests(unittest.TestCase):
                     "source_speaker_id": "speaker-" + group_id,
                     "role": role,
                 })
-                for label, amount in ((1, 2), (0, 4)):
+                for label, amount in ((1, 3), (0, 9)):
                     for item_index in range(amount):
                         row_id = f"{group_id}-{'pos' if label else 'neg'}-{item_index}"
                         pcm_path = f"audio/{row_id}.pcm"
@@ -164,8 +271,8 @@ class V7TrainingPlanTests(unittest.TestCase):
             "source_groups": groups,
             "role_counts": {"train": 6, "development": 2},
             "rows": rows,
-            "training_rows": 36,
-            "development_rows": 12,
+            "training_rows": 72,
+            "development_rows": 24,
             "training_snapshot_allowed": True,
             "calibration_rows_included": False,
             "locked_test_rows_included": False,
@@ -224,10 +331,10 @@ class V7TrainingPlanTests(unittest.TestCase):
             root = Path(temp) / "VOSEN"
             manifest, inventory, snapshot = self.make_snapshot(root)
             verified, identity = trainer.verify_training_snapshot(root, "VOSEN", trainer.load_plan())
-            self.assertEqual(len(verified["rows"]), 48)
+            self.assertEqual(len(verified["rows"]), 96)
             self.assertEqual({row["role"] for row in verified["rows"]}, {"train", "development"})
-            self.assertEqual(identity["training_rows"], 36)
-            self.assertEqual(identity["development_rows"], 12)
+            self.assertEqual(identity["training_rows"], 72)
+            self.assertEqual(identity["development_rows"], 24)
             self.assertEqual(trainer.read_pcm(verified["rows"][0], root), b"\x00\x00" * 6400)
 
     def test_locked_test_row_is_rejected_before_any_locked_audio_read(self):
