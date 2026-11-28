@@ -99,7 +99,7 @@ jobs:
           --output "${{ runner.temp }}/fixed-frontend-static-export"
       - name: Upload static source export and receipts
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: english-fixed-frontend-static-export-${{ github.run_id }}
           path: ${{ runner.temp }}/fixed-frontend-static-export
@@ -145,7 +145,7 @@ jobs:
             --output "$RUNNER_TEMP/oww-assets-audit.json"
       - name: Upload metadata-only audit report
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: english-embedding-backbone-assets-audit-${{ github.run_id }}
           path: ${{ runner.temp }}/oww-assets-audit.json
