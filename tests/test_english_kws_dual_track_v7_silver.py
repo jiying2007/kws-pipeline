@@ -385,52 +385,22 @@ class V7AdmissionTests(unittest.TestCase):
                 self.assertFalse((directory / "MACHINE_EVIDENCE.json").exists())
                 self.assertFalse((directory / "CORPUS_MANIFEST.json").exists())
 
-    def test_g3_admission_does_not_open_calibration_or_locked_test_files(self):
-        corpus = copy.deepcopy(self.corpus)
-        evidence = copy.deepcopy(self.evidence)
-        reserved = {group["source_group_id"] for group in self.groups
-                    if group["role"] in ("calibration", "locked-test")}
-        for row in corpus["rows"]:
-            if row["source_group_id"] not in reserved:
-                continue
-            for key in ("pcm_path", "wav_path"):
-                path = self.root / row[key]
-                if path.exists():
-                    path.unlink()
-        for packet in evidence["rows"]:
-            row = next(item for item in corpus["rows"] if item["id"] == packet["id"])
-            if row["source_group_id"] not in reserved:
-                continue
-            for observation in packet["observations"]:
-                path = self.root / observation["capture_path"]
-                if path.exists():
-                    path.unlink()
-            phone = packet["phone_observation"]
-            if phone:
-                path = self.root / phone["capture_path"]
-                if path.exists():
-                    path.unlink()
+    def test_g3_admission_roles_are_strictly_train_dev_only(self):
+        with self.assertRaisesRegex(ValueError, "AUTHORIZED_ADMISSION_ROLES"):
+            v7.build_admission(
+                self.corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan,
+                open_roles=("train", "development", "calibration"))
         result = v7.build_admission(
-            corpus, evidence, self.root, profile=PROFILE, plan=self.plan,
+            self.corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan,
             open_roles=("train", "development"))
-        self.assertTrue(result["summary"]["data_admitted"])
-        self.assertFalse(result["summary"]["calibration_pcm_opened"])
-        self.assertFalse(result["summary"]["locked_test_pcm_opened"])
         for candidate in v7.CANDIDATES:
             manifest = result["candidate_manifests"][candidate]
             self.assertEqual(manifest["balanced_groups_by_role"],
-                             {"train": 6, "development": 2, "calibration": 0, "locked-test": 0})
-            sealed = [row for row in manifest["rows"]
-                      if row["role"] in ("calibration", "locked-test")]
-            self.assertEqual(len(sealed), 48)
-            self.assertTrue(all(row["tier"] == "unknown"
-                                and row["research_class"] is None
-                                and row["evidence_refs"] == []
-                                and row["pcm_sha256"] is None
-                                and row["wav_sha256"] is None
-                                and "requested_text" not in row
-                                and "requested_class" not in row
-                                for row in sealed))
+                             {"train": 6, "development": 2})
+            self.assertTrue(all(row["role"] in ("train", "development")
+                                for row in manifest["rows"]))
+            self.assertTrue(all("pcm_path" in row and "wav_path" in row
+                                for row in manifest["rows"]))
 
     def test_packet_inventory_authenticates_train_dev_and_never_opens_reserved_files(self):
         with tempfile.TemporaryDirectory() as temp:
