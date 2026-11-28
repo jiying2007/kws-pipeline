@@ -59,6 +59,13 @@ class V7TrainingPlanTests(unittest.TestCase):
         self.assertEqual(bundle["status"], "NOT_BOUND")
         self.assertEqual(bundle["required_source_schema"],
                          "english-kws-dual-track-v7-voice-clone-corpus-v1")
+        self.assertEqual(bundle["required_source_rows"], 96)
+        self.assertEqual(bundle["required_source_groups"], {"train": 6, "development": 2})
+        self.assertEqual(bundle["required_observers"], ["qwen", "whisper", "parakeet", "phoneme"])
+        self.assertEqual(bundle["model"]["quantization"], "Q8_0+AudioVAE-F16")
+        self.assertEqual(plan["source_roles"], {
+            "train": 6, "development": 2, "calibration": 2, "locked-test": 2})
+        self.assertEqual(plan["training_input"]["role_counts"], {"train": 6, "development": 2})
         self.assertEqual(bundle["generator"]["commit"],
                          "e5b89534e379c79b923c9969b79c3858d140bedb")
         self.assertEqual(bundle["model"]["repository"], "openbmb/VoxCPM1.5")
