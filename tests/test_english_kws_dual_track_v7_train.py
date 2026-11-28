@@ -163,7 +163,7 @@ class V7TrainingPlanTests(unittest.TestCase):
             "kws_model_forwards": 0,
             "product_promotion_allowed": False,
         }
-        manifest_raw = trainer.canonical(manifest) + b"\\n"
+        manifest_raw = trainer.canonical(manifest) + b"\n"
         (root / "MANIFEST.json").write_bytes(manifest_raw)
         files.append({"path": "MANIFEST.json", "bytes": len(manifest_raw),
                       "sha256": trainer.sha(manifest_raw)})
@@ -174,7 +174,7 @@ class V7TrainingPlanTests(unittest.TestCase):
             "candidate": candidate,
             "files": files,
         }
-        inventory_raw = trainer.canonical(inventory) + b"\\n"
+        inventory_raw = trainer.canonical(inventory) + b"\n"
         (root / "FILES.json").write_bytes(inventory_raw)
         snapshot = {
             "schema": "english-kws-dual-track-v7-training-snapshot-v1",
@@ -202,7 +202,7 @@ class V7TrainingPlanTests(unittest.TestCase):
             "kws_model_forwards": 0,
             "product_promotion_allowed": False,
         }
-        (root / "SNAPSHOT.json").write_bytes(trainer.canonical(snapshot) + b"\\n")
+        (root / "SNAPSHOT.json").write_bytes(trainer.canonical(snapshot) + b"\n")
         return manifest, inventory, snapshot
 
     def test_valid_candidate_snapshot_reads_only_train_and_development(self):
@@ -232,10 +232,10 @@ class V7TrainingPlanTests(unittest.TestCase):
                 "training_weight": 0.0,
             })
             manifest["rows"].append(locked)
-            raw = trainer.canonical(manifest) + b"\\n"
+            raw = trainer.canonical(manifest) + b"\n"
             (root / "MANIFEST.json").write_bytes(raw)
             snapshot["manifest_sha256"] = trainer.sha(raw)
-            (root / "SNAPSHOT.json").write_bytes(trainer.canonical(snapshot) + b"\\n")
+            (root / "SNAPSHOT.json").write_bytes(trainer.canonical(snapshot) + b"\n")
             with self.assertRaisesRegex(ValueError, "NO_CALIBRATION_OR_LOCKED_ROWS_IN_TRAINING_SNAPSHOT"):
                 trainer.verify_training_snapshot(root, "VOSEN", trainer.load_plan())
             self.assertFalse((root / "audio/locked-secret.pcm").exists())
@@ -250,11 +250,11 @@ class V7TrainingPlanTests(unittest.TestCase):
                 "sha256": trainer.sha(b"x"),
             })
             inventory["files"].sort(key=lambda item: item["path"])
-            raw = trainer.canonical(inventory) + b"\\n"
+            raw = trainer.canonical(inventory) + b"\n"
             (root / "FILES.json").write_bytes(raw)
             snapshot["files_manifest_sha256"] = trainer.sha(raw)
             snapshot["file_count"] = len(inventory["files"])
-            (root / "SNAPSHOT.json").write_bytes(trainer.canonical(snapshot) + b"\\n")
+            (root / "SNAPSHOT.json").write_bytes(trainer.canonical(snapshot) + b"\n")
             with self.assertRaisesRegex(ValueError, "NO_EXTRA_OR_MISSING_TRAIN_DEV_FILES"):
                 trainer.verify_training_snapshot(root, "VOSEN", trainer.load_plan())
             self.assertFalse((root / "audio/locked-secret.pcm").exists())
