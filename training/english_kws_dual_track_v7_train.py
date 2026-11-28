@@ -74,7 +74,15 @@ def write_once(path, value):
 def load_plan():
     plan = read_json(PLAN_PATH)
     need(plan.get("schema") == "english-kws-dual-track-v7-independent-training-plan-v1"
-         and plan.get("enabled") is True
+         and plan.get("enabled") is False
+         and plan.get("status") == "BLOCKED_AWAITING_NEW_KOKORO_G2_SOURCE"
+         and plan.get("source_compatibility") == {
+             "compatible": False,
+             "pinned_run_id": 46000882374,
+             "pinned_corpus_schema": "english-kws-dual-track-v7-corpus-v1",
+             "expected_corpus_schema": "english-kws-dual-track-v7-kokoro-corpus-v1",
+             "reason": "The pinned 144-row Piper G2 packet is not the 96-row Kokoro TRAIN/DEV corpus required by this V7 G3 implementation. A new immutable source/observer campaign and exact artifact identity are required before training.",
+         }
          and plan.get("source_repository") == REPO
          and plan.get("source_plan_sha256") == "baad365440a789db351aa6277214a631feae0383ef5550664bcddf118fd94c31"
          and plan.get("next_main_before") == plan.get("source_commit")
@@ -134,6 +142,7 @@ def load_plan():
 
 
 def guard(plan, env=None, event=None):
+    need(plan.get("enabled") is True, "G3_SOURCE_CAMPAIGN_NOT_READY")
     env = os.environ if env is None else env
     required = {
         "GITHUB_ACTIONS": "true", "GITHUB_REPOSITORY": REPO,
@@ -697,7 +706,7 @@ def run(snapshot, candidate, output, *, env=None, event=None):
 def source_check():
     plan = load_plan()
     return {
-        "status": "TRAINING_PLAN_VALID_NO_MODEL_EXECUTION",
+        "status": "BLOCKED_AWAITING_NEW_KOKORO_G2_SOURCE_NO_MODEL_EXECUTION",
         "candidates": sorted(plan["candidates"]),
         "optimizer_updates_per_candidate": plan["optimizer"]["updates_per_candidate"],
         "training_forwards_per_candidate": plan["optimizer"]["training_forwards_per_candidate"],
