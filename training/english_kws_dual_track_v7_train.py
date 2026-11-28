@@ -74,48 +74,41 @@ def write_once(path, value):
 def load_plan():
     plan = read_json(PLAN_PATH)
     need(plan.get("schema") == "english-kws-dual-track-v7-independent-training-plan-v1"
-         and plan.get("enabled") is True
-         and plan.get("status") == "READY_FOR_MULTISOURCE_G3"
+         and plan.get("enabled") is False
+         and plan.get("status") == "WAITING_FOR_VOXCPM_G3_SOURCE"
          and plan.get("source_repository") == REPO
-         and plan.get("next_main_before") == "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
-         "EXACT_PREDECLARED_MULTISOURCE_G3_PLAN")
+         and plan.get("next_main_before") == "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2"
+         and plan.get("source_plan_sha256") == "0" * 64,
+         "EXACT_DISABLED_VOXCPM_G3_PLAN")
     bundle = plan.get("source_bundle")
-    expected_pins = [
-        ("fresh24", "source", 44289263966, "aca5d052daa78aa3c4f3f21dc462ab2a350d6efb", 14422271973, "english-fresh24-clone168-44289263966", 4505217, "26396073f5be2f91e35575bedb586737405162388e32bfe85633ed3d796a9583"),
-        ("fresh24", "screen", 44306842000, "75ccd81bb3abe2973e01fb2bf1a74411629e9279", 14429385634, "english-fresh24-prospective-screen-44306842000", 19501, "5a9b226b8fe475331d9f03d3ca4f91d5bb94c5270113f6d0cf3e8b4c36fe8316"),
-        ("fresh18", "source", 44310115097, "768922492ef294240153c085e5318c528a92a70a", 14429578824, "english-fresh18-direct126-44310115097", 3359173, "34cf7879f974f62c9f6046a72a964002f30bf59d2186a423ac382a76ff69d0e9"),
-        ("fresh18", "screen", 44312719394, "6fc03ff706b8949b9a6c066f4478890db8de28aa", 14429884666, "english-fresh18-cumulative-screen-44312719394", 15068, "4a685afa1d8e8c35767900290a7fd590f2153fb69f3b2e5ae68d5dada58b11e1"),
-        ("piper24", "source", 44321329022, "54fd82f4fa165740fbb4ae2df70b12c634e41a41", 14434542792, "english-newpiper-source-44321329022", 3362081, "d1f75716fefd954d59c3289c37e7e6670965ee98917436676896312e4b781aa1"),
-        ("piper24", "screen", 44323694022, "4992666d4356d76301ad8ccbd71fad12db3d7caa", 14436377961, "english-newpiper-cumulative-screen-44323694022", 19503, "c6b8573bae44ffa110b776482da74919d16e6b1437c6c3e1f462fd1b7a28a519"),
-    ]
     need(isinstance(bundle, dict)
-         and bundle.get("schema") == "english-canonical-multisource-reviewed-pcm-v1"
-         and bundle.get("source_policy_git_blob_sha1") == "0a688325d0d36e83ef6623ac678511df24a92374"
-         and bundle.get("source_plan_git_blobs") == {
-             "fresh24": "dbe911fbcf8a697492ad29c7ca11858e707a72ff",
-             "fresh18": "c2ee2f7bf2fbdeb8821920d6cb5e6890d0df1f76",
-             "piper24": "d477ecec2a07910fc1a91063752aff1acc9006ef",
+         and bundle.get("status") == "NOT_BOUND"
+         and bundle.get("required_source_schema") == "english-kws-dual-track-v7-voice-clone-corpus-v1"
+         and bundle.get("required_source_rows") == 96
+         and bundle.get("required_source_groups") == {"train": 6, "development": 2}
+         and bundle.get("required_observers") == ["qwen", "whisper", "parakeet", "phoneme"]
+         and bundle.get("generator") == {
+             "repository": "bluryar/VoxCPM.cpp",
+             "commit": "e5b89534e379c79b923c9969b79c3858d140bedb",
          }
-         and isinstance(bundle.get("artifacts"), list)
-         and [(x.get("key"), x.get("kind"), x.get("run_id"), x.get("commit"), x.get("artifact_id"),
-               x.get("name"), x.get("bytes"), x.get("sha256"))
-              for x in bundle["artifacts"]] == expected_pins
-         and bundle.get("qualified_groups_by_role") == {
-             "train": 8, "development": 4, "calibration": 3, "locked-test": 3}
-         and bundle.get("minimum_groups_by_role") == {
-             "train": 6, "development": 2, "calibration": 2, "locked-test": 2}
-         and bundle.get("selected_machine_reviewed_rows") == 63
-         and bundle.get("original_rows_authenticated") == 462
-         and bundle.get("new_tts_calls") == bundle.get("new_asr_calls") == bundle.get("new_phone_calls") == 0
-         and bundle.get("audio_regenerated") is False
+         and bundle.get("model") == {
+             "repository": "openbmb/VoxCPM1.5",
+             "license": "Apache-2.0",
+             "quantization": "Q8_0+AudioVAE-F16",
+         }
+         and bundle.get("donor_reference") == {
+             "run_id": 44256271861,
+             "artifact_id": 14406282094,
+             "sha256": "8b86b46759f6f2bd084cd37e1c804c72058fe52ec57f6c221c912eeca96092e5",
+         }
+         and bundle.get("required_candidate_isolation") is True
+         and bundle.get("no_legacy_audio_or_labels") is True
+         and bundle.get("calibration_locked_reference_bytes_opened") is False
          and bundle.get("human_gold") is False
          and bundle.get("independent_human_speaker_identity_claimed") is False
-         and bundle.get("original_screen_training_snapshot_allowed") is False
-         and bundle.get("fresh_candidate_snapshot_required") is True,
-         "EXACT_SIX_ARTIFACT_MULTISOURCE_BUNDLE")
-    need(plan.get("source_plan_sha256") == "COMPUTED_FROM_EXACT_SOURCE_BUNDLE_AT_RUNTIME",
-         "SOURCE_BUNDLE_HASH_DERIVATION_MODE")
-    plan["source_plan_sha256"] = sha(canonical(bundle))
+         and bundle.get("training_allowed") is False
+         and bundle.get("promotion_allowed") is False,
+         "VOXCPM_G3_SOURCE_REQUIRED_BUT_NOT_BOUND")
     model = plan["model"]
     need(model == {
         "family": "causal-fsmn-ctc-v1", "parameters": PARAMETERS,
@@ -132,17 +125,17 @@ def load_plan():
          and optimizer["gain_levels_train_only"] == list(GAIN_LEVELS)
          and optimizer["weak_row_weight"] == 0.5
          and optimizer["group_schedule"] ==
-             "round-robin eight TRAIN source groups; cycle each candidate's admitted rows deterministically",
+             "round-robin six TRAIN source groups; cycle each candidate's admitted rows deterministically",
          "FIXED_SINGLE_RUN_TRAINING_BUDGET")
     need(plan["source_roles"] == {
-        "train": 8, "development": 4, "calibration": 3, "locked-test": 3},
-        "EXACT_8_4_3_3_MULTISOURCE_ROLE_SPLIT")
+        "train": 6, "development": 2, "calibration": 2, "locked-test": 2},
+        "EXACT_6_2_2_2_SOURCE_ROLE_SPLIT")
     need(plan["admission"] == {
-        "minimum_train_groups": 8, "minimum_dev_groups": 4,
-        "minimum_positive_rows_per_train_group": 1,
-        "minimum_negative_rows_per_train_group": 2,
-        "minimum_positive_rows_per_dev_group": 1,
-        "minimum_negative_rows_per_dev_group": 2,
+        "minimum_train_groups": 6, "minimum_dev_groups": 2,
+        "minimum_positive_rows_per_train_group": 2,
+        "minimum_negative_rows_per_train_group": 4,
+        "minimum_positive_rows_per_dev_group": 2,
+        "minimum_negative_rows_per_dev_group": 4,
         "train_only_silver_weak": True, "unknown_is_background": False,
         "no_old_audio_or_legacy_labels": True,
         "candidate_mapping": {
@@ -153,7 +146,7 @@ def load_plan():
     need(plan["training_input"] == {
         "schema": "english-kws-dual-track-v7-training-snapshot-v1",
         "allowed_roles": ["train", "development"],
-        "role_counts": {"train": 8, "development": 4},
+        "role_counts": {"train": 6, "development": 2},
         "calibration_audio_available": False,
         "calibration_labels_available": False,
         "locked_test_audio_available": False,
@@ -168,6 +161,8 @@ def load_plan():
          and plan["independence"]["training_runs_per_candidate"] == 1
          and plan["execution"]["retries"] == 0
          and plan["execution"]["run_attempt"] == 1
+         and plan["execution"]["enabled"] is False
+         and plan["execution"]["automatic_expansion"] is False
          and plan["promotion_allowed"] is False,
          "INDEPENDENT_NO_RETRY_NO_PROMOTION")
     need(set(plan["candidates"]) == {"VOSEN", "MERO"}
@@ -259,8 +254,8 @@ def verify_training_snapshot(snapshot, candidate, plan):
          "NO_CALIBRATION_OR_LOCKED_ROWS_IN_TRAINING_SNAPSHOT")
     group_roles = {group.get("source_group_id"): group.get("role") for group in groups}
     role_counts = Counter(group_roles.values())
-    need(role_counts == Counter({"train": 8, "development": 4})
-         and len(group_roles) == 12
+    need(role_counts == Counter({"train": 6, "development": 2})
+         and len(group_roles) == 8
          and len(set(group.get("source_speaker_id") for group in groups)) == 12
          and all(role in ("train", "development") for role in group_roles.values()),
          "TRAIN_DEV_ONLY_GROUP_PARTITION")
@@ -303,8 +298,8 @@ def verify_training_snapshot(snapshot, candidate, plan):
                          if row["tier"] in ("silver", "weak") and row["research_class"] in (0, 1)]
     for group_id in (group_id for group_id, role in group_roles.items() if role == "development"):
         group_rows = [row for row in eligible_dev_rows if row["source_group_id"] == group_id]
-        need(sum(row["research_class"] == 1 for row in group_rows) >= 1
-             and sum(row["research_class"] == 0 for row in group_rows) >= 2,
+        need(sum(row["research_class"] == 1 for row in group_rows) >= 2
+             and sum(row["research_class"] == 0 for row in group_rows) >= 4,
              "BALANCED_DEVELOPMENT_GROUP_ROWS")
     # Reject extra calibration/locked paths before opening any listed file bytes.
     seen = set()
@@ -322,7 +317,7 @@ def verify_training_snapshot(snapshot, candidate, plan):
         raw = admission.read_member(snapshot, item["path"], item["sha256"], limit=4 * 1024 * 1024)
         need(len(raw) == item["bytes"], "TRAIN_DEV_FILE_BYTE_COUNT")
         total_bytes += len(raw)
-    need(snapshot_meta.get("role_counts") == {"train": 8, "development": 4}
+    need(snapshot_meta.get("role_counts") == {"train": 6, "development": 2}
          and snapshot_meta.get("training_rows") == len(train_rows)
          and snapshot_meta.get("development_rows") == len(eligible_dev_rows)
          and snapshot_meta.get("file_count") == len(files["files"])
@@ -528,8 +523,8 @@ def run(snapshot, candidate, output, *, env=None, event=None):
         dev_rows = [row for row in manifest["rows"]
                     if row["role"] == "development" and row["tier"] in ("silver", "weak")
                     and row["research_class"] in (0, 1)]
-        need(len({row["source_group_id"] for row in train_rows}) == 8
-             and len({row["source_group_id"] for row in dev_rows}) == 4
+        need(len({row["source_group_id"] for row in train_rows}) == 6
+             and len({row["source_group_id"] for row in dev_rows}) == 2
              and all(row["role"] == "train" and row["training_class"] in (0, 1)
                      and row["optimizer_allowed"] is False for row in train_rows)
              and all(row["role"] == "development" and row["training_class"] is None
@@ -542,7 +537,7 @@ def run(snapshot, candidate, output, *, env=None, event=None):
         negatives = {group: sorted([row for row in train_rows
                                     if row["source_group_id"] == group and row["training_class"] == 0],
                                    key=lambda row: row["id"]) for group in train_groups}
-        need(all(len(positives[group]) >= 1 and len(negatives[group]) >= 2 for group in train_groups),
+        need(all(len(positives[group]) >= 2 and len(negatives[group]) >= 4 for group in train_groups),
              "BALANCED_TRAIN_GROUPS")
         import numpy as np
         import torch
@@ -749,9 +744,11 @@ def run(snapshot, candidate, output, *, env=None, event=None):
 def source_check():
     plan = load_plan()
     return {
-        "status": "MULTISOURCE_G3_PLAN_VALID_NO_MODEL_EXECUTION",
-        "training_enabled": plan["enabled"],
-        "source_bundle_sha256": plan["source_plan_sha256"],
+        "status": "WAITING_FOR_VOXCPM_G3_SOURCE",
+        "training_enabled": False,
+        "source_bundle_bound": False,
+        "source_bundle_status": plan["source_bundle"]["status"],
+        "source_bundle_sha256": None,
         "source_qualified_groups": plan["source_roles"],
         "candidates": sorted(plan["candidates"]),
         "optimizer_updates_per_candidate": plan["optimizer"]["updates_per_candidate"],
