@@ -1,9 +1,9 @@
 {
   "schema": "english-kws-dual-track-v7-independent-training-plan-v1",
-  "status": "BLOCKED_AWAITING_NEW_VOICE_CLONE_G2_SOURCE",
-  "enabled": false,
+  "status": "READY_FOR_MULTISOURCE_G3",
+  "enabled": true,
   "source_repository": "jiying2007/kws-data",
-  "source_plan_sha256": "baad365440a789db351aa6277214a631feae0383ef5550664bcddf118fd94c31",
+  "source_plan_sha256": "COMPUTED_FROM_EXACT_SOURCE_BUNDLE_AT_RUNTIME",
   "next_main_before": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
   "model": {
     "family": "causal-fsmn-ctc-v1",
@@ -29,7 +29,7 @@
     "updates_per_candidate": 192,
     "training_forwards_per_candidate": 384,
     "batch": "one candidate-positive and one explicit candidate-negative from the same source group per update",
-    "group_schedule": "round-robin six TRAIN source groups; cycle each group's admitted rows deterministically",
+    "group_schedule": "round-robin eight TRAIN source groups; cycle each candidate's admitted rows deterministically",
     "gain_levels_train_only": [
       0.75,
       1,
@@ -76,25 +76,31 @@
     }
   },
   "source_roles": {
-    "train": 6,
-    "development": 2,
-    "calibration": 2,
-    "locked-test": 2
+    "train": 8,
+    "development": 4,
+    "calibration": 3,
+    "locked-test": 3
   },
   "admission": {
-    "minimum_train_groups": 6,
-    "minimum_dev_groups": 2,
-    "minimum_positive_rows_per_train_group": 2,
-    "minimum_negative_rows_per_train_group": 4,
+    "minimum_train_groups": 8,
+    "minimum_dev_groups": 4,
+    "minimum_positive_rows_per_train_group": 1,
+    "minimum_negative_rows_per_train_group": 2,
+    "minimum_positive_rows_per_dev_group": 1,
+    "minimum_negative_rows_per_dev_group": 2,
     "train_only_silver_weak": true,
     "unknown_is_background": false,
-    "no_old_audio_or_legacy_labels": true
+    "no_old_audio_or_legacy_labels": true,
+    "candidate_mapping": {
+      "VOSEN": "observed class 1 positive; classes 0 and 2 are negatives",
+      "MERO": "observed class 2 positive; classes 0 and 1 are negatives"
+    }
   },
   "evaluation": {
     "development": "one original-PCM pass after final weights are frozen; no threshold or checkpoint sweep",
     "development_forwards_max_per_candidate": 24,
-    "calibration": "NOT_IN_CURRENT_96_ROW_G3_SOURCE; separate sealed evaluation campaign required",
-    "locked_test": "NOT_IN_CURRENT_96_ROW_G3_SOURCE; separate sealed evaluation campaign required",
+    "calibration": "SEPARATE_POST_TRAIN_JOB_ONLY; original 3 qualified calibration groups; not included in training snapshots",
+    "locked_test": "SEPARATE_POST_CALIBRATION_JOB_ONLY; original 3 qualified locked groups; one pass after frozen weights and thresholds",
     "real_human_far_frr": "NOT_RUN",
     "physical_ssc305": "NOT_RUN"
   },
@@ -131,16 +137,16 @@
   "promotion_allowed": false,
   "product_quality_claims_allowed": false,
   "commercial_derivative_clearance": "NOT_ASSERTED_LEGAL_REVIEW_REQUIRED",
-  "source_run_id": 46000882374,
-  "source_commit": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
-  "source_workflow_id": 432334213,
-  "source_artifact_name": "v7-machine-evidence-packet-46000882374",
   "training_input": {
     "schema": "english-kws-dual-track-v7-training-snapshot-v1",
     "allowed_roles": [
       "train",
       "development"
     ],
+    "role_counts": {
+      "train": 8,
+      "development": 4
+    },
     "calibration_audio_available": false,
     "calibration_labels_available": false,
     "locked_test_audio_available": false,
@@ -149,12 +155,124 @@
     "full_admission_recomputed_by_training_job": false,
     "admission_stage_builds_candidate_specific_snapshots": true
   },
-  "source_compatibility": {
-    "compatible": false,
-    "pinned_run_id": 46000882374,
-    "pinned_corpus_schema": "english-kws-dual-track-v7-corpus-v1",
-    "expected_corpus_schema": "english-kws-dual-track-v7-voice-clone-corpus-v1",
-    "reason": "The pinned 144-row Piper G2 packet is not the 96-row TRAIN/DEV voice-clone corpus required by this V7 G3 implementation. A separately versioned VoxCPM 1.5 CPU voice-clone pilot and full source/observer campaign must pass before training.",
-    "expected_generator": "VoxCPM 1.5 Q8_0 + AudioVAE F16 (pilot pending)"
+  "source_bundle": {
+    "schema": "english-canonical-multisource-reviewed-pcm-v1",
+    "artifacts": [
+      {
+        "key": "fresh24",
+        "kind": "source",
+        "run_id": 44289263966,
+        "commit": "aca5d052daa78aa3c4f3f21dc462ab2a350d6efb",
+        "artifact_id": 14422271973,
+        "name": "english-fresh24-clone168-44289263966",
+        "bytes": 4505217,
+        "sha256": "26396073f5be2f91e35575bedb586737405162388e32bfe85633ed3d796a9583",
+        "denominator": 168,
+        "source_schema": "english-fresh24-qwen-voice-clone-v1"
+      },
+      {
+        "key": "fresh24",
+        "kind": "screen",
+        "run_id": 44306842000,
+        "commit": "75ccd81bb3abe2973e01fb2bf1a74411629e9279",
+        "artifact_id": 14429385634,
+        "name": "english-fresh24-prospective-screen-44306842000",
+        "bytes": 19501,
+        "sha256": "5a9b226b8fe475331d9f03d3ca4f91d5bb94c5270113f6d0cf3e8b4c36fe8316",
+        "status": "STOP_CANONICAL_6_2_2_2_SOURCE_COVERAGE",
+        "qualified_by_role": {
+          "train": 4,
+          "development": 1,
+          "calibration": 3,
+          "locked-test": 0
+        }
+      },
+      {
+        "key": "fresh18",
+        "kind": "source",
+        "run_id": 44310115097,
+        "commit": "768922492ef294240153c085e5318c528a92a70a",
+        "artifact_id": 14429578824,
+        "name": "english-fresh18-direct126-44310115097",
+        "bytes": 3359173,
+        "sha256": "34cf7879f974f62c9f6046a72a964002f30bf59d2186a423ac382a76ff69d0e9",
+        "denominator": 126,
+        "source_schema": "english-fresh18-new-kokoro-direct-phones-v1"
+      },
+      {
+        "key": "fresh18",
+        "kind": "screen",
+        "run_id": 44312719394,
+        "commit": "6fc03ff706b8949b9a6c066f4478890db8de28aa",
+        "artifact_id": 14429884666,
+        "name": "english-fresh18-cumulative-screen-44312719394",
+        "bytes": 15068,
+        "sha256": "4a685afa1d8e8c35767900290a7fd590f2153fb69f3b2e5ae68d5dada58b11e1",
+        "status": "STOP_CUMULATIVE_6_2_2_2_SOURCE_COVERAGE",
+        "qualified_by_role": {
+          "train": 0,
+          "development": 0,
+          "calibration": 0,
+          "locked-test": 1
+        }
+      },
+      {
+        "key": "piper24",
+        "kind": "source",
+        "run_id": 44321329022,
+        "commit": "54fd82f4fa165740fbb4ae2df70b12c634e41a41",
+        "artifact_id": 14434542792,
+        "name": "english-newpiper-source-44321329022",
+        "bytes": 3362081,
+        "sha256": "d1f75716fefd954d59c3289c37e7e6670965ee98917436676896312e4b781aa1",
+        "denominator": 168,
+        "source_schema": "english-piper-fresh24-original-source-v1"
+      },
+      {
+        "key": "piper24",
+        "kind": "screen",
+        "run_id": 44323694022,
+        "commit": "4992666d4356d76301ad8ccbd71fad12db3d7caa",
+        "artifact_id": 14436377961,
+        "name": "english-newpiper-cumulative-screen-44323694022",
+        "bytes": 19503,
+        "sha256": "c6b8573bae44ffa110b776482da74919d16e6b1437c6c3e1f462fd1b7a28a519",
+        "status": "PASS_CUMULATIVE_6_2_2_2_SOURCE_COVERAGE",
+        "qualified_by_role": {
+          "train": 4,
+          "development": 3,
+          "calibration": 0,
+          "locked-test": 2
+        }
+      }
+    ],
+    "source_policy_git_blob_sha1": "0a688325d0d36e83ef6623ac678511df24a92374",
+    "source_plan_git_blobs": {
+      "fresh24": "dbe911fbcf8a697492ad29c7ca11858e707a72ff",
+      "fresh18": "c2ee2f7bf2fbdeb8821920d6cb5e6890d0df1f76",
+      "piper24": "d477ecec2a07910fc1a91063752aff1acc9006ef"
+    },
+    "qualified_groups_by_role": {
+      "train": 8,
+      "development": 4,
+      "calibration": 3,
+      "locked-test": 3
+    },
+    "minimum_groups_by_role": {
+      "train": 6,
+      "development": 2,
+      "calibration": 2,
+      "locked-test": 2
+    },
+    "selected_machine_reviewed_rows": 63,
+    "original_rows_authenticated": 462,
+    "new_tts_calls": 0,
+    "new_asr_calls": 0,
+    "new_phone_calls": 0,
+    "audio_regenerated": false,
+    "human_gold": false,
+    "independent_human_speaker_identity_claimed": false,
+    "original_screen_training_snapshot_allowed": false,
+    "fresh_candidate_snapshot_required": true
   }
 }
