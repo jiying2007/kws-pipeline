@@ -256,7 +256,7 @@ def verify_training_snapshot(snapshot, candidate, plan):
     role_counts = Counter(group_roles.values())
     need(role_counts == Counter({"train": 6, "development": 2})
          and len(group_roles) == 8
-         and len(set(group.get("source_speaker_id") for group in groups)) == 12
+         and len(set(group.get("source_speaker_id") for group in groups)) == 8
          and all(role in ("train", "development") for role in group_roles.values()),
          "TRAIN_DEV_ONLY_GROUP_PARTITION")
     row_ids = set()
