@@ -17,11 +17,11 @@ import english_kws_dual_track_v7_train as trainer
 class V7TrainingPlanTests(unittest.TestCase):
     def test_two_candidates_have_independent_one_shot_budgets(self):
         report = trainer.source_check()
-        self.assertEqual(report["status"], "BLOCKED_AWAITING_NEW_KOKORO_G2_SOURCE_NO_MODEL_EXECUTION")
+        self.assertEqual(report["status"], "BLOCKED_AWAITING_NEW_VOICE_CLONE_G2_SOURCE_NO_MODEL_EXECUTION")
         self.assertFalse(report["training_enabled"])
         self.assertFalse(report["source_compatible"])
         plan = trainer.load_plan()
-        self.assertEqual(plan["status"], "BLOCKED_AWAITING_NEW_KOKORO_G2_SOURCE")
+        self.assertEqual(plan["status"], "BLOCKED_AWAITING_NEW_VOICE_CLONE_G2_SOURCE")
         self.assertEqual(plan["source_compatibility"]["pinned_run_id"], 46000882374)
         self.assertEqual(plan["source_compatibility"]["expected_corpus_schema"],
                          "english-kws-dual-track-v7-voice-clone-corpus-v1")
