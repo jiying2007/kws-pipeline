@@ -75,7 +75,7 @@ def load_plan():
     plan = read_json(PLAN_PATH)
     need(plan.get("schema") == "english-kws-dual-track-v7-independent-training-plan-v1"
          and plan.get("enabled") is False
-         and plan.get("status") == "BLOCKED_AWAITING_NEW_KOKORO_G2_SOURCE"
+         and plan.get("status") == "BLOCKED_AWAITING_NEW_VOICE_CLONE_G2_SOURCE"
          and plan.get("source_compatibility") == {
              "compatible": False,
              "pinned_run_id": 46000882374,
@@ -707,7 +707,7 @@ def run(snapshot, candidate, output, *, env=None, event=None):
 def source_check():
     plan = load_plan()
     return {
-        "status": "BLOCKED_AWAITING_NEW_KOKORO_G2_SOURCE_NO_MODEL_EXECUTION",
+        "status": "BLOCKED_AWAITING_NEW_VOICE_CLONE_G2_SOURCE_NO_MODEL_EXECUTION",
         "training_enabled": plan["enabled"],
         "source_compatible": plan["source_compatibility"]["compatible"],
         "candidates": sorted(plan["candidates"]),
