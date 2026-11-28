@@ -707,6 +707,8 @@ def source_check():
     plan = load_plan()
     return {
         "status": "BLOCKED_AWAITING_NEW_KOKORO_G2_SOURCE_NO_MODEL_EXECUTION",
+        "training_enabled": plan["enabled"],
+        "source_compatible": plan["source_compatibility"]["compatible"],
         "candidates": sorted(plan["candidates"]),
         "optimizer_updates_per_candidate": plan["optimizer"]["updates_per_candidate"],
         "training_forwards_per_candidate": plan["optimizer"]["training_forwards_per_candidate"],
