@@ -56,7 +56,7 @@ class V7AdmissionTests(unittest.TestCase):
             "source_count": 96,
             "candidate_ids": ["hey-vosen-v7", "hey-mero-v7"],
             "observer_providers": ["qwen", "whisper", "parakeet", "phoneme"],
-            "source_role_counts": {"train": 6, "development": 2, "calibration": 2, "locked-test": 2},
+            "source_role_counts": {"train": 6, "development": 2},
             "positive_min_samples": 6400,
             "positive_max_samples": 28672,
             "source_plan_sha256": "a" * 64,
@@ -454,7 +454,7 @@ class V7AdmissionTests(unittest.TestCase):
                 files.append({"path": name, "bytes": len(raw), "sha256": v7.sha(raw)})
             (packet / "FILES.json").write_bytes(v7.canonical({
                 "schema": "english-kws-dual-track-v7-files-v1", "files": files
-            }) + b"\\n")
+            }) + b"\n")
             corpus = {"rows": [
                 {"id": "train", "role": "train", "generation_status": "success",
                  "pcm_path": "source/audio/train.pcm", "wav_path": "source/audio/train.wav"},
