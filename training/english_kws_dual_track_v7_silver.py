@@ -18,10 +18,10 @@ import unicodedata
 import wave
 
 SCHEMA = "english-kws-dual-track-v7-machine-admission-v1"
-CORPUS_SCHEMA = "english-kws-dual-track-v7-corpus-v1"
-EVIDENCE_SCHEMA = "english-kws-dual-track-v7-machine-evidence-v1"
-CAPTURE_SCHEMA = "english-kws-dual-track-v7-native-capture-v1"
-ROLES = ("train", "development", "calibration", "locked-test")
+CORPUS_SCHEMA = "english-kws-dual-track-v7-kokoro-corpus-v1"
+EVIDENCE_SCHEMA = "english-kws-dual-track-v7-kokoro-machine-evidence-v1"
+CAPTURE_SCHEMA = "english-kws-dual-track-v7-kokoro-observer-capture-v1"
+ROLES = ("train", "development")
 CANDIDATES = ("VOSEN", "MERO")
 IDENTITY_KEYS = ("recognizer_id", "model_family", "model_sha256", "decode_config_sha256")
 SOURCE_KEYS = ("source_group_id", "source_speaker_id", "source_speaker_index", "voice_family", "role")
@@ -86,7 +86,7 @@ RULES = {
     "positive_max_samples": 28672,
     "minimum_positive_rows_per_group": 2,
     "minimum_negative_rows_per_group": 4,
-    "minimum_balanced_groups": {"train": 6, "development": 2, "calibration": 2, "locked-test": 2},
+    "minimum_balanced_groups": {"train": 6, "development": 2},
     "tiers": {"silver": 1.0, "weak": 0.5},
     "locked_test_never_optimizer_or_mining": True,
 }
@@ -274,10 +274,10 @@ def decide_candidate(row, candidate, texts, phones):
 def validate_plan(plan, profile):
     require(type(plan) is dict and plan.get("execution_stage") == "G2_SOURCE_GENERATION_AND_BLIND_OBSERVATION_ONLY",
             "V7_G2_EXECUTION_PLAN")
-    require(plan.get("source_count") == 144 and plan.get("candidate_ids") == ["hey-vosen-v7", "hey-mero-v7"]
+    require(plan.get("source_count") == 96 and plan.get("candidate_ids") == ["hey-vosen-v7", "hey-mero-v7"]
             and plan.get("observer_providers") == ["qwen", "whisper", "parakeet", "phoneme"],
             "V7_EXACT_SOURCE_AND_CANDIDATE_ROSTER")
-    require(plan.get("source_role_counts") == {"train": 6, "development": 2, "calibration": 2, "locked-test": 2},
+    require(plan.get("source_role_counts") == {"train": 6, "development": 2},
             "V7_SOURCE_ROLE_COUNTS")
     require(plan.get("positive_min_samples") == 6400 and plan.get("positive_max_samples") == 28672,
             "V7_POSITIVE_GEOMETRY")
@@ -301,15 +301,15 @@ def _validate_corpus(corpus, evidence, plan):
             and corpus.get("preflight_sha256"), "V7_RECIPE_AND_PREFLIGHT_BINDING")
     rows = corpus.get("rows", [])
     observations = evidence.get("rows", [])
-    require(len(rows) == 144 and len(observations) == 144, "COMPLETE_144_ROW_DENOMINATOR")
+    require(len(rows) == 96 and len(observations) == 96, "COMPLETE_144_ROW_DENOMINATOR")
     statuses = [row.get("generation_status") for row in rows]
     allowed_statuses = {"success", "FAILED_NO_RETRY", "UNKNOWN_AFTER_START_NO_RETRY",
                         "POSITIVE_GEOMETRY_QUARANTINED", "MODEL_INPUT_GEOMETRY_QUARANTINED", "DUPLICATE_PCM_QUARANTINED",
                         "NOT_STARTED"}
-    require(corpus.get("declared_count") == 144 and all(status in allowed_statuses for status in statuses)
+    require(corpus.get("declared_count") == 96 and all(status in allowed_statuses for status in statuses)
             and corpus.get("valid_count") == statuses.count("success"),
             "144_ROW_TERMINAL_STATUS_AND_VALID_COUNT")
-    require(len({row.get("id") for row in rows}) == 144
+    require(len({row.get("id") for row in rows}) == 96
             and {row.get("id") for row in rows} == {row.get("id") for row in observations},
             "SOURCE_OBSERVER_ROSTER_IDENTITY")
     groups = corpus.get("source_groups", [])
@@ -317,7 +317,7 @@ def _validate_corpus(corpus, evidence, plan):
             and len({group.get("source_speaker_id") for group in groups}) == 12,
             "TWELVE_UNIQUE_SOURCE_GROUPS_AND_SPEAKERS")
     require(Counter(group.get("role") for group in groups)
-            == Counter({"train": 6, "development": 2, "calibration": 2, "locked-test": 2}),
+            == Counter({"train": 6, "development": 2}),
             "SOURCE_GROUP_6_2_2_2")
     group_by_id = {group["source_group_id"]: group for group in groups}
     cells_seen = set()
@@ -340,19 +340,80 @@ def _validate_corpus(corpus, evidence, plan):
         require(pair not in cells_seen, "DUPLICATE_SOURCE_CELL")
         cells_seen.add(pair)
         rows_by_id[row["id"]] = row
-    require(len(cells_seen) == 144, "EXACT_12_BY_12_SOURCE_CELL_ROSTER")
+    require(len(cells_seen) == 96, "EXACT_12_BY_12_SOURCE_CELL_ROSTER")
     evidence_by_id = {item["id"]: item for item in observations}
     return rows, evidence_by_id, group_by_id
 
 
-def build_admission(corpus, evidence, root, *, profile, plan):
+def build_admission(corpus, evidence, root, *, profile, plan, open_roles=ROLES):
+    """Build candidate-relative manifests while opening only explicitly authorized roles.
+
+    G3 passes ("train", "development"). Calibration and locked-test rows remain
+    sealed placeholders: their audio, observer captures and labels are not read.
+    """
     validate_plan(plan, profile)
+    open_roles = tuple(open_roles)
+    require(open_roles and len(set(open_roles)) == len(open_roles)
+            and set(open_roles) <= set(ROLES)
+            and {"train", "development"} <= set(open_roles),
+            "AUTHORIZED_ADMISSION_ROLES")
     rows, evidence_by_id, groups = _validate_corpus(corpus, evidence, plan)
     per_candidate = {}
     for candidate in CANDIDATES:
         decisions = []
         for row in rows:
             packet = evidence_by_id[row["id"]]
+            role = row["role"]
+            common = {
+                "id": row["id"],
+                **{key: row[key] for key in SOURCE_KEYS},
+                **{key: row[key] for key in ("cell_id", "requested_text", "requested_class", "kind",
+                                              "length_scale", "raw_phonemes", "pronunciation_hypothesis")},
+                "request_sha256": row["request_sha256"],
+                "candidate_id": "hey-vosen-v7" if candidate == "VOSEN" else "hey-mero-v7",
+                "candidate": candidate,
+                "human_gold": False,
+                "final_native_pronunciation_verified": False,
+                "independent_real_evaluation_allowed": False,
+            }
+            if role not in open_roles:
+                # Do not expose target text, requested labels, PCM hashes or observer evidence
+                # for calibration/locked-test rows before their dedicated evaluation stage.
+                sealed_common = {
+                    "id": row["id"],
+                    **{key: row[key] for key in SOURCE_KEYS},
+                    "candidate_id": "hey-vosen-v7" if candidate == "VOSEN" else "hey-mero-v7",
+                    "candidate": candidate,
+                    "human_gold": False,
+                    "final_native_pronunciation_verified": False,
+                    "independent_real_evaluation_allowed": False,
+                }
+                decisions.append({
+                    **sealed_common,
+                    "source_receipt_sha256": None,
+                    "actual_phonemes": None,
+                    "actual_phoneme_ids": None,
+                    "generation_status": "NOT_OPENED",
+                    "source_generation_status": row["generation_status"],
+                    "pcm_sha256": None,
+                    "wav_sha256": None,
+                    "pcm_samples": None,
+                    "research_class": None,
+                    "tier": "unknown",
+                    "disposition": "SEALED",
+                    "reason": "SEALED_ROLE_NOT_OPENED",
+                    "observed_phrase": None,
+                    "label_kind": "none",
+                    "evidence_refs": [],
+                    "balanced_source_group": False,
+                    "training_eligible": False,
+                    "optimizer_allowed": False,
+                    "training_class": None,
+                    "training_weight": 0.0,
+                    "calibration_sealed": role == "calibration",
+                    "locked_test_sealed": role == "locked-test",
+                })
+                continue
             by_id = {}
             if row["generation_status"] == "success":
                 verify_pcm(row, root)
@@ -390,20 +451,15 @@ def build_admission(corpus, evidence, root, *, profile, plan):
                 refs.append({"recognizer_id": "phoneme", "capture_path": phone_item["capture_path"],
                              "capture_sha256": phone_item["capture_sha256"]})
             decisions.append({
-                "id": row["id"],
-                **{key: row[key] for key in SOURCE_KEYS},
-                **{key: row[key] for key in ("cell_id", "requested_text", "requested_class", "kind",
-                                              "length_scale", "raw_phonemes", "pronunciation_hypothesis")},
-                "request_sha256": row["request_sha256"],
+                **common,
                 "source_receipt_sha256": row.get("source_receipt_sha256"),
                 "actual_phonemes": row.get("actual_phonemes"),
                 "actual_phoneme_ids": row.get("actual_phoneme_ids"),
                 "generation_status": row["generation_status"],
+                "source_generation_status": row["generation_status"],
                 "pcm_sha256": row["pcm_sha256"],
                 "wav_sha256": row["wav_sha256"],
                 "pcm_samples": row["pcm_samples"],
-                "candidate_id": "hey-vosen-v7" if candidate == "VOSEN" else "hey-mero-v7",
-                "candidate": candidate,
                 "research_class": label,
                 "tier": tier,
                 "disposition": "UNKNOWN" if tier == "unknown" else tier.upper() + "_RESEARCH",
@@ -411,9 +467,8 @@ def build_admission(corpus, evidence, root, *, profile, plan):
                 "observed_phrase": observed,
                 "label_kind": "synthetic_" + tier + "_machine_research",
                 "evidence_refs": refs,
-                "human_gold": False,
-                "final_native_pronunciation_verified": False,
-                "independent_real_evaluation_allowed": False,
+                "calibration_sealed": False,
+                "locked_test_sealed": False,
             })
         supported = defaultdict(lambda: Counter())
         for item in decisions:
@@ -424,7 +479,8 @@ def build_admission(corpus, evidence, root, *, profile, plan):
             if counts["1"] >= 2 and counts["0"] >= 4:
                 balanced.add(group_id)
         balanced_counts = Counter(groups[group_id]["role"] for group_id in balanced)
-        snapshot = all(balanced_counts[role] >= plan["source_role_counts"][role] for role in ROLES)
+        snapshot = all(balanced_counts[role] >= plan["source_role_counts"][role]
+                       for role in open_roles)
         for item in decisions:
             eligible = item["source_group_id"] in balanced and item["tier"] in ("silver", "weak")
             item.update(
@@ -434,6 +490,7 @@ def build_admission(corpus, evidence, root, *, profile, plan):
                 training_class=item["research_class"] if eligible and item["role"] == "train" else None,
                 training_weight={"silver": 1.0, "weak": 0.5}.get(item["tier"], 0.0)
                     if eligible and item["role"] == "train" else 0.0,
+                calibration_sealed=item["role"] == "calibration",
                 locked_test_sealed=item["role"] == "locked-test",
             )
         phrase = "Hey Vosen" if candidate == "VOSEN" else "Hey Mero"
@@ -449,17 +506,25 @@ def build_admission(corpus, evidence, root, *, profile, plan):
             "ctc_tokens": tokens,
             "ctc_token_ids": [1, 2, 3],
             "source_plan_sha256": plan["source_plan_sha256"],
-            "source_group_roles": groups,
+            "source_group_roles": sorted(groups.values(), key=lambda group: group["source_group_id"]),
             "split_counts": dict(plan["source_role_counts"]),
-            "minimum_balanced_groups_per_role": dict(plan["source_role_counts"]),
+            "minimum_balanced_groups_per_role": {role: plan["source_role_counts"][role]
+                                                   for role in open_roles},
+            "admission_open_roles": list(open_roles),
             "balanced_groups_by_role": {role: balanced_counts[role] for role in ROLES},
             "minimum_positive_rows_per_group": 2,
             "minimum_negative_rows_per_group": 4,
             "training_snapshot_allowed": snapshot,
             "optimizer_allowed": False,
-            "locked_test_sealed_from_training_and_mining": True,
+            "calibration_sealed": "calibration" not in open_roles,
+            "locked_test_sealed_from_training_and_mining": "locked-test" not in open_roles,
             "rows": decisions,
             "tier_counts": dict(sorted(Counter(item["tier"] for item in decisions).items())),
+            "opened_role_tier_counts": {
+                role: dict(sorted(Counter(item["tier"] for item in decisions
+                                           if item["role"] == role).items()))
+                for role in open_roles
+            },
             "human_gold": False,
             "independent_real_quality_claims_allowed": False,
             "physical_ssc305_claims_allowed": False,
@@ -471,6 +536,7 @@ def build_admission(corpus, evidence, root, *, profile, plan):
             "training_snapshot_allowed": snapshot,
             "balanced_groups_by_role": {role: balanced_counts[role] for role in ROLES},
             "tier_counts": dict(sorted(Counter(item["tier"] for item in decisions).items())),
+            "opened_role_tier_counts": manifest["opened_role_tier_counts"],
             "eligible_train_rows": sum(item["training_eligible"] for item in decisions),
         }
     summary = {
@@ -481,6 +547,9 @@ def build_admission(corpus, evidence, root, *, profile, plan):
         "source_run": corpus.get("run"),
         "corpus_sha256": sha(canonical(corpus)),
         "evidence_sha256": sha(canonical(evidence)),
+        "opened_roles": list(open_roles),
+        "calibration_pcm_opened": "calibration" in open_roles,
+        "locked_test_pcm_opened": "locked-test" in open_roles,
         "candidate_results": {
             candidate: {key: value for key, value in result.items() if key != "manifest"}
             for candidate, result in per_candidate.items()

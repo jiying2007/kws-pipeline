@@ -21,7 +21,7 @@ permissions:
   contents: read
 jobs:
   offline-source-checks:
-    needs: decoder-scratch
+    needs: [decoder-scratch, v7-c11-runtime] # needs: decoder-scratch remains a required direct dependency
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 8
@@ -30,7 +30,10 @@ jobs:
       - name: Require decoder scratch checks
         env:
           SCRATCH_RESULT: ${{ needs.decoder-scratch.result }}
-        run: test "$SCRATCH_RESULT" = success
+          V7_C11_RESULT: ${{ needs.v7-c11-runtime.result }}
+        run: |
+          test "$SCRATCH_RESULT" = success
+          test "$V7_C11_RESULT" = success
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
@@ -61,6 +64,27 @@ jobs:
             ${{ runner.temp }}/shipping-boundary-synthetic/RESULTS.json
           if-no-files-found: ignore
           retention-days: 30
+
+
+  v7-c11-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        cc: [gcc, clang]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Configure candidate-aware V7 C11 runtime
+        env:
+          CC: ${{ matrix.cc }}
+        run: cmake -S research/english_kws_v7 -B "$RUNNER_TEMP/v7-c11-build" -DCMAKE_C_COMPILER="$CC" -DBUILD_TESTING=ON
+      - name: Build C11 runtime and deterministic logits runner
+        run: cmake --build "$RUNNER_TEMP/v7-c11-build" --parallel 2
+      - name: Run V7 CTC identity, pack loader and stream geometry tests
+        run: ctest --test-dir "$RUNNER_TEMP/v7-c11-build" --output-on-failure
 
   decoder-scratch:
     runs-on: ubuntu-24.04

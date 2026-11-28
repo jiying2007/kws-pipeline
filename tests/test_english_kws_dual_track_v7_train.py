@@ -1,7 +1,11 @@
 """Source-only frozen G3 training-plan contracts; no torch/model/audio execution."""
 from __future__ import annotations
 
+import io
+import json
 import sys
+import tempfile
+import wave
 from pathlib import Path
 import unittest
 
@@ -62,6 +66,193 @@ class V7TrainingPlanTests(unittest.TestCase):
         self.assertNotEqual(plan["candidates"]["VOSEN"]["seed"], plan["candidates"]["MERO"]["seed"])
         self.assertEqual(plan["candidates"]["VOSEN"]["keyword_id"], 1)
         self.assertEqual(plan["candidates"]["MERO"]["keyword_id"], 2)
+
+
+
+    def make_snapshot(self, root):
+        plan = trainer.load_plan()
+        candidate = "VOSEN"
+        candidate_plan = plan["candidates"][candidate]
+        root.mkdir(parents=True)
+        groups = []
+        rows = []
+        files = []
+        total_bytes = 0
+        pcm = b"\\x00\\x00" * 6400
+        wav_buffer = io.BytesIO()
+        with wave.open(wav_buffer, "wb") as stream:
+            stream.setnchannels(1)
+            stream.setsampwidth(2)
+            stream.setframerate(16000)
+            stream.writeframes(pcm)
+        wav = wav_buffer.getvalue()
+        for role, count in (("train", 6), ("development", 2)):
+            for index in range(count):
+                group_id = f"{role}-{index}"
+                groups.append({
+                    "source_group_id": group_id,
+                    "source_speaker_id": "speaker-" + group_id,
+                    "role": role,
+                })
+                for label, amount in ((1, 2), (0, 4)):
+                    for item_index in range(amount):
+                        row_id = f"{group_id}-{'pos' if label else 'neg'}-{item_index}"
+                        pcm_path = f"audio/{row_id}.pcm"
+                        wav_path = f"audio/{row_id}.wav"
+                        (root / pcm_path).parent.mkdir(parents=True, exist_ok=True)
+                        (root / pcm_path).write_bytes(pcm)
+                        (root / wav_path).write_bytes(wav)
+                        for name, raw in ((pcm_path, pcm), (wav_path, wav)):
+                            files.append({"path": name, "bytes": len(raw), "sha256": trainer.sha(raw)})
+                            total_bytes += len(raw)
+                        rows.append({
+                            "id": row_id,
+                            "role": role,
+                            "source_group_id": group_id,
+                            "candidate_id": candidate_plan["candidate_id"],
+                            "research_class": label,
+                            "tier": "silver",
+                            "optimizer_allowed": False,
+                            "locked_test_sealed": False,
+                            "training_eligible": role == "train",
+                            "training_class": label if role == "train" else None,
+                            "training_weight": 1.0 if role == "train" else 0.0,
+                            "pcm_path": pcm_path,
+                            "wav_path": wav_path,
+                            "pcm_sha256": trainer.sha(pcm),
+                            "wav_sha256": trainer.sha(wav),
+                            "pcm_samples": 6400,
+                        })
+        source_run = {
+            "repository": trainer.REPO,
+            "run_id": str(plan["source_run_id"]),
+            "sha": plan["source_commit"],
+            "event": "push",
+            "ref": "refs/heads/main",
+            "attempt": "1",
+        }
+        manifest = {
+            "schema": "english-kws-dual-track-v7-training-snapshot-manifest-v1",
+            "candidate": candidate,
+            "candidate_id": candidate_plan["candidate_id"],
+            "phrase": candidate_plan["phrase"],
+            "locale": "en-US",
+            "ipa": candidate_plan["ipa"],
+            "ctc_tokens": candidate_plan["token_labels"],
+            "ctc_token_ids": candidate_plan["token_ids"],
+            "source_plan_sha256": plan["source_plan_sha256"],
+            "source_run": source_run,
+            "source_groups": groups,
+            "role_counts": {"train": 6, "development": 2},
+            "rows": rows,
+            "training_rows": 36,
+            "development_rows": 12,
+            "training_snapshot_allowed": True,
+            "calibration_rows_included": False,
+            "locked_test_rows_included": False,
+            "calibration_labels_included": False,
+            "locked_test_labels_included": False,
+            "calibration_audio_included": False,
+            "locked_test_audio_included": False,
+            "optimizer_updates": 0,
+            "kws_model_forwards": 0,
+            "product_promotion_allowed": False,
+        }
+        manifest_raw = trainer.canonical(manifest) + b"\\n"
+        (root / "MANIFEST.json").write_bytes(manifest_raw)
+        files.append({"path": "MANIFEST.json", "bytes": len(manifest_raw),
+                      "sha256": trainer.sha(manifest_raw)})
+        total_bytes += len(manifest_raw)
+        files.sort(key=lambda item: item["path"])
+        inventory = {
+            "schema": "english-kws-dual-track-v7-training-snapshot-files-v1",
+            "candidate": candidate,
+            "files": files,
+        }
+        inventory_raw = trainer.canonical(inventory) + b"\\n"
+        (root / "FILES.json").write_bytes(inventory_raw)
+        snapshot = {
+            "schema": "english-kws-dual-track-v7-training-snapshot-v1",
+            "candidate": candidate,
+            "candidate_id": candidate_plan["candidate_id"],
+            "source_run": source_run,
+            "source_plan_sha256": plan["source_plan_sha256"],
+            "source_candidate_manifest_sha256": "a" * 64,
+            "source_packet_files_manifest_sha256": "b" * 64,
+            "manifest_sha256": trainer.sha(manifest_raw),
+            "files_manifest_sha256": trainer.sha(inventory_raw),
+            "file_count": len(files),
+            "verified_bytes": total_bytes,
+            "training_rows": 36,
+            "development_rows": 12,
+            "role_counts": {"train": 6, "development": 2},
+            "calibration_rows_included": False,
+            "locked_test_rows_included": False,
+            "calibration_labels_included": False,
+            "locked_test_labels_included": False,
+            "calibration_audio_included": False,
+            "locked_test_audio_included": False,
+            "locked_test_access_in_training_job": False,
+            "optimizer_updates": 0,
+            "kws_model_forwards": 0,
+            "product_promotion_allowed": False,
+        }
+        (root / "SNAPSHOT.json").write_bytes(trainer.canonical(snapshot) + b"\\n")
+        return manifest, inventory, snapshot
+
+    def test_valid_candidate_snapshot_reads_only_train_and_development(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "VOSEN"
+            manifest, inventory, snapshot = self.make_snapshot(root)
+            verified, identity = trainer.verify_training_snapshot(root, "VOSEN", trainer.load_plan())
+            self.assertEqual(len(verified["rows"]), 48)
+            self.assertEqual({row["role"] for row in verified["rows"]}, {"train", "development"})
+            self.assertEqual(identity["training_rows"], 36)
+            self.assertEqual(identity["development_rows"], 12)
+            self.assertEqual(trainer.read_pcm(verified["rows"][0], root), b"\\x00\\x00" * 6400)
+
+    def test_locked_test_row_is_rejected_before_any_locked_audio_read(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "VOSEN"
+            manifest, inventory, snapshot = self.make_snapshot(root)
+            locked = dict(manifest["rows"][0])
+            locked.update({
+                "id": "locked-secret",
+                "role": "locked-test",
+                "source_group_id": "locked-0",
+                "pcm_path": "audio/locked-secret.pcm",
+                "wav_path": "audio/locked-secret.wav",
+                "training_eligible": False,
+                "training_class": None,
+                "training_weight": 0.0,
+            })
+            manifest["rows"].append(locked)
+            raw = trainer.canonical(manifest) + b"\\n"
+            (root / "MANIFEST.json").write_bytes(raw)
+            snapshot["manifest_sha256"] = trainer.sha(raw)
+            (root / "SNAPSHOT.json").write_bytes(trainer.canonical(snapshot) + b"\\n")
+            with self.assertRaisesRegex(ValueError, "NO_CALIBRATION_OR_LOCKED_ROWS_IN_TRAINING_SNAPSHOT"):
+                trainer.verify_training_snapshot(root, "VOSEN", trainer.load_plan())
+            self.assertFalse((root / "audio/locked-secret.pcm").exists())
+
+    def test_extra_locked_audio_path_is_rejected_before_file_read(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "VOSEN"
+            manifest, inventory, snapshot = self.make_snapshot(root)
+            inventory["files"].append({
+                "path": "audio/locked-secret.pcm",
+                "bytes": 1,
+                "sha256": trainer.sha(b"x"),
+            })
+            inventory["files"].sort(key=lambda item: item["path"])
+            raw = trainer.canonical(inventory) + b"\\n"
+            (root / "FILES.json").write_bytes(raw)
+            snapshot["files_manifest_sha256"] = trainer.sha(raw)
+            snapshot["file_count"] = len(inventory["files"])
+            (root / "SNAPSHOT.json").write_bytes(trainer.canonical(snapshot) + b"\\n")
+            with self.assertRaisesRegex(ValueError, "NO_EXTRA_OR_MISSING_TRAIN_DEV_FILES"):
+                trainer.verify_training_snapshot(root, "VOSEN", trainer.load_plan())
+            self.assertFalse((root / "audio/locked-secret.pcm").exists())
 
 
 if __name__ == "__main__":
