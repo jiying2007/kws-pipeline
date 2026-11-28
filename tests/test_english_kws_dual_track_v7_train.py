@@ -17,19 +17,26 @@ import english_kws_dual_track_v7_train as trainer
 class V7TrainingPlanTests(unittest.TestCase):
     def test_two_candidates_have_independent_one_shot_budgets(self):
         report = trainer.source_check()
-        self.assertEqual(report["status"], "MULTISOURCE_G3_PLAN_VALID_NO_MODEL_EXECUTION")
-        self.assertTrue(report["training_enabled"])
+        self.assertEqual(report["status"], "WAITING_FOR_VOXCPM_G3_SOURCE")
+        self.assertFalse(report["training_enabled"])
+        self.assertFalse(report["source_bundle_bound"])
+        self.assertEqual(report["source_bundle_status"], "NOT_BOUND")
         plan = trainer.load_plan()
-        self.assertEqual(plan["status"], "READY_FOR_MULTISOURCE_G3")
+        self.assertEqual(plan["status"], "WAITING_FOR_VOXCPM_G3_SOURCE")
+        self.assertFalse(plan["enabled"])
         self.assertEqual(plan["source_roles"],
-                         {"train": 8, "development": 4, "calibration": 3, "locked-test": 3})
-        self.assertEqual(plan["source_bundle"]["selected_machine_reviewed_rows"], 63)
-        self.assertEqual(plan["source_bundle"]["new_tts_calls"], 0)
-        self.assertEqual(plan["source_bundle"]["new_asr_calls"], 0)
-        self.assertEqual(plan["source_bundle"]["new_phone_calls"], 0)
-        self.assertEqual(report["source_qualified_groups"]["train"], 8)
-        self.assertEqual(report["source_qualified_groups"]["development"], 4)
-        self.assertEqual(len(report["source_bundle_sha256"]), 64)
+                         {"train": 6, "development": 2, "calibration": 2, "locked-test": 2})
+        self.assertEqual(plan["source_bundle"]["status"], "NOT_BOUND")
+        self.assertFalse(plan["source_bundle"]["training_allowed"])
+        self.assertEqual(plan["source_bundle"]["required_source_rows"], 96)
+        self.assertEqual(plan["source_bundle"]["required_source_groups"],
+                         {"train": 6, "development": 2})
+        self.assertNotIn("artifacts", plan["source_bundle"])
+        self.assertEqual(report["source_qualified_groups"]["train"], 6)
+        self.assertEqual(report["source_qualified_groups"]["development"], 2)
+        self.assertEqual(report["source_qualified_groups"]["calibration"], 2)
+        self.assertEqual(report["source_qualified_groups"]["locked-test"], 2)
+        self.assertIsNone(report["source_bundle_sha256"])
         self.assertEqual(report["candidates"], ["MERO", "VOSEN"])
         self.assertEqual(report["optimizer_updates_per_candidate"], 192)
         self.assertEqual(report["training_forwards_per_candidate"], 384)
@@ -43,39 +50,26 @@ class V7TrainingPlanTests(unittest.TestCase):
 
     def test_pull_request_and_rerun_are_not_training_authority(self):
         plan = trainer.load_plan()
-        with self.assertRaisesRegex(ValueError, "PUBLIC_MAIN_FIRST_ATTEMPT_TRAINING_ONLY"):
+        with self.assertRaisesRegex(ValueError, "G3_MULTISOURCE_BUNDLE_NOT_READY"):
             trainer.guard(plan, env={}, event={})
 
-    def test_exact_six_artifact_bundle_and_first_main_guard(self):
+    def test_voxcpm_source_requirement_is_unbound_and_legacy_bundle_is_absent(self):
         plan = trainer.load_plan()
         bundle = plan["source_bundle"]
-        self.assertEqual(len(bundle["artifacts"]), 6)
-        self.assertEqual(bundle["qualified_groups_by_role"],
-                         {"train": 8, "development": 4, "calibration": 3, "locked-test": 3})
-        self.assertEqual(bundle["source_policy_git_blob_sha1"],
-                         "0a688325d0d36e83ef6623ac678511df24a92374")
-        self.assertFalse(bundle["audio_regenerated"])
-        self.assertFalse(bundle["human_gold"])
-        env = {
-            "GITHUB_ACTIONS": "true",
-            "GITHUB_REPOSITORY": trainer.REPO,
-            "GITHUB_EVENT_NAME": "push",
-            "GITHUB_REF": "refs/heads/main",
-            "GITHUB_RUN_ATTEMPT": "1",
-            "GITHUB_SHA": "f" * 40,
-            "GITHUB_RUN_ID": "46010000001",
-        }
-        event = {
-            "before": plan["next_main_before"],
-            "after": env["GITHUB_SHA"],
-            "ref": "refs/heads/main",
-            "forced": False,
-            "deleted": False,
-            "repository": {"full_name": trainer.REPO, "private": False},
-        }
-        identity = trainer.guard(plan, env=env, event=event)
-        self.assertEqual(identity["source_bundle_sha256"], plan["source_plan_sha256"])
-        self.assertEqual(identity["parent"], plan["next_main_before"])
+        self.assertEqual(bundle["status"], "NOT_BOUND")
+        self.assertEqual(bundle["required_source_schema"],
+                         "english-kws-dual-track-v7-voice-clone-corpus-v1")
+        self.assertEqual(bundle["generator"]["commit"],
+                         "e5b89534e379c79b923c9969b79c3858d140bedb")
+        self.assertEqual(bundle["model"]["repository"], "openbmb/VoxCPM1.5")
+        self.assertEqual(bundle["model"]["license"], "Apache-2.0")
+        self.assertEqual(bundle["donor_reference"]["artifact_id"], 14406282094)
+        self.assertFalse(bundle["training_allowed"])
+        self.assertFalse(bundle["promotion_allowed"])
+        self.assertNotIn("artifacts", bundle)
+        self.assertEqual(plan["source_plan_sha256"], "0" * 64)
+        with self.assertRaisesRegex(ValueError, "G3_MULTISOURCE_BUNDLE_NOT_READY"):
+            trainer.guard(plan, env={}, event={})
 
     def test_exact_brand_pronunciations_and_separate_seeds(self):
         plan = trainer.load_plan()
@@ -104,7 +98,7 @@ class V7TrainingPlanTests(unittest.TestCase):
             stream.setframerate(16000)
             stream.writeframes(pcm)
         wav = wav_buffer.getvalue()
-        for role, count in (("train", 8), ("development", 4)):
+        for role, count in (("train", 6), ("development", 2)):
             for index in range(count):
                 group_id = f"{role}-{index}"
                 groups.append({
@@ -112,7 +106,7 @@ class V7TrainingPlanTests(unittest.TestCase):
                     "source_speaker_id": "speaker-" + group_id,
                     "role": role,
                 })
-                for label, amount in ((1, 1), (0, 2)):
+                for label, amount in ((1, 2), (0, 4)):
                     for item_index in range(amount):
                         row_id = f"{group_id}-{'pos' if label else 'neg'}-{item_index}"
                         pcm_path = f"audio/{row_id}.pcm"
@@ -161,9 +155,9 @@ class V7TrainingPlanTests(unittest.TestCase):
             "source_plan_sha256": plan["source_plan_sha256"],
             "source_run": source_run,
             "source_groups": groups,
-            "role_counts": {"train": 8, "development": 4},
+            "role_counts": {"train": 6, "development": 2},
             "rows": rows,
-            "training_rows": 24,
+            "training_rows": 36,
             "development_rows": 12,
             "training_snapshot_allowed": True,
             "calibration_rows_included": False,
@@ -201,9 +195,9 @@ class V7TrainingPlanTests(unittest.TestCase):
             "files_manifest_sha256": trainer.sha(inventory_raw),
             "file_count": len(files),
             "verified_bytes": total_bytes,
-            "training_rows": 24,
+            "training_rows": 36,
             "development_rows": 12,
-            "role_counts": {"train": 8, "development": 4},
+            "role_counts": {"train": 6, "development": 2},
             "calibration_rows_included": False,
             "locked_test_rows_included": False,
             "calibration_labels_included": False,
@@ -223,9 +217,9 @@ class V7TrainingPlanTests(unittest.TestCase):
             root = Path(temp) / "VOSEN"
             manifest, inventory, snapshot = self.make_snapshot(root)
             verified, identity = trainer.verify_training_snapshot(root, "VOSEN", trainer.load_plan())
-            self.assertEqual(len(verified["rows"]), 36)
+            self.assertEqual(len(verified["rows"]), 48)
             self.assertEqual({row["role"] for row in verified["rows"]}, {"train", "development"})
-            self.assertEqual(identity["training_rows"], 24)
+            self.assertEqual(identity["training_rows"], 36)
             self.assertEqual(identity["development_rows"], 12)
             self.assertEqual(trainer.read_pcm(verified["rows"][0], root), b"\x00\x00" * 6400)
 
