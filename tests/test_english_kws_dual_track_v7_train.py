@@ -17,16 +17,19 @@ import english_kws_dual_track_v7_train as trainer
 class V7TrainingPlanTests(unittest.TestCase):
     def test_two_candidates_have_independent_one_shot_budgets(self):
         report = trainer.source_check()
-        self.assertEqual(report["status"], "BLOCKED_AWAITING_NEW_VOICE_CLONE_G2_SOURCE_NO_MODEL_EXECUTION")
-        self.assertFalse(report["training_enabled"])
-        self.assertFalse(report["source_compatible"])
+        self.assertEqual(report["status"], "MULTISOURCE_G3_PLAN_VALID_NO_MODEL_EXECUTION")
+        self.assertTrue(report["training_enabled"])
         plan = trainer.load_plan()
-        self.assertEqual(plan["status"], "BLOCKED_AWAITING_NEW_VOICE_CLONE_G2_SOURCE")
-        self.assertEqual(plan["source_compatibility"]["pinned_run_id"], 46000882374)
-        self.assertEqual(plan["source_compatibility"]["expected_corpus_schema"],
-                         "english-kws-dual-track-v7-voice-clone-corpus-v1")
-        self.assertEqual(plan["source_compatibility"]["expected_generator"],
-                         "VoxCPM 1.5 Q8_0 + AudioVAE F16 (pilot pending)")
+        self.assertEqual(plan["status"], "READY_FOR_MULTISOURCE_G3")
+        self.assertEqual(plan["source_roles"],
+                         {"train": 8, "development": 4, "calibration": 3, "locked-test": 3})
+        self.assertEqual(plan["source_bundle"]["selected_machine_reviewed_rows"], 63)
+        self.assertEqual(plan["source_bundle"]["new_tts_calls"], 0)
+        self.assertEqual(plan["source_bundle"]["new_asr_calls"], 0)
+        self.assertEqual(plan["source_bundle"]["new_phone_calls"], 0)
+        self.assertEqual(report["source_qualified_groups"]["train"], 8)
+        self.assertEqual(report["source_qualified_groups"]["development"], 4)
+        self.assertEqual(len(report["source_bundle_sha256"]), 64)
         self.assertEqual(report["candidates"], ["MERO", "VOSEN"])
         self.assertEqual(report["optimizer_updates_per_candidate"], 192)
         self.assertEqual(report["training_forwards_per_candidate"], 384)
@@ -40,17 +43,19 @@ class V7TrainingPlanTests(unittest.TestCase):
 
     def test_pull_request_and_rerun_are_not_training_authority(self):
         plan = trainer.load_plan()
-        with self.assertRaisesRegex(ValueError, "G3_SOURCE_CAMPAIGN_NOT_READY"):
+        with self.assertRaisesRegex(ValueError, "PUBLIC_MAIN_FIRST_ATTEMPT_TRAINING_ONLY"):
             trainer.guard(plan, env={}, event={})
 
-    def test_incompatible_piper_g2_run_cannot_authorize_kokoro_training(self):
+    def test_exact_six_artifact_bundle_and_first_main_guard(self):
         plan = trainer.load_plan()
-        self.assertEqual(plan["source_run_id"], 46000882374)
-        self.assertEqual(plan["source_compatibility"]["pinned_corpus_schema"],
-                         "english-kws-dual-track-v7-corpus-v1")
-        self.assertEqual(plan["source_compatibility"]["expected_corpus_schema"],
-                         "english-kws-dual-track-v7-kokoro-corpus-v1")
-        self.assertFalse(plan["source_compatibility"]["compatible"])
+        bundle = plan["source_bundle"]
+        self.assertEqual(len(bundle["artifacts"]), 6)
+        self.assertEqual(bundle["qualified_groups_by_role"],
+                         {"train": 8, "development": 4, "calibration": 3, "locked-test": 3})
+        self.assertEqual(bundle["source_policy_git_blob_sha1"],
+                         "0a688325d0d36e83ef6623ac678511df24a92374")
+        self.assertFalse(bundle["audio_regenerated"])
+        self.assertFalse(bundle["human_gold"])
         env = {
             "GITHUB_ACTIONS": "true",
             "GITHUB_REPOSITORY": trainer.REPO,
@@ -68,8 +73,9 @@ class V7TrainingPlanTests(unittest.TestCase):
             "deleted": False,
             "repository": {"full_name": trainer.REPO, "private": False},
         }
-        with self.assertRaisesRegex(ValueError, "G3_SOURCE_CAMPAIGN_NOT_READY"):
-            trainer.guard(plan, env=env, event=event)
+        identity = trainer.guard(plan, env=env, event=event)
+        self.assertEqual(identity["source_bundle_sha256"], plan["source_plan_sha256"])
+        self.assertEqual(identity["parent"], plan["next_main_before"])
 
     def test_exact_brand_pronunciations_and_separate_seeds(self):
         plan = trainer.load_plan()
@@ -98,7 +104,7 @@ class V7TrainingPlanTests(unittest.TestCase):
             stream.setframerate(16000)
             stream.writeframes(pcm)
         wav = wav_buffer.getvalue()
-        for role, count in (("train", 6), ("development", 2)):
+        for role, count in (("train", 8), ("development", 4)):
             for index in range(count):
                 group_id = f"{role}-{index}"
                 groups.append({
@@ -106,7 +112,7 @@ class V7TrainingPlanTests(unittest.TestCase):
                     "source_speaker_id": "speaker-" + group_id,
                     "role": role,
                 })
-                for label, amount in ((1, 2), (0, 4)):
+                for label, amount in ((1, 1), (0, 2)):
                     for item_index in range(amount):
                         row_id = f"{group_id}-{'pos' if label else 'neg'}-{item_index}"
                         pcm_path = f"audio/{row_id}.pcm"
@@ -137,11 +143,11 @@ class V7TrainingPlanTests(unittest.TestCase):
                         })
         source_run = {
             "repository": trainer.REPO,
-            "run_id": str(plan["source_run_id"]),
-            "sha": plan["source_commit"],
-            "event": "push",
-            "ref": "refs/heads/main",
-            "attempt": "1",
+            "run_id": "46010000001",
+            "commit": "f" * 40,
+            "parent": plan["next_main_before"],
+            "attempt": 1,
+            "source_bundle_sha256": plan["source_plan_sha256"],
         }
         manifest = {
             "schema": "english-kws-dual-track-v7-training-snapshot-manifest-v1",
@@ -155,9 +161,9 @@ class V7TrainingPlanTests(unittest.TestCase):
             "source_plan_sha256": plan["source_plan_sha256"],
             "source_run": source_run,
             "source_groups": groups,
-            "role_counts": {"train": 6, "development": 2},
+            "role_counts": {"train": 8, "development": 4},
             "rows": rows,
-            "training_rows": 36,
+            "training_rows": 24,
             "development_rows": 12,
             "training_snapshot_allowed": True,
             "calibration_rows_included": False,
@@ -197,7 +203,7 @@ class V7TrainingPlanTests(unittest.TestCase):
             "verified_bytes": total_bytes,
             "training_rows": 36,
             "development_rows": 12,
-            "role_counts": {"train": 6, "development": 2},
+            "role_counts": {"train": 8, "development": 4},
             "calibration_rows_included": False,
             "locked_test_rows_included": False,
             "calibration_labels_included": False,
@@ -217,9 +223,9 @@ class V7TrainingPlanTests(unittest.TestCase):
             root = Path(temp) / "VOSEN"
             manifest, inventory, snapshot = self.make_snapshot(root)
             verified, identity = trainer.verify_training_snapshot(root, "VOSEN", trainer.load_plan())
-            self.assertEqual(len(verified["rows"]), 48)
+            self.assertEqual(len(verified["rows"]), 36)
             self.assertEqual({row["role"] for row in verified["rows"]}, {"train", "development"})
-            self.assertEqual(identity["training_rows"], 36)
+            self.assertEqual(identity["training_rows"], 24)
             self.assertEqual(identity["development_rows"], 12)
             self.assertEqual(trainer.read_pcm(verified["rows"][0], root), b"\x00\x00" * 6400)
 
