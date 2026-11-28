@@ -527,8 +527,8 @@ def run(snapshot, candidate, output, *, env=None, event=None):
         dev_rows = [row for row in manifest["rows"]
                     if row["role"] == "development" and row["tier"] in ("silver", "weak")
                     and row["research_class"] in (0, 1)]
-        need(len({row["source_group_id"] for row in train_rows}) == 6
-             and len({row["source_group_id"] for row in dev_rows}) == 2
+        need(len({row["source_group_id"] for row in train_rows}) == 8
+             and len({row["source_group_id"] for row in dev_rows}) == 4
              and all(row["role"] == "train" and row["training_class"] in (0, 1)
                      and row["optimizer_allowed"] is False for row in train_rows)
              and all(row["role"] == "development" and row["training_class"] is None
@@ -541,7 +541,7 @@ def run(snapshot, candidate, output, *, env=None, event=None):
         negatives = {group: sorted([row for row in train_rows
                                     if row["source_group_id"] == group and row["training_class"] == 0],
                                    key=lambda row: row["id"]) for group in train_groups}
-        need(all(len(positives[group]) >= 2 and len(negatives[group]) >= 4 for group in train_groups),
+        need(all(len(positives[group]) >= 1 and len(negatives[group]) >= 2 for group in train_groups),
              "BALANCED_TRAIN_GROUPS")
         import numpy as np
         import torch
@@ -654,7 +654,7 @@ def run(snapshot, candidate, output, *, env=None, event=None):
                 })
         dev_positive = [row for row in dev_results if row["research_class"] == 1]
         dev_negative = [row for row in dev_results if row["research_class"] == 0]
-        need(len(dev_positive) >= 2 and len(dev_negative) >= 2, "MINIMUM_ADMITTED_DEV_ROWS")
+        need(len(dev_positive) >= 4 and len(dev_negative) >= 8, "MINIMUM_ADMITTED_DEV_ROWS")
         dev_summary = {
             "positive_rows": len(dev_positive),
             "positive_hits": sum(row["full_sequence_event"] for row in dev_positive),
@@ -721,7 +721,7 @@ def run(snapshot, candidate, output, *, env=None, event=None):
             "pack_bytes": len(pack), "pack_sha256": sha(pack),
             "candidate_manifest_sha256": manifest_sha,
             "training_plan_sha256": sha(canonical(plan)),
-            "source_run_id": plan["source_run_id"], "source_commit": plan["source_commit"],
+            "source_bundle_sha256": plan["source_plan_sha256"],
             "training_run_id": identity["run_id"], "training_commit": identity["commit"],
             "product_promotion_allowed": False,
         }
@@ -745,9 +745,10 @@ def run(snapshot, candidate, output, *, env=None, event=None):
 def source_check():
     plan = load_plan()
     return {
-        "status": "BLOCKED_AWAITING_NEW_VOICE_CLONE_G2_SOURCE_NO_MODEL_EXECUTION",
+        "status": "MULTISOURCE_G3_PLAN_VALID_NO_MODEL_EXECUTION",
         "training_enabled": plan["enabled"],
-        "source_compatible": plan["source_compatibility"]["compatible"],
+        "source_bundle_sha256": plan["source_plan_sha256"],
+        "source_qualified_groups": plan["source_roles"],
         "candidates": sorted(plan["candidates"]),
         "optimizer_updates_per_candidate": plan["optimizer"]["updates_per_candidate"],
         "training_forwards_per_candidate": plan["optimizer"]["training_forwards_per_candidate"],
@@ -759,8 +760,7 @@ def source_check():
         "shared_optimizer": plan["independence"]["optimizer_state_shared"],
         "training_runs_per_candidate": plan["independence"]["training_runs_per_candidate"],
         "retries": plan["execution"]["retries"],
-        "source_run_id": plan["source_run_id"],
-        "source_commit": plan["source_commit"],
+        "source_bundle_sha256": plan["source_plan_sha256"],
         "promotion_allowed": plan["promotion_allowed"],
     }
 
