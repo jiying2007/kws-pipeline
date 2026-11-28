@@ -88,15 +88,32 @@ def load_plan():
          and bundle.get("required_source_groups") == {"train": 6, "development": 2}
          and bundle.get("required_observers") == ["qwen", "whisper", "parakeet", "phoneme"]
          and bundle.get("generator") == {
-             "repository": "bluryar/VoxCPM.cpp",
-             "commit": "e5b89534e379c79b923c9969b79c3858d140bedb",
-         }
-         and bundle.get("model") == {
-             "repository": "openbmb/VoxCPM1.5",
-             "license": "Apache-2.0",
-             "quantization": "Q8_0+AudioVAE-F16",
-         }
-         and bundle.get("donor_reference") == {
+              "repository": "bluryar/VoxCPM.cpp",
+              "commit": "e5b89534e379c79b923c9969b79c3858d140bedb",
+              "license": "Apache-2.0",
+          }
+          and bundle.get("converter") == {
+              "repository": "OpenBMB/VoxCPM",
+              "commit": "300e4260b509066151d623dc9c0aa922cf82232b",
+              "license": "Apache-2.0",
+          }
+          and bundle.get("model") == {
+              "repository": "openbmb/VoxCPM1.5",
+              "license": "Apache-2.0",
+              "quantization": "Q8_0+AudioVAE-F16",
+              "revision": "09c7a389438c27100dfa4e6cda1f8f0dd0d2fbfa",
+              "files": {
+                  "model.safetensors": "7e97ee2cd2ca891662f7da368921df08368a616410afe67461253e4dcd3823cc",
+                  "audiovae.pth": "8160987a7f10acd4c49b72a9a3e974c0b5c1c786538cd4bcaac5f2df388c0f14",
+              },
+              "audio_vae_sample_rate": 44100,
+          }
+          and bundle.get("required_source_cells") == [
+              "vosen-slow", "vosen-normal", "vosen-fast",
+              "mero-slow", "mero-normal", "mero-fast",
+              "bosen-s", "bosen-z", "memo", "nero", "hello", "morning",
+          ]
+          and bundle.get("donor_reference") == {
              "run_id": 44256271861,
              "artifact_id": 14406282094,
              "sha256": "8b86b46759f6f2bd084cd37e1c804c72058fe52ec57f6c221c912eeca96092e5",
@@ -127,9 +144,8 @@ def load_plan():
          and optimizer["group_schedule"] ==
              "round-robin six TRAIN source groups; cycle each candidate's admitted rows deterministically",
          "FIXED_SINGLE_RUN_TRAINING_BUDGET")
-    need(plan["source_roles"] == {
-        "train": 6, "development": 2, "calibration": 2, "locked-test": 2},
-        "EXACT_6_2_2_2_SOURCE_ROLE_SPLIT")
+    need(plan["source_roles"] == {"train": 6, "development": 2},
+         "EXACT_VOXCPM_6_TRAIN_2_DEVELOPMENT_SOURCE_SPLIT")
     need(plan["admission"] == {
         "minimum_train_groups": 6, "minimum_dev_groups": 2,
         "minimum_positive_rows_per_train_group": 2,
@@ -176,6 +192,116 @@ def load_plan():
                   "little_endian_float32": True, "candidate_id_in_header": False},
          "EXACT_KWSV7C01_PACK_GEOMETRY")
     return plan
+
+def verify_source_bundle_contract(bundle, corpus, plan):
+    """Reject any G3 corpus that drifts from the pinned VoxCPM 96-row 6/2 contract."""
+    expected = plan["source_bundle"]
+    need(isinstance(bundle, dict) and bundle.get("status") == "BOUND",
+         "VOXCPM_SOURCE_BUNDLE_MUST_BE_BOUND")
+    for key in ("required_source_schema", "required_source_rows", "required_source_groups",
+                "required_observers", "required_source_cells", "generator", "converter",
+                "model", "donor_reference", "required_candidate_isolation",
+                "no_legacy_audio_or_labels", "calibration_locked_reference_bytes_opened",
+                "human_gold", "independent_human_speaker_identity_claimed",
+                "training_allowed", "promotion_allowed"):
+        need(bundle.get(key) == expected.get(key), "VOXCPM_BUNDLE_PIN_MISMATCH:" + key)
+    need(bundle.get("required_source_schema") == "english-kws-dual-track-v7-voice-clone-corpus-v1"
+         and bundle.get("required_source_rows") == 96
+         and bundle.get("required_source_groups") == {"train": 6, "development": 2}
+         and bundle.get("required_observers") == ["qwen", "whisper", "parakeet", "phoneme"],
+         "VOXCPM_EXACT_SOURCE_SCHEMA_DENOMINATOR_AND_OBSERVERS")
+    need(bundle.get("required_candidate_isolation") is True
+         and bundle.get("no_legacy_audio_or_labels") is True
+         and bundle.get("calibration_locked_reference_bytes_opened") is False
+         and bundle.get("human_gold") is False
+         and bundle.get("independent_human_speaker_identity_claimed") is False
+         and bundle.get("training_allowed") is False
+         and bundle.get("promotion_allowed") is False,
+         "VOXCPM_SYNTHETIC_ONLY_NO_TRAINING_NO_PROMOTION")
+    need(isinstance(corpus, dict)
+         and corpus.get("schema") == bundle["required_source_schema"]
+         and corpus.get("training_allowed") is False
+         and corpus.get("human_gold") is False
+         and corpus.get("independent_human_speaker_identity_claimed") is False
+         and corpus.get("calibration_locked_reference_bytes_opened") is False
+         and corpus.get("candidate_ids") == ["hey-vosen-v7", "hey-mero-v7"]
+         and corpus.get("observers") == bundle["required_observers"]
+         and corpus.get("generator") == bundle["generator"]
+         and corpus.get("converter") == bundle["converter"]
+         and corpus.get("model") == bundle["model"]
+         and corpus.get("donor_reference") == bundle["donor_reference"],
+         "VOXCPM_CORPUS_PROVENANCE_IDENTITY")
+    source_plan_sha = corpus.get("source_plan_sha256")
+    need(isinstance(source_plan_sha, str) and re.fullmatch(r"[0-9a-f]{64}", source_plan_sha)
+         and bundle.get("source_plan_sha256") == source_plan_sha,
+         "VOXCPM_SOURCE_PLAN_SHA256_BINDING")
+    run = corpus.get("run")
+    need(isinstance(run, dict) and run == bundle.get("source_run")
+         and run.get("repository") == REPO
+         and str(run.get("run_id", "")).isdigit()
+         and re.fullmatch(r"[0-9a-f]{40}", str(run.get("commit", ""))) is not None
+         and re.fullmatch(r"[0-9a-f]{40}", str(run.get("parent", ""))) is not None
+         and run.get("attempt") == 1,
+         "VOXCPM_SOURCE_RUN_IDENTITY")
+    groups = corpus.get("source_groups")
+    rows = corpus.get("rows")
+    need(isinstance(groups, list) and len(groups) == 8
+         and isinstance(rows, list) and len(rows) == 96,
+         "VOXCPM_EXACT_EIGHT_GROUP_96_ROW_DENOMINATOR")
+    group_ids = [group.get("source_group_id") for group in groups]
+    speaker_ids = [group.get("source_speaker_id") for group in groups]
+    need(len(set(group_ids)) == len(group_ids) and len(set(speaker_ids)) == len(speaker_ids),
+         "VOXCPM_UNIQUE_SOURCE_GROUP_AND_SPEAKER_IDENTITIES")
+    need(Counter(group.get("role") for group in groups)
+         == Counter({"train": 6, "development": 2})
+         and all(group.get("role") in ("train", "development") for group in groups),
+         "VOXCPM_EXACT_TRAIN_DEV_GROUP_SPLIT")
+    group_by_id = {group["source_group_id"]: group for group in groups}
+    expected_cells = bundle["required_source_cells"]
+    need(len(expected_cells) == 12 and len(set(expected_cells)) == 12,
+         "VOXCPM_TWELVE_FIXED_SOURCE_CELLS")
+    seen_ids, seen_pairs, seen_pcm, seen_wav = set(), set(), set(), set()
+    for row in rows:
+        row_id = row.get("id")
+        group = group_by_id.get(row.get("source_group_id"))
+        need(isinstance(row_id, str) and row_id not in seen_ids and group is not None
+             and row.get("source_speaker_id") == group["source_speaker_id"]
+             and row.get("role") == group["role"]
+             and row.get("cell_id") in expected_cells,
+             "VOXCPM_ROW_SOURCE_AND_CELL_IDENTITY")
+        pair = (row["source_group_id"], row["cell_id"])
+        need(pair not in seen_pairs, "VOXCPM_DUPLICATE_GROUP_CELL")
+        seen_ids.add(row_id)
+        seen_pairs.add(pair)
+        for key, seen in (("pcm_sha256", seen_pcm), ("wav_sha256", seen_wav)):
+            value = row.get(key)
+            need(isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)
+                 and value not in seen, "VOXCPM_UNIQUE_AUDIO_HASH:" + key)
+            seen.add(value)
+        need(type(row.get("pcm_samples")) is int and row["pcm_samples"] > 0
+             and row.get("sample_rate") == 16000 and row.get("channels") == 1
+             and row.get("human_gold") is False and row.get("training_allowed") is False,
+             "VOXCPM_ROW_AUDIO_AND_SYNTHETIC_FLAGS")
+        admission.safe_relative(row.get("pcm_path"))
+        admission.safe_relative(row.get("wav_path"))
+    need(len(seen_pairs) == 96
+         and all(sum(row["source_group_id"] == group_id for row in rows) == 12
+                 for group_id in group_ids),
+         "VOXCPM_EACH_GROUP_HAS_EXACTLY_TWELVE_CELLS")
+    return {
+        "status": "PASS_VOXCPM_G3_SOURCE_CONTRACT",
+        "source_rows": len(rows),
+        "source_groups": len(groups),
+        "role_counts": {"train": 6, "development": 2},
+        "candidate_ids": list(corpus["candidate_ids"]),
+        "source_plan_sha256": source_plan_sha,
+        "source_run": run,
+        "calibration_or_locked_test_opened": False,
+        "training_authorized": False,
+        "optimizer_updates": 0,
+        "product_promotion_allowed": False,
+    }
+
 
 def guard(plan, env=None, event=None):
     need(plan.get("enabled") is True
