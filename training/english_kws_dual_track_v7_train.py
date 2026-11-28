@@ -144,8 +144,9 @@ def load_plan():
          and optimizer["group_schedule"] ==
              "round-robin six TRAIN source groups; cycle each candidate's admitted rows deterministically",
          "FIXED_SINGLE_RUN_TRAINING_BUDGET")
-    need(plan["source_roles"] == {"train": 6, "development": 2},
-         "EXACT_VOXCPM_6_TRAIN_2_DEVELOPMENT_SOURCE_SPLIT")
+    need(plan["source_roles"] == {"train": 6, "development": 2,
+                                  "calibration": 2, "locked-test": 2},
+         "EXACT_6_2_2_2_SOURCE_ROLE_INVENTORY")
     need(plan["admission"] == {
         "minimum_train_groups": 6, "minimum_dev_groups": 2,
         "minimum_positive_rows_per_train_group": 2,
