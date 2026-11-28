@@ -77,9 +77,7 @@
   },
   "source_roles": {
     "train": 6,
-    "development": 2,
-    "calibration": 2,
-    "locked-test": 2
+    "development": 2
   },
   "admission": {
     "minimum_train_groups": 6,
@@ -97,10 +95,10 @@
     }
   },
   "evaluation": {
-    "development": "one original-PCM pass after final weights are frozen; no threshold or checkpoint sweep",
+    "development": "ONE_ORIGINAL_PCM_PASS_AFTER_FINAL_WEIGHTS_FROZEN; NO_THRESHOLD_OR_CHECKPOINT_SWEEP",
     "development_forwards_max_per_candidate": 24,
-    "calibration": "SEPARATE_POST_TRAIN_JOB_ONLY; original 3 qualified calibration groups; not included in training snapshots",
-    "locked_test": "SEPARATE_POST_CALIBRATION_JOB_ONLY; original 3 qualified locked groups; one pass after frozen weights and thresholds",
+    "calibration": "NOT_BOUND; SEPARATE_FUTURE_DATASET_REQUIRED_AFTER_TRAINING; NEVER_INCLUDED_IN_TRAINING_SNAPSHOTS",
+    "locked_test": "NOT_BOUND; SEPARATE_FUTURE_DATASET_REQUIRED_AFTER_FROZEN_THRESHOLDS; ONE_PASS_ONLY",
     "real_human_far_frr": "NOT_RUN",
     "physical_ssc305": "NOT_RUN"
   },
@@ -172,12 +170,19 @@
     ],
     "generator": {
       "repository": "bluryar/VoxCPM.cpp",
-      "commit": "e5b89534e379c79b923c9969b79c3858d140bedb"
+      "commit": "e5b89534e379c79b923c9969b79c3858d140bedb",
+      "license": "Apache-2.0"
     },
     "model": {
       "repository": "openbmb/VoxCPM1.5",
       "license": "Apache-2.0",
-      "quantization": "Q8_0+AudioVAE-F16"
+      "quantization": "Q8_0+AudioVAE-F16",
+      "revision": "09c7a389438c27100dfa4e6cda1f8f0dd0d2fbfa",
+      "files": {
+        "model.safetensors": "7e97ee2cd2ca891662f7da368921df08368a616410afe67461253e4dcd3823cc",
+        "audiovae.pth": "8160987a7f10acd4c49b72a9a3e974c0b5c1c786538cd4bcaac5f2df388c0f14"
+      },
+      "audio_vae_sample_rate": 44100
     },
     "donor_reference": {
       "run_id": 44256271861,
@@ -190,6 +195,25 @@
     "human_gold": false,
     "independent_human_speaker_identity_claimed": false,
     "training_allowed": false,
-    "promotion_allowed": false
+    "promotion_allowed": false,
+    "required_source_cells": [
+      "vosen-slow",
+      "vosen-normal",
+      "vosen-fast",
+      "mero-slow",
+      "mero-normal",
+      "mero-fast",
+      "bosen-s",
+      "bosen-z",
+      "memo",
+      "nero",
+      "hello",
+      "morning"
+    ],
+    "converter": {
+      "repository": "OpenBMB/VoxCPM",
+      "commit": "300e4260b509066151d623dc9c0aa922cf82232b",
+      "license": "Apache-2.0"
+    }
   }
 }
