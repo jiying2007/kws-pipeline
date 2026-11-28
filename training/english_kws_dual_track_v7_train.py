@@ -182,7 +182,10 @@ def load_plan():
     return plan
 
 def guard(plan, env=None, event=None):
-    need(plan.get("enabled") is True, "G3_SOURCE_CAMPAIGN_NOT_READY")
+    need(plan.get("enabled") is True
+         and plan.get("status") == "READY_FOR_MULTISOURCE_G3"
+         and re.fullmatch(r"[0-9a-f]{64}", plan.get("source_plan_sha256", "")) is not None,
+         "G3_MULTISOURCE_BUNDLE_NOT_READY")
     env = os.environ if env is None else env
     required = {
         "GITHUB_ACTIONS": "true", "GITHUB_REPOSITORY": REPO,
@@ -196,13 +199,6 @@ def guard(plan, env=None, event=None):
     need(re.fullmatch(r"[0-9a-f]{40}", head) is not None
          and re.fullmatch(r"[1-9][0-9]*", run_id) is not None,
          "VALID_GITHUB_MAIN_RUN_ID")
-    source_run_id = plan.get("source_run_id")
-    source_commit = plan.get("source_commit")
-    need(type(source_run_id) is int and source_run_id > 0
-         and re.fullmatch(r"[0-9a-f]{40}", str(source_commit)) is not None
-         and plan.get("source_workflow_id") == 432334213
-         and plan.get("source_artifact_name") == f"v7-machine-evidence-packet-{source_run_id}",
-         "EXACT_G2_SOURCE_RUN_BINDING")
     if event is None:
         event = read_json(env["GITHUB_EVENT_PATH"])
     need(event.get("before") == plan["next_main_before"]
@@ -212,11 +208,11 @@ def guard(plan, env=None, event=None):
          and event.get("repository", {}).get("full_name") == REPO
          and event.get("repository", {}).get("private") is False,
          "EXACT_FIRST_MAIN_SUCCESSOR_AND_PUBLIC_REPOSITORY")
-    return {"repository": REPO, "run_id": int(run_id), "commit": head,
-            "parent": plan["next_main_before"], "attempt": 1,
-            "source_run_id": source_run_id, "source_commit": source_commit,
-            "source_workflow_id": plan["source_workflow_id"]}
-
+    return {
+        "repository": REPO, "run_id": int(run_id), "commit": head,
+        "parent": plan["next_main_before"], "attempt": 1,
+        "source_bundle_sha256": plan["source_plan_sha256"],
+    }
 
 def read_pcm(row, snapshot):
     raw = admission.read_member(snapshot, row["pcm_path"], row["pcm_sha256"], limit=1024 * 1024)
