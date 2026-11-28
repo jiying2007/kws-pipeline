@@ -223,7 +223,7 @@ def build_training_snapshot(packet, output, candidate, manifest, source_run, pac
         "kws_model_forwards": 0,
         "product_promotion_allowed": False,
     }
-    manifest_raw = admission.canonical(snapshot_manifest) + b"\\n"
+    manifest_raw = admission.canonical(snapshot_manifest) + b"\n"
     write_bytes_once(output / "MANIFEST.json", manifest_raw)
     file_entries.append({
         "path": "MANIFEST.json", "bytes": len(manifest_raw),
@@ -235,7 +235,7 @@ def build_training_snapshot(packet, output, candidate, manifest, source_run, pac
         "candidate": candidate,
         "files": file_entries,
     }
-    inventory_raw = admission.canonical(inventory) + b"\\n"
+    inventory_raw = admission.canonical(inventory) + b"\n"
     write_bytes_once(output / "FILES.json", inventory_raw)
     snapshot = {
         "schema": "english-kws-dual-track-v7-training-snapshot-v1",
