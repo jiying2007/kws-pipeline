@@ -80,7 +80,8 @@ def load_plan():
              "compatible": False,
              "pinned_run_id": 46000882374,
              "pinned_corpus_schema": "english-kws-dual-track-v7-corpus-v1",
-             "expected_corpus_schema": "english-kws-dual-track-v7-kokoro-corpus-v1",
+             "expected_corpus_schema": "english-kws-dual-track-v7-voice-clone-corpus-v1",
+             "expected_generator": "VoxCPM 1.5 Q8_0 + AudioVAE F16 (pilot pending)",
              "reason": "The pinned 144-row Piper G2 packet is not the 96-row Kokoro TRAIN/DEV corpus required by this V7 G3 implementation. A new immutable source/observer campaign and exact artifact identity are required before training.",
          }
          and plan.get("source_repository") == REPO
