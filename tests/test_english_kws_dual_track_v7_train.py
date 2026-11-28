@@ -83,7 +83,7 @@ class V7TrainingPlanTests(unittest.TestCase):
         rows = []
         files = []
         total_bytes = 0
-        pcm = b"\\x00\\x00" * 6400
+        pcm = b"\x00\x00" * 6400
         wav_buffer = io.BytesIO()
         with wave.open(wav_buffer, "wb") as stream:
             stream.setnchannels(1)
@@ -214,7 +214,7 @@ class V7TrainingPlanTests(unittest.TestCase):
             self.assertEqual({row["role"] for row in verified["rows"]}, {"train", "development"})
             self.assertEqual(identity["training_rows"], 36)
             self.assertEqual(identity["development_rows"], 12)
-            self.assertEqual(trainer.read_pcm(verified["rows"][0], root), b"\\x00\\x00" * 6400)
+            self.assertEqual(trainer.read_pcm(verified["rows"][0], root), b"\x00\x00" * 6400)
 
     def test_locked_test_row_is_rejected_before_any_locked_audio_read(self):
         with tempfile.TemporaryDirectory() as temp:
