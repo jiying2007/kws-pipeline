@@ -1,6 +1,6 @@
 {
   "schema": "english-kws-dual-track-v7-independent-training-plan-v1",
-  "status": "BLOCKED_AWAITING_NEW_KOKORO_G2_SOURCE",
+  "status": "BLOCKED_AWAITING_NEW_VOICE_CLONE_G2_SOURCE",
   "enabled": false,
   "source_repository": "jiying2007/kws-data",
   "source_plan_sha256": "baad365440a789db351aa6277214a631feae0383ef5550664bcddf118fd94c31",
