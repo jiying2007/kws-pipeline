@@ -7,6 +7,7 @@ audio, never retries, and never promotes a product model.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import hashlib
 import io
 import json
@@ -24,7 +25,6 @@ import sys
 sys.path.insert(0, str(TRAINING))
 sys.path.insert(0, str(ROOT / "automation"))
 import english_kws_dual_track_v7_silver as admission
-import english_kws_dual_track_v7_admit as admission_cli
 
 PLAN_PATH = ROOT / "configs/research/english-kws-dual-track-v7-training-plan.json"
 REPO = "jiying2007/kws-data"
@@ -74,15 +74,58 @@ def write_once(path, value):
 def load_plan():
     plan = read_json(PLAN_PATH)
     need(plan.get("schema") == "english-kws-dual-track-v7-independent-training-plan-v1"
-         and plan.get("enabled") is True
+         and plan.get("enabled") is False
+         and plan.get("status") == "WAITING_FOR_VOXCPM_G3_SOURCE"
          and plan.get("source_repository") == REPO
-         and plan.get("source_plan_sha256") == "baad365440a789db351aa6277214a631feae0383ef5550664bcddf118fd94c31"
-         and plan.get("next_main_before") == plan.get("source_commit")
-         and plan.get("source_run_id") == 46000882374
-         and plan.get("source_commit") == "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2"
-         and plan.get("source_workflow_id") == 432334213
-         and plan.get("source_artifact_name") == "v7-machine-evidence-packet-46000882374",
-         "EXACT_PREDECLARED_G3_TRAINING_PLAN")
+         and plan.get("next_main_before") == "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2"
+         and plan.get("source_plan_sha256") == "0" * 64,
+         "EXACT_DISABLED_VOXCPM_G3_PLAN")
+    bundle = plan.get("source_bundle")
+    need(isinstance(bundle, dict)
+         and bundle.get("status") == "NOT_BOUND"
+         and bundle.get("required_source_schema") == "english-kws-dual-track-v7-voice-clone-corpus-v1"
+         and bundle.get("required_source_rows") == 96
+         and bundle.get("required_source_groups") == {"train": 6, "development": 2}
+         and bundle.get("required_observers") == ["qwen", "whisper", "parakeet", "phoneme"]
+         and bundle.get("generator") == {
+              "repository": "bluryar/VoxCPM.cpp",
+              "commit": "e5b89534e379c79b923c9969b79c3858d140bedb",
+              "license": "Apache-2.0",
+          }
+          and bundle.get("converter") == {
+              "repository": "OpenBMB/VoxCPM",
+              "commit": "300e4260b509066151d623dc9c0aa922cf82232b",
+              "license": "Apache-2.0",
+          }
+          and bundle.get("model") == {
+              "repository": "openbmb/VoxCPM1.5",
+              "license": "Apache-2.0",
+              "quantization": "Q8_0+AudioVAE-F16",
+              "revision": "09c7a389438c27100dfa4e6cda1f8f0dd0d2fbfa",
+              "files": {
+                  "model.safetensors": "7e97ee2cd2ca891662f7da368921df08368a616410afe67461253e4dcd3823cc",
+                  "audiovae.pth": "8160987a7f10acd4c49b72a9a3e974c0b5c1c786538cd4bcaac5f2df388c0f14",
+              },
+              "audio_vae_sample_rate": 44100,
+          }
+          and bundle.get("required_source_cells") == [
+              "vosen-slow", "vosen-normal", "vosen-fast",
+              "mero-slow", "mero-normal", "mero-fast",
+              "bosen-s", "bosen-z", "memo", "nero", "hello", "morning",
+          ]
+          and bundle.get("donor_reference") == {
+             "run_id": 44256271861,
+             "artifact_id": 14406282094,
+             "sha256": "8b86b46759f6f2bd084cd37e1c804c72058fe52ec57f6c221c912eeca96092e5",
+         }
+         and bundle.get("required_candidate_isolation") is True
+         and bundle.get("no_legacy_audio_or_labels") is True
+         and bundle.get("calibration_locked_reference_bytes_opened") is False
+         and bundle.get("human_gold") is False
+         and bundle.get("independent_human_speaker_identity_claimed") is False
+         and bundle.get("training_allowed") is False
+         and bundle.get("promotion_allowed") is False,
+         "VOXCPM_G3_SOURCE_REQUIRED_BUT_NOT_BOUND")
     model = plan["model"]
     need(model == {
         "family": "causal-fsmn-ctc-v1", "parameters": PARAMETERS,
@@ -97,16 +140,46 @@ def load_plan():
          and optimizer["updates_per_candidate"] == 192
          and optimizer["training_forwards_per_candidate"] == 384
          and optimizer["gain_levels_train_only"] == list(GAIN_LEVELS)
-         and optimizer["weak_row_weight"] == 0.5,
+         and optimizer["weak_row_weight"] == 0.5
+         and optimizer["group_schedule"] ==
+             "round-robin six TRAIN source groups; cycle each candidate's admitted rows deterministically",
          "FIXED_SINGLE_RUN_TRAINING_BUDGET")
-    need(plan["source_roles"] == {"train": 6, "development": 2, "calibration": 2, "locked-test": 2},
-         "EXACT_6_2_2_2_ROLE_SPLIT")
+    need(plan["source_roles"] == {"train": 6, "development": 2,
+                                  "calibration": 2, "locked-test": 2},
+         "EXACT_6_2_2_2_SOURCE_ROLE_INVENTORY")
+    need(plan["admission"] == {
+        "minimum_train_groups": 6, "minimum_dev_groups": 2,
+        "minimum_positive_rows_per_train_group": 2,
+        "minimum_negative_rows_per_train_group": 4,
+        "minimum_positive_rows_per_dev_group": 2,
+        "minimum_negative_rows_per_dev_group": 4,
+        "train_only_silver_weak": True, "unknown_is_background": False,
+        "no_old_audio_or_legacy_labels": True,
+        "candidate_mapping": {
+            "VOSEN": "observed class 1 positive; classes 0 and 2 are negatives",
+            "MERO": "observed class 2 positive; classes 0 and 1 are negatives",
+        },
+    }, "CANDIDATE_RELATIVE_CROSS_TRIGGER_ADMISSION")
+    need(plan["training_input"] == {
+        "schema": "english-kws-dual-track-v7-training-snapshot-v1",
+        "allowed_roles": ["train", "development"],
+        "role_counts": {"train": 6, "development": 2},
+        "calibration_audio_available": False,
+        "calibration_labels_available": False,
+        "locked_test_audio_available": False,
+        "locked_test_labels_available": False,
+        "full_source_packet_downloaded_by_training_job": False,
+        "full_admission_recomputed_by_training_job": False,
+        "admission_stage_builds_candidate_specific_snapshots": True,
+    }, "TRAIN_DEV_SNAPSHOT_ONLY_INPUT_BOUNDARY")
     need(plan["independence"]["model_parameters_shared"] is False
          and plan["independence"]["optimizer_state_shared"] is False
          and plan["independence"]["checkpoints_shared"] is False
          and plan["independence"]["training_runs_per_candidate"] == 1
          and plan["execution"]["retries"] == 0
          and plan["execution"]["run_attempt"] == 1
+         and plan["execution"]["enabled"] is False
+         and plan["execution"]["automatic_expansion"] is False
          and plan["promotion_allowed"] is False,
          "INDEPENDENT_NO_RETRY_NO_PROMOTION")
     need(set(plan["candidates"]) == {"VOSEN", "MERO"}
@@ -121,8 +194,121 @@ def load_plan():
          "EXACT_KWSV7C01_PACK_GEOMETRY")
     return plan
 
+def verify_source_bundle_contract(bundle, corpus, plan):
+    """Reject any G3 corpus that drifts from the pinned VoxCPM 96-row 6/2 contract."""
+    expected = plan["source_bundle"]
+    need(isinstance(bundle, dict) and bundle.get("status") == "BOUND",
+         "VOXCPM_SOURCE_BUNDLE_MUST_BE_BOUND")
+    for key in ("required_source_schema", "required_source_rows", "required_source_groups",
+                "required_observers", "required_source_cells", "generator", "converter",
+                "model", "donor_reference", "required_candidate_isolation",
+                "no_legacy_audio_or_labels", "calibration_locked_reference_bytes_opened",
+                "human_gold", "independent_human_speaker_identity_claimed",
+                "training_allowed", "promotion_allowed"):
+        need(bundle.get(key) == expected.get(key), "VOXCPM_BUNDLE_PIN_MISMATCH:" + key)
+    need(bundle.get("required_source_schema") == "english-kws-dual-track-v7-voice-clone-corpus-v1"
+         and bundle.get("required_source_rows") == 96
+         and bundle.get("required_source_groups") == {"train": 6, "development": 2}
+         and bundle.get("required_observers") == ["qwen", "whisper", "parakeet", "phoneme"],
+         "VOXCPM_EXACT_SOURCE_SCHEMA_DENOMINATOR_AND_OBSERVERS")
+    need(bundle.get("required_candidate_isolation") is True
+         and bundle.get("no_legacy_audio_or_labels") is True
+         and bundle.get("calibration_locked_reference_bytes_opened") is False
+         and bundle.get("human_gold") is False
+         and bundle.get("independent_human_speaker_identity_claimed") is False
+         and bundle.get("training_allowed") is False
+         and bundle.get("promotion_allowed") is False,
+         "VOXCPM_SYNTHETIC_ONLY_NO_TRAINING_NO_PROMOTION")
+    need(isinstance(corpus, dict)
+         and corpus.get("schema") == bundle["required_source_schema"]
+         and corpus.get("training_allowed") is False
+         and corpus.get("human_gold") is False
+         and corpus.get("independent_human_speaker_identity_claimed") is False
+         and corpus.get("calibration_locked_reference_bytes_opened") is False
+         and corpus.get("candidate_ids") == ["hey-vosen-v7", "hey-mero-v7"]
+         and corpus.get("observers") == bundle["required_observers"]
+         and corpus.get("generator") == bundle["generator"]
+         and corpus.get("converter") == bundle["converter"]
+         and corpus.get("model") == bundle["model"]
+         and corpus.get("donor_reference") == bundle["donor_reference"],
+         "VOXCPM_CORPUS_PROVENANCE_IDENTITY")
+    source_plan_sha = corpus.get("source_plan_sha256")
+    need(isinstance(source_plan_sha, str) and re.fullmatch(r"[0-9a-f]{64}", source_plan_sha)
+         and bundle.get("source_plan_sha256") == source_plan_sha,
+         "VOXCPM_SOURCE_PLAN_SHA256_BINDING")
+    run = corpus.get("run")
+    need(isinstance(run, dict) and run == bundle.get("source_run")
+         and run.get("repository") == REPO
+         and str(run.get("run_id", "")).isdigit()
+         and re.fullmatch(r"[0-9a-f]{40}", str(run.get("commit", ""))) is not None
+         and re.fullmatch(r"[0-9a-f]{40}", str(run.get("parent", ""))) is not None
+         and run.get("attempt") == 1,
+         "VOXCPM_SOURCE_RUN_IDENTITY")
+    groups = corpus.get("source_groups")
+    rows = corpus.get("rows")
+    need(isinstance(groups, list) and len(groups) == 8
+         and isinstance(rows, list) and len(rows) == 96,
+         "VOXCPM_EXACT_EIGHT_GROUP_96_ROW_DENOMINATOR")
+    group_ids = [group.get("source_group_id") for group in groups]
+    speaker_ids = [group.get("source_speaker_id") for group in groups]
+    need(len(set(group_ids)) == len(group_ids) and len(set(speaker_ids)) == len(speaker_ids),
+         "VOXCPM_UNIQUE_SOURCE_GROUP_AND_SPEAKER_IDENTITIES")
+    need(Counter(group.get("role") for group in groups)
+         == Counter({"train": 6, "development": 2})
+         and all(group.get("role") in ("train", "development") for group in groups),
+         "VOXCPM_EXACT_TRAIN_DEV_GROUP_SPLIT")
+    group_by_id = {group["source_group_id"]: group for group in groups}
+    expected_cells = bundle["required_source_cells"]
+    need(len(expected_cells) == 12 and len(set(expected_cells)) == 12,
+         "VOXCPM_TWELVE_FIXED_SOURCE_CELLS")
+    seen_ids, seen_pairs, seen_pcm, seen_wav = set(), set(), set(), set()
+    for row in rows:
+        row_id = row.get("id")
+        group = group_by_id.get(row.get("source_group_id"))
+        need(isinstance(row_id, str) and row_id not in seen_ids and group is not None
+             and row.get("source_speaker_id") == group["source_speaker_id"]
+             and row.get("role") == group["role"]
+             and row.get("cell_id") in expected_cells,
+             "VOXCPM_ROW_SOURCE_AND_CELL_IDENTITY")
+        pair = (row["source_group_id"], row["cell_id"])
+        need(pair not in seen_pairs, "VOXCPM_DUPLICATE_GROUP_CELL")
+        seen_ids.add(row_id)
+        seen_pairs.add(pair)
+        for key, seen in (("pcm_sha256", seen_pcm), ("wav_sha256", seen_wav)):
+            value = row.get(key)
+            need(isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)
+                 and value not in seen, "VOXCPM_UNIQUE_AUDIO_HASH:" + key)
+            seen.add(value)
+        need(type(row.get("pcm_samples")) is int and row["pcm_samples"] > 0
+             and row.get("sample_rate") == 16000 and row.get("channels") == 1
+             and row.get("human_gold") is False and row.get("training_allowed") is False,
+             "VOXCPM_ROW_AUDIO_AND_SYNTHETIC_FLAGS")
+        admission.safe_relative(row.get("pcm_path"))
+        admission.safe_relative(row.get("wav_path"))
+    need(len(seen_pairs) == 96
+         and all(sum(row["source_group_id"] == group_id for row in rows) == 12
+                 for group_id in group_ids),
+         "VOXCPM_EACH_GROUP_HAS_EXACTLY_TWELVE_CELLS")
+    return {
+        "status": "PASS_VOXCPM_G3_SOURCE_CONTRACT",
+        "source_rows": len(rows),
+        "source_groups": len(groups),
+        "role_counts": {"train": 6, "development": 2},
+        "candidate_ids": list(corpus["candidate_ids"]),
+        "source_plan_sha256": source_plan_sha,
+        "source_run": run,
+        "calibration_or_locked_test_opened": False,
+        "training_authorized": False,
+        "optimizer_updates": 0,
+        "product_promotion_allowed": False,
+    }
+
 
 def guard(plan, env=None, event=None):
+    need(plan.get("enabled") is True
+         and plan.get("status") == "READY_FOR_MULTISOURCE_G3"
+         and re.fullmatch(r"[0-9a-f]{64}", plan.get("source_plan_sha256", "")) is not None,
+         "G3_MULTISOURCE_BUNDLE_NOT_READY")
     env = os.environ if env is None else env
     required = {
         "GITHUB_ACTIONS": "true", "GITHUB_REPOSITORY": REPO,
@@ -136,13 +322,6 @@ def guard(plan, env=None, event=None):
     need(re.fullmatch(r"[0-9a-f]{40}", head) is not None
          and re.fullmatch(r"[1-9][0-9]*", run_id) is not None,
          "VALID_GITHUB_MAIN_RUN_ID")
-    source_run_id = plan.get("source_run_id")
-    source_commit = plan.get("source_commit")
-    need(type(source_run_id) is int and source_run_id > 0
-         and re.fullmatch(r"[0-9a-f]{40}", str(source_commit)) is not None
-         and plan.get("source_workflow_id") == 432334213
-         and plan.get("source_artifact_name") == f"v7-machine-evidence-packet-{source_run_id}",
-         "EXACT_G2_SOURCE_RUN_BINDING")
     if event is None:
         event = read_json(env["GITHUB_EVENT_PATH"])
     need(event.get("before") == plan["next_main_before"]
@@ -152,15 +331,15 @@ def guard(plan, env=None, event=None):
          and event.get("repository", {}).get("full_name") == REPO
          and event.get("repository", {}).get("private") is False,
          "EXACT_FIRST_MAIN_SUCCESSOR_AND_PUBLIC_REPOSITORY")
-    return {"repository": REPO, "run_id": int(run_id), "commit": head,
-            "parent": plan["next_main_before"], "attempt": 1,
-            "source_run_id": source_run_id, "source_commit": source_commit,
-            "source_workflow_id": plan["source_workflow_id"]}
+    return {
+        "repository": REPO, "run_id": int(run_id), "commit": head,
+        "parent": plan["next_main_before"], "attempt": 1,
+        "source_bundle_sha256": plan["source_plan_sha256"],
+    }
 
-
-def read_pcm(row, packet):
-    raw = admission.read_member(packet, row["pcm_path"], row["pcm_sha256"], limit=1024 * 1024)
-    wav = admission.read_member(packet, row["wav_path"], row["wav_sha256"], limit=4 * 1024 * 1024)
+def read_pcm(row, snapshot):
+    raw = admission.read_member(snapshot, row["pcm_path"], row["pcm_sha256"], limit=1024 * 1024)
+    wav = admission.read_member(snapshot, row["wav_path"], row["wav_sha256"], limit=4 * 1024 * 1024)
     with wave.open(io.BytesIO(wav), "rb") as stream:
         need((stream.getnchannels(), stream.getsampwidth(), stream.getframerate(),
               stream.getcomptype(), stream.getnframes())
@@ -170,6 +349,139 @@ def read_pcm(row, packet):
     need(row["pcm_samples"] >= 6400 and row["pcm_samples"] <= 28672,
          "35_FRAME_CTC_MODEL_INPUT_GEOMETRY")
     return raw
+
+
+def verify_training_snapshot(snapshot, candidate, plan):
+    """Verify only candidate-specific TRAIN+DEV bytes; no full G2 packet is available here."""
+    snapshot = Path(snapshot)
+    need(snapshot.is_dir() and not snapshot.is_symlink(), "REGULAR_TRAIN_DEV_SNAPSHOT_DIRECTORY")
+    snapshot_meta = read_json(snapshot / "SNAPSHOT.json")
+    snapshot_raw = (snapshot / "SNAPSHOT.json").read_bytes()
+    manifest = read_json(snapshot / "MANIFEST.json")
+    manifest_raw = (snapshot / "MANIFEST.json").read_bytes()
+    files = read_json(snapshot / "FILES.json")
+    files_raw = (snapshot / "FILES.json").read_bytes()
+    need(sha(manifest_raw) == snapshot_meta.get("manifest_sha256"),
+         "TRAIN_DEV_MANIFEST_SHA256")
+    need(sha(files_raw) == snapshot_meta.get("files_manifest_sha256"),
+         "TRAIN_DEV_FILES_MANIFEST_SHA256")
+    need(snapshot_meta.get("schema") == "english-kws-dual-track-v7-training-snapshot-v1"
+         and snapshot_meta.get("candidate") == candidate
+         and manifest.get("schema") == "english-kws-dual-track-v7-training-snapshot-manifest-v1"
+         and manifest.get("candidate") == candidate
+         and manifest.get("training_snapshot_allowed") is True,
+         "EXACT_CANDIDATE_TRAIN_DEV_SNAPSHOT")
+    need(files.get("schema") == "english-kws-dual-track-v7-training-snapshot-files-v1"
+         and files.get("candidate") == candidate and isinstance(files.get("files"), list),
+         "TRAIN_DEV_FILES_SCHEMA")
+    rows = manifest.get("rows")
+    groups = manifest.get("source_groups")
+    need(isinstance(rows, list) and isinstance(groups, list)
+         and all(row.get("role") in ("train", "development") for row in rows),
+         "NO_CALIBRATION_OR_LOCKED_ROWS_IN_TRAINING_SNAPSHOT")
+    group_roles = {group.get("source_group_id"): group.get("role") for group in groups}
+    role_counts = Counter(group_roles.values())
+    need(role_counts == Counter({"train": 6, "development": 2})
+         and len(group_roles) == 8
+         and len(set(group.get("source_speaker_id") for group in groups)) == 8
+         and all(role in ("train", "development") for role in group_roles.values()),
+         "TRAIN_DEV_ONLY_GROUP_PARTITION")
+    row_ids = set()
+    expected_files = {"MANIFEST.json"}
+    train_rows = []
+    dev_rows = []
+    for row in rows:
+        row_id = admission.safe_relative(row.get("id"))
+        need("/" not in row_id and "\\" not in row_id and row_id not in row_ids,
+             "UNIQUE_SAFE_TRAIN_DEV_ROW_ID")
+        row_ids.add(row_id)
+        role = row["role"]
+        need(group_roles.get(row.get("source_group_id")) == role
+             and row.get("optimizer_allowed") is False
+             and row.get("locked_test_sealed") is False
+             and row.get("tier") in ("silver", "weak")
+             and row.get("research_class") in (0, 1),
+             "TRAIN_DEV_ROW_PROVENANCE_AND_LABEL")
+        pcm_name = admission.safe_relative(row.get("pcm_path"))
+        wav_name = admission.safe_relative(row.get("wav_path"))
+        need(pcm_name not in expected_files and wav_name not in expected_files,
+             "UNIQUE_TRAIN_DEV_AUDIO_PATHS")
+        expected_files.update((pcm_name, wav_name))
+        if role == "train":
+            need(row.get("training_eligible") is True
+                 and row.get("training_class") == row.get("research_class")
+                 and row.get("training_class") in (0, 1)
+                 and isinstance(row.get("training_weight"), (int, float))
+                 and row["training_weight"] > 0.0,
+                 "TRAIN_ROW_OPTIMIZER_ELIGIBILITY")
+            train_rows.append(row)
+        else:
+            need(row.get("training_eligible") is False
+                 and row.get("training_class") is None
+                 and row.get("training_weight") == 0.0,
+                 "DEVELOPMENT_ROW_NEVER_OPTIMIZER_ELIGIBLE")
+            dev_rows.append(row)
+    eligible_dev_rows = [row for row in dev_rows
+                         if row["tier"] in ("silver", "weak") and row["research_class"] in (0, 1)]
+    for group_id in (group_id for group_id, role in group_roles.items() if role == "development"):
+        group_rows = [row for row in eligible_dev_rows if row["source_group_id"] == group_id]
+        need(sum(row["research_class"] == 1 for row in group_rows) >= 2
+             and sum(row["research_class"] == 0 for row in group_rows) >= 4,
+             "BALANCED_DEVELOPMENT_GROUP_ROWS")
+    # Reject extra calibration/locked paths before opening any listed file bytes.
+    seen = set()
+    for item in files["files"]:
+        need(isinstance(item, dict) and set(item) == {"path", "bytes", "sha256"},
+             "TRAIN_DEV_FILE_ENTRY")
+        name = admission.safe_relative(item["path"])
+        need(name not in seen and type(item["bytes"]) is int and item["bytes"] >= 0
+             and re.fullmatch(r"[0-9a-f]{64}", str(item["sha256"])) is not None,
+             "UNIQUE_SIZED_TRAIN_DEV_FILE")
+        seen.add(name)
+    need(seen == expected_files, "NO_EXTRA_OR_MISSING_TRAIN_DEV_FILES")
+    total_bytes = 0
+    for item in files["files"]:
+        raw = admission.read_member(snapshot, item["path"], item["sha256"], limit=4 * 1024 * 1024)
+        need(len(raw) == item["bytes"], "TRAIN_DEV_FILE_BYTE_COUNT")
+        total_bytes += len(raw)
+    need(snapshot_meta.get("role_counts") == {"train": 6, "development": 2}
+         and snapshot_meta.get("training_rows") == len(train_rows)
+         and snapshot_meta.get("development_rows") == len(eligible_dev_rows)
+         and snapshot_meta.get("file_count") == len(files["files"])
+         and snapshot_meta.get("verified_bytes") == total_bytes
+         and re.fullmatch(r"[0-9a-f]{64}", str(snapshot_meta.get("source_candidate_manifest_sha256"))) is not None
+         and re.fullmatch(r"[0-9a-f]{64}", str(snapshot_meta.get("source_packet_files_manifest_sha256"))) is not None,
+         "TRAIN_DEV_SNAPSHOT_COUNTS_AND_BYTES")
+    for key in ("calibration_rows_included", "locked_test_rows_included",
+                "calibration_labels_included", "locked_test_labels_included",
+                "calibration_audio_included", "locked_test_audio_included",
+                "locked_test_access_in_training_job"):
+        need(snapshot_meta.get(key) is False, "SEALED_ROLE_EXCLUDED:" + key)
+    source_run = manifest.get("source_run")
+    need(isinstance(source_run, dict) and source_run == snapshot_meta.get("source_run")
+         and source_run.get("repository") == REPO
+         and str(source_run.get("run_id", "")).isdigit()
+         and re.fullmatch(r"[0-9a-f]{40}", str(source_run.get("commit", ""))) is not None
+         and source_run.get("parent") == plan["next_main_before"]
+         and source_run.get("attempt") == 1
+         and source_run.get("source_bundle_sha256") == plan["source_plan_sha256"]
+         and manifest.get("source_plan_sha256") == plan["source_plan_sha256"]
+         and snapshot_meta.get("source_plan_sha256") == plan["source_plan_sha256"],
+         "TRAIN_DEV_SNAPSHOT_SOURCE_BUNDLE_IDENTITY")
+    candidate_plan = plan["candidates"][candidate]
+    need(manifest.get("candidate_id") == candidate_plan["candidate_id"]
+         and snapshot_meta.get("candidate_id") == candidate_plan["candidate_id"]
+         and manifest.get("phrase") == candidate_plan["phrase"]
+         and manifest.get("ipa") == candidate_plan["ipa"]
+         and manifest.get("ctc_tokens") == candidate_plan["token_labels"]
+         and manifest.get("ctc_token_ids") == candidate_plan["token_ids"],
+         "TRAIN_DEV_CANDIDATE_PRONUNCIATION_BINDING")
+    return manifest, {
+        **snapshot_meta,
+        "snapshot_sha256": sha(snapshot_raw),
+        "manifest_sha256": sha(manifest_raw),
+        "files_manifest_sha256": sha(files_raw),
+    }
 
 
 def make_mel_bank(np):
@@ -305,60 +617,24 @@ def pack_model(state, bank, mean, scale, candidate_id, np):
     return MAGIC + struct.pack("<II", 1, FLOAT_COUNT) + floats.tobytes()
 
 
-def run(packet, candidate, output, *, env=None, event=None):
+def run(snapshot, candidate, output, *, env=None, event=None):
     plan = load_plan()
     need(candidate in ("VOSEN", "MERO"), "EXACT_CANDIDATE")
     identity = guard(plan, env=env, event=event)
-    packet = Path(packet)
+    snapshot = Path(snapshot)
     output = Path(output)
-    need(packet.is_dir() and not packet.is_symlink(), "IMMUTABLE_G2_PACKET")
     need(not output.exists() and output.parent.is_dir(), "NEW_ONE_SHOT_MODEL_OUTPUT")
-    admission_dir = packet / "admission"
-    packet_identity = admission_cli.verify_packet_inventory(packet)
-    readiness = read_json(admission_dir / "G3_READINESS.json")
-    need(readiness.get("packet_files_manifest_sha256") == packet_identity["files_manifest_sha256"],
-         "IMMUTABLE_G2_PACKET_RECHECK")
-    corpus = read_json(packet / "CORPUS_MANIFEST.json")
-    evidence = read_json(packet / "MACHINE_EVIDENCE.json")
-    execution_plan = read_json(packet / "EXECUTION_PLAN.json")
-    profile = read_json(ROOT / "configs/research/english-pronunciation-profile-20261115.json")
-    recomputed = admission.build_admission(corpus, evidence, packet, profile=profile, plan=execution_plan)
-    need(recomputed["summary"]["data_admitted"] is True,
-         "RECOMPUTED_G3_ADMISSION_REQUIRED")
-    manifest_name = "HEY_" + candidate + "_V7_MANIFEST.json"
-    manifest = read_json(admission_dir / manifest_name)
-    need(recomputed["candidate_manifests"][candidate] == manifest,
-         "SAVED_CANDIDATE_MANIFEST_EQUALS_RECOMPUTED_ADMISSION")
-    readiness_candidate = readiness["candidate_manifests"][candidate]
-    manifest_sha = sha(canonical(manifest))
-    source_run = readiness.get("source_run", {})
-    need(readiness.get("data_admitted") is True
-         and readiness.get("status") == "READY_FOR_G3_BUDGET_DECLARATION"
-         and readiness.get("training_authorized") is False
-         and source_run.get("repository") == REPO
-         and source_run.get("event") == "push"
-         and source_run.get("ref") == "refs/heads/main"
-         and str(source_run.get("run_id")) == str(plan["source_run_id"])
-         and source_run.get("sha") == plan["source_commit"]
-         and str(source_run.get("attempt")) == "1"
-         and readiness_candidate["sha256"] == manifest_sha
-         and readiness_candidate["training_snapshot_allowed"] is True
-         and manifest["training_snapshot_allowed"] is True
-         and manifest["source_plan_sha256"] == plan["source_plan_sha256"]
-         and manifest["candidate"] == candidate,
-         "G2_ADMISSION_AND_CURRENT_RUN_BINDING")
+    manifest, snapshot_info = verify_training_snapshot(snapshot, candidate, plan)
+    manifest_sha = snapshot_info["source_candidate_manifest_sha256"]
+    snapshot_sha = snapshot_info["snapshot_sha256"]
     candidate_plan = plan["candidates"][candidate]
-    need(manifest["candidate_id"] == candidate_plan["candidate_id"]
-         and manifest["phrase"] == candidate_plan["phrase"]
-         and manifest["ipa"] == candidate_plan["ipa"]
-         and manifest["ctc_token_ids"] == candidate_plan["token_ids"],
-         "CANDIDATE_PRONUNCIATION_AND_TOKEN_BINDING")
     output.mkdir(mode=0o700)
     started = {
         "schema": "english-kws-dual-track-v7-training-start-v1",
         "run": identity, "candidate": candidate,
         "candidate_id": candidate_plan["candidate_id"],
         "candidate_manifest_sha256": manifest_sha,
+        "training_snapshot_sha256": snapshot_sha,
         "training_plan_sha256": sha(canonical(plan)),
         "seed": candidate_plan["seed"],
         "optimizer_updates_budget": plan["optimizer"]["updates_per_candidate"],
@@ -402,7 +678,7 @@ def run(packet, candidate, output, *, env=None, event=None):
         bank = make_mel_bank(np)
         train_features = {}
         for row in train_rows:
-            pcm = read_pcm(row, packet)
+            pcm = read_pcm(row, snapshot)
             train_features[row["id"]] = extract_features(pcm, bank, torch, np)
         concatenated = np.concatenate([train_features[row["id"]] for row in train_rows], axis=0)
         mean = concatenated.mean(axis=0).astype(np.float32)
@@ -488,7 +764,7 @@ def run(packet, candidate, output, *, env=None, event=None):
         dev_results = []
         with torch.no_grad():
             for row in dev_rows:
-                pcm = read_pcm(row, packet)
+                pcm = read_pcm(row, snapshot)
                 features = extract_features(pcm, bank, torch, np)
                 model_input = torch.from_numpy(((features - mean) / scale).astype(np.float32)).unsqueeze(0)
                 logits = reloaded(model_input)
@@ -501,7 +777,7 @@ def run(packet, candidate, output, *, env=None, event=None):
                 })
         dev_positive = [row for row in dev_results if row["research_class"] == 1]
         dev_negative = [row for row in dev_results if row["research_class"] == 0]
-        need(len(dev_positive) >= 2 and len(dev_negative) >= 2, "MINIMUM_ADMITTED_DEV_ROWS")
+        need(len(dev_positive) >= 4 and len(dev_negative) >= 8, "MINIMUM_ADMITTED_DEV_ROWS")
         dev_summary = {
             "positive_rows": len(dev_positive),
             "positive_hits": sum(row["full_sequence_event"] for row in dev_positive),
@@ -519,6 +795,9 @@ def run(packet, candidate, output, *, env=None, event=None):
             "schema": "english-kws-dual-track-v7-training-result-v1",
             "status": "SYNTHETIC_RESEARCH_TRAINED_NOT_PRODUCT_QUALIFIED",
             "candidate": candidate, "candidate_id": candidate_plan["candidate_id"],
+            "training_snapshot_sha256": snapshot_sha,
+            "source_bundle_sha256": plan["source_plan_sha256"],
+            "source_candidate_manifest_sha256": manifest_sha,
             "phrase": candidate_plan["phrase"], "ipa": candidate_plan["ipa"],
             "token_labels": candidate_plan["token_labels"], "token_ids": [1, 2, 3],
             "seed": candidate_plan["seed"], "model_parameters": PARAMETERS,
@@ -546,6 +825,8 @@ def run(packet, candidate, output, *, env=None, event=None):
         training = {
             "schema": "english-kws-dual-track-v7-training-ledger-v1",
             "candidate": candidate, "candidate_manifest_sha256": manifest_sha,
+            "training_snapshot_sha256": snapshot_sha,
+            "source_bundle_sha256": plan["source_plan_sha256"],
             "training_plan_sha256": sha(canonical(plan)),
             "seed": candidate_plan["seed"], "actual_optimizer_updates": updates,
             "actual_training_forwards": updates * 2, "training_rows": len(train_rows),
@@ -565,7 +846,7 @@ def run(packet, candidate, output, *, env=None, event=None):
             "pack_bytes": len(pack), "pack_sha256": sha(pack),
             "candidate_manifest_sha256": manifest_sha,
             "training_plan_sha256": sha(canonical(plan)),
-            "source_run_id": plan["source_run_id"], "source_commit": plan["source_commit"],
+            "source_bundle_sha256": plan["source_plan_sha256"],
             "training_run_id": identity["run_id"], "training_commit": identity["commit"],
             "product_promotion_allowed": False,
         }
@@ -578,7 +859,8 @@ def run(packet, candidate, output, *, env=None, event=None):
         write_once(output / "STOP.json", {
             "schema": "english-kws-dual-track-v7-training-stop-v1",
             "status": "STOP_NO_RETRY",
-            "candidate": candidate, "exception_type": type(exc).__name__,
+            "candidate": candidate, "source_bundle_sha256": plan["source_plan_sha256"],
+            "exception_type": type(exc).__name__,
             "reason": str(exc)[:520], "retry_allowed": False,
             "calibration_pcm_opened": False, "locked_test_pcm_opened": False,
             "product_promotion_allowed": False,
@@ -589,18 +871,23 @@ def run(packet, candidate, output, *, env=None, event=None):
 def source_check():
     plan = load_plan()
     return {
-        "status": "TRAINING_PLAN_VALID_NO_MODEL_EXECUTION",
+        "status": "WAITING_FOR_VOXCPM_G3_SOURCE",
+        "training_enabled": False,
+        "source_bundle_bound": False,
+        "source_bundle_status": plan["source_bundle"]["status"],
+        "source_bundle_sha256": None,
+        "source_qualified_groups": plan["source_roles"],
         "candidates": sorted(plan["candidates"]),
         "optimizer_updates_per_candidate": plan["optimizer"]["updates_per_candidate"],
         "training_forwards_per_candidate": plan["optimizer"]["training_forwards_per_candidate"],
         "model_parameters": plan["model"]["parameters"],
         "pack_bytes": plan["pack"]["total_bytes"],
+        "training_input_schema": plan["training_input"]["schema"],
+        "calibration_and_locked_test_available_to_training": False,
         "shared_parameters": plan["independence"]["model_parameters_shared"],
         "shared_optimizer": plan["independence"]["optimizer_state_shared"],
         "training_runs_per_candidate": plan["independence"]["training_runs_per_candidate"],
         "retries": plan["execution"]["retries"],
-        "source_run_id": plan["source_run_id"],
-        "source_commit": plan["source_commit"],
         "promotion_allowed": plan["promotion_allowed"],
     }
 
@@ -609,7 +896,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--source-check", action="store_true")
     parser.add_argument("--execute", action="store_true")
-    parser.add_argument("--packet", type=Path)
+    parser.add_argument("--snapshot", type=Path)
     parser.add_argument("--candidate", choices=("VOSEN", "MERO"))
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
@@ -617,8 +904,8 @@ def main():
     if args.source_check:
         print(json.dumps(source_check(), sort_keys=True))
     else:
-        need(args.packet and args.candidate and args.output, "TRAIN_PACKET_CANDIDATE_OUTPUT_REQUIRED")
-        run(args.packet, args.candidate, args.output)
+        need(args.snapshot and args.candidate and args.output, "TRAIN_SNAPSHOT_CANDIDATE_OUTPUT_REQUIRED")
+        run(args.snapshot, args.candidate, args.output)
 
 
 if __name__ == "__main__":

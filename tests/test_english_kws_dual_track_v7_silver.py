@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / "training"))
 sys.path.insert(0, str(ROOT / "automation"))
 import english_kws_dual_track_v7_silver as v7
 import english_kws_dual_track_v7_admit as v7cli
+import english_kws_dual_track_v7_train as v7trainer
 
 PROFILE = json.loads((ROOT / "configs/research/english-pronunciation-profile-20261115.json").read_text())
 
@@ -42,21 +43,21 @@ class V7AdmissionTests(unittest.TestCase):
         cls.temp = tempfile.TemporaryDirectory()
         cls.root = Path(cls.temp.name)
         cls.groups = []
-        for index in range(12):
-            role = "train" if index < 6 else "development" if index < 8 else "calibration" if index < 10 else "locked-test"
+        for index in range(8):
+            role = "train" if index < 6 else "development"
             cls.groups.append({
-                "source_group_id": "piper-libritts-index-" + str(496 + index),
-                "source_speaker_id": "p" + str(1000 + index),
-                "source_speaker_index": 496 + index,
-                "voice_family": "piper-libritts-p" + str(1000 + index),
+                "source_group_id": "kokoro-voice-" + str(index),
+                "source_speaker_id": "kokoro-voice-" + str(index),
+                "source_speaker_index": index,
+                "voice_family": "kokoro-82m-voice-" + str(1000 + index),
                 "role": role,
             })
         cls.plan = {
             "execution_stage": "G2_SOURCE_GENERATION_AND_BLIND_OBSERVATION_ONLY",
-            "source_count": 144,
+            "source_count": 96,
             "candidate_ids": ["hey-vosen-v7", "hey-mero-v7"],
             "observer_providers": ["qwen", "whisper", "parakeet", "phoneme"],
-            "source_role_counts": {"train": 6, "development": 2, "calibration": 2, "locked-test": 2},
+            "source_role_counts": {"train": 6, "development": 2},
             "positive_min_samples": 6400,
             "positive_max_samples": 28672,
             "source_plan_sha256": "a" * 64,
@@ -152,8 +153,8 @@ class V7AdmissionTests(unittest.TestCase):
             "schema": v7.CORPUS_SCHEMA,
             "recipe_sha256": "b" * 64,
             "preflight_sha256": "c" * 64,
-            "declared_count": 144,
-            "valid_count": 144,
+            "declared_count": 96,
+            "valid_count": 96,
             "source_groups": cls.groups,
             "rows": rows,
             "human_gold": False,
@@ -188,7 +189,7 @@ class V7AdmissionTests(unittest.TestCase):
             manifest = result["candidate_manifests"][candidate]
             self.assertTrue(manifest["training_snapshot_allowed"])
             self.assertEqual(manifest["balanced_groups_by_role"], self.plan["source_role_counts"])
-            self.assertEqual(len(manifest["rows"]), 144)
+            self.assertEqual(len(manifest["rows"]), 96)
             self.assertEqual(manifest["ctc_token_ids"], [1, 2, 3])
             self.assertFalse(manifest["optimizer_allowed"])
             self.assertTrue(manifest["locked_test_sealed_from_training_and_mining"])
@@ -226,7 +227,7 @@ class V7AdmissionTests(unittest.TestCase):
         self.assertEqual(rows_mero["vosen-slow"]["research_class"], 0)
         self.assertEqual(rows_vosen["mero-slow"]["reason"], "OTHER_BRAND_CROSS_TRIGGER_NEGATIVE")
 
-    def test_locked_calibration_and_development_never_enter_optimizer(self):
+    def test_development_never_enters_optimizer_and_reserved_roles_are_absent(self):
         result = v7.build_admission(self.corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan)
         for candidate in v7.CANDIDATES:
             for row in result["candidate_manifests"][candidate]["rows"]:
@@ -311,28 +312,159 @@ class V7AdmissionTests(unittest.TestCase):
             item = gate["candidate_manifests"][candidate]
             self.assertTrue(item["training_snapshot_allowed"])
             self.assertEqual(item["balanced_groups_by_role"], self.plan["source_role_counts"])
-            self.assertEqual(sum(item["tier_counts"].values()), 144)
+            self.assertEqual(sum(item["tier_counts"].values()), 96)
             self.assertEqual(len(item["sha256"]), 64)
 
-    def test_packet_inventory_authenticates_every_file_and_rejects_tampering(self):
+    def test_training_snapshots_contain_only_candidate_train_and_development_bytes(self):
+        corpus = copy.deepcopy(self.corpus)
+        source_plan_sha256 = self.plan["source_plan_sha256"]
+        training_plan = v7trainer.load_plan()
+        training_plan["source_plan_sha256"] = source_plan_sha256
+        source_run = {
+            "repository": "jiying2007/kws-data",
+            "run_id": "46000882374",
+            "commit": "f" * 40,
+            "parent": training_plan["next_main_before"],
+            "attempt": 1,
+            "source_bundle_sha256": source_plan_sha256,
+        }
+        corpus["run"] = source_run
+        evidence = copy.deepcopy(self.evidence)
+        reserved = {group["source_group_id"] for group in self.groups
+                    if group["role"] in ("calibration", "locked-test")}
+        for row in corpus["rows"]:
+            if row["source_group_id"] not in reserved:
+                continue
+            for key in ("pcm_path", "wav_path"):
+                path = self.root / row[key]
+                if path.exists():
+                    path.unlink()
+        for packet_row in evidence["rows"]:
+            source_row = next(item for item in corpus["rows"] if item["id"] == packet_row["id"])
+            if source_row["source_group_id"] not in reserved:
+                continue
+            for observation in packet_row["observations"]:
+                path = self.root / observation["capture_path"]
+                if path.exists():
+                    path.unlink()
+            phone = packet_row["phone_observation"]
+            if phone:
+                path = self.root / phone["capture_path"]
+                if path.exists():
+                    path.unlink()
+        joined = v7.build_admission(
+            corpus, evidence, self.root, profile=PROFILE, plan=self.plan,
+            open_roles=("train", "development"))
+        identity = {
+            "files_manifest_sha256": "a" * 64,
+            "file_count": 723,
+            "verified_bytes": 123456,
+        }
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "snapshots"
+            snapshots = v7cli.build_training_snapshots(self.root, root, joined, identity)
+            self.assertEqual(set(snapshots), set(v7.CANDIDATES))
+            for candidate in v7.CANDIDATES:
+                directory = root / candidate
+                snapshot = json.loads((directory / "SNAPSHOT.json").read_bytes())
+                manifest = json.loads((directory / "MANIFEST.json").read_bytes())
+                files = json.loads((directory / "FILES.json").read_bytes())
+                self.assertEqual(snapshot["candidate"], candidate)
+                self.assertEqual(snapshot["role_counts"], {"train": 6, "development": 2})
+                self.assertFalse(snapshot["calibration_audio_included"])
+                self.assertFalse(snapshot["locked_test_audio_included"])
+                self.assertFalse(snapshot["calibration_labels_included"])
+                self.assertFalse(snapshot["locked_test_labels_included"])
+                self.assertEqual({row["role"] for row in manifest["rows"]},
+                                 {"train", "development"})
+                self.assertEqual(len(manifest["source_groups"]), 8)
+                self.assertTrue(all("evidence_refs" not in row for row in manifest["rows"]))
+                self.assertTrue(all("locked" not in item["path"].lower()
+                                    and "calibration" not in item["path"].lower()
+                                    for item in files["files"]))
+                self.assertEqual(snapshot["file_count"], len(files["files"]))
+                self.assertEqual(snapshot["files_manifest_sha256"],
+                                 v7.sha((directory / "FILES.json").read_bytes()))
+                self.assertEqual(snapshot["manifest_sha256"],
+                                 v7.sha((directory / "MANIFEST.json").read_bytes()))
+                self.assertFalse((directory / "MACHINE_EVIDENCE.json").exists())
+                self.assertFalse((directory / "CORPUS_MANIFEST.json").exists())
+
+                # Exercise the real admission -> candidate snapshot -> trainer
+                # verifier handoff with the exact source identity, not only JSON shape.
+                verified, identity = v7trainer.verify_training_snapshot(
+                    directory, candidate, training_plan)
+                self.assertEqual(verified["candidate"], candidate)
+                self.assertEqual(len(verified["rows"]), 96)
+                self.assertEqual(identity["training_rows"], 72)
+                self.assertEqual(identity["development_rows"], 24)
+                self.assertEqual(identity["source_run"], source_run)
+                self.assertEqual(identity["role_counts"], {"train": 6, "development": 2})
+                other_candidate = "MERO" if candidate == "VOSEN" else "VOSEN"
+                with self.assertRaisesRegex(ValueError, "EXACT_CANDIDATE_TRAIN_DEV_SNAPSHOT"):
+                    v7trainer.verify_training_snapshot(directory, other_candidate, training_plan)
+
+    def test_g3_admission_roles_are_strictly_train_dev_only(self):
+        with self.assertRaisesRegex(ValueError, "AUTHORIZED_ADMISSION_ROLES"):
+            v7.build_admission(
+                self.corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan,
+                open_roles=("train", "development", "calibration"))
+        result = v7.build_admission(
+            self.corpus, self.evidence, self.root, profile=PROFILE, plan=self.plan,
+            open_roles=("train", "development"))
+        for candidate in v7.CANDIDATES:
+            manifest = result["candidate_manifests"][candidate]
+            self.assertEqual(manifest["balanced_groups_by_role"],
+                             {"train": 6, "development": 2})
+            self.assertTrue(all(row["role"] in ("train", "development")
+                                for row in manifest["rows"]))
+            self.assertTrue(all("pcm_path" in row and "wav_path" in row
+                                for row in manifest["rows"]))
+
+    def test_packet_inventory_authenticates_train_dev_and_never_opens_reserved_files(self):
         with tempfile.TemporaryDirectory() as temp:
             packet = Path(temp)
             files = []
-            for name in ("CORPUS_MANIFEST.json", "MACHINE_EVIDENCE.json", "EXECUTION_PLAN.json",
-                         "source/audio/a.wav"):
-                target = packet / name
-                target.parent.mkdir(parents=True, exist_ok=True)
-                raw = ("fixture:" + name).encode()
-                target.write_bytes(raw)
+            payloads = {
+                "CORPUS_MANIFEST.json": b"corpus-metadata",
+                "MACHINE_EVIDENCE.json": b"observer-index-metadata",
+                "EXECUTION_PLAN.json": b"execution-plan-metadata",
+                "source/audio/train.pcm": b"train-pcm",
+                "source/audio/train.wav": b"train-wav",
+                # Reserved files are intentionally absent from disk.
+                "source/audio/calibration.pcm": b"calibration-pcm",
+                "source/audio/locked.pcm": b"locked-pcm",
+            }
+            for name, raw in payloads.items():
+                if "calibration" not in name and "locked" not in name:
+                    target = packet / name
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(raw)
                 files.append({"path": name, "bytes": len(raw), "sha256": v7.sha(raw)})
             (packet / "FILES.json").write_bytes(v7.canonical({
                 "schema": "english-kws-dual-track-v7-files-v1", "files": files
             }) + b"\n")
-            result = v7cli.verify_packet_inventory(packet)
-            self.assertEqual(result["file_count"], 4)
-            (packet / "source/audio/a.wav").write_bytes(b"tampered")
+            corpus = {"rows": [
+                {"id": "train", "role": "train", "generation_status": "success",
+                 "pcm_path": "source/audio/train.pcm", "wav_path": "source/audio/train.wav"},
+                {"id": "locked", "role": "locked-test", "generation_status": "success",
+                 "pcm_path": "source/audio/locked.pcm", "wav_path": "source/audio/locked.wav"},
+            ]}
+            evidence = {"rows": [
+                {"id": "train", "observations": [], "phone_observation": None},
+                {"id": "locked", "observations": [{"capture_path": "evidence/locked.json"}],
+                 "phone_observation": None},
+            ]}
+            result = v7cli.verify_packet_inventory(packet, corpus, evidence)
+            self.assertEqual(result["file_count"], len(files))
+            self.assertEqual(result["opened_roles"], ["train", "development"])
+            self.assertFalse(result["calibration_files_opened"])
+            self.assertFalse(result["locked_test_files_opened"])
+            self.assertFalse((packet / "source/audio/locked.pcm").exists())
+            self.assertFalse((packet / "evidence/locked.json").exists())
+            (packet / "source/audio/train.pcm").write_bytes(b"tampered")
             with self.assertRaisesRegex(ValueError, "MEMBER_SHA256_MISMATCH"):
-                v7cli.verify_packet_inventory(packet)
+                v7cli.verify_packet_inventory(packet, corpus, evidence)
 
     def test_training_or_promotion_cannot_be_enabled_by_plan(self):
         self.plan["training_allowed"] = True

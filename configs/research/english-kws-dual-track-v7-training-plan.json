@@ -1,9 +1,9 @@
 {
   "schema": "english-kws-dual-track-v7-independent-training-plan-v1",
-  "status": "PREDECLARED_ONE_SHOT_SYNTHETIC_RESEARCH_TRAINING",
-  "enabled": true,
+  "status": "WAITING_FOR_VOXCPM_G3_SOURCE",
+  "enabled": false,
   "source_repository": "jiying2007/kws-data",
-  "source_plan_sha256": "baad365440a789db351aa6277214a631feae0383ef5550664bcddf118fd94c31",
+  "source_plan_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "next_main_before": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
   "model": {
     "family": "causal-fsmn-ctc-v1",
@@ -29,7 +29,7 @@
     "updates_per_candidate": 192,
     "training_forwards_per_candidate": 384,
     "batch": "one candidate-positive and one explicit candidate-negative from the same source group per update",
-    "group_schedule": "round-robin six TRAIN source groups; cycle each group's admitted rows deterministically",
+    "group_schedule": "round-robin six TRAIN source groups; cycle each candidate's admitted rows deterministically",
     "gain_levels_train_only": [
       0.75,
       1,
@@ -86,15 +86,21 @@
     "minimum_dev_groups": 2,
     "minimum_positive_rows_per_train_group": 2,
     "minimum_negative_rows_per_train_group": 4,
+    "minimum_positive_rows_per_dev_group": 2,
+    "minimum_negative_rows_per_dev_group": 4,
     "train_only_silver_weak": true,
     "unknown_is_background": false,
-    "no_old_audio_or_legacy_labels": true
+    "no_old_audio_or_legacy_labels": true,
+    "candidate_mapping": {
+      "VOSEN": "observed class 1 positive; classes 0 and 2 are negatives",
+      "MERO": "observed class 2 positive; classes 0 and 1 are negatives"
+    }
   },
   "evaluation": {
-    "development": "one original-PCM pass after final weights are frozen; no threshold or checkpoint sweep",
+    "development": "ONE_ORIGINAL_PCM_PASS_AFTER_FINAL_WEIGHTS_FROZEN; NO_THRESHOLD_OR_CHECKPOINT_SWEEP",
     "development_forwards_max_per_candidate": 24,
-    "calibration": "NOT_OPENED_DURING_TRAINING",
-    "locked_test": "NOT_OPENED_DURING_TRAINING_OR_G4",
+    "calibration": "NOT_BOUND; SEPARATE_FUTURE_DATASET_REQUIRED_AFTER_TRAINING; NEVER_INCLUDED_IN_TRAINING_SNAPSHOTS",
+    "locked_test": "NOT_BOUND; SEPARATE_FUTURE_DATASET_REQUIRED_AFTER_FROZEN_THRESHOLDS; ONE_PASS_ONLY",
     "real_human_far_frr": "NOT_RUN",
     "physical_ssc305": "NOT_RUN"
   },
@@ -117,7 +123,8 @@
     "total_optimizer_updates_max": 384,
     "total_training_forwards_max": 768,
     "total_development_forwards_max": 48,
-    "total_model_forwards_max": 816
+    "total_model_forwards_max": 816,
+    "enabled": false
   },
   "pack": {
     "magic": "KWSV7C01",
@@ -131,8 +138,84 @@
   "promotion_allowed": false,
   "product_quality_claims_allowed": false,
   "commercial_derivative_clearance": "NOT_ASSERTED_LEGAL_REVIEW_REQUIRED",
-  "source_run_id": 46000882374,
-  "source_commit": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
-  "source_workflow_id": 432334213,
-  "source_artifact_name": "v7-machine-evidence-packet-46000882374"
+  "training_input": {
+    "schema": "english-kws-dual-track-v7-training-snapshot-v1",
+    "allowed_roles": [
+      "train",
+      "development"
+    ],
+    "role_counts": {
+      "train": 6,
+      "development": 2
+    },
+    "calibration_audio_available": false,
+    "calibration_labels_available": false,
+    "locked_test_audio_available": false,
+    "locked_test_labels_available": false,
+    "full_source_packet_downloaded_by_training_job": false,
+    "full_admission_recomputed_by_training_job": false,
+    "admission_stage_builds_candidate_specific_snapshots": true
+  },
+  "source_bundle": {
+    "status": "NOT_BOUND",
+    "required_source_schema": "english-kws-dual-track-v7-voice-clone-corpus-v1",
+    "required_source_rows": 96,
+    "required_source_groups": {
+      "train": 6,
+      "development": 2
+    },
+    "required_observers": [
+      "qwen",
+      "whisper",
+      "parakeet",
+      "phoneme"
+    ],
+    "generator": {
+      "repository": "bluryar/VoxCPM.cpp",
+      "commit": "e5b89534e379c79b923c9969b79c3858d140bedb",
+      "license": "Apache-2.0"
+    },
+    "model": {
+      "repository": "openbmb/VoxCPM1.5",
+      "license": "Apache-2.0",
+      "quantization": "Q8_0+AudioVAE-F16",
+      "revision": "09c7a389438c27100dfa4e6cda1f8f0dd0d2fbfa",
+      "files": {
+        "model.safetensors": "7e97ee2cd2ca891662f7da368921df08368a616410afe67461253e4dcd3823cc",
+        "audiovae.pth": "8160987a7f10acd4c49b72a9a3e974c0b5c1c786538cd4bcaac5f2df388c0f14"
+      },
+      "audio_vae_sample_rate": 44100
+    },
+    "donor_reference": {
+      "run_id": 44256271861,
+      "artifact_id": 14406282094,
+      "sha256": "8b86b46759f6f2bd084cd37e1c804c72058fe52ec57f6c221c912eeca96092e5"
+    },
+    "required_candidate_isolation": true,
+    "no_legacy_audio_or_labels": true,
+    "calibration_locked_reference_bytes_opened": false,
+    "human_gold": false,
+    "independent_human_speaker_identity_claimed": false,
+    "training_allowed": false,
+    "promotion_allowed": false,
+    "required_source_cells": [
+      "vosen-slow",
+      "vosen-normal",
+      "vosen-fast",
+      "mero-slow",
+      "mero-normal",
+      "mero-fast",
+      "bosen-s",
+      "bosen-z",
+      "memo",
+      "nero",
+      "hello",
+      "morning"
+    ],
+    "converter": {
+      "repository": "OpenBMB/VoxCPM",
+      "commit": "300e4260b509066151d623dc9c0aa922cf82232b",
+      "license": "Apache-2.0"
+    }
+  }
 }
