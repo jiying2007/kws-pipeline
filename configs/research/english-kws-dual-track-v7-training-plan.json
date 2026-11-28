@@ -1,7 +1,7 @@
 {
   "schema": "english-kws-dual-track-v7-independent-training-plan-v1",
-  "status": "PREDECLARED_ONE_SHOT_SYNTHETIC_RESEARCH_TRAINING",
-  "enabled": true,
+  "status": "BLOCKED_AWAITING_NEW_KOKORO_G2_SOURCE",
+  "enabled": false,
   "source_repository": "jiying2007/kws-data",
   "source_plan_sha256": "baad365440a789db351aa6277214a631feae0383ef5550664bcddf118fd94c31",
   "next_main_before": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
@@ -93,8 +93,8 @@
   "evaluation": {
     "development": "one original-PCM pass after final weights are frozen; no threshold or checkpoint sweep",
     "development_forwards_max_per_candidate": 24,
-    "calibration": "NOT_OPENED_DURING_TRAINING",
-    "locked_test": "NOT_OPENED_DURING_TRAINING_OR_G4",
+    "calibration": "NOT_IN_CURRENT_96_ROW_G3_SOURCE; separate sealed evaluation campaign required",
+    "locked_test": "NOT_IN_CURRENT_96_ROW_G3_SOURCE; separate sealed evaluation campaign required",
     "real_human_far_frr": "NOT_RUN",
     "physical_ssc305": "NOT_RUN"
   },
@@ -148,5 +148,12 @@
     "full_source_packet_downloaded_by_training_job": false,
     "full_admission_recomputed_by_training_job": false,
     "admission_stage_builds_candidate_specific_snapshots": true
+  },
+  "source_compatibility": {
+    "compatible": false,
+    "pinned_run_id": 46000882374,
+    "pinned_corpus_schema": "english-kws-dual-track-v7-corpus-v1",
+    "expected_corpus_schema": "english-kws-dual-track-v7-kokoro-corpus-v1",
+    "reason": "The pinned 144-row Piper G2 packet is not the 96-row Kokoro TRAIN/DEV corpus required by this V7 G3 implementation. A new immutable source/observer campaign and exact artifact identity are required before training."
   }
 }
