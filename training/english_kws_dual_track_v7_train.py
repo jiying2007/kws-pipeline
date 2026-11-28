@@ -81,12 +81,12 @@ def load_plan():
          "EXACT_PREDECLARED_MULTISOURCE_G3_PLAN")
     bundle = plan.get("source_bundle")
     expected_pins = [
-        ("fresh24", "source", 14422271973, "26396073f5be2f91e35575bedb586737405162388e32bfe85633ed3d796a9583", 4505217),
-        ("fresh24", "screen", 14429385634, "5a9b226b8fe475331d9f03d3ca4f91d5bb94c5270113f6d0cf3e8b4c36fe8316", 19501),
-        ("fresh18", "source", 14429578824, "34cf7879f974f62c9f6046a72a964002f30bf59d2186a423ac382a76ff69d0e9", 3359173),
-        ("fresh18", "screen", 14429884666, "4a685afa1d8e8c35767900290a7fd590f2153fb69f3b2e5ae68d5dada58b11e1", 15068),
-        ("piper24", "source", 14434542792, "d1f75716fefd954d59c3289c37e7e6670965ee98917436676896312e4b781aa1", 3362081),
-        ("piper24", "screen", 14436377961, "c6b8573bae44ffa110b776482da74919d16e6b1437c6c3e1f462fd1b7a28a519", 19503),
+        ("fresh24", "source", 44289263966, "aca5d052daa78aa3c4f3f21dc462ab2a350d6efb", 14422271973, "english-fresh24-clone168-44289263966", 4505217, "26396073f5be2f91e35575bedb586737405162388e32bfe85633ed3d796a9583"),
+        ("fresh24", "screen", 44306842000, "75ccd81bb3abe2973e01fb2bf1a74411629e9279", 14429385634, "english-fresh24-prospective-screen-44306842000", 19501, "5a9b226b8fe475331d9f03d3ca4f91d5bb94c5270113f6d0cf3e8b4c36fe8316"),
+        ("fresh18", "source", 44310115097, "768922492ef294240153c085e5318c528a92a70a", 14429578824, "english-fresh18-direct126-44310115097", 3359173, "34cf7879f974f62c9f6046a72a964002f30bf59d2186a423ac382a76ff69d0e9"),
+        ("fresh18", "screen", 44312719394, "6fc03ff706b8949b9a6c066f4478890db8de28aa", 14429884666, "english-fresh18-cumulative-screen-44312719394", 15068, "4a685afa1d8e8c35767900290a7fd590f2153fb69f3b2e5ae68d5dada58b11e1"),
+        ("piper24", "source", 44321329022, "54fd82f4fa165740fbb4ae2df70b12c634e41a41", 14434542792, "english-newpiper-source-44321329022", 3362081, "d1f75716fefd954d59c3289c37e7e6670965ee98917436676896312e4b781aa1"),
+        ("piper24", "screen", 44323694022, "4992666d4356d76301ad8ccbd71fad12db3d7caa", 14436377961, "english-newpiper-cumulative-screen-44323694022", 19503, "c6b8573bae44ffa110b776482da74919d16e6b1437c6c3e1f462fd1b7a28a519"),
     ]
     need(isinstance(bundle, dict)
          and bundle.get("schema") == "english-canonical-multisource-reviewed-pcm-v1"
@@ -97,7 +97,8 @@ def load_plan():
              "piper24": "d477ecec2a07910fc1a91063752aff1acc9006ef",
          }
          and isinstance(bundle.get("artifacts"), list)
-         and [(x.get("key"), x.get("kind"), x.get("artifact_id"), x.get("sha256"), x.get("bytes"))
+         and [(x.get("key"), x.get("kind"), x.get("run_id"), x.get("commit"), x.get("artifact_id"),
+               x.get("name"), x.get("bytes"), x.get("sha256"))
               for x in bundle["artifacts"]] == expected_pins
          and bundle.get("qualified_groups_by_role") == {
              "train": 8, "development": 4, "calibration": 3, "locked-test": 3}
