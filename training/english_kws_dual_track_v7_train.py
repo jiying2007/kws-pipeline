@@ -760,7 +760,6 @@ def source_check():
         "shared_optimizer": plan["independence"]["optimizer_state_shared"],
         "training_runs_per_candidate": plan["independence"]["training_runs_per_candidate"],
         "retries": plan["execution"]["retries"],
-        "source_bundle_sha256": plan["source_plan_sha256"],
         "promotion_allowed": plan["promotion_allowed"],
     }
 
