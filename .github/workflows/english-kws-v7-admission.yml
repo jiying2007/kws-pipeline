@@ -1,0 +1,51 @@
+name: English KWS V7 candidate-relative admission contracts
+'on':
+  pull_request:
+    branches: [main]
+    paths:
+      - training/english_kws_dual_track_v7_silver.py
+      - automation/english_kws_dual_track_v7_admit.py
+      - training/english_kws_dual_track_v7_train.py
+      - configs/research/english-kws-dual-track-v7-training-plan.json
+      - tests/test_english_kws_dual_track_v7_silver.py
+      - tests/test_english_kws_dual_track_v7_train.py
+      - research/english_kws_v7/**
+      - .github/workflows/english-kws-v7-admission.yml
+permissions:
+  contents: read
+concurrency:
+  group: english-kws-v7-admission-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  source-only:
+    if: github.repository == 'jiying2007/kws-pipeline'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Run byte-fixture admission tests under normal, optimized and stripped interpreters
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -I -S -B tests/test_english_kws_dual_track_v7_silver.py -v
+          python3 -I -S -B tests/test_english_kws_dual_track_v7_train.py -v
+          python3 -I -S -B automation/english_kws_dual_track_v7_admit.py --help
+          python3 -I -S -B training/english_kws_dual_track_v7_train.py --source-check
+          python3 -I -S -B training/english_kws_dual_track_v7_train.py --help
+          python3 -I -S -B -O tests/test_english_kws_dual_track_v7_silver.py -v
+          python3 -I -S -B -O tests/test_english_kws_dual_track_v7_train.py -v
+          python3 -I -S -B -O automation/english_kws_dual_track_v7_admit.py --help
+          python3 -I -S -B -O training/english_kws_dual_track_v7_train.py --source-check
+          python3 -I -S -B -O training/english_kws_dual_track_v7_train.py --help
+          python3 -I -S -B -OO tests/test_english_kws_dual_track_v7_silver.py -v
+          python3 -I -S -B -OO tests/test_english_kws_dual_track_v7_train.py -v
+          python3 -I -S -B -OO automation/english_kws_dual_track_v7_admit.py --help
+          python3 -I -S -B -OO training/english_kws_dual_track_v7_train.py --source-check
+          python3 -I -S -B -OO training/english_kws_dual_track_v7_train.py --help
+          git diff --check
+          test -z "$(git status --porcelain)"

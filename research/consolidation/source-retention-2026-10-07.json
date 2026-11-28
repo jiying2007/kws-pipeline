@@ -15604,7 +15604,8 @@
     ".github/workflows/english-head-calibrated-threshold.yml",
     ".github/workflows/english-v5-mero-contract.yml",
     ".github/workflows/english-v6-delivery-contract.yml",
-    ".github/workflows/english-v6-b28-delivery-contract.yml"
+    ".github/workflows/english-v6-b28-delivery-contract.yml",
+    ".github/workflows/english-kws-v7-admission.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -54535,6 +54536,13 @@
       "bytes": 964,
       "sha256": "301ca2af782019ef24b85291b2502cf6109474b4e4adeedcb7e71db396e540c6",
       "git_blob_sha1": "024c5141bbb119a855d31108349a6289058ff252"
+    },
+    {
+      "path": ".github/workflows/english-kws-v7-admission.yml",
+      "mode": "100644",
+      "bytes": 2527,
+      "sha256": "4769216e1c5333b7f7c763c8a0607947a2a65a05364f6a35c4fe6864c1838a6a",
+      "git_blob_sha1": "88e46a6962c5d3503a01ebd370b9f9c31e2f4226"
     }
   ],
   "current_source_revision": {

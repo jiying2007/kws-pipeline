@@ -1,0 +1,138 @@
+{
+  "schema": "english-kws-dual-track-v7-independent-training-plan-v1",
+  "status": "PREDECLARED_ONE_SHOT_SYNTHETIC_RESEARCH_TRAINING",
+  "enabled": true,
+  "source_repository": "jiying2007/kws-data",
+  "source_plan_sha256": "baad365440a789db351aa6277214a631feae0383ef5550664bcddf118fd94c31",
+  "next_main_before": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
+  "model": {
+    "family": "causal-fsmn-ctc-v1",
+    "parameters": 43876,
+    "frontend": "PCM16 mono 16 kHz -> FFT512 Hann400 hop160 center=false -> 40 HTK log1p Mel",
+    "normalization": "per-bin mean/std computed only from eligible TRAIN PCM",
+    "hidden": 96,
+    "blocks": 4,
+    "left_memory": 4,
+    "outputs": 4,
+    "ctc_target_token_ids": [
+      1,
+      2,
+      3
+    ],
+    "dropout_train_only": 0.1
+  },
+  "optimizer": {
+    "name": "AdamW",
+    "learning_rate": 0.00012,
+    "weight_decay": 0.001,
+    "max_grad_norm": 5,
+    "updates_per_candidate": 192,
+    "training_forwards_per_candidate": 384,
+    "batch": "one candidate-positive and one explicit candidate-negative from the same source group per update",
+    "group_schedule": "round-robin six TRAIN source groups; cycle each group's admitted rows deterministically",
+    "gain_levels_train_only": [
+      0.75,
+      1,
+      1.25
+    ],
+    "weak_row_weight": 0.5,
+    "positive_loss": "CTC(full HEY+candidate-name sequence)+softplus(0.5-4*(blank_loss-positive_loss))",
+    "negative_loss": "0.35*blank_loss+softplus(0.5+4*(blank_loss-positive_loss))"
+  },
+  "candidates": {
+    "VOSEN": {
+      "candidate_id": "hey-vosen-v7",
+      "keyword_id": 1,
+      "phrase": "Hey Vosen",
+      "ipa": "/heɪ ˈvoʊ.sən/",
+      "token_labels": [
+        "HEY",
+        "VOH",
+        "SEN"
+      ],
+      "token_ids": [
+        1,
+        2,
+        3
+      ],
+      "seed": 20261127
+    },
+    "MERO": {
+      "candidate_id": "hey-mero-v7",
+      "keyword_id": 2,
+      "phrase": "Hey Mero",
+      "ipa": "/heɪ ˈmɛroʊ/",
+      "token_labels": [
+        "HEY",
+        "MEH",
+        "ROH"
+      ],
+      "token_ids": [
+        1,
+        2,
+        3
+      ],
+      "seed": 20261128
+    }
+  },
+  "source_roles": {
+    "train": 6,
+    "development": 2,
+    "calibration": 2,
+    "locked-test": 2
+  },
+  "admission": {
+    "minimum_train_groups": 6,
+    "minimum_dev_groups": 2,
+    "minimum_positive_rows_per_train_group": 2,
+    "minimum_negative_rows_per_train_group": 4,
+    "train_only_silver_weak": true,
+    "unknown_is_background": false,
+    "no_old_audio_or_legacy_labels": true
+  },
+  "evaluation": {
+    "development": "one original-PCM pass after final weights are frozen; no threshold or checkpoint sweep",
+    "development_forwards_max_per_candidate": 24,
+    "calibration": "NOT_OPENED_DURING_TRAINING",
+    "locked_test": "NOT_OPENED_DURING_TRAINING_OR_G4",
+    "real_human_far_frr": "NOT_RUN",
+    "physical_ssc305": "NOT_RUN"
+  },
+  "independence": {
+    "fresh_random_initialization_per_candidate": true,
+    "distinct_seeds": true,
+    "model_parameters_shared": false,
+    "optimizer_state_shared": false,
+    "checkpoints_shared": false,
+    "thresholds_shared": false,
+    "evaluation_results_shared": false,
+    "training_runs_per_candidate": 1
+  },
+  "execution": {
+    "first_protected_public_main_successor_only": true,
+    "github_actions": true,
+    "run_attempt": 1,
+    "retries": 0,
+    "automatic_expansion": false,
+    "total_optimizer_updates_max": 384,
+    "total_training_forwards_max": 768,
+    "total_development_forwards_max": 48,
+    "total_model_forwards_max": 816
+  },
+  "pack": {
+    "magic": "KWSV7C01",
+    "version": 1,
+    "float_count": 54236,
+    "header_bytes": 16,
+    "total_bytes": 216960,
+    "little_endian_float32": true,
+    "candidate_id_in_header": false
+  },
+  "promotion_allowed": false,
+  "product_quality_claims_allowed": false,
+  "commercial_derivative_clearance": "NOT_ASSERTED_LEGAL_REVIEW_REQUIRED",
+  "source_run_id": 46000882374,
+  "source_commit": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
+  "source_workflow_id": 432334213,
+  "source_artifact_name": "v7-machine-evidence-packet-46000882374"
+}

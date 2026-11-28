@@ -25,6 +25,7 @@ OFFICIAL_WORKFLOWS = (
     '.github/workflows/training-audit-closure.yml',
     '.github/workflows/speech-like-external-base-bundle-contract.yml',
     '.github/workflows/product-training-data-contract.yml',
+    '.github/workflows/english-kws-v7-admission.yml',
 )
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
