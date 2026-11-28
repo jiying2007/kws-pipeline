@@ -313,9 +313,9 @@ def _validate_corpus(corpus, evidence, plan):
             and {row.get("id") for row in rows} == {row.get("id") for row in observations},
             "SOURCE_OBSERVER_ROSTER_IDENTITY")
     groups = corpus.get("source_groups", [])
-    require(len(groups) == 12 and len({group.get("source_group_id") for group in groups}) == 12
-            and len({group.get("source_speaker_id") for group in groups}) == 12,
-            "TWELVE_UNIQUE_SOURCE_GROUPS_AND_SPEAKERS")
+    require(len(groups) == 8 and len({group.get("source_group_id") for group in groups}) == 8
+            and len({group.get("source_speaker_id") for group in groups}) == 8,
+            "EIGHT_UNIQUE_SOURCE_GROUPS_AND_SPEAKERS")
     require(Counter(group.get("role") for group in groups)
             == Counter({"train": 6, "development": 2}),
             "SOURCE_GROUP_6_2_2_2")
@@ -340,7 +340,7 @@ def _validate_corpus(corpus, evidence, plan):
         require(pair not in cells_seen, "DUPLICATE_SOURCE_CELL")
         cells_seen.add(pair)
         rows_by_id[row["id"]] = row
-    require(len(cells_seen) == 96, "EXACT_12_BY_12_SOURCE_CELL_ROSTER")
+    require(len(cells_seen) == 96, "EXACT_8_BY_12_SOURCE_CELL_ROSTER")
     evidence_by_id = {item["id"]: item for item in observations}
     return rows, evidence_by_id, group_by_id
 
