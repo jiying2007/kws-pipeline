@@ -25,8 +25,8 @@ class V7TrainingPlanTests(unittest.TestCase):
         plan = trainer.load_plan()
         self.assertEqual(plan["status"], "WAITING_FOR_VOXCPM_G3_SOURCE")
         self.assertFalse(plan["enabled"])
-        self.assertEqual(plan["source_roles"],
-                         {"train": 6, "development": 2})
+        self.assertEqual(plan["source_roles"], {
+            "train": 6, "development": 2, "calibration": 2, "locked-test": 2})
         self.assertEqual(plan["source_bundle"]["status"], "NOT_BOUND")
         self.assertFalse(plan["source_bundle"]["training_allowed"])
         self.assertEqual(plan["source_bundle"]["required_source_rows"], 96)
@@ -309,8 +309,8 @@ class V7TrainingPlanTests(unittest.TestCase):
             "files_manifest_sha256": trainer.sha(inventory_raw),
             "file_count": len(files),
             "verified_bytes": total_bytes,
-            "training_rows": 36,
-            "development_rows": 12,
+            "training_rows": 72,
+            "development_rows": 24,
             "role_counts": {"train": 6, "development": 2},
             "calibration_rows_included": False,
             "locked_test_rows_included": False,
