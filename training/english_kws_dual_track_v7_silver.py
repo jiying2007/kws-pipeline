@@ -370,6 +370,8 @@ def build_admission(corpus, evidence, root, *, profile, plan, open_roles=ROLES):
                 **{key: row[key] for key in ("cell_id", "requested_text", "requested_class", "kind",
                                               "length_scale", "raw_phonemes", "pronunciation_hypothesis")},
                 "request_sha256": row["request_sha256"],
+                "pcm_path": row["pcm_path"],
+                "wav_path": row["wav_path"],
                 "candidate_id": "hey-vosen-v7" if candidate == "VOSEN" else "hey-mero-v7",
                 "candidate": candidate,
                 "human_gold": False,
