@@ -20,6 +20,11 @@ class V7TrainingPlanTests(unittest.TestCase):
         self.assertEqual(report["status"], "BLOCKED_AWAITING_NEW_KOKORO_G2_SOURCE_NO_MODEL_EXECUTION")
         self.assertFalse(report["training_enabled"])
         self.assertFalse(report["source_compatible"])
+        plan = trainer.load_plan()
+        self.assertEqual(plan["status"], "BLOCKED_AWAITING_NEW_KOKORO_G2_SOURCE")
+        self.assertEqual(plan["source_compatibility"]["pinned_run_id"], 46000882374)
+        self.assertEqual(plan["source_compatibility"]["expected_corpus_schema"],
+                         "english-kws-dual-track-v7-kokoro-corpus-v1")
         self.assertEqual(report["candidates"], ["MERO", "VOSEN"])
         self.assertEqual(report["optimizer_updates_per_candidate"], 192)
         self.assertEqual(report["training_forwards_per_candidate"], 384)
