@@ -19,8 +19,8 @@ import wave
 
 SCHEMA = "english-kws-dual-track-v7-machine-admission-v1"
 CORPUS_SCHEMA = "english-kws-dual-track-v7-voice-clone-corpus-v1"
-EVIDENCE_SCHEMA = "english-kws-dual-track-v7-kokoro-machine-evidence-v1"
-CAPTURE_SCHEMA = "english-kws-dual-track-v7-kokoro-observer-capture-v1"
+EVIDENCE_SCHEMA = "english-kws-dual-track-v7-voice-clone-machine-evidence-v1"
+CAPTURE_SCHEMA = "english-kws-dual-track-v7-voice-clone-observer-capture-v1"
 ROLES = ("train", "development")
 CANDIDATES = ("VOSEN", "MERO")
 IDENTITY_KEYS = ("recognizer_id", "model_family", "model_sha256", "decode_config_sha256")
