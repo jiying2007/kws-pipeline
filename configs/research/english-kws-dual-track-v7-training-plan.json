@@ -77,7 +77,9 @@
   },
   "source_roles": {
     "train": 6,
-    "development": 2
+    "development": 2,
+    "calibration": 2,
+    "locked-test": 2
   },
   "admission": {
     "minimum_train_groups": 6,
