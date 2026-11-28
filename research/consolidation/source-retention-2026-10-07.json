@@ -54372,9 +54372,9 @@
     {
       "path": ".github/workflows/research-source-consolidation.yml",
       "mode": "100644",
-      "bytes": 5280,
-      "sha256": "cf7d6c851988cd48d97b60ca81cf48b40aa80890b68893a8ab9e57d9291dc4d1",
-      "git_blob_sha1": "f0b85d2c946477c6713a3e05a651752c4edf057d"
+      "bytes": 5342,
+      "sha256": "d9fc9620f80ebc563aaaf55fc21bd1979a29b7b6519c4575236a9538ba62c1ee",
+      "git_blob_sha1": "1323f74386d21479be8a8c211ed3e6984ce81e73"
     },
     {
       "path": ".github/workflows/qwen12-native-admission-v1.yml",
