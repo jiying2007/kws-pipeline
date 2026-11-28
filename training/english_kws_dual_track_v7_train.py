@@ -74,35 +74,47 @@ def write_once(path, value):
 def load_plan():
     plan = read_json(PLAN_PATH)
     need(plan.get("schema") == "english-kws-dual-track-v7-independent-training-plan-v1"
-         and plan.get("enabled") is False
-         and plan.get("status") == "BLOCKED_AWAITING_NEW_VOICE_CLONE_G2_SOURCE"
-         and plan.get("source_compatibility") == {
-             "compatible": False,
-             "pinned_run_id": 46000882374,
-             "pinned_corpus_schema": "english-kws-dual-track-v7-corpus-v1",
-             "expected_corpus_schema": "english-kws-dual-track-v7-voice-clone-corpus-v1",
-             "expected_generator": "VoxCPM 1.5 Q8_0 + AudioVAE F16 (pilot pending)",
-             "reason": "The pinned 144-row Piper G2 packet is not the 96-row Kokoro TRAIN/DEV corpus required by this V7 G3 implementation. A new immutable source/observer campaign and exact artifact identity are required before training.",
-         }
+         and plan.get("enabled") is True
+         and plan.get("status") == "READY_FOR_MULTISOURCE_G3"
          and plan.get("source_repository") == REPO
-         and plan.get("source_plan_sha256") == "baad365440a789db351aa6277214a631feae0383ef5550664bcddf118fd94c31"
-         and plan.get("next_main_before") == plan.get("source_commit")
-         and plan.get("source_run_id") == 46000882374
-         and plan.get("source_commit") == "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2"
-         and plan.get("source_workflow_id") == 432334213
-         and plan.get("source_artifact_name") == "v7-machine-evidence-packet-46000882374",
-         "EXACT_PREDECLARED_G3_TRAINING_PLAN")
-    need(plan.get("training_input") == {
-        "schema": "english-kws-dual-track-v7-training-snapshot-v1",
-        "allowed_roles": ["train", "development"],
-        "calibration_audio_available": False,
-        "calibration_labels_available": False,
-        "locked_test_audio_available": False,
-        "locked_test_labels_available": False,
-        "full_source_packet_downloaded_by_training_job": False,
-        "full_admission_recomputed_by_training_job": False,
-        "admission_stage_builds_candidate_specific_snapshots": True,
-    }, "TRAIN_DEV_SNAPSHOT_ONLY_INPUT_BOUNDARY")
+         and plan.get("next_main_before") == "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
+         "EXACT_PREDECLARED_MULTISOURCE_G3_PLAN")
+    bundle = plan.get("source_bundle")
+    expected_pins = [
+        ("fresh24", "source", 14422271973, "26396073f5be2f91e35575bedb586737405162388e32bfe85633ed3d796a9583", 4505217),
+        ("fresh24", "screen", 14429385634, "5a9b226b8fe475331d9f03d3ca4f91d5bb94c5270113f6d0cf3e8b4c36fe8316", 19501),
+        ("fresh18", "source", 14429578824, "34cf7879f974f62c9f6046a72a964002f30bf59d2186a423ac382a76ff69d0e9", 3359173),
+        ("fresh18", "screen", 14429884666, "4a685afa1d8e8c35767900290a7fd590f2153fb69f3b2e5ae68d5dada58b11e1", 15068),
+        ("piper24", "source", 14434542792, "d1f75716fefd954d59c3289c37e7e6670965ee98917436676896312e4b781aa1", 3362081),
+        ("piper24", "screen", 14436377961, "c6b8573bae44ffa110b776482da74919d16e6b1437c6c3e1f462fd1b7a28a519", 19503),
+    ]
+    need(isinstance(bundle, dict)
+         and bundle.get("schema") == "english-canonical-multisource-reviewed-pcm-v1"
+         and bundle.get("source_policy_git_blob_sha1") == "0a688325d0d36e83ef6623ac678511df24a92374"
+         and bundle.get("source_plan_git_blobs") == {
+             "fresh24": "dbe911fbcf8a697492ad29c7ca11858e707a72ff",
+             "fresh18": "c2ee2f7bf2fbdeb8821920d6cb5e6890d0df1f76",
+             "piper24": "d477ecec2a07910fc1a91063752aff1acc9006ef",
+         }
+         and isinstance(bundle.get("artifacts"), list)
+         and [(x.get("key"), x.get("kind"), x.get("artifact_id"), x.get("sha256"), x.get("bytes"))
+              for x in bundle["artifacts"]] == expected_pins
+         and bundle.get("qualified_groups_by_role") == {
+             "train": 8, "development": 4, "calibration": 3, "locked-test": 3}
+         and bundle.get("minimum_groups_by_role") == {
+             "train": 6, "development": 2, "calibration": 2, "locked-test": 2}
+         and bundle.get("selected_machine_reviewed_rows") == 63
+         and bundle.get("original_rows_authenticated") == 462
+         and bundle.get("new_tts_calls") == bundle.get("new_asr_calls") == bundle.get("new_phone_calls") == 0
+         and bundle.get("audio_regenerated") is False
+         and bundle.get("human_gold") is False
+         and bundle.get("independent_human_speaker_identity_claimed") is False
+         and bundle.get("original_screen_training_snapshot_allowed") is False
+         and bundle.get("fresh_candidate_snapshot_required") is True,
+         "EXACT_SIX_ARTIFACT_MULTISOURCE_BUNDLE")
+    need(plan.get("source_plan_sha256") == "COMPUTED_FROM_EXACT_SOURCE_BUNDLE_AT_RUNTIME",
+         "SOURCE_BUNDLE_HASH_DERIVATION_MODE")
+    plan["source_plan_sha256"] = sha(canonical(bundle))
     model = plan["model"]
     need(model == {
         "family": "causal-fsmn-ctc-v1", "parameters": PARAMETERS,
@@ -117,10 +129,38 @@ def load_plan():
          and optimizer["updates_per_candidate"] == 192
          and optimizer["training_forwards_per_candidate"] == 384
          and optimizer["gain_levels_train_only"] == list(GAIN_LEVELS)
-         and optimizer["weak_row_weight"] == 0.5,
+         and optimizer["weak_row_weight"] == 0.5
+         and optimizer["group_schedule"] ==
+             "round-robin eight TRAIN source groups; cycle each candidate's admitted rows deterministically",
          "FIXED_SINGLE_RUN_TRAINING_BUDGET")
-    need(plan["source_roles"] == {"train": 6, "development": 2, "calibration": 2, "locked-test": 2},
-         "EXACT_6_2_2_2_ROLE_SPLIT")
+    need(plan["source_roles"] == {
+        "train": 8, "development": 4, "calibration": 3, "locked-test": 3},
+        "EXACT_8_4_3_3_MULTISOURCE_ROLE_SPLIT")
+    need(plan["admission"] == {
+        "minimum_train_groups": 8, "minimum_dev_groups": 4,
+        "minimum_positive_rows_per_train_group": 1,
+        "minimum_negative_rows_per_train_group": 2,
+        "minimum_positive_rows_per_dev_group": 1,
+        "minimum_negative_rows_per_dev_group": 2,
+        "train_only_silver_weak": True, "unknown_is_background": False,
+        "no_old_audio_or_legacy_labels": True,
+        "candidate_mapping": {
+            "VOSEN": "observed class 1 positive; classes 0 and 2 are negatives",
+            "MERO": "observed class 2 positive; classes 0 and 1 are negatives",
+        },
+    }, "CANDIDATE_RELATIVE_CROSS_TRIGGER_ADMISSION")
+    need(plan["training_input"] == {
+        "schema": "english-kws-dual-track-v7-training-snapshot-v1",
+        "allowed_roles": ["train", "development"],
+        "role_counts": {"train": 8, "development": 4},
+        "calibration_audio_available": False,
+        "calibration_labels_available": False,
+        "locked_test_audio_available": False,
+        "locked_test_labels_available": False,
+        "full_source_packet_downloaded_by_training_job": False,
+        "full_admission_recomputed_by_training_job": False,
+        "admission_stage_builds_candidate_specific_snapshots": True,
+    }, "TRAIN_DEV_SNAPSHOT_ONLY_INPUT_BOUNDARY")
     need(plan["independence"]["model_parameters_shared"] is False
          and plan["independence"]["optimizer_state_shared"] is False
          and plan["independence"]["checkpoints_shared"] is False
@@ -140,7 +180,6 @@ def load_plan():
                   "little_endian_float32": True, "candidate_id_in_header": False},
          "EXACT_KWSV7C01_PACK_GEOMETRY")
     return plan
-
 
 def guard(plan, env=None, event=None):
     need(plan.get("enabled") is True, "G3_SOURCE_CAMPAIGN_NOT_READY")
