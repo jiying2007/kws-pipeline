@@ -395,7 +395,9 @@ class V7AdmissionTests(unittest.TestCase):
                 verified, identity = v7trainer.verify_training_snapshot(
                     directory, candidate, training_plan)
                 self.assertEqual(verified["candidate"], candidate)
-                self.assertEqual(len(verified["rows"]), 48)
+                self.assertEqual(len(verified["rows"]), 96)
+                self.assertEqual(identity["training_rows"], 72)
+                self.assertEqual(identity["development_rows"], 24)
                 self.assertEqual(identity["source_run"], source_run)
                 self.assertEqual(identity["role_counts"], {"train": 6, "development": 2})
                 other_candidate = "MERO" if candidate == "VOSEN" else "VOSEN"
