@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / "training"))
 sys.path.insert(0, str(ROOT / "automation"))
 import english_kws_dual_track_v7_silver as v7
 import english_kws_dual_track_v7_admit as v7cli
+import english_kws_dual_track_v7_train as v7trainer
 
 PROFILE = json.loads((ROOT / "configs/research/english-pronunciation-profile-20261115.json").read_text())
 
@@ -316,14 +317,18 @@ class V7AdmissionTests(unittest.TestCase):
 
     def test_training_snapshots_contain_only_candidate_train_and_development_bytes(self):
         corpus = copy.deepcopy(self.corpus)
-        corpus["run"] = {
+        source_plan_sha256 = self.plan["source_plan_sha256"]
+        training_plan = v7trainer.load_plan()
+        training_plan["source_plan_sha256"] = source_plan_sha256
+        source_run = {
             "repository": "jiying2007/kws-data",
             "run_id": "46000882374",
-            "sha": "5902f1f8d4fdc8096a864eb5d814c253d6f58ff2",
-            "event": "push",
-            "ref": "refs/heads/main",
-            "attempt": "1",
+            "commit": "f" * 40,
+            "parent": training_plan["next_main_before"],
+            "attempt": 1,
+            "source_bundle_sha256": source_plan_sha256,
         }
+        corpus["run"] = source_run
         evidence = copy.deepcopy(self.evidence)
         reserved = {group["source_group_id"] for group in self.groups
                     if group["role"] in ("calibration", "locked-test")}
@@ -384,6 +389,18 @@ class V7AdmissionTests(unittest.TestCase):
                                  v7.sha((directory / "MANIFEST.json").read_bytes()))
                 self.assertFalse((directory / "MACHINE_EVIDENCE.json").exists())
                 self.assertFalse((directory / "CORPUS_MANIFEST.json").exists())
+
+                # Exercise the real admission -> candidate snapshot -> trainer
+                # verifier handoff with the exact source identity, not only JSON shape.
+                verified, identity = v7trainer.verify_training_snapshot(
+                    directory, candidate, training_plan)
+                self.assertEqual(verified["candidate"], candidate)
+                self.assertEqual(len(verified["rows"]), 48)
+                self.assertEqual(identity["source_run"], source_run)
+                self.assertEqual(identity["role_counts"], {"train": 6, "development": 2})
+                other_candidate = "MERO" if candidate == "VOSEN" else "VOSEN"
+                with self.assertRaisesRegex(ValueError, "EXACT_CANDIDATE_TRAIN_DEV_SNAPSHOT"):
+                    v7trainer.verify_training_snapshot(directory, other_candidate, training_plan)
 
     def test_g3_admission_roles_are_strictly_train_dev_only(self):
         with self.assertRaisesRegex(ValueError, "AUTHORIZED_ADMISSION_ROLES"):
